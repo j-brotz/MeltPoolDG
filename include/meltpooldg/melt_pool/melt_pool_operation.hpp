@@ -9,6 +9,7 @@
 // DoFTools
 #include <deal.II/dofs/dof_tools.h>
 // MeltPoolDG
+#include <meltpooldg/heat_equation/heat_operation.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
@@ -27,17 +28,9 @@ namespace MeltPoolDG
 
     public:
       /*
-       *    This are the primary solution variables of this module, which will be also publically
-       *    accessible for output_results.
-       */
-      VectorType temperature;
-      VectorType solid;
-      VectorType liquid;
-      /*
        *  All the necessary parameters are stored in this struct.
        */
-      MeltPoolData<double> mp_data;
-      FlowData<double>     flow_data;
+
 
       MeltPoolOperation() = default;
 
@@ -67,6 +60,17 @@ namespace MeltPoolDG
          */
         laser_center =
           MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(mp_data.laser_center);
+
+        heat_operation =
+          std::make_shared<HeatEquation::HeatOperation<dim>>(scratch_data,
+                                                             data_in.mp,
+                                                             data_in.flow.density,
+                                                             data_in.flow.density +
+                                                               data_in.flow.density_difference,
+                                                             laser_center,
+                                                             time,
+                                                             temp_dof_idx_in,
+                                                             temp_quad_idx_in);
       }
 
       void
@@ -75,7 +79,7 @@ namespace MeltPoolDG
         /*
          *  Initialize the temperature field
          */
-        compute_temperature_vector(level_set_as_heaviside);
+        heat_operation->solve(level_set_as_heaviside);
       }
 
       /**
@@ -84,22 +88,25 @@ namespace MeltPoolDG
        * is however possible. First, the temperature is updated and second, the recoil pressure is
        * computed.
        */
+
       void
-      compute_recoil_pressure_force(VectorType &      force_rhs,
-                                    const VectorType &level_set_as_heaviside,
-                                    const double      dt,
-                                    bool              zero_out = true)
+      move_laser(const double dt)
       {
         time += dt;
         // 1) compute the current center of the laser beam
         if (mp_data.do_move_laser)
           laser_center[0] += mp_data.scan_speed * dt;
+      }
 
+      void
+      compute_recoil_pressure_force(VectorType &      force_rhs,
+                                    const VectorType &level_set_as_heaviside,
+                                    bool              zero_out = true)
+      {
         // 2) update the temperature field
-        compute_temperature_vector(level_set_as_heaviside);
+        heat_operation->solve(level_set_as_heaviside);
 
-        temperature.update_ghost_values();
-        // 3) update the recoil pressure force
+        heat_operation->get_temperature().update_ghost_values();
         scratch_data->get_matrix_free().template cell_loop<VectorType, VectorType>(
           [&](const auto &matrix_free,
               auto &      force_rhs,
@@ -120,7 +127,7 @@ namespace MeltPoolDG
                 level_set.gather_evaluate(level_set_as_heaviside, false, true);
 
                 temperature_val.reinit(cell);
-                temperature_val.read_dof_values_plain(temperature);
+                temperature_val.read_dof_values_plain(heat_operation->get_temperature());
                 temperature_val.evaluate(true, false);
 
                 recoil_pressure.reinit(cell);
@@ -144,7 +151,7 @@ namespace MeltPoolDG
           force_rhs,
           level_set_as_heaviside,
           zero_out);
-        temperature.zero_out_ghosts();
+        heat_operation->get_temperature().zero_out_ghosts();
       }
 
       /**
@@ -201,7 +208,7 @@ namespace MeltPoolDG
                 curvature.evaluate(true, false);
 
                 temperature_val.reinit(cell);
-                temperature_val.read_dof_values_plain(temperature);
+                temperature_val.read_dof_values_plain(heat_operation->get_temperature());
                 temperature_val.evaluate(true, true);
 
                 for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
@@ -248,66 +255,19 @@ namespace MeltPoolDG
       }
 
       /**
-       * The temperature (member variable of this class) is calculated using an analytic expression
-       * for a given heaviside representation of a level set field. The resulting DoF vector will be
-       * based on the same DoFHandler as the level set field.
+       *  The constraints of the flow velocity are modified such that they are zero in solid
+       *  regions.
+       *
+       *  @todo: PROBLEM -- is_solid_region still needed since degree of velocity is different
+       *  than solid
        */
-      void
-      compute_temperature_vector(const VectorType &level_set_as_heaviside)
-      {
-        level_set_as_heaviside.update_ghost_values();
-
-        scratch_data->initialize_dof_vector(temperature, temp_dof_idx);
-        scratch_data->initialize_dof_vector(solid, temp_dof_idx);
-        scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
-
-        FEValues<dim> fe_values(scratch_data->get_mapping(),
-                                scratch_data->get_dof_handler(temp_dof_idx).get_fe(),
-                                scratch_data->get_quadrature(temp_quad_idx),
-                                update_values | update_gradients | update_quadrature_points |
-                                  update_JxW_values);
-
-        const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
-
-        std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-        std::map<types::global_dof_index, Point<dim>> support_points;
-        DoFTools::map_dofs_to_support_points(scratch_data->get_mapping(),
-                                             scratch_data->get_dof_handler(temp_dof_idx),
-                                             support_points);
-
-        for (const auto &cell : scratch_data->get_dof_handler(temp_dof_idx).active_cell_iterators())
-          if (cell->is_locally_owned())
-            {
-              cell->get_dof_indices(local_dof_indices);
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                {
-                  temperature[local_dof_indices[i]] =
-                    analytical_temperature_field(support_points[local_dof_indices[i]],
-                                                 level_set_as_heaviside[local_dof_indices[i]]);
-                  solid[local_dof_indices[i]] =
-                    is_solid_region(support_points[local_dof_indices[i]]);
-                  liquid[local_dof_indices[i]] =
-                    is_liquid_region(support_points[local_dof_indices[i]]);
-                }
-            }
-
-        temperature.compress(VectorOperation::insert);
-        solid.compress(VectorOperation::insert);
-
-        scratch_data->get_constraint(temp_dof_idx).distribute(temperature);
-        scratch_data->get_constraint(temp_dof_idx).distribute(solid);
-
-        level_set_as_heaviside.zero_out_ghosts();
-      }
-
       void
       set_flow_field_in_solid_regions_to_zero(const DoFHandler<dim> &    flow_dof_handler,
                                               AffineConstraints<double> &flow_constraints)
       {
+        heat_operation->get_solid().update_ghost_values();
+
         const unsigned int dofs_per_cell = flow_dof_handler.get_fe().n_dofs_per_cell();
-
-
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
         std::map<types::global_dof_index, Point<dim>> support_points;
@@ -328,7 +288,7 @@ namespace MeltPoolDG
               cell->get_dof_indices(local_dof_indices);
 
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                if (is_solid_region(support_points[local_dof_indices[i]]))
+                if (heat_operation->is_solid_region(support_points[local_dof_indices[i]]))
                   {
                     solid_constraints.add_line(local_dof_indices[i]);
                   }
@@ -337,37 +297,45 @@ namespace MeltPoolDG
         solid_constraints.close();
         flow_constraints.merge(solid_constraints,
                                AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
+        heat_operation->get_solid().zero_out_ghosts();
       }
 
+      /**
+       * This function sets the level set field in solid regions to zero.
+       */
       void
-      set_level_set(VectorType &level_set)
+      set_level_set_in_solid_regions_to_zero(VectorType &level_set)
       {
+        AssertThrow(scratch_data->get_degree(temp_dof_idx) == scratch_data->get_degree(ls_dof_idx),
+                    ExcMessage(
+                      "The usage of this function assumes that the temperature field "
+                      "is interpolated with the polynomial with the same degree as the level set"));
         level_set.update_ghost_values();
 
         FEValues<dim> fe_values(scratch_data->get_mapping(),
-                                scratch_data->get_dof_handler(temp_dof_idx).get_fe(),
+                                scratch_data->get_dof_handler(ls_dof_idx).get_fe(),
                                 scratch_data->get_quadrature(temp_quad_idx),
                                 update_values | update_gradients | update_quadrature_points |
                                   update_JxW_values);
 
-        const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
+        const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(ls_dof_idx);
 
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
         std::map<types::global_dof_index, Point<dim>> support_points;
         DoFTools::map_dofs_to_support_points(scratch_data->get_mapping(),
-                                             scratch_data->get_dof_handler(temp_dof_idx),
+                                             scratch_data->get_dof_handler(ls_dof_idx),
                                              support_points);
 
-        for (const auto &cell : scratch_data->get_dof_handler(temp_dof_idx).active_cell_iterators())
+        for (const auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
           if (cell->is_locally_owned())
             {
               cell->get_dof_indices(local_dof_indices);
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 {
-                  if (liquid[local_dof_indices[i]])
+                  if (heat_operation->get_liquid()[local_dof_indices[i]])
                     level_set[local_dof_indices[i]] = 1.0;
-                  else if (is_solid_region(support_points[local_dof_indices[i]]))
+                  else if (heat_operation->get_solid()[local_dof_indices[i]])
                     level_set[local_dof_indices[i]] = 0.0;
                   else
                     level_set[local_dof_indices[i]] = -1.0;
@@ -376,12 +344,20 @@ namespace MeltPoolDG
         level_set.zero_out_ghosts();
       }
 
+      /**
+       *  The level set constraints are modified such that they are zero in solid
+       *  regions.
+       */
       void
       remove_the_level_set_from_solid_regions(const DoFHandler<dim> &    level_set_dof_handler,
                                               AffineConstraints<double> &level_set_constraints)
-
-
       {
+        heat_operation->get_solid().update_ghost_values();
+        AssertThrow(scratch_data->get_degree(temp_dof_idx) == scratch_data->get_degree(ls_dof_idx),
+                    ExcMessage(
+                      "The usage of this function assumes that the temperature field "
+                      "is interpolated with the polynomial with the same degree as the level set"));
+
         FEValues<dim> fe_values(scratch_data->get_mapping(),
                                 level_set_dof_handler.get_fe(),
                                 scratch_data->get_quadrature(flow_quad_idx),
@@ -408,212 +384,62 @@ namespace MeltPoolDG
               cell->get_dof_indices(local_dof_indices);
 
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                if (is_solid_region(support_points[local_dof_indices[i]]))
+                if (heat_operation->get_solid()[local_dof_indices[i]])
                   solid_constraints.add_line(local_dof_indices[i]);
             }
         level_set_constraints.merge(
           solid_constraints, AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
         level_set_constraints.close();
+        heat_operation->get_solid().zero_out_ghosts();
       }
 
       void
       reinit()
       {
-        scratch_data->initialize_dof_vector(temperature, temp_dof_idx);
-        scratch_data->initialize_dof_vector(solid, temp_dof_idx);
-        scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
+        heat_operation->reinit();
       }
 
       void
       attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
       {
-        temperature.update_ghost_values();
-        solid.update_ghost_values();
-        liquid.update_ghost_values();
-        vectors.push_back(&temperature);
-        vectors.push_back(&solid);
-        vectors.push_back(&liquid);
+        heat_operation->attach_vectors(vectors);
       }
 
       void
       attach_output_vectors(DataOut<dim> &data_out) const
       {
-        MeltPoolDG::VectorTools::update_ghost_values(temperature, solid, liquid);
-        /**
-         *  temperature
-         */
-        data_out.add_data_vector(scratch_data->get_dof_handler(temp_dof_idx),
-                                 temperature,
-                                 "temperature");
-        /**
-         *  solid
-         */
-        data_out.add_data_vector(scratch_data->get_dof_handler(temp_dof_idx), solid, "solid");
-        /**
-         *  liquid
-         */
-        data_out.add_data_vector(scratch_data->get_dof_handler(temp_dof_idx), liquid, "liquid");
+        heat_operation->attach_output_vectors(data_out);
+      }
+
+      void
+      distribute_constraints()
+      {
+        heat_operation->distribute_constraints();
+      }
+
+      const VectorType &
+      get_temperature() const
+      {
+        return heat_operation->get_temperature();
+      }
+
+      const VectorType &
+      get_solid() const
+      {
+        return heat_operation->get_solid();
+      }
+
+      const VectorType &
+      get_liquid() const
+      {
+        return heat_operation->get_liquid();
       }
 
     private:
       void
       set_melt_pool_parameters(const Parameters<double> &data_in)
       {
-        mp_data   = data_in.mp;
-        flow_data = data_in.flow;
-      }
-
-      double
-      analytical_temperature_field(Point<dim> point, const double phi)
-      {
-        if (mp_data.temperature_formulation == "analytical")
-          {
-            // The temperature function below is derived from the publication on
-            // "Heat Source Modeling in Selective Laser Melting" by E. Mirkoohi, D. E. Seivers,
-            //  H. Garmestani and S. Y. Liang
-            //
-            //  In order to capture anisotropic temperature fields, a modification is introduced.
-            const double indicator = UtilityFunctions::CharacteristicFunctions::heaviside(phi, 0.5);
-
-
-            double laser_intensity = 1.0;
-            if (mp_data.laser_power_over_time == "ramp")
-              {
-                AssertThrow(
-                  mp_data.laser_power_end_time > mp_data.laser_power_start_time,
-                  ExcMessage(
-                    "For the temporal ramp distribution of the laser power,"
-                    " the parameter laser power end time must be larger than laser power start time."));
-                laser_intensity = (time - mp_data.laser_power_start_time) /
-                                  (mp_data.laser_power_end_time - mp_data.laser_power_start_time);
-                laser_intensity = std::min(std::max(0.0, laser_intensity), 1.0);
-              }
-
-
-            const double &P  = mp_data.laser_power * laser_intensity;
-            const double &v  = mp_data.scan_speed;
-            const double &T0 = mp_data.ambient_temperature;
-            const double &absorptivity =
-              (indicator == 1) ? mp_data.liquid.absorptivity : mp_data.gas.absorptivity;
-            const double &conductivity =
-              (indicator == 1) ? mp_data.liquid.conductivity : mp_data.gas.conductivity;
-            const double &capacity =
-              (indicator == 1) ? mp_data.liquid.capacity : mp_data.gas.capacity;
-            const double density = flow_data.density + flow_data.density_difference * indicator;
-
-            const double thermal_diffusivity = conductivity / (density * capacity);
-
-            // modify temperature profile to be anisotropic
-            for (int d = 0; d < dim - 1; d++)
-              point[d] *= mp_data.temperature_x_to_y_ratio;
-
-            double R = point.distance(laser_center);
-
-            if (R == 0.0)
-              R = 1e-16;
-            double T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
-                         std::exp(-v * (R) / (2. * thermal_diffusivity)) +
-                       T0;
-            return (T > mp_data.max_temperature) ? mp_data.max_temperature : T;
-          }
-        else
-          AssertThrow(false, ExcNotImplemented());
-      }
-
-      /**
-       *  This function determines for a given point, whether it belongs to the solid domain.
-       *
-       *  WARNING: All points above (component dim-1) the center point of the laser source are
-       *  automatically identified as gaseous parts. Thus, this function has to be modified when the
-       *  initial interface between the feedstock and the ambient gas is not planar.
-       */
-      bool
-      is_solid_region(const Point<dim> point)
-      {
-        if (mp_data.liquid.melt_pool_radius == 0)
-          return false;
-        else if (point[dim - 1] >= laser_center[dim - 1])
-          return false;
-        else
-          {
-            Point<dim> shifted_center =
-              MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                mp_data.melt_pool_center);
-
-            if (mp_data.melt_pool_shape == "parabola")
-              {
-                if (dim == 2)
-                  {
-                    const double sign =
-                      -2 * mp_data.liquid.melt_pool_radius * (point[1] - shifted_center[1]) +
-                      std::pow(point[0] - shifted_center[0], 2);
-                    return (sign >= 0) ? true : false;
-                  }
-                else
-                  AssertThrow(false, ExcMessage("not implemented"));
-              }
-            else if (mp_data.melt_pool_shape == "ellipse")
-              return UtilityFunctions::DistanceFunctions::ellipsoidal_manifold<dim>(
-                       point,
-                       shifted_center,
-                       mp_data.liquid.melt_pool_radius,
-                       mp_data.liquid.melt_pool_depth) > 0 ?
-                       false :
-                       true;
-            else if (mp_data.melt_pool_shape == "temperature_dependent")
-              return (analytical_temperature_field(point, 1.0 /* is_liquid */) >=
-                      mp_data.liquid.melting_point) ?
-                       false :
-                       true;
-            else
-              AssertThrow(false, ExcMessage("not implemented"));
-          }
-      }
-
-      /*
-       * check if a given point is liquid
-       */
-      bool
-      is_liquid_region(const Point<dim> point)
-      {
-        if (mp_data.liquid.melt_pool_radius == 0)
-          return false;
-        else if (point[dim - 1] >= laser_center[dim - 1])
-          return false;
-        else
-          {
-            Point<dim> shifted_center =
-              MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                mp_data.melt_pool_center);
-
-            if (mp_data.melt_pool_shape == "parabola")
-              {
-                if (dim == 2)
-                  {
-                    const double sign =
-                      -2 * mp_data.liquid.melt_pool_radius * (point[1] - shifted_center[1]) +
-                      std::pow(point[0] - shifted_center[0], 2);
-                    return (sign >= 0) ? false : true;
-                  }
-                else
-                  AssertThrow(false, ExcMessage("not implemented"));
-              }
-            else if (mp_data.melt_pool_shape == "ellipse")
-              return UtilityFunctions::DistanceFunctions::ellipsoidal_manifold<dim>(
-                       point,
-                       shifted_center,
-                       mp_data.liquid.melt_pool_radius,
-                       mp_data.liquid.melt_pool_depth) > 0 ?
-                       true :
-                       false;
-            else if (mp_data.melt_pool_shape == "temperature_dependent")
-              return (analytical_temperature_field(point, 1.0 /* is_liquid */) >=
-                      mp_data.liquid.melting_point) ?
-                       true :
-                       false;
-            else
-              AssertThrow(false, ExcMessage("not implemented"));
-          }
+        mp_data = data_in.mp;
       }
       /**
        *  This function computes the recoil pressure coefficient for a given temperature value
@@ -633,7 +459,10 @@ namespace MeltPoolDG
        *  Center of the laser
        */
       Point<dim> laser_center;
-
+      /**
+       *  Parameters
+       */
+      MeltPoolData<double> mp_data;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
@@ -644,6 +473,8 @@ namespace MeltPoolDG
       unsigned int flow_quad_idx;
       unsigned int temp_dof_idx;
       unsigned int temp_quad_idx;
+
+      std::shared_ptr<HeatEquation::HeatOperation<dim>> heat_operation;
 
       /*
        *  current time

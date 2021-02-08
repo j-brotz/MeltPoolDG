@@ -102,11 +102,11 @@ namespace MeltPoolDG::Flow
 
           if (base_in->parameters.base.problem_name == "melt_pool")
             {
+              melt_pool_operation.move_laser(dt);
               // ... c) recoil pressure (+ compute temperature from analytical field)
               melt_pool_operation.compute_recoil_pressure_force(
                 force_rhs,
                 level_set_operation.level_set_as_heaviside,
-                dt,
                 false /*false means add to force vector*/);
 
               //// ... d) temperature-dependent surface tension
@@ -294,7 +294,18 @@ namespace MeltPoolDG::Flow
        * set initial condition of the melt pool class
        */
       if (base_in->parameters.base.problem_name == "melt_pool")
-        melt_pool_operation.set_initial_condition(level_set_operation.level_set_as_heaviside);
+        {
+          melt_pool_operation.set_initial_condition(level_set_operation.level_set_as_heaviside);
+
+          if (base_in->parameters.mp.set_level_set_to_zero_in_solid)
+
+            {
+              melt_pool_operation.remove_the_level_set_from_solid_regions(dof_handler,
+                                                                          ls_constraints_dirichlet);
+              melt_pool_operation.remove_the_level_set_from_solid_regions(
+                dof_handler, reinit_constraints_dirichlet);
+            }
+        }
 
       if (base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation")
         {
@@ -334,8 +345,9 @@ namespace MeltPoolDG::Flow
               << flow_operation->get_dof_handler_pressure().n_dofs() << "(p)";
 
             if (base_in->parameters.base.problem_name == "melt_pool")
-              scratch_data->get_pcout() << " T.size " << melt_pool_operation.temperature.size()
-                                        << " solid.size " << melt_pool_operation.solid.size();
+              scratch_data->get_pcout()
+                << " T.size " << melt_pool_operation.get_temperature().size() << " solid.size "
+                << melt_pool_operation.get_solid().size();
 
             scratch_data->get_pcout() << std::endl;
 
@@ -425,7 +437,7 @@ namespace MeltPoolDG::Flow
        *    limit the level set interface to the touching regions of liquid/gas
        */
       if ((base_in->parameters.base.problem_name == "melt_pool") &&
-          base_in->parameters.mp.set_level_set_to_zero_in_solid)
+          base_in->parameters.mp.set_level_set_to_zero_in_solid && do_reinit)
 
         {
           melt_pool_operation.remove_the_level_set_from_solid_regions(dof_handler,
@@ -630,7 +642,7 @@ namespace MeltPoolDG::Flow
 
       if (base_in->parameters.base.problem_name == "melt_pool")
         data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
-          melt_pool_operation.attach_vectors(vectors); // temperature + solid
+          melt_pool_operation.attach_vectors(vectors); // temperature + solid + liquid
         });
 
       if (evaporation_operation)
@@ -655,11 +667,7 @@ namespace MeltPoolDG::Flow
          * melt pool
          */
         if (base_in->parameters.base.problem_name == "melt_pool")
-          {
-            scratch_data->get_constraint(temp_dof_idx).distribute(melt_pool_operation.temperature);
-            scratch_data->get_constraint(temp_dof_idx).distribute(melt_pool_operation.solid);
-            scratch_data->get_constraint(temp_dof_idx).distribute(melt_pool_operation.liquid);
-          }
+          melt_pool_operation.distribute_constraints();
         /**
          * evaporation
          */
