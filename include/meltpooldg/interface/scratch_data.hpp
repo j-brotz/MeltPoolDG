@@ -351,6 +351,12 @@ namespace MeltPoolDG
       return get_dof_handler(dof_idx).get_fe().n_dofs_per_cell();
     }
 
+    unsigned int
+    get_degree(const unsigned int dof_idx = 0) const
+    {
+      return get_dof_handler(dof_idx).get_fe().tensor_degree();
+    }
+
     const double &
     get_min_cell_size(const unsigned int dof_idx = 0) const
     {
