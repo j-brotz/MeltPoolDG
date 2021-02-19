@@ -18,29 +18,25 @@ namespace MeltPoolDG::HeatEquation
   class LaserOperation
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType = LinearAlgebra::distributed::Vector<double>;
 
     const ScratchData<dim> &scratch_data;
     /*
      *  Laser parameters
      */
-    const LaserData<double> &laser_data;
+    const LaserData<double> laser_data;
     /*
      *  Center of the laser
      */
     Point<dim> laser_position;
     double     current_time;
-    double     dt;
     /*
      *  Current intensity of the laser
      */
     double laser_intensity;
 
-
-
   public:
-    LaserOperation(const ScratchData<dim> &scratch_data_in, const LaserData<double> &laser_data_in)
+    LaserOperation(const ScratchData<dim> &scratch_data_in, const LaserData<double> laser_data_in)
       : scratch_data(scratch_data_in)
       , laser_data(laser_data_in)
       , laser_position(
@@ -93,7 +89,7 @@ namespace MeltPoolDG::HeatEquation
                                          const double &              density_gas,
                                          const double &              density_liquid,
                                          const MeltPoolData<double> &mp_data,
-                                         const double &              level_set_value_is_gas = -1.0)
+                                         const double                level_set_value_is_gas = -1.0)
     {
       level_set_as_heaviside.update_ghost_values();
 
@@ -145,55 +141,48 @@ namespace MeltPoolDG::HeatEquation
                                  const double &                 density_liquid,
                                  [[maybe_unused]] const double &level_set_value_is_gas)
     {
-      if (laser_data.analytical_temperature_formulation == "Mirkoohi")
-        {
-          const double  P  = laser_data.power * laser_intensity;
-          const double &v  = laser_data.scan_speed;
-          const double &T0 = mp_data.ambient_temperature;
+      const double  P  = laser_data.power * laser_intensity;
+      const double &v  = laser_data.scan_speed;
+      const double &T0 = mp_data.ambient_temperature;
 
-          // heaviside=0 ... gas phase
-          // constant parameters within each phase
-          ////  In order to capture anisotropic temperature fields, a modification is introduced.
-          // const double indicator =
-          // UtilityFunctions::CharacteristicFunctions::heaviside(heaviside, 0.5);
-          // const double &absorptivity =
-          //(indicator == 1) ? mp_data.liquid.absorptivity : mp_data.gas.absorptivity;
-          // const double &conductivity =
-          //(indicator == 1) ? mp_data.liquid.conductivity : mp_data.gas.conductivity;
-          // const double &capacity =
-          //(indicator == 1) ? mp_data.liquid.capacity : mp_data.gas.capacity;
-          // const double density = density_liquid + (density_gas - density_liquid) * indicator;
+      // heaviside=0 ... gas phase
+      // constant parameters within each phase
+      ////  In order to capture anisotropic temperature fields, a modification is introduced.
+      // const double indicator =
+      // UtilityFunctions::CharacteristicFunctions::heaviside(heaviside, 0.5);
+      // const double &absorptivity =
+      //(indicator == 1) ? mp_data.liquid.absorptivity : mp_data.gas.absorptivity;
+      // const double &conductivity =
+      //(indicator == 1) ? mp_data.liquid.conductivity : mp_data.gas.conductivity;
+      // const double &capacity =
+      //(indicator == 1) ? mp_data.liquid.capacity : mp_data.gas.capacity;
+      // const double density = density_liquid + (density_gas - density_liquid) * indicator;
 
-          // variable parameters over phase boundaries
-          double weight = (level_set_value_is_gas == -1) ? heaviside : (1 - heaviside);
+      // variable parameters over phase boundaries
+      double weight = (level_set_value_is_gas == -1) ? heaviside : (1 - heaviside);
 
-          const double absorptivity =
-            mp_data.gas.absorptivity +
-            weight * (mp_data.liquid.absorptivity - mp_data.gas.absorptivity);
-          const double conductivity =
-            mp_data.gas.conductivity +
-            weight * (mp_data.liquid.conductivity - mp_data.gas.conductivity);
-          const double capacity =
-            mp_data.gas.capacity + weight * (mp_data.liquid.capacity - mp_data.gas.capacity);
-          const double density             = density_gas + weight * (density_liquid - density_gas);
-          const double thermal_diffusivity = conductivity / (density * capacity);
+      const double absorptivity = mp_data.gas.absorptivity +
+                                  weight * (mp_data.liquid.absorptivity - mp_data.gas.absorptivity);
+      const double conductivity = mp_data.gas.conductivity +
+                                  weight * (mp_data.liquid.conductivity - mp_data.gas.conductivity);
+      const double capacity =
+        mp_data.gas.capacity + weight * (mp_data.liquid.capacity - mp_data.gas.capacity);
+      const double density             = density_gas + weight * (density_liquid - density_gas);
+      const double thermal_diffusivity = conductivity / (density * capacity);
 
-          // modify temperature profile to be anisotropic
-          for (int d = 0; d < dim - 1; d++)
-            point[d] *= mp_data.temperature_x_to_y_ratio;
+      // modify temperature profile to be anisotropic
+      for (int d = 0; d < dim - 1; d++)
+        point[d] *= mp_data.temperature_x_to_y_ratio;
 
-          double R = point.distance(laser_position);
+      double R = point.distance(laser_position);
 
-          if (R == 0.0)
-            R = 1e-16;
-          double T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
-                       std::exp(-v * (R) / (2. * thermal_diffusivity)) +
-                     T0;
+      if (R == 0.0)
+        R = 1e-16;
+      double T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
+                   std::exp(-v * (R) / (2. * thermal_diffusivity)) +
+                 T0;
 
-          return (T > mp_data.max_temperature) ? mp_data.max_temperature : T;
-        }
-      else
-        AssertThrow(false, ExcNotImplemented());
+      return (T > mp_data.max_temperature) ? mp_data.max_temperature : T;
     }
   };
 } // namespace MeltPoolDG::HeatEquation

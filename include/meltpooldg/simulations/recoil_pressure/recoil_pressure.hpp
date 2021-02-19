@@ -127,15 +127,44 @@ namespace MeltPoolDG
         void
         set_boundary_conditions() override
         {
-          this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
-          this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
+          const types::boundary_id lower_bc = 1;
+          const types::boundary_id upper_bc = 2;
+          const types::boundary_id left_bc  = 3;
+          const types::boundary_id right_bc = 4;
+
+          if constexpr (dim == 2)
+            {
+              for (const auto &cell : this->triangulation->cell_iterators())
+                for (const auto &face : cell->face_iterators())
+                  if ((face->at_boundary()))
+                    {
+                      if (face->center()[1] == this->parameters.mp.domain_y_min)
+                        face->set_boundary_id(lower_bc);
+                      else if (face->center()[1] == this->parameters.mp.domain_y_max)
+                        face->set_boundary_id(upper_bc);
+                      else if (face->center()[0] == this->parameters.mp.domain_x_min)
+                        face->set_boundary_id(left_bc);
+                      else if (face->center()[0] == this->parameters.mp.domain_x_max)
+                        face->set_boundary_id(right_bc);
+                    }
+            }
+          else
+            AssertThrow(false, ExcNotImplemented());
+
+          this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
+          this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+          this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
+          this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
+
+          this->attach_dirichlet_boundary_condition(
+            upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
         }
 
         void
         set_field_conditions() override
         {
           auto laser_center = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-            this->parameters.mp.laser_center);
+            this->parameters.laser.center);
           this->attach_initial_condition(
             std::make_shared<InitialValuesLS<dim>>(this->parameters.mp.domain_x_min,
                                                    this->parameters.mp.domain_x_max,
