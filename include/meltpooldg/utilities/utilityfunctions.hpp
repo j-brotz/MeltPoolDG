@@ -97,8 +97,6 @@ namespace MeltPoolDG
           // write values back into global vector
           fe_eval.set_dof_values(vec);
         }
-
-      vec.compress(VectorOperation::max);
     }
 
     /*
@@ -168,8 +166,6 @@ namespace MeltPoolDG
           // write values back into global vector
           fe_eval.set_dof_values(vec);
         }
-
-      vec.compress(VectorOperation::max);
     }
     /*
      * This function converts a string of coordinates given as e.g. "5,10,5" to a Point<dim>
