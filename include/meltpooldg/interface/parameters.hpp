@@ -53,7 +53,6 @@ namespace MeltPoolDG
   struct LevelSetData
   {
     bool        do_reinitialization     = false;
-    int         n_initial_reinit_steps  = -1.0;
     number      artificial_diffusivity  = 0.0;
     std::string time_integration_scheme = "crank_nicolson";
     number      start_time              = 0.0;
@@ -138,7 +137,7 @@ namespace MeltPoolDG
     number      laser_power                          = 0.0;
     std::string laser_power_over_time                = "constant";
     number      laser_power_start_time               = 0.0;
-    number      laser_power_end_time                 = 0.0;
+    number      laser_power_end_time                 = 1.e12;
     std::string laser_center                         = "0,0,0";
     std::string melt_pool_center                     = "not_initialized";
     std::string melt_pool_shape                      = "ellipse";
@@ -156,6 +155,7 @@ namespace MeltPoolDG
     number      boiling_temperature                  = 0.0;
     number      max_temperature                      = 0.0;
     bool        do_print_l2norm                      = true;
+    double      evaporation_flux_scale_factor        = 1.0;
 
     struct Liquid
     {
@@ -240,13 +240,6 @@ namespace MeltPoolDG
        */
       if (amr.min_grid_refinement_level == 1)
         amr.min_grid_refinement_level = base.global_refinements;
-
-      /*
-       *  set the number of initial reinitialization steps equal to the number of reinit steps
-       *  if no value is provided
-       */
-      if (ls.do_reinitialization && ls.n_initial_reinit_steps < 0.0)
-        ls.n_initial_reinit_steps = reinit.max_n_steps;
       /*
        *  set the melt pool center if not specified
        */
@@ -270,7 +263,7 @@ namespace MeltPoolDG
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 
       if ((base.problem_name == "two_phase_flow") || (base.problem_name == "melt_pool") ||
-          (base.problem_name == "two_phase_flow_with_evaporation"))
+          (base.problem_name == "two_phase_flow_with_evaporation") || (base.problem_name == "melt_pool_with_evaporation"))
         {
           adaflo_params.parse_parameters(parameter_filename);
           // WARNING: by setting the differences to a non-zero value we force
@@ -357,7 +350,7 @@ namespace MeltPoolDG
           base.problem_name,
           "Sets the base name for the problem that should be solved.",
           Patterns::Selection(
-            "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool|level_set_with_evaporation|two_phase_flow_with_evaporation"));
+            "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool|level_set_with_evaporation|two_phase_flow_with_evaporation|melt_pool_with_evaporation"));
         prm.add_parameter("dimension", base.dimension, "Defines the dimension of the problem");
         prm.add_parameter("global refinements",
                           base.global_refinements,
@@ -461,10 +454,6 @@ namespace MeltPoolDG
         prm.add_parameter("ls do reinitialization",
                           ls.do_reinitialization,
                           "Defines if reinitialization of level set function is activated");
-        prm.add_parameter(
-          "ls n initial reinit steps",
-          ls.n_initial_reinit_steps,
-          "Defines the number of initial reinitialization steps of the level set function.");
         prm.add_parameter("ls time integration scheme",
                           ls.time_integration_scheme,
                           "Determines the time integration scheme.",
@@ -667,6 +656,7 @@ namespace MeltPoolDG
         prm.add_parameter("mp temperature x to y ratio",
                           mp.temperature_x_to_y_ratio,
                           "This factor scales the analytical temperature field to be anisotropic.");
+        prm.add_parameter("mp evaporation flux scale factor", mp.evaporation_flux_scale_factor, "Scale factor for the evaporative flux");
         prm.add_parameter("mp laser power", mp.laser_power, "Intensity of the laser");
         prm.add_parameter("mp laser power over time",
                           mp.laser_power_over_time,
