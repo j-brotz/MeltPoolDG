@@ -131,32 +131,42 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct LaserData
+  {
+    number      power                              = 0.0;
+    std::string power_over_time                    = "constant";
+    number      power_start_time                   = 0.0;
+    number      power_end_time                     = 1.e12;
+    std::string center                             = "0,0,0";
+    bool        do_move                            = false;
+    number      scan_speed                         = 0.0;
+    std::string analytical_temperature_formulation = "analytical";
+  };
+
+  template <typename number = double>
+  struct RecoilPressureData
+  {
+    number pressure_constant    = 0.0;
+    number temperature_constant = 0.0;
+  };
+
+  template <typename number = double>
   struct MeltPoolData
   {
-    std::string temperature_formulation              = "analytical";
-    number      temperature_x_to_y_ratio             = 1.0;
-    number      laser_power                          = 0.0;
-    std::string laser_power_over_time                = "constant";
-    number      laser_power_start_time               = 0.0;
-    number      laser_power_end_time                 = 1.e12;
-    std::string laser_center                         = "0,0,0";
-    std::string melt_pool_center                     = "not_initialized";
-    std::string melt_pool_shape                      = "ellipse";
-    number      scan_speed                           = 0.0;
-    bool        do_move_laser                        = false;
-    bool        set_velocity_to_zero_in_solid        = false;
-    bool        set_level_set_to_zero_in_solid       = false;
-    number      ambient_temperature                  = 0.0;
-    number      domain_x_min                         = 0.0;
-    number      domain_y_min                         = 0.0;
-    number      domain_x_max                         = 0.0;
-    number      domain_y_max                         = 0.0;
-    number      recoil_pressure_constant             = 0.0;
-    number      recoil_pressure_temperature_constant = 0.0;
-    number      boiling_temperature                  = 0.0;
-    number      max_temperature                      = 0.0;
-    bool        do_print_l2norm                      = true;
-    double      evaporation_flux_scale_factor        = 1.0;
+    std::string temperature_formulation        = "analytical";
+    number      temperature_x_to_y_ratio       = 1.0;
+    std::string melt_pool_center               = "not_initialized";
+    bool        set_velocity_to_zero_in_solid  = false;
+    bool        set_level_set_to_zero_in_solid = false;
+    number      ambient_temperature            = 0.0;
+    number      domain_x_min                   = 0.0;
+    number      domain_y_min                   = 0.0;
+    number      domain_x_max                   = 0.0;
+    number      domain_y_max                   = 0.0;
+    number      boiling_temperature            = 0.0;
+    number      max_temperature                = 0.0;
+    bool        do_print_l2norm                = true;
+    double      evaporation_flux_scale_factor  = 1.0;
 
     struct Liquid
     {
@@ -252,7 +262,7 @@ namespace MeltPoolDG
        *  set the melt pool center if not specified
        */
       if (mp.melt_pool_center == "not_initialized")
-        mp.melt_pool_center = mp.laser_center;
+        mp.melt_pool_center = laser.center;
       /*
        *  set the maximum temperature of the melt pool if not specified
        */
@@ -657,6 +667,48 @@ namespace MeltPoolDG
       }
       prm.leave_subsection();
       /*
+       *   laser
+       */
+      prm.enter_subsection("laser");
+      {
+        prm.add_parameter("laser power", laser.power, "Intensity of the laser");
+        prm.add_parameter("laser power over time",
+                          laser.power_over_time,
+                          "Temporal distribution of the laser power",
+                          Patterns::Selection("constant|ramp"));
+        prm.add_parameter("laser power start time",
+                          laser.power_start_time,
+                          "In case of time-dependent laser power: activation time of laser.");
+        prm.add_parameter("laser power end time",
+                          laser.power_end_time,
+                          "In case of time-dependent laser power: end time of laser.");
+        prm.add_parameter("laser center",
+                          laser.center,
+                          "Center coordinates of the laser beam on the interface melt/gas.");
+        prm.add_parameter("laser scan speed",
+                          laser.scan_speed,
+                          "Scan speed of the laser (in case of an analytical temperature field).");
+        prm.add_parameter(
+          "laser do move",
+          laser.do_move,
+          "Set this parameter to true to move the laser in x-direction with the given parameter scan speed "
+          "(in case of an analytical temperature field).");
+      }
+      prm.leave_subsection();
+      /*
+       *   recoil pressure
+       */
+      prm.enter_subsection("recoil pressure");
+      {
+        prm.add_parameter("recoil pressure constant",
+                          recoil.pressure_constant,
+                          "Pressure constant for the recoil pressure model.");
+        prm.add_parameter("recoil temperature constant",
+                          recoil.temperature_constant,
+                          "Temperature constant for the recoil pressure model.");
+      }
+      prm.leave_subsection();
+      /*
        *   melt pool
        */
       prm.enter_subsection("melt pool");
@@ -672,20 +724,6 @@ namespace MeltPoolDG
         prm.add_parameter("mp evaporation flux scale factor",
                           mp.evaporation_flux_scale_factor,
                           "Scale factor for the evaporative flux");
-        prm.add_parameter("mp laser power", mp.laser_power, "Intensity of the laser");
-        prm.add_parameter("mp laser power over time",
-                          mp.laser_power_over_time,
-                          "Temporal distribution of the laser power",
-                          Patterns::Selection("constant|ramp"));
-        prm.add_parameter("mp laser power start time",
-                          mp.laser_power_start_time,
-                          "In case of time-dependent laser power: activation time of laser.");
-        prm.add_parameter("mp laser power end time",
-                          mp.laser_power_end_time,
-                          "In case of time-dependent laser power: end time of laser.");
-        prm.add_parameter("mp laser center",
-                          mp.laser_center,
-                          "Center coordinates of the laser beam on the interface melt/gas.");
         prm.add_parameter("mp melt pool center",
                           mp.melt_pool_center,
                           "Center coordinates of the melt pool ellipse/parabola. If no value is "
@@ -702,18 +740,6 @@ namespace MeltPoolDG
         prm.add_parameter("mp domain y max",
                           mp.domain_y_max,
                           "maximum y coordinate of simulation domain");
-        prm.add_parameter("mp melt pool shape",
-                          mp.melt_pool_shape,
-                          "Shape of the user defined melt pool",
-                          Patterns::Selection("parabola|ellipse|temperature_dependent"));
-        prm.add_parameter("mp scan speed",
-                          mp.scan_speed,
-                          "Scan speed of the laser (in case of an analytical temperature field).");
-        prm.add_parameter(
-          "mp do move laser",
-          mp.do_move_laser,
-          "Set this parameter to true to move the laser in x-direction with the given parameter scan speed "
-          "(in case of an analytical temperature field).");
         prm.add_parameter(
           "mp set velocity to zero in solid",
           mp.set_velocity_to_zero_in_solid,
@@ -725,12 +751,6 @@ namespace MeltPoolDG
         prm.add_parameter("mp ambient temperature",
                           mp.ambient_temperature,
                           "Ambient temperature in the inert gas.");
-        prm.add_parameter("mp recoil pressure constant",
-                          mp.recoil_pressure_constant,
-                          "Pressure constant for the recoil pressure model.");
-        prm.add_parameter("mp recoil pressure temperature constant",
-                          mp.recoil_pressure_temperature_constant,
-                          "Temperature constant for the recoil pressure model.");
         prm.add_parameter("mp boiling temperature",
                           mp.boiling_temperature,
                           "Boiling temperature of the melt.");
@@ -739,9 +759,6 @@ namespace MeltPoolDG
           mp.max_temperature,
           "Maximum temperature arising in the melt pool. If this temperature is lower than the boiling"
           " temperature, this value is corrected to correspond to the boiling temperature + 500 K.");
-        prm.add_parameter("mp do print l2norm",
-                          mp.do_print_l2norm,
-                          "Defines if the l2norm of the melt pool results should be printed)");
         prm.add_parameter("mp liquid absorptivity",
                           mp.liquid.absorptivity,
                           "Absorptivity of the liquid part of domain");
@@ -880,7 +897,9 @@ namespace MeltPoolDG
     FlowData<number>               flow;
     NormalVectorData<number>       normal_vec;
     CurvatureData<number>          curv;
+    LaserData<number>              laser;
     MeltPoolData<number>           mp;
+    RecoilPressureData<number>     recoil;
     EvaporationData<number>        evapor;
     ParaviewData<number>           paraview;
     OutputData<number>             output;

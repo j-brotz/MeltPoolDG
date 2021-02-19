@@ -70,6 +70,7 @@ namespace MeltPoolDG
     {
       this->clear();
 
+      set_mapping(mapping);
 
       for (unsigned int i = 0; i < dof_handler.size(); ++i)
         this->attach_dof_handler(*dof_handler[i]);
@@ -283,6 +284,12 @@ namespace MeltPoolDG
     get_constraint(const unsigned int constraint_index = 0) const
     {
       return *this->constraint[constraint_index];
+    }
+
+    AffineConstraints<number> &
+    modify_constraint(const unsigned int constraint_index = 0)
+    {
+      return const_cast<AffineConstraints<number> &>(*this->constraint[constraint_index]);
     }
 
     const std::vector<const AffineConstraints<number> *> &
