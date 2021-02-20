@@ -68,11 +68,9 @@ namespace MeltPoolDG
                  * Note that the normal vector is used from the old step.
                  */
                 level_set_operation.update_normal_vector();
-                evaporation_operation->solve(advection_velocity);
-                level_set_operation.solve(dt, evaporation_operation->get_interface_velocity());
+                evaporation_operation->compute_evaporation_velocity();
               }
-            else
-              level_set_operation.solve(dt, advection_velocity);
+            level_set_operation.solve(dt, advection_velocity);
 
 
             // do paraview output if requested
@@ -204,6 +202,18 @@ namespace MeltPoolDG
               vel_dof_idx,
               ls_hanging_nodes_dof_idx,
               ls_quad_idx);
+
+            /**
+             *  set evaporative mass flux constant
+             */
+            evaporation_operation->get_evaporative_mass_flux() =
+              base_in->parameters.evapor.evaporative_mass_flux;
+
+            level_set_operation.setup_with_evaporation(ls_hanging_nodes_dof_idx,
+                                                       vel_dof_idx,
+                                                       vel_dof_idx,
+                                                       advection_velocity,
+                                                       evaporation_operation->get_velocity());
           }
         /*
          *  initialize postprocessor

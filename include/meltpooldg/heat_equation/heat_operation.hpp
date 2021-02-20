@@ -18,10 +18,9 @@ namespace MeltPoolDG::HeatEquation
   class HeatOperation
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+    using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    const std::shared_ptr<const ScratchData<dim>> &scratch_data;
+    const ScratchData<dim> &scratch_data;
     /**
      *  time
      */
@@ -38,10 +37,10 @@ namespace MeltPoolDG::HeatEquation
     VectorType temperature;
 
   public:
-    HeatOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                  const double                                   time_in,
-                  const unsigned int                             temp_dof_idx_in,
-                  const unsigned int                             temp_quad_idx_in)
+    HeatOperation(const ScratchData<dim> &scratch_data_in,
+                  const double            time_in,
+                  const unsigned int      temp_dof_idx_in,
+                  const unsigned int      temp_quad_idx_in)
       : scratch_data(scratch_data_in)
       , time(time_in)
       , temp_dof_idx(temp_dof_idx_in)
@@ -51,7 +50,7 @@ namespace MeltPoolDG::HeatEquation
     void
     reinit()
     {
-      scratch_data->initialize_dof_vector(temperature, temp_dof_idx);
+      scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
     }
 
     void
@@ -70,7 +69,7 @@ namespace MeltPoolDG::HeatEquation
     void
     distribute_constraints()
     {
-      scratch_data->get_constraint(temp_dof_idx).distribute(temperature);
+      scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
     }
 
     void
@@ -80,7 +79,7 @@ namespace MeltPoolDG::HeatEquation
        *  temperature
        */
       MeltPoolDG::VectorTools::update_ghost_values(temperature);
-      data_out.add_data_vector(scratch_data->get_dof_handler(temp_dof_idx),
+      data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
                                temperature,
                                "temperature");
     }

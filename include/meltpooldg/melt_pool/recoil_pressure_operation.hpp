@@ -119,9 +119,22 @@ namespace MeltPoolDG::MeltPool
     inline double
     compute_recoil_pressure_coefficient(const double T)
     {
-      return recoil_pressure_data.pressure_constant *
-             std::exp(-recoil_pressure_data.temperature_constant *
-                      (1. / T - 1. / boiling_temperature));
+      return compute_recoil_pressure_coefficient(T,
+                                                 recoil_pressure_data.pressure_constant,
+                                                 recoil_pressure_data.temperature_constant,
+                                                 boiling_temperature);
+    }
+    /**
+     * compute the recoil pressure coefficient depending on the temperature
+     */
+    static double
+    compute_recoil_pressure_coefficient(const double  T,
+                                        const double &pressure_constant,
+                                        const double &temperature_constant,
+                                        const double &boiling_temperature)
+    {
+      return pressure_constant *
+             std::exp(-temperature_constant * (1. / T - 1. / boiling_temperature));
     }
   };
 } // namespace MeltPoolDG::MeltPool

@@ -68,7 +68,8 @@ namespace MeltPoolDG
                         const unsigned int                       flow_vel_quad_idx_in,
                         const unsigned int                       temp_dof_idx_in,
                         const unsigned int                       temp_quad_idx_in,
-                        const double                             start_time_in)
+                        const double                             start_time_in,
+                        bool                                     do_recoil_pressure = true)
         : scratch_data(scratch_data_in)
         , ls_dof_idx(ls_dof_idx_in)
         , reinit_dof_idx(reinit_dof_idx_in)
@@ -97,13 +98,14 @@ namespace MeltPoolDG
         /*
          * initialize the recoil pressure operation class
          */
-        recoil_pressure_operation =
-          std::make_shared<RecoilPressureOperation<dim>>(*scratch_data_in,
-                                                         data_in,
-                                                         flow_vel_dof_idx_in,
-                                                         flow_vel_quad_idx_in,
-                                                         ls_dof_idx_in,
-                                                         temp_dof_idx_in);
+        if (do_recoil_pressure)
+          recoil_pressure_operation =
+            std::make_shared<RecoilPressureOperation<dim>>(*scratch_data_in,
+                                                           data_in,
+                                                           flow_vel_dof_idx_in,
+                                                           flow_vel_quad_idx_in,
+                                                           ls_dof_idx_in,
+                                                           temp_dof_idx_in);
       }
 
       void
@@ -160,11 +162,12 @@ namespace MeltPoolDG
 
         // 3) compute forces
         //     ... recoil pressure
-        recoil_pressure_operation->compute_recoil_pressure_force(
-          vel_force_rhs,
-          level_set_as_heaviside,
-          heat_operation->get_temperature(),
-          false /*false means add to force vector*/);
+        if (recoil_pressure_operation)
+          recoil_pressure_operation->compute_recoil_pressure_force(
+            vel_force_rhs,
+            level_set_as_heaviside,
+            heat_operation->get_temperature(),
+            false /*false means add to force vector*/);
         //     ... or evaporative flux
         //@todo
 

@@ -13,6 +13,7 @@
 #include <meltpooldg/curvature/curvature_operation.hpp>
 #include <meltpooldg/curvature/curvature_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/curvature/curvature_operation_base.hpp>
+#include <meltpooldg/level_set/level_set_operator_with_phase_change.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
@@ -228,6 +229,28 @@ namespace MeltPoolDG
 
         // this->reinit();
       }
+      /**
+       *  with evaporation
+       */
+      void
+      setup_with_evaporation(const unsigned int temp_dof_idx_in,
+                             const unsigned int flow_vel_dof_idx_in,
+                             const unsigned int evapor_vel_dof_idx_in,
+                             const VectorType & advection_velocity,
+                             const VectorType & evaporation_velocity)
+      {
+        level_set_with_phase_change =
+          std::make_shared<LevelSetOperatorWithPhaseChange<dim>>(*scratch_data,
+                                                                 advection_velocity,
+                                                                 evaporation_velocity,
+                                                                 level_set_data,
+                                                                 ls_dof_idx,
+                                                                 ls_hanging_nodes_dof_idx,
+                                                                 ls_quad_idx,
+                                                                 temp_dof_idx_in,
+                                                                 flow_vel_dof_idx_in,
+                                                                 evapor_vel_dof_idx_in);
+      }
 
       void
       reinit()
@@ -277,7 +300,7 @@ namespace MeltPoolDG
         /*
          *  1) solve the advection step of the level set function
          */
-        advec_diff_operation->solve(dt, advection_velocity);
+        advect_level_set(dt, advection_velocity);
         /*
          *  2) solve the reinitialization problem of the level set equation
          */
@@ -295,6 +318,16 @@ namespace MeltPoolDG
          */
         if (level_set_data.do_curvature_correction)
           correct_curvature_values();
+      }
+
+      void
+      advect_level_set(const double dt, const VectorType &advection_velocity)
+      {
+        // with phase change (evaporation)
+        if (level_set_with_phase_change)
+          level_set_with_phase_change->solve(dt, get_level_set());
+        else
+          advec_diff_operation->solve(dt, advection_velocity);
       }
 
       void
@@ -625,6 +658,8 @@ namespace MeltPoolDG
        */
       VectorType level_set_as_heaviside;
       VectorType distance_to_level_set;
+
+      std::shared_ptr<LevelSetOperatorWithPhaseChange<dim>> level_set_with_phase_change;
     };
   } // namespace LevelSet
 } // namespace MeltPoolDG

@@ -166,7 +166,6 @@ namespace MeltPoolDG
     number      boiling_temperature            = 0.0;
     number      max_temperature                = 0.0;
     bool        do_print_l2norm                = true;
-    double      evaporation_flux_scale_factor  = 1.0;
 
     struct Liquid
     {
@@ -189,11 +188,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct EvaporationData
   {
-    number evaporative_mass_flux = 0.0;
-    number density_liquid        = 0.0;
-    number density_gas           = 0.0;
-    number ls_value_liquid       = 1.0;
-    number ls_value_gas          = -1.0;
+    number evaporative_mass_flux_scale_factor = 1.0;
+    number evaporative_mass_flux              = 0.0;
+    number density_liquid                     = 0.0;
+    number density_gas                        = 0.0;
+    number ls_value_liquid                    = 1.0;
+    number ls_value_gas                       = -1.0;
   };
 
   template <typename number = double>
@@ -721,9 +721,6 @@ namespace MeltPoolDG
         prm.add_parameter("mp temperature x to y ratio",
                           mp.temperature_x_to_y_ratio,
                           "This factor scales the analytical temperature field to be anisotropic.");
-        prm.add_parameter("mp evaporation flux scale factor",
-                          mp.evaporation_flux_scale_factor,
-                          "Scale factor for the evaporative flux");
         prm.add_parameter("mp melt pool center",
                           mp.melt_pool_center,
                           "Center coordinates of the melt pool ellipse/parabola. If no value is "
@@ -794,6 +791,9 @@ namespace MeltPoolDG
        */
       prm.enter_subsection("evaporation");
       {
+        prm.add_parameter("evapor evaporative mass flux scale factor",
+                          evapor.evaporative_mass_flux_scale_factor,
+                          "Scale factor for the evaporative flux");
         prm.add_parameter("evapor evaporative mass flux",
                           evapor.evaporative_mass_flux,
                           "Mass flux due to evaporation (SI unit in kg/m²s).");
