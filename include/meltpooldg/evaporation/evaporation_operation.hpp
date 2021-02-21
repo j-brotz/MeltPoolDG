@@ -225,6 +225,8 @@ namespace MeltPoolDG::Evaporation
                                      bool               zero_out)
     {
       evaporative_mass_flux.update_ghost_values();
+      normal_vector.update_ghost_values();
+
       scratch_data->get_matrix_free().template cell_loop<VectorType, VectorType>(
         [&](const auto &matrix_free,
             auto &      mass_balance_rhs,
@@ -242,12 +244,18 @@ namespace MeltPoolDG::Evaporation
             scratch_data->get_matrix_free(),
             ls_hanging_nodes_dof_idx, // @todo: generalize --> temp_dof_idx
             pressure_quad_idx);
+          FECellIntegrator<dim, dim, double> normal_vec(matrix_free,
+                                                        normal_dof_idx,
+                                                        pressure_quad_idx);
 
           for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
             {
               heaviside.reinit(cell);
               heaviside.read_dof_values_plain(level_set_as_heaviside);
               heaviside.evaluate(false, true);
+              normal_vec.reinit(cell);
+              normal_vec.read_dof_values_plain(normal_vector);
+              normal_vec.evaluate(true, false);
 
               mass_flux.reinit(cell);
 
@@ -257,9 +265,11 @@ namespace MeltPoolDG::Evaporation
 
               for (unsigned int q_index = 0; q_index < mass_flux.n_q_points; ++q_index)
                 {
+
                   mass_flux.submit_value((1. / evaporation_data.density_liquid -
                                           1. / evaporation_data.density_gas) *
-                                           heaviside.get_gradient(q_index).norm() *
+                                           MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index)) *
+                                           heaviside.get_gradient(q_index) *
                                            evap_flux.get_value(q_index),
                                          q_index);
                 }
@@ -271,16 +281,23 @@ namespace MeltPoolDG::Evaporation
         level_set_as_heaviside,
         zero_out);
       evaporative_mass_flux.zero_out_ghosts();
+      normal_vector.zero_out_ghosts();
     }
 
     /*
      * attach functions
      */
-    virtual void
+    void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
     {
       evaporation_velocity.update_ghost_values();
       vectors.push_back(&evaporation_velocity);
+    }
+
+    void
+    distribute_constraints()
+    {
+         scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
     }
 
     void
@@ -303,7 +320,6 @@ namespace MeltPoolDG::Evaporation
       /*
        *  evaporation mass flux
        */
-      std::cout << "output: " << evaporative_mass_flux.l2_norm() << std::endl;
       data_out.add_data_vector(scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
                                evaporative_mass_flux,
                                "evaporative_mass_flux");

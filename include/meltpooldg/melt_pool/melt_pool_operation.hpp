@@ -273,8 +273,6 @@ namespace MeltPoolDG
       {
         level_set_as_heaviside.update_ghost_values();
 
-        reinit();
-
         const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
 
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);

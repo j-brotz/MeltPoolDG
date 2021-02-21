@@ -116,8 +116,6 @@ namespace MeltPoolDG::HeatEquation
                                              level_set_value_is_gas);
           }
 
-      temperature.compress(VectorOperation::insert);
-
       scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
       level_set_as_heaviside.zero_out_ghosts();
     }
