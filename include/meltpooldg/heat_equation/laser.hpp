@@ -80,6 +80,9 @@ namespace MeltPoolDG::HeatEquation
         }
       else
         AssertThrow(false, ExcNotImplemented());
+
+      scratch_data.get_pcout() << "current laser position: " << laser_position << std::endl;
+      scratch_data.get_pcout() << "current laser intensity: " << laser_intensity << std::endl;
     }
 
     void
@@ -143,21 +146,8 @@ namespace MeltPoolDG::HeatEquation
       const double &v  = laser_data.scan_speed;
       const double &T0 = mp_data.ambient_temperature;
 
-      // heaviside=0 ... gas phase
-      // constant parameters within each phase
-      ////  In order to capture anisotropic temperature fields, a modification is introduced.
-      // const double indicator =
-      // UtilityFunctions::CharacteristicFunctions::heaviside(heaviside, 0.5);
-      // const double &absorptivity =
-      //(indicator == 1) ? mp_data.liquid.absorptivity : mp_data.gas.absorptivity;
-      // const double &conductivity =
-      //(indicator == 1) ? mp_data.liquid.conductivity : mp_data.gas.conductivity;
-      // const double &capacity =
-      //(indicator == 1) ? mp_data.liquid.capacity : mp_data.gas.capacity;
-      // const double density = density_liquid + (density_gas - density_liquid) * indicator;
-
       // variable parameters over phase boundaries
-      double weight = (level_set_value_is_gas == -1) ? heaviside : (1 - heaviside);
+      double weight = (level_set_value_is_gas == -1) ? heaviside : (1. - heaviside);
 
       const double absorptivity = mp_data.gas.absorptivity +
                                   weight * (mp_data.liquid.absorptivity - mp_data.gas.absorptivity);
@@ -177,7 +167,7 @@ namespace MeltPoolDG::HeatEquation
       if (R == 0.0)
         R = 1e-16;
       double T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
-                   std::exp(-v * (R) / (2. * thermal_diffusivity)) +
+                   std::exp(-v * R / (2. * thermal_diffusivity)) +
                  T0;
 
       return (T > mp_data.max_temperature) ? mp_data.max_temperature : T;
