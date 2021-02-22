@@ -314,14 +314,7 @@ namespace MeltPoolDG
                                               AffineConstraints<double> &flow_constraints)
       {
         solid.update_ghost_values();
-
-        const unsigned int dofs_per_cell = flow_dof_handler.get_fe().n_dofs_per_cell();
-        std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-        std::map<types::global_dof_index, Point<dim>> support_points;
-        DoFTools::map_dofs_to_support_points(scratch_data->get_mapping(),
-                                             flow_dof_handler,
-                                             support_points);
+        heat_operation->get_temperature().update_ghost_values();
 
         IndexSet flow_locally_relevant_dofs;
         DoFTools::extract_locally_relevant_dofs(flow_dof_handler, flow_locally_relevant_dofs);
@@ -330,20 +323,47 @@ namespace MeltPoolDG
         solid_constraints.reinit(flow_locally_relevant_dofs);
         DoFTools::make_hanging_node_constraints(flow_dof_handler, solid_constraints);
 
+        FEValues<dim> flow_eval(scratch_data->get_mapping(),
+                                flow_dof_handler.get_fe(),
+                                Quadrature<dim>(
+                                  flow_dof_handler.get_fe().get_unit_support_points()),
+                                update_quadrature_points);
+
+        FEValues<dim> temp_eval(scratch_data->get_mapping(),
+                                scratch_data->get_dof_handler(temp_dof_idx).get_fe(),
+                                Quadrature<dim>(
+                                  flow_dof_handler.get_fe().get_unit_support_points()),
+                                update_values);
+
+        const unsigned int  n_q_points = flow_eval.get_quadrature().size();
+        std::vector<double> temp_at_q(n_q_points);
+
+        typename DoFHandler<dim>::active_cell_iterator temp_cell =
+          scratch_data->get_dof_handler(temp_dof_idx).begin_active();
+
+        const unsigned int dofs_per_cell = flow_dof_handler.get_fe().n_dofs_per_cell();
+        std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
         for (const auto &cell : flow_dof_handler.active_cell_iterators())
-          if (cell->is_locally_owned())
-            {
-              cell->get_dof_indices(local_dof_indices);
+          {
+            if (cell->is_locally_owned())
+              {
+                cell->get_dof_indices(local_dof_indices);
+                flow_eval.reinit(cell);
+                temp_eval.reinit(temp_cell);
 
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                if (is_solid_region(support_points[local_dof_indices[i]],
-                                    heat_operation->get_temperature()[local_dof_indices[i]]))
-                  solid_constraints.add_line(local_dof_indices[i]);
-            }
+                temp_eval.get_function_values(heat_operation->get_temperature(), temp_at_q);
 
+                for (const auto q : flow_eval.quadrature_point_indices())
+                  if (is_solid_region(flow_eval.quadrature_point(q), temp_at_q[q]))
+                    solid_constraints.add_line(local_dof_indices[q]);
+              }
+            ++temp_cell;
+          }
         solid_constraints.close();
         flow_constraints.merge(solid_constraints,
                                AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
+        heat_operation->get_temperature().zero_out_ghosts();
         solid.zero_out_ghosts();
       }
 
