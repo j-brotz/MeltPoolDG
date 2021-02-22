@@ -140,7 +140,7 @@ namespace MeltPoolDG
     std::string center                             = "0,0,0";
     bool        do_move                            = false;
     number      scan_speed                         = 0.0;
-    std::string analytical_temperature_formulation = "analytical";
+    bool        variable_properties_over_interface = true;
   };
 
   template <typename number = double>
@@ -689,6 +689,10 @@ namespace MeltPoolDG
                           laser.scan_speed,
                           "Scan speed of the laser (in case of an analytical temperature field).");
         prm.add_parameter(
+          "laser variable properties over interface",
+          laser.variable_properties_over_interface,
+          "Set this parameter to true to interpolate the thermal properties over the interface smoothly.");
+        prm.add_parameter(
           "laser do move",
           laser.do_move,
           "Set this parameter to true to move the laser in x-direction with the given parameter scan speed "
@@ -713,11 +717,11 @@ namespace MeltPoolDG
        */
       prm.enter_subsection("melt pool");
       {
-        prm.add_parameter(
-          "mp temperature formulation",
-          mp.temperature_formulation,
-          "Definition type of the temperature field: "
-          "(1) analytical expression (2) solve heat equation (not implemented yet)");
+        prm.add_parameter("mp temperature formulation",
+                          mp.temperature_formulation,
+                          "Definition type of the temperature field: "
+                          "(1) analytical expression (2) solve heat equation (not implemented yet)",
+                          Patterns::Selection("analytical"));
         prm.add_parameter("mp temperature x to y ratio",
                           mp.temperature_x_to_y_ratio,
                           "This factor scales the analytical temperature field to be anisotropic.");
