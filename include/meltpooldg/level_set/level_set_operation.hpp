@@ -37,6 +37,46 @@ namespace MeltPoolDG
       using VectorType      = LinearAlgebra::distributed::Vector<double>;
       using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
+      std::shared_ptr<const ScratchData<dim>> scratch_data;
+      /*
+       *  The following objects are the operations, which are performed for solving the
+       *  level set equation.
+       */
+      std::shared_ptr<AdvectionDiffusion::AdvectionDiffusionOperationBase<dim>>
+                                                                            advec_diff_operation;
+      std::shared_ptr<Reinitialization::ReinitializationOperationBase<dim>> reinit_operation;
+      std::shared_ptr<Curvature::CurvatureOperationBase<dim>>               curvature_operation;
+      /*
+       *  The reinitialization of the level set function is a "pseudo"-time-dependent
+       *  equation, which is solved up to quasi-steady state. Thus a time iterator is
+       *  needed.
+       */
+      TimeIterator<double> reinit_time_iterator;
+      /*
+       *  All the necessary parameters are stored in this vector.
+       */
+      LevelSetData<double> level_set_data;
+      /*
+       * select the relevant DoFHandler
+       */
+      unsigned int ls_dof_idx;
+      unsigned int ls_hanging_nodes_dof_idx;
+      unsigned int ls_quad_idx;
+      unsigned int curv_dof_idx;
+      unsigned int normal_dof_idx;
+
+      double reinit_constant_epsilon     = 0; //@todo: better solution
+      double reinit_scale_factor_epsilon = 0; //@todo: better solution
+
+      /*
+       *    This is the surface_tension vector calculated after level set and reinitialization
+       * update
+       */
+      VectorType level_set_as_heaviside;
+      VectorType distance_to_level_set;
+
+      std::shared_ptr<LevelSetOperatorWithPhaseChange<dim>> level_set_with_phase_change;
+
     public:
       LevelSetOperation() = default;
 
@@ -272,29 +312,6 @@ namespace MeltPoolDG
       }
 
       void
-      do_reinitialization()
-      {
-        if (level_set_data.do_reinitialization)
-          {
-            reinit_operation->update_initial_solution(advec_diff_operation->get_advected_field());
-
-            while (!reinit_time_iterator.is_finished())
-              {
-                const double d_tau = reinit_time_iterator.get_next_time_increment();
-                scratch_data->get_pcout() << std::setw(4) << ""
-                                          << "| reini: τ= " << std::setw(10) << std::left
-                                          << reinit_time_iterator.get_current_time();
-                reinit_operation->solve(d_tau);
-                /*
-                 *  reset the solution of the level set field to the reinitialized solution
-                 */
-                advec_diff_operation->get_advected_field() = reinit_operation->get_level_set();
-              }
-            reinit_time_iterator.reset();
-          }
-      }
-
-      void
       solve(const double dt, const VectorType &advection_velocity)
       {
         /*
@@ -320,6 +337,127 @@ namespace MeltPoolDG
           correct_curvature_values();
       }
 
+      /*
+       *  getter functions for solution vectors
+       */
+      const LinearAlgebra::distributed::Vector<double> &
+      get_curvature() const
+      {
+        return curvature_operation->get_curvature();
+      }
+
+      LinearAlgebra::distributed::Vector<double> &
+      get_curvature()
+      {
+        return curvature_operation->get_curvature();
+      }
+
+      const LinearAlgebra::distributed::BlockVector<double> &
+      get_normal_vector() const
+      {
+        if (level_set_data.do_reinitialization)
+          return reinit_operation->get_normal_vector();
+        else
+          return curvature_operation->get_normal_vector();
+      }
+
+      const LinearAlgebra::distributed::Vector<double> &
+      get_level_set() const
+      {
+        return advec_diff_operation->get_advected_field();
+      }
+
+      LinearAlgebra::distributed::Vector<double> &
+      get_level_set()
+      {
+        return advec_diff_operation->get_advected_field();
+      }
+
+      const LinearAlgebra::distributed::Vector<double> &
+      get_level_set_as_heaviside() const
+      {
+        return level_set_as_heaviside;
+      }
+
+      LinearAlgebra::distributed::Vector<double> &
+      get_level_set_as_heaviside()
+      {
+        return level_set_as_heaviside;
+      }
+
+      const LinearAlgebra::distributed::Vector<double> &
+      get_distance_to_level_set() const
+      {
+        return distance_to_level_set;
+      }
+      /**
+       * register vectors for adaptive mesh refinement
+       */
+      virtual void
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+      {
+        advec_diff_operation->attach_vectors(vectors);
+        level_set_as_heaviside.update_ghost_values();
+        vectors.push_back(&level_set_as_heaviside);
+      }
+
+      void
+      attach_output_vectors(DataOut<dim> &data_out) const
+      {
+        MeltPoolDG::VectorTools::update_ghost_values(get_level_set(),
+                                                     get_curvature(),
+                                                     get_normal_vector(),
+                                                     level_set_as_heaviside,
+                                                     distance_to_level_set);
+        /*
+         *  output advected field
+         */
+        data_out.attach_dof_handler(scratch_data->get_dof_handler(ls_dof_idx));
+        data_out.add_data_vector(get_level_set(), "level_set");
+
+        /*
+         *  output normal vector field
+         */
+        for (unsigned int d = 0; d < dim; ++d)
+          data_out.add_data_vector(get_normal_vector().block(d), "normal_" + std::to_string(d));
+        /*
+         *  output curvature
+         */
+        data_out.add_data_vector(get_curvature(), "curvature");
+        /*
+         *  output heaviside
+         */
+        data_out.add_data_vector(level_set_as_heaviside, "heaviside");
+        /*
+         *  output distance function
+         */
+        data_out.add_data_vector(distance_to_level_set, "distance");
+      }
+
+    private:
+      void
+      do_reinitialization()
+      {
+        if (level_set_data.do_reinitialization)
+          {
+            reinit_operation->update_initial_solution(advec_diff_operation->get_advected_field());
+
+            while (!reinit_time_iterator.is_finished())
+              {
+                const double d_tau = reinit_time_iterator.get_next_time_increment();
+                scratch_data->get_pcout() << std::setw(4) << ""
+                                          << "| reini: τ= " << std::setw(10) << std::left
+                                          << reinit_time_iterator.get_current_time();
+                reinit_operation->solve(d_tau);
+                /*
+                 *  reset the solution of the level set field to the reinitialized solution
+                 */
+                advec_diff_operation->get_advected_field() = reinit_operation->get_level_set();
+              }
+            reinit_time_iterator.reset();
+          }
+      }
+
       void
       advect_level_set(const double dt, const VectorType &advection_velocity)
       {
@@ -330,64 +468,6 @@ namespace MeltPoolDG
           advec_diff_operation->solve(dt, advection_velocity);
       }
 
-      void
-      compute_surface_tension(VectorType &       force_rhs,
-                              const double       surface_tension_coefficient,
-                              const unsigned int flow_vel_dof_idx,
-                              const unsigned int flow_quad_idx,
-                              const bool         zero_out = true)
-      {
-        curvature_operation->get_curvature().update_ghost_values();
-
-        scratch_data->get_matrix_free().template cell_loop<VectorType, VectorType>(
-          [&](const auto &matrix_free,
-              auto &      force_rhs,
-              const auto &level_set_as_heaviside,
-              auto        macro_cells) {
-            FECellIntegrator<dim, 1, double> level_set(matrix_free, ls_dof_idx, flow_quad_idx);
-
-            FECellIntegrator<dim, 1, double> curvature(matrix_free, curv_dof_idx, flow_quad_idx);
-
-            FECellIntegrator<dim, dim, double> surface_tension(matrix_free,
-                                                               flow_vel_dof_idx,
-                                                               flow_quad_idx);
-
-            for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
-              {
-                level_set.reinit(cell);
-                level_set.read_dof_values_plain(level_set_as_heaviside);
-                level_set.evaluate(false, true);
-
-                surface_tension.reinit(cell);
-
-                curvature.reinit(cell);
-                curvature.read_dof_values_plain(curvature_operation->get_curvature());
-                curvature.evaluate(true, false);
-
-                for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
-                  {
-                    surface_tension.submit_value(
-                      surface_tension_coefficient *
-                        level_set.get_gradient(
-                          q_index) * // must be adopted --> level set be between zero and 1
-                        curvature.get_value(q_index),
-                      q_index);
-                  }
-                surface_tension.integrate_scatter(true, false, force_rhs);
-              }
-          },
-          force_rhs,
-          level_set_as_heaviside,
-          zero_out);
-
-        curvature_operation->get_curvature().zero_out_ghosts();
-      }
-      /*
-       *  getter functions for solution vectors
-       */
-      // @ todo
-
-    private:
       inline double
       approximate_distance_from_level_set(const double phi, const double eps, const double cutoff)
       {
@@ -526,140 +606,6 @@ namespace MeltPoolDG
         reinit_constant_epsilon     = data_in.reinit.constant_epsilon;     //@todo: better solution
         reinit_scale_factor_epsilon = data_in.reinit.scale_factor_epsilon; //@todo: better solution
       }
-
-      std::shared_ptr<const ScratchData<dim>> scratch_data;
-      /*
-       *  The following objects are the operations, which are performed for solving the
-       *  level set equation.
-       */
-      std::shared_ptr<AdvectionDiffusion::AdvectionDiffusionOperationBase<dim>>
-                                                                            advec_diff_operation;
-      std::shared_ptr<Reinitialization::ReinitializationOperationBase<dim>> reinit_operation;
-      std::shared_ptr<Curvature::CurvatureOperationBase<dim>>               curvature_operation;
-      /*
-       *  The reinitialization of the level set function is a "pseudo"-time-dependent
-       *  equation, which is solved up to quasi-steady state. Thus a time iterator is
-       *  needed.
-       */
-      TimeIterator<double> reinit_time_iterator;
-      /*
-       *  All the necessary parameters are stored in this vector.
-       */
-      LevelSetData<double> level_set_data;
-      /*
-       * select the relevant DoFHandler
-       */
-      unsigned int ls_dof_idx;
-      unsigned int ls_hanging_nodes_dof_idx;
-      unsigned int ls_quad_idx;
-      unsigned int curv_dof_idx;
-      unsigned int normal_dof_idx;
-
-      double reinit_constant_epsilon     = 0; //@todo: better solution
-      double reinit_scale_factor_epsilon = 0; //@todo: better solution
-
-    public:
-      const LinearAlgebra::distributed::Vector<double> &
-      get_curvature() const
-      {
-        return curvature_operation->get_curvature();
-      }
-
-      LinearAlgebra::distributed::Vector<double> &
-      get_curvature()
-      {
-        return curvature_operation->get_curvature();
-      }
-
-      const LinearAlgebra::distributed::BlockVector<double> &
-      get_normal_vector() const
-      {
-        if (level_set_data.do_reinitialization)
-          return reinit_operation->get_normal_vector();
-        else
-          return curvature_operation->get_normal_vector();
-      }
-
-      const LinearAlgebra::distributed::Vector<double> &
-      get_level_set() const
-      {
-        return advec_diff_operation->get_advected_field();
-      }
-
-      LinearAlgebra::distributed::Vector<double> &
-      get_level_set()
-      {
-        return advec_diff_operation->get_advected_field();
-      }
-
-      const LinearAlgebra::distributed::Vector<double> &
-      get_level_set_as_heaviside() const
-      {
-        return level_set_as_heaviside;
-      }
-
-      LinearAlgebra::distributed::Vector<double> &
-      get_level_set_as_heaviside()
-      {
-        return level_set_as_heaviside;
-      }
-
-      const LinearAlgebra::distributed::Vector<double> &
-      get_distance_to_level_set() const
-      {
-        return distance_to_level_set;
-      }
-      /**
-       * register vectors for adaptive mesh refinement
-       */
-      virtual void
-      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
-      {
-        advec_diff_operation->attach_vectors(vectors);
-        level_set_as_heaviside.update_ghost_values();
-        vectors.push_back(&level_set_as_heaviside);
-      }
-
-      void
-      attach_output_vectors(DataOut<dim> &data_out) const
-      {
-        MeltPoolDG::VectorTools::update_ghost_values(get_level_set(),
-                                                     get_curvature(),
-                                                     get_normal_vector(),
-                                                     level_set_as_heaviside,
-                                                     distance_to_level_set);
-        /*
-         *  output advected field
-         */
-        data_out.attach_dof_handler(scratch_data->get_dof_handler(ls_dof_idx));
-        data_out.add_data_vector(get_level_set(), "level_set");
-
-        /*
-         *  output normal vector field
-         */
-        for (unsigned int d = 0; d < dim; ++d)
-          data_out.add_data_vector(get_normal_vector().block(d), "normal_" + std::to_string(d));
-        /*
-         *  output curvature
-         */
-        data_out.add_data_vector(get_curvature(), "curvature");
-        /*
-         *  output heaviside
-         */
-        data_out.add_data_vector(level_set_as_heaviside, "heaviside");
-        /*
-         *  output distance function
-         */
-        data_out.add_data_vector(distance_to_level_set, "distance");
-      }
-      /*
-       *    This is the surface_tension vector calculated after level set and reinitialization
-       * update
-       */
-      VectorType level_set_as_heaviside;
-      VectorType distance_to_level_set;
-
-      std::shared_ptr<LevelSetOperatorWithPhaseChange<dim>> level_set_with_phase_change;
     };
   } // namespace LevelSet
 } // namespace MeltPoolDG
