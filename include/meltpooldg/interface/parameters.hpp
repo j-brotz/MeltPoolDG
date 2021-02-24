@@ -141,7 +141,7 @@ namespace MeltPoolDG
     std::string center                             = "0,0,0";
     bool        do_move                            = false;
     number      scan_speed                         = 0.0;
-    bool        variable_properties_over_interface = true;
+    bool        variable_properties_over_interface = false;
   };
 
   template <typename number = double>
