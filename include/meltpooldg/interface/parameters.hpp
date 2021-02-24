@@ -60,7 +60,6 @@ namespace MeltPoolDG
     number      end_time                = 1.0;
     number      time_step_size          = 0.01;
     bool        enable_CFL_condition    = false;
-    bool        do_print_l2norm         = false;
     bool        do_curvature_correction = false;
     bool        do_matrix_free          = false;
     std::string implementation          = "meltpooldg";
@@ -74,7 +73,6 @@ namespace MeltPoolDG
     number             scale_factor_epsilon = 0.5;
     number             dtau                 = -1.0;
     std::string        modeltype            = "olsson2007";
-    bool               do_print_l2norm      = false;
     SolverData<number> solver;
     std::string        implementation = "meltpooldg";
   };
@@ -89,7 +87,6 @@ namespace MeltPoolDG
     number       time_step_size          = 0.01;
     unsigned int max_n_steps             = 1000000;
     bool         do_matrix_free          = false;
-    bool         do_print_l2norm         = true;
     std::string  implementation          = "meltpooldg";
   };
 
@@ -118,7 +115,6 @@ namespace MeltPoolDG
   {
     number      damping_scale_factor = 0.5;
     bool        do_matrix_free       = false;
-    bool        do_print_l2norm      = true;
     std::string implementation       = "meltpooldg";
   };
 
@@ -127,7 +123,6 @@ namespace MeltPoolDG
   {
     number      damping_scale_factor = 0.0;
     bool        do_matrix_free       = false;
-    bool        do_print_l2norm      = true;
     std::string implementation       = "meltpooldg";
   };
 
@@ -166,7 +161,6 @@ namespace MeltPoolDG
     number      domain_y_max                   = 0.0;
     number      boiling_temperature            = 0.0;
     number      max_temperature                = 0.0;
-    bool        do_print_l2norm                = true;
 
     struct Liquid
     {
@@ -450,9 +444,6 @@ namespace MeltPoolDG
           "advec diff do matrix free",
           advec_diff.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
-        prm.add_parameter("advec diff do print l2norm",
-                          advec_diff.do_print_l2norm,
-                          "Defines if the l2norm of the advected field should be printed).");
         prm.add_parameter(
           "advec diff implementation",
           advec_diff.implementation,
@@ -497,9 +488,6 @@ namespace MeltPoolDG
                           ls.enable_CFL_condition,
                           "Enables to dynamically adapt the time step to meet the CFL condition"
                           " in case of explicit time integration.");
-        prm.add_parameter("ls do print l2norm",
-                          ls.do_print_l2norm,
-                          "Defines if the l2norm of the levelset result should be printed)");
         prm.add_parameter(
           "ls do matrix free",
           ls.do_matrix_free,
@@ -545,10 +533,6 @@ namespace MeltPoolDG
                           reinit.modeltype,
                           "Sets the type of reinitialization model that should be used.");
         prm.add_parameter(
-          "reinit do print l2norm",
-          reinit.do_print_l2norm,
-          "Defines if the l2norm of the reinitialization result should be printed)");
-        prm.add_parameter(
           "reinit do matrix free",
           reinit.solver.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
@@ -589,9 +573,6 @@ namespace MeltPoolDG
           "normal vec do matrix free",
           normal_vec.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
-        prm.add_parameter("normal vec do print l2norm",
-                          normal_vec.do_print_l2norm,
-                          "Defines if the l2norm of the normal vector result should be printed)");
         prm.add_parameter("normal vec implementation",
                           normal_vec.implementation,
                           "Choose the corresponding implementation of the normal vector operation.",
@@ -610,9 +591,6 @@ namespace MeltPoolDG
           "curv do matrix free",
           curv.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
-        prm.add_parameter("curv do print l2norm",
-                          curv.do_print_l2norm,
-                          "Defines if the l2norm of the curvature result should be printed)");
         prm.add_parameter("curv implementation",
                           curv.implementation,
                           "Choose the corresponding implementation of the curvature operation.",

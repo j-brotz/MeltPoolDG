@@ -124,13 +124,10 @@ namespace MeltPoolDG
         solution_advected_field = src;
         solution_advected_field.update_ghost_values();
 
-        if (this->advec_diff_data.do_print_l2norm)
-          {
-            const ConditionalOStream &pcout = scratch_data->get_pcout();
-            pcout << "| GMRES: i=" << std::setw(5) << std::left << iter;
-            pcout << "\t |ϕ|2 = " << std::setw(15) << std::left << std::setprecision(10)
-                  << solution_advected_field.l2_norm() << std::endl;
-          }
+        const ConditionalOStream &pcout = scratch_data->get_pcout();
+        pcout << "| GMRES: i=" << std::setw(5) << std::left << iter;
+        pcout << "\t |ϕ|2 = " << std::setw(15) << std::left << std::setprecision(10)
+              << solution_advected_field.l2_norm() << std::endl;
 
         advection_velocity.zero_out_ghosts();
       }
