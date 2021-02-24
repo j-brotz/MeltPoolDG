@@ -433,8 +433,6 @@ namespace MeltPoolDG
          */
         data_out.add_data_vector(distance_to_level_set, "distance");
       }
-
-    private:
       void
       do_reinitialization()
       {
@@ -458,6 +456,7 @@ namespace MeltPoolDG
           }
       }
 
+    private:
       void
       advect_level_set(const double dt, const VectorType &advection_velocity)
       {
@@ -509,16 +508,11 @@ namespace MeltPoolDG
       }
 
 
-
       void
       transform_level_set_to_smooth_heaviside()
       {
         scratch_data->initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
         scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
-        FEValues<dim> fe_values(scratch_data->get_mapping(),
-                                scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).get_fe(),
-                                scratch_data->get_quadrature(ls_quad_idx),
-                                update_values | update_quadrature_points | update_JxW_values);
 
         const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell();
 

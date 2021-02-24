@@ -29,7 +29,10 @@ namespace MeltPoolDG::HeatEquation
      *  Center of the laser
      */
     Point<dim> laser_position;
-    double     current_time;
+    /*
+     *  Current time
+     */
+    double current_time;
     /*
      *  Current intensity of the laser
      */
@@ -47,39 +50,21 @@ namespace MeltPoolDG::HeatEquation
     set_initial_condition(const double start_time)
     {
       current_time = start_time;
+      compute_laser_intensity();
+      scratch_data.get_pcout() << "current laser position: " << laser_position << std::endl;
+      scratch_data.get_pcout() << "current laser intensity: " << laser_intensity << std::endl;
     }
 
     void
     move_laser(const double dt)
     {
+      // 0) update current time
       current_time += dt;
       // 1) compute the current center of the laser beam
       if (laser_data.do_move)
         laser_position[0] += laser_data.scan_speed * dt;
-
-      // 2) update intensity
-      if (laser_data.power_over_time == "ramp")
-        {
-          AssertThrow(
-            laser_data.power_end_time > laser_data.power_start_time,
-            ExcMessage(
-              "For the temporal ramp distribution of the laser power,"
-              " the parameter laser power end time must be larger than laser power start time."));
-          laser_intensity = (current_time - laser_data.power_start_time) /
-                            (laser_data.power_end_time - laser_data.power_start_time);
-          laser_intensity = std::min(std::max(0.0, laser_intensity), 1.0);
-        }
-      else if (laser_data.power_over_time == "constant")
-        {
-          if (current_time >= laser_data.power_end_time)
-            {
-              laser_intensity = 0.0;
-            }
-          else
-            laser_intensity = 1.0;
-        }
-      else
-        AssertThrow(false, ExcNotImplemented());
+      // 2) update intensity of the laser
+      compute_laser_intensity();
 
       scratch_data.get_pcout() << "current laser position: " << laser_position << std::endl;
       scratch_data.get_pcout() << "current laser intensity: " << laser_intensity << std::endl;
@@ -95,6 +80,7 @@ namespace MeltPoolDG::HeatEquation
                                          const double                level_set_value_is_gas = -1.0)
     {
       level_set_as_heaviside.update_ghost_values();
+      scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
 
       const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(temp_dof_idx);
 
@@ -119,6 +105,7 @@ namespace MeltPoolDG::HeatEquation
                                              level_set_value_is_gas);
           }
 
+      temperature.compress(VectorOperation::insert);
       scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
       level_set_as_heaviside.zero_out_ghosts();
     }
@@ -130,6 +117,32 @@ namespace MeltPoolDG::HeatEquation
     }
 
   private:
+    void
+    compute_laser_intensity()
+    {
+      if (laser_data.power_over_time == "ramp")
+        {
+          AssertThrow(
+            laser_data.power_end_time > laser_data.power_start_time,
+            ExcMessage(
+              "For the temporal ramp distribution of the laser power,"
+              " the parameter laser power end time must be larger than laser power start time."));
+          laser_intensity = (current_time - laser_data.power_start_time) /
+                            (laser_data.power_end_time - laser_data.power_start_time);
+          laser_intensity = std::min(std::max(0.0, laser_intensity), 1.0);
+        }
+      else if (laser_data.power_over_time == "constant")
+        {
+          if (current_time >= laser_data.power_end_time)
+            {
+              laser_intensity = 0.0;
+            }
+          else
+            laser_intensity = 1.0;
+        }
+      else
+        AssertThrow(false, ExcNotImplemented());
+    }
     // The temperature function below is derived from the publication on
     // "Heat Source Modeling in Selective Laser Melting" by E. Mirkoohi, D. E. Seivers,
     //  H. Garmestani and S. Y. Liang
@@ -142,20 +155,57 @@ namespace MeltPoolDG::HeatEquation
                                  const double &                 density_liquid,
                                  [[maybe_unused]] const double &level_set_value_is_gas)
     {
-      const double  P  = laser_data.power * laser_intensity;
+      // const double  P  = laser_data.power * laser_intensity;
+      // const double &v  = laser_data.scan_speed;
+      // const double &T0 = mp_data.ambient_temperature;
+
+      //// variable parameters over phase boundaries
+      // double weight;
+      // if (laser_data.variable_properties_over_interface)
+      // weight = (level_set_value_is_gas == -1) ? heaviside : (1. - heaviside);
+      // else
+      //{
+      // double sharp_heaviside = ( heaviside > 0.5 ) ? 1.0 : 0.0;
+      // weight = (level_set_value_is_gas == -1) ? sharp_heaviside : (1. - sharp_heaviside);
+      //}
+
+      // const double absorptivity = mp_data.gas.absorptivity +
+      // weight * (mp_data.liquid.absorptivity - mp_data.gas.absorptivity);
+      // const double conductivity = mp_data.gas.conductivity +
+      // weight * (mp_data.liquid.conductivity - mp_data.gas.conductivity);
+      // const double capacity =
+      // mp_data.gas.capacity + weight * (mp_data.liquid.capacity - mp_data.gas.capacity);
+
+      // const double density             = density_gas + weight * (density_liquid - density_gas);
+      // const double thermal_diffusivity = conductivity / (density * capacity);
+
+      //// modify temperature profile to be anisotropic
+      // for (int d = 0; d < dim - 1; d++)
+      // point[d] *= mp_data.temperature_x_to_y_ratio;
+
+      // double R = point.distance(laser_position);
+
+      // if (R == 0.0)
+      // R = 1e-16;
+      // double T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
+      // std::exp(-v * R / (2. * thermal_diffusivity)) +
+      // T0;
+
+      // return (T > mp_data.max_temperature) ? mp_data.max_temperature : T;
+
+      // old formulation
+      const double indicator = UtilityFunctions::CharacteristicFunctions::heaviside(heaviside, 0.5);
+      const double &P        = laser_data.power * laser_intensity;
+
       const double &v  = laser_data.scan_speed;
       const double &T0 = mp_data.ambient_temperature;
+      const double &absorptivity =
+        (indicator == 1) ? mp_data.liquid.absorptivity : mp_data.gas.absorptivity;
+      const double &conductivity =
+        (indicator == 1) ? mp_data.liquid.conductivity : mp_data.gas.conductivity;
+      const double &capacity = (indicator == 1) ? mp_data.liquid.capacity : mp_data.gas.capacity;
+      const double  density  = density_gas + (density_liquid - density_gas) * indicator;
 
-      // variable parameters over phase boundaries
-      double weight = (level_set_value_is_gas == -1) ? heaviside : (1. - heaviside);
-
-      const double absorptivity = mp_data.gas.absorptivity +
-                                  weight * (mp_data.liquid.absorptivity - mp_data.gas.absorptivity);
-      const double conductivity = mp_data.gas.conductivity +
-                                  weight * (mp_data.liquid.conductivity - mp_data.gas.conductivity);
-      const double capacity =
-        mp_data.gas.capacity + weight * (mp_data.liquid.capacity - mp_data.gas.capacity);
-      const double density             = density_gas + weight * (density_liquid - density_gas);
       const double thermal_diffusivity = conductivity / (density * capacity);
 
       // modify temperature profile to be anisotropic
@@ -167,9 +217,8 @@ namespace MeltPoolDG::HeatEquation
       if (R == 0.0)
         R = 1e-16;
       double T = P * absorptivity / (4 * numbers::PI * R * conductivity) *
-                   std::exp(-v * R / (2. * thermal_diffusivity)) +
+                   std::exp(-v * (R) / (2. * thermal_diffusivity)) +
                  T0;
-
       return (T > mp_data.max_temperature) ? mp_data.max_temperature : T;
     }
   };

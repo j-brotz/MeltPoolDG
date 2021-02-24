@@ -85,11 +85,11 @@ namespace MeltPoolDG::Flow
 
           level_set_operation.solve(dt, flow_operation->get_velocity());
 
-          // update
-          update_phases(level_set_operation.level_set_as_heaviside, base_in->parameters);
+          // update the two phases
+          update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
 
           // accumulate forces: a) gravity force
-          compute_gravity_force(vel_force_rhs, base_in->parameters.base.gravity);
+          compute_gravity_force(vel_force_rhs, base_in->parameters.base.gravity, true);
 
           // ... b) surface tension
           if (base_in->parameters.flow.temperature_dependent_surface_tension_coefficient == 0.0)
@@ -101,14 +101,13 @@ namespace MeltPoolDG::Flow
               base_in->parameters.flow.surface_tension_coefficient,
               ls_dof_idx,
               curv_dof_idx,
-              flow_operation->get_dof_handler_idx_velocity(),
+              // flow_operation->get_dof_handler_idx_velocity(),
+              flow_operation->get_dof_handler_idx_hanging_nodes_velocity(),
               flow_operation->get_quad_idx_velocity(),
-              false);
+              false /* false means not to zero out the vorce vector */);
 
           if (evaporation_operation)
             {
-              level_set_operation.update_normal_vector();
-              // @todo: why needed?
               scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
               evaporation_operation->compute_mass_balance_source_term(
                 mass_balance_rhs,
@@ -252,6 +251,26 @@ namespace MeltPoolDG::Flow
           "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
           "  this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), 'level_set') "));
 
+      /*
+       *    initialize the melt pool operation class
+       */
+      if (base_in->parameters.base.problem_name == "melt_pool" ||
+          base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
+        melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
+          scratch_data,
+          base_in->parameters,
+          ls_dof_idx,
+          reinit_dof_idx,
+          flow_operation->get_dof_handler_idx_velocity(),
+          flow_operation->get_quad_idx_velocity(),
+          temp_dof_idx,
+          temp_quad_idx,
+          base_in->parameters.flow.start_time,
+          evaporation_operation == nullptr);
+
+      /*
+       *    compute intial conditions of the level set
+       */
       VectorType initial_solution;
       scratch_data->initialize_dof_vector(initial_solution, ls_dof_idx);
 
@@ -301,29 +320,21 @@ namespace MeltPoolDG::Flow
             flow_operation->get_velocity(),
             evaporation_operation->get_velocity());
         }
-      /*
-       *    initialize the melt pool operation class
-       */
-      if (base_in->parameters.base.problem_name == "melt_pool" ||
-          base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
-        melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
-          scratch_data,
-          base_in->parameters,
-          ls_dof_idx,
-          reinit_dof_idx,
-          flow_operation->get_dof_handler_idx_velocity(),
-          flow_operation->get_quad_idx_velocity(),
-          temp_dof_idx,
-          temp_quad_idx,
-          base_in->parameters.flow.start_time,
-          evaporation_operation == nullptr);
 
       /*
        * set initial condition of the melt pool class
        */
       if (melt_pool_operation)
         {
-          melt_pool_operation->set_initial_condition(level_set_operation.level_set_as_heaviside);
+          const double density_gas = base_in->parameters.flow.density;
+          const double density_liquid =
+            base_in->parameters.flow.density + base_in->parameters.flow.density_difference;
+
+          melt_pool_operation->set_initial_condition(
+            level_set_operation.get_level_set_as_heaviside(),
+            level_set_operation.get_level_set(),
+            density_gas,
+            density_liquid);
         }
       /*
        *  initialize postprocessor
@@ -407,12 +418,11 @@ namespace MeltPoolDG::Flow
           for (const auto &bc : base_in->get_dirichlet_bc(
                  "level_set")) // @todo: add name of bc at a more central place
             {
-              dealii::VectorTools::interpolate_boundary_values(
-                scratch_data->get_mapping(),
-                dof_handler,
-                bc.first, //@todo: function map can be provided as argument directly
-                *bc.second,
-                ls_constraints_dirichlet);
+              dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
+                                                               dof_handler,
+                                                               bc.first,
+                                                               *bc.second,
+                                                               ls_constraints_dirichlet);
             }
         }
       ls_constraints_dirichlet.close();
@@ -428,12 +438,11 @@ namespace MeltPoolDG::Flow
           for (const auto &bc : base_in->get_dirichlet_bc(
                  "reinitialization")) // @todo: add name of bc at a more central place
             {
-              dealii::VectorTools::interpolate_boundary_values(
-                scratch_data->get_mapping(),
-                dof_handler,
-                bc.first, //@todo: function map can be provided as argument directly
-                *bc.second,
-                reinit_constraints_dirichlet);
+              dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
+                                                               dof_handler,
+                                                               bc.first,
+                                                               *bc.second,
+                                                               reinit_constraints_dirichlet);
             }
         }
       reinit_constraints_dirichlet.close();
@@ -482,14 +491,16 @@ namespace MeltPoolDG::Flow
      * Update material parameter of the phases.
      *
      * @todo Find a better place.
+     *
+     * @todo: generalize for level set value gas is 1.0
      */
     void
     update_phases(const VectorType &src, const Parameters<double> &parameters) const
     {
       double dummy;
 
-      double volume;
-      double mass;
+      double mass = 0.0;
+
 
       scratch_data->get_matrix_free().template cell_loop<double, VectorType>(
         [&](const auto &matrix_free, auto &, const auto &src, auto macro_cells) {
@@ -505,9 +516,11 @@ namespace MeltPoolDG::Flow
 
               for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
                 {
-                  // convert level-set value to heaviside function
-                  const auto indicator = UtilityFunctions::heaviside(ls_values.get_value(q), 0.5);
-                  //// set density
+                  const auto indicator = parameters.flow.variable_properties_over_interface ?
+                                           ls_values.get_value(q) :
+                                           UtilityFunctions::heaviside(ls_values.get_value(q), 0.5);
+
+                  // set density
                   flow_operation->get_density(cell, q) =
                     parameters.flow.density + parameters.flow.density_difference * indicator;
 
@@ -515,45 +528,54 @@ namespace MeltPoolDG::Flow
                   flow_operation->get_viscosity(cell, q) =
                     parameters.flow.viscosity + parameters.flow.viscosity_difference * indicator;
 
-                  //@todo --> variable densities over interface thickness
+                  //@todo --> variable densities over interface thickness consistent with evaporation
                   // const double& rho_g = parameters.evapor.density_gas;
                   // const double& rho_l = parameters.evapor.density_liquid;
                   // flow_operation->get_density(cell, q) = rho_g/(1. +
                   // (rho_g/rho_l-1)*ls_values.get_value(q) );
 
                   // check if no spurious densities or viscosities are computed
-                  // for (auto dens : flow_operation->get_density(cell, q))
-                  // if (!((dens == parameters.flow.density) ||
-                  //(dens == parameters.flow.density_difference + parameters.flow.density)))
-                  // std::cout << "WARNING: density does not comply with input:" << dens
-                  //<< std::endl;
-                  // for (auto visc : flow_operation->get_viscosity(cell, q))
-                  // if (!((visc == parameters.flow.viscosity) ||
-                  //(visc ==
-                  // parameters.flow.viscosity_difference + parameters.flow.viscosity)))
-                  // std::cout << "WARNING: viscosity does not comply with input:" << visc
-                  //<< std::endl;
+                  const double min_density =
+                    std::min(parameters.flow.density,
+                             parameters.flow.density + parameters.flow.density_difference);
+                  const double max_density =
+                    std::max(parameters.flow.density,
+                             parameters.flow.density + parameters.flow.density_difference);
+
+                  for (auto dens : flow_operation->get_density(cell, q))
+                    if (min_density > dens || dens > max_density)
+                      std::cout << "WARNING: density does not comply with input:" << dens
+                                << std::endl;
+
+                  const double min_viscosity =
+                    std::min(parameters.flow.viscosity,
+                             parameters.flow.viscosity + parameters.flow.viscosity_difference);
+                  const double max_viscosity =
+                    std::max(parameters.flow.viscosity,
+                             parameters.flow.viscosity + parameters.flow.viscosity_difference);
+
+                  for (auto visc : flow_operation->get_viscosity(cell, q))
+                    if (min_viscosity > visc || visc > max_viscosity)
+                      std::cout << "WARNING: viscosity does not comply with input:" << visc
+                                << std::endl;
+
+                  // compute overall mass
                   for (unsigned int v = 0;
                        v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
                        ++v)
                     {
-                      volume += ls_values.JxW(q)[v];
                       mass += (parameters.flow.density +
                                parameters.flow.density_difference * ls_values.get_value(q)[v]) *
                               ls_values.JxW(q)[v];
                     }
-                  //
                 }
             }
         },
         dummy,
         src);
 
-      if (evaporation_operation)
+      if (evaporation_operation || melt_pool_operation)
         {
-          scratch_data->get_pcout()
-            << "total volume: " << Utilities::MPI::sum(volume, scratch_data->get_mpi_comm())
-            << std::endl;
           scratch_data->get_pcout()
             << "total mass: " << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm())
             << std::endl;
@@ -679,10 +701,10 @@ namespace MeltPoolDG::Flow
           melt_pool_operation->attach_vectors(vectors); // temperature + solid + liquid
         });
 
-      // if (evaporation_operation)
-      // data.emplace_back(&dof_handler_evapor, [&](std::vector<VectorType *> &vectors) {
-      // evaporation_operation->attach_vectors(vectors);
-      //});
+      if (evaporation_operation)
+        data.emplace_back(&dof_handler_evapor, [&](std::vector<VectorType *> &vectors) {
+          evaporation_operation->attach_vectors(vectors);
+        });
 
       const auto post = [&]() {
         /**
@@ -704,8 +726,8 @@ namespace MeltPoolDG::Flow
         /**
          * evaporation
          */
-        // if (evaporation_operation)
-        // evaporation_operation->distribute_constraints();
+        if (evaporation_operation)
+          evaporation_operation->distribute_constraints();
       };
 
       const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };

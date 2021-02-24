@@ -88,6 +88,10 @@ namespace MeltPoolDG
         laser_operation =
           std::make_shared<HeatEquation::LaserOperation<dim>>(*scratch_data, data_in.laser);
         /*
+         *  Initialize the laser operation
+         */
+        laser_operation->set_initial_condition(start_time_in);
+        /*
          *  initialize the heat operation class
          */
         heat_operation = std::make_shared<HeatEquation::HeatOperation<dim>>(*scratch_data,
@@ -106,31 +110,43 @@ namespace MeltPoolDG
                                                            flow_vel_quad_idx_in,
                                                            ls_dof_idx_in,
                                                            temp_dof_idx_in);
+        /*
+         * initialize the dof_vectors
+         */
+        scratch_data->initialize_dof_vector(solid, temp_dof_idx);
+        scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
+        scratch_data->initialize_dof_vector(heat_operation->get_temperature(), temp_dof_idx);
       }
 
       void
-      set_initial_condition([[maybe_unused]] const VectorType &level_set_as_heaviside)
+      set_initial_condition(const VectorType &level_set_as_heaviside,
+                            VectorType &      level_set,
+                            const double &    density_gas,
+                            const double &    density_liquid)
       {
-        scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
-        scratch_data->initialize_dof_vector(solid, temp_dof_idx);
         /*
-         *  Initialize the temperature field
+         *  Compute analytical temperature field
          */
-        heat_operation->reinit();
+        if (mp_data.temperature_formulation == "analytical")
+          laser_operation->compute_analytical_temperature_field(
+            level_set_as_heaviside,
+            heat_operation->get_temperature(),
+            temp_dof_idx,
+            density_gas,
+            density_liquid,
+            mp_data,
+            -1.0 /* level set value for gas @todo */);
+        else
+          AssertThrow(false, ExcNotImplemented());
         /*
-         *  Initialize the laser operation
+         *  Compute the initial solid and liquid phases
          */
-        laser_operation->set_initial_condition(
-          0.0 /* start_time @todo if other value should be available*/);
-
-        if (mp_data.set_level_set_to_zero_in_solid)
-          {
-            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
-                                                    scratch_data->modify_constraint(ls_dof_idx));
-            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
-                                                    scratch_data->modify_constraint(
-                                                      reinit_dof_idx));
-          }
+        compute_solid_and_liquid_phases(level_set_as_heaviside);
+        /*
+         *  Constraint the solid domain if requested
+         */
+        make_constraints_in_spatially_fixed_solid_domain();
+        scratch_data->get_constraint(ls_dof_idx).distribute(level_set);
       }
 
       void
@@ -148,26 +164,34 @@ namespace MeltPoolDG
         laser_operation->move_laser(dt);
 
         // 1) update temperature
-        laser_operation->compute_analytical_temperature_field(
-          level_set_as_heaviside,
-          heat_operation->get_temperature(),
-          temp_dof_idx,
-          density_gas,
-          density_liquid,
-          mp_data,
-          -1.0 /* level set value for gas @todo */);
+        if (mp_data.temperature_formulation == "analytical")
+          laser_operation->compute_analytical_temperature_field(
+            level_set_as_heaviside,
+            heat_operation->get_temperature(),
+            temp_dof_idx,
+            density_gas,
+            density_liquid,
+            mp_data,
+            -1.0 /* level set value for gas @todo */);
 
-        // 2) update solid/liquid phases
-        compute_solid_and_liquid_phases(level_set_as_heaviside);
+        // 2) update phases
+        if (mp_data.temperature_formulation != "analytical")
+          {
+            compute_solid_and_liquid_phases(level_set_as_heaviside);
 
-        // 3) compute forces
-        //     ... recoil pressure
+            // 3) update the constraints such that the solid domain is spatially fixed
+            make_constraints_in_spatially_fixed_solid_domain();
+          }
+
+        // 4) compute forces
+        //   i)  ... recoil pressure
         if (recoil_pressure_operation)
           recoil_pressure_operation->compute_recoil_pressure_force(
             vel_force_rhs,
             level_set_as_heaviside,
             heat_operation->get_temperature(),
             false /*false means add to force vector*/);
+
         //     ... or evaporative flux
         //@todo
 
@@ -187,8 +211,22 @@ namespace MeltPoolDG
             flow_vel_quad_idx,
             temp_dof_idx,
             false /*false means add to force vector*/);
+      }
 
-        // 4) set velocities in solid to zero
+      void
+      make_constraints_in_spatially_fixed_solid_domain()
+      {
+        /*
+         *    limit the level set interface to the touching regions of liquid/gas
+         */
+        if (mp_data.set_level_set_to_zero_in_solid)
+          {
+            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
+                                                    scratch_data->modify_constraint(ls_dof_idx));
+            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
+                                                    scratch_data->modify_constraint(
+                                                      reinit_dof_idx));
+          }
 
         if (mp_data.set_velocity_to_zero_in_solid)
           set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
@@ -202,18 +240,6 @@ namespace MeltPoolDG
         heat_operation->reinit();
         scratch_data->initialize_dof_vector(solid, temp_dof_idx);
         scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
-        /*
-         *    limit the level set interface to the touching regions of liquid/gas
-         *    @todo: at the moment this only works for a temporally fixed solid domain!!
-         */
-        if (mp_data.set_level_set_to_zero_in_solid)
-          {
-            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
-                                                    scratch_data->modify_constraint(ls_dof_idx));
-            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
-                                                    scratch_data->modify_constraint(
-                                                      reinit_dof_idx));
-          }
       }
 
       void
@@ -271,7 +297,9 @@ namespace MeltPoolDG
       void
       compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside)
       {
-        level_set_as_heaviside.update_ghost_values();
+        (void)level_set_as_heaviside; // @todo: the level set will be needed later, when the thermal
+                                      // coupling is completed
+        heat_operation->get_temperature().update_ghost_values();
 
         const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
 
@@ -297,31 +325,30 @@ namespace MeltPoolDG
                 }
             }
 
-        scratch_data->get_constraint(temp_dof_idx).distribute(solid);
+        liquid.compress(VectorOperation::insert);
+        solid.compress(VectorOperation::insert);
 
-        level_set_as_heaviside.zero_out_ghosts();
+        scratch_data->get_constraint(temp_dof_idx).distribute(solid);
+        scratch_data->get_constraint(temp_dof_idx).distribute(liquid);
+
+        heat_operation->get_temperature().zero_out_ghosts();
       }
 
       /**
        *  The constraints of the flow velocity are modified such that they are zero in solid
        *  regions.
-       *
-       *  @todo: PROBLEM -- is_solid_region still needed since degree of velocity is different
-       *  than solid
        */
       void
       set_flow_field_in_solid_regions_to_zero(const DoFHandler<dim> &    flow_dof_handler,
                                               AffineConstraints<double> &flow_constraints)
       {
         solid.update_ghost_values();
-        heat_operation->get_temperature().update_ghost_values();
 
         IndexSet flow_locally_relevant_dofs;
         DoFTools::extract_locally_relevant_dofs(flow_dof_handler, flow_locally_relevant_dofs);
 
         AffineConstraints<double> solid_constraints;
         solid_constraints.reinit(flow_locally_relevant_dofs);
-        DoFTools::make_hanging_node_constraints(flow_dof_handler, solid_constraints);
 
         FEValues<dim> flow_eval(scratch_data->get_mapping(),
                                 flow_dof_handler.get_fe(),
@@ -329,88 +356,45 @@ namespace MeltPoolDG
                                   flow_dof_handler.get_fe().get_unit_support_points()),
                                 update_quadrature_points);
 
-        FEValues<dim> temp_eval(scratch_data->get_mapping(),
-                                scratch_data->get_dof_handler(temp_dof_idx).get_fe(),
-                                Quadrature<dim>(
-                                  flow_dof_handler.get_fe().get_unit_support_points()),
-                                update_values);
-
-        const unsigned int  n_q_points = flow_eval.get_quadrature().size();
-        std::vector<double> temp_at_q(n_q_points);
-
-        typename DoFHandler<dim>::active_cell_iterator temp_cell =
-          scratch_data->get_dof_handler(temp_dof_idx).begin_active();
+        FEValues<dim> solid_eval(scratch_data->get_mapping(),
+                                 scratch_data->get_dof_handler(temp_dof_idx).get_fe(),
+                                 Quadrature<dim>(
+                                   flow_dof_handler.get_fe().get_unit_support_points()),
+                                 update_values);
 
         const unsigned int dofs_per_cell = flow_dof_handler.get_fe().n_dofs_per_cell();
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+        std::vector<double>                  solid_at_q(dofs_per_cell);
+
+        typename DoFHandler<dim>::active_cell_iterator solid_cell =
+          scratch_data->get_dof_handler(temp_dof_idx).begin_active();
 
         for (const auto &cell : flow_dof_handler.active_cell_iterators())
           {
             if (cell->is_locally_owned())
               {
                 cell->get_dof_indices(local_dof_indices);
-                flow_eval.reinit(cell);
-                temp_eval.reinit(temp_cell);
 
-                temp_eval.get_function_values(heat_operation->get_temperature(), temp_at_q);
+                flow_eval.reinit(cell);
+
+                solid_eval.reinit(solid_cell);
+                solid_eval.get_function_values(solid, solid_at_q);
 
                 for (const auto q : flow_eval.quadrature_point_indices())
-                  if (is_solid_region(flow_eval.quadrature_point(q), temp_at_q[q]))
-                    solid_constraints.add_line(local_dof_indices[q]);
+                  {
+                    if (solid_at_q[q] == 1.0)
+                      solid_constraints.add_line(local_dof_indices[q]);
+                  }
               }
-            ++temp_cell;
+            ++solid_cell;
           }
+
         solid_constraints.close();
         flow_constraints.merge(solid_constraints,
                                AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
-        heat_operation->get_temperature().zero_out_ghosts();
+
         solid.zero_out_ghosts();
       }
-
-      /**
-       * This function sets the level set field in solid regions to zero.
-       */
-      void
-      set_level_set_in_solid_regions_to_zero(VectorType &level_set)
-      {
-        AssertThrow(scratch_data->get_degree(temp_dof_idx) == scratch_data->get_degree(ls_dof_idx),
-                    ExcMessage(
-                      "The usage of this function assumes that the temperature field "
-                      "is interpolated with the polynomial with the same degree as the level set"));
-        level_set.update_ghost_values();
-
-        FEValues<dim> fe_values(scratch_data->get_mapping(),
-                                scratch_data->get_dof_handler(ls_dof_idx).get_fe(),
-                                scratch_data->get_quadrature(temp_quad_idx),
-                                update_values | update_gradients | update_quadrature_points |
-                                  update_JxW_values);
-
-        const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(ls_dof_idx);
-
-        std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-        std::map<types::global_dof_index, Point<dim>> support_points;
-        DoFTools::map_dofs_to_support_points(scratch_data->get_mapping(),
-                                             scratch_data->get_dof_handler(ls_dof_idx),
-                                             support_points);
-
-        for (const auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
-          if (cell->is_locally_owned())
-            {
-              cell->get_dof_indices(local_dof_indices);
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                {
-                  if (liquid[local_dof_indices[i]])
-                    level_set[local_dof_indices[i]] = 1.0;
-                  else if (solid[local_dof_indices[i]])
-                    level_set[local_dof_indices[i]] = 0.0;
-                  else
-                    level_set[local_dof_indices[i]] = -1.0;
-                }
-            }
-        level_set.zero_out_ghosts();
-      }
-
       /**
        *  The level set constraints are modified such that they are zero in solid
        *  regions.

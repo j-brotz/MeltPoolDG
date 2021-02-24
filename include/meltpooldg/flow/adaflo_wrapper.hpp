@@ -385,9 +385,6 @@ namespace MeltPoolDG::Flow
       get_hanging_node_constraints_pressure().distribute(viscosity);
       viscosity.update_ghost_values();
       data_out.add_data_vector(get_dof_handler_pressure(), viscosity, "viscosity");
-      /**
-       *  viscosity
-       */
     }
 
   private:

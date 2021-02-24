@@ -83,6 +83,9 @@ namespace MeltPoolDG::MeltPool
             {
               level_set.reinit(cell);
               level_set.gather_evaluate(level_set_as_heaviside, false, true);
+              // level_set.evaluate(false, true);
+              // level_set.read_dof_values_plain(level_set_as_heaviside);
+              // level_set.evaluate(false, true);
 
               temperature_val.reinit(cell);
               temperature_val.read_dof_values_plain(temperature);

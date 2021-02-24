@@ -110,6 +110,7 @@ namespace MeltPoolDG
     number       end_time                                          = 1.0;
     number       time_step_size                                    = 0.05;
     unsigned int max_n_steps                                       = 1000000;
+    bool         variable_properties_over_interface                = false;
   };
 
   template <typename number = double>
@@ -664,6 +665,10 @@ namespace MeltPoolDG
         prm.add_parameter("flow max n steps",
                           flow.max_n_steps,
                           "Sets the maximum number of flow steps");
+        prm.add_parameter(
+          "flow variable properties over interface",
+          flow.variable_properties_over_interface,
+          "Set this parameter to true to interpolate the flow properties over the interface smoothly.");
       }
       prm.leave_subsection();
       /*

@@ -35,7 +35,7 @@ namespace MeltPoolDG::Flow
                             const double            surface_tension_coefficient,
                             const unsigned int      ls_dof_idx,
                             const unsigned int      curv_dof_idx,
-                            const unsigned int      flow_vel_dof_idx,
+                            const unsigned int      flow_vel_hanging_nodes_dof_idx,
                             const unsigned int      flow_quad_idx,
                             const bool              zero_out = true)
     {
@@ -51,7 +51,7 @@ namespace MeltPoolDG::Flow
           FECellIntegrator<dim, 1, double> curvature(matrix_free, curv_dof_idx, flow_quad_idx);
 
           FECellIntegrator<dim, dim, double> surface_tension(matrix_free,
-                                                             flow_vel_dof_idx,
+                                                             flow_vel_hanging_nodes_dof_idx,
                                                              flow_quad_idx);
 
           for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
