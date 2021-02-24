@@ -416,7 +416,8 @@ namespace MeltPoolDG
 
         const auto attach_vectors = [&](std::vector<VectorType *> &vectors) {
           level_set_operation.attach_vectors(vectors);
-          evaporation_operation->attach_vectors(vectors);
+          if (evaporation_operation)
+            evaporation_operation->attach_vectors(vectors);
         };
 
         const auto post = [&]() {
