@@ -32,6 +32,36 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
+    std::shared_ptr<const ScratchData<dim>> scratch_data;
+    /**
+     *  parameters controlling the evaporation
+     */
+    EvaporationData<double> evaporation_data;
+    /**
+     * references to solutions needed for the computation
+     */
+    const VectorType &     level_set_as_heaviside;
+    const BlockVectorType &normal_vector;
+    /**
+     * select the relevant DoFHandlers and quadrature rules
+     */
+    const unsigned int normal_dof_idx;
+    const unsigned int evapor_vel_dof_idx;
+    const unsigned int ls_hanging_nodes_dof_idx;
+    const unsigned int ls_quad_idx;
+    /**
+     * evaporative mass flux
+     */
+    VectorType evaporative_mass_flux;
+    /**
+     * evaporation velocity at quadrature points
+     */
+    AlignedVector<Tensor<1, dim, VectorizedArray<double>>> evaporation_velocities;
+    /**
+     * evaporation velocity due to evaporation and flow
+     */
+    VectorType evaporation_velocity;
+
   public:
     EvaporationOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
                          const VectorType &                             level_set_as_heaviside_in,
@@ -83,28 +113,6 @@ namespace MeltPoolDG::Evaporation
                                                              temperature_constant,
                                                              boiling_temperature);
           }
-    }
-
-    /**
-     * @todo
-     * !!!!!!!! HARD CODED PARAMETERS !!!!!!!!!!!!! --> this function will be replaced when the heat
-     * equation is implemented anyhow
-     */
-    inline double
-    compute_temperature_dependent_mass_flux_rate(const double &T,
-                                                 const double &pressure_constant,
-                                                 const double &temperature_constant,
-                                                 const double &boiling_temperature)
-    {
-      // according to Meier 2020
-      const double cs = 1.0;  // sticking coefficent
-      const double Cm = 1e-3; // molar_mass/(2*pi*molar_gas_constant)
-      return (T >= boiling_temperature) ?
-               evaporation_data.evaporative_mass_flux_scale_factor * 0.82 * cs *
-                 MeltPool::RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(
-                   T, pressure_constant, temperature_constant, boiling_temperature) *
-                 std::sqrt(Cm / T) :
-               0.0;
     }
 
     void
@@ -188,6 +196,10 @@ namespace MeltPoolDG::Evaporation
         });
 
       scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
+
+      scratch_data->get_pcout() << "    | evapor: |u|2 = " << evaporation_velocity.l2_norm()
+                                << std::endl;
+
       evaporation_velocity.zero_out_ghosts();
     }
 
@@ -254,6 +266,9 @@ namespace MeltPoolDG::Evaporation
         zero_out);
       evaporative_mass_flux.zero_out_ghosts();
       normal_vector.zero_out_ghosts();
+
+      scratch_data->get_pcout() << "    | evapor: |m|2 = " << mass_balance_rhs.l2_norm()
+                                << std::endl;
     }
 
     /*
@@ -349,34 +364,26 @@ namespace MeltPoolDG::Evaporation
     }
 
   private:
-    std::shared_ptr<const ScratchData<dim>> scratch_data;
     /**
-     *  parameters controlling the evaporation
+     * @todo
+     * !!!!!!!! HARD CODED PARAMETERS !!!!!!!!!!!!! --> this function will be replaced when the heat
+     * equation is implemented anyhow
      */
-    EvaporationData<double> evaporation_data;
-    /**
-     * references to solutions needed for the computation
-     */
-    const VectorType &     level_set_as_heaviside;
-    const BlockVectorType &normal_vector;
-    /**
-     * select the relevant DoFHandlers and quadrature rules
-     */
-    const unsigned int normal_dof_idx;
-    const unsigned int evapor_vel_dof_idx;
-    const unsigned int ls_hanging_nodes_dof_idx;
-    const unsigned int ls_quad_idx;
-    /**
-     * evaporative mass flux
-     */
-    VectorType evaporative_mass_flux;
-    /**
-     * evaporation velocity at quadrature points
-     */
-    AlignedVector<Tensor<1, dim, VectorizedArray<double>>> evaporation_velocities;
-    /**
-     * evaporation velocity due to evaporation and flow
-     */
-    VectorType evaporation_velocity;
+    inline double
+    compute_temperature_dependent_mass_flux_rate(const double &T,
+                                                 const double &pressure_constant,
+                                                 const double &temperature_constant,
+                                                 const double &boiling_temperature)
+    {
+      // according to Meier 2020
+      const double cs = 1.0;  // sticking coefficent
+      const double Cm = 1e-3; // molar_mass/(2*pi*molar_gas_constant)
+      return (T >= boiling_temperature) ?
+               evaporation_data.evaporative_mass_flux_scale_factor * 0.82 * cs *
+                 MeltPool::RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(
+                   T, pressure_constant, temperature_constant, boiling_temperature) *
+                 std::sqrt(Cm / T) :
+               0.0;
+    }
   };
 } // namespace MeltPoolDG::Evaporation

@@ -107,6 +107,7 @@ namespace MeltPoolDG::Flow
 
           if (evaporation_operation)
             {
+              scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
               evaporation_operation->compute_mass_balance_source_term(
                 mass_balance_rhs,
                 flow_operation->get_dof_handler_idx_pressure(),
@@ -578,8 +579,8 @@ namespace MeltPoolDG::Flow
       if (evaporation_operation || melt_pool_operation)
         {
           scratch_data->get_pcout()
-            << "total mass: " << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm())
-            << std::endl;
+            << "    | two phase flow: total mass = "
+            << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm()) << std::endl;
         }
     }
 

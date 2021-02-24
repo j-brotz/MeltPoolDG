@@ -27,8 +27,9 @@ namespace MeltPoolDG
       class InitialValuesLS : public Function<dim>
       {
       public:
-        InitialValuesLS()
-          : Function<dim>(1, 0)
+        InitialValuesLS(const double eps)
+          : Function<dim>()
+          , eps(eps)
         {}
 
         double
@@ -36,9 +37,11 @@ namespace MeltPoolDG
         {
           Point<dim>   center = dim == 2 ? Point<dim>(2, 2) : Point<dim>(2, 2, 2);
           const double radius = 0.5;
-          return UtilityFunctions::CharacteristicFunctions::sgn(
-            UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+          return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+            UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius), eps);
         }
+
+        double eps = 0.0;
       };
 
       /*
@@ -138,7 +141,22 @@ namespace MeltPoolDG
         void
         set_field_conditions() override
         {
-          this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(), "level_set");
+          double eps = 0.0;
+          if (this->parameters.reinit.implementation == "adaflo" ||
+              this->parameters.ls.implementation == "adaflo")
+            eps = this->parameters.reinit.constant_epsilon > 0.0 ?
+                    this->parameters.reinit.constant_epsilon :
+                    GridTools::minimal_cell_diameter(*this->triangulation) /
+                      this->parameters.base.degree / std::sqrt(dim);
+          else
+            eps = this->parameters.reinit.constant_epsilon > 0.0 ?
+                    this->parameters.reinit.constant_epsilon :
+                    GridTools::minimal_cell_diameter(*this->triangulation) / std::sqrt(dim) *
+                      this->parameters.reinit.scale_factor_epsilon;
+
+          AssertThrow(eps > 0, ExcNotImplemented());
+
+          this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
