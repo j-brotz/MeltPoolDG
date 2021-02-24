@@ -582,8 +582,7 @@ namespace MeltPoolDG
         advec_diff_operation->advec_diff_data.diffusivity = data_in.ls.artificial_diffusivity;
         advec_diff_operation->advec_diff_data.time_integration_scheme =
           data_in.ls.time_integration_scheme;
-        advec_diff_operation->advec_diff_data.do_print_l2norm = data_in.ls.do_print_l2norm;
-        advec_diff_operation->advec_diff_data.do_matrix_free  = data_in.ls.do_matrix_free;
+        advec_diff_operation->advec_diff_data.do_matrix_free = data_in.ls.do_matrix_free;
         /*
          *  setup the time iterator for the reinitialization problem
          */

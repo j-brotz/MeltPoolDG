@@ -17,10 +17,13 @@ namespace MeltPoolDG::Evaporation
    *     \f[ \boldsymbol{n}\cfrac{\dot{m}}{\rho} \f]
    *
    *     with the normal vector \f$\boldsymbol{n}\f$, the evaporative mass flux \f$\dot{m}\f$
-   *     and the density \f$\rho\f$. One has to take care from which time step the normal
-   *     vector is computed.
+   *     and the density \f$\rho\f$ as well as the corresponding term in the mass balance
+   *     equation of the incompressible Navier-Stokes formulation
    *
-   *     @todo: add description of mass balance term
+   *     \f[ \dot{m}\,(\frac{1}{\rho_l}-\frac{1}{\rho_g})\,\delta \f]
+   *
+   *     with the delta-function \f$\delta\f$.
+   *
    */
   template <int dim>
   class EvaporationOperation
@@ -62,24 +65,12 @@ namespace MeltPoolDG::Evaporation
     compute_evaporative_mass_flux_from_temperature(const VectorType & temperature,
                                                    const unsigned int temp_dof_idx,
                                                    const double &     boiling_temperature,
-                                                   const double &     const_evapor_rate,
                                                    const double &     pressure_constant    = 0.0,
                                                    const double &     temperature_constant = 0.0)
     {
-      if (const_evapor_rate > 0)
-        {
-          evaporative_mass_flux = const_evapor_rate;
-          return;
-        }
-
       const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
 
       std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-      std::map<types::global_dof_index, Point<dim>> support_points;
-      DoFTools::map_dofs_to_support_points(scratch_data->get_mapping(),
-                                           scratch_data->get_dof_handler(temp_dof_idx),
-                                           support_points);
 
       for (const auto &cell : scratch_data->get_dof_handler(temp_dof_idx).active_cell_iterators())
         if (cell->is_locally_owned())
@@ -95,6 +86,7 @@ namespace MeltPoolDG::Evaporation
     }
 
     /**
+     * @todo
      * !!!!!!!! HARD CODED PARAMETERS !!!!!!!!!!!!! --> this function will be replaced when the heat
      * equation is implemented anyhow
      */
@@ -104,32 +96,15 @@ namespace MeltPoolDG::Evaporation
                                                  const double &temperature_constant,
                                                  const double &boiling_temperature)
     {
-      // double mass_iron     = 9.2732796e-26; // atomic weight of iron kg
-      // double p_air         = 101.325;       // air pressure
-      // double k_b           = 1.380649e-23;  // Kevin-Boltzmann constanta J/K
-      // double latent_heat_v = 6.1e6;         // latent heat of evaporation J/kg
-      // double beta          = 0;             // retrodiffusion cofficient; default = 0
-
-      // const double p_sat =
-      // p_air * std::exp(mass_iron * latent_heat_v / (k_b * boiling_temperature) *
-      //(1. - boiling_temperature / T));
-
-      // if (T>=3500)
-      // return 10*std::sqrt(mass_iron/(2*numbers::PI*k_b)) * p_sat/std::sqrt(T) * (1.-beta);
-      //
       // according to Meier 2020
       const double cs = 1.0;  // sticking coefficent
       const double Cm = 1e-3; // molar_mass/(2*pi*molar_gas_constant)
-      return (T >= 3500) ?
+      return (T >= boiling_temperature) ?
                evaporation_data.evaporative_mass_flux_scale_factor * 0.82 * cs *
                  MeltPool::RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(
                    T, pressure_constant, temperature_constant, boiling_temperature) *
                  std::sqrt(Cm / T) :
                0.0;
-
-      // Alternative
-      // return (T>=3000) ? 0.82 * cs * compute_recoil_pressure_coefficient(T) * std::sqrt(Cm/T) :
-      // 0.0;
     }
 
     void
@@ -205,10 +180,8 @@ namespace MeltPoolDG::Evaporation
         scratch_data->get_matrix_free(),
         evapor_vel_dof_idx,
         ls_quad_idx,
-        scratch_data->get_fe(evapor_vel_dof_idx)
-          .tensor_degree(), // fe_degree of the resulting vector
-        scratch_data->get_fe(ls_hanging_nodes_dof_idx).tensor_degree() +
-          1, // n_q_points_1d of cell operation
+        scratch_data->get_degree(evapor_vel_dof_idx),           // fe_degree of the resulting vector
+        scratch_data->get_degree(ls_hanging_nodes_dof_idx) + 1, // n_q_points_1d of cell operation
         [&](const unsigned int cell,
             const unsigned int quad) -> const Tensor<1, dim, VectorizedArray<double>> & {
           return begin_evaporation_velocity(cell)[quad];
@@ -253,6 +226,7 @@ namespace MeltPoolDG::Evaporation
               heaviside.reinit(cell);
               heaviside.read_dof_values_plain(level_set_as_heaviside);
               heaviside.evaluate(false, true);
+
               normal_vec.reinit(cell);
               normal_vec.read_dof_values_plain(normal_vector);
               normal_vec.evaluate(true, false);
@@ -265,13 +239,11 @@ namespace MeltPoolDG::Evaporation
 
               for (unsigned int q_index = 0; q_index < mass_flux.n_q_points; ++q_index)
                 {
-
-                  mass_flux.submit_value((1. / evaporation_data.density_liquid -
-                                          1. / evaporation_data.density_gas) *
-                                           MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index)) *
-                                           heaviside.get_gradient(q_index) *
-                                           evap_flux.get_value(q_index),
-                                         q_index);
+                  mass_flux.submit_value(
+                    (1. / evaporation_data.density_liquid - 1. / evaporation_data.density_gas) *
+                      MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index)) *
+                      heaviside.get_gradient(q_index) * evap_flux.get_value(q_index),
+                    q_index);
                 }
 
               mass_flux.integrate_scatter(true, false, mass_balance_rhs);
@@ -288,16 +260,24 @@ namespace MeltPoolDG::Evaporation
      * attach functions
      */
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+    attach_dim_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
     {
       evaporation_velocity.update_ghost_values();
       vectors.push_back(&evaporation_velocity);
     }
 
     void
+    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+    {
+      evaporative_mass_flux.update_ghost_values();
+      vectors.push_back(&evaporative_mass_flux);
+    }
+
+    void
     distribute_constraints()
     {
-         scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
+      scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
+      scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(evaporative_mass_flux);
     }
 
     void

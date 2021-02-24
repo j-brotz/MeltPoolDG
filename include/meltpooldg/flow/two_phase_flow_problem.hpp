@@ -73,7 +73,6 @@ namespace MeltPoolDG::Flow
                   melt_pool_operation->get_temperature(),
                   temp_dof_idx,
                   base_in->parameters.mp.boiling_temperature,
-                  base_in->parameters.evapor.evaporative_mass_flux,
                   base_in->parameters.recoil.pressure_constant,
                   base_in->parameters.recoil.temperature_constant);
               else
@@ -108,7 +107,6 @@ namespace MeltPoolDG::Flow
 
           if (evaporation_operation)
             {
-              scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
               evaporation_operation->compute_mass_balance_source_term(
                 mass_balance_rhs,
                 flow_operation->get_dof_handler_idx_pressure(),
@@ -116,22 +114,25 @@ namespace MeltPoolDG::Flow
                 true /* zero out force rhs */);
             }
 
-          const double density_gas = base_in->parameters.flow.density;
-          const double density_liquid =
-            base_in->parameters.flow.density + base_in->parameters.flow.density_difference;
-
+          // ... solve melt pool operation
+          // It is assumed that flow.density represents the density of the gas phase
           if (melt_pool_operation)
-            // ... solve melt pool operation
-            melt_pool_operation->solve(
-              vel_force_rhs,
-              level_set_operation.get_level_set_as_heaviside(),
-              level_set_operation.get_curvature(),
-              base_in->parameters.flow.surface_tension_coefficient,
-              base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
-              base_in->parameters.flow.surface_tension_reference_temperature,
-              density_gas,
-              density_liquid,
-              dt);
+            {
+              const double density_gas = base_in->parameters.flow.density;
+              const double density_liquid =
+                base_in->parameters.flow.density + base_in->parameters.flow.density_difference;
+
+              melt_pool_operation->solve(
+                vel_force_rhs,
+                level_set_operation.get_level_set_as_heaviside(),
+                level_set_operation.get_curvature(),
+                base_in->parameters.flow.surface_tension_coefficient,
+                base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
+                base_in->parameters.flow.surface_tension_reference_temperature,
+                density_gas,
+                density_liquid,
+                dt);
+            }
 
           //  ... and set the resulting forces within the Navier-Stokes solver
           flow_operation->set_force_rhs(vel_force_rhs);
@@ -702,9 +703,14 @@ namespace MeltPoolDG::Flow
         });
 
       if (evaporation_operation)
-        data.emplace_back(&dof_handler_evapor, [&](std::vector<VectorType *> &vectors) {
-          evaporation_operation->attach_vectors(vectors);
-        });
+        {
+          data.emplace_back(&dof_handler_evapor, [&](std::vector<VectorType *> &vectors) {
+            evaporation_operation->attach_dim_vectors(vectors);
+          });
+          data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
+            evaporation_operation->attach_vectors(vectors);
+          });
+        }
 
       const auto post = [&]() {
         /**
