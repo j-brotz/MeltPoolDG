@@ -29,7 +29,8 @@ namespace MeltPoolDG
         return std::make_shared<AdvectionDiffusion::AdvectionDiffusionProblem<dim>>();
 
       else if (problem_name == "two_phase_flow" || problem_name == "melt_pool" ||
-               problem_name == "two_phase_flow_with_evaporation" || problem_name == "melt_pool_with_evaporation")
+               problem_name == "two_phase_flow_with_evaporation" ||
+               problem_name == "melt_pool_with_evaporation")
         return std::make_shared<Flow::TwoPhaseFlowProblem<dim>>();
       /* add your problem here*/
 

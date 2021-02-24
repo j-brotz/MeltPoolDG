@@ -105,9 +105,9 @@ namespace MeltPoolDG
              *
              */
             for (unsigned int j = 0; j < n; ++j)
-            {
-              solution_transfer[j]->interpolate(new_grid_solutions[j]);
-            }
+              {
+                solution_transfer[j]->interpolate(new_grid_solutions[j]);
+              }
             post();
           }
         else
