@@ -22,10 +22,6 @@ namespace MeltPoolDG::HeatEquation
 
     const ScratchData<dim> &scratch_data;
     /**
-     *  time
-     */
-    const double time;
-    /**
      * select the relevant DoFHandlers and quadrature rules
      */
     const unsigned int temp_dof_idx;
@@ -38,11 +34,9 @@ namespace MeltPoolDG::HeatEquation
 
   public:
     HeatOperation(const ScratchData<dim> &scratch_data_in,
-                  const double            time_in,
                   const unsigned int      temp_dof_idx_in,
                   const unsigned int      temp_quad_idx_in)
       : scratch_data(scratch_data_in)
-      , time(time_in)
       , temp_dof_idx(temp_dof_idx_in)
       , temp_quad_idx(temp_quad_idx_in)
     {}

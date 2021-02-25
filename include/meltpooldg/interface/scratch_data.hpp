@@ -287,7 +287,7 @@ namespace MeltPoolDG
     }
 
     AffineConstraints<number> &
-    modify_constraint(const unsigned int constraint_index = 0)
+    get_constraint(const unsigned int constraint_index = 0)
     {
       return const_cast<AffineConstraints<number> &>(*this->constraint[constraint_index]);
     }
