@@ -56,30 +56,31 @@
         "ls do reinitialization": "true",
         "ls time integration scheme" : "crank_nicolson"
     },
+    "recoil pressure" : {
+      "recoil pressure constant": "10000.",
+      "recoil temperature constant": "10000."
+    },
+    "laser" : {
+      "laser power": "75.",
+      "laser center": "0.0,0.00004",
+      "laser scan speed": "0.003",
+      "laser do move": "false"
+    },
     "melt pool": {
         "mp ambient temperature": "500.",
         "mp boiling temperature": "3000.",
         "mp max temperature": "3500.",
-        "mp do move laser": "false",
         "mp gas absorptivity": "0",
         "mp gas capacity": "0",
         "mp gas conductivity": "10",
-        "mp laser center": "0.0,0.00004",
-        "mp laser power": "75",
         "mp liquid absorptivity": "0.5",
         "mp liquid capacity": "965",
         "mp liquid conductivity": "35.95",
-        "mp liquid melt pool depth": "0.000100",
-        "mp liquid melt pool radius": "0.000175",
         "mp liquid melting point": "1700",
         "mp domain x min": "-0.0002",
         "mp domain x max": "0.0002",
         "mp domain y min": "-0.0001",
         "mp domain y max": "0.0002",
-        "mp melt pool shape": "temperature_dependent",
-        "mp recoil pressure constant": "10000.",
-        "mp recoil pressure temperature constant": "10000.",
-        "mp scan speed": "0.003",
         "mp temperature x to y ratio": "3."
     },
     "normal vector": {

@@ -156,7 +156,6 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
         }
       else
         AssertThrow(false, ExcNotImplemented());
-      //// upper face
       this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
       this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
 

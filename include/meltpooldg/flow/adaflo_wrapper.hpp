@@ -132,6 +132,7 @@ namespace MeltPoolDG::Flow
     {
       navier_stokes.get_constraints_u().set_zero(navier_stokes.user_rhs.block(0));
       navier_stokes.get_constraints_p().set_zero(navier_stokes.user_rhs.block(1));
+
       navier_stokes.advance_time_step();
     }
 
@@ -319,7 +320,8 @@ namespace MeltPoolDG::Flow
     {
       MeltPoolDG::VectorTools::update_ghost_values(get_velocity(),
                                                    get_pressure(),
-                                                   navier_stokes.user_rhs.block(0));
+                                                   navier_stokes.user_rhs.block(0),
+                                                   navier_stokes.user_rhs.block(1));
 
       std::vector<DataComponentInterpretation::DataComponentInterpretation>
         vector_component_interpretation(dim,
@@ -342,6 +344,12 @@ namespace MeltPoolDG::Flow
                                navier_stokes.user_rhs.block(0),
                                std::vector<std::string>(dim, "force_rhs_velocity"),
                                vector_component_interpretation);
+      /**
+       *  mass balance rhs
+       */
+      data_out.add_data_vector(get_dof_handler_pressure(),
+                               navier_stokes.user_rhs.block(1),
+                               "force_rhs_pressure");
       /**
        *  density
        */
@@ -377,9 +385,6 @@ namespace MeltPoolDG::Flow
       get_hanging_node_constraints_pressure().distribute(viscosity);
       viscosity.update_ghost_values();
       data_out.add_data_vector(get_dof_handler_pressure(), viscosity, "viscosity");
-      /**
-       *  viscosity
-       */
     }
 
   private:

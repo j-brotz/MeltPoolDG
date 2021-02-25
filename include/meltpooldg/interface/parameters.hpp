@@ -60,7 +60,6 @@ namespace MeltPoolDG
     number      end_time                = 1.0;
     number      time_step_size          = 0.01;
     bool        enable_CFL_condition    = false;
-    bool        do_print_l2norm         = false;
     bool        do_curvature_correction = false;
     bool        do_matrix_free          = false;
     std::string implementation          = "meltpooldg";
@@ -74,7 +73,6 @@ namespace MeltPoolDG
     number             scale_factor_epsilon = 0.5;
     number             dtau                 = -1.0;
     std::string        modeltype            = "olsson2007";
-    bool               do_print_l2norm      = false;
     SolverData<number> solver;
     std::string        implementation = "meltpooldg";
   };
@@ -89,7 +87,6 @@ namespace MeltPoolDG
     number       time_step_size          = 0.01;
     unsigned int max_n_steps             = 1000000;
     bool         do_matrix_free          = false;
-    bool         do_print_l2norm         = true;
     std::string  implementation          = "meltpooldg";
   };
 
@@ -110,6 +107,7 @@ namespace MeltPoolDG
     number       end_time                                          = 1.0;
     number       time_step_size                                    = 0.05;
     unsigned int max_n_steps                                       = 1000000;
+    bool         variable_properties_over_interface                = false;
   };
 
   template <typename number = double>
@@ -117,7 +115,6 @@ namespace MeltPoolDG
   {
     number      damping_scale_factor = 0.5;
     bool        do_matrix_free       = false;
-    bool        do_print_l2norm      = true;
     std::string implementation       = "meltpooldg";
   };
 
@@ -126,36 +123,44 @@ namespace MeltPoolDG
   {
     number      damping_scale_factor = 0.0;
     bool        do_matrix_free       = false;
-    bool        do_print_l2norm      = true;
     std::string implementation       = "meltpooldg";
+  };
+
+  template <typename number = double>
+  struct LaserData
+  {
+    number      power                              = 0.0;
+    std::string power_over_time                    = "constant";
+    number      power_start_time                   = 0.0;
+    number      power_end_time                     = 1.e12;
+    std::string center                             = "0,0,0";
+    bool        do_move                            = false;
+    number      scan_speed                         = 0.0;
+    bool        variable_properties_over_interface = false;
+  };
+
+  template <typename number = double>
+  struct RecoilPressureData
+  {
+    number pressure_constant    = 0.0;
+    number temperature_constant = 0.0;
   };
 
   template <typename number = double>
   struct MeltPoolData
   {
-    std::string temperature_formulation              = "analytical";
-    number      temperature_x_to_y_ratio             = 1.0;
-    number      laser_power                          = 0.0;
-    std::string laser_power_over_time                = "constant";
-    number      laser_power_start_time               = 0.0;
-    number      laser_power_end_time                 = 0.0;
-    std::string laser_center                         = "0,0,0";
-    std::string melt_pool_center                     = "not_initialized";
-    std::string melt_pool_shape                      = "ellipse";
-    number      scan_speed                           = 0.0;
-    bool        do_move_laser                        = false;
-    bool        set_velocity_to_zero_in_solid        = false;
-    bool        set_level_set_to_zero_in_solid       = false;
-    number      ambient_temperature                  = 0.0;
-    number      domain_x_min                         = 0.0;
-    number      domain_y_min                         = 0.0;
-    number      domain_x_max                         = 0.0;
-    number      domain_y_max                         = 0.0;
-    number      recoil_pressure_constant             = 0.0;
-    number      recoil_pressure_temperature_constant = 0.0;
-    number      boiling_temperature                  = 0.0;
-    number      max_temperature                      = 0.0;
-    bool        do_print_l2norm                      = true;
+    std::string temperature_formulation        = "analytical";
+    number      temperature_x_to_y_ratio       = 1.0;
+    std::string melt_pool_center               = "not_initialized";
+    bool        set_velocity_to_zero_in_solid  = false;
+    bool        set_level_set_to_zero_in_solid = false;
+    number      ambient_temperature            = 0.0;
+    number      domain_x_min                   = 0.0;
+    number      domain_y_min                   = 0.0;
+    number      domain_x_max                   = 0.0;
+    number      domain_y_max                   = 0.0;
+    number      boiling_temperature            = 0.0;
+    number      max_temperature                = 0.0;
 
     struct Liquid
     {
@@ -178,11 +183,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct EvaporationData
   {
-    number evaporative_mass_flux = 0.0;
-    number density_liquid        = 0.0;
-    number density_gas           = 0.0;
-    number ls_value_liquid       = 1.0;
-    number ls_value_gas          = -1.0;
+    number evaporative_mass_flux_scale_factor = 1.0;
+    number evaporative_mass_flux              = 0.0;
+    number density_liquid                     = 0.0;
+    number density_gas                        = 0.0;
+    number ls_value_liquid                    = 1.0;
+    number ls_value_gas                       = -1.0;
   };
 
   template <typename number = double>
@@ -251,7 +257,7 @@ namespace MeltPoolDG
        *  set the melt pool center if not specified
        */
       if (mp.melt_pool_center == "not_initialized")
-        mp.melt_pool_center = mp.laser_center;
+        mp.melt_pool_center = laser.center;
       /*
        *  set the maximum temperature of the melt pool if not specified
        */
@@ -270,7 +276,8 @@ namespace MeltPoolDG
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 
       if ((base.problem_name == "two_phase_flow") || (base.problem_name == "melt_pool") ||
-          (base.problem_name == "two_phase_flow_with_evaporation"))
+          (base.problem_name == "two_phase_flow_with_evaporation") ||
+          (base.problem_name == "melt_pool_with_evaporation"))
         {
           adaflo_params.parse_parameters(parameter_filename);
           // WARNING: by setting the differences to a non-zero value we force
@@ -357,7 +364,7 @@ namespace MeltPoolDG
           base.problem_name,
           "Sets the base name for the problem that should be solved.",
           Patterns::Selection(
-            "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool|level_set_with_evaporation|two_phase_flow_with_evaporation"));
+            "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool|level_set_with_evaporation|two_phase_flow_with_evaporation|melt_pool_with_evaporation"));
         prm.add_parameter("dimension", base.dimension, "Defines the dimension of the problem");
         prm.add_parameter("global refinements",
                           base.global_refinements,
@@ -437,9 +444,6 @@ namespace MeltPoolDG
           "advec diff do matrix free",
           advec_diff.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
-        prm.add_parameter("advec diff do print l2norm",
-                          advec_diff.do_print_l2norm,
-                          "Defines if the l2norm of the advected field should be printed).");
         prm.add_parameter(
           "advec diff implementation",
           advec_diff.implementation,
@@ -484,9 +488,6 @@ namespace MeltPoolDG
                           ls.enable_CFL_condition,
                           "Enables to dynamically adapt the time step to meet the CFL condition"
                           " in case of explicit time integration.");
-        prm.add_parameter("ls do print l2norm",
-                          ls.do_print_l2norm,
-                          "Defines if the l2norm of the levelset result should be printed)");
         prm.add_parameter(
           "ls do matrix free",
           ls.do_matrix_free,
@@ -532,10 +533,6 @@ namespace MeltPoolDG
                           reinit.modeltype,
                           "Sets the type of reinitialization model that should be used.");
         prm.add_parameter(
-          "reinit do print l2norm",
-          reinit.do_print_l2norm,
-          "Defines if the l2norm of the reinitialization result should be printed)");
-        prm.add_parameter(
           "reinit do matrix free",
           reinit.solver.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
@@ -576,9 +573,6 @@ namespace MeltPoolDG
           "normal vec do matrix free",
           normal_vec.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
-        prm.add_parameter("normal vec do print l2norm",
-                          normal_vec.do_print_l2norm,
-                          "Defines if the l2norm of the normal vector result should be printed)");
         prm.add_parameter("normal vec implementation",
                           normal_vec.implementation,
                           "Choose the corresponding implementation of the normal vector operation.",
@@ -597,9 +591,6 @@ namespace MeltPoolDG
           "curv do matrix free",
           curv.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
-        prm.add_parameter("curv do print l2norm",
-                          curv.do_print_l2norm,
-                          "Defines if the l2norm of the curvature result should be printed)");
         prm.add_parameter("curv implementation",
                           curv.implementation,
                           "Choose the corresponding implementation of the curvature operation.",
@@ -652,6 +643,56 @@ namespace MeltPoolDG
         prm.add_parameter("flow max n steps",
                           flow.max_n_steps,
                           "Sets the maximum number of flow steps");
+        prm.add_parameter(
+          "flow variable properties over interface",
+          flow.variable_properties_over_interface,
+          "Set this parameter to true to interpolate the flow properties over the interface smoothly.");
+      }
+      prm.leave_subsection();
+      /*
+       *   laser
+       */
+      prm.enter_subsection("laser");
+      {
+        prm.add_parameter("laser power", laser.power, "Intensity of the laser");
+        prm.add_parameter("laser power over time",
+                          laser.power_over_time,
+                          "Temporal distribution of the laser power",
+                          Patterns::Selection("constant|ramp"));
+        prm.add_parameter("laser power start time",
+                          laser.power_start_time,
+                          "In case of time-dependent laser power: activation time of laser.");
+        prm.add_parameter("laser power end time",
+                          laser.power_end_time,
+                          "In case of time-dependent laser power: end time of laser.");
+        prm.add_parameter("laser center",
+                          laser.center,
+                          "Center coordinates of the laser beam on the interface melt/gas.");
+        prm.add_parameter("laser scan speed",
+                          laser.scan_speed,
+                          "Scan speed of the laser (in case of an analytical temperature field).");
+        prm.add_parameter(
+          "laser variable properties over interface",
+          laser.variable_properties_over_interface,
+          "Set this parameter to true to interpolate the thermal properties over the interface smoothly.");
+        prm.add_parameter(
+          "laser do move",
+          laser.do_move,
+          "Set this parameter to true to move the laser in x-direction with the given parameter scan speed "
+          "(in case of an analytical temperature field).");
+      }
+      prm.leave_subsection();
+      /*
+       *   recoil pressure
+       */
+      prm.enter_subsection("recoil pressure");
+      {
+        prm.add_parameter("recoil pressure constant",
+                          recoil.pressure_constant,
+                          "Pressure constant for the recoil pressure model.");
+        prm.add_parameter("recoil temperature constant",
+                          recoil.temperature_constant,
+                          "Temperature constant for the recoil pressure model.");
       }
       prm.leave_subsection();
       /*
@@ -659,28 +700,14 @@ namespace MeltPoolDG
        */
       prm.enter_subsection("melt pool");
       {
-        prm.add_parameter(
-          "mp temperature formulation",
-          mp.temperature_formulation,
-          "Definition type of the temperature field: "
-          "(1) analytical expression (2) solve heat equation (not implemented yet)");
+        prm.add_parameter("mp temperature formulation",
+                          mp.temperature_formulation,
+                          "Definition type of the temperature field: "
+                          "(1) analytical expression (2) solve heat equation (not implemented yet)",
+                          Patterns::Selection("analytical"));
         prm.add_parameter("mp temperature x to y ratio",
                           mp.temperature_x_to_y_ratio,
                           "This factor scales the analytical temperature field to be anisotropic.");
-        prm.add_parameter("mp laser power", mp.laser_power, "Intensity of the laser");
-        prm.add_parameter("mp laser power over time",
-                          mp.laser_power_over_time,
-                          "Temporal distribution of the laser power",
-                          Patterns::Selection("constant|ramp"));
-        prm.add_parameter("mp laser power start time",
-                          mp.laser_power_start_time,
-                          "In case of time-dependent laser power: activation time of laser.");
-        prm.add_parameter("mp laser power end time",
-                          mp.laser_power_end_time,
-                          "In case of time-dependent laser power: end time of laser.");
-        prm.add_parameter("mp laser center",
-                          mp.laser_center,
-                          "Center coordinates of the laser beam on the interface melt/gas.");
         prm.add_parameter("mp melt pool center",
                           mp.melt_pool_center,
                           "Center coordinates of the melt pool ellipse/parabola. If no value is "
@@ -697,18 +724,6 @@ namespace MeltPoolDG
         prm.add_parameter("mp domain y max",
                           mp.domain_y_max,
                           "maximum y coordinate of simulation domain");
-        prm.add_parameter("mp melt pool shape",
-                          mp.melt_pool_shape,
-                          "Shape of the user defined melt pool",
-                          Patterns::Selection("parabola|ellipse|temperature_dependent"));
-        prm.add_parameter("mp scan speed",
-                          mp.scan_speed,
-                          "Scan speed of the laser (in case of an analytical temperature field).");
-        prm.add_parameter(
-          "mp do move laser",
-          mp.do_move_laser,
-          "Set this parameter to true to move the laser in x-direction with the given parameter scan speed "
-          "(in case of an analytical temperature field).");
         prm.add_parameter(
           "mp set velocity to zero in solid",
           mp.set_velocity_to_zero_in_solid,
@@ -720,12 +735,6 @@ namespace MeltPoolDG
         prm.add_parameter("mp ambient temperature",
                           mp.ambient_temperature,
                           "Ambient temperature in the inert gas.");
-        prm.add_parameter("mp recoil pressure constant",
-                          mp.recoil_pressure_constant,
-                          "Pressure constant for the recoil pressure model.");
-        prm.add_parameter("mp recoil pressure temperature constant",
-                          mp.recoil_pressure_temperature_constant,
-                          "Temperature constant for the recoil pressure model.");
         prm.add_parameter("mp boiling temperature",
                           mp.boiling_temperature,
                           "Boiling temperature of the melt.");
@@ -734,9 +743,6 @@ namespace MeltPoolDG
           mp.max_temperature,
           "Maximum temperature arising in the melt pool. If this temperature is lower than the boiling"
           " temperature, this value is corrected to correspond to the boiling temperature + 500 K.");
-        prm.add_parameter("mp do print l2norm",
-                          mp.do_print_l2norm,
-                          "Defines if the l2norm of the melt pool results should be printed)");
         prm.add_parameter("mp liquid absorptivity",
                           mp.liquid.absorptivity,
                           "Absorptivity of the liquid part of domain");
@@ -772,6 +778,9 @@ namespace MeltPoolDG
        */
       prm.enter_subsection("evaporation");
       {
+        prm.add_parameter("evapor evaporative mass flux scale factor",
+                          evapor.evaporative_mass_flux_scale_factor,
+                          "Scale factor for the evaporative flux");
         prm.add_parameter("evapor evaporative mass flux",
                           evapor.evaporative_mass_flux,
                           "Mass flux due to evaporation (SI unit in kg/m²s).");
@@ -875,7 +884,9 @@ namespace MeltPoolDG
     FlowData<number>               flow;
     NormalVectorData<number>       normal_vec;
     CurvatureData<number>          curv;
+    LaserData<number>              laser;
     MeltPoolData<number>           mp;
+    RecoilPressureData<number>     recoil;
     EvaporationData<number>        evapor;
     ParaviewData<number>           paraview;
     OutputData<number>             output;
