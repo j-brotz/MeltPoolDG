@@ -95,7 +95,6 @@ namespace MeltPoolDG
          *  initialize the heat operation class
          */
         heat_operation = std::make_shared<HeatEquation::HeatOperation<dim>>(*scratch_data,
-                                                                            start_time_in,
                                                                             temp_dof_idx,
                                                                             temp_quad_idx);
 
@@ -222,16 +221,14 @@ namespace MeltPoolDG
         if (mp_data.set_level_set_to_zero_in_solid)
           {
             remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
-                                                    scratch_data->modify_constraint(ls_dof_idx));
+                                                    scratch_data->get_constraint(ls_dof_idx));
             remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
-                                                    scratch_data->modify_constraint(
-                                                      reinit_dof_idx));
+                                                    scratch_data->get_constraint(reinit_dof_idx));
           }
 
         if (mp_data.set_velocity_to_zero_in_solid)
           set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
-                                                  scratch_data->modify_constraint(
-                                                    flow_vel_dof_idx));
+                                                  scratch_data->get_constraint(flow_vel_dof_idx));
       }
 
       void
