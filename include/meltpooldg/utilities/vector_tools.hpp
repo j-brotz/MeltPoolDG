@@ -9,10 +9,10 @@ namespace MeltPoolDG
   {
     template <int dim, int spacedim, typename Number>
     void
-    convert_fe_sytem_vector_to_block_vector(const LinearAlgebra::distributed::Vector<Number> &in,
-                                            const DoFHandler<dim, spacedim> &dof_handler_fe_system,
-                                            LinearAlgebra::distributed::BlockVector<Number> &out,
-                                            const DoFHandler<dim, spacedim> &dof_handler)
+    convert_fe_system_vector_to_block_vector(const LinearAlgebra::distributed::Vector<Number> &in,
+                                             const DoFHandler<dim, spacedim> &dof_handler_fe_system,
+                                             LinearAlgebra::distributed::BlockVector<Number> &out,
+                                             const DoFHandler<dim, spacedim> &dof_handler)
     {
       in.update_ghost_values();
 
@@ -34,7 +34,8 @@ namespace MeltPoolDG
                 Vector<double>     local_component(n_dofs_per_component);
 
                 for (unsigned int c = 0; c < n_dofs_per_component; ++c)
-                  local_component[c] = local[c * dim + d];
+                  local_component[c] =
+                    local[dof_handler_fe_system.get_fe().component_to_system_index(d, c)];
 
                 cell.set_dof_values(local_component, out.block(d));
               }
@@ -45,7 +46,7 @@ namespace MeltPoolDG
 
     template <int dim, int spacedim, typename Number>
     void
-    convert_block_vector_to_fe_sytem_vector(
+    convert_block_vector_to_fe_system_vector(
       const LinearAlgebra::distributed::BlockVector<Number> &in,
       const DoFHandler<dim, spacedim> &                      dof_handler,
       LinearAlgebra::distributed::Vector<Number> &           out,
@@ -71,7 +72,8 @@ namespace MeltPoolDG
                 cell.get_dof_values(in.block(d), local_component);
 
                 for (unsigned int c = 0; c < n_dofs_per_component; ++c)
-                  local[c * dim + d] = local_component[c];
+                  local[dof_handler_fe_system.get_fe().component_to_system_index(d, c)] =
+                    local_component[c];
               }
             cell_fe_system->set_dof_values(local, out);
           }
