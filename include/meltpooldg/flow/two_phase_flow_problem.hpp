@@ -183,7 +183,7 @@ namespace MeltPoolDG::Flow
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
       if (base_in->parameters.base.do_simplex)
         scratch_data->set_mapping(
-          MappingFE<dim>(Simplex::FE_P<dim>(base_in->parameters.base.degree)));
+          MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
       else
 #endif
         scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
@@ -206,7 +206,7 @@ namespace MeltPoolDG::Flow
       if (base_in->parameters.base.do_simplex)
         {
           ls_quad_idx = scratch_data->attach_quadrature(
-            Simplex::QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+            QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
         }
       else
 #endif
@@ -380,9 +380,9 @@ namespace MeltPoolDG::Flow
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
       if (base_in->parameters.base.do_simplex)
         {
-          dof_handler.distribute_dofs(Simplex::FE_P<dim>(base_in->parameters.base.degree));
+          dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
           dof_handler_evapor.distribute_dofs(
-            FESystem<dim>(Simplex::FE_P<dim>(base_in->parameters.base.degree), dim));
+            FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim));
         }
       else
 #endif

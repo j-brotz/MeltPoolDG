@@ -23,10 +23,10 @@
 // for mapping
 #include <deal.II/fe/mapping.h>
 // for simplex
-#include <deal.II/fe/mapping_fe.h>
+#include <deal.II/base/quadrature_lib.h>
 
-#include <deal.II/simplex/fe_lib.h>
-#include <deal.II/simplex/quadrature_lib.h>
+#include <deal.II/fe/fe_simplex_p.h>
+#include <deal.II/fe/mapping_fe.h>
 // MeltPoolDG
 #include <meltpooldg/interface/problembase.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
@@ -109,7 +109,7 @@ namespace MeltPoolDG
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (base_in->parameters.base.do_simplex)
             scratch_data->set_mapping(
-              MappingFE<dim>(Simplex::FE_P<dim>(base_in->parameters.base.degree)));
+              MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
           else
 #endif
             scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
@@ -120,7 +120,7 @@ namespace MeltPoolDG
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (base_in->parameters.base.do_simplex)
             scratch_data->attach_quadrature(
-              Simplex::QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+              QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
           else
 #endif
             reinit_quad_idx =
@@ -209,7 +209,7 @@ namespace MeltPoolDG
          */
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
         if (base_in->parameters.base.do_simplex)
-          dof_handler.distribute_dofs(Simplex::FE_P<dim>(base_in->parameters.base.degree));
+          dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
         else
 #endif
           dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));

@@ -7,6 +7,7 @@
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/data_out_base.h>
 #include <deal.II/base/index_set.h>
+#include <deal.II/base/quadrature_lib.h>
 
 #include <deal.II/distributed/grid_refinement.h>
 #include <deal.II/distributed/tria_base.h>
@@ -14,6 +15,7 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_simplex_p.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/mapping.h>
 #include <deal.II/fe/mapping_fe.h>
@@ -22,9 +24,6 @@
 
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/error_estimator.h>
-
-#include <deal.II/simplex/fe_lib.h>
-#include <deal.II/simplex/quadrature_lib.h>
 
 // MeltPoolDG
 #include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
@@ -174,9 +173,9 @@ namespace MeltPoolDG
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
         if (base_in->parameters.base.do_simplex)
           {
-            fe = std::make_unique<Simplex::FE_P<dim>>(base_in->parameters.base.degree);
+            fe = std::make_unique<FE_SimplexP<dim>>(base_in->parameters.base.degree);
             fe_velocity =
-              std::make_unique<FESystem<dim>>(Simplex::FE_P<dim>(base_in->parameters.base.degree),
+              std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(base_in->parameters.base.degree),
                                               dim);
           }
         else
@@ -199,7 +198,7 @@ namespace MeltPoolDG
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (base_in->parameters.base.do_simplex)
             scratch_data->set_mapping(
-              MappingFE<dim>(Simplex::FE_P<dim>(base_in->parameters.base.degree)));
+              MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
           else
 #endif
             scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
@@ -209,7 +208,7 @@ namespace MeltPoolDG
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (base_in->parameters.base.do_simplex)
             advec_diff_quad_idx = scratch_data->attach_quadrature(
-              Simplex::QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+              QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
           else
 #endif
             advec_diff_quad_idx =
