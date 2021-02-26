@@ -518,23 +518,25 @@ namespace MeltPoolDG::Flow
 
               for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
                 {
-                  const auto indicator = parameters.flow.variable_properties_over_interface ?
+                  const auto indicator = parameters.flow.variable_properties_over_interface=="true" ||
+                                         parameters.flow.variable_properties_over_interface=="consistent_with_evaporation" ? 
                                            ls_values.get_value(q) :
                                            UtilityFunctions::heaviside(ls_values.get_value(q), 0.5);
 
                   // set density
-                  flow_operation->get_density(cell, q) =
-                    parameters.flow.density + parameters.flow.density_difference * indicator;
+                  if (parameters.flow.variable_properties_over_interface == "consistent_with_evaporation")
+                  {
+                    const double& rho_g = parameters.evapor.density_gas;
+                    const double& rho_l = parameters.evapor.density_liquid;
+                    flow_operation->get_density(cell, q) = rho_g/(1. + (rho_g/rho_l-1)*ls_values.get_value(q) );
+                  }
+                  else
+                    flow_operation->get_density(cell, q) =
+                      parameters.flow.density + parameters.flow.density_difference * indicator;
 
                   // set viscosity
                   flow_operation->get_viscosity(cell, q) =
                     parameters.flow.viscosity + parameters.flow.viscosity_difference * indicator;
-
-                  //@todo --> variable densities over interface thickness consistent with evaporation
-                  // const double& rho_g = parameters.evapor.density_gas;
-                  // const double& rho_l = parameters.evapor.density_liquid;
-                  // flow_operation->get_density(cell, q) = rho_g/(1. +
-                  // (rho_g/rho_l-1)*ls_values.get_value(q) );
 
                   // check if no spurious densities or viscosities are computed
                   const double min_density =
