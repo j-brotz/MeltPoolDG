@@ -254,23 +254,6 @@ namespace MeltPoolDG::Flow
           "  this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), 'level_set') "));
 
       /*
-       *    initialize the melt pool operation class
-       */
-      if (base_in->parameters.base.problem_name == "melt_pool" ||
-          base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
-        melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
-          scratch_data,
-          base_in->parameters,
-          ls_dof_idx,
-          reinit_dof_idx,
-          flow_operation->get_dof_handler_idx_velocity(),
-          flow_operation->get_quad_idx_velocity(),
-          temp_dof_idx,
-          temp_quad_idx,
-          base_in->parameters.flow.start_time,
-          evaporation_operation == nullptr);
-
-      /*
        *    compute intial conditions of the level set
        */
       VectorType initial_solution;
@@ -322,6 +305,23 @@ namespace MeltPoolDG::Flow
             flow_operation->get_velocity(),
             evaporation_operation->get_velocity());
         }
+
+      /*
+       *    initialize the melt pool operation class
+       */
+      if (base_in->parameters.base.problem_name == "melt_pool" ||
+          base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
+        melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
+          scratch_data,
+          base_in->parameters,
+          ls_dof_idx,
+          reinit_dof_idx,
+          flow_operation->get_dof_handler_idx_velocity(),
+          flow_operation->get_quad_idx_velocity(),
+          temp_dof_idx,
+          temp_quad_idx,
+          base_in->parameters.flow.start_time,
+          evaporation_operation == nullptr);
 
       /*
        * set initial condition of the melt pool class
@@ -518,18 +518,22 @@ namespace MeltPoolDG::Flow
 
               for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
                 {
-                  const auto indicator = parameters.flow.variable_properties_over_interface=="true" ||
-                                         parameters.flow.variable_properties_over_interface=="consistent_with_evaporation" ? 
-                                           ls_values.get_value(q) :
-                                           UtilityFunctions::heaviside(ls_values.get_value(q), 0.5);
+                  const auto indicator =
+                    parameters.flow.variable_properties_over_interface == "true" ||
+                        parameters.flow.variable_properties_over_interface ==
+                          "consistent_with_evaporation" ?
+                      ls_values.get_value(q) :
+                      UtilityFunctions::heaviside(ls_values.get_value(q), 0.5);
 
                   // set density
-                  if (parameters.flow.variable_properties_over_interface == "consistent_with_evaporation")
-                  {
-                    const double& rho_g = parameters.evapor.density_gas;
-                    const double& rho_l = parameters.evapor.density_liquid;
-                    flow_operation->get_density(cell, q) = rho_g/(1. + (rho_g/rho_l-1)*ls_values.get_value(q) );
-                  }
+                  if (parameters.flow.variable_properties_over_interface ==
+                      "consistent_with_evaporation")
+                    {
+                      const double &rho_g = parameters.evapor.density_gas;
+                      const double &rho_l = parameters.evapor.density_liquid;
+                      flow_operation->get_density(cell, q) =
+                        rho_g / (1. + (rho_g / rho_l - 1) * ls_values.get_value(q));
+                    }
                   else
                     flow_operation->get_density(cell, q) =
                       parameters.flow.density + parameters.flow.density_difference * indicator;

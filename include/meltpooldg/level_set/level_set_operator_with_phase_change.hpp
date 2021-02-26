@@ -36,6 +36,16 @@ namespace MeltPoolDG::LevelSet
     using vector              = Tensor<1, dim, VectorizedArray<number>>;
     using scalar              = VectorizedArray<number>;
 
+    const ScratchData<dim> &    scratch_data;
+    const VectorType &          advection_velocity;
+    const VectorType &          evapor_velocity;
+    const LevelSetData<number> &data;
+    const unsigned int          ls_hanging_nodes_dof_idx;
+    const unsigned int          temp_dof_idx;
+    const unsigned int          flow_vel_dof_idx;
+    const unsigned int          evapor_vel_dof_idx;
+    double                      theta;
+
   public:
     // clang-format off
     LevelSetOperatorWithPhaseChange( const ScratchData<dim> &scratch_data_in, 
@@ -254,16 +264,5 @@ namespace MeltPoolDG::LevelSet
                                << std::setprecision(10) << advected_field.l2_norm() << std::endl;
       advected_field.zero_out_ghosts();
     }
-
-  private:
-    const ScratchData<dim> &    scratch_data;
-    const VectorType &          advection_velocity;
-    const VectorType &          evapor_velocity;
-    const LevelSetData<number> &data;
-    const unsigned int          ls_hanging_nodes_dof_idx;
-    const unsigned int          temp_dof_idx;
-    const unsigned int          flow_vel_dof_idx;
-    const unsigned int          evapor_vel_dof_idx;
-    double                      theta;
   };
 } // namespace MeltPoolDG::LevelSet

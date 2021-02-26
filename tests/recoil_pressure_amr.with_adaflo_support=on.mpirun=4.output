@@ -1,5 +1,3 @@
-current laser position: 0 4e-05
-current laser intensity: 1
 | normal vector:         i=47 	|n_0| = 3.8742593583e-09|n_1| = 1121259.0504   
     | reini: τ= 2.762135864e-06| CG: i=27   	 |ΔΨ|∞ = 0.4233483459    |ΔΨ|²/dT = 1752294.066    |
     | reini: τ= 5.524271728e-06| CG: i=27   	 |ΔΨ|∞ = 0.175358511     |ΔΨ|²/dT = 736324.3757    |
@@ -8,6 +6,8 @@ current laser intensity: 1
     | reini: τ= 1.381067932e-05| CG: i=28   	 |ΔΨ|∞ = 0.02746619917   |ΔΨ|²/dT = 146751.9083    |
  |n|_0=8.709957941e-11 |n|_1=433328.8695    
  |k|=1.512144145e-17
+current laser position: 0 4e-05
+current laser intensity: 1
 cycle: 0 n_dofs: 4225(ls) + 33282(vel) + 4225(p) T.size 4225 solid.size 4225
 cycle: 1 n_dofs: 4661(ls) + 36770(vel) + 4661(p) T.size 4661 solid.size 4661
 cycle: 2 n_dofs: 5919(ls) + 46826(vel) + 5919(p) T.size 5919 solid.size 5919

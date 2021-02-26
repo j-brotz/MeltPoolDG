@@ -1,10 +1,10 @@
-current laser position: 0 0
-current laser intensity: 1
 | normal vector:         i=41 	|n_0| = 8.3145559453e-10|n_1| = 721093.3591    
     | reini: τ= 4.1735014594e-06| CG: i=26   	 |ΔΨ|∞ = 0.6435627875    |ΔΨ|²/dT = 1263487.698    |
     | reini: τ= 8.347002919e-06| CG: i=26   	 |ΔΨ|∞ = 0.1964001203    |ΔΨ|²/dT = 385357.9234    |
 | normal vector:         i=41 	|n_0| = 0.0079775549315|n_1| = 666074.87318   
 | curvature:         i=67 	|k| = 2911.3031574   
+current laser position: 0 0
+current laser intensity: 1
 t= 5e-07     | GMRES: i=28   	 |ϕ|2 = 25.57427848    
 | normal vector:         i=42 	|n_0| = 218368.41645   |n_1| = 440986.74303   
     | reini: τ= 4.1735014594e-06| CG: i=30   	 |ΔΨ|∞ = 0.242370196     |ΔΨ|²/dT = 227040.6224    |
