@@ -11,7 +11,7 @@ MESSAGE("_______________________________________________________________________
 
 # this is the standard deal.II search mechanism, including check for Trilinos and p4est
 cmake_minimum_required(VERSION 3.3)  
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 ## avoid in-source compilation
 set(DEFAULT_OUT_OF_SOURCE_FOLDER "build")
