@@ -9,8 +9,6 @@
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/numerics/vector_tools.h>
-
-#include <deal.II/simplex/grid_generator.h>
 // c++
 #include <cmath>
 #include <iostream>

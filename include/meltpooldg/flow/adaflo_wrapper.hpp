@@ -87,11 +87,11 @@ namespace MeltPoolDG::Flow
 
       this->quad_index_u =
         adaflo_params.use_simplex_mesh ?
-          scratch_data.attach_quadrature(Simplex::QGauss<dim>(adaflo_params.velocity_degree + 1)) :
+          scratch_data.attach_quadrature(QGaussSimplex<dim>(adaflo_params.velocity_degree + 1)) :
           scratch_data.attach_quadrature(QGauss<1>(adaflo_params.velocity_degree + 1));
       this->quad_index_p =
         adaflo_params.use_simplex_mesh ?
-          scratch_data.attach_quadrature(Simplex::QGauss<dim>(adaflo_params.velocity_degree)) :
+          scratch_data.attach_quadrature(QGaussSimplex<dim>(adaflo_params.velocity_degree)) :
           scratch_data.attach_quadrature(QGauss<1>(adaflo_params.velocity_degree));
     }
 
