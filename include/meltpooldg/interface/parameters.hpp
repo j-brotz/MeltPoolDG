@@ -127,6 +127,13 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct HeatData
+  {
+    number emissivity             = 0.0;
+    number convection_coefficient = 0.0;
+  };
+
+  template <typename number = double>
   struct LaserData
   {
     number      power                              = 0.0;
@@ -651,6 +658,19 @@ namespace MeltPoolDG
       }
       prm.leave_subsection();
       /*
+       *   heat
+       */
+      prm.enter_subsection("heat");
+      {
+        prm.add_parameter("heat convection coefficient",
+                          heat.convection_coefficient,
+                          "Convection coefficient for the radiative boundary condition");
+        prm.add_parameter("heat emissivity",
+                          heat.emissivity,
+                          "Emissivity for the radiative boundary condition");
+      }
+      prm.leave_subsection();
+      /*
        *   laser
        */
       prm.enter_subsection("laser");
@@ -885,6 +905,7 @@ namespace MeltPoolDG
     FlowData<number>               flow;
     NormalVectorData<number>       normal_vec;
     CurvatureData<number>          curv;
+    HeatData<number>               heat;
     LaserData<number>              laser;
     MeltPoolData<number>           mp;
     RecoilPressureData<number>     recoil;
