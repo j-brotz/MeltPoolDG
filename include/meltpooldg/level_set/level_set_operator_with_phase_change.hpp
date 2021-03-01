@@ -127,7 +127,7 @@ namespace MeltPoolDG::LevelSet
                   flow_vel.evaluate(true, true);
 
                   evapor_vel.reinit(cell);
-                  evapor_vel.gather_evaluate(evapor_velocity, true, false);
+                  evapor_vel.gather_evaluate(evapor_velocity, true, true);
 
                   for (unsigned int q_index = 0; q_index < advected_field.n_q_points; ++q_index)
                     {
@@ -143,7 +143,8 @@ namespace MeltPoolDG::LevelSet
                       advected_field.submit_value(
                         phi + this->d_tau * theta * velocity_grad_phi
                         // non zero divergence of the fluid field
-                        //+ this->d_tau * theta * phi * velocity.get_divergence(q_index)
+                        //+ this->d_tau * theta * phi * flow_vel.get_divergence(q_index)
+                        //+ this->d_tau * theta * phi * evapor_vel.get_divergence(q_index)
                         ,
                         q_index);
                     }
@@ -194,7 +195,7 @@ namespace MeltPoolDG::LevelSet
                   flow_vel.evaluate(true, true);
 
                   evapor_vel.reinit(cell);
-                  evapor_vel.gather_evaluate(evapor_velocity, true, false);
+                  evapor_vel.gather_evaluate(evapor_velocity, true, true);
 
                   for (unsigned int q_index = 0; q_index < advected_field.n_q_points; ++q_index)
                     {
@@ -211,7 +212,8 @@ namespace MeltPoolDG::LevelSet
                       advected_field.submit_value(
                         phi - this->d_tau * (1. - theta) * velocity_grad_phi
                         // non zero divergence of the fluid field
-                        //- this->d_tau * (1 - theta) * phi * velocity.get_divergence(q_index)
+                        //- this->d_tau * (1-theta) * phi * flow_vel.get_divergence(q_index)
+                        //- this->d_tau * (1-theta) * phi * evapor_vel.get_divergence(q_index)
                         ,
                         q_index);
                     }

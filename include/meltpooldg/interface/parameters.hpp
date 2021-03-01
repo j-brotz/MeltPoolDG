@@ -647,7 +647,7 @@ namespace MeltPoolDG
           "flow variable properties over interface",
           flow.variable_properties_over_interface,
           "Set this parameter to interpolate the flow properties over the interface smoothly.",
-                          Patterns::Selection("false|true|consistent_with_evaporation"));
+          Patterns::Selection("false|true|consistent_with_evaporation"));
       }
       prm.leave_subsection();
       /*
@@ -675,7 +675,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "laser variable properties over interface",
           laser.variable_properties_over_interface,
-          "Set this parameter to true interpolate the thermal properties over the interface smoothly.");
+          "Set this parameter to true to interpolate the thermal properties over the interface smoothly.");
         prm.add_parameter(
           "laser do move",
           laser.do_move,

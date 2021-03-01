@@ -503,6 +503,9 @@ namespace MeltPoolDG::Flow
 
       double mass = 0.0;
 
+      bool variable_props =
+        parameters.flow.variable_properties_over_interface == "true" ||
+        parameters.flow.variable_properties_over_interface == "consistent_with_evaporation";
 
       scratch_data->get_matrix_free().template cell_loop<double, VectorType>(
         [&](const auto &matrix_free, auto &, const auto &src, auto macro_cells) {
@@ -518,12 +521,9 @@ namespace MeltPoolDG::Flow
 
               for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
                 {
-                  const auto indicator =
-                    parameters.flow.variable_properties_over_interface == "true" ||
-                        parameters.flow.variable_properties_over_interface ==
-                          "consistent_with_evaporation" ?
-                      ls_values.get_value(q) :
-                      UtilityFunctions::heaviside(ls_values.get_value(q), 0.5);
+                  const auto indicator = variable_props ?
+                                           ls_values.get_value(q) :
+                                           UtilityFunctions::heaviside(ls_values.get_value(q), 0.5);
 
                   // set density
                   if (parameters.flow.variable_properties_over_interface ==
