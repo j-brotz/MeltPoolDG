@@ -131,6 +131,7 @@ namespace MeltPoolDG
   {
     number emissivity             = 0.0;
     number convection_coefficient = 0.0;
+    number temperature_infinity   = 0.0;
   };
 
   template <typename number = double>
@@ -668,6 +669,10 @@ namespace MeltPoolDG
         prm.add_parameter("heat emissivity",
                           heat.emissivity,
                           "Emissivity for the radiative boundary condition");
+        prm.add_parameter(
+          "heat temperature infinity",
+          heat.temperature_infinity,
+          "Infinity temperature for the conductive and radiative boundary condition");
       }
       prm.leave_subsection();
       /*
