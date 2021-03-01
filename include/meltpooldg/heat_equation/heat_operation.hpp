@@ -8,6 +8,7 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/heat_equation/heat_operator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::HeatEquation
@@ -31,6 +32,8 @@ namespace MeltPoolDG::HeatEquation
      *    accessible for output_results.
      */
     VectorType temperature;
+
+    std::shared_ptr<HeatOperator<dim>> heat_operator;
 
   public:
     HeatOperation(const ScratchData<dim> &scratch_data_in,

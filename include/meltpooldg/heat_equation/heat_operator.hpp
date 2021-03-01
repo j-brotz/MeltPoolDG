@@ -64,8 +64,37 @@ namespace MeltPoolDG::HeatEquation
     void
     vmult(VectorType &dst, const VectorType &src) const override
     {
+      scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
+        [&](const auto &matrix_free,
+            auto &      dst,
+            const auto &src,
+            auto        cell_range) { /* todo */ }, // cell loop
+        [&](const auto &matrix_free,
+            auto &      dst,
+            const auto &src,
+            auto        face_range) { /*do nothing*/ }, // face loop
+        [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
+          boundary_loop(dst, src, face_range);
+        },
+        dst,
+        src,
+        true);
+    }
+
+    void
+    cell_loop(VectorType &dst, const VectorType &src) const override
+    {
       AssertThrow(false, ExcNotImplemented());
     }
+
+    /*
+     * apply Robin-type boundary conditions for convection and radiation
+     */
+    void
+    boundary_loop(VectorType &                           dst,
+                  const VectorType &                     src,
+                  std::pair<unsigned int, unsigned int> &face_range)
+    {}
 
     void
     create_rhs(VectorType &dst, const VectorType &src) const override
