@@ -22,15 +22,17 @@ namespace MeltPoolDG::HeatEquation
    *  R(T^(n+1)) = | w, ρ c_p ( T^(n+1)- T^(n+1)) |  -  | ∇w, ρ c_p T^(n+1) u - k ∇T^(n+1)) |
    *               \                              /     \                                  /
    *                                               Ω                                        Ω
-   *         /    _   \     /    _  \
-   *       + | w, q_s |  -  | w, q  | = 0
-   *         \        /     \       /
-   *                 Ω               Γ
-   *                                  N
+   *               /    _   \     /    _  \
+   *             + | w, q_s |  -  | w, q  | = 0
+   *               \        /     \       /
+   *                         Ω             Γ
+   *                                        N
    *
    * with the temperature field T^(n+1), test function w, the density ρ, the specific heat capacity
    * c_p and the conductivity k, source/sink terms q_s and prescribed fluxes q along Neumann
    * boundaries.
+   *
+   * We assume that the density and the specific heat capacity do not dependent on the temperature.
    *
    *
    */
@@ -49,33 +51,34 @@ namespace MeltPoolDG::HeatEquation
     const HeatData<number> &data;
     const unsigned int      temp_dof_idx;
     const unsigned int      temp_quad_idx;
-    const unsigned int      vel_dof_idx;
+    unsigned int            vel_dof_idx = 0; //@todo: fill
 
     const VectorType &temperature;
-    const VectorType &temperature_old;
     VectorType        heat_source; //@todo: fill
     VectorType        velocity;    //@todo: fill
 
-    std::vector<int> bc_radiation_indices;  //@todo: fill
-    std::vector<int> bc_convection_indices; //@todo: fill
-    double           rho          = 0.0;    //@todo: fill
-    double           c_p          = 0.0;    //@todo: fill
-    double           conductivity = 0.0;    //@todo: fill
+    std::vector<types::boundary_id> bc_radiation_indices;  //@todo: fill
+    std::vector<types::boundary_id> bc_convection_indices; //@todo: fill
+    double                          rho          = 0.0;    //@todo: fill
+    double                          c_p          = 0.0;    //@todo: fill
+    double                          conductivity = 0.0;    //@todo: fill
 
   public:
-    HeatOperator(const ScratchData<dim> &scratch_data_in,
-                 const HeatData<number> &data_in,
-                 const unsigned int      temp_dof_idx_in,
-                 const unsigned int      temp_quad_idx_in,
-                 const VectorType &      temperature_in,
-                 const VectorType &      temperature_old_in)
+    HeatOperator(const ScratchData<dim> &              scratch_data_in,
+                 const HeatData<number> &              data_in,
+                 const std::vector<types::boundary_id> bc_radiation_in,
+                 const std::vector<types::boundary_id> bc_convection_in,
+                 const unsigned int                    temp_dof_idx_in,
+                 const unsigned int                    temp_quad_idx_in,
+                 const VectorType &                    temperature_in)
       // clang-format off
-    : scratch_data        ( scratch_data_in    )
-    , data                ( data_in            )
-    , temp_dof_idx        ( temp_dof_idx_in    )
-    , temp_quad_idx       ( temp_quad_idx_in   )
-    , temperature         ( temperature_in     )
-    , temperature_old     ( temperature_old_in )
+    : scratch_data         ( scratch_data_in  )
+    , data                 ( data_in          )
+    , temp_dof_idx         ( temp_dof_idx_in  )
+    , temp_quad_idx        ( temp_quad_idx_in )
+    , temperature          ( temperature_in   )
+    , bc_radiation_indices ( bc_radiation_in  )
+    , bc_convection_indices( bc_convection_in )
     {
       this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
     }
@@ -200,6 +203,7 @@ namespace MeltPoolDG::HeatEquation
                   const VectorType &                     src,
                   std::pair<unsigned int, unsigned int> &cell_range) const
     {
+      (void)src;
       FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, this->dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, this->dof_idx, this->quad_idx);
@@ -211,7 +215,7 @@ namespace MeltPoolDG::HeatEquation
           temp_vals.gather_evaluate(temperature, true, true);
 
           temp_vals_old.reinit(cell);
-          temp_vals_old.gather_evaluate(temperature_old, true, false);
+          temp_vals_old.gather_evaluate(src, true, false);
 
           heat_source_vals.reinit(cell);
           heat_source_vals.read_dof_values_plain(heat_source);
@@ -242,7 +246,6 @@ namespace MeltPoolDG::HeatEquation
     void
     rhs_boundary_loop(const MatrixFree<dim, number> &        matrix_free,
                       VectorType &                           dst,
-                      const VectorType &                     src,
                       std::pair<unsigned int, unsigned int> &face_range) const
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free, this->dof_idx, this->quad_idx);

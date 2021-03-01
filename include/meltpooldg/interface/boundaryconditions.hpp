@@ -22,6 +22,9 @@ namespace MeltPoolDG
     no_slip_bc,
     fix_pressure_constant,
     symmetry_bc,
+    open_boundary_bc,
+    radiation_bc,
+    convection_bc,
     undefined
   };
 
@@ -35,6 +38,8 @@ namespace MeltPoolDG
     std::vector<types::boundary_id>                              fix_pressure_constant;
     std::vector<types::boundary_id>                              symmetry_bc;
     std::vector<types::boundary_id>                              open_boundary_bc;
+    std::vector<types::boundary_id>                              radiation_bc;
+    std::vector<types::boundary_id>                              convection_bc;
 
     inline DEAL_II_ALWAYS_INLINE BoundaryTypes
     get_boundary_type(types::boundary_id id)
@@ -52,6 +57,13 @@ namespace MeltPoolDG
         return BoundaryTypes::fix_pressure_constant;
       else if (std::find(symmetry_bc.begin(), symmetry_bc.end(), id) != symmetry_bc.end())
         return BoundaryTypes::symmetry_bc;
+      else if (std::find(open_boundary_bc.begin(), open_boundary_bc.end(), id) !=
+               open_boundary_bc.end())
+        return BoundaryTypes::open_boundary_bc;
+      else if (std::find(radiation_bc.begin(), radiation_bc.end(), id) != radiation_bc.end())
+        return BoundaryTypes::radiation_bc;
+      else if (std::find(convection_bc.begin(), convection_bc.end(), id) != convection_bc.end())
+        return BoundaryTypes::convection_bc;
       else
         {
           AssertThrow(false, ExcMessage("for specified boundary_id: " + std::string(id)));

@@ -62,6 +62,8 @@ namespace MeltPoolDG
     public:
       MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
                         const Parameters<double> &               data_in,
+                        const std::vector<types::boundary_id>    bc_radiation_in,
+                        const std::vector<types::boundary_id>    bc_convection_in,
                         const unsigned int                       ls_dof_idx_in,
                         const unsigned int                       reinit_dof_idx_in,
                         const unsigned int                       flow_vel_dof_idx_in,
@@ -95,6 +97,9 @@ namespace MeltPoolDG
          *  initialize the heat operation class
          */
         heat_operation = std::make_shared<HeatEquation::HeatOperation<dim>>(*scratch_data,
+                                                                            data_in.heat,
+                                                                            bc_radiation_in,
+                                                                            bc_convection_in,
                                                                             temp_dof_idx,
                                                                             temp_quad_idx);
 

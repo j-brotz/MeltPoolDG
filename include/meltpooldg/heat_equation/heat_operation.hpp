@@ -32,28 +32,117 @@ namespace MeltPoolDG::HeatEquation
      *    accessible for output_results.
      */
     VectorType temperature;
+    VectorType temperature_old;
+    VectorType heat_source;
+
+    const HeatData<double> heat_data;
 
     std::shared_ptr<HeatOperator<dim>> heat_operator;
 
   public:
-    HeatOperation(const ScratchData<dim> &scratch_data_in,
-                  const unsigned int      temp_dof_idx_in,
-                  const unsigned int      temp_quad_idx_in)
+    HeatOperation(const ScratchData<dim> &              scratch_data_in,
+                  const HeatData<double> &              heat_data_in,
+                  const unsigned int                    temp_dof_idx_in,
+                  const unsigned int                    temp_quad_idx_in,
+                  const std::vector<types::boundary_id> bc_radiation_in,
+                  const std::vector<types::boundary_id> bc_convection_in)
       : scratch_data(scratch_data_in)
+      , heat_data(heat_data_in)
       , temp_dof_idx(temp_dof_idx_in)
       , temp_quad_idx(temp_quad_idx_in)
-    {}
+    {
+      heat_operator = std::make_shared<HeatOperator<dim>>(scratch_data,
+                                                          heat_data,
+                                                          bc_radiation_in,
+                                                          bc_convection_in,
+                                                          temp_dof_idx,
+                                                          temp_quad_idx,
+                                                          temperature);
+    }
+
+    void
+    set_initial_condition(const VectorType &initial_temperature_field)
+    {
+      scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
+      scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
+
+      temperature     = initial_temperature_field;
+      temperature_old = initial_temperature_field;
+    }
 
     void
     reinit()
     {
       scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
+      scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
+      scratch_data.initialize_dof_vector(heat_source, temp_dof_idx);
+    }
+
+    bool
+    is_converged(const int         n_nonlinear_iter,
+                 const VectorType &residual,
+                 const VectorType &solution_update)
+    {
+      const double res_norm    = residual.l2_norm();
+      const double update_norm = solution_update.l2_norm();
+
+      scratch_data.get_pcout() << std::setprecision(10) << res_norm << " " << std::setprecision(10)
+                               << update_norm << std::endl;
+      if (n_nonlinear_iter <= heat_data.max_nonlinear_iterations)
+        {
+          return (update_norm <= heat_data.field_correction_tolerance) &&
+                 (res_norm <= heat_data.residual_tolerance);
+        }
+      else if (n_nonlinear_iter <=
+               heat_data.max_nonlinear_iterations + heat_data.max_nonlinear_iterations_alt)
+        {
+          return (update_norm <= heat_data.field_correction_tolerance_alt) &&
+                 (res_norm <= heat_data.residual_tolerance_alt);
+        }
+      else
+        return false;
     }
 
     void
     solve()
     {
-      AssertThrow(false, ExcNotImplemented());
+      if (!heat_data.do_matrix_free)
+        AssertThrow(false, ExcNotImplemented());
+
+      VectorType solution_update, rhs;
+
+      scratch_data.initialize_dof_vector(solution_update, temp_dof_idx);
+      scratch_data.initialize_dof_vector(rhs, temp_dof_idx);
+
+      scratch_data.get_pcout << " iter_solve     T      norm(R)      T_inc " << std::endl;
+      for (unsigned int i = 0;
+           i <= heat_data.max_nonlinear_iterations + heat_data.max_nonlinear_iterations_alt;
+           ++i)
+        {
+          // @todo: apply dirichlet bc
+          heat_operator->create_rhs(rhs, temperature_old);
+
+          int iter = LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
+            *heat_operator, solution_update, rhs);
+
+          if (is_converged(i, rhs, solution_update))
+            {
+              scratch_data.get_pcout << " converged successfully." << std::endl;
+              break;
+            }
+          else if (i >= heat_data.max_nonlinear_iterations + heat_data.max_nonlinear_iterations_alt)
+            {
+              scratch_data.get_pcout << " NOT CONVERGED !!! " << std::endl;
+              break;
+            }
+
+          temperature += solution_update;
+
+          scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
+
+          scratch_data.get_pcout << std::setprecision(0) << iter << " " << std::setprecision(10)
+                                 << temperature.l2_norm() << " ";
+        }
     }
 
     void
@@ -61,24 +150,33 @@ namespace MeltPoolDG::HeatEquation
     {
       temperature.update_ghost_values();
       vectors.push_back(&temperature);
+      temperature_old.update_ghost_values();
+      vectors.push_back(&temperature_old);
     }
 
     void
     distribute_constraints()
     {
       scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
+      scratch_data.get_constraint(temp_dof_idx).distribute(temperature_old);
     }
 
     void
     attach_output_vectors(DataOut<dim> &data_out) const
     {
+      MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
       /**
        *  temperature
        */
-      MeltPoolDG::VectorTools::update_ghost_values(temperature);
       data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
                                temperature,
                                "temperature");
+      /**
+       *  heat source
+       */
+      data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                               heat_source,
+                               "heat_source");
     }
 
     const VectorType &
@@ -91,6 +189,18 @@ namespace MeltPoolDG::HeatEquation
     get_temperature()
     {
       return temperature;
+    }
+
+    const VectorType &
+    get_heat_source() const
+    {
+      return heat_source;
+    }
+
+    VectorType &
+    get_heat_source()
+    {
+      return heat_source;
     }
   };
 } // namespace MeltPoolDG::HeatEquation

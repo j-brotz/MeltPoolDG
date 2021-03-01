@@ -129,9 +129,16 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
-    number emissivity             = 0.0;
-    number convection_coefficient = 0.0;
-    number temperature_infinity   = 0.0;
+    number emissivity                     = 0.0;
+    number convection_coefficient         = 0.0;
+    number temperature_infinity           = 0.0;
+    bool   do_matrix_free                 = true;  //@todo user input
+    int    max_nonlinear_iterations       = 10;    //@todo user input
+    double field_correction_tolerance     = 1e-10; //@todo user input
+    double residual_tolerance             = 1e-10; //@todo user input
+    int    max_nonlinear_iterations_alt   = 5;     //@todo user input
+    double field_correction_tolerance_alt = 1e-8;  //@todo user input
+    double residual_tolerance_alt         = 1e-8;  //@todo user input
   };
 
   template <typename number = double>
