@@ -90,16 +90,16 @@ namespace MeltPoolDG::HeatEquation
 
       scratch_data.get_pcout() << std::setprecision(10) << res_norm << " " << std::setprecision(10)
                                << update_norm << std::endl;
-      if (n_nonlinear_iter <= heat_data.max_nonlinear_iterations)
+      if (n_nonlinear_iter <= heat_data.nlsolve.max_nonlinear_iterations)
         {
-          return (update_norm <= heat_data.field_correction_tolerance) &&
-                 (res_norm <= heat_data.residual_tolerance);
+          return (update_norm <= heat_data.nlsolve.field_correction_tolerance) &&
+                 (res_norm <= heat_data.nlsolve.residual_tolerance);
         }
-      else if (n_nonlinear_iter <=
-               heat_data.max_nonlinear_iterations + heat_data.max_nonlinear_iterations_alt)
+      else if (n_nonlinear_iter <= heat_data.nlsolve.max_nonlinear_iterations +
+                                     heat_data.nlsolve.max_nonlinear_iterations_alt)
         {
-          return (update_norm <= heat_data.field_correction_tolerance_alt) &&
-                 (res_norm <= heat_data.residual_tolerance_alt);
+          return (update_norm <= heat_data.nlsolve.field_correction_tolerance_alt) &&
+                 (res_norm <= heat_data.nlsolve.residual_tolerance_alt);
         }
       else
         return false;
@@ -117,8 +117,8 @@ namespace MeltPoolDG::HeatEquation
       scratch_data.initialize_dof_vector(rhs, temp_dof_idx);
 
       scratch_data.get_pcout() << " iter_solve     T      norm(R)      T_inc " << std::endl;
-      for (unsigned int i = 0;
-           i <= heat_data.max_nonlinear_iterations + heat_data.max_nonlinear_iterations_alt;
+      for (unsigned int i = 0; i <= heat_data.nlsolve.max_nonlinear_iterations +
+                                      heat_data.nlsolve.max_nonlinear_iterations_alt;
            ++i)
         {
           // @todo: apply dirichlet bc
@@ -132,7 +132,8 @@ namespace MeltPoolDG::HeatEquation
               scratch_data.get_pcout() << " converged successfully." << std::endl;
               break;
             }
-          else if (i >= heat_data.max_nonlinear_iterations + heat_data.max_nonlinear_iterations_alt)
+          else if (i >= heat_data.nlsolve.max_nonlinear_iterations +
+                          heat_data.nlsolve.max_nonlinear_iterations_alt)
             {
               scratch_data.get_pcout() << " NOT CONVERGED !!! " << std::endl;
               break;

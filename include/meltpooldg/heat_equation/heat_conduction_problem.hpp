@@ -137,19 +137,15 @@ namespace MeltPoolDG::HeatEquation
       /*
        *    initialize the heat operation class
        */
-      // heat_operation.initialize(scratch_data,
-      // initial_solution,
-      // flow_operation->get_velocity(),
-      // base_in,
-      // ls_dof_idx,
-      // ls_hanging_nodes_dof_idx,
-      // ls_quad_idx,
-      // reinit_dof_idx,
-      // reinit_hanging_nodes_dof_idx,
-      // curv_dof_idx,
-      // normal_dof_idx,
-      // vel_dof_idx,
-      // ls_dof_idx [> todo: ls_zero_bc_idx<]);
+      heat_operation =
+        std::make_shared<HeatOperation<dim>>(*scratch_data,
+                                             base_in->parameters.heat,
+                                             temp_dof_idx,
+                                             temp_quad_idx,
+                                             base_in->get_radiation_id("heat_conduction_T"),
+                                             base_in->get_convection_id("heat_conduction_T"));
+
+      heat_operation->set_initial_condition(initial_solution);
       /*
        *  initialize postprocessor
        */

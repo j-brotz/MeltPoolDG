@@ -52,6 +52,8 @@ namespace MeltPoolDG::HeatEquation
     const unsigned int      temp_dof_idx;
     const unsigned int      temp_quad_idx;
 
+    const double stefan_boltzmann = 5.67e-8; // W/(mK^4)
+
     const VectorType &              temperature;
     std::vector<types::boundary_id> bc_radiation_indices;  //@todo: fill
     std::vector<types::boundary_id> bc_convection_indices; //@todo: fill
@@ -181,8 +183,8 @@ namespace MeltPoolDG::HeatEquation
               VectorizedArray<double> temp = 0;
               if (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
                   bc_radiation_indices.end())
-                temp += 4 * data.emissivity * pow<double>(temp_vals.get_value(q_index), 3) *
-                        inc_temp_vals_at_q;
+                temp += 4 * data.emissivity * stefan_boltzmann *
+                        pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
               if (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
                   bc_convection_indices.end())
                 temp += data.convection_coefficient * inc_temp_vals_at_q;
@@ -265,7 +267,7 @@ namespace MeltPoolDG::HeatEquation
               VectorizedArray<double> temp = 0;
               if (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
                   bc_radiation_indices.end())
-                temp += data.emissivity *
+                temp += data.emissivity * stefan_boltzmann *
                         (pow<double>(temp_vals, 4) - std::pow(data.temperature_infinity, 4));
               if (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
                   bc_convection_indices.end())

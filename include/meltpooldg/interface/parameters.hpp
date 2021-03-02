@@ -24,6 +24,17 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct NonlinearSolverData
+  {
+    int    max_nonlinear_iterations       = 10;
+    number field_correction_tolerance     = 1e-10;
+    number residual_tolerance             = 1e-10;
+    int    max_nonlinear_iterations_alt   = 5;
+    number field_correction_tolerance_alt = 1e-8;
+    number residual_tolerance_alt         = 1e-8;
+  };
+
+  template <typename number = double>
   struct TimeSteppingData
   {
     number       start_time              = 0.0;
@@ -83,8 +94,8 @@ namespace MeltPoolDG
     number             scale_factor_epsilon = 0.5;
     number             dtau                 = -1.0;
     std::string        modeltype            = "olsson2007";
+    std::string        implementation       = "meltpooldg";
     SolverData<number> solver;
-    std::string        implementation = "meltpooldg";
   };
 
   template <typename number = double>
@@ -139,17 +150,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
-    number                   emissivity                     = 0.0;
-    number                   convection_coefficient         = 0.0;
-    number                   temperature_infinity           = 0.0;
-    bool                     do_matrix_free                 = true;  //@todo user input
-    int                      max_nonlinear_iterations       = 10;    //@todo user input
-    double                   field_correction_tolerance     = 1e-10; //@todo user input
-    double                   residual_tolerance             = 1e-10; //@todo user input
-    int                      max_nonlinear_iterations_alt   = 5;     //@todo user input
-    double                   field_correction_tolerance_alt = 1e-8;  //@todo user input
-    double                   residual_tolerance_alt         = 1e-8;  //@todo user input
-    TimeSteppingData<number> time_stepping;                          //@todo user input
+    number                      emissivity             = 0.0;
+    number                      convection_coefficient = 0.0;
+    number                      temperature_infinity   = 0.0;
+    bool                        do_matrix_free         = true;
+    TimeSteppingData<number>    time_stepping;
+    NonlinearSolverData<number> nlsolve;
   };
 
   template <typename number = double>
@@ -698,6 +704,48 @@ namespace MeltPoolDG
           "heat temperature infinity",
           heat.temperature_infinity,
           "Infinity temperature for the conductive and radiative boundary condition");
+        prm.add_parameter(
+          "heat do matrix free",
+          heat.do_matrix_free,
+          "Set this parameter if a matrix free solution procedure should be performed");
+        prm.add_parameter(
+          "heat nlsolve max nonlinear iterations",
+          heat.nlsolve.max_nonlinear_iterations,
+          "Set the number of maximum nonlinear iterations with standard tolerances.");
+        prm.add_parameter(
+          "heat nlsolve field correction tolerance",
+          heat.nlsolve.field_correction_tolerance,
+          "Set the tolerance for the maximum allowed correction of the unknown field.");
+        prm.add_parameter(
+          "heat nlsolve residual tolerance",
+          heat.nlsolve.residual_tolerance,
+          "Set the tolerance for the maximum allowed residual of the nonlinear system.");
+        prm.add_parameter(
+          "heat nlsolve max nonlinear iterations alt",
+          heat.nlsolve.max_nonlinear_iterations_alt,
+          "Set the number of maximum nonlinear iterations with alternative tolerances.");
+        prm.add_parameter(
+          "heat nlsolve field correction tolerance alt",
+          heat.nlsolve.field_correction_tolerance_alt,
+          "Set the alternative tolerance for the maximum allowed correction of the unknown field.");
+        prm.add_parameter(
+          "heat nlsolve residual tolerance alt",
+          heat.nlsolve.residual_tolerance_alt,
+          "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
+        prm.add_parameter("heat start time",
+                          heat.time_stepping.start_time,
+                          "Defines the start time for the solution of the heat problem");
+        prm.add_parameter("heat end time",
+                          heat.time_stepping.end_time,
+                          "Sets the end time for the solution of the heat problem");
+        prm.add_parameter("heat time step size",
+                          heat.time_stepping.time_step_size,
+                          "Sets the step size for time stepping. For non-uniform "
+                          "time stepping, this parameter determines the size of the first "
+                          "time step.");
+        prm.add_parameter("heat max n steps",
+                          heat.time_stepping.max_n_steps,
+                          "Sets the maximum number of time steps");
       }
       prm.leave_subsection();
       /*
