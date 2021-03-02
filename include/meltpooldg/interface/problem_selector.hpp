@@ -2,6 +2,7 @@
 // MeltPoolDG
 #include <meltpooldg/advection_diffusion/advection_diffusion_problem.hpp>
 #include <meltpooldg/flow/two_phase_flow_problem.hpp>
+#include <meltpooldg/heat_equation/heat_conduction_problem.hpp>
 #include <meltpooldg/interface/problembase.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
@@ -32,6 +33,9 @@ namespace MeltPoolDG
                problem_name == "two_phase_flow_with_evaporation" ||
                problem_name == "melt_pool_with_evaporation")
         return std::make_shared<Flow::TwoPhaseFlowProblem<dim>>();
+
+      else if (problem_name == "heat_conduction")
+        return std::make_shared<HeatEquation::HeatConductionProblem<dim>>();
       /* add your problem here*/
 
       else

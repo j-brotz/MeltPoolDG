@@ -24,6 +24,16 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct TimeSteppingData
+  {
+    number       start_time              = 0.0;
+    number       end_time                = 1.0;
+    number       time_step_size          = 0.01;
+    unsigned int max_n_steps             = 1000000;
+    std::string  time_integration_scheme = "none";
+  };
+
+  template <typename number = double>
   struct BaseData
   {
     std::string  application_name    = "none";
@@ -129,16 +139,17 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
-    number emissivity                     = 0.0;
-    number convection_coefficient         = 0.0;
-    number temperature_infinity           = 0.0;
-    bool   do_matrix_free                 = true;  //@todo user input
-    int    max_nonlinear_iterations       = 10;    //@todo user input
-    double field_correction_tolerance     = 1e-10; //@todo user input
-    double residual_tolerance             = 1e-10; //@todo user input
-    int    max_nonlinear_iterations_alt   = 5;     //@todo user input
-    double field_correction_tolerance_alt = 1e-8;  //@todo user input
-    double residual_tolerance_alt         = 1e-8;  //@todo user input
+    number                   emissivity                     = 0.0;
+    number                   convection_coefficient         = 0.0;
+    number                   temperature_infinity           = 0.0;
+    bool                     do_matrix_free                 = true;  //@todo user input
+    int                      max_nonlinear_iterations       = 10;    //@todo user input
+    double                   field_correction_tolerance     = 1e-10; //@todo user input
+    double                   residual_tolerance             = 1e-10; //@todo user input
+    int                      max_nonlinear_iterations_alt   = 5;     //@todo user input
+    double                   field_correction_tolerance_alt = 1e-8;  //@todo user input
+    double                   residual_tolerance_alt         = 1e-8;  //@todo user input
+    TimeSteppingData<number> time_stepping;                          //@todo user input
   };
 
   template <typename number = double>

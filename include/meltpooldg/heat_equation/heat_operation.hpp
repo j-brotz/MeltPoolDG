@@ -116,7 +116,7 @@ namespace MeltPoolDG::HeatEquation
       scratch_data.initialize_dof_vector(solution_update, temp_dof_idx);
       scratch_data.initialize_dof_vector(rhs, temp_dof_idx);
 
-      scratch_data.get_pcout << " iter_solve     T      norm(R)      T_inc " << std::endl;
+      scratch_data.get_pcout() << " iter_solve     T      norm(R)      T_inc " << std::endl;
       for (unsigned int i = 0;
            i <= heat_data.max_nonlinear_iterations + heat_data.max_nonlinear_iterations_alt;
            ++i)
@@ -129,12 +129,12 @@ namespace MeltPoolDG::HeatEquation
 
           if (is_converged(i, rhs, solution_update))
             {
-              scratch_data.get_pcout << " converged successfully." << std::endl;
+              scratch_data.get_pcout() << " converged successfully." << std::endl;
               break;
             }
           else if (i >= heat_data.max_nonlinear_iterations + heat_data.max_nonlinear_iterations_alt)
             {
-              scratch_data.get_pcout << " NOT CONVERGED !!! " << std::endl;
+              scratch_data.get_pcout() << " NOT CONVERGED !!! " << std::endl;
               break;
             }
 
@@ -142,8 +142,8 @@ namespace MeltPoolDG::HeatEquation
 
           scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
 
-          scratch_data.get_pcout << std::setprecision(0) << iter << " " << std::setprecision(10)
-                                 << temperature.l2_norm() << " ";
+          scratch_data.get_pcout() << std::setprecision(0) << iter << " " << std::setprecision(10)
+                                   << temperature.l2_norm() << " ";
         }
     }
 
