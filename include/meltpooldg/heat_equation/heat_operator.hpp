@@ -52,19 +52,17 @@ namespace MeltPoolDG::HeatEquation
     const unsigned int      temp_dof_idx;
     const unsigned int      temp_quad_idx;
 
-    const double stefan_boltzmann = 5.67e-8; // W/(mK^4)
+    const double stefan_boltzmann = 5.67e-8; // W/(mK^4) // @todo move -- where?
 
     const VectorType &              temperature;
-    std::vector<types::boundary_id> bc_radiation_indices;  //@todo: fill
-    std::vector<types::boundary_id> bc_convection_indices; //@todo: fill
-    unsigned int                    vel_dof_idx = 0;       //@todo: fill
+    std::vector<types::boundary_id> bc_radiation_indices;
+    std::vector<types::boundary_id> bc_convection_indices;
+    unsigned int                    vel_dof_idx = 0; //@todo: fill
 
     VectorType heat_source; //@todo: fill
     VectorType velocity;    //@todo: fill
 
-    double rho          = 0.0; //@todo: fill
-    double c_p          = 0.0; //@todo: fill
-    double conductivity = 0.0; //@todo: fill
+    bool do_velocity = false;
 
   public:
     HeatOperator(const ScratchData<dim> &              scratch_data_in,
@@ -128,27 +126,38 @@ namespace MeltPoolDG::HeatEquation
                       const VectorType &                     src,
                       std::pair<unsigned int, unsigned int> &cell_range) const
     {
-      FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, this->dof_idx, this->quad_idx);
-      FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
+
+      // if (do_velocity)
+      // FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           temp_vals.reinit(cell);
           temp_vals.gather_evaluate(src, true, true);
 
-          velocity_vals.reinit(cell);
-          velocity_vals.gather_evaluate(velocity, true, false);
+          // if (do_velocity)
+          //{
+          // velocity_vals.reinit(cell);
+          // velocity_vals.gather_evaluate(velocity, true, false);
+          //}
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              temp_vals.submit_value(rho * c_p * temp_vals.get_value(q_index), q_index);
-              temp_vals.submit_gradient(-this->d_tau * rho * c_p * temp_vals.get_value(q_index) *
-                                            MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                              velocity_vals.get_value(q_index)) -
-                                          conductivity *
-                                            MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                              temp_vals.get_gradient(q_index)),
-                                        q_index);
+              temp_vals.submit_value(data.density * data.capacity * temp_vals.get_value(q_index),
+                                     q_index);
+
+
+              auto val_grad = -data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                                     temp_vals.get_gradient(q_index));
+              // if (do_velocity)
+              //{
+              // val_grad += -this->d_tau * data.density * data.capacity *
+              // temp_vals.get_value(q_index) * MeltPoolDG::VectorTools::convert_to_vector<dim>(
+              // velocity_vals.get_value(q_index));
+              //}
+
+              temp_vals.submit_gradient(val_grad, q_index);
             }
           temp_vals.integrate_scatter(true, true, dst);
         }
@@ -205,7 +214,8 @@ namespace MeltPoolDG::HeatEquation
       FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, this->dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, this->dof_idx, this->quad_idx);
-      FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+      // if (do_velocity)
+      // FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
@@ -219,24 +229,30 @@ namespace MeltPoolDG::HeatEquation
           heat_source_vals.read_dof_values_plain(heat_source);
           heat_source_vals.evaluate(true, false);
 
-          velocity_vals.reinit(cell);
-          velocity_vals.gather_evaluate(velocity, true, false);
+          // if (do_velocity)
+          //{
+          // velocity_vals.reinit(cell);
+          // velocity_vals.gather_evaluate(velocity, true, false);
+          //}
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              temp_vals.submit_value(-1. * (rho * c_p *
+              temp_vals.submit_value(-1. * (data.density * data.capacity *
                                               (temp_vals.get_value(q_index) -
                                                temp_vals_old.get_value(q_index)) +
                                             heat_source_vals.get_value(q_index)),
                                      q_index);
-              temp_vals.submit_gradient(-1.0 * (-this->d_tau *
-                                                (rho * c_p * temp_vals.get_value(q_index) *
-                                                   MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                                     velocity_vals.get_value(q_index)) -
-                                                 conductivity *
-                                                   MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                                     temp_vals.get_gradient(q_index)))),
-                                        q_index);
+
+              auto val_grad = -data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                                     temp_vals.get_gradient(q_index));
+
+              // if (do_velocity)
+              //{
+              // val_grad += -this->d_tau * data.density * data.capacity *
+              // temp_vals.get_value(q_index) * MeltPoolDG::VectorTools::convert_to_vector<dim>(
+              // velocity_vals.get_value(q_index));
+              //}
+              temp_vals.submit_gradient(-1.0 * val_grad, q_index);
             }
           temp_vals.integrate_scatter(true, true, dst);
         }

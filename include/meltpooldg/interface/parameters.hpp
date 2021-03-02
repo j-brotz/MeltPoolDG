@@ -154,6 +154,9 @@ namespace MeltPoolDG
     number                      convection_coefficient = 0.0;
     number                      temperature_infinity   = 0.0;
     bool                        do_matrix_free         = true;
+    number                      density                = 0.0;
+    number                      conductivity           = 0.0;
+    number                      capacity               = 0.0;
     TimeSteppingData<number>    time_stepping;
     NonlinearSolverData<number> nlsolve;
   };
@@ -746,6 +749,11 @@ namespace MeltPoolDG
         prm.add_parameter("heat max n steps",
                           heat.time_stepping.max_n_steps,
                           "Sets the maximum number of time steps");
+        prm.add_parameter("heat conductivity",
+                          heat.conductivity,
+                          "Conductivity for the heat problem.");
+        prm.add_parameter("heat capacity", heat.capacity, "Heat capacity for the heat problem.");
+        prm.add_parameter("heat density", heat.density, "Density for the heat problem.");
       }
       prm.leave_subsection();
       /*

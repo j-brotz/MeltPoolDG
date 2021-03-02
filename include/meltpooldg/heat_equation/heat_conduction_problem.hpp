@@ -18,6 +18,20 @@ namespace MeltPoolDG::HeatEquation
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
+    TimeIterator<double> time_iterator;
+    DoFHandler<dim>      dof_handler;
+
+    AffineConstraints<double> temp_constraints;
+    AffineConstraints<double> temp_hanging_nodes_constraints;
+
+    unsigned int temp_dof_idx;
+    unsigned int temp_hanging_nodes_dof_idx;
+    unsigned int temp_quad_idx;
+
+    std::shared_ptr<ScratchData<dim>>   scratch_data;
+    std::shared_ptr<HeatOperation<dim>> heat_operation;
+    std::shared_ptr<Postprocessor<dim>> post_processor;
+
   public:
     HeatConductionProblem() = default;
 
@@ -34,7 +48,7 @@ namespace MeltPoolDG::HeatEquation
           scratch_data->get_pcout()
             << "t= " << std::setw(10) << std::left << time_iterator.get_current_time();
 
-          heat_operation->solve();
+          heat_operation->solve(dt);
 
           // ... and output the results to vtk files.
           output_results(n);
@@ -141,6 +155,7 @@ namespace MeltPoolDG::HeatEquation
         std::make_shared<HeatOperation<dim>>(*scratch_data,
                                              base_in->parameters.heat,
                                              temp_dof_idx,
+                                             temp_hanging_nodes_dof_idx,
                                              temp_quad_idx,
                                              base_in->get_radiation_id("heat_conduction_T"),
                                              base_in->get_convection_id("heat_conduction_T"));
@@ -274,19 +289,5 @@ namespace MeltPoolDG::HeatEquation
       // base_in->parameters.amr,
       // time_iterator.get_current_time_step_number());
     }
-
-    TimeIterator<double> time_iterator;
-    DoFHandler<dim>      dof_handler;
-
-    AffineConstraints<double> temp_constraints;
-    AffineConstraints<double> temp_hanging_nodes_constraints;
-
-    unsigned int temp_dof_idx;
-    unsigned int temp_hanging_nodes_dof_idx;
-    unsigned int temp_quad_idx;
-
-    std::shared_ptr<ScratchData<dim>>   scratch_data;
-    std::shared_ptr<HeatOperation<dim>> heat_operation;
-    std::shared_ptr<Postprocessor<dim>> post_processor;
   };
 } // namespace MeltPoolDG::HeatEquation

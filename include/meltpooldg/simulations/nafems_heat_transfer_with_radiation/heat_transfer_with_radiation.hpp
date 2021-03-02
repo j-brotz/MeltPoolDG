@@ -43,19 +43,7 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex)
-        {
-          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
-            this->mpi_communicator,
-            (::Triangulation<dim>::none),
-            false,
-            parallel::shared::Triangulation<dim>::Settings::partition_metis);
-        }
-      else
-        {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
-        }
+      this->triangulation = std::make_shared<Triangulation<dim>>();
 
       if constexpr (dim == 1)
         {

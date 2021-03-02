@@ -30,6 +30,7 @@ namespace MeltPoolDG::HeatEquation
      * select the relevant DoFHandlers and quadrature rules
      */
     const unsigned int temp_dof_idx;
+    const unsigned int temp_hanging_nodes_dof_idx;
     const unsigned int temp_quad_idx;
     /*
      *    This are the primary solution variables of this module, which will be also publically
@@ -45,12 +46,14 @@ namespace MeltPoolDG::HeatEquation
     HeatOperation(const ScratchData<dim> &              scratch_data_in,
                   const HeatData<double> &              heat_data_in,
                   const unsigned int                    temp_dof_idx_in,
+                  const unsigned int                    temp_hanging_nodes_dof_idx_in,
                   const unsigned int                    temp_quad_idx_in,
                   const std::vector<types::boundary_id> bc_radiation_in,
                   const std::vector<types::boundary_id> bc_convection_in)
       : scratch_data(scratch_data_in)
       , heat_data(heat_data_in)
       , temp_dof_idx(temp_dof_idx_in)
+      , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
       , temp_quad_idx(temp_quad_idx_in)
     {
       heat_operator = std::make_shared<HeatOperator<dim>>(scratch_data,
@@ -106,10 +109,12 @@ namespace MeltPoolDG::HeatEquation
     }
 
     void
-    solve()
+    solve(const double dt)
     {
       if (!heat_data.do_matrix_free)
         AssertThrow(false, ExcNotImplemented());
+
+      heat_operator->set_time_increment(dt);
 
       VectorType solution_update, rhs;
 
@@ -122,7 +127,8 @@ namespace MeltPoolDG::HeatEquation
            ++i)
         {
           // @todo: apply dirichlet bc
-          heat_operator->create_rhs(rhs, temperature_old);
+          heat_operator->create_rhs_and_apply_dirichlet_mf(
+            rhs, temperature_old, scratch_data, temp_dof_idx, temp_hanging_nodes_dof_idx);
 
           int iter = LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
             *heat_operator, solution_update, rhs);
@@ -146,6 +152,7 @@ namespace MeltPoolDG::HeatEquation
           scratch_data.get_pcout() << std::setprecision(0) << iter << " " << std::setprecision(10)
                                    << temperature.l2_norm() << " ";
         }
+      temperature_old = temperature;
     }
 
     void
