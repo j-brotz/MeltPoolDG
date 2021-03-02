@@ -23,6 +23,10 @@ namespace MeltPoolDG::HeatEquation
 
     const ScratchData<dim> &scratch_data;
     /**
+     * parameters
+     */
+    const HeatData<double> heat_data;
+    /**
      * select the relevant DoFHandlers and quadrature rules
      */
     const unsigned int temp_dof_idx;
@@ -34,8 +38,6 @@ namespace MeltPoolDG::HeatEquation
     VectorType temperature;
     VectorType temperature_old;
     VectorType heat_source;
-
-    const HeatData<double> heat_data;
 
     std::shared_ptr<HeatOperator<dim>> heat_operator;
 

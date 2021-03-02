@@ -51,17 +51,18 @@ namespace MeltPoolDG::HeatEquation
     const HeatData<number> &data;
     const unsigned int      temp_dof_idx;
     const unsigned int      temp_quad_idx;
-    unsigned int            vel_dof_idx = 0; //@todo: fill
 
-    const VectorType &temperature;
-    VectorType        heat_source; //@todo: fill
-    VectorType        velocity;    //@todo: fill
-
+    const VectorType &              temperature;
     std::vector<types::boundary_id> bc_radiation_indices;  //@todo: fill
     std::vector<types::boundary_id> bc_convection_indices; //@todo: fill
-    double                          rho          = 0.0;    //@todo: fill
-    double                          c_p          = 0.0;    //@todo: fill
-    double                          conductivity = 0.0;    //@todo: fill
+    unsigned int                    vel_dof_idx = 0;       //@todo: fill
+
+    VectorType heat_source; //@todo: fill
+    VectorType velocity;    //@todo: fill
+
+    double rho          = 0.0; //@todo: fill
+    double c_p          = 0.0; //@todo: fill
+    double conductivity = 0.0; //@todo: fill
 
   public:
     HeatOperator(const ScratchData<dim> &              scratch_data_in,
@@ -107,10 +108,10 @@ namespace MeltPoolDG::HeatEquation
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
           tangent_cell_loop(matrix_free, dst, src, cell_range);
         }, // cell loop
-        [&](const auto &matrix_free,
-            auto &      dst,
-            const auto &src,
-            auto        face_range) { /*do nothing*/ }, // internal face loop
+        [&]([[maybe_unused]] const auto &matrix_free,
+            [[maybe_unused]] auto &      dst,
+            [[maybe_unused]] const auto &src,
+            [[maybe_unused]] auto        face_range) { /*do nothing*/ }, // internal face loop
         [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
           tangent_boundary_loop(matrix_free, dst, src, face_range); // boundary face loop
         },
@@ -138,11 +139,14 @@ namespace MeltPoolDG::HeatEquation
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              temp_vals.submit_value(rho * c_p * temp_vals.get_value(q_index));
-              temp_vals.submit_gradient(-this->d_tau * rho * c_p *
-                                          velocity_vals.get_value(q_index) *
-                                          temp_vals.get_value(q_index) -
-                                        conductivity * temp_vals.get_gradient(q_index));
+              temp_vals.submit_value(rho * c_p * temp_vals.get_value(q_index), q_index);
+              temp_vals.submit_gradient(-this->d_tau * rho * c_p * temp_vals.get_value(q_index) *
+                                            MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                              velocity_vals.get_value(q_index)) -
+                                          conductivity *
+                                            MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                              temp_vals.get_gradient(q_index)),
+                                        q_index);
             }
           temp_vals.integrate_scatter(true, true, dst);
         }
@@ -155,7 +159,7 @@ namespace MeltPoolDG::HeatEquation
     tangent_boundary_loop(const MatrixFree<dim, number> &        matrix_free,
                           VectorType &                           dst,
                           const VectorType &                     src,
-                          std::pair<unsigned int, unsigned int> &face_range)
+                          std::pair<unsigned int, unsigned int> &face_range) const
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free, this->dof_idx, this->quad_idx);
       FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
@@ -168,28 +172,20 @@ namespace MeltPoolDG::HeatEquation
           temp_vals.reinit(face);
           temp_vals.gather_evaluate(temperature, true, false);
 
-          auto bc_index = matrix_free.get_boundary_id(face);
+          types::boundary_id bc_index = matrix_free.get_boundary_id(face);
 
           for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
             {
-              auto temp_vals_at_q     = temp_vals.get_value(q_index);
               auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
 
               VectorizedArray<double> temp = 0;
-              for (unsigned int v = 0;
-                   v < scratch_data->get_matrix_free().n_active_entries_per_face_batch(face);
-                   ++v)
-                {
-                  if (std::find(bc_radiation_indices.begin(),
-                                bc_radiation_indices.end(),
-                                bc_index[v]) != bc_radiation_indices.end())
-                    temp[v] +=
-                      4 * data.emissivity * std::pow(temp_vals_at_q[v], 3) * inc_temp_vals_at_q[v];
-                  if (std::find(bc_convection_indices.begin(),
-                                bc_convection_indices.end(),
-                                bc_index[v]) != bc_convection_indices.end())
-                    temp[v] += data.convection_coefficient * inc_temp_vals_at_q[v];
-                }
+              if (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
+                  bc_radiation_indices.end())
+                temp += 4 * data.emissivity * pow<double>(temp_vals.get_value(q_index), 3) *
+                        inc_temp_vals_at_q;
+              if (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
+                  bc_convection_indices.end())
+                temp += data.convection_coefficient * inc_temp_vals_at_q;
 
               dQ_dT.submit_value(temp, q_index);
             }
@@ -226,14 +222,19 @@ namespace MeltPoolDG::HeatEquation
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              temp_vals.submit_value(
-                -1. *
-                (rho * c_p * (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) +
-                 heat_source_vals.get_value(q_index)));
-              temp_vals.submit_gradient(
-                -1.0 * (-this->d_tau * (rho * c_p * temp_vals.get_value(q_index) *
-                                          velocity_vals.get_value(q_index) -
-                                        conductivity * temp_vals.get_gradient(q_index))));
+              temp_vals.submit_value(-1. * (rho * c_p *
+                                              (temp_vals.get_value(q_index) -
+                                               temp_vals_old.get_value(q_index)) +
+                                            heat_source_vals.get_value(q_index)),
+                                     q_index);
+              temp_vals.submit_gradient(-1.0 * (-this->d_tau *
+                                                (rho * c_p * temp_vals.get_value(q_index) *
+                                                   MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                                     velocity_vals.get_value(q_index)) -
+                                                 conductivity *
+                                                   MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                                     temp_vals.get_gradient(q_index)))),
+                                        q_index);
             }
           temp_vals.integrate_scatter(true, true, dst);
         }
@@ -246,6 +247,7 @@ namespace MeltPoolDG::HeatEquation
     void
     rhs_boundary_loop(const MatrixFree<dim, number> &        matrix_free,
                       VectorType &                           dst,
+                      [[maybe_unused]] const VectorType &    src,
                       std::pair<unsigned int, unsigned int> &face_range) const
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free, this->dof_idx, this->quad_idx);
@@ -254,28 +256,20 @@ namespace MeltPoolDG::HeatEquation
           dQ_dT.reinit(face);
           dQ_dT.gather_evaluate(temperature, true, false);
 
-          auto bc_index = matrix_free.get_boundary_id(face);
+          types::boundary_id bc_index = matrix_free.get_boundary_id(face);
 
           for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
             {
               auto temp_vals = dQ_dT.get_value(q_index);
 
               VectorizedArray<double> temp = 0;
-              for (unsigned int v = 0;
-                   v < scratch_data->get_matrix_free().n_active_entries_per_face_batch(face);
-                   ++v)
-                {
-                  if (std::find(bc_radiation_indices.begin(),
-                                bc_radiation_indices.end(),
-                                bc_index[v]) != bc_radiation_indices.end())
-                    temp[v] += data.emissivity *
-                               (std::pow(temp_vals[v], 4) - std::pow(data.temperature_infinity, 4));
-                  if (std::find(bc_convection_indices.begin(),
-                                bc_convection_indices.end(),
-                                bc_index[v]) != bc_convection_indices.end())
-                    temp[v] +=
-                      data.convection_coefficient * (temp_vals[v] - data.temperature_infinity);
-                }
+              if (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
+                  bc_radiation_indices.end())
+                temp += data.emissivity *
+                        (pow<double>(temp_vals, 4) - std::pow(data.temperature_infinity, 4));
+              if (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
+                  bc_convection_indices.end())
+                temp += data.convection_coefficient * (temp_vals - data.temperature_infinity);
 
               dQ_dT.submit_value(-temp, q_index);
             }
@@ -293,10 +287,10 @@ namespace MeltPoolDG::HeatEquation
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
           rhs_cell_loop(matrix_free, dst, src, cell_range);
         },
-        [&](const auto &matrix_free,
-            auto &      dst,
-            const auto &src,
-            auto        face_range) { /*do nothing*/ }, // face loop
+        [&]([[maybe_unused]] const auto &matrix_free,
+            [[maybe_unused]] auto &      dst,
+            [[maybe_unused]] const auto &src,
+            [[maybe_unused]] auto        face_range) { /*do nothing*/ }, // face loop
         [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
           rhs_boundary_loop(matrix_free, dst, src, face_range);
         },

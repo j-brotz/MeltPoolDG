@@ -98,10 +98,10 @@ namespace MeltPoolDG
          */
         heat_operation = std::make_shared<HeatEquation::HeatOperation<dim>>(*scratch_data,
                                                                             data_in.heat,
-                                                                            bc_radiation_in,
-                                                                            bc_convection_in,
                                                                             temp_dof_idx,
-                                                                            temp_quad_idx);
+                                                                            temp_quad_idx,
+                                                                            bc_radiation_in,
+                                                                            bc_convection_in);
 
         /*
          * initialize the recoil pressure operation class
