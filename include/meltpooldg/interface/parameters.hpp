@@ -152,6 +152,13 @@ namespace MeltPoolDG
     bool        do_move                            = false;
     number      scan_speed                         = 0.0;
     bool        variable_properties_over_interface = false;
+    struct Gusarov
+    {
+      number laser_beam_radius      = 0.0; // R      //@todo user input
+      number reflectivity           = 0.0; // rho     //@todo user input
+      number extinction_coefficient = 0.0; // beta    //@todo user input
+      number layer_thickness        = 0.0; // L       //@todo user input
+    } gusarov;
   };
 
   template <typename number = double>

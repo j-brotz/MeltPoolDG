@@ -411,11 +411,6 @@ namespace MeltPoolDG
                       "The usage of this function assumes that the temperature field "
                       "is interpolated with the polynomial with the same degree as the level set"));
 
-        FEValues<dim> fe_values(scratch_data->get_mapping(),
-                                level_set_dof_handler.get_fe(),
-                                scratch_data->get_quadrature(flow_vel_quad_idx),
-                                update_values);
-
         const unsigned int dofs_per_cell = level_set_dof_handler.get_fe().n_dofs_per_cell();
 
         std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);

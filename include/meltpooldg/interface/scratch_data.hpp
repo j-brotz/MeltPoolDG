@@ -179,6 +179,9 @@ namespace MeltPoolDG
           additional_data.mapping_update_flags =
             update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
 
+          additional_data.mapping_update_flags_boundary_faces =
+            update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
+
           this->matrix_free.reinit(
             *this->mapping, this->dof_handler, this->constraint, this->quad, additional_data);
 
