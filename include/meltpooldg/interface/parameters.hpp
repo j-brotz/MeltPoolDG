@@ -152,7 +152,7 @@ namespace MeltPoolDG
     bool        do_move                            = false;
     number      scan_speed                         = 0.0;
     bool        variable_properties_over_interface = false;
-    struct Gusarov
+    struct GusarovData
     {
       number laser_beam_radius      = 0.0; // R      //@todo user input
       number reflectivity           = 0.0; // rho     //@todo user input

@@ -12,6 +12,7 @@
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat_equation/heat_operation.hpp>
 #include <meltpooldg/heat_equation/laser.hpp>
+#include <meltpooldg/heat_equation/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
@@ -35,8 +36,9 @@ namespace MeltPoolDG
        */
       MeltPoolData<double> mp_data;
 
-      std::shared_ptr<HeatEquation::LaserOperation<dim>> laser_operation;
-      std::shared_ptr<RecoilPressureOperation<dim>>      recoil_pressure_operation;
+      std::shared_ptr<HeatEquation::LaserOperation<dim>>         laser_operation;
+      std::shared_ptr<RecoilPressureOperation<dim>>              recoil_pressure_operation;
+      std::shared_ptr<HeatEquation::LaserHeatSourceGusarov<dim>> laser_heat_source_operation;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
@@ -120,6 +122,12 @@ namespace MeltPoolDG
         scratch_data->initialize_dof_vector(solid, temp_dof_idx);
         scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
         scratch_data->initialize_dof_vector(heat_operation->get_temperature(), temp_dof_idx);
+
+        if (mp_data.temperature_formulation == "numerical")
+          laser_heat_source_operation =
+            std::make_shared<HeatEquation::LaserHeatSourceGusarov<dim>>(*scratch_data,
+                                                                        data_in.laser.gusarov,
+                                                                        temp_dof_idx);
       }
 
       void

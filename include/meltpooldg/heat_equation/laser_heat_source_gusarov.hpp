@@ -8,6 +8,7 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::HeatEquation
@@ -43,16 +44,16 @@ namespace MeltPoolDG::HeatEquation
     /*
      *  Parameters for the Gusarov model
      */
-    const GusarovData<double> gusarov_data;
+    const LaserData<double>::GusarovData gusarov_data;
 
     const double lambda; // optical thickness (-)
 
     const unsigned int temp_dof_idx;
 
   public:
-    LaserHeatSourceGusarov(const ScratchData<dim> &  scratch_data_in,
-                           const GusarovData<double> gusarov_data_in,
-                           unsigned int              temp_dof_idx_in)
+    LaserHeatSourceGusarov(const ScratchData<dim> &             scratch_data_in,
+                           const LaserData<double>::GusarovData gusarov_data_in,
+                           unsigned int                         temp_dof_idx_in)
       : scratch_data(scratch_data_in)
       , gusarov_data(gusarov_data_in)
       , lambda(gusarov_data.extinction_coefficient * gusarov_data.layer_thickness)
@@ -89,7 +90,9 @@ namespace MeltPoolDG::HeatEquation
 
               for (const auto q : heat_source_eval.quadrature_point_indices())
                 heat_source_vector[local_dof_indices[q]] =
-                  local_heat_source(heat_source_eval.quadrature_point(q), laser_position);
+                  local_heat_source(heat_source_eval.quadrature_point(q),
+                                    laser_position,
+                                    laser_power);
             }
         }
     }
@@ -102,9 +105,9 @@ namespace MeltPoolDG::HeatEquation
     power_density(const double radius, const double power)
     {
       const double &R = gusarov_data.laser_beam_radius;
-      return r <= R ?
-               3. * power / (Constants::PI * R ^ 2) * (1. - radius / R) ^ 2 * (1 + radius / R) ^ 2 :
-               0.0;
+      return radius <= R ? 3. * power / (numbers::PI * R * R) * std::pow(1. - radius / R, 2) *
+                             std::pow(1 + radius / R, 2) :
+                           0.0;
     }
 
     /**
@@ -125,12 +128,12 @@ namespace MeltPoolDG::HeatEquation
                / // ------------------------------------------------------
                                        (4 * rho - 3) 
                 +
-                       2 * a^2 * rho 
+                       2 * a * a * rho 
                 / // ------------------
                    (D * (4 * rho - 3)) 
                 *
                    (
-                    std::exp(-lambda) * (1 - rho ^ 2) *
+                    std::exp(-lambda) * (1 - rho * rho) *
                       (std::exp(-2 * a * xi) * (a - 1) + std::exp(2 * a * xi) * (a + 1)) 
                    -
                     (rho * std::exp(-2 * lambda) + 3) *
@@ -147,15 +150,17 @@ namespace MeltPoolDG::HeatEquation
      */
 
     void
-    local_heat_source(const Point<dim> &position, const Point<dim> &laser_position)
+    local_heat_source(const Point<dim> &position,
+                      const Point<dim> &laser_position,
+                      const double      power)
     {
       const double radius = position.distance(laser_position);
       const double z      = -position[dim - 1];
       const double xi     = z * gusarov_data.extinction_coefficient;
 
-      return (z >= gusarov_dat.layer_thickness) || (z < laser_position[dim - 1]) ?
+      return (z >= gusarov_data.layer_thickness) || (z < laser_position[dim - 1]) ?
                0. :
-               -gusarov_data.extinction_coefficient * power_density(radius, power) * dq_dxi(xi)
+               -gusarov_data.extinction_coefficient * power_density(radius, power) * dq_dxi(xi);
     }
   };
 } // namespace MeltPoolDG::HeatEquation
