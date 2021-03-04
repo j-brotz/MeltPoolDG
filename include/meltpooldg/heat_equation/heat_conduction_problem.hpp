@@ -152,7 +152,7 @@ namespace MeltPoolDG::HeatEquation
       /*
        *    initialize the heat operation class
        */
-      heat_operation = std::make_shared<HeatOperation<dim>>(base_in->get_bc("heat_condution"),
+      heat_operation = std::make_shared<HeatOperation<dim>>(base_in->get_bc("heat_conduction"),
                                                             *scratch_data,
                                                             base_in->parameters.heat,
                                                             temp_dof_idx,
@@ -228,11 +228,6 @@ namespace MeltPoolDG::HeatEquation
       temp_constraints.close();
       temp_constraints.merge(temp_constraints,
                              AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
-
-      std::cout << "temperature constraints" << std::endl;
-      temp_constraints.print(std::cout);
-
-      // @todo: radiation and convection bc
 
       scratch_data->build();
 

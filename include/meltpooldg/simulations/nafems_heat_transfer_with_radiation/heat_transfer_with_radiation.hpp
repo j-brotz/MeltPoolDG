@@ -19,6 +19,27 @@
 
 /**
  * This example represents a benchmark from the NAFEMS collection.
+ * It offers two configurations:
+ *
+ *  case 1: emissivity > 0
+ *             adiabatic
+ *            +--------+
+ *            |        |
+ * T=const    |        |   radiation
+ *            |        |
+ *            +--------+
+ *            adiabatic
+ *
+ *  case 2: emissivity = 0
+ *
+ *             adiabatic
+ *            +--------+
+ *            |        |
+ *  adiabatic | T0=lin |   adiabatic
+ *            |        |
+ *            +--------+
+ *            adiabatic
+ *
  */
 
 namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
@@ -40,7 +61,7 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      return 1 * p[0];
+      return p[0];
     }
   };
 
@@ -93,10 +114,13 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
       const types::boundary_id left_bc  = 1;
       const types::boundary_id right_bc = 2;
 
-      // this->attach_dirichlet_boundary_condition(
-      // left_bc, std::make_shared<Functions::ConstantFunction<dim>>(1000.0), "heat_conduction");
+      if (this->parameters.heat.emissivity > 0.0)
+        {
+          this->attach_dirichlet_boundary_condition(
+            left_bc, std::make_shared<Functions::ConstantFunction<dim>>(1000.0), "heat_conduction");
 
-      // this->attach_radiation_boundary_condition(right_bc, "heat_conduction");
+          this->attach_radiation_boundary_condition(right_bc, "heat_conduction");
+        }
 
       // this->attach_neumann_boundary_condition(
       // right_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "heat_conduction");
@@ -122,9 +146,11 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_conduction");
-      // this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
-      //"heat_conduction");
+      if (this->parameters.heat.emissivity > 0.0)
+        this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
+                                       "heat_conduction");
+      else
+        this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_conduction");
     }
 
   private:

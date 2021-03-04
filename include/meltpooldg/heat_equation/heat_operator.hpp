@@ -198,6 +198,7 @@ namespace MeltPoolDG::HeatEquation
           bool do_radiation =
             (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
              bc_radiation_indices.end());
+
           bool do_convection =
             (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
              bc_convection_indices.end());
@@ -211,7 +212,7 @@ namespace MeltPoolDG::HeatEquation
               if (do_convection)
                 temp += data.convection_coefficient * inc_temp_vals_at_q;
               if (do_radiation)
-                temp += 4 * data.emissivity * stefan_boltzmann *
+                temp += 4. * data.emissivity * stefan_boltzmann *
                         pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
 
               dQ_dT.submit_value(-temp, q_index);
@@ -338,18 +339,18 @@ namespace MeltPoolDG::HeatEquation
 
                       for (unsigned int d = 0; d < dim; ++d)
                         {
-                          temp[v] += neumann_bc.at(bc_index)->value(quad_point_v, d) *
+                          temp[v] -= neumann_bc.at(bc_index)->value(quad_point_v, d) *
                                      dQ_dT.get_normal_vector(q_index)[d][v];
                         }
                     }
                 }
               if (do_radiation)
-                temp += data.emissivity * stefan_boltzmann *
+                temp -= data.emissivity * stefan_boltzmann *
                         (pow<double>(temp_vals, 4) - std::pow(data.temperature_infinity, 4));
               if (do_convection)
-                temp += data.convection_coefficient * (temp_vals - data.temperature_infinity);
+                temp -= data.convection_coefficient * (temp_vals - data.temperature_infinity);
 
-              dQ_dT.submit_value(-temp, q_index);
+              dQ_dT.submit_value(temp, q_index);
             }
           dQ_dT.integrate_scatter(true, false, dst);
         }
