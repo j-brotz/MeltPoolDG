@@ -215,7 +215,7 @@ namespace MeltPoolDG::HeatEquation
                 temp += 4. * data.emissivity * stefan_boltzmann *
                         pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
 
-              dQ_dT.submit_value(-temp, q_index);
+              dQ_dT.submit_value(temp, q_index);
             }
           dQ_dT.integrate_scatter(true, false, dst);
         }
