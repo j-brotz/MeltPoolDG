@@ -183,9 +183,9 @@ namespace MeltPoolDG
                   TrilinosWrappers::PreconditionBase>::solve(reinit_operator->system_matrix,
                                                              src,
                                                              rhs,
-                                                             *preconditioner,
+                                                             reinit_data.solver.rel_tolerance_rhs,
                                                              reinit_data.solver.max_iterations,
-                                                             reinit_data.solver.rel_tolerance_rhs);
+                                                             *preconditioner);
               }
             else if (reinit_data.solver.solver_type == "GMRES")
               {
@@ -202,9 +202,9 @@ namespace MeltPoolDG
                   TrilinosWrappers::PreconditionBase>::solve(reinit_operator->system_matrix,
                                                              src,
                                                              rhs,
-                                                             *preconditioner,
+                                                             reinit_data.solver.rel_tolerance_rhs,
                                                              reinit_data.solver.max_iterations,
-                                                             reinit_data.solver.rel_tolerance_rhs);
+                                                             *preconditioner);
               }
           }
         scratch_data->get_constraint(reinit_dof_idx).distribute(src);

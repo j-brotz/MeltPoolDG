@@ -29,9 +29,9 @@ namespace MeltPoolDG
     solve(const OperatorType &      system_matrix,
           VectorType &              solution,
           const VectorType &        rhs,
-          const PreconditionerType &preconditioner    = PreconditionIdentity(),
+          const double              rel_tolerance_rhs = 1e-8,
           const unsigned int        max_iterations    = 10000,
-          const double              rel_tolerance_rhs = 1e-8)
+          const PreconditionerType &preconditioner    = PreconditionIdentity())
     {
       SolverControl solver_control(max_iterations, rel_tolerance_rhs * rhs.l2_norm());
       SolverType    solver(solver_control);

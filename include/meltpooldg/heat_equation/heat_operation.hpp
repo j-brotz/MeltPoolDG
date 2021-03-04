@@ -9,6 +9,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat_equation/heat_operator.hpp>
+#include <meltpooldg/utilities/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::HeatEquation
@@ -117,43 +118,27 @@ namespace MeltPoolDG::HeatEquation
 
       heat_operator->set_time_increment(dt);
 
-      VectorType solution_update, rhs;
+      const auto create_rhs = [&](VectorType &rhs) {
+        heat_operator->create_rhs_and_apply_dirichlet_mf(
+          rhs, temperature_old, scratch_data, temp_dof_idx, temp_hanging_nodes_dof_idx);
+      };
 
-      scratch_data.initialize_dof_vector(solution_update, temp_dof_idx);
-      scratch_data.initialize_dof_vector(rhs, temp_dof_idx);
+      const auto solve_linear_system = [&](VectorType &      solution_update,
+                                           const VectorType &rhs) -> int {
+        return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
+          *heat_operator, solution_update, rhs, heat_data.solver.rel_tolerance_rhs);
+      };
 
-      scratch_data.get_pcout() << " iter_solve     T      norm(R)      T_inc " << std::endl;
-      for (int i = 0; i <= heat_data.nlsolve.max_nonlinear_iterations +
-                             heat_data.nlsolve.max_nonlinear_iterations_alt;
-           ++i)
-        {
-          // @todo: apply dirichlet bc
-          heat_operator->create_rhs_and_apply_dirichlet_mf(
-            rhs, temperature_old, scratch_data, temp_dof_idx, temp_hanging_nodes_dof_idx);
+      auto newton = NewtonRaphsonSolver<dim>(scratch_data,
+                                             heat_data.nlsolve,
+                                             temp_dof_idx,
+                                             temperature_old,
+                                             temperature,
+                                             create_rhs,
+                                             solve_linear_system);
 
-          int iter = LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
-            *heat_operator, solution_update, rhs);
+      newton.solve();
 
-          if (is_converged(i, rhs, solution_update))
-            {
-              scratch_data.get_pcout() << " ✓ converged successfully." << std::endl;
-              break;
-            }
-          else if (i >= heat_data.nlsolve.max_nonlinear_iterations +
-                          heat_data.nlsolve.max_nonlinear_iterations_alt)
-            {
-              scratch_data.get_pcout() << " ✗ NOT CONVERGED !!! " << std::endl;
-              break;
-            }
-
-          temperature += solution_update;
-
-          scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
-
-          scratch_data.get_pcout()
-            << std::setw(15) << std::setprecision(0) << iter << " " << std::setw(15)
-            << std::setprecision(10) << temperature.l2_norm() << " ";
-        }
       temperature_old = temperature;
     }
 

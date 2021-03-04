@@ -43,10 +43,10 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
     void
     create_spatial_discretization() override
     {
-      this->triangulation = std::make_shared<Triangulation<dim>>();
-
       if constexpr (dim == 1)
         {
+          AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
+          this->triangulation = std::make_shared<Triangulation<dim>>();
           // create mesh
           const Point<1> left(x_min);
           const Point<1> right(x_max);
@@ -55,6 +55,8 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
         }
       else if constexpr (dim == 2)
         {
+          this->triangulation =
+            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
           // create mesh
           const Point<2> left(x_min, 0.0);
           const Point<2> right(x_max, 0.1);

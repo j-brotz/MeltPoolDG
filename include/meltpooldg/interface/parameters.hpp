@@ -29,7 +29,7 @@ namespace MeltPoolDG
     int    max_nonlinear_iterations       = 10;
     number field_correction_tolerance     = 1e-10;
     number residual_tolerance             = 1e-9;
-    int    max_nonlinear_iterations_alt   = 5;
+    int    max_nonlinear_iterations_alt   = 0;
     number field_correction_tolerance_alt = 1e-9;
     number residual_tolerance_alt         = 1e-8;
   };
@@ -159,6 +159,7 @@ namespace MeltPoolDG
     number                      capacity               = 0.0;
     TimeSteppingData<number>    time_stepping;
     NonlinearSolverData<number> nlsolve;
+    SolverData<number>          solver;
   };
 
   template <typename number = double>
@@ -711,6 +712,19 @@ namespace MeltPoolDG
           "heat do matrix free",
           heat.do_matrix_free,
           "Set this parameter if a matrix free solution procedure should be performed");
+        prm.add_parameter(
+          "heat solver type",
+          heat.solver.solver_type,
+          "Set this parameter for choosing a solver type. At the moment GMRES or CG solvers "
+          " are supported");
+        prm.add_parameter(
+          "heat solver max iterations",
+          heat.solver.max_iterations,
+          "Set the maximum number of iterations for solving the linear system of equations.");
+        prm.add_parameter(
+          "heat solver rel tolerance rhs",
+          heat.solver.rel_tolerance_rhs,
+          "Set the relative tolerance for a successful solution of the linear system of equations.");
         prm.add_parameter(
           "heat nlsolve max nonlinear iterations",
           heat.nlsolve.max_nonlinear_iterations,
