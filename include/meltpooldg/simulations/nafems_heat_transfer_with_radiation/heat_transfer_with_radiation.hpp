@@ -53,6 +53,14 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
           GridGenerator::hyper_rectangle(*this->triangulation, left, right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
+      else if constexpr (dim == 2)
+        {
+          // create mesh
+          const Point<2> left(x_min, 0.0);
+          const Point<2> right(x_max, 0.1);
+          GridGenerator::hyper_rectangle(*this->triangulation, left, right);
+          this->triangulation->refine_global(this->parameters.base.global_refinements);
+        }
       else
         {
           AssertThrow(false, ExcNotImplemented());
@@ -74,7 +82,7 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
 
       this->attach_radiation_boundary_condition(right_bc, "heat_conduction_T");
 
-      if constexpr (dim == 1)
+      if constexpr ((dim == 1) || (dim == 2))
         {
           for (const auto &cell : this->triangulation->cell_iterators())
             for (auto &face : cell->face_iterators())

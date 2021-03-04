@@ -77,7 +77,7 @@ namespace MeltPoolDG
     write_paraview_files(const double time_step)
     {
       DataOutBase::VtkFlags flags;
-      if (do_simplex == false)
+      if ((do_simplex == false) && (dim > 1))
         flags.write_higher_order_cells = true;
       data_out.set_flags(flags);
 

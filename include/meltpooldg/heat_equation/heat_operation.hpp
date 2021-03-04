@@ -62,17 +62,17 @@ namespace MeltPoolDG::HeatEquation
                                                           bc_convection_in,
                                                           temp_dof_idx,
                                                           temp_quad_idx,
-                                                          temperature);
+                                                          temperature,
+                                                          heat_source);
     }
 
     void
     set_initial_condition(const VectorType &initial_temperature_field)
     {
-      scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
-      scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
+      reinit();
 
-      temperature     = initial_temperature_field;
-      temperature_old = initial_temperature_field;
+      temperature.copy_locally_owned_data_from(initial_temperature_field);
+      temperature_old.copy_locally_owned_data_from(initial_temperature_field);
     }
 
     void
@@ -91,8 +91,9 @@ namespace MeltPoolDG::HeatEquation
       const double res_norm    = residual.l2_norm();
       const double update_norm = solution_update.l2_norm();
 
-      scratch_data.get_pcout() << std::setprecision(10) << res_norm << " " << std::setprecision(10)
-                               << update_norm << std::endl;
+      scratch_data.get_pcout() << std::setw(15) << std::setprecision(10) << res_norm << " "
+                               << std::setw(15) << std::setprecision(10) << update_norm
+                               << std::endl;
       if (n_nonlinear_iter <= heat_data.nlsolve.max_nonlinear_iterations)
         {
           return (update_norm <= heat_data.nlsolve.field_correction_tolerance) &&
@@ -122,8 +123,8 @@ namespace MeltPoolDG::HeatEquation
       scratch_data.initialize_dof_vector(rhs, temp_dof_idx);
 
       scratch_data.get_pcout() << " iter_solve     T      norm(R)      T_inc " << std::endl;
-      for (unsigned int i = 0; i <= heat_data.nlsolve.max_nonlinear_iterations +
-                                      heat_data.nlsolve.max_nonlinear_iterations_alt;
+      for (int i = 0; i <= heat_data.nlsolve.max_nonlinear_iterations +
+                             heat_data.nlsolve.max_nonlinear_iterations_alt;
            ++i)
         {
           // @todo: apply dirichlet bc
@@ -135,13 +136,13 @@ namespace MeltPoolDG::HeatEquation
 
           if (is_converged(i, rhs, solution_update))
             {
-              scratch_data.get_pcout() << " converged successfully." << std::endl;
+              scratch_data.get_pcout() << " ✓ converged successfully." << std::endl;
               break;
             }
           else if (i >= heat_data.nlsolve.max_nonlinear_iterations +
                           heat_data.nlsolve.max_nonlinear_iterations_alt)
             {
-              scratch_data.get_pcout() << " NOT CONVERGED !!! " << std::endl;
+              scratch_data.get_pcout() << " ✗ NOT CONVERGED !!! " << std::endl;
               break;
             }
 
@@ -149,8 +150,9 @@ namespace MeltPoolDG::HeatEquation
 
           scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
 
-          scratch_data.get_pcout() << std::setprecision(0) << iter << " " << std::setprecision(10)
-                                   << temperature.l2_norm() << " ";
+          scratch_data.get_pcout()
+            << std::setw(15) << std::setprecision(0) << iter << " " << std::setw(15)
+            << std::setprecision(10) << temperature.l2_norm() << " ";
         }
       temperature_old = temperature;
     }

@@ -115,6 +115,7 @@ namespace MeltPoolDG::HeatEquation
             scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
         }
 
+      setup_dof_system(base_in, false);
       /*
        *  initialize the time stepping scheme
        */

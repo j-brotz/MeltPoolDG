@@ -28,9 +28,9 @@ namespace MeltPoolDG
   {
     int    max_nonlinear_iterations       = 10;
     number field_correction_tolerance     = 1e-10;
-    number residual_tolerance             = 1e-10;
+    number residual_tolerance             = 1e-9;
     int    max_nonlinear_iterations_alt   = 5;
-    number field_correction_tolerance_alt = 1e-8;
+    number field_correction_tolerance_alt = 1e-9;
     number residual_tolerance_alt         = 1e-8;
   };
 
@@ -406,7 +406,7 @@ namespace MeltPoolDG
           base.problem_name,
           "Sets the base name for the problem that should be solved.",
           Patterns::Selection(
-            "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool|level_set_with_evaporation|two_phase_flow_with_evaporation|melt_pool_with_evaporation"));
+            "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool|level_set_with_evaporation|two_phase_flow_with_evaporation|melt_pool_with_evaporation|heat_conduction"));
         prm.add_parameter("dimension", base.dimension, "Defines the dimension of the problem");
         prm.add_parameter("global refinements",
                           base.global_refinements,
