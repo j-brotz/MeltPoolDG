@@ -40,7 +40,7 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      return 1000 * p[0];
+      return 1 * p[0];
     }
   };
 

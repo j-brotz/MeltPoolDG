@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  *
- * Author: Magdalena Schreter, TUM, September 2020
+ * Author: Magdalena Schreter, UIBK/TUM, February 2021
  *
  * ---------------------------------------------------------------------*/
 #pragma once
@@ -18,15 +18,15 @@ namespace MeltPoolDG::HeatEquation
    *  This operator computes the residual and its consistent tangent of the time-discretized heat
    * equation
    *
-   *               /                              \     /                                  \
-   *  R(T^(n+1)) = | w, ρ c_p ( T^(n+1)- T^(n+1)) |  -  | ∇w, ρ c_p T^(n+1) u - k ∇T^(n+1)) |
-   *               \                              /     \                                  /
-   *                                               Ω                                        Ω
-   *               /    _   \     /    _  \
-   *             + | w, q_s |  -  | w, q  | = 0
-   *               \        /     \       /
-   *                         Ω             Γ
-   *                                        N
+   *                 1   /                              \     /                                  \
+   *  R(T^(n+1)) =  ---  | w, ρ c_p ( T^(n+1)- T^(n+1)) |  - | ∇w, ρ c_p T^(n+1) u - k ∇T^(n+1)) |
+   *                dt   \                              /     \                                  /
+   *                                                    Ω                                         Ω
+   *                 /    _   \     /    _  \
+   *             -   | w, q_s |  -  | w, q  | = 0
+   *                 \        /     \       /
+   *                           Ω             Γ
+   *                                            N
    *
    * with the temperature field T^(n+1), test function w, the density ρ, the specific heat capacity
    * c_p and the conductivity k, source/sink terms q_s and prescribed fluxes q along Neumann
@@ -92,11 +92,6 @@ namespace MeltPoolDG::HeatEquation
     }
     // clang-format on
 
-    /*
-     *    this is the matrix-based implementation of the rhs and the matrix
-     *    @todo: this could be improved by using the WorkStream functionality of dealii
-     */
-
     void
     assemble_matrixbased([[maybe_unused]] const VectorType &advected_field_old,
                          [[maybe_unused]] SparseMatrixType &matrix,
@@ -109,8 +104,10 @@ namespace MeltPoolDG::HeatEquation
      *    matrix-free implementation
      */
     void
-    vmult(VectorType &dst, const VectorType &src) const override
+    vmult(VectorType &dst, const VectorType &src /*solution_update*/) const override
     {
+      AssertThrow(this->d_tau > 0.0, ExcMessage("advection diffusion operator: d_tau must be set"));
+
       scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
           tangent_cell_loop(matrix_free, dst, src, cell_range);
@@ -151,12 +148,12 @@ namespace MeltPoolDG::HeatEquation
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              temp_vals.submit_value(data.density * data.capacity * temp_vals.get_value(q_index),
+              temp_vals.submit_value(data.density * data.capacity / this->d_tau *
+                                       temp_vals.get_value(q_index),
                                      q_index);
 
-              auto val_grad =
-                this->d_tau * data.conductivity *
-                MeltPoolDG::VectorTools::convert_to_vector<dim>(temp_vals.get_gradient(q_index));
+              auto val_grad = data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                                    temp_vals.get_gradient(q_index));
               // if (do_velocity)
               //{
               // val_grad += -this->d_tau * data.density * data.capacity *
@@ -217,7 +214,7 @@ namespace MeltPoolDG::HeatEquation
                 temp += 4 * data.emissivity * stefan_boltzmann *
                         pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
 
-              dQ_dT.submit_value(-this->d_tau * temp, q_index);
+              dQ_dT.submit_value(-temp, q_index);
             }
           dQ_dT.integrate_scatter(true, false, dst);
         }
@@ -240,10 +237,12 @@ namespace MeltPoolDG::HeatEquation
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           temp_vals.reinit(cell);
-          temp_vals.gather_evaluate(temperature, true, true);
+          temp_vals.read_dof_values_plain(temperature);
+          temp_vals.evaluate(true, true);
 
           temp_vals_old.reinit(cell);
-          temp_vals_old.gather_evaluate(src, true, false);
+          temp_vals_old.read_dof_values_plain(src);
+          temp_vals_old.evaluate(true, false);
 
           heat_source_vals.reinit(cell);
           heat_source_vals.read_dof_values_plain(heat_source);
@@ -259,17 +258,17 @@ namespace MeltPoolDG::HeatEquation
             {
               temp_vals.submit_value(-1. * (data.density * data.capacity *
                                               (temp_vals.get_value(q_index) -
-                                               temp_vals_old.get_value(q_index)) -
-                                            this->d_tau * heat_source_vals.get_value(q_index)),
+                                               temp_vals_old.get_value(q_index)) /
+                                              this->d_tau -
+                                            heat_source_vals.get_value(q_index)),
                                      q_index); // negative sign since residual is moved to rhs
 
-              auto val_grad =
-                this->d_tau * data.conductivity *
-                MeltPoolDG::VectorTools::convert_to_vector<dim>(temp_vals.get_gradient(q_index));
+              auto val_grad = data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                                    temp_vals.get_gradient(q_index));
 
               // if (do_velocity)
               //{
-              // val_grad += -this->d_tau * data.density * data.capacity *
+              // val_grad += -data.density * data.capacity *
               // temp_vals.get_value(q_index) * MeltPoolDG::VectorTools::convert_to_vector<dim>(
               // velocity_vals.get_value(q_index));
               //}
@@ -350,7 +349,7 @@ namespace MeltPoolDG::HeatEquation
               if (do_convection)
                 temp += data.convection_coefficient * (temp_vals - data.temperature_infinity);
 
-              dQ_dT.submit_value(this->d_tau * temp, q_index);
+              dQ_dT.submit_value(-temp, q_index);
             }
           dQ_dT.integrate_scatter(true, false, dst);
         }
@@ -360,7 +359,7 @@ namespace MeltPoolDG::HeatEquation
      * -R(T)
      */
     void
-    create_rhs(VectorType &dst, const VectorType &src) const override
+    create_rhs(VectorType &dst, const VectorType &src /*temperature_old*/) const override
     {
       scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -375,7 +374,7 @@ namespace MeltPoolDG::HeatEquation
         },
         dst,
         src,
-        true /*zero dst vector*/); // @todo ?
+        false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
     }
   };
 } // namespace MeltPoolDG::HeatEquation

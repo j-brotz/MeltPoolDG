@@ -77,32 +77,6 @@ namespace MeltPoolDG::HeatEquation
       scratch_data.initialize_dof_vector(heat_source, temp_dof_idx);
     }
 
-    bool
-    is_converged(const int         n_nonlinear_iter,
-                 const VectorType &residual,
-                 const VectorType &solution_update)
-    {
-      const double res_norm    = residual.l2_norm();
-      const double update_norm = solution_update.l2_norm();
-
-      scratch_data.get_pcout() << std::setw(15) << std::setprecision(10) << res_norm << " "
-                               << std::setw(15) << std::setprecision(10) << update_norm
-                               << std::endl;
-      if (n_nonlinear_iter <= heat_data.nlsolve.max_nonlinear_iterations)
-        {
-          return (update_norm <= heat_data.nlsolve.field_correction_tolerance) &&
-                 (res_norm <= heat_data.nlsolve.residual_tolerance);
-        }
-      else if (n_nonlinear_iter <= heat_data.nlsolve.max_nonlinear_iterations +
-                                     heat_data.nlsolve.max_nonlinear_iterations_alt)
-        {
-          return (update_norm <= heat_data.nlsolve.field_correction_tolerance_alt) &&
-                 (res_norm <= heat_data.nlsolve.residual_tolerance_alt);
-        }
-      else
-        return false;
-    }
-
     void
     solve(const double dt)
     {
@@ -110,6 +84,7 @@ namespace MeltPoolDG::HeatEquation
         AssertThrow(false, ExcNotImplemented());
 
       heat_operator->set_time_increment(dt);
+      temperature_old = temperature;
 
       const auto create_rhs = [&](VectorType &rhs) {
         heat_operator->create_rhs_and_apply_dirichlet_mf(
@@ -118,12 +93,10 @@ namespace MeltPoolDG::HeatEquation
 
       const auto solve_linear_system = [&](VectorType &      solution_update,
                                            const VectorType &rhs) -> int {
-        return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
+        return LinearSolve<VectorType, SolverCG<VectorType>, OperatorBase<double>>::solve(
           *heat_operator, solution_update, rhs, heat_data.solver.rel_tolerance_rhs);
       };
 
-      std::cout << "temperature before:  " << temperature.l2_norm() << std::endl;
-      std::cout << "temperature old before:  " << temperature_old.l2_norm() << std::endl;
       auto newton = NewtonRaphsonSolver<dim>(scratch_data,
                                              heat_data.nlsolve,
                                              temp_dof_idx,
@@ -133,11 +106,6 @@ namespace MeltPoolDG::HeatEquation
                                              solve_linear_system);
 
       newton.solve();
-
-      temperature_old = temperature;
-
-      std::cout << "temperature after:  " << temperature.l2_norm() << std::endl;
-      std::cout << "temperature old after:  " << temperature_old.l2_norm() << std::endl;
     }
 
     void
@@ -166,6 +134,12 @@ namespace MeltPoolDG::HeatEquation
       data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
                                temperature,
                                "temperature");
+      /**
+       *  temperature old
+       */
+      data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                               temperature_old,
+                               "temperature_old");
       /**
        *  heat source
        */

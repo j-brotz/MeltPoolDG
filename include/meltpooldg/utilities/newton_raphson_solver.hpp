@@ -133,6 +133,9 @@ namespace MeltPoolDG
     void
     solve_increment()
     {
+      rhs             = 0.0;
+      solution_update = 0.0;
+
       create_rhs(rhs);
       int iter = solve_linear_system(solution_update, rhs);
       scratch_data.get_pcout() << std::setw(15) << std::setprecision(0) << iter;
