@@ -29,6 +29,20 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
   /*
    *      This class collects all relevant input data for the level set simulation
    */
+  template <int dim>
+  class LinearTemp : public Function<dim>
+  {
+  public:
+    LinearTemp()
+      : Function<dim>(1, 0)
+    {}
+
+    double
+    value(const Point<dim> &p, const unsigned int /*component*/) const
+    {
+      return 1000 * p[0];
+    }
+  };
 
   template <int dim>
   class SimulationHeatTransferWithRadiation : public SimulationBase<dim>
@@ -79,13 +93,13 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
       const types::boundary_id left_bc  = 1;
       const types::boundary_id right_bc = 2;
 
-      this->attach_dirichlet_boundary_condition(
-        left_bc, std::make_shared<Functions::ConstantFunction<dim>>(1000.0), "heat_conduction_T");
+      // this->attach_dirichlet_boundary_condition(
+      // left_bc, std::make_shared<Functions::ConstantFunction<dim>>(1000.0), "heat_conduction");
 
-      // this->attach_radiation_boundary_condition(right_bc, "heat_conduction_T");
+      // this->attach_radiation_boundary_condition(right_bc, "heat_conduction");
 
-      this->attach_neumann_boundary_condition(
-        right_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "heat_conduction_T");
+      // this->attach_neumann_boundary_condition(
+      // right_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "heat_conduction");
 
       if constexpr ((dim == 1) || (dim == 2))
         {
@@ -108,8 +122,9 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
-                                     "heat_conduction_T");
+      this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_conduction");
+      // this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
+      //"heat_conduction");
     }
 
   private:

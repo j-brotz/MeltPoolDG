@@ -67,27 +67,27 @@ namespace MeltPoolDG::HeatEquation
     bool do_velocity = false;
 
   public:
-    HeatOperator(const ScratchData<dim> &scratch_data_in,
-                 const HeatData<number> &data_in,
-                 std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
-                   neumann_bc_in, //@todo find a nice way to provide BC
-                 const std::vector<types::boundary_id> bc_radiation_in,
-                 const std::vector<types::boundary_id> bc_convection_in,
-                 const unsigned int                    temp_dof_idx_in,
-                 const unsigned int                    temp_quad_idx_in,
-                 const VectorType &                    temperature_in,
-                 const VectorType &                    heat_source_in)
+    HeatOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
+                 const ScratchData<dim> &                        scratch_data_in,
+                 const HeatData<number> &                        data_in,
+                 const unsigned int                              temp_dof_idx_in,
+                 const unsigned int                              temp_quad_idx_in,
+                 const VectorType &                              temperature_in,
+                 const VectorType &                              heat_source_in)
       // clang-format off
     : scratch_data         ( scratch_data_in  )
     , data                 ( data_in          )
     , temp_dof_idx         ( temp_dof_idx_in  )
     , temp_quad_idx        ( temp_quad_idx_in )
     , temperature          ( temperature_in   )
-    , neumann_bc           ( neumann_bc_in    )
-    , bc_radiation_indices ( bc_radiation_in  )
-    , bc_convection_indices( bc_convection_in )
     , heat_source          ( heat_source_in   ) 
     {
+      if (bc)
+      {
+        bc_convection_indices = bc->convection_bc;
+        bc_radiation_indices = bc->radiation_bc;
+        neumann_bc = bc->neumann_bc;
+      }
       this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
     }
     // clang-format on
@@ -154,9 +154,9 @@ namespace MeltPoolDG::HeatEquation
               temp_vals.submit_value(data.density * data.capacity * temp_vals.get_value(q_index),
                                      q_index);
 
-
-              auto val_grad = -data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                                     temp_vals.get_gradient(q_index));
+              auto val_grad =
+                this->d_tau * data.conductivity *
+                MeltPoolDG::VectorTools::convert_to_vector<dim>(temp_vals.get_gradient(q_index));
               // if (do_velocity)
               //{
               // val_grad += -this->d_tau * data.density * data.capacity *
@@ -211,13 +211,13 @@ namespace MeltPoolDG::HeatEquation
 
               VectorizedArray<double> temp = 0;
 
+              if (do_convection)
+                temp += data.convection_coefficient * inc_temp_vals_at_q;
               if (do_radiation)
                 temp += 4 * data.emissivity * stefan_boltzmann *
                         pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
-              if (do_convection)
-                temp += data.convection_coefficient * inc_temp_vals_at_q;
 
-              dQ_dT.submit_value(temp, q_index);
+              dQ_dT.submit_value(-this->d_tau * temp, q_index);
             }
           dQ_dT.integrate_scatter(true, false, dst);
         }
@@ -226,7 +226,7 @@ namespace MeltPoolDG::HeatEquation
     void
     rhs_cell_loop(const MatrixFree<dim, number> &        matrix_free,
                   VectorType &                           dst,
-                  const VectorType &                     src,
+                  const VectorType &                     src, /* temperature_old*/
                   std::pair<unsigned int, unsigned int> &cell_range) const
     {
       FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
@@ -259,12 +259,13 @@ namespace MeltPoolDG::HeatEquation
             {
               temp_vals.submit_value(-1. * (data.density * data.capacity *
                                               (temp_vals.get_value(q_index) -
-                                               temp_vals_old.get_value(q_index)) +
-                                            heat_source_vals.get_value(q_index)),
-                                     q_index);
+                                               temp_vals_old.get_value(q_index)) -
+                                            this->d_tau * heat_source_vals.get_value(q_index)),
+                                     q_index); // negative sign since residual is moved to rhs
 
-              auto val_grad = -data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                                     temp_vals.get_gradient(q_index));
+              auto val_grad =
+                this->d_tau * data.conductivity *
+                MeltPoolDG::VectorTools::convert_to_vector<dim>(temp_vals.get_gradient(q_index));
 
               // if (do_velocity)
               //{
@@ -349,7 +350,7 @@ namespace MeltPoolDG::HeatEquation
               if (do_convection)
                 temp += data.convection_coefficient * (temp_vals - data.temperature_infinity);
 
-              dQ_dT.submit_value(-temp, q_index);
+              dQ_dT.submit_value(this->d_tau * temp, q_index);
             }
           dQ_dT.integrate_scatter(true, false, dst);
         }

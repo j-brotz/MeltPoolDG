@@ -129,7 +129,7 @@ namespace MeltPoolDG::HeatEquation
        *  set initial conditions of the levelset function
        */
       AssertThrow(
-        base_in->get_initial_condition("heat_conduction_T"),
+        base_in->get_initial_condition("heat_conduction"),
         ExcMessage(
           "It seems that your SimulationBase object does not contain "
           "a valid initial field function for the temperature field. A shared_ptr to your initial field "
@@ -146,21 +146,18 @@ namespace MeltPoolDG::HeatEquation
                                    dof_handler,
                                    temp_constraints,
                                    scratch_data->get_quadrature(temp_quad_idx),
-                                   *base_in->get_initial_condition("heat_conduction_T"),
+                                   *base_in->get_initial_condition("heat_conduction"),
                                    initial_solution);
       initial_solution.update_ghost_values();
       /*
        *    initialize the heat operation class
        */
-      heat_operation =
-        std::make_shared<HeatOperation<dim>>(*scratch_data,
-                                             base_in->parameters.heat,
-                                             temp_dof_idx,
-                                             temp_hanging_nodes_dof_idx,
-                                             temp_quad_idx,
-                                             base_in->get_neumann_bc("heat_conduction_T"),
-                                             base_in->get_radiation_id("heat_conduction_T"),
-                                             base_in->get_convection_id("heat_conduction_T"));
+      heat_operation = std::make_shared<HeatOperation<dim>>(base_in->get_bc("heat_condution"),
+                                                            *scratch_data,
+                                                            base_in->parameters.heat,
+                                                            temp_dof_idx,
+                                                            temp_hanging_nodes_dof_idx,
+                                                            temp_quad_idx);
 
       heat_operation->set_initial_condition(initial_solution);
       /*
@@ -218,11 +215,11 @@ namespace MeltPoolDG::HeatEquation
 
       temp_constraints.clear();
       temp_constraints.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
-      if (base_in->get_bc("heat_conduction_T") &&
-          !base_in->get_dirichlet_bc("heat_conduction_T").empty())
+      if (base_in->get_bc("heat_conduction") &&
+          !base_in->get_dirichlet_bc("heat_conduction").empty())
         {
           for (const auto &bc : base_in->get_dirichlet_bc(
-                 "heat_conduction_T")) // @todo: add name of bc at a more central place
+                 "heat_conduction")) // @todo: add name of bc at a more central place
             {
               dealii::VectorTools::interpolate_boundary_values(
                 scratch_data->get_mapping(), dof_handler, bc.first, *bc.second, temp_constraints);
@@ -232,6 +229,8 @@ namespace MeltPoolDG::HeatEquation
       temp_constraints.merge(temp_constraints,
                              AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
+      std::cout << "temperature constraints" << std::endl;
+      temp_constraints.print(std::cout);
 
       // @todo: radiation and convection bc
 

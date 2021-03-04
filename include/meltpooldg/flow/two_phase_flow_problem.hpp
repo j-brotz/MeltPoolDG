@@ -313,10 +313,8 @@ namespace MeltPoolDG::Flow
           base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
         melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
           scratch_data,
+          base_in->get_bc("heat_conduction"),
           base_in->parameters,
-          base_in->get_neumann_bc("heat"),
-          base_in->get_radiation_id("heat"),
-          base_in->get_convection_id("heat"),
           ls_dof_idx,
           reinit_dof_idx,
           flow_operation->get_dof_handler_idx_velocity(),

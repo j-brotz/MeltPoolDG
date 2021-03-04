@@ -44,30 +44,20 @@ namespace MeltPoolDG::HeatEquation
     std::shared_ptr<HeatOperator<dim>> heat_operator;
 
   public:
-    HeatOperation(const ScratchData<dim> &scratch_data_in,
-                  const HeatData<double> &heat_data_in,
-                  const unsigned int      temp_dof_idx_in,
-                  const unsigned int      temp_hanging_nodes_dof_idx_in,
-                  const unsigned int      temp_quad_idx_in,
-                  const std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
-                    &neumann_bc_in, //@todo find a nice way to provide BC
-                  const std::vector<types::boundary_id> bc_radiation_in,
-                  const std::vector<types::boundary_id> bc_convection_in)
+    HeatOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
+                  const ScratchData<dim> &                        scratch_data_in,
+                  const HeatData<double> &                        heat_data_in,
+                  const unsigned int                              temp_dof_idx_in,
+                  const unsigned int                              temp_hanging_nodes_dof_idx_in,
+                  const unsigned int                              temp_quad_idx_in)
       : scratch_data(scratch_data_in)
       , heat_data(heat_data_in)
       , temp_dof_idx(temp_dof_idx_in)
       , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
       , temp_quad_idx(temp_quad_idx_in)
     {
-      heat_operator = std::make_shared<HeatOperator<dim>>(scratch_data,
-                                                          heat_data,
-                                                          neumann_bc_in,
-                                                          bc_radiation_in,
-                                                          bc_convection_in,
-                                                          temp_dof_idx,
-                                                          temp_quad_idx,
-                                                          temperature,
-                                                          heat_source);
+      heat_operator = std::make_shared<HeatOperator<dim>>(
+        bc_data, scratch_data, heat_data, temp_dof_idx, temp_quad_idx, temperature, heat_source);
     }
 
     void
@@ -132,6 +122,8 @@ namespace MeltPoolDG::HeatEquation
           *heat_operator, solution_update, rhs, heat_data.solver.rel_tolerance_rhs);
       };
 
+      std::cout << "temperature before:  " << temperature.l2_norm() << std::endl;
+      std::cout << "temperature old before:  " << temperature_old.l2_norm() << std::endl;
       auto newton = NewtonRaphsonSolver<dim>(scratch_data,
                                              heat_data.nlsolve,
                                              temp_dof_idx,
@@ -143,6 +135,9 @@ namespace MeltPoolDG::HeatEquation
       newton.solve();
 
       temperature_old = temperature;
+
+      std::cout << "temperature after:  " << temperature.l2_norm() << std::endl;
+      std::cout << "temperature old after:  " << temperature_old.l2_norm() << std::endl;
     }
 
     void

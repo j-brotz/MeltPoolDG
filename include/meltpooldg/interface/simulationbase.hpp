@@ -256,13 +256,16 @@ namespace MeltPoolDG
     }
 
     /**
-     * Attach functions for boundary conditions
+     * Getter functions for boundary conditions
      */
     const auto &
     get_bc(const std::string operation_name)
     {
+      if (!boundary_conditions_map[operation_name])
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
       return boundary_conditions_map[operation_name];
     }
+
     const auto &
     get_dirichlet_bc(const std::string operation_name)
     {
