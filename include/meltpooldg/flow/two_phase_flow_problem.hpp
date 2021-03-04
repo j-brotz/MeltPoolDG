@@ -314,6 +314,7 @@ namespace MeltPoolDG::Flow
         melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
           scratch_data,
           base_in->parameters,
+          base_in->get_neumann_bc("heat"),
           base_in->get_radiation_id("heat"),
           base_in->get_convection_id("heat"),
           ls_dof_idx,

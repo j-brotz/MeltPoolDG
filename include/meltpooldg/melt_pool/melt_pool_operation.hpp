@@ -64,16 +64,18 @@ namespace MeltPoolDG
     public:
       MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
                         const Parameters<double> &               data_in,
-                        const std::vector<types::boundary_id>    bc_radiation_in,
-                        const std::vector<types::boundary_id>    bc_convection_in,
-                        const unsigned int                       ls_dof_idx_in,
-                        const unsigned int                       reinit_dof_idx_in,
-                        const unsigned int                       flow_vel_dof_idx_in,
-                        const unsigned int                       flow_vel_quad_idx_in,
-                        const unsigned int                       temp_dof_idx_in,
-                        const unsigned int                       temp_quad_idx_in,
-                        const double                             start_time_in,
-                        bool                                     do_recoil_pressure = true)
+                        const std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
+                          &neumann_bc_in, //@todo find a nice way to provide BC
+                        const std::vector<types::boundary_id> bc_radiation_in,
+                        const std::vector<types::boundary_id> bc_convection_in,
+                        const unsigned int                    ls_dof_idx_in,
+                        const unsigned int                    reinit_dof_idx_in,
+                        const unsigned int                    flow_vel_dof_idx_in,
+                        const unsigned int                    flow_vel_quad_idx_in,
+                        const unsigned int                    temp_dof_idx_in,
+                        const unsigned int                    temp_quad_idx_in,
+                        const double                          start_time_in,
+                        bool                                  do_recoil_pressure = true)
         : scratch_data(scratch_data_in)
         , ls_dof_idx(ls_dof_idx_in)
         , reinit_dof_idx(reinit_dof_idx_in)
@@ -104,6 +106,7 @@ namespace MeltPoolDG
                                                              temp_dof_idx,
                                                              temp_dof_idx, //@todo: hanging nodes
                                                              temp_quad_idx,
+                                                             neumann_bc_in,
                                                              bc_radiation_in,
                                                              bc_convection_in);
 

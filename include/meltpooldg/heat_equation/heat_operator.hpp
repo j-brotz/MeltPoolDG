@@ -54,7 +54,9 @@ namespace MeltPoolDG::HeatEquation
 
     const double stefan_boltzmann = 5.67e-8; // W/(mK^4) // @todo move -- where?
 
-    const VectorType &              temperature;
+    const VectorType &temperature;
+    std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
+                                    neumann_bc; //@todo find a nice way to provide BC
     std::vector<types::boundary_id> bc_radiation_indices;
     std::vector<types::boundary_id> bc_convection_indices;
     unsigned int                    vel_dof_idx = 0; //@todo: fill
@@ -65,8 +67,10 @@ namespace MeltPoolDG::HeatEquation
     bool do_velocity = false;
 
   public:
-    HeatOperator(const ScratchData<dim> &              scratch_data_in,
-                 const HeatData<number> &              data_in,
+    HeatOperator(const ScratchData<dim> &scratch_data_in,
+                 const HeatData<number> &data_in,
+                 std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
+                   neumann_bc_in, //@todo find a nice way to provide BC
                  const std::vector<types::boundary_id> bc_radiation_in,
                  const std::vector<types::boundary_id> bc_convection_in,
                  const unsigned int                    temp_dof_idx_in,
@@ -79,6 +83,7 @@ namespace MeltPoolDG::HeatEquation
     , temp_dof_idx         ( temp_dof_idx_in  )
     , temp_quad_idx        ( temp_quad_idx_in )
     , temperature          ( temperature_in   )
+    , neumann_bc           ( neumann_bc_in    )
     , bc_radiation_indices ( bc_radiation_in  )
     , bc_convection_indices( bc_convection_in )
     , heat_source          ( heat_source_in   ) 
@@ -193,17 +198,23 @@ namespace MeltPoolDG::HeatEquation
 
           types::boundary_id bc_index = matrix_free.get_boundary_id(face);
 
+          bool do_radiation =
+            (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
+             bc_radiation_indices.end());
+          bool do_convection =
+            (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
+             bc_convection_indices.end());
+
           for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
             {
               auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
 
               VectorizedArray<double> temp = 0;
-              if (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
-                  bc_radiation_indices.end())
+
+              if (do_radiation)
                 temp += 4 * data.emissivity * stefan_boltzmann *
                         pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
-              if (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
-                  bc_convection_indices.end())
+              if (do_convection)
                 temp += data.convection_coefficient * inc_temp_vals_at_q;
 
               dQ_dT.submit_value(temp, q_index);
@@ -287,7 +298,9 @@ namespace MeltPoolDG::HeatEquation
           dQ_dT.reinit(face);
           dQ_dT.gather_evaluate(temperature, true, false);
 
-          types::boundary_id bc_index = matrix_free.get_boundary_id(face);
+          const types::boundary_id bc_index = matrix_free.get_boundary_id(face);
+
+          bool do_neumann = neumann_bc.find(bc_index) != neumann_bc.end();
 
           bool do_radiation =
             (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
@@ -296,7 +309,12 @@ namespace MeltPoolDG::HeatEquation
             (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
              bc_convection_indices.end());
 
-          if (!do_radiation && !do_convection)
+          AssertThrow(!(do_neumann && (do_radiation || do_convection)),
+                      ExcMessage(
+                        "It is not allowed to specify both Neumann and radiation and/or convection"
+                        " boundary conditions at the same face."));
+
+          if (!do_neumann && !do_radiation && !do_convection)
             continue;
 
           for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
@@ -304,6 +322,27 @@ namespace MeltPoolDG::HeatEquation
               auto temp_vals = dQ_dT.get_value(q_index);
 
               VectorizedArray<double> temp = 0;
+              if (do_neumann)
+                {
+                  auto quad_point = dQ_dT.quadrature_point(q_index);
+                  for (unsigned int v = 0;
+                       v < scratch_data.get_matrix_free().n_active_entries_per_face_batch(face);
+                       ++v)
+                    {
+                      // @todo: This implementation is extremely odd. Is there another way to call a
+                      // Function with Point<dim, VectorizedArray>?
+                      Point<dim> quad_point_v;
+
+                      for (unsigned int d = 0; d < dim; ++d)
+                        quad_point_v[d] = quad_point[d][v];
+
+                      for (unsigned int d = 0; d < dim; ++d)
+                        {
+                          temp[v] += neumann_bc.at(bc_index)->value(quad_point_v, d) *
+                                     dQ_dT.get_normal_vector(q_index)[d][v];
+                        }
+                    }
+                }
               if (do_radiation)
                 temp += data.emissivity * stefan_boltzmann *
                         (pow<double>(temp_vals, 4) - std::pow(data.temperature_infinity, 4));

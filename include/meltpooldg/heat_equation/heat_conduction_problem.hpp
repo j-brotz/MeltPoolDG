@@ -158,6 +158,7 @@ namespace MeltPoolDG::HeatEquation
                                              temp_dof_idx,
                                              temp_hanging_nodes_dof_idx,
                                              temp_quad_idx,
+                                             base_in->get_neumann_bc("heat_conduction_T"),
                                              base_in->get_radiation_id("heat_conduction_T"),
                                              base_in->get_convection_id("heat_conduction_T"));
 

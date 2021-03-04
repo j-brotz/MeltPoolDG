@@ -82,7 +82,10 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
       this->attach_dirichlet_boundary_condition(
         left_bc, std::make_shared<Functions::ConstantFunction<dim>>(1000.0), "heat_conduction_T");
 
-      this->attach_radiation_boundary_condition(right_bc, "heat_conduction_T");
+      // this->attach_radiation_boundary_condition(right_bc, "heat_conduction_T");
+
+      this->attach_neumann_boundary_condition(
+        right_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "heat_conduction_T");
 
       if constexpr ((dim == 1) || (dim == 2))
         {

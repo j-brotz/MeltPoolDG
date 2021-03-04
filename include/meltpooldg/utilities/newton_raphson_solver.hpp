@@ -56,11 +56,11 @@ namespace MeltPoolDG
       solution.zero_out_ghosts();
 
       scratch_data.get_pcout() << std::endl;
-      scratch_data.get_pcout() << "+" << std::string(43, '-') << "+" << std::endl;
+      scratch_data.get_pcout() << "+" << std::string(60, '-') << "+" << std::endl;
       scratch_data.get_pcout() << std::setw(15) << "iter lin solve" << std::setw(15)
                                << "||residual||" << std::setw(15) << "||solution_update||"
                                << std::endl;
-      scratch_data.get_pcout() << "+" << std::string(43, '-') << "+" << std::endl;
+      scratch_data.get_pcout() << "+" << std::string(60, '-') << "+" << std::endl;
 
       int i = 0;
       while (i < max_number_of_iterations)
