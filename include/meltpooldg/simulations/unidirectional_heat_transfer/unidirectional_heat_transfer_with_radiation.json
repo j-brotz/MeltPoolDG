@@ -6,7 +6,7 @@
         "do simplex": "false",
         "do print parameters": "true",
         "global refinements": "7",
-        "problem name": "heat_conduction"
+        "problem name": "heat_transfer"
     },
     "heat" : {
       "heat emissivity": "0.98",

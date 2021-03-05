@@ -120,7 +120,8 @@ namespace MeltPoolDG
          */
         scratch_data->initialize_dof_vector(solid, temp_dof_idx);
         scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
-        scratch_data->initialize_dof_vector(heat_operation->get_temperature(), temp_dof_idx);
+        heat_operation->reinit();
+
 
         if (mp_data.temperature_formulation == "numerical")
           laser_heat_source_operation =
