@@ -6,7 +6,6 @@
 #include <meltpooldg/simulations/advection_diffusion/advection_diffusion.hpp>
 #include <meltpooldg/simulations/evaporating_droplet/evaporating_droplet.hpp>
 #include <meltpooldg/simulations/flow_past_cylinder/flow_past_cylinder.hpp>
-#include <meltpooldg/simulations/nafems_heat_transfer_with_radiation/heat_transfer_with_radiation.hpp>
 #include <meltpooldg/simulations/recoil_pressure/recoil_pressure.hpp>
 #include <meltpooldg/simulations/reinit_circle/reinit_circle.hpp>
 #include <meltpooldg/simulations/rising_bubble/rising_bubble.hpp>
@@ -15,6 +14,7 @@
 #include <meltpooldg/simulations/spurious_currents/spurious_currents.hpp>
 #include <meltpooldg/simulations/stefans_problem/stefans_problem.hpp>
 #include <meltpooldg/simulations/stefans_problem/stefans_problem_with_flow.hpp>
+#include <meltpooldg/simulations/unidirectional_heat_transfer/unidirectional_heat_transfer.hpp>
 #include <meltpooldg/simulations/vortex_bubble/vortex_bubble.hpp>
 
 namespace MeltPoolDG
@@ -68,10 +68,10 @@ namespace MeltPoolDG
         else if (simulation_name == "evaporating_droplet")
           return std::make_shared<EvaporatingDroplet::SimulationEvaporatingDroplet<dim>>(
             parameter_file, mpi_communicator);
-        else if (simulation_name == "heat_transfer_with_radiation")
+        else if (simulation_name == "unidirectional_heat_transfer")
           return std::make_shared<
-            HeatTransferWithRadiation::SimulationHeatTransferWithRadiation<dim>>(parameter_file,
-                                                                                 mpi_communicator);
+            UnidirectionalHeatTransfer::SimulationUnidirectionalHeatTransfer<dim>>(
+            parameter_file, mpi_communicator);
         /* add your simulation here*/
         else
           AssertThrow(false,

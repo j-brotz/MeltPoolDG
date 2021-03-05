@@ -8,16 +8,16 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/heat_equation/heat_operator.hpp>
+#include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::HeatEquation
+namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
   template <int dim>
-  class HeatOperation
+  class HeatTransferOperation
   {
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
@@ -41,22 +41,22 @@ namespace MeltPoolDG::HeatEquation
     VectorType temperature_old;
     VectorType heat_source;
 
-    std::shared_ptr<HeatOperator<dim>> heat_operator;
+    std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
 
   public:
-    HeatOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
-                  const ScratchData<dim> &                        scratch_data_in,
-                  const HeatData<double> &                        heat_data_in,
-                  const unsigned int                              temp_dof_idx_in,
-                  const unsigned int                              temp_hanging_nodes_dof_idx_in,
-                  const unsigned int                              temp_quad_idx_in)
+    HeatTransferOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
+                          const ScratchData<dim> &                        scratch_data_in,
+                          const HeatData<double> &                        heat_data_in,
+                          const unsigned int                              temp_dof_idx_in,
+                          const unsigned int temp_hanging_nodes_dof_idx_in,
+                          const unsigned int temp_quad_idx_in)
       : scratch_data(scratch_data_in)
       , heat_data(heat_data_in)
       , temp_dof_idx(temp_dof_idx_in)
       , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
       , temp_quad_idx(temp_quad_idx_in)
     {
-      heat_operator = std::make_shared<HeatOperator<dim>>(
+      heat_operator = std::make_shared<HeatTransferOperator<dim>>(
         bc_data, scratch_data, heat_data, temp_dof_idx, temp_quad_idx, temperature, heat_source);
     }
 
@@ -172,4 +172,4 @@ namespace MeltPoolDG::HeatEquation
       return heat_source;
     }
   };
-} // namespace MeltPoolDG::HeatEquation
+} // namespace MeltPoolDG::Heat

@@ -11,7 +11,7 @@
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::HeatEquation
+namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
@@ -163,4 +163,4 @@ namespace MeltPoolDG::HeatEquation
                -gusarov_data.extinction_coefficient * power_density(radius, power) * dq_dxi(xi);
     }
   };
-} // namespace MeltPoolDG::HeatEquation
+} // namespace MeltPoolDG::Heat

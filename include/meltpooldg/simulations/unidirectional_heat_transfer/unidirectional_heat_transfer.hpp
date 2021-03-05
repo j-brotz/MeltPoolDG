@@ -2,23 +2,16 @@
 // deal-specific libraries
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
-#include <deal.II/base/tensor_function.h>
 
 #include <deal.II/grid/grid_generator.h>
-
-#include <deal.II/lac/vector.h>
-
-#include <deal.II/numerics/vector_tools.h>
-
 // c++
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
-#include <meltpooldg/utilities/utilityfunctions.hpp>
 
 /**
- * This example represents a benchmark from the NAFEMS collection.
+ * This example represents a simple test example for heat transfer.
  * It offers the following configurations dependent on the input parameters:
  *
  *  case 1: emissivity > 0, convection_coefficient = 0
@@ -60,7 +53,7 @@
  *
  */
 
-namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
+namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
 {
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
@@ -84,10 +77,11 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
   };
 
   template <int dim>
-  class SimulationHeatTransferWithRadiation : public SimulationBase<dim>
+  class SimulationUnidirectionalHeatTransfer : public SimulationBase<dim>
   {
   public:
-    SimulationHeatTransferWithRadiation(std::string parameter_file, const MPI_Comm mpi_communicator)
+    SimulationUnidirectionalHeatTransfer(std::string    parameter_file,
+                                         const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
     {
       this->set_parameters();
@@ -133,10 +127,10 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
       const types::boundary_id right_bc = 2;
 
       if (this->parameters.heat.emissivity > 0.0)
-        this->attach_radiation_boundary_condition(right_bc, "heat_conduction");
+        this->attach_radiation_boundary_condition(right_bc, "heat_transfer");
 
       if (this->parameters.heat.convection_coefficient > 0.0)
-        this->attach_convection_boundary_condition(right_bc, "heat_conduction");
+        this->attach_convection_boundary_condition(right_bc, "heat_transfer");
 
       if constexpr ((dim == 1) || (dim == 2))
         {
@@ -162,13 +156,13 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
       if (this->parameters.heat.emissivity > 0.0 ||
           this->parameters.heat.convection_coefficient > 0.0)
         this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
-                                       "heat_conduction");
+                                       "heat_transfer");
       else
-        this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_conduction");
+        this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_transfer");
     }
 
   private:
     const double x_min = 0.0;
     const double x_max = 0.1;
   };
-} // namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
+} // namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer

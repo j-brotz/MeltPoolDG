@@ -10,7 +10,7 @@
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 
-namespace MeltPoolDG::HeatEquation
+namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
@@ -38,9 +38,9 @@ namespace MeltPoolDG::HeatEquation
    */
 
   template <int dim, typename number = double>
-  class HeatOperator : public OperatorBase<number,
-                                           LinearAlgebra::distributed::Vector<number>,
-                                           LinearAlgebra::distributed::Vector<number>>
+  class HeatTransferOperator : public OperatorBase<number,
+                                                   LinearAlgebra::distributed::Vector<number>,
+                                                   LinearAlgebra::distributed::Vector<number>>
   {
   private:
     using VectorType          = LinearAlgebra::distributed::Vector<number>;
@@ -67,13 +67,13 @@ namespace MeltPoolDG::HeatEquation
     bool do_velocity = false;
 
   public:
-    HeatOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
-                 const ScratchData<dim> &                        scratch_data_in,
-                 const HeatData<number> &                        data_in,
-                 const unsigned int                              temp_dof_idx_in,
-                 const unsigned int                              temp_quad_idx_in,
-                 const VectorType &                              temperature_in,
-                 const VectorType &                              heat_source_in)
+    HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
+                         const ScratchData<dim> &                        scratch_data_in,
+                         const HeatData<number> &                        data_in,
+                         const unsigned int                              temp_dof_idx_in,
+                         const unsigned int                              temp_quad_idx_in,
+                         const VectorType &                              temperature_in,
+                         const VectorType &                              heat_source_in)
       // clang-format off
     : scratch_data         ( scratch_data_in  )
     , data                 ( data_in          )
@@ -381,4 +381,4 @@ namespace MeltPoolDG::HeatEquation
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
     }
   };
-} // namespace MeltPoolDG::HeatEquation
+} // namespace MeltPoolDG::Heat

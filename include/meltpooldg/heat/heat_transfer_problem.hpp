@@ -7,12 +7,12 @@
 #include <meltpooldg/interface/problembase.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
 
-namespace MeltPoolDG::HeatEquation
+namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
   template <int dim>
-  class HeatConductionProblem : public ProblemBase<dim>
+  class HeatTransferProblem : public ProblemBase<dim>
   {
   private:
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
@@ -28,12 +28,12 @@ namespace MeltPoolDG::HeatEquation
     unsigned int temp_hanging_nodes_dof_idx;
     unsigned int temp_quad_idx;
 
-    std::shared_ptr<ScratchData<dim>>   scratch_data;
-    std::shared_ptr<HeatOperation<dim>> heat_operation;
-    std::shared_ptr<Postprocessor<dim>> post_processor;
+    std::shared_ptr<ScratchData<dim>>           scratch_data;
+    std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
+    std::shared_ptr<Postprocessor<dim>>         post_processor;
 
   public:
-    HeatConductionProblem() = default;
+    HeatTransferProblem() = default;
 
     void
     run(std::shared_ptr<SimulationBase<dim>> base_in) final
@@ -61,7 +61,7 @@ namespace MeltPoolDG::HeatEquation
     std::string
     get_name() final
     {
-      return "heat_conduction";
+      return "heat_transfer";
     };
 
   private:
@@ -129,7 +129,7 @@ namespace MeltPoolDG::HeatEquation
        *  set initial conditions of the levelset function
        */
       AssertThrow(
-        base_in->get_initial_condition("heat_conduction"),
+        base_in->get_initial_condition("heat_transfer"),
         ExcMessage(
           "It seems that your SimulationBase object does not contain "
           "a valid initial field function for the temperature field. A shared_ptr to your initial field "
@@ -146,18 +146,19 @@ namespace MeltPoolDG::HeatEquation
                                    dof_handler,
                                    temp_constraints,
                                    scratch_data->get_quadrature(temp_quad_idx),
-                                   *base_in->get_initial_condition("heat_conduction"),
+                                   *base_in->get_initial_condition("heat_transfer"),
                                    initial_solution);
       initial_solution.update_ghost_values();
       /*
        *    initialize the heat operation class
        */
-      heat_operation = std::make_shared<HeatOperation<dim>>(base_in->get_bc("heat_conduction"),
-                                                            *scratch_data,
-                                                            base_in->parameters.heat,
-                                                            temp_dof_idx,
-                                                            temp_hanging_nodes_dof_idx,
-                                                            temp_quad_idx);
+      heat_operation =
+        std::make_shared<HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
+                                                     *scratch_data,
+                                                     base_in->parameters.heat,
+                                                     temp_dof_idx,
+                                                     temp_hanging_nodes_dof_idx,
+                                                     temp_quad_idx);
 
       heat_operation->set_initial_condition(initial_solution);
       /*
@@ -215,11 +216,10 @@ namespace MeltPoolDG::HeatEquation
 
       temp_constraints.clear();
       temp_constraints.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
-      if (base_in->get_bc("heat_conduction") &&
-          !base_in->get_dirichlet_bc("heat_conduction").empty())
+      if (base_in->get_bc("heat_transfer") && !base_in->get_dirichlet_bc("heat_transfer").empty())
         {
           for (const auto &bc : base_in->get_dirichlet_bc(
-                 "heat_conduction")) // @todo: add name of bc at a more central place
+                 "heat_transfer")) // @todo: add name of bc at a more central place
             {
               dealii::VectorTools::interpolate_boundary_values(
                 scratch_data->get_mapping(), dof_handler, bc.first, *bc.second, temp_constraints);
@@ -286,4 +286,4 @@ namespace MeltPoolDG::HeatEquation
       // time_iterator.get_current_time_step_number());
     }
   };
-} // namespace MeltPoolDG::HeatEquation
+} // namespace MeltPoolDG::Heat

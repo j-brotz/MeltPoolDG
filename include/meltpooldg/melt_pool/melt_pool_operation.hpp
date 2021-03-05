@@ -10,9 +10,9 @@
 #include <deal.II/dofs/dof_tools.h>
 // MeltPoolDG
 #include <meltpooldg/flow/surface_tension_operation.hpp>
-#include <meltpooldg/heat_equation/heat_operation.hpp>
-#include <meltpooldg/heat_equation/laser.hpp>
-#include <meltpooldg/heat_equation/laser_heat_source_gusarov.hpp>
+#include <meltpooldg/heat/heat_transfer_operation.hpp>
+#include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
@@ -36,9 +36,9 @@ namespace MeltPoolDG
        */
       MeltPoolData<double> mp_data;
 
-      std::shared_ptr<HeatEquation::LaserOperation<dim>>         laser_operation;
-      std::shared_ptr<RecoilPressureOperation<dim>>              recoil_pressure_operation;
-      std::shared_ptr<HeatEquation::LaserHeatSourceGusarov<dim>> laser_heat_source_operation;
+      std::shared_ptr<Heat::LaserOperation<dim>>         laser_operation;
+      std::shared_ptr<RecoilPressureOperation<dim>>      recoil_pressure_operation;
+      std::shared_ptr<Heat::LaserHeatSourceGusarov<dim>> laser_heat_source_operation;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
@@ -59,7 +59,7 @@ namespace MeltPoolDG
       /*
        *  heat operation
        */
-      std::shared_ptr<HeatEquation::HeatOperation<dim>> heat_operation;
+      std::shared_ptr<Heat::HeatTransferOperation<dim>> heat_operation;
 
     public:
       MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &       scratch_data_in,
@@ -88,8 +88,7 @@ namespace MeltPoolDG
         /*
          *  initialize the laser operation class
          */
-        laser_operation =
-          std::make_shared<HeatEquation::LaserOperation<dim>>(*scratch_data, data_in.laser);
+        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data, data_in.laser);
         /*
          *  Initialize the laser operation
          */
@@ -98,7 +97,7 @@ namespace MeltPoolDG
          *  initialize the heat operation class
          */
         heat_operation =
-          std::make_shared<HeatEquation::HeatOperation<dim>>(heat_bc,
+          std::make_shared<Heat::HeatTransferOperation<dim>>(heat_bc,
                                                              *scratch_data,
                                                              data_in.heat,
                                                              temp_dof_idx,
@@ -125,9 +124,9 @@ namespace MeltPoolDG
 
         if (mp_data.temperature_formulation == "numerical")
           laser_heat_source_operation =
-            std::make_shared<HeatEquation::LaserHeatSourceGusarov<dim>>(*scratch_data,
-                                                                        data_in.laser.gusarov,
-                                                                        temp_dof_idx);
+            std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(*scratch_data,
+                                                                data_in.laser.gusarov,
+                                                                temp_dof_idx);
       }
 
       void
