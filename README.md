@@ -42,7 +42,7 @@ touch vortex_bubble.hpp
 touch vortex_bubble.json
 ```
 In the `.hpp` file a child class of the MeltPoolDG::SimulationBase<dim> class must be created. In the `.json`-file the parameters will be specified. Note that the `.json`-file is a command line argument and is only needed at run-time of the simulation. 
-The new simulation has to be added to the simulation factory `./include/meltpooldg/simulation_selector.hpp` 
+The new simulation has to be added to the simulation factory `./include/meltpooldg/simulations/simulation_selector.hpp` 
 ```cpp
  #include <include/meltpooldg/simulations/vortex_bubble/vortex_bubble.hpp>
 else if( simulation_name == "vortex_bubble" )
