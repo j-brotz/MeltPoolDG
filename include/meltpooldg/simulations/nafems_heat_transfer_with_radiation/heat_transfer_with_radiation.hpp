@@ -19,9 +19,9 @@
 
 /**
  * This example represents a benchmark from the NAFEMS collection.
- * It offers two configurations:
+ * It offers the following configurations dependent on the input parameters:
  *
- *  case 1: emissivity > 0
+ *  case 1: emissivity > 0, convection_coefficient = 0
  *             adiabatic
  *            +--------+
  *            |        |
@@ -30,7 +30,25 @@
  *            +--------+
  *            adiabatic
  *
- *  case 2: emissivity = 0
+ *  case 2: emissivity = 0, convection_coefficient > 0
+ *             adiabatic
+ *            +--------+
+ *            |        |
+ * T=const    |        |   convection
+ *            |        |
+ *            +--------+
+ *            adiabatic
+ *
+ *  case 3: emissivity > 0, convection_coefficient > 0
+ *             adiabatic
+ *            +--------+
+ *            |        |
+ * T=const    |        |   radiation + convection
+ *            |        |
+ *            +--------+
+ *            adiabatic
+ *
+ *  case 4: emissivity = 0, convection_coefficient = 0
  *
  *             adiabatic
  *            +--------+
@@ -114,16 +132,16 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
       const types::boundary_id left_bc  = 1;
       const types::boundary_id right_bc = 2;
 
+      if (this->parameters.heat.emissivity > 0.0 ||
+          this->parameters.heat.convection_coefficient > 0.0)
+        this->attach_dirichlet_boundary_condition(
+          left_bc, std::make_shared<Functions::ConstantFunction<dim>>(1000.0), "heat_conduction");
+
       if (this->parameters.heat.emissivity > 0.0)
-        {
-          this->attach_dirichlet_boundary_condition(
-            left_bc, std::make_shared<Functions::ConstantFunction<dim>>(1000.0), "heat_conduction");
+        this->attach_radiation_boundary_condition(right_bc, "heat_conduction");
 
-          this->attach_radiation_boundary_condition(right_bc, "heat_conduction");
-        }
-
-      // this->attach_neumann_boundary_condition(
-      // right_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "heat_conduction");
+      if (this->parameters.heat.convection_coefficient > 0.0)
+        this->attach_convection_boundary_condition(right_bc, "heat_conduction");
 
       if constexpr ((dim == 1) || (dim == 2))
         {
@@ -146,7 +164,8 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
     void
     set_field_conditions() final
     {
-      if (this->parameters.heat.emissivity > 0.0)
+      if (this->parameters.heat.emissivity > 0.0 ||
+          this->parameters.heat.convection_coefficient > 0.0)
         this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
                                        "heat_conduction");
       else

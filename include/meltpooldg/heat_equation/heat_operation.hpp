@@ -127,7 +127,7 @@ namespace MeltPoolDG::HeatEquation
     void
     attach_output_vectors(DataOut<dim> &data_out) const
     {
-      MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
+      MeltPoolDG::VectorTools::update_ghost_values(temperature, temperature_old, heat_source);
       /**
        *  temperature
        */
