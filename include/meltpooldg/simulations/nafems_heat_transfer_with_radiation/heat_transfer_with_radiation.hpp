@@ -132,11 +132,6 @@ namespace MeltPoolDG::Simulation::HeatTransferWithRadiation
       const types::boundary_id left_bc  = 1;
       const types::boundary_id right_bc = 2;
 
-      if (this->parameters.heat.emissivity > 0.0 ||
-          this->parameters.heat.convection_coefficient > 0.0)
-        this->attach_dirichlet_boundary_condition(
-          left_bc, std::make_shared<Functions::ConstantFunction<dim>>(1000.0), "heat_conduction");
-
       if (this->parameters.heat.emissivity > 0.0)
         this->attach_radiation_boundary_condition(right_bc, "heat_conduction");
 
