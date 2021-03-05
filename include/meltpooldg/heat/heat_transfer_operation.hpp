@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  *
- * Author: Magdalena Schreter, UIBK/TUM, January 2021
+ * Author: Magdalena Schreter, UIBK/TUM, February 2021
  *
  * ---------------------------------------------------------------------*/
 #pragma once
