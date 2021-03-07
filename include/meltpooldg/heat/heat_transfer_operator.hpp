@@ -308,7 +308,7 @@ namespace MeltPoolDG::Heat
                       std::pair<unsigned int, unsigned int> &face_range) const
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
-                                             false /* is interior face*/,
+                                             true /* is interior face*/,
                                              this->dof_idx,
                                              this->quad_idx);
       for (unsigned int face = face_range.first; face < face_range.second; face++)
