@@ -18,7 +18,7 @@
  *             adiabatic
  *            +--------+
  *            |        |
- * T=const    |        |   radiation
+ * adiabatic  |        |   radiation
  *            |        |
  *            +--------+
  *            adiabatic
@@ -27,7 +27,7 @@
  *             adiabatic
  *            +--------+
  *            |        |
- * T=const    |        |   convection
+ * adiabatic  |        |   convection
  *            |        |
  *            +--------+
  *            adiabatic
@@ -36,7 +36,7 @@
  *             adiabatic
  *            +--------+
  *            |        |
- * T=const    |        |   radiation + convection
+ * adiabatic  |        |   radiation + convection
  *            |        |
  *            +--------+
  *            adiabatic

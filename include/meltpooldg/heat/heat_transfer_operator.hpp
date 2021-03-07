@@ -15,26 +15,44 @@ namespace MeltPoolDG::Heat
   using namespace dealii;
 
   /*
-   *  This operator computes the residual and its consistent tangent of the time-discretized heat
+   * This operator computes the residual and its consistent tangent of the discretized heat
    * equation
    *
-   *                 1   /                              \     /                                  \
-   *  R(T^(n+1)) =  ---  | w, ρ c_p ( T^(n+1)- T^(n+1)) |  - | ∇w, ρ c_p T^(n+1) u - k ∇T^(n+1)) |
-   *                dt   \                              /     \                                  /
-   *                                                    Ω                                         Ω
+   *                    1   /                                     \
+   *  R(T_b^(n+1)) =   ---  | N_a, ρ c_p ( N_b T_b^(n+1) - T^(n)) |
+   *                   dt   \                                     /
+   *                                                               Ω
+   *                /                                                 \
+   *              - | ∇N_a, ρ c_p N_b T_b^(n+1) u - k ∇N_b T_b^(n+1)) |
+   *                \                                                 /
+   *                                                                   Ω
    *                 /    _   \     /    _  \
    *             -   | w, q_s |  -  | w, q  | = 0
    *                 \        /     \       /
    *                           Ω             Γ
-   *                                            N
+   *                                          N
    *
-   * with the temperature field T^(n+1), test function w, the density ρ, the specific heat capacity
-   * c_p and the conductivity k, source/sink terms q_s and prescribed fluxes q along Neumann
-   * boundaries.
+   *                                                                             _
+   *  dR(T^(n+1))    1   /                \     /              \      /        d q       \
+   *  ----------- = ---  | N_a, ρ c_p N_b |  +  | ∇N_a, k ∇N_b |   -  | N_a, ---------   |
+   *  dT_b^(n+1)     dt  \                /     \              /      \       dT_b^(n+1) /
+   *                                       Ω                    Ω                         Γ
+   *                                                                                       N
+   *
+   * with shape functions N_a and N_b, nodal temperature values T_b^(n+1), the density ρ, the
+   * specific heat capacity c_p and the conductivity k, source/sink terms q_s and prescribed
+   * fluxes q along Neumann boundaries. The heat flux may result from radiative losses
+   *
+   *  q = σ ϵ (T^4-T∞^4)
+   *
+   * with the Stefan-Boltzmann constant σ, the emissivity ϵ and the temperature of the surroundings
+   * T∞ as well as convective losses
+   *
+   *  q = α (T-T∞)
+   *
+   * with the convection coeficient alpha.
    *
    * We assume that the density and the specific heat capacity do not dependent on the temperature.
-   *
-   *
    */
 
   template <int dim, typename number = double>
@@ -135,7 +153,6 @@ namespace MeltPoolDG::Heat
     {
       FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
 
-      // if (do_velocity)
       // FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
@@ -151,7 +168,7 @@ namespace MeltPoolDG::Heat
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              temp_vals.submit_value(data.density * data.capacity / this->d_tau *
+              temp_vals.submit_value(data.density * data.capacity * this->d_tau_inv *
                                        temp_vals.get_value(q_index),
                                      q_index);
 
@@ -233,7 +250,6 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, this->dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, this->dof_idx, this->quad_idx);
-      // if (do_velocity)
       // FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
 
 
@@ -261,8 +277,8 @@ namespace MeltPoolDG::Heat
             {
               temp_vals.submit_value(-1. * (data.density * data.capacity *
                                               (temp_vals.get_value(q_index) -
-                                               temp_vals_old.get_value(q_index)) /
-                                              this->d_tau -
+                                               temp_vals_old.get_value(q_index)) *
+                                              this->d_tau_inv -
                                             heat_source_vals.get_value(q_index)),
                                      q_index); // negative sign since residual is moved to rhs
 
@@ -292,7 +308,7 @@ namespace MeltPoolDG::Heat
                       std::pair<unsigned int, unsigned int> &face_range) const
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
-                                             true /* is interior face*/,
+                                             false /* is interior face*/,
                                              this->dof_idx,
                                              this->quad_idx);
       for (unsigned int face = face_range.first; face < face_range.second; face++)
@@ -327,23 +343,26 @@ namespace MeltPoolDG::Heat
               if (do_neumann)
                 {
                   auto quad_point = dQ_dT.quadrature_point(q_index);
-                  for (unsigned int v = 0;
-                       v < scratch_data.get_matrix_free().n_active_entries_per_face_batch(face);
-                       ++v)
-                    {
-                      // @todo: This implementation is extremely odd. Is there another way to call a
-                      // Function with Point<dim, VectorizedArray>?
-                      Point<dim> quad_point_v;
+                  // for (unsigned int v = 0;
+                  // v < scratch_data.get_matrix_free().n_active_entries_per_face_batch(face);
+                  //++v)
+                  //{
+                  //// @todo: This implementation is extremely odd. Is there another way to call a
+                  //// Function with Point<dim, VectorizedArray>?
+                  // Point<dim> quad_point_v;
 
-                      for (unsigned int d = 0; d < dim; ++d)
-                        quad_point_v[d] = quad_point[d][v];
+                  // for (unsigned int d = 0; d < dim; ++d)
+                  // quad_point_v[d] = quad_point[d][v];
 
-                      for (unsigned int d = 0; d < dim; ++d)
-                        {
-                          temp[v] -= neumann_bc.at(bc_index)->value(quad_point_v, d) *
-                                     dQ_dT.get_normal_vector(q_index)[d][v];
-                        }
-                    }
+                  // for (unsigned int d = 0; d < dim; ++d)
+                  //{
+                  // temp[v] -= neumann_bc.at(bc_index)->value(quad_point_v, d) *
+                  // dQ_dT.get_normal_vector(q_index)[d][v];
+                  //}
+                  //}
+                  temp -= MeltPoolDG::VectorTools::evaluate_function_at_vectorized_points(
+                            *neumann_bc.at(bc_index), quad_point) *
+                          dQ_dT.get_normal_vector(q_index);
                 }
               if (do_radiation)
                 temp -= data.emissivity * stefan_boltzmann *

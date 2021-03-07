@@ -486,7 +486,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "advec diff do matrix free",
           advec_diff.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter(
           "advec diff implementation",
           advec_diff.implementation,
@@ -534,7 +534,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "ls do matrix free",
           ls.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter(
           "ls do curvature correction",
           ls.do_curvature_correction,
@@ -578,7 +578,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "reinit do matrix free",
           reinit.solver.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter(
           "reinit solver type",
           reinit.solver.solver_type,
@@ -615,7 +615,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "normal vec do matrix free",
           normal_vec.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter("normal vec implementation",
                           normal_vec.implementation,
                           "Choose the corresponding implementation of the normal vector operation.",
@@ -633,7 +633,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "curv do matrix free",
           curv.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter("curv implementation",
                           curv.implementation,
                           "Choose the corresponding implementation of the curvature operation.",
@@ -711,7 +711,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "heat do matrix free",
           heat.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter(
           "heat solver type",
           heat.solver.solver_type,

@@ -155,7 +155,7 @@ namespace MeltPoolDG::Heat
                       const double      power)
     {
       const double radius = position.distance(laser_position);
-      const double z      = -position[dim - 1];
+      const double z      = -(position[dim - 1] - laser_position[dim - 1]);
       const double xi     = z * gusarov_data.extinction_coefficient;
 
       return (z >= gusarov_data.layer_thickness) || (z < laser_position[dim - 1]) ?
