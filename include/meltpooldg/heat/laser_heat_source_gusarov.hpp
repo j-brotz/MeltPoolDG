@@ -148,7 +148,6 @@ namespace MeltPoolDG::Heat
      * volumetric heat source; The z-axis (= axis of the laser beam) is assumed to correspond to
      * negative dim-1 coordinate.
      */
-
     void
     local_heat_source(const Point<dim> &position,
                       const Point<dim> &laser_position,
