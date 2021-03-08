@@ -56,7 +56,8 @@ namespace MeltPoolDG
     void
     set_time_increment(const double dt)
     {
-      d_tau = dt;
+      d_tau     = dt;
+      d_tau_inv = 1. / d_tau;
     }
 
     void
@@ -121,7 +122,8 @@ namespace MeltPoolDG
       return this->system_matrix;
     }
 
-    double              d_tau = 0.0;
+    double              d_tau     = 0.0;
+    double              d_tau_inv = 0.0;
     SparseMatrixType    system_matrix;
     SparsityPatternType dsp;
 

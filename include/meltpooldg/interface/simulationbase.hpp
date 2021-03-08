@@ -195,6 +195,36 @@ namespace MeltPoolDG
       bc.push_back(id);
     }
 
+    void
+    attach_radiation_boundary_condition(types::boundary_id id, const std::string operation_name)
+    {
+      if (!boundary_conditions_map[operation_name])
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+
+      auto &bc = boundary_conditions_map[operation_name]->radiation_bc;
+      if (std::find(bc.begin(), bc.end(), id) != bc.end())
+        AssertThrow(false,
+                    ExcMessage("You try to attach a radiation boundary conditions "
+                               "for a boundary_id for which a boundary condition is already "
+                               "specified. Check your input related to bc!"));
+      bc.push_back(id);
+    }
+
+    void
+    attach_convection_boundary_condition(types::boundary_id id, const std::string operation_name)
+    {
+      if (!boundary_conditions_map[operation_name])
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+
+      auto &bc = boundary_conditions_map[operation_name]->convection_bc;
+      if (std::find(bc.begin(), bc.end(), id) != bc.end())
+        AssertThrow(false,
+                    ExcMessage("You try to attach a convection boundary conditions "
+                               "for a boundary_id for which a boundary condition is already "
+                               "specified. Check your input related to bc!"));
+      bc.push_back(id);
+    }
+
     /*
      * getter functions
      */
@@ -226,13 +256,16 @@ namespace MeltPoolDG
     }
 
     /**
-     * Attach functions for boundary conditions
+     * Getter functions for boundary conditions
      */
     const auto &
     get_bc(const std::string operation_name)
     {
+      if (!boundary_conditions_map[operation_name])
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
       return boundary_conditions_map[operation_name];
     }
+
     const auto &
     get_dirichlet_bc(const std::string operation_name)
     {
@@ -275,6 +308,18 @@ namespace MeltPoolDG
     get_open_boundary_id(const std::string operation_name)
     {
       return boundary_conditions_map[operation_name]->open_boundary_bc;
+    }
+
+    const std::vector<types::boundary_id> &
+    get_radiation_id(const std::string operation_name)
+    {
+      return boundary_conditions_map[operation_name]->radiation_bc;
+    }
+
+    const std::vector<types::boundary_id> &
+    get_convection_id(const std::string operation_name)
+    {
+      return boundary_conditions_map[operation_name]->convection_bc;
     }
 
   public:

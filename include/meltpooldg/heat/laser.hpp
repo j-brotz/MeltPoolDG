@@ -10,7 +10,7 @@
 
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::HeatEquation
+namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
@@ -195,4 +195,4 @@ namespace MeltPoolDG::HeatEquation
       return (T > mp_data.max_temperature) ? mp_data.max_temperature : T;
     }
   };
-} // namespace MeltPoolDG::HeatEquation
+} // namespace MeltPoolDG::Heat

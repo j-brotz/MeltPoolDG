@@ -24,6 +24,27 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct NonlinearSolverData
+  {
+    int    max_nonlinear_iterations       = 10;
+    number field_correction_tolerance     = 1e-10;
+    number residual_tolerance             = 1e-9;
+    int    max_nonlinear_iterations_alt   = 0;
+    number field_correction_tolerance_alt = 1e-9;
+    number residual_tolerance_alt         = 1e-8;
+  };
+
+  template <typename number = double>
+  struct TimeSteppingData
+  {
+    number       start_time              = 0.0;
+    number       end_time                = 1.0;
+    number       time_step_size          = 0.01;
+    unsigned int max_n_steps             = 1000000;
+    std::string  time_integration_scheme = "none";
+  };
+
+  template <typename number = double>
   struct BaseData
   {
     std::string  application_name    = "none";
@@ -73,8 +94,8 @@ namespace MeltPoolDG
     number             scale_factor_epsilon = 0.5;
     number             dtau                 = -1.0;
     std::string        modeltype            = "olsson2007";
+    std::string        implementation       = "meltpooldg";
     SolverData<number> solver;
-    std::string        implementation = "meltpooldg";
   };
 
   template <typename number = double>
@@ -127,6 +148,21 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct HeatData
+  {
+    number                      emissivity             = 0.0;
+    number                      convection_coefficient = 0.0;
+    number                      temperature_infinity   = 0.0;
+    bool                        do_matrix_free         = true;
+    number                      density                = 0.0;
+    number                      conductivity           = 0.0;
+    number                      capacity               = 0.0;
+    TimeSteppingData<number>    time_stepping;
+    NonlinearSolverData<number> nlsolve;
+    SolverData<number>          solver;
+  };
+
+  template <typename number = double>
   struct LaserData
   {
     number      power                              = 0.0;
@@ -137,6 +173,13 @@ namespace MeltPoolDG
     bool        do_move                            = false;
     number      scan_speed                         = 0.0;
     bool        variable_properties_over_interface = false;
+    struct GusarovData
+    {
+      number laser_beam_radius      = 0.0; // R      //@todo user input
+      number reflectivity           = 0.0; // rho     //@todo user input
+      number extinction_coefficient = 0.0; // beta    //@todo user input
+      number layer_thickness        = 0.0; // L       //@todo user input
+    } gusarov;
   };
 
   template <typename number = double>
@@ -364,7 +407,7 @@ namespace MeltPoolDG
           base.problem_name,
           "Sets the base name for the problem that should be solved.",
           Patterns::Selection(
-            "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool|level_set_with_evaporation|two_phase_flow_with_evaporation|melt_pool_with_evaporation"));
+            "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool|level_set_with_evaporation|two_phase_flow_with_evaporation|melt_pool_with_evaporation|heat_transfer"));
         prm.add_parameter("dimension", base.dimension, "Defines the dimension of the problem");
         prm.add_parameter("global refinements",
                           base.global_refinements,
@@ -443,7 +486,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "advec diff do matrix free",
           advec_diff.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter(
           "advec diff implementation",
           advec_diff.implementation,
@@ -491,7 +534,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "ls do matrix free",
           ls.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter(
           "ls do curvature correction",
           ls.do_curvature_correction,
@@ -535,7 +578,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "reinit do matrix free",
           reinit.solver.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter(
           "reinit solver type",
           reinit.solver.solver_type,
@@ -572,7 +615,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "normal vec do matrix free",
           normal_vec.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter("normal vec implementation",
                           normal_vec.implementation,
                           "Choose the corresponding implementation of the normal vector operation.",
@@ -590,7 +633,7 @@ namespace MeltPoolDG
         prm.add_parameter(
           "curv do matrix free",
           curv.do_matrix_free,
-          "Set this parameter if a matrix free solution procedure should be performed");
+          "Set this parameter if a matrix free solution procedure should be performed.");
         prm.add_parameter("curv implementation",
                           curv.implementation,
                           "Choose the corresponding implementation of the curvature operation.",
@@ -648,6 +691,83 @@ namespace MeltPoolDG
           flow.variable_properties_over_interface,
           "Set this parameter to interpolate the flow properties over the interface smoothly.",
           Patterns::Selection("false|true|consistent_with_evaporation"));
+      }
+      prm.leave_subsection();
+      /*
+       *   heat
+       */
+      prm.enter_subsection("heat");
+      {
+        prm.add_parameter("heat convection coefficient",
+                          heat.convection_coefficient,
+                          "Convection coefficient for the radiative boundary condition");
+        prm.add_parameter("heat emissivity",
+                          heat.emissivity,
+                          "Emissivity for the radiative boundary condition");
+        prm.add_parameter(
+          "heat temperature infinity",
+          heat.temperature_infinity,
+          "Infinity temperature for the conductive and radiative boundary condition");
+        prm.add_parameter(
+          "heat do matrix free",
+          heat.do_matrix_free,
+          "Set this parameter if a matrix free solution procedure should be performed.");
+        prm.add_parameter(
+          "heat solver type",
+          heat.solver.solver_type,
+          "Set this parameter for choosing a solver type. At the moment GMRES or CG solvers "
+          " are supported");
+        prm.add_parameter(
+          "heat solver max iterations",
+          heat.solver.max_iterations,
+          "Set the maximum number of iterations for solving the linear system of equations.");
+        prm.add_parameter(
+          "heat solver rel tolerance rhs",
+          heat.solver.rel_tolerance_rhs,
+          "Set the relative tolerance for a successful solution of the linear system of equations.");
+        prm.add_parameter(
+          "heat nlsolve max nonlinear iterations",
+          heat.nlsolve.max_nonlinear_iterations,
+          "Set the number of maximum nonlinear iterations with standard tolerances.");
+        prm.add_parameter(
+          "heat nlsolve field correction tolerance",
+          heat.nlsolve.field_correction_tolerance,
+          "Set the tolerance for the maximum allowed correction of the unknown field.");
+        prm.add_parameter(
+          "heat nlsolve residual tolerance",
+          heat.nlsolve.residual_tolerance,
+          "Set the tolerance for the maximum allowed residual of the nonlinear system.");
+        prm.add_parameter(
+          "heat nlsolve max nonlinear iterations alt",
+          heat.nlsolve.max_nonlinear_iterations_alt,
+          "Set the number of maximum nonlinear iterations with alternative tolerances.");
+        prm.add_parameter(
+          "heat nlsolve field correction tolerance alt",
+          heat.nlsolve.field_correction_tolerance_alt,
+          "Set the alternative tolerance for the maximum allowed correction of the unknown field.");
+        prm.add_parameter(
+          "heat nlsolve residual tolerance alt",
+          heat.nlsolve.residual_tolerance_alt,
+          "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
+        prm.add_parameter("heat start time",
+                          heat.time_stepping.start_time,
+                          "Defines the start time for the solution of the heat problem");
+        prm.add_parameter("heat end time",
+                          heat.time_stepping.end_time,
+                          "Sets the end time for the solution of the heat problem");
+        prm.add_parameter("heat time step size",
+                          heat.time_stepping.time_step_size,
+                          "Sets the step size for time stepping. For non-uniform "
+                          "time stepping, this parameter determines the size of the first "
+                          "time step.");
+        prm.add_parameter("heat max n steps",
+                          heat.time_stepping.max_n_steps,
+                          "Sets the maximum number of time steps");
+        prm.add_parameter("heat conductivity",
+                          heat.conductivity,
+                          "Conductivity for the heat problem.");
+        prm.add_parameter("heat capacity", heat.capacity, "Heat capacity for the heat problem.");
+        prm.add_parameter("heat density", heat.density, "Density for the heat problem.");
       }
       prm.leave_subsection();
       /*
@@ -885,6 +1005,7 @@ namespace MeltPoolDG
     FlowData<number>               flow;
     NormalVectorData<number>       normal_vec;
     CurvatureData<number>          curv;
+    HeatData<number>               heat;
     LaserData<number>              laser;
     MeltPoolData<number>           mp;
     RecoilPressureData<number>     recoil;

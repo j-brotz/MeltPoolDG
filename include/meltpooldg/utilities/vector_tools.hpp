@@ -144,5 +144,27 @@ namespace MeltPoolDG
       return in;
     }
 
+    template <int dim, typename number = double>
+    static Tensor<1, dim, VectorizedArray<number>>
+    evaluate_function_at_vectorized_points(const Function<dim> &                      func,
+                                           const Point<dim, VectorizedArray<double>> &points)
+    {
+      AssertThrow(func.n_components == dim, ExcNotImplemented());
+
+      Tensor<1, dim, VectorizedArray<number>> vec;
+
+      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
+        {
+          Point<dim> point_v;
+
+          for (unsigned int d = 0; d < dim; ++d)
+            point_v[d] = points[d][v];
+
+          for (unsigned int d = 0; d < dim; ++d)
+            vec[d][v] = func.value(point_v, d);
+        }
+      return vec;
+    }
+
   } // namespace VectorTools
 } // namespace MeltPoolDG

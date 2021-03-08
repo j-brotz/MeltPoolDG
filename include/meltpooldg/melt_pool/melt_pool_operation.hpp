@@ -10,8 +10,9 @@
 #include <deal.II/dofs/dof_tools.h>
 // MeltPoolDG
 #include <meltpooldg/flow/surface_tension_operation.hpp>
-#include <meltpooldg/heat_equation/heat_operation.hpp>
-#include <meltpooldg/heat_equation/laser.hpp>
+#include <meltpooldg/heat/heat_transfer_operation.hpp>
+#include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
@@ -35,8 +36,9 @@ namespace MeltPoolDG
        */
       MeltPoolData<double> mp_data;
 
-      std::shared_ptr<HeatEquation::LaserOperation<dim>> laser_operation;
+      std::shared_ptr<Heat::LaserOperation<dim>>         laser_operation;
       std::shared_ptr<RecoilPressureOperation<dim>>      recoil_pressure_operation;
+      std::shared_ptr<Heat::LaserHeatSourceGusarov<dim>> laser_heat_source_operation;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
@@ -57,19 +59,20 @@ namespace MeltPoolDG
       /*
        *  heat operation
        */
-      std::shared_ptr<HeatEquation::HeatOperation<dim>> heat_operation;
+      std::shared_ptr<Heat::HeatTransferOperation<dim>> heat_operation;
 
     public:
-      MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
-                        const Parameters<double> &               data_in,
-                        const unsigned int                       ls_dof_idx_in,
-                        const unsigned int                       reinit_dof_idx_in,
-                        const unsigned int                       flow_vel_dof_idx_in,
-                        const unsigned int                       flow_vel_quad_idx_in,
-                        const unsigned int                       temp_dof_idx_in,
-                        const unsigned int                       temp_quad_idx_in,
-                        const double                             start_time_in,
-                        bool                                     do_recoil_pressure = true)
+      MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &       scratch_data_in,
+                        const std::shared_ptr<BoundaryConditions<dim>> &heat_bc,
+                        const Parameters<double> &                      data_in,
+                        const unsigned int                              ls_dof_idx_in,
+                        const unsigned int                              reinit_dof_idx_in,
+                        const unsigned int                              flow_vel_dof_idx_in,
+                        const unsigned int                              flow_vel_quad_idx_in,
+                        const unsigned int                              temp_dof_idx_in,
+                        const unsigned int                              temp_quad_idx_in,
+                        const double                                    start_time_in,
+                        bool                                            do_recoil_pressure = true)
         : scratch_data(scratch_data_in)
         , ls_dof_idx(ls_dof_idx_in)
         , reinit_dof_idx(reinit_dof_idx_in)
@@ -85,8 +88,7 @@ namespace MeltPoolDG
         /*
          *  initialize the laser operation class
          */
-        laser_operation =
-          std::make_shared<HeatEquation::LaserOperation<dim>>(*scratch_data, data_in.laser);
+        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data, data_in.laser);
         /*
          *  Initialize the laser operation
          */
@@ -94,9 +96,13 @@ namespace MeltPoolDG
         /*
          *  initialize the heat operation class
          */
-        heat_operation = std::make_shared<HeatEquation::HeatOperation<dim>>(*scratch_data,
-                                                                            temp_dof_idx,
-                                                                            temp_quad_idx);
+        heat_operation =
+          std::make_shared<Heat::HeatTransferOperation<dim>>(heat_bc,
+                                                             *scratch_data,
+                                                             data_in.heat,
+                                                             temp_dof_idx,
+                                                             temp_dof_idx, //@todo: hanging nodes
+                                                             temp_quad_idx);
 
         /*
          * initialize the recoil pressure operation class
@@ -114,7 +120,14 @@ namespace MeltPoolDG
          */
         scratch_data->initialize_dof_vector(solid, temp_dof_idx);
         scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
-        scratch_data->initialize_dof_vector(heat_operation->get_temperature(), temp_dof_idx);
+        heat_operation->reinit();
+
+
+        if (mp_data.temperature_formulation == "numerical")
+          laser_heat_source_operation =
+            std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(*scratch_data,
+                                                                data_in.laser.gusarov,
+                                                                temp_dof_idx);
       }
 
       void
@@ -405,11 +418,6 @@ namespace MeltPoolDG
                     ExcMessage(
                       "The usage of this function assumes that the temperature field "
                       "is interpolated with the polynomial with the same degree as the level set"));
-
-        FEValues<dim> fe_values(scratch_data->get_mapping(),
-                                level_set_dof_handler.get_fe(),
-                                scratch_data->get_quadrature(flow_vel_quad_idx),
-                                update_values);
 
         const unsigned int dofs_per_cell = level_set_dof_handler.get_fe().n_dofs_per_cell();
 
