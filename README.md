@@ -11,11 +11,17 @@ This project depends on the following third-party libraries:
 - adaflo (optional)
 
 Before installing deal.II, you have to install the two libraries p4est and Trilinos. More information for that you can find here for p4est (https://www.dealii.org/9.2.0/external-libs/p4est.html) and here for Trilinos (https://www.dealii.org/9.2.0/external-libs/trilinos.html).  
+
+Currently, we use the current developer version of deal.II. Clone the deal.II repository on the current master branch:
+
+```bash
+git clone git@github.com:dealii/dealii.git
+```
+
 To configure the deal.II library, you have to use now these arguments for cmake:
 
  ```bash
-cmake -DCMAKE_INSTALL_PREFIX=/path/to/install/dir 
--DP4EST_DIR=/path/to/installation -DDEAL_II_WITH_P4EST=ON -DEAL_II_WITH_MPI=ON -DTRILINOS_DIR=/path/to/trilinos -DDEAL_II_WITH_TRILINOS=ON ../deal.II
+cmake -D CMAKE_INSTALL_PREFIX=/path/to/install/dir -D P4EST_DIR=/path/to/installation -D DEAL_II_WITH_P4EST=ON -D DEAL_II_WITH_MPI=ON -D TRILINOS_DIR=/path/to/trilinos -D DEAL_II_WITH_TRILINOS=ON -D DEAL_II_WITH_SIMPLEX_SUPPORT=ON ../deal.II
 ```
  
 then compiling as usual:
@@ -42,7 +48,7 @@ touch vortex_bubble.hpp
 touch vortex_bubble.json
 ```
 In the `.hpp` file a child class of the MeltPoolDG::SimulationBase<dim> class must be created. In the `.json`-file the parameters will be specified. Note that the `.json`-file is a command line argument and is only needed at run-time of the simulation. 
-The new simulation has to be added to the simulation factory `./include/meltpooldg/simulation_selector.hpp` 
+The new simulation has to be added to the simulation factory `./include/meltpooldg/simulations/simulation_selector.hpp` 
 ```cpp
  #include <include/meltpooldg/simulations/vortex_bubble/vortex_bubble.hpp>
 else if( simulation_name == "vortex_bubble" )
@@ -58,7 +64,7 @@ You can build your simulation as follows:
 ```bash  
 mkdir build
 cd build
-cmake -D DEAL_II_DIR=/dealii_build_dir ../.
+cmake -D DEAL_II_DIR=/dealii_install_dir ../.
 ```
 For the debug version call
 ```bash  
@@ -82,7 +88,7 @@ If you prefer dynamic linking, make sure that you are compiling adaflo with `-D 
 As an example the simulation of the newly created "vortex_bubble" is demonstrated using 4 processes:
 ```bash  
 make -j 4 
-mpirun -np 4 ./meltpooldg ../include/meltpooldg/simulations/vortex_bubble.json
+mpirun -np 4 ./meltpooldg ../include/meltpooldg/simulations/vortex_bubble/vortex_bubble.json
 ```
 
 

@@ -22,8 +22,9 @@ jobs:
                   mkdir build                                           && \ 
                   cd build                                              && \ 
                   cmake ..                                              && \ 
-                  make -j2                                              && \ 
-                  ctest -V";
+                  make -j2";
+
+         # TODO: enable tests again
 
          echo $command
          docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
@@ -49,8 +50,9 @@ jobs:
           mkdir MeltPoolDG-build                                && \ 
           cd MeltPoolDG-build                                   && \
           cmake ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && \
-          make -j2                                              && \
-          ctest -V";
+          make -j2";
+
+         # TODO: enable tests again
 
          echo $command
          docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
