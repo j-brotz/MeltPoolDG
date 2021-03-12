@@ -32,12 +32,17 @@ namespace MeltPoolDG::Heat
    *                           Ω             Γ
    *                                          N
    *
-   *                                                                             _
-   *  dR(T^(n+1))    1   /                \     /              \      /        d q       \
-   *  ----------- = ---  | N_a, ρ c_p N_b |  +  | ∇N_a, k ∇N_b |   -  | N_a, ---------   |
-   *  dT_b^(n+1)     dt  \                /     \              /      \       dT_b^(n+1) /
-   *                                       Ω                    Ω                         Γ
-   *                                                                                       N
+   *
+   *  dR(T^(n+1))    1   /                \     /                   \       /              \
+   *  ----------- = ---  | N_a, ρ c_p N_b |  -  | ∇N_a, ρ c_p N_b u |   +   | ∇N_a, k ∇N_b |
+   *  dT_b^(n+1)     dt  \                /     \                   /       \              /
+   *                                       Ω                         Ω                      Ω
+   *                              _
+   *                   /        d q       \
+   *                -  | N_a, ---------   |
+   *                   \       dT_b^(n+1) /
+   *                                       Γ
+   *                                        N
    *
    * with shape functions N_a and N_b, nodal temperature values T_b^(n+1), the density ρ, the
    * specific heat capacity c_p and the conductivity k, source/sink terms q_s and prescribed
@@ -77,12 +82,17 @@ namespace MeltPoolDG::Heat
                                     neumann_bc; //@todo find a nice way to provide BC
     std::vector<types::boundary_id> bc_radiation_indices;
     std::vector<types::boundary_id> bc_convection_indices;
-    unsigned int                    vel_dof_idx = 0; //@todo: fill
 
     const VectorType &heat_source;
-    VectorType        velocity; //@todo: fill
 
-    bool do_velocity = false;
+    // configuration if heat particles are transported with a given velocity field
+    const unsigned int vel_dof_idx; //@todo: fill
+    const VectorType * velocity;    //@todo: fill
+
+    // configuration if two phases are given
+    const unsigned int ls_dof_idx;             //@todo: fill
+    const VectorType * level_set_as_heaviside; //@todo: fill
+
 
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
@@ -91,14 +101,22 @@ namespace MeltPoolDG::Heat
                          const unsigned int                              temp_dof_idx_in,
                          const unsigned int                              temp_quad_idx_in,
                          const VectorType &                              temperature_in,
-                         const VectorType &                              heat_source_in)
+                         const VectorType &                              heat_source_in,
+                         const unsigned int                              vel_dof_idx_in = 0,
+                         const VectorType *                              velocity_in    = nullptr,
+                         const unsigned int                              ls_dof_idx_in  = 0,
+                         const VectorType *level_set_as_heaviside_in                    = nullptr)
       // clang-format off
-    : scratch_data         ( scratch_data_in  )
-    , data                 ( data_in          )
-    , temp_dof_idx         ( temp_dof_idx_in  )
-    , temp_quad_idx        ( temp_quad_idx_in )
-    , temperature          ( temperature_in   )
-    , heat_source          ( heat_source_in   ) 
+    : scratch_data           ( scratch_data_in           )
+    , data                   ( data_in                   )
+    , temp_dof_idx           ( temp_dof_idx_in           )
+    , temp_quad_idx          ( temp_quad_idx_in          )
+    , temperature            ( temperature_in            )
+    , heat_source            ( heat_source_in            ) 
+    , vel_dof_idx            ( vel_dof_idx_in            )
+    , velocity               ( velocity_in               )
+    , ls_dof_idx             ( ls_dof_idx_in             )
+    , level_set_as_heaviside ( level_set_as_heaviside_in )
     {
       if (bc)
       {
@@ -106,6 +124,7 @@ namespace MeltPoolDG::Heat
         bc_radiation_indices = bc->radiation_bc;
         neumann_bc = bc->neumann_bc;
       }
+
       this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
     }
     // clang-format on
@@ -151,35 +170,39 @@ namespace MeltPoolDG::Heat
                       const VectorType &                     src,
                       std::pair<unsigned int, unsigned int> &cell_range) const
     {
-      FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
-
-      // FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, this->dof_idx, this->quad_idx);
+      FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           temp_vals.reinit(cell);
           temp_vals.gather_evaluate(src, true, true);
 
-          // if (do_velocity)
-          //{
-          // velocity_vals.reinit(cell);
-          // velocity_vals.gather_evaluate(velocity, true, false);
-          //}
+          if (velocity)
+            {
+              velocity_vals.reinit(cell);
+              velocity_vals.gather_evaluate(*velocity, true, false);
+            }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
+              // if (do_two_phases)
+              //
+              //@todo
+
               temp_vals.submit_value(data.density * data.capacity * this->d_tau_inv *
                                        temp_vals.get_value(q_index),
                                      q_index);
 
               auto val_grad = data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
                                                     temp_vals.get_gradient(q_index));
-              // if (do_velocity)
-              //{
-              // val_grad += -this->d_tau * data.density * data.capacity *
-              // temp_vals.get_value(q_index) * MeltPoolDG::VectorTools::convert_to_vector<dim>(
-              // velocity_vals.get_value(q_index));
-              //}
+              if (velocity)
+                {
+                  val_grad += -data.density * data.capacity * temp_vals.get_value(q_index) *
+                              MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                velocity_vals.get_value(q_index));
+                }
 
               temp_vals.submit_gradient(val_grad, q_index);
             }
@@ -250,7 +273,8 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, this->dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, this->dof_idx, this->quad_idx);
-      // FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
@@ -267,11 +291,11 @@ namespace MeltPoolDG::Heat
           heat_source_vals.read_dof_values_plain(heat_source);
           heat_source_vals.evaluate(true, false);
 
-          // if (do_velocity)
-          //{
-          // velocity_vals.reinit(cell);
-          // velocity_vals.gather_evaluate(velocity, true, false);
-          //}
+          if (velocity)
+            {
+              velocity_vals.reinit(cell);
+              velocity_vals.gather_evaluate(*velocity, true, false);
+            }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
@@ -285,21 +309,23 @@ namespace MeltPoolDG::Heat
               auto val_grad = data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
                                                     temp_vals.get_gradient(q_index));
 
-              // if (do_velocity)
-              //{
-              // val_grad += -data.density * data.capacity *
-              // temp_vals.get_value(q_index) * MeltPoolDG::VectorTools::convert_to_vector<dim>(
-              // velocity_vals.get_value(q_index));
-              //}
-              temp_vals.submit_gradient(-1.0 * val_grad, q_index);
+              if (velocity)
+                {
+                  val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
+                              MeltPoolDG::VectorTools::convert_to_vector<dim>(
+                                velocity_vals.get_value(q_index));
+                }
+              temp_vals.submit_gradient(-1.0 * val_grad,
+                                        q_index); // -1 since residual is moved to rhs
             }
           temp_vals.integrate_scatter(true, true, dst);
         }
     }
     /*
-     * compute the RHS due to Robin-type boundary conditions for convection and radiation
+     * compute the RHS due to Neumann and Robin-type boundary conditions for convection and
+     * radiation
      *
-     * @todo: add description
+     * @todo: add equations
      */
     void
     rhs_boundary_loop(const MatrixFree<dim, number> &        matrix_free,
@@ -343,23 +369,7 @@ namespace MeltPoolDG::Heat
               if (do_neumann)
                 {
                   auto quad_point = dQ_dT.quadrature_point(q_index);
-                  // for (unsigned int v = 0;
-                  // v < scratch_data.get_matrix_free().n_active_entries_per_face_batch(face);
-                  //++v)
-                  //{
-                  //// @todo: This implementation is extremely odd. Is there another way to call a
-                  //// Function with Point<dim, VectorizedArray>?
-                  // Point<dim> quad_point_v;
 
-                  // for (unsigned int d = 0; d < dim; ++d)
-                  // quad_point_v[d] = quad_point[d][v];
-
-                  // for (unsigned int d = 0; d < dim; ++d)
-                  //{
-                  // temp[v] -= neumann_bc.at(bc_index)->value(quad_point_v, d) *
-                  // dQ_dT.get_normal_vector(q_index)[d][v];
-                  //}
-                  //}
                   temp -= MeltPoolDG::VectorTools::evaluate_function_at_vectorized_points(
                             *neumann_bc.at(bc_index), quad_point) *
                           dQ_dT.get_normal_vector(q_index);

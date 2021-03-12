@@ -161,9 +161,10 @@ namespace MeltPoolDG::Evaporation
 
               evapor_vel[q_index] =
                 n_phi * evap_flux.get_value(q_index) *
-                ((1.0 - ls.get_value(q_index)) * std::abs(1. / evaporation_data.density_liquid -
-                                                          1. / evaporation_data.density_gas) +
-                 1. / evaporation_data.density_liquid);
+                (ls.get_value(q_index) * std::abs(1. / evaporation_data.density_liquid -
+                                                  1. / evaporation_data.density_gas) +
+                 1. / evaporation_data.density_gas);
+
 
               // The normal vector field is oriented such that the normal vector points from
               // the negative level set value (= default for representing the gas phase) to the
@@ -210,7 +211,8 @@ namespace MeltPoolDG::Evaporation
                                      bool               zero_out)
     {
       evaporative_mass_flux.update_ghost_values();
-      normal_vector.update_ghost_values();
+
+      double mass = 0.0;
 
       scratch_data->get_matrix_free().template cell_loop<VectorType, VectorType>(
         [&](const auto &matrix_free,
@@ -229,19 +231,12 @@ namespace MeltPoolDG::Evaporation
             scratch_data->get_matrix_free(),
             ls_hanging_nodes_dof_idx, // @todo: generalize --> temp_dof_idx
             pressure_quad_idx);
-          FECellIntegrator<dim, dim, double> normal_vec(matrix_free,
-                                                        normal_dof_idx,
-                                                        pressure_quad_idx);
 
           for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
             {
               heaviside.reinit(cell);
               heaviside.read_dof_values_plain(level_set_as_heaviside);
               heaviside.evaluate(false, true);
-
-              normal_vec.reinit(cell);
-              normal_vec.read_dof_values_plain(normal_vector);
-              normal_vec.evaluate(true, false);
 
               mass_flux.reinit(cell);
 
@@ -251,11 +246,21 @@ namespace MeltPoolDG::Evaporation
 
               for (unsigned int q_index = 0; q_index < mass_flux.n_q_points; ++q_index)
                 {
-                  mass_flux.submit_value(
-                    (1. / evaporation_data.density_liquid - 1. / evaporation_data.density_gas) *
-                      MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index)) *
-                      heaviside.get_gradient(q_index) * evap_flux.get_value(q_index),
-                    q_index);
+                  mass_flux.submit_value((1. / evaporation_data.density_liquid -
+                                          1. / evaporation_data.density_gas) *
+                                           heaviside.get_gradient(q_index).norm() *
+                                           evap_flux.get_value(q_index),
+                                         q_index);
+                  // compute overall rhs
+                  for (unsigned int v = 0;
+                       v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
+                       ++v)
+                    {
+                      mass +=
+                        (1. / evaporation_data.density_liquid - 1. / evaporation_data.density_gas) *
+                        heaviside.get_gradient(q_index).norm()[v] *
+                        evap_flux.get_value(q_index)[v] * mass_flux.JxW(q_index)[v];
+                    }
                 }
 
               mass_flux.integrate_scatter(true, false, mass_balance_rhs);
@@ -265,7 +270,10 @@ namespace MeltPoolDG::Evaporation
         level_set_as_heaviside,
         zero_out);
       evaporative_mass_flux.zero_out_ghosts();
-      normal_vector.zero_out_ghosts();
+
+      scratch_data->get_pcout() << "    | evaporation: jump in the velocity field = "
+                                << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm())
+                                << std::endl;
 
       scratch_data->get_pcout() << "    | evapor: |m|2 = " << mass_balance_rhs.l2_norm()
                                 << std::endl;
