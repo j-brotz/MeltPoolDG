@@ -159,10 +159,10 @@ namespace MeltPoolDG::Evaporation
               const auto n_phi =
                 MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index));
 
-              evapor_vel[q_index] = 
+              evapor_vel[q_index] =
                 n_phi * evap_flux.get_value(q_index) *
-                (    ls.get_value(q_index) * std::abs(1. / evaporation_data.density_liquid -
-                                                      1. / evaporation_data.density_gas) +
+                (ls.get_value(q_index) * std::abs(1. / evaporation_data.density_liquid -
+                                                  1. / evaporation_data.density_gas) +
                  1. / evaporation_data.density_gas);
 
 
@@ -211,7 +211,7 @@ namespace MeltPoolDG::Evaporation
                                      bool               zero_out)
     {
       evaporative_mass_flux.update_ghost_values();
-      
+
       double mass = 0.0;
 
       scratch_data->get_matrix_free().template cell_loop<VectorType, VectorType>(
@@ -246,17 +246,20 @@ namespace MeltPoolDG::Evaporation
 
               for (unsigned int q_index = 0; q_index < mass_flux.n_q_points; ++q_index)
                 {
-                  mass_flux.submit_value(
-                    (1. / evaporation_data.density_liquid - 1. / evaporation_data.density_gas) *
-                      heaviside.get_gradient(q_index).norm()* evap_flux.get_value(q_index),
-                    q_index);
+                  mass_flux.submit_value((1. / evaporation_data.density_liquid -
+                                          1. / evaporation_data.density_gas) *
+                                           heaviside.get_gradient(q_index).norm() *
+                                           evap_flux.get_value(q_index),
+                                         q_index);
                   // compute overall rhs
                   for (unsigned int v = 0;
                        v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
                        ++v)
                     {
-                      mass += (1. / evaporation_data.density_liquid - 1. / evaporation_data.density_gas) *
-                              heaviside.get_gradient(q_index).norm()[v]* evap_flux.get_value(q_index)[v] * mass_flux.JxW(q_index)[v];
+                      mass +=
+                        (1. / evaporation_data.density_liquid - 1. / evaporation_data.density_gas) *
+                        heaviside.get_gradient(q_index).norm()[v] *
+                        evap_flux.get_value(q_index)[v] * mass_flux.JxW(q_index)[v];
                     }
                 }
 
@@ -268,9 +271,9 @@ namespace MeltPoolDG::Evaporation
         zero_out);
       evaporative_mass_flux.zero_out_ghosts();
 
-          scratch_data->get_pcout()
-            << "    | evaporation: jump in the velocity field = "
-            << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm()) << std::endl;
+      scratch_data->get_pcout() << "    | evaporation: jump in the velocity field = "
+                                << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm())
+                                << std::endl;
 
       scratch_data->get_pcout() << "    | evapor: |m|2 = " << mass_balance_rhs.l2_norm()
                                 << std::endl;
