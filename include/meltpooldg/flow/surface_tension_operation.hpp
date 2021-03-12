@@ -163,14 +163,7 @@ namespace MeltPoolDG::Flow
 
 
                   for (unsigned int v = 0; v < VectorizedArray<double>::size(); ++v)
-                    {
-                      alpha[v] = alpha[v] <= 0.0 ? 0.0 : alpha[v];
-                      Assert(alpha[v] >= 0.0,
-                             ExcMessage(
-                               "The surface tension coefficient tends to be negative in "
-                               "some regions. Check the value of the temperature dependent surface "
-                               "tension coefficient."));
-                    }
+                    alpha[v] = alpha[v] <= 0.0 ? 0.0 : alpha[v];
 
                   surface_tension.submit_value(alpha * n * curvature.get_value(q_index) +
                                                  temp_surf_ten,
