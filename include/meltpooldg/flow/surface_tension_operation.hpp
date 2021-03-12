@@ -155,18 +155,22 @@ namespace MeltPoolDG::Flow
                                              d_alpha0 * grad_T[j] :
                                            (n[i] * n[j]) * d_alpha0 * grad_T[j];
 
-                  const auto alpha = compare_and_apply_mask<SIMDComparison::less_than>(
+                  auto alpha = compare_and_apply_mask<SIMDComparison::less_than>(
                     T,
                     T0,
                     VectorizedArray<double>(alpha0),
                     VectorizedArray<double>(alpha0) - VectorizedArray<double>(d_alpha0) * (T - T0));
 
+
                   for (unsigned int v = 0; v < VectorizedArray<double>::size(); ++v)
-                    Assert(alpha[v] >= 0.0,
-                           ExcMessage(
-                             "The surface tension coefficient tends to be negative in "
-                             "some regions. Check the value of the temperature dependent surface "
-                             "tension coefficient."));
+                    {
+                      alpha[v] = alpha[v] <= 0.0 ? 0.0 : alpha[v];
+                      Assert(alpha[v] >= 0.0,
+                             ExcMessage(
+                               "The surface tension coefficient tends to be negative in "
+                               "some regions. Check the value of the temperature dependent surface "
+                               "tension coefficient."));
+                    }
 
                   surface_tension.submit_value(alpha * n * curvature.get_value(q_index) +
                                                  temp_surf_ten,
