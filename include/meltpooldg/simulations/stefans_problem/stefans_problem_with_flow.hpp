@@ -51,9 +51,12 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      Point<dim> lower_left = dim == 2 ? Point<dim>(x_min, y_min) : Point<dim>(x_min, x_min, y_min);
-      Point<dim> upper_right =
-        dim == 2 ? Point<dim>(x_max, y_interface) : Point<dim>(x_max, x_max, y_interface);
+      Point<dim> lower_left  = dim == 1 ? Point<dim>(y_min) :
+                               dim == 2 ? Point<dim>(x_min, y_min) :
+                                          Point<dim>(x_min, x_min, y_min);
+      Point<dim> upper_right = dim == 1 ? Point<dim>(y_interface) :
+                               dim == 2 ? Point<dim>(x_max, y_interface) :
+                                          Point<dim>(x_max, x_max, y_interface);
 
       return UtilityFunctions::CharacteristicFunctions::sgn(
         UtilityFunctions::DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
@@ -77,7 +80,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.do_simplex || dim == 1)
         {
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
@@ -91,37 +94,32 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
         }
 
-      if constexpr ((dim == 2) || (dim == 3))
-        {
-          // create mesh
-          const Point<dim> bottom_left =
-            (dim == 2) ? Point<dim>(x_min, y_min) : Point<dim>(x_min, x_min, y_min);
-          const Point<dim> top_right =
-            (dim == 2) ? Point<dim>(x_max, y_max) : Point<dim>(x_max, x_max, y_max);
+      // create mesh
+      const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
+                                     (dim == 2) ? Point<dim>(x_min, y_min) :
+                                                  Point<dim>(x_min, x_min, y_min);
+      const Point<dim> top_right   = dim == 1   ? Point<dim>(y_max) :
+                                     (dim == 2) ? Point<dim>(x_max, y_max) :
+                                                  Point<dim>(x_max, x_max, y_max);
 
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
-          if (this->parameters.base.do_simplex)
-            {
-              // create mesh
-              std::vector<unsigned int> subdivisions(
-                dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
-              subdivisions[dim - 1] *= 2;
+      if (this->parameters.base.do_simplex)
+        {
+          // create mesh
+          std::vector<unsigned int> subdivisions(
+            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+          subdivisions[dim - 1] *= 2;
 
-              GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                       subdivisions,
-                                                                       bottom_left,
-                                                                       top_right);
-            }
-          else
-#endif
-            {
-              GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
-              this->triangulation->refine_global(this->parameters.base.global_refinements);
-            }
+          GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                   subdivisions,
+                                                                   bottom_left,
+                                                                   top_right);
         }
       else
+#endif
         {
-          AssertThrow(false, ExcNotImplemented());
+          GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
+          this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }
 
@@ -155,9 +153,12 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
         }
       else
         AssertThrow(false, ExcNotImplemented());
-      this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-      this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
 
+      if (dim >= 2)
+        {
+          this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
+          this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+        }
 
       /*
        *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
@@ -174,7 +175,19 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
               +---------------+
        * (0,1)      fix/open   (1,0)
        */
-      if constexpr (dim == 2)
+      if constexpr (dim == 1)
+        {
+          for (auto &cell : this->triangulation->cell_iterators())
+            for (auto &face : cell->face_iterators())
+              if ((face->at_boundary()))
+                {
+                  if (face->center()[0] == y_min)
+                    face->set_boundary_id(lower_bc);
+                  else if (face->center()[0] == y_max)
+                    face->set_boundary_id(upper_bc);
+                }
+        }
+      else if constexpr (dim == 2)
         {
           for (const auto &cell : this->triangulation->cell_iterators())
             for (const auto &face : cell->face_iterators())

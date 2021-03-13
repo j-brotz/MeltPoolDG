@@ -229,12 +229,13 @@ namespace MeltPoolDG
   template <typename number = double>
   struct EvaporationData
   {
-    number evaporative_mass_flux_scale_factor = 1.0;
-    number evaporative_mass_flux              = 0.0;
-    number density_liquid                     = 0.0;
-    number density_gas                        = 0.0;
-    number ls_value_liquid                    = 1.0;
-    number ls_value_gas                       = -1.0;
+    number      evaporative_mass_flux_scale_factor = 1.0;
+    number      evaporative_mass_flux              = 0.0;
+    number      density_liquid                     = 0.0;
+    number      density_gas                        = 0.0;
+    number      ls_value_liquid                    = 1.0;
+    number      ls_value_gas                       = -1.0;
+    std::string formulation_source_term_continuity = "diffuse";
   };
 
   template <typename number = double>
@@ -929,6 +930,11 @@ namespace MeltPoolDG
                           evapor.ls_value_gas,
                           "Set the level set value corresponding to the gaseous domain.",
                           Patterns::Selection("1|-1|1.|-1.|1.0|-1.0"));
+        prm.add_parameter("evapor formulation source term continuity",
+                          evapor.formulation_source_term_continuity,
+                          "Select how the additional source term due to evaporation in the"
+                          " continuity equation is computed.",
+                          Patterns::Selection("diffuse|sharp"));
       }
       prm.leave_subsection();
       /*
