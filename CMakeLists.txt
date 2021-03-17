@@ -95,5 +95,6 @@ DEAL_II_SETUP_TARGET(${projectName})
 SET(_n_tests "0")
 enable_testing()
 ADD_SUBDIRECTORY(tests)
+ADD_SUBDIRECTORY(unit_tests)
 
 
