@@ -87,7 +87,7 @@ namespace MeltPoolDG::Heat
 
     // configuration if heat particles are transported with a given velocity field
     const unsigned int vel_dof_idx; //@todo: fill
-    const VectorType * velocity;    //@todo: fill
+    const VectorType & velocity;    //@todo: fill
 
     // configuration if two phases are given
     const unsigned int ls_dof_idx;             //@todo: fill
@@ -102,10 +102,10 @@ namespace MeltPoolDG::Heat
                          const unsigned int                              temp_quad_idx_in,
                          const VectorType &                              temperature_in,
                          const VectorType &                              heat_source_in,
-                         const unsigned int                              vel_dof_idx_in = 0,
-                         const VectorType *                              velocity_in    = nullptr,
-                         const unsigned int                              ls_dof_idx_in  = 0,
-                         const VectorType *level_set_as_heaviside_in                    = nullptr)
+                         const unsigned int                              vel_dof_idx_in,
+                         const VectorType &                              velocity_in,
+                         const unsigned int                              ls_dof_idx_in = 0,
+                         const VectorType *level_set_as_heaviside_in                   = nullptr)
       // clang-format off
     : scratch_data           ( scratch_data_in           )
     , data                   ( data_in                   )
@@ -145,7 +145,7 @@ namespace MeltPoolDG::Heat
     {
       AssertThrow(this->d_tau > 0.0, ExcMessage("advection diffusion operator: d_tau must be set"));
 
-      MeltPoolDG::VectorTools::update_ghost_values(temperature);
+      MeltPoolDG::VectorTools::update_ghost_values(temperature, velocity);
 
       scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -161,7 +161,7 @@ namespace MeltPoolDG::Heat
         dst,
         src,
         true /*zero dst vector*/);
-      MeltPoolDG::VectorTools::zero_out_ghosts(temperature);
+      MeltPoolDG::VectorTools::zero_out_ghosts(temperature, velocity);
     }
 
     void
@@ -170,7 +170,7 @@ namespace MeltPoolDG::Heat
                       const VectorType &                     src,
                       std::pair<unsigned int, unsigned int> &cell_range) const
     {
-      FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, this->dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
@@ -179,10 +179,10 @@ namespace MeltPoolDG::Heat
           temp_vals.reinit(cell);
           temp_vals.gather_evaluate(src, true, true);
 
-          if (velocity)
+          if (data.with_velocity)
             {
               velocity_vals.reinit(cell);
-              velocity_vals.gather_evaluate(*velocity, true, false);
+              velocity_vals.gather_evaluate(velocity, true, false);
             }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -197,7 +197,7 @@ namespace MeltPoolDG::Heat
 
               auto val_grad = data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
                                                     temp_vals.get_gradient(q_index));
-              if (velocity)
+              if (data.with_velocity)
                 {
                   val_grad += -data.density * data.capacity * temp_vals.get_value(q_index) *
                               MeltPoolDG::VectorTools::convert_to_vector<dim>(
@@ -221,11 +221,11 @@ namespace MeltPoolDG::Heat
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
                                              true /*is_interior_face*/,
-                                             this->dof_idx,
+                                             temp_dof_idx,
                                              this->quad_idx);
       FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
                                                  true /*is_interior_face*/,
-                                                 this->dof_idx,
+                                                 temp_dof_idx,
                                                  this->quad_idx);
 
       for (unsigned int face = face_range.first; face < face_range.second; face++)
@@ -270,9 +270,9 @@ namespace MeltPoolDG::Heat
                   const VectorType &                     src, /* temperature_old*/
                   std::pair<unsigned int, unsigned int> &cell_range) const
     {
-      FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
-      FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, this->dof_idx, this->quad_idx);
-      FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, this->dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number> temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, temp_dof_idx, this->quad_idx);
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
@@ -291,10 +291,11 @@ namespace MeltPoolDG::Heat
           heat_source_vals.read_dof_values_plain(heat_source);
           heat_source_vals.evaluate(true, false);
 
-          if (velocity)
+          if (data.with_velocity)
             {
               velocity_vals.reinit(cell);
-              velocity_vals.gather_evaluate(*velocity, true, false);
+              velocity_vals.read_dof_values_plain(velocity);
+              velocity_vals.evaluate(true, false);
             }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -309,9 +310,9 @@ namespace MeltPoolDG::Heat
               auto val_grad = data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
                                                     temp_vals.get_gradient(q_index));
 
-              if (velocity)
+              if (data.with_velocity)
                 {
-                  val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
+                  val_grad += -data.density * data.capacity * temp_vals.get_value(q_index) *
                               MeltPoolDG::VectorTools::convert_to_vector<dim>(
                                 velocity_vals.get_value(q_index));
                 }
@@ -335,7 +336,7 @@ namespace MeltPoolDG::Heat
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
                                              true /* is interior face*/,
-                                             this->dof_idx,
+                                             temp_dof_idx,
                                              this->quad_idx);
       for (unsigned int face = face_range.first; face < face_range.second; face++)
         {

@@ -102,7 +102,8 @@ namespace MeltPoolDG
                                                              data_in.heat,
                                                              temp_dof_idx,
                                                              temp_dof_idx, //@todo: hanging nodes
-                                                             temp_quad_idx);
+                                                             temp_quad_idx,
+                                                             flow_vel_dof_idx);
 
         /*
          * initialize the recoil pressure operation class
