@@ -151,6 +151,10 @@ namespace MeltPoolDG::LevelSet
                   advected_field.integrate_scatter(true, false, dst);
                 }
             }
+          else
+            {
+              (void)cell_range;
+            }
         },
         dst,
         src,
@@ -220,6 +224,10 @@ namespace MeltPoolDG::LevelSet
 
                   advected_field.integrate_scatter(true, false, dst);
                 }
+            }
+          else
+            {
+              (void)macro_cells;
             }
         },
         dst,
