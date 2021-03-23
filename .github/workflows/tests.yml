@@ -21,7 +21,7 @@ jobs:
                   git checkout FETCH_HEAD                               && \
                   mkdir build                                           && \ 
                   cd build                                              && \ 
-                  cmake ..                                              && \ 
+                  cmake -DCMAKE_CXX_FLAGS="-Werror" ..                  && \ 
                   make -j2";
 
          # TODO: enable tests again
@@ -49,7 +49,7 @@ jobs:
           cd ..                                                 && \
           mkdir MeltPoolDG-build                                && \ 
           cd MeltPoolDG-build                                   && \
-          cmake ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && \
+          cmake -DCMAKE_CXX_FLAGS="-Werror" ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && \
           make -j2";
 
          # TODO: enable tests again

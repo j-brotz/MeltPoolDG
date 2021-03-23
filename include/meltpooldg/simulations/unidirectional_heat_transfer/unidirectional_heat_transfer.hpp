@@ -147,6 +147,8 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       else
         {
           AssertThrow(false, ExcNotImplemented());
+          (void)left_bc;
+          (void)right_bc;
         }
     }
 
