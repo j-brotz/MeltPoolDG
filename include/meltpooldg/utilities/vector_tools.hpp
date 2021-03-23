@@ -1,5 +1,46 @@
 #pragma once
 
+namespace dealii
+{
+  template <typename Number, std::size_t N>
+  dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>>
+  operator+=(const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec,
+             const dealii::VectorizedArray<Number, N> &                      scalar)
+  {
+    auto temp = vec;
+    temp[0] += scalar;
+
+    return temp;
+  }
+
+  template <typename Number, std::size_t N>
+  dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>>
+  operator-=(const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec,
+             const dealii::VectorizedArray<Number, N> &                      scalar)
+  {
+    auto temp = vec;
+    temp[0] -= scalar;
+
+    return temp;
+  }
+
+  template <typename Number, std::size_t N>
+  dealii::VectorizedArray<Number, N>
+  scalar_product(const dealii::VectorizedArray<Number, N> &                      scalar,
+                 const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec)
+  {
+    return vec[0] * scalar;
+  }
+
+  template <typename Number, std::size_t N>
+  dealii::VectorizedArray<Number, N>
+  scalar_product(const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec,
+                 const dealii::VectorizedArray<Number, N> &                      scalar)
+  {
+    return vec[0] * scalar;
+  }
+} // namespace dealii
+
 
 namespace MeltPoolDG
 {
@@ -123,25 +164,6 @@ namespace MeltPoolDG
             vec[d][v] = 0.0;
 
       return vec;
-    }
-
-    template <int dim, typename number = double>
-    static Tensor<1, dim, VectorizedArray<number>>
-    convert_to_vector(const VectorizedArray<number> &in)
-    {
-      Tensor<1, dim, VectorizedArray<number>> vec;
-
-      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
-        vec[0][v] = in[v];
-
-      return vec;
-    }
-
-    template <int dim, typename number = double>
-    static Tensor<1, dim, VectorizedArray<number>>
-    convert_to_vector(const Tensor<1, dim, VectorizedArray<number>> &in)
-    {
-      return in;
     }
 
     template <int dim, typename number = double>

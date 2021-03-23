@@ -195,13 +195,11 @@ namespace MeltPoolDG::Heat
                                        temp_vals.get_value(q_index),
                                      q_index);
 
-              auto val_grad = data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                                    temp_vals.get_gradient(q_index));
+              auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
               if (velocity)
                 {
-                  val_grad += -data.density * data.capacity * temp_vals.get_value(q_index) *
-                              MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                velocity_vals.get_value(q_index));
+                  val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
+                              velocity_vals.get_value(q_index);
                 }
 
               temp_vals.submit_gradient(val_grad, q_index);
@@ -306,14 +304,12 @@ namespace MeltPoolDG::Heat
                                             heat_source_vals.get_value(q_index)),
                                      q_index); // negative sign since residual is moved to rhs
 
-              auto val_grad = data.conductivity * MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                                    temp_vals.get_gradient(q_index));
+              auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
 
               if (velocity)
                 {
                   val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
-                              MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                velocity_vals.get_value(q_index));
+                              velocity_vals.get_value(q_index);
                 }
               temp_vals.submit_gradient(-1.0 * val_grad,
                                         q_index); // -1 since residual is moved to rhs
