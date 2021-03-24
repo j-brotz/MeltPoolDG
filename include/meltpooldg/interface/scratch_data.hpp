@@ -171,6 +171,11 @@ namespace MeltPoolDG
     void
     build()
     {
+      AssertThrow(this->constraint.size() == this->dof_handler.size(),
+                  ExcMessage(
+                    "The number of DoFHandlers and AffineConstraints attached to ScratchData<dim>"
+                    " must be equal."));
+
       if (do_matrix_free)
         {
           this->matrix_free.clear();
