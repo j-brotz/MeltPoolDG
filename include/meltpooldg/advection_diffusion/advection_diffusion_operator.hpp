@@ -213,9 +213,7 @@ namespace MeltPoolDG
                     const vector grad_phi = advected_field.get_gradient(q_index);
 
                     const scalar velocity_grad_phi =
-                      scalar_product(MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                       velocity.get_value(q_index)),
-                                     grad_phi);
+                      scalar_product(velocity.get_value(q_index), grad_phi);
 
                     advected_field.submit_value(phi + this->d_tau * theta * velocity_grad_phi,
                                                 q_index);
@@ -266,9 +264,7 @@ namespace MeltPoolDG
                     const vector grad_phi = advected_field.get_gradient(q_index);
 
                     const scalar velocity_grad_phi =
-                      scalar_product(MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                       velocity.get_value(q_index)),
-                                     grad_phi);
+                      scalar_product(velocity.get_value(q_index), grad_phi);
                     advected_field.submit_value(phi -
                                                   this->d_tau * (1. - theta) * velocity_grad_phi,
                                                 q_index);

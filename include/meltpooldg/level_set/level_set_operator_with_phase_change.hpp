@@ -135,10 +135,7 @@ namespace MeltPoolDG::LevelSet
                       const vector grad_phi = advected_field.get_gradient(q_index);
 
                       const scalar velocity_grad_phi =
-                        scalar_product(MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                         flow_vel.get_value(q_index)) +
-                                         MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                           evapor_vel.get_value(q_index)),
+                        scalar_product(flow_vel.get_value(q_index) + evapor_vel.get_value(q_index),
                                        grad_phi);
                       advected_field.submit_value(
                         phi + this->d_tau * theta * velocity_grad_phi
@@ -150,6 +147,10 @@ namespace MeltPoolDG::LevelSet
                     }
                   advected_field.integrate_scatter(true, false, dst);
                 }
+            }
+          else
+            {
+              (void)cell_range;
             }
         },
         dst,
@@ -203,10 +204,7 @@ namespace MeltPoolDG::LevelSet
                       const vector grad_phi = advected_field.get_gradient(q_index);
 
                       const scalar velocity_grad_phi =
-                        scalar_product(MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                         flow_vel.get_value(q_index)) +
-                                         MeltPoolDG::VectorTools::convert_to_vector<dim>(
-                                           evapor_vel.get_value(q_index)),
+                        scalar_product(flow_vel.get_value(q_index) + evapor_vel.get_value(q_index),
                                        grad_phi);
 
                       advected_field.submit_value(
@@ -220,6 +218,10 @@ namespace MeltPoolDG::LevelSet
 
                   advected_field.integrate_scatter(true, false, dst);
                 }
+            }
+          else
+            {
+              (void)macro_cells;
             }
         },
         dst,
