@@ -77,6 +77,28 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   };
 
   template <int dim>
+  class UnidirectionalVelocityField : public Function<dim>
+  {
+  public:
+    UnidirectionalVelocityField(double velocity)
+      : Function<dim>(dim)
+      , vel(velocity)
+    {}
+
+    double
+    value(const Point<dim> &, const unsigned int component) const override
+    {
+      if (component == 0)
+        return -vel;
+      else
+        return 0.0;
+    }
+
+  private:
+    const double vel;
+  };
+
+  template <int dim>
   class SimulationUnidirectionalHeatTransfer : public SimulationBase<dim>
   {
   public:
@@ -161,6 +183,10 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
                                        "heat_transfer");
       else
         this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_transfer");
+
+      this->attach_velocity_field(std::make_shared<UnidirectionalVelocityField<dim>>(
+                                    this->parameters.heat.velocity),
+                                  "heat_transfer");
     }
 
   private:

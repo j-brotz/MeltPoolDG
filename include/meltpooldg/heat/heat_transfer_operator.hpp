@@ -98,8 +98,8 @@ namespace MeltPoolDG::Heat
     const VectorType &heat_source;
 
     // configuration if heat particles are transported with a given velocity field
-    const unsigned int vel_dof_idx; //@todo: fill
-    const VectorType & velocity;    //@todo: fill
+    const unsigned int vel_dof_idx;
+    const VectorType * velocity;
 
     // configuration if two phases are given
     const unsigned int ls_dof_idx;             //@todo: fill
@@ -114,10 +114,10 @@ namespace MeltPoolDG::Heat
                          const unsigned int                              temp_quad_idx_in,
                          const VectorType &                              temperature_in,
                          const VectorType &                              heat_source_in,
-                         const unsigned int                              vel_dof_idx_in,
-                         const VectorType &                              velocity_in,
-                         const unsigned int                              ls_dof_idx_in = 0,
-                         const VectorType *level_set_as_heaviside_in                   = nullptr)
+                         const unsigned int                              vel_dof_idx_in = 0,
+                         const VectorType *                              velocity_in    = nullptr,
+                         const unsigned int                              ls_dof_idx_in  = 0,
+                         const VectorType *level_set_as_heaviside_in                    = nullptr)
       // clang-format off
     : scratch_data           ( scratch_data_in           )
     , data                   ( data_in                   )
@@ -157,7 +157,9 @@ namespace MeltPoolDG::Heat
     {
       AssertThrow(this->d_tau > 0.0, ExcMessage("advection diffusion operator: d_tau must be set"));
 
-      MeltPoolDG::VectorTools::update_ghost_values(temperature, velocity);
+      MeltPoolDG::VectorTools::update_ghost_values(temperature);
+      if (velocity)
+        MeltPoolDG::VectorTools::update_ghost_values(*velocity);
 
       scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -173,7 +175,9 @@ namespace MeltPoolDG::Heat
         dst,
         src,
         true /*zero dst vector*/);
-      MeltPoolDG::VectorTools::zero_out_ghosts(temperature, velocity);
+      MeltPoolDG::VectorTools::zero_out_ghosts(temperature);
+      if (velocity)
+        MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
     }
 
     void
@@ -191,10 +195,10 @@ namespace MeltPoolDG::Heat
           temp_vals.reinit(cell);
           temp_vals.gather_evaluate(src, true, true);
 
-          if (data.with_velocity)
+          if (velocity)
             {
               velocity_vals.reinit(cell);
-              velocity_vals.gather_evaluate(velocity, true, false);
+              velocity_vals.gather_evaluate(*velocity, true, false);
             }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -205,7 +209,7 @@ namespace MeltPoolDG::Heat
 
               auto val =
                 data.density * data.capacity * this->d_tau_inv * temp_vals.get_value(q_index);
-              if (data.with_velocity)
+              if (velocity)
                 {
                   val += data.density * data.capacity * temp_vals.get_gradient(q_index) *
                          velocity_vals.get_value(q_index);
@@ -302,10 +306,10 @@ namespace MeltPoolDG::Heat
           heat_source_vals.read_dof_values_plain(heat_source);
           heat_source_vals.evaluate(true, false);
 
-          if (data.with_velocity)
+          if (velocity)
             {
               velocity_vals.reinit(cell);
-              velocity_vals.read_dof_values_plain(velocity);
+              velocity_vals.read_dof_values_plain(*velocity);
               velocity_vals.evaluate(true, false);
             }
 
@@ -316,7 +320,7 @@ namespace MeltPoolDG::Heat
                            this->d_tau_inv -
                          heat_source_vals.get_value(q_index);
 
-              if (data.with_velocity)
+              if (velocity)
                 {
                   val += data.density * data.capacity * temp_vals.get_gradient(q_index) *
                          velocity_vals.get_value(q_index);

@@ -87,6 +87,16 @@ namespace MeltPoolDG
 
     template <typename FunctionType>
     void
+    attach_velocity_field(std::shared_ptr<FunctionType> velocity, const std::string operation_name)
+    {
+      if (!field_conditions_map[operation_name])
+        field_conditions_map[operation_name] = std::make_shared<FieldConditions<dim>>();
+
+      field_conditions_map[operation_name]->velocity_field = velocity;
+    }
+
+    template <typename FunctionType>
+    void
     attach_exact_solution(std::shared_ptr<FunctionType> exact_solution,
                           const std::string             operation_name)
     {
@@ -247,6 +257,12 @@ namespace MeltPoolDG
     get_advection_field(const std::string operation_name)
     {
       return field_conditions_map[operation_name]->advection_field;
+    }
+
+    const std::shared_ptr<Function<dim>> &
+    get_velocity_field(const std::string operation_name)
+    {
+      return field_conditions_map[operation_name]->velocity_field;
     }
 
     const std::shared_ptr<Function<dim>> &
