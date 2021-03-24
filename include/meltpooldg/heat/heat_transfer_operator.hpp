@@ -196,7 +196,7 @@ namespace MeltPoolDG::Heat
                                      q_index);
 
               auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
-              if (velocity)
+              if (data.with_velocity)
                 {
                   val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
                               velocity_vals.get_value(q_index);
