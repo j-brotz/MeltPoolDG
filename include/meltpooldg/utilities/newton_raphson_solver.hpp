@@ -143,7 +143,7 @@ namespace MeltPoolDG
 
       create_rhs(rhs);
       int iter = solve_linear_system(solution_update, rhs);
-      scratch_data.get_pcout() << std::setw(15) << std::setprecision(0) << iter;
+      scratch_data.get_pcout() << std::right << std::setw(15) << std::setprecision(0) << iter;
     }
   };
 
