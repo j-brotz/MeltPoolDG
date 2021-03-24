@@ -15,6 +15,17 @@ namespace dealii
 
   template <typename Number, std::size_t N>
   dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>>
+  operator+=(const dealii::VectorizedArray<Number, N> &                      scalar,
+             const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec)
+  {
+    auto temp = vec;
+    temp[0] += scalar;
+
+    return temp;
+  }
+
+  template <typename Number, std::size_t N>
+  dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>>
   operator-=(const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec,
              const dealii::VectorizedArray<Number, N> &                      scalar)
   {

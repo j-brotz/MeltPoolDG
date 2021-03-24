@@ -22,27 +22,39 @@ namespace MeltPoolDG::Heat
    *  R(T_b^(n+1)) =   ---  | N_a, ρ c_p ( N_b T_b^(n+1) - T^(n)) |
    *                   dt   \                                     /
    *                                                               Ω
-   *                /                                                 \
-   *              - | ∇N_a, ρ c_p N_b T_b^(n+1) u - k ∇N_b T_b^(n+1)) |
-   *                \                                                 /
-   *                                                                   Ω
+   *                 /                             \
+   *               + | N_a, ρ c_p u ∇N_b T_b^(n+1) |
+   *                 \                             /
+   *                                                Ω
+   *                 /                              \
+   *               + | N_a, ρ c_p N_b T_b^(n+1) ∇·u |    (this term is not yet considered @todo)
+   *                 \                              /
+   *                                                 Ω
+   *                 /                         \
+   *               + | ∇N_a, k ∇N_b T_b^(n+1)) |
+   *                 \                         /
+   *                                            Ω
    *                 /    _   \     /    _  \
-   *             -   | w, q_s |  -  | w, q  | = 0
+   *               - | w, q_s |  -  | w, q  | = 0
    *                 \        /     \       /
    *                           Ω             Γ
    *                                          N
    *
    *
-   *  dR(T^(n+1))    1   /                \     /                   \       /              \
-   *  ----------- = ---  | N_a, ρ c_p N_b |  -  | ∇N_a, ρ c_p N_b u |   +   | ∇N_a, k ∇N_b |
-   *  dT_b^(n+1)     dt  \                /     \                   /       \              /
-   *                                       Ω                         Ω                      Ω
-   *                              _
-   *                   /        d q       \
-   *                -  | N_a, ---------   |
-   *                   \       dT_b^(n+1) /
-   *                                       Γ
-   *                                        N
+   *  dR(T^(n+1))    1   /                \     /                              \
+   *  ----------- = ---  | N_a, ρ c_p N_b |  +  | N_a, ρ c_p  ( ∇N_b u + ∇·u ) |
+   *  dT_b^(n+1)     dt  \                /     \                              /
+   *                                       Ω                                    Ω
+   *                  /              \
+   *              +   | ∇N_a, k ∇N_b |
+   *                  \              /
+   *                                  Ω
+   *                            _
+   *                 /        d q       \
+   *              -  | N_a, ---------   |
+   *                 \       dT_b^(n+1) /
+   *                                     Γ
+   *                                      N
    *
    * with shape functions N_a and N_b, nodal temperature values T_b^(n+1), the density ρ, the
    * specific heat capacity c_p and the conductivity k, source/sink terms q_s and prescribed
@@ -195,7 +207,7 @@ namespace MeltPoolDG::Heat
                 data.density * data.capacity * this->d_tau_inv * temp_vals.get_value(q_index);
               if (data.with_velocity)
                 {
-                  val -= data.density * data.capacity * temp_vals.get_gradient(q_index) *
+                  val += data.density * data.capacity * temp_vals.get_gradient(q_index) *
                          velocity_vals.get_value(q_index);
                 }
 
@@ -306,7 +318,7 @@ namespace MeltPoolDG::Heat
 
               if (data.with_velocity)
                 {
-                  val -= data.density * data.capacity * temp_vals.get_gradient(q_index) *
+                  val += data.density * data.capacity * temp_vals.get_gradient(q_index) *
                          velocity_vals.get_value(q_index);
                 }
               temp_vals.submit_value(-val, q_index); // negative sign since residual is moved to rhs
