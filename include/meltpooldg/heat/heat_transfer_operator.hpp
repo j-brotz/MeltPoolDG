@@ -22,27 +22,39 @@ namespace MeltPoolDG::Heat
    *  R(T_b^(n+1)) =   ---  | N_a, ρ c_p ( N_b T_b^(n+1) - T^(n)) |
    *                   dt   \                                     /
    *                                                               Ω
-   *                /                                                 \
-   *              - | ∇N_a, ρ c_p N_b T_b^(n+1) u - k ∇N_b T_b^(n+1)) |
-   *                \                                                 /
-   *                                                                   Ω
+   *                 /                             \
+   *               + | N_a, ρ c_p u ∇N_b T_b^(n+1) |
+   *                 \                             /
+   *                                                Ω
+   *                 /                              \
+   *               + | N_a, ρ c_p N_b T_b^(n+1) ∇·u |    (this term is not yet considered @todo)
+   *                 \                              /
+   *                                                 Ω
+   *                 /                         \
+   *               + | ∇N_a, k ∇N_b T_b^(n+1)) |
+   *                 \                         /
+   *                                            Ω
    *                 /    _   \     /    _  \
-   *             -   | w, q_s |  -  | w, q  | = 0
+   *               - | w, q_s |  -  | w, q  | = 0
    *                 \        /     \       /
    *                           Ω             Γ
    *                                          N
    *
    *
-   *  dR(T^(n+1))    1   /                \     /                   \       /              \
-   *  ----------- = ---  | N_a, ρ c_p N_b |  -  | ∇N_a, ρ c_p N_b u |   +   | ∇N_a, k ∇N_b |
-   *  dT_b^(n+1)     dt  \                /     \                   /       \              /
-   *                                       Ω                         Ω                      Ω
-   *                              _
-   *                   /        d q       \
-   *                -  | N_a, ---------   |
-   *                   \       dT_b^(n+1) /
-   *                                       Γ
-   *                                        N
+   *  dR(T^(n+1))    1   /                \     /                              \
+   *  ----------- = ---  | N_a, ρ c_p N_b |  +  | N_a, ρ c_p  ( ∇N_b u + ∇·u ) |
+   *  dT_b^(n+1)     dt  \                /     \                              /
+   *                                       Ω                                    Ω
+   *                  /              \
+   *              +   | ∇N_a, k ∇N_b |
+   *                  \              /
+   *                                  Ω
+   *                            _
+   *                 /        d q       \
+   *              -  | N_a, ---------   |
+   *                 \       dT_b^(n+1) /
+   *                                     Γ
+   *                                      N
    *
    * with shape functions N_a and N_b, nodal temperature values T_b^(n+1), the density ρ, the
    * specific heat capacity c_p and the conductivity k, source/sink terms q_s and prescribed
@@ -87,7 +99,7 @@ namespace MeltPoolDG::Heat
 
     // configuration if heat particles are transported with a given velocity field
     const unsigned int vel_dof_idx; //@todo: fill
-    const VectorType * velocity;    //@todo: fill
+    const VectorType & velocity;    //@todo: fill
 
     // configuration if two phases are given
     const unsigned int ls_dof_idx;             //@todo: fill
@@ -102,10 +114,10 @@ namespace MeltPoolDG::Heat
                          const unsigned int                              temp_quad_idx_in,
                          const VectorType &                              temperature_in,
                          const VectorType &                              heat_source_in,
-                         const unsigned int                              vel_dof_idx_in = 0,
-                         const VectorType *                              velocity_in    = nullptr,
-                         const unsigned int                              ls_dof_idx_in  = 0,
-                         const VectorType *level_set_as_heaviside_in                    = nullptr)
+                         const unsigned int                              vel_dof_idx_in,
+                         const VectorType &                              velocity_in,
+                         const unsigned int                              ls_dof_idx_in = 0,
+                         const VectorType *level_set_as_heaviside_in                   = nullptr)
       // clang-format off
     : scratch_data           ( scratch_data_in           )
     , data                   ( data_in                   )
@@ -145,7 +157,7 @@ namespace MeltPoolDG::Heat
     {
       AssertThrow(this->d_tau > 0.0, ExcMessage("advection diffusion operator: d_tau must be set"));
 
-      MeltPoolDG::VectorTools::update_ghost_values(temperature);
+      MeltPoolDG::VectorTools::update_ghost_values(temperature, velocity);
 
       scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -161,7 +173,7 @@ namespace MeltPoolDG::Heat
         dst,
         src,
         true /*zero dst vector*/);
-      MeltPoolDG::VectorTools::zero_out_ghosts(temperature);
+      MeltPoolDG::VectorTools::zero_out_ghosts(temperature, velocity);
     }
 
     void
@@ -170,7 +182,7 @@ namespace MeltPoolDG::Heat
                       const VectorType &                     src,
                       std::pair<unsigned int, unsigned int> &cell_range) const
     {
-      FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, this->dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
@@ -179,10 +191,10 @@ namespace MeltPoolDG::Heat
           temp_vals.reinit(cell);
           temp_vals.gather_evaluate(src, true, true);
 
-          if (velocity)
+          if (data.with_velocity)
             {
               velocity_vals.reinit(cell);
-              velocity_vals.gather_evaluate(*velocity, true, false);
+              velocity_vals.gather_evaluate(velocity, true, false);
             }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -191,16 +203,17 @@ namespace MeltPoolDG::Heat
               //
               //@todo
 
-              temp_vals.submit_value(data.density * data.capacity * this->d_tau_inv *
-                                       temp_vals.get_value(q_index),
-                                     q_index);
+              auto val =
+                data.density * data.capacity * this->d_tau_inv * temp_vals.get_value(q_index);
+              if (data.with_velocity)
+                {
+                  val += data.density * data.capacity * temp_vals.get_gradient(q_index) *
+                         velocity_vals.get_value(q_index);
+                }
+
+              temp_vals.submit_value(val, q_index);
 
               auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
-              if (velocity)
-                {
-                  val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
-                              velocity_vals.get_value(q_index);
-                }
 
               temp_vals.submit_gradient(val_grad, q_index);
             }
@@ -219,11 +232,11 @@ namespace MeltPoolDG::Heat
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
                                              true /*is_interior_face*/,
-                                             this->dof_idx,
+                                             temp_dof_idx,
                                              this->quad_idx);
       FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
                                                  true /*is_interior_face*/,
-                                                 this->dof_idx,
+                                                 temp_dof_idx,
                                                  this->quad_idx);
 
       for (unsigned int face = face_range.first; face < face_range.second; face++)
@@ -268,9 +281,9 @@ namespace MeltPoolDG::Heat
                   const VectorType &                     src, /* temperature_old*/
                   std::pair<unsigned int, unsigned int> &cell_range) const
     {
-      FECellIntegrator<dim, 1, number> temp_vals(matrix_free, this->dof_idx, this->quad_idx);
-      FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, this->dof_idx, this->quad_idx);
-      FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, this->dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number> temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, temp_dof_idx, this->quad_idx);
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
@@ -289,28 +302,29 @@ namespace MeltPoolDG::Heat
           heat_source_vals.read_dof_values_plain(heat_source);
           heat_source_vals.evaluate(true, false);
 
-          if (velocity)
+          if (data.with_velocity)
             {
               velocity_vals.reinit(cell);
-              velocity_vals.gather_evaluate(*velocity, true, false);
+              velocity_vals.read_dof_values_plain(velocity);
+              velocity_vals.evaluate(true, false);
             }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              temp_vals.submit_value(-1. * (data.density * data.capacity *
-                                              (temp_vals.get_value(q_index) -
-                                               temp_vals_old.get_value(q_index)) *
-                                              this->d_tau_inv -
-                                            heat_source_vals.get_value(q_index)),
-                                     q_index); // negative sign since residual is moved to rhs
+              auto val = data.density * data.capacity *
+                           (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) *
+                           this->d_tau_inv -
+                         heat_source_vals.get_value(q_index);
+
+              if (data.with_velocity)
+                {
+                  val += data.density * data.capacity * temp_vals.get_gradient(q_index) *
+                         velocity_vals.get_value(q_index);
+                }
+              temp_vals.submit_value(-val, q_index); // negative sign since residual is moved to rhs
 
               auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
 
-              if (velocity)
-                {
-                  val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
-                              velocity_vals.get_value(q_index);
-                }
               temp_vals.submit_gradient(-1.0 * val_grad,
                                         q_index); // -1 since residual is moved to rhs
             }
@@ -331,7 +345,7 @@ namespace MeltPoolDG::Heat
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
                                              true /* is interior face*/,
-                                             this->dof_idx,
+                                             temp_dof_idx,
                                              this->quad_idx);
       for (unsigned int face = face_range.first; face < face_range.second; face++)
         {

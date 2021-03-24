@@ -12,6 +12,28 @@ namespace MeltPoolDG::Heat
   using namespace dealii;
 
   template <int dim>
+  class VelocityField : public Function<dim>
+  {
+  public:
+    VelocityField(double velocity)
+      : Function<dim>(dim)
+      , vel(velocity)
+    {}
+
+    double
+    value(const Point<dim> &, const unsigned int component) const override
+    {
+      if (component == 0)
+        return -vel;
+      else
+        return 0.0;
+    }
+
+  private:
+    const double vel;
+  };
+
+  template <int dim>
   class HeatTransferProblem : public ProblemBase<dim>
   {
   private:
@@ -20,13 +42,16 @@ namespace MeltPoolDG::Heat
 
     TimeIterator<double> time_iterator;
     DoFHandler<dim>      dof_handler;
+    DoFHandler<dim>      dof_handler_velocity;
 
     AffineConstraints<double> temp_constraints;
     AffineConstraints<double> temp_hanging_nodes_constraints;
+    AffineConstraints<double> velocity_hanging_nodes_constraints;
 
     unsigned int temp_dof_idx;
     unsigned int temp_hanging_nodes_dof_idx;
     unsigned int temp_quad_idx;
+    unsigned int velocity_dof_idx;
 
     std::shared_ptr<ScratchData<dim>>           scratch_data;
     std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
@@ -76,6 +101,7 @@ namespace MeltPoolDG::Heat
        *  setup DoFHandler
        */
       dof_handler.reinit(*base_in->triangulation);
+      dof_handler_velocity.reinit(*base_in->triangulation);
       /*
        *  setup scratch data
        */
@@ -94,10 +120,15 @@ namespace MeltPoolDG::Heat
 
       scratch_data->attach_dof_handler(dof_handler);
       scratch_data->attach_dof_handler(dof_handler);
+      scratch_data->attach_dof_handler(dof_handler_velocity);
 
+      /*
+       * attach constraints
+       */
       temp_dof_idx = scratch_data->attach_constraint_matrix(temp_constraints);
       temp_hanging_nodes_dof_idx =
         scratch_data->attach_constraint_matrix(temp_hanging_nodes_constraints);
+      velocity_dof_idx = scratch_data->attach_constraint_matrix(velocity_hanging_nodes_constraints);
 
       /*
        *  create quadrature rule
@@ -137,7 +168,7 @@ namespace MeltPoolDG::Heat
           "  this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), 'temperature') "));
 
       /*
-       *    compute intial conditions of the level set
+       *    compute initial conditions of the temperature field
        */
       VectorType initial_solution;
       scratch_data->initialize_dof_vector(initial_solution, temp_dof_idx);
@@ -149,6 +180,7 @@ namespace MeltPoolDG::Heat
                                    *base_in->get_initial_condition("heat_transfer"),
                                    initial_solution);
       initial_solution.update_ghost_values();
+
       /*
        *    initialize the heat operation class
        */
@@ -158,9 +190,28 @@ namespace MeltPoolDG::Heat
                                                      base_in->parameters.heat,
                                                      temp_dof_idx,
                                                      temp_hanging_nodes_dof_idx,
-                                                     temp_quad_idx);
+                                                     temp_quad_idx,
+                                                     velocity_dof_idx);
 
       heat_operation->set_initial_condition(initial_solution);
+
+      /*
+       *    set velocity field
+       */
+      VectorType velocity;
+      scratch_data->initialize_dof_vector(velocity, velocity_dof_idx);
+
+      if (base_in->parameters.heat.with_velocity)
+        {
+          VelocityField<dim> function(base_in->parameters.heat.velocity);
+          dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                           scratch_data->get_dof_handler(velocity_dof_idx),
+                                           function,
+                                           velocity);
+        }
+      velocity.update_ghost_values();
+      heat_operation->set_velocity(velocity);
+
       /*
        *  initialize postprocessor
        */
@@ -194,11 +245,15 @@ namespace MeltPoolDG::Heat
       if (base_in->parameters.base.do_simplex)
         {
           dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
+          dof_handler_velocity.distribute_dofs(
+            FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim));
         }
       else
 #endif
         {
           dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
+          dof_handler_velocity.distribute_dofs(
+            FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree), dim));
         }
       /*
        *  create partitioning
@@ -229,6 +284,13 @@ namespace MeltPoolDG::Heat
       temp_constraints.merge(temp_constraints,
                              AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
+      velocity_hanging_nodes_constraints.clear();
+      velocity_hanging_nodes_constraints.reinit(
+        scratch_data->get_locally_relevant_dofs(velocity_dof_idx));
+      DoFTools::make_hanging_node_constraints(dof_handler_velocity,
+                                              velocity_hanging_nodes_constraints);
+      velocity_hanging_nodes_constraints.close();
+
       scratch_data->build();
 
       if (do_reinit)
@@ -258,6 +320,7 @@ namespace MeltPoolDG::Heat
     void
     refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
     {
+      // @todo
       (void)base_in;
       AssertThrow(false, ExcNotImplemented());
 

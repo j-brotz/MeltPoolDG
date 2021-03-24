@@ -1,6 +1,6 @@
 {
     "base": {
-        "application name": "heat_transfer_with_radiation",
+        "application name": "unidirectional_heat_transfer",
         "degree": "1",
         "dimension": "2",
         "do simplex": "false",

@@ -33,6 +33,7 @@ namespace MeltPoolDG::Heat
     const unsigned int temp_dof_idx;
     const unsigned int temp_hanging_nodes_dof_idx;
     const unsigned int temp_quad_idx;
+    const unsigned int vel_dof_idx;
     /*
      *    This are the primary solution variables of this module, which will be also publically
      *    accessible for output_results.
@@ -40,6 +41,7 @@ namespace MeltPoolDG::Heat
     VectorType temperature;
     VectorType temperature_old;
     VectorType heat_source;
+    VectorType velocity;
 
     std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
 
@@ -49,15 +51,24 @@ namespace MeltPoolDG::Heat
                           const HeatData<double> &                        heat_data_in,
                           const unsigned int                              temp_dof_idx_in,
                           const unsigned int temp_hanging_nodes_dof_idx_in,
-                          const unsigned int temp_quad_idx_in)
+                          const unsigned int temp_quad_idx_in,
+                          const unsigned int vel_dof_idx_in)
       : scratch_data(scratch_data_in)
       , heat_data(heat_data_in)
       , temp_dof_idx(temp_dof_idx_in)
       , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
       , temp_quad_idx(temp_quad_idx_in)
+      , vel_dof_idx(vel_dof_idx_in)
     {
-      heat_operator = std::make_shared<HeatTransferOperator<dim>>(
-        bc_data, scratch_data, heat_data, temp_dof_idx, temp_quad_idx, temperature, heat_source);
+      heat_operator = std::make_shared<HeatTransferOperator<dim>>(bc_data,
+                                                                  scratch_data,
+                                                                  heat_data,
+                                                                  temp_dof_idx,
+                                                                  temp_quad_idx,
+                                                                  temperature,
+                                                                  heat_source,
+                                                                  vel_dof_idx,
+                                                                  velocity);
     }
 
     void
@@ -70,11 +81,19 @@ namespace MeltPoolDG::Heat
     }
 
     void
+    set_velocity(const VectorType &velocity_in)
+    {
+      scratch_data.initialize_dof_vector(velocity, vel_dof_idx);
+      velocity.copy_locally_owned_data_from(velocity_in);
+    }
+
+    void
     reinit()
     {
       scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
       scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
       scratch_data.initialize_dof_vector(heat_source, temp_dof_idx);
+      scratch_data.initialize_dof_vector(velocity, vel_dof_idx);
     }
 
     void
@@ -93,7 +112,7 @@ namespace MeltPoolDG::Heat
 
       const auto solve_linear_system = [&](VectorType &      solution_update,
                                            const VectorType &rhs) -> int {
-        return LinearSolve<VectorType, SolverCG<VectorType>, OperatorBase<double>>::solve(
+        return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
           *heat_operator, solution_update, rhs, heat_data.solver.rel_tolerance_rhs);
       };
 
@@ -127,7 +146,10 @@ namespace MeltPoolDG::Heat
     void
     attach_output_vectors(DataOut<dim> &data_out) const
     {
-      MeltPoolDG::VectorTools::update_ghost_values(temperature, temperature_old, heat_source);
+      MeltPoolDG::VectorTools::update_ghost_values(temperature,
+                                                   temperature_old,
+                                                   heat_source,
+                                                   velocity);
       /**
        *  temperature
        */
@@ -146,6 +168,20 @@ namespace MeltPoolDG::Heat
       data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
                                heat_source,
                                "heat_source");
+
+      if (heat_data.with_velocity)
+        {
+          std::vector<DataComponentInterpretation::DataComponentInterpretation>
+            vector_component_interpretation(
+              dim, DataComponentInterpretation::component_is_part_of_vector);
+          /**
+           *  velocity
+           */
+          data_out.add_data_vector(scratch_data.get_dof_handler(vel_dof_idx),
+                                   velocity,
+                                   std::vector<std::string>(dim, "velocity"),
+                                   vector_component_interpretation);
+        }
     }
 
     const VectorType &
