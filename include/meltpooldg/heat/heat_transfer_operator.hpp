@@ -191,16 +191,17 @@ namespace MeltPoolDG::Heat
               //
               //@todo
 
-              temp_vals.submit_value(data.density * data.capacity * this->d_tau_inv *
-                                       temp_vals.get_value(q_index),
-                                     q_index);
-
-              auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
+              auto val =
+                data.density * data.capacity * this->d_tau_inv * temp_vals.get_value(q_index);
               if (data.with_velocity)
                 {
-                  val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
-                              velocity_vals.get_value(q_index);
+                  val -= data.density * data.capacity * temp_vals.get_gradient(q_index) *
+                         velocity_vals.get_value(q_index);
                 }
+
+              temp_vals.submit_value(val, q_index);
+
+              auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
 
               temp_vals.submit_gradient(val_grad, q_index);
             }
@@ -298,20 +299,20 @@ namespace MeltPoolDG::Heat
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              temp_vals.submit_value(-1. * (data.density * data.capacity *
-                                              (temp_vals.get_value(q_index) -
-                                               temp_vals_old.get_value(q_index)) *
-                                              this->d_tau_inv -
-                                            heat_source_vals.get_value(q_index)),
-                                     q_index); // negative sign since residual is moved to rhs
-
-              auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
+              auto val = data.density * data.capacity *
+                           (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) *
+                           this->d_tau_inv -
+                         heat_source_vals.get_value(q_index);
 
               if (data.with_velocity)
                 {
-                  val_grad -= data.density * data.capacity * temp_vals.get_value(q_index) *
-                              velocity_vals.get_value(q_index);
+                  val -= data.density * data.capacity * temp_vals.get_gradient(q_index) *
+                         velocity_vals.get_value(q_index);
                 }
+              temp_vals.submit_value(-val, q_index); // negative sign since residual is moved to rhs
+
+              auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
+
               temp_vals.submit_gradient(-1.0 * val_grad,
                                         q_index); // -1 since residual is moved to rhs
             }
