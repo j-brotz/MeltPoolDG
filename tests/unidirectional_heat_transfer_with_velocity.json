@@ -15,7 +15,6 @@
     "heat conductivity": "55.563",
     "heat capacity": "460",
     "heat density": "7850.0",
-    "heat with velocity": "true",
     "heat velocity": "0.01",
     "heat start time": "0.0",
     "heat time step size": "0.001",

@@ -4,7 +4,7 @@
     "degree": "1",
     "dimension": "2",
     "do simplex": "false",
-    "do print parameters": "true",
+    "do print parameters": "false",
     "global refinements": "7",
     "problem name": "heat_transfer"
   },
@@ -15,8 +15,7 @@
     "heat conductivity": "55.563",
     "heat capacity": "460",
     "heat density": "7850.0",
-    "heat with velocity": "true",
-    "heat velocity": "0.0001",
+    "heat velocity": "0.01",
     "heat start time": "0.0",
     "heat time step size": "0.001",
     "heat end time": "1.0",

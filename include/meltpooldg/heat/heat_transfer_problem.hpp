@@ -12,33 +12,13 @@ namespace MeltPoolDG::Heat
   using namespace dealii;
 
   template <int dim>
-  class VelocityField : public Function<dim>
-  {
-  public:
-    VelocityField(double velocity)
-      : Function<dim>(dim)
-      , vel(velocity)
-    {}
-
-    double
-    value(const Point<dim> &, const unsigned int component) const override
-    {
-      if (component == 0)
-        return -vel;
-      else
-        return 0.0;
-    }
-
-  private:
-    const double vel;
-  };
-
-  template <int dim>
   class HeatTransferProblem : public ProblemBase<dim>
   {
   private:
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+
+    VectorType velocity;
 
     TimeIterator<double> time_iterator;
     DoFHandler<dim>      dof_handler;
@@ -72,6 +52,9 @@ namespace MeltPoolDG::Heat
 
           scratch_data->get_pcout()
             << "t= " << std::setw(10) << std::left << time_iterator.get_current_time();
+
+          if (base_in->parameters.heat.velocity != 0.0)
+            compute_velocity_field(*base_in->get_velocity_field("heat_transfer"));
 
           heat_operation->solve(dt);
 
@@ -182,6 +165,16 @@ namespace MeltPoolDG::Heat
       initial_solution.update_ghost_values();
 
       /*
+       *    set velocity field
+       */
+      VectorType *velocity_ptr = nullptr;
+      if (base_in->parameters.heat.velocity != 0.0)
+        {
+          compute_velocity_field(*base_in->get_velocity_field("heat_transfer"));
+          velocity_ptr = &velocity;
+        }
+
+      /*
        *    initialize the heat operation class
        */
       heat_operation =
@@ -191,26 +184,10 @@ namespace MeltPoolDG::Heat
                                                      temp_dof_idx,
                                                      temp_hanging_nodes_dof_idx,
                                                      temp_quad_idx,
-                                                     velocity_dof_idx);
+                                                     velocity_dof_idx,
+                                                     velocity_ptr);
 
       heat_operation->set_initial_condition(initial_solution);
-
-      /*
-       *    set velocity field
-       */
-      VectorType velocity;
-      scratch_data->initialize_dof_vector(velocity, velocity_dof_idx);
-
-      if (base_in->parameters.heat.with_velocity)
-        {
-          VelocityField<dim> function(base_in->parameters.heat.velocity);
-          dealii::VectorTools::interpolate(scratch_data->get_mapping(),
-                                           scratch_data->get_dof_handler(velocity_dof_idx),
-                                           function,
-                                           velocity);
-        }
-      velocity.update_ghost_values();
-      heat_operation->set_velocity(velocity);
 
       /*
        *  initialize postprocessor
@@ -295,6 +272,23 @@ namespace MeltPoolDG::Heat
 
       if (do_reinit)
         heat_operation->reinit();
+    }
+
+    void
+    compute_velocity_field(Function<dim> &field_function)
+    {
+      scratch_data->initialize_dof_vector(velocity, velocity_dof_idx);
+      /*
+       *  set the current time to the advection field function
+       */
+      field_function.set_time(time_iterator.get_current_time());
+      /*
+       *  interpolate the values of the advection velocity
+       */
+      dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                       scratch_data->get_dof_handler(velocity_dof_idx),
+                                       field_function,
+                                       velocity);
     }
 
     /*

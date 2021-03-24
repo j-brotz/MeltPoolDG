@@ -157,7 +157,6 @@ namespace MeltPoolDG
     number                      density                = 0.0;
     number                      conductivity           = 0.0;
     number                      capacity               = 0.0;
-    bool                        with_velocity          = false;
     number                      velocity               = 0.0;
     TimeSteppingData<number>    time_stepping;
     NonlinearSolverData<number> nlsolve;
@@ -770,10 +769,6 @@ namespace MeltPoolDG
                           "Conductivity for the heat problem.");
         prm.add_parameter("heat capacity", heat.capacity, "Heat capacity for the heat problem.");
         prm.add_parameter("heat density", heat.density, "Density for the heat problem.");
-        prm.add_parameter(
-          "heat with velocity",
-          heat.with_velocity,
-          "Set this parameter if the heat equation should include a velocity field.");
         prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
       }
       prm.leave_subsection();
