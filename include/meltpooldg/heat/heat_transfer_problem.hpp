@@ -29,13 +29,6 @@ namespace MeltPoolDG::Heat
         return 0.0;
     }
 
-    void
-    vector_value(const Point<dim> &p, Vector<double> &values) const override
-    {
-      for (unsigned int c = 0; c < this->n_components; ++c)
-        values(c) = value(p, c);
-    }
-
   private:
     const double vel;
   };
@@ -290,6 +283,7 @@ namespace MeltPoolDG::Heat
       temp_constraints.close();
       temp_constraints.merge(temp_constraints,
                              AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+
       velocity_hanging_nodes_constraints.clear();
       velocity_hanging_nodes_constraints.reinit(
         scratch_data->get_locally_relevant_dofs(velocity_dof_idx));

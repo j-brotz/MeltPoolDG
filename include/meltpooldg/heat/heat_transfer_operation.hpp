@@ -171,10 +171,16 @@ namespace MeltPoolDG::Heat
 
       if (heat_data.with_velocity)
         {
+          std::vector<DataComponentInterpretation::DataComponentInterpretation>
+            vector_component_interpretation(
+              dim, DataComponentInterpretation::component_is_part_of_vector);
           /**
            *  velocity
            */
-          data_out.add_data_vector(scratch_data.get_dof_handler(vel_dof_idx), velocity, "velocity");
+          data_out.add_data_vector(scratch_data.get_dof_handler(vel_dof_idx),
+                                   velocity,
+                                   std::vector<std::string>(dim, "velocity"),
+                                   vector_component_interpretation);
         }
     }
 

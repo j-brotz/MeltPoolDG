@@ -80,13 +80,6 @@ namespace MeltPoolDG
 
           return value_[component];
         }
-
-        void
-        vector_value(const Point<dim> &p, Vector<double> &values) const override
-        {
-          for (unsigned int c = 0; c < this->n_components; ++c)
-            values(c) = value(p, c);
-        }
       };
 
       /* for constant Dirichlet conditions we could also use the ConstantFunction
