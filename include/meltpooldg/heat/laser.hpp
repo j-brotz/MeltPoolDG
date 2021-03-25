@@ -116,6 +116,12 @@ namespace MeltPoolDG::Heat
       return laser_position;
     }
 
+    double
+    get_laser_power()
+    {
+      return laser_intensity * laser_data.power;
+    }
+
   private:
     void
     compute_laser_intensity()

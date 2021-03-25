@@ -70,7 +70,7 @@ namespace MeltPoolDG::Heat
         scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);
 
       FEValues<dim> heat_source_eval(
-        scratch_data->get_mapping(),
+        scratch_data.get_mapping(),
         scratch_data.get_dof_handler(temp_dof_idx).get_fe(),
         Quadrature<dim>(
           scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
@@ -148,7 +148,7 @@ namespace MeltPoolDG::Heat
      * volumetric heat source; The z-axis (= axis of the laser beam) is assumed to correspond to
      * negative dim-1 coordinate.
      */
-    void
+    double
     local_heat_source(const Point<dim> &position,
                       const Point<dim> &laser_position,
                       const double      power)
