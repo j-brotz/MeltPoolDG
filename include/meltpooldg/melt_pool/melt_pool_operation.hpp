@@ -123,12 +123,21 @@ namespace MeltPoolDG
         scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
         heat_operation->reinit();
 
-
-        if (mp_data.temperature_formulation == "numerical")
-          laser_heat_source_operation =
-            std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(*scratch_data,
-                                                                data_in.laser.gusarov,
-                                                                temp_dof_idx);
+        if (mp_data.temperature_formulation == "solve_heat_equation")
+          {
+            if (data_in.laser.heat_source_model == "Gusarov")
+              {
+                laser_heat_source_operation =
+                  std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(*scratch_data,
+                                                                      data_in.laser.gusarov,
+                                                                      temp_dof_idx);
+              }
+            else
+              AssertThrow(false,
+                          ExcMessage(
+                            "No requested laser model found. Please speficy the "
+                            "heat source model in the laser section of the input parameters."))
+          }
       }
 
       void
@@ -149,6 +158,10 @@ namespace MeltPoolDG
             density_liquid,
             mp_data,
             -1.0 /* level set value for gas @todo */);
+        else if (mp_data.temperature_formulation == "solve_heat_equation")
+          {
+            heat_operation->get_temperature() = mp_data.ambient_temperature;
+          }
         else
           AssertThrow(false, ExcNotImplemented());
         /*
@@ -176,8 +189,18 @@ namespace MeltPoolDG
         // 0) move laser
         laser_operation->move_laser(dt);
 
-        // 1) update temperature
-        if (mp_data.temperature_formulation == "analytical")
+        // 1) compute temperature field
+        if (mp_data.temperature_formulation == "solve_heat_equation")
+          {
+            // @todo: support other heat source models
+            laser_heat_source_operation->compute_volumetric_heat_source(
+              heat_operation->get_heat_source(),
+              laser_operation->get_laser_power(),
+              laser_operation->get_laser_position(),
+              true /* zero_out */);
+            heat_operation->solve(dt);
+          }
+        else if (mp_data.temperature_formulation == "analytical")
           laser_operation->compute_analytical_temperature_field(
             level_set_as_heaviside,
             heat_operation->get_temperature(),
@@ -186,6 +209,8 @@ namespace MeltPoolDG
             density_liquid,
             mp_data,
             -1.0 /* level set value for gas @todo */);
+        else
+          AssertThrow(false, ExcNotImplemented());
 
         // 2) update phases
         if (mp_data.temperature_formulation != "analytical")
@@ -205,10 +230,10 @@ namespace MeltPoolDG
             heat_operation->get_temperature(),
             false /*false means add to force vector*/);
 
-        //     ... or evaporative flux
+        //   ii) ... or evaporative flux
         //@todo
 
-        //     ... temperature dependent surface tension
+        //   iii)  ... temperature dependent surface tension
         if (temperature_dependent_surface_tension_coefficient > 0.0)
           Flow::SurfaceTensionOperation<dim>::compute_temperature_dependent_surface_tension(
             *scratch_data,
@@ -224,25 +249,6 @@ namespace MeltPoolDG
             flow_vel_quad_idx,
             temp_dof_idx,
             false /*false means add to force vector*/);
-      }
-
-      void
-      make_constraints_in_spatially_fixed_solid_domain()
-      {
-        /*
-         *    limit the level set interface to the touching regions of liquid/gas
-         */
-        if (mp_data.set_level_set_to_zero_in_solid)
-          {
-            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
-                                                    scratch_data->get_constraint(ls_dof_idx));
-            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
-                                                    scratch_data->get_constraint(reinit_dof_idx));
-          }
-
-        if (mp_data.set_velocity_to_zero_in_solid)
-          set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
-                                                  scratch_data->get_constraint(flow_vel_dof_idx));
       }
 
       void
@@ -306,10 +312,29 @@ namespace MeltPoolDG
 
     private:
       void
+      make_constraints_in_spatially_fixed_solid_domain()
+      {
+        /*
+         *    limit the level set interface to the touching regions of liquid/gas
+         */
+        if (mp_data.set_level_set_to_zero_in_solid)
+          {
+            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
+                                                    scratch_data->get_constraint(ls_dof_idx));
+            remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
+                                                    scratch_data->get_constraint(reinit_dof_idx));
+          }
+
+        if (mp_data.set_velocity_to_zero_in_solid)
+          set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
+                                                  scratch_data->get_constraint(flow_vel_dof_idx));
+      }
+
+
+      void
       compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside)
       {
-        (void)level_set_as_heaviside; // @todo: the level set will be needed later, when the thermal
-                                      // coupling is completed
+        level_set_as_heaviside.update_ghost_values();
         heat_operation->get_temperature().update_ghost_values();
 
         const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
@@ -321,6 +346,9 @@ namespace MeltPoolDG
                                              scratch_data->get_dof_handler(temp_dof_idx),
                                              support_points);
 
+        liquid = 0;
+        solid  = 0;
+
         for (const auto &cell : scratch_data->get_dof_handler(temp_dof_idx).active_cell_iterators())
           if (cell->is_locally_owned())
             {
@@ -328,10 +356,10 @@ namespace MeltPoolDG
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 {
                   solid[local_dof_indices[i]] =
-                    is_solid_region(support_points[local_dof_indices[i]],
+                    is_solid_region(level_set_as_heaviside[local_dof_indices[i]],
                                     heat_operation->get_temperature()[local_dof_indices[i]]);
                   liquid[local_dof_indices[i]] =
-                    is_liquid_region(support_points[local_dof_indices[i]],
+                    is_liquid_region(level_set_as_heaviside[local_dof_indices[i]],
                                      heat_operation->get_temperature()[local_dof_indices[i]]);
                 }
             }
@@ -343,6 +371,7 @@ namespace MeltPoolDG
         scratch_data->get_constraint(temp_dof_idx).distribute(liquid);
 
         heat_operation->get_temperature().zero_out_ghosts();
+        level_set_as_heaviside.zero_out_ghosts();
       }
 
       /**
@@ -457,31 +486,36 @@ namespace MeltPoolDG
       }
 
       /**
-       *  This function determines for a given point, whether it belongs to the solid domain.
-       *
-       *  WARNING: All points above (component dim-1) the center point of the laser source are
-       *  automatically identified as gaseous parts. Thus, this function has to be modified when the
-       *  initial interface between the feedstock and the ambient gas is not planar.
+       *  This function determines for a given pair of level set and temperature values, whether
+       * it characterizes a solid state. For this purpose, it is assumed that phi=1 in the liquid
+       * AND the solid domain and phi=0 in the gaseous domain. Thus, if phi=1 and the temperature
+       * is SMALLER than the fusion point, a solid phase is met.
        */
       bool
-      is_solid_region(const Point<dim> point, const double temperature)
+      is_solid_region(const double phi_liquid, const double temperature)
       {
-        if (point[dim - 1] >= laser_operation->get_laser_position()[dim - 1])
-          return false;
+        if (phi_liquid <= 0.5)
+          return false; // point is gas phase
+        else if (phi_liquid > 0.5 && temperature >= mp_data.liquid.melting_point)
+          return false; // point is melted
         else
-          return (temperature >= mp_data.liquid.melting_point) ? false : true;
+          return true;
       }
-
-      /*
-       * check if a given point is liquid
+      /**
+       *  This function determines for a given pair of level set and temperature values, whether
+       * it characterizes a liquid state. For this purpose, it is assumed that phi=1 in the liquid
+       * AND the solid domain and phi=0 in the gaseous domain. Thus, if phi=1 and the temperature
+       * is LARGER than the fusion point, a liquid phase is met.
        */
       bool
-      is_liquid_region(const Point<dim> point, const double temperature)
+      is_liquid_region(const double phi_liquid, const double temperature)
       {
-        if (point[dim - 1] >= laser_operation->get_laser_position()[dim - 1])
-          return false;
+        if (phi_liquid <= 0.5)
+          return false; // point is gas phase
+        else if (phi_liquid > 0.5 && temperature >= mp_data.liquid.melting_point)
+          return true; // point is melted
         else
-          return (temperature >= mp_data.liquid.melting_point) ? true : false;
+          return false; // point is solid
       }
     };
   } // namespace MeltPool

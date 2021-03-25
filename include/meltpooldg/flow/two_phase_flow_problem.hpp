@@ -24,6 +24,7 @@
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
+#include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/interface/problembase.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
@@ -87,6 +88,11 @@ namespace MeltPoolDG::Flow
           // update the two phases
           update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
 
+          if (!melt_pool_operation && heat_operation)
+            {
+              heat_operation->solve(dt);
+            }
+
           // accumulate forces: a) gravity force
           compute_gravity_force(vel_force_rhs, base_in->parameters.base.gravity, true);
 
@@ -104,6 +110,24 @@ namespace MeltPoolDG::Flow
               flow_operation->get_dof_handler_idx_hanging_nodes_velocity(),
               flow_operation->get_quad_idx_velocity(),
               false /* false means not to zero out the vorce vector */);
+
+          // ... c) temperature-dependent surface tension
+          if (!melt_pool_operation && heat_operation &&
+              base_in->parameters.flow.temperature_dependent_surface_tension_coefficient > 0.0)
+            Flow::SurfaceTensionOperation<dim>::compute_temperature_dependent_surface_tension(
+              *scratch_data,
+              vel_force_rhs,
+              level_set_operation.get_level_set_as_heaviside(),
+              level_set_operation.get_curvature(),
+              heat_operation->get_temperature(),
+              base_in->parameters.flow.surface_tension_coefficient,
+              base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
+              base_in->parameters.flow.surface_tension_reference_temperature,
+              ls_dof_idx,
+              vel_dof_idx,
+              flow_operation->get_quad_idx_velocity(),
+              temp_dof_idx,
+              false /*false means add to force vector*/);
 
           if (evaporation_operation)
             {
@@ -283,6 +307,38 @@ namespace MeltPoolDG::Flow
                                      vel_dof_idx,
                                      ls_dof_idx /* todo: ls_zero_bc_idx*/);
       /*
+       *    initialize the heat operation class
+       */
+      // @todo: fill level set
+      if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
+        {
+          heat_operation =
+            std::make_shared<Heat::HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
+                                                               *scratch_data,
+                                                               base_in->parameters.heat,
+                                                               temp_dof_idx,
+                                                               temp_dof_idx,
+                                                               temp_quad_idx,
+                                                               vel_dof_idx,
+                                                               &flow_operation->get_velocity());
+
+          /*
+           *    compute initial conditions of the temperature field
+           */
+          scratch_data->initialize_dof_vector(initial_solution, temp_dof_idx);
+
+          dealii::VectorTools::project(scratch_data->get_mapping(),
+                                       dof_handler,
+                                       scratch_data->get_constraint(temp_dof_idx),
+                                       scratch_data->get_quadrature(temp_quad_idx),
+                                       *base_in->get_initial_condition("heat_transfer"),
+                                       initial_solution);
+          initial_solution.update_ghost_values();
+
+          heat_operation->set_initial_condition(initial_solution);
+        }
+
+      /*
        *    initialize the evaporation class
        */
       if (base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation" ||
@@ -368,6 +424,8 @@ namespace MeltPoolDG::Flow
               scratch_data->get_pcout()
                 << " T.size " << melt_pool_operation->get_temperature().size() << " solid.size "
                 << melt_pool_operation->get_solid().size();
+            if (heat_operation)
+              scratch_data->get_pcout() << " T.size " << heat_operation->get_temperature().size();
 
             scratch_data->get_pcout() << std::endl;
 
@@ -469,6 +527,8 @@ namespace MeltPoolDG::Flow
             evaporation_operation->reinit();
           if (melt_pool_operation)
             melt_pool_operation->reinit();
+          if (heat_operation)
+            heat_operation->reinit();
         }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -643,6 +703,8 @@ namespace MeltPoolDG::Flow
 
         if (evaporation_operation)
           evaporation_operation->attach_output_vectors(data_out);
+        if (heat_operation)
+          heat_operation->attach_output_vectors(data_out);
       };
       /**
        * do the output operation
@@ -720,6 +782,11 @@ namespace MeltPoolDG::Flow
           });
         }
 
+      if (heat_operation)
+        data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
+          heat_operation->attach_vectors(vectors);
+        });
+
       const auto post = [&]() {
         /**
          * level set
@@ -742,6 +809,11 @@ namespace MeltPoolDG::Flow
          */
         if (evaporation_operation)
           evaporation_operation->distribute_constraints();
+        /**
+         * melt pool
+         */
+        if (heat_operation)
+          heat_operation->distribute_constraints();
       };
 
       const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
@@ -786,7 +858,7 @@ namespace MeltPoolDG::Flow
     LevelSet::LevelSetOperation<dim>                        level_set_operation;
     std::shared_ptr<MeltPool::MeltPoolOperation<dim>>       melt_pool_operation;
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation = nullptr;
-
-    std::shared_ptr<Postprocessor<dim>> post_processor;
+    std::shared_ptr<Heat::HeatTransferOperation<dim>>       heat_operation;
+    std::shared_ptr<Postprocessor<dim>>                     post_processor;
   };
 } // namespace MeltPoolDG::Flow
