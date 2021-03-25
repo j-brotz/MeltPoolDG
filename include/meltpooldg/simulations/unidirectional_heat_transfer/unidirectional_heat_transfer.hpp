@@ -99,6 +99,27 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   };
 
   template <int dim>
+  class HorizontalLevelSetHeaviside : public Function<dim>
+  {
+  public:
+    HorizontalLevelSetHeaviside(double eps = 0.01)
+      : Function<dim>(1)
+      , eps(eps)
+    {}
+
+    double
+    value(const Point<dim> &p, const unsigned int) const override
+    {
+      const auto y = p[1];
+      return UtilityFunctions::CharacteristicFunctions::heaviside(level - y, eps);
+    }
+
+  private:
+    const double eps;
+    const double level = 0.05;
+  };
+
+  template <int dim>
   class SimulationUnidirectionalHeatTransfer : public SimulationBase<dim>
   {
   public:
@@ -187,6 +208,9 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       this->attach_velocity_field(std::make_shared<UnidirectionalVelocityField<dim>>(
                                     this->parameters.heat.velocity),
                                   "heat_transfer");
+
+      this->template attach_initial_condition(std::make_shared<HorizontalLevelSetHeaviside<dim>>(),
+                                              "prescribed_level_set");
     }
 
   private:

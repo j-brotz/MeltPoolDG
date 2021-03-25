@@ -249,6 +249,13 @@ namespace MeltPoolDG
 
     } // namespace CharacteristicFunctions
 
+    template <typename value_type>
+    inline value_type
+    interpolate(const value_type &ls, const double val1, const double val2)
+    {
+      return (1. - ls) * val1 + ls * val2;
+    }
+
     namespace DistanceFunctions
     {
       template <int dim>
