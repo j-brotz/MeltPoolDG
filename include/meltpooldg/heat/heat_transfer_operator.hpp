@@ -97,13 +97,13 @@ namespace MeltPoolDG::Heat
 
     const VectorType &heat_source;
 
-    // configuration if heat particles are transported with a given velocity field
+    // optional flow velocity for internal convection
     const unsigned int vel_dof_idx;
     const VectorType * velocity;
 
-    // configuration if two phases are given
-    const unsigned int ls_dof_idx;             //@todo: fill
-    const VectorType * level_set_as_heaviside; //@todo: fill
+    // optional level-set heaviside field for two phase flow
+    const unsigned int ls_dof_idx;
+    const VectorType * level_set_as_heaviside;
 
 
   public:
@@ -130,6 +130,9 @@ namespace MeltPoolDG::Heat
     , ls_dof_idx             ( ls_dof_idx_in             )
     , level_set_as_heaviside ( level_set_as_heaviside_in )
     {
+      AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside) ,
+          ExcMessage("Two-phase flow must come with a velocity! Abort..."));
+
       if (bc)
       {
         bc_convection_indices = bc->convection_bc;
@@ -160,6 +163,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(temperature);
       if (velocity)
         MeltPoolDG::VectorTools::update_ghost_values(*velocity);
+      if (level_set_as_heaviside)
+        MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
 
       scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -178,6 +183,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature);
       if (velocity)
         MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      if (level_set_as_heaviside)
+        MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
     }
 
     void
@@ -201,23 +208,36 @@ namespace MeltPoolDG::Heat
               velocity_vals.gather_evaluate(*velocity, true, false);
             }
 
+          if (level_set_as_heaviside)
+            {
+              ls_vals.reinit(cell);
+              ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
+            }
+
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              // if (do_two_phases)
-              //
-              //@todo
+              VectorizedArrayType conductivity, density, capacity;
+              if (level_set_as_heaviside)
+                std::tie(density, capacity, conductivity) =
+                  get_two_phase_material_parameters(ls_vals.get_value(q_index));
+              else
+                {
+                  density      = data.density;
+                  capacity     = data.capacity;
+                  conductivity = data.conductivity;
+                }
 
-              auto val =
-                data.density * data.capacity * this->d_tau_inv * temp_vals.get_value(q_index);
+              auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
+
               if (velocity)
                 {
-                  val += data.density * data.capacity * temp_vals.get_gradient(q_index) *
+                  val += density * capacity * temp_vals.get_gradient(q_index) *
                          velocity_vals.get_value(q_index);
                 }
 
               temp_vals.submit_value(val, q_index);
 
-              auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
+              auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
               temp_vals.submit_gradient(val_grad, q_index);
             }
@@ -313,21 +333,41 @@ namespace MeltPoolDG::Heat
               velocity_vals.evaluate(true, false);
             }
 
+          if (level_set_as_heaviside)
+            {
+              ls_vals.reinit(cell);
+              ls_vals.read_dof_values_plain(*level_set_as_heaviside);
+              ls_vals.evaluate(true, false);
+            }
+
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              auto val = data.density * data.capacity *
+              VectorizedArrayType conductivity, density, capacity;
+              if (level_set_as_heaviside)
+                std::tie(density, capacity, conductivity) =
+                  get_two_phase_material_parameters(ls_vals.get_value(q_index));
+              else
+                {
+                  density      = data.density;
+                  capacity     = data.capacity;
+                  conductivity = data.conductivity;
+                }
+
+              auto val = density * capacity *
                            (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) *
                            this->d_tau_inv -
                          heat_source_vals.get_value(q_index);
 
               if (velocity)
                 {
-                  val += data.density * data.capacity * temp_vals.get_gradient(q_index) *
+                  val += density * capacity * temp_vals.get_gradient(q_index) *
                          velocity_vals.get_value(q_index);
                 }
-              temp_vals.submit_value(-val, q_index); // negative sign since residual is moved to rhs
 
-              auto val_grad = data.conductivity * temp_vals.get_gradient(q_index);
+              temp_vals.submit_value(-val,
+                                     q_index); // negative sign since residual is moved to rhs
+
+              auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
               temp_vals.submit_gradient(-1.0 * val_grad,
                                         q_index); // -1 since residual is moved to rhs
@@ -422,6 +462,27 @@ namespace MeltPoolDG::Heat
         src,
         false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+    }
+
+  private:
+    /*
+     * @return \c std::tuple with density, capacity and conductivity
+     */
+    template <typename vaule_type>
+    std::tuple<vaule_type, vaule_type, vaule_type>
+    get_two_phase_material_parameters(const vaule_type &ls_heaviside_val) const
+    {
+      // todo Input material parameters for two phase
+      const auto density      = UtilityFunctions::interpolate(ls_heaviside_val,
+                                                         /*other dens*/ data.density / 2,
+                                                         data.density);
+      const auto capacity     = UtilityFunctions::interpolate(ls_heaviside_val,
+                                                          /*other cap*/ data.capacity / 2,
+                                                          data.capacity);
+      const auto conductivity = UtilityFunctions::interpolate(ls_heaviside_val,
+                                                              /*other cond*/ data.conductivity / 2,
+                                                              data.conductivity);
+      return std::make_tuple(density, capacity, conductivity);
     }
   };
 } // namespace MeltPoolDG::Heat

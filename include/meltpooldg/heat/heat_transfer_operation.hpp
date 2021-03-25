@@ -41,8 +41,13 @@ namespace MeltPoolDG::Heat
     VectorType temperature_old;
     VectorType heat_source;
 
+    // optional flow velocity for internal convection
     const unsigned int vel_dof_idx;
     VectorType *       velocity;
+
+    // optional level-set heaviside field for two phase flow
+    const unsigned int ls_dof_idx;
+    VectorType *       level_set_as_heaviside;
 
     std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
 
@@ -53,8 +58,10 @@ namespace MeltPoolDG::Heat
                           const unsigned int                              temp_dof_idx_in,
                           const unsigned int temp_hanging_nodes_dof_idx_in,
                           const unsigned int temp_quad_idx_in,
-                          const unsigned int vel_dof_idx_in = 0,
-                          VectorType *       velocity_in    = nullptr)
+                          const unsigned int vel_dof_idx_in            = 0,
+                          VectorType *       velocity_in               = nullptr,
+                          const unsigned int ls_dof_idx_in             = 0,
+                          VectorType *       level_set_as_heaviside_in = nullptr)
       : scratch_data(scratch_data_in)
       , heat_data(heat_data_in)
       , temp_dof_idx(temp_dof_idx_in)
@@ -62,6 +69,8 @@ namespace MeltPoolDG::Heat
       , temp_quad_idx(temp_quad_idx_in)
       , vel_dof_idx(vel_dof_idx_in)
       , velocity(velocity_in)
+      , ls_dof_idx(ls_dof_idx_in)
+      , level_set_as_heaviside(level_set_as_heaviside_in)
     {
       heat_operator = std::make_shared<HeatTransferOperator<dim>>(bc_data,
                                                                   scratch_data,
@@ -71,7 +80,9 @@ namespace MeltPoolDG::Heat
                                                                   temperature,
                                                                   heat_source,
                                                                   vel_dof_idx,
-                                                                  velocity);
+                                                                  velocity,
+                                                                  ls_dof_idx,
+                                                                  level_set_as_heaviside);
     }
 
     void
@@ -145,6 +156,10 @@ namespace MeltPoolDG::Heat
       if (velocity)
         MeltPoolDG::VectorTools::update_ghost_values(*velocity);
 
+      if (level_set_as_heaviside)
+        MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
+
+
       /**
        *  temperature
        */
@@ -176,6 +191,13 @@ namespace MeltPoolDG::Heat
                                    *velocity,
                                    std::vector<std::string>(dim, "velocity"),
                                    vector_component_interpretation);
+        }
+
+      if (level_set_as_heaviside)
+        {
+          data_out.add_data_vector(scratch_data.get_dof_handler(ls_dof_idx),
+                                   *level_set_as_heaviside,
+                                   "level_set_as_heaviside");
         }
     }
 

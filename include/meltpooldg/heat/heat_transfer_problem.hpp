@@ -19,19 +19,23 @@ namespace MeltPoolDG::Heat
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
     VectorType velocity;
+    VectorType level_set_as_heaviside;
 
     TimeIterator<double> time_iterator;
     DoFHandler<dim>      dof_handler;
     DoFHandler<dim>      dof_handler_velocity;
+    DoFHandler<dim>      dof_handler_level_set;
 
     AffineConstraints<double> temp_constraints;
     AffineConstraints<double> temp_hanging_nodes_constraints;
     AffineConstraints<double> velocity_hanging_nodes_constraints;
+    AffineConstraints<double> level_set_hanging_nodes_constraints;
 
     unsigned int temp_dof_idx;
     unsigned int temp_hanging_nodes_dof_idx;
     unsigned int temp_quad_idx;
     unsigned int velocity_dof_idx;
+    unsigned int level_set_dof_idx;
 
     std::shared_ptr<ScratchData<dim>>           scratch_data;
     std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
@@ -54,7 +58,14 @@ namespace MeltPoolDG::Heat
             << "t= " << std::setw(10) << std::left << time_iterator.get_current_time();
 
           if (base_in->parameters.heat.velocity != 0.0)
-            compute_velocity_field(*base_in->get_velocity_field("heat_transfer"));
+            compute_field_vector(velocity,
+                                 velocity_dof_idx,
+                                 *base_in->get_velocity_field("heat_transfer"));
+
+          if (base_in->parameters.heat.two_phase)
+            compute_field_vector(level_set_as_heaviside,
+                                 level_set_dof_idx,
+                                 *base_in->get_initial_condition("prescribed_level_set"));
 
           heat_operation->solve(dt);
 
@@ -85,6 +96,7 @@ namespace MeltPoolDG::Heat
        */
       dof_handler.reinit(*base_in->triangulation);
       dof_handler_velocity.reinit(*base_in->triangulation);
+      dof_handler_level_set.reinit(*base_in->triangulation);
       /*
        *  setup scratch data
        */
@@ -104,6 +116,7 @@ namespace MeltPoolDG::Heat
       scratch_data->attach_dof_handler(dof_handler);
       scratch_data->attach_dof_handler(dof_handler);
       scratch_data->attach_dof_handler(dof_handler_velocity);
+      scratch_data->attach_dof_handler(dof_handler_level_set);
 
       /*
        * attach constraints
@@ -112,6 +125,8 @@ namespace MeltPoolDG::Heat
       temp_hanging_nodes_dof_idx =
         scratch_data->attach_constraint_matrix(temp_hanging_nodes_constraints);
       velocity_dof_idx = scratch_data->attach_constraint_matrix(velocity_hanging_nodes_constraints);
+      level_set_dof_idx =
+        scratch_data->attach_constraint_matrix(level_set_hanging_nodes_constraints);
 
       /*
        *  create quadrature rule
@@ -170,8 +185,22 @@ namespace MeltPoolDG::Heat
       VectorType *velocity_ptr = nullptr;
       if (base_in->parameters.heat.velocity != 0.0)
         {
-          compute_velocity_field(*base_in->get_velocity_field("heat_transfer"));
+          compute_field_vector(velocity,
+                               velocity_dof_idx,
+                               *base_in->get_velocity_field("heat_transfer"));
           velocity_ptr = &velocity;
+        }
+
+      /*
+       *    set level-set as heaviside field
+       */
+      VectorType *level_set_as_heaviside_ptr = nullptr;
+      if (base_in->parameters.heat.two_phase)
+        {
+          compute_field_vector(level_set_as_heaviside,
+                               level_set_dof_idx,
+                               *base_in->get_initial_condition("prescribed_level_set"));
+          level_set_as_heaviside_ptr = &level_set_as_heaviside;
         }
 
       /*
@@ -185,7 +214,9 @@ namespace MeltPoolDG::Heat
                                                      temp_hanging_nodes_dof_idx,
                                                      temp_quad_idx,
                                                      velocity_dof_idx,
-                                                     velocity_ptr);
+                                                     velocity_ptr,
+                                                     level_set_dof_idx,
+                                                     level_set_as_heaviside_ptr);
 
       heat_operation->set_initial_condition(initial_solution);
 
@@ -224,6 +255,7 @@ namespace MeltPoolDG::Heat
           dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
           dof_handler_velocity.distribute_dofs(
             FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim));
+          dof_handler_level_set.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
         }
       else
 #endif
@@ -231,6 +263,7 @@ namespace MeltPoolDG::Heat
           dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
           dof_handler_velocity.distribute_dofs(
             FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree), dim));
+          dof_handler_level_set.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
         }
       /*
        *  create partitioning
@@ -268,6 +301,13 @@ namespace MeltPoolDG::Heat
                                               velocity_hanging_nodes_constraints);
       velocity_hanging_nodes_constraints.close();
 
+      level_set_hanging_nodes_constraints.clear();
+      level_set_hanging_nodes_constraints.reinit(
+        scratch_data->get_locally_relevant_dofs(level_set_dof_idx));
+      DoFTools::make_hanging_node_constraints(dof_handler_level_set,
+                                              level_set_hanging_nodes_constraints);
+      level_set_hanging_nodes_constraints.close();
+
       scratch_data->build();
 
       if (do_reinit)
@@ -275,9 +315,9 @@ namespace MeltPoolDG::Heat
     }
 
     void
-    compute_velocity_field(Function<dim> &field_function)
+    compute_field_vector(VectorType &vector, const unsigned dof_idx, Function<dim> &field_function)
     {
-      scratch_data->initialize_dof_vector(velocity, velocity_dof_idx);
+      scratch_data->initialize_dof_vector(vector, dof_idx);
       /*
        *  set the current time to the advection field function
        */
@@ -286,9 +326,9 @@ namespace MeltPoolDG::Heat
        *  interpolate the values of the advection velocity
        */
       dealii::VectorTools::interpolate(scratch_data->get_mapping(),
-                                       scratch_data->get_dof_handler(velocity_dof_idx),
+                                       scratch_data->get_dof_handler(dof_idx),
                                        field_function,
-                                       velocity);
+                                       vector);
     }
 
     /*

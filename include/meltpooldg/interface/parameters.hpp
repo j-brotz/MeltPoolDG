@@ -158,6 +158,7 @@ namespace MeltPoolDG
     number                      conductivity           = 0.0;
     number                      capacity               = 0.0;
     number                      velocity               = 0.0;
+    bool                        two_phase              = false;
     TimeSteppingData<number>    time_stepping;
     NonlinearSolverData<number> nlsolve;
     SolverData<number>          solver;
@@ -770,6 +771,9 @@ namespace MeltPoolDG
         prm.add_parameter("heat capacity", heat.capacity, "Heat capacity for the heat problem.");
         prm.add_parameter("heat density", heat.density, "Density for the heat problem.");
         prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
+        prm.add_parameter("heat two phase",
+                          heat.two_phase,
+                          "Set this parameter for two phase flow.");
       }
       prm.leave_subsection();
       /*
