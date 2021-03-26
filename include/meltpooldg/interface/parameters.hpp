@@ -123,6 +123,7 @@ namespace MeltPoolDG
     number       surface_tension_coefficient                       = 0.0;
     number       temperature_dependent_surface_tension_coefficient = 0.0;
     number       surface_tension_reference_temperature             = 0.0;
+    number       surface_tension_coefficient_residual_fraction     = 0.0;
     std::string  solver_type                                       = "incompressible";
     number       start_time                                        = 0.0;
     number       end_time                                          = 1.0;
@@ -696,6 +697,11 @@ namespace MeltPoolDG
         prm.add_parameter("flow surface tension reference temperature",
                           flow.surface_tension_reference_temperature,
                           "Reference temperature for calculating surface tension");
+        prm.add_parameter(
+          "flow surface tension coefficient residual fraction",
+          flow.surface_tension_coefficient_residual_fraction,
+          "Define the minimum fraction of the constant surface tension reference value "
+          "that can be reached.");
         prm.add_parameter("flow solver type", flow.solver_type, "solver type of the flow problem");
         prm.add_parameter("flow start time",
                           flow.start_time,

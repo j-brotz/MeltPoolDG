@@ -178,10 +178,6 @@ namespace MeltPoolDG
       void
       solve(VectorType &      vel_force_rhs,
             const VectorType &level_set_as_heaviside,
-            const VectorType &curvature,
-            const double &    surface_tension_coefficient,
-            const double &    temperature_dependent_surface_tension_coefficient,
-            const double &    surface_tension_reference_temperature,
             const double &    density_gas,
             const double &    density_liquid,
             const double &    dt)
@@ -232,23 +228,6 @@ namespace MeltPoolDG
 
         //   ii) ... or evaporative flux
         //@todo
-
-        //   iii)  ... temperature dependent surface tension
-        if (temperature_dependent_surface_tension_coefficient > 0.0)
-          Flow::SurfaceTensionOperation<dim>::compute_temperature_dependent_surface_tension(
-            *scratch_data,
-            vel_force_rhs,
-            level_set_as_heaviside,
-            curvature,
-            heat_operation->get_temperature(),
-            surface_tension_coefficient,
-            temperature_dependent_surface_tension_coefficient,
-            surface_tension_reference_temperature,
-            ls_dof_idx,
-            flow_vel_dof_idx,
-            flow_vel_quad_idx,
-            temp_dof_idx,
-            false /*false means add to force vector*/);
       }
 
       void

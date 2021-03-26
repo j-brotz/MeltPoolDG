@@ -162,7 +162,7 @@ namespace MeltPoolDG::Heat
     {
       AssertThrow(this->d_tau > 0.0, ExcMessage("advection diffusion operator: d_tau must be set"));
 
-      MeltPoolDG::VectorTools::update_ghost_values(temperature);
+      MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
       if (velocity)
         MeltPoolDG::VectorTools::update_ghost_values(*velocity);
       if (level_set_as_heaviside)
@@ -182,7 +182,7 @@ namespace MeltPoolDG::Heat
         dst,
         src,
         true /*zero dst vector*/);
-      MeltPoolDG::VectorTools::zero_out_ghosts(temperature);
+      MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
       if (velocity)
         MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
       if (level_set_as_heaviside)
@@ -449,6 +449,10 @@ namespace MeltPoolDG::Heat
     create_rhs(VectorType &dst, const VectorType &src /*temperature_old*/) const override
     {
       MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
+      if (velocity)
+        MeltPoolDG::VectorTools::update_ghost_values(*velocity);
+      if (level_set_as_heaviside)
+        MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
       scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
         [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
           rhs_cell_loop(matrix_free, dst, src, cell_range);
@@ -464,6 +468,10 @@ namespace MeltPoolDG::Heat
         src,
         false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+      if (velocity)
+        MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      if (level_set_as_heaviside)
+        MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
     }
 
   private:
