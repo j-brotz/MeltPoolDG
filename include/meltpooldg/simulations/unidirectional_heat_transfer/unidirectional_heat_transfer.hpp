@@ -102,9 +102,8 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   class HorizontalLevelSetHeaviside : public Function<dim>
   {
   public:
-    HorizontalLevelSetHeaviside(double eps = 0.01)
+    HorizontalLevelSetHeaviside()
       : Function<dim>(1)
-      , eps(eps)
     {}
 
     double
@@ -115,7 +114,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     }
 
   private:
-    const double eps;
+    const double eps   = 0.01;
     const double level = 0.05;
   };
 
