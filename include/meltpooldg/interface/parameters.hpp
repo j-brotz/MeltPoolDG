@@ -239,6 +239,24 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct MaterialData
+  {
+    struct Liquid
+    {
+      number capacity     = 0.0;
+      number conductivity = 0.0;
+      number density      = 0.0;
+    } liquid;
+
+    struct Gas
+    {
+      number capacity     = 0.0;
+      number conductivity = 0.0;
+      number density      = 0.0;
+    } gas;
+  };
+
+  template <typename number = double>
   struct ParaviewData
   {
     bool        do_output           = false;
@@ -937,6 +955,23 @@ namespace MeltPoolDG
       }
       prm.leave_subsection();
       /*
+       *  material
+       */
+      prm.enter_subsection("material");
+      {
+        prm.add_parameter("material liquid capacity", material.liquid.capacity, "liquid capacity");
+        prm.add_parameter("material liquid conductivity",
+                          material.liquid.conductivity,
+                          "liquid conductivity");
+        prm.add_parameter("material liquid density", material.liquid.density, "liquid density");
+        prm.add_parameter("material gas capacity", material.gas.capacity, "gas capacity");
+        prm.add_parameter("material gas conductivity",
+                          material.gas.conductivity,
+                          "gas conductivity");
+        prm.add_parameter("material gas density", material.gas.density, "gas density");
+      }
+      prm.leave_subsection();
+      /*
        *   paraview
        */
       prm.enter_subsection("paraview");
@@ -1025,6 +1060,7 @@ namespace MeltPoolDG
     MeltPoolData<number>           mp;
     RecoilPressureData<number>     recoil;
     EvaporationData<number>        evapor;
+    MaterialData<number>           material;
     ParaviewData<number>           paraview;
     OutputData<number>             output;
     Flow::AdafloWrapperParameters  adaflo_params;
