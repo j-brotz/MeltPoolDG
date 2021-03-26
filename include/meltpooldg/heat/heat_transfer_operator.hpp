@@ -102,9 +102,9 @@ namespace MeltPoolDG::Heat
     const VectorType * velocity;
 
     // optional level-set heaviside field for two phase flow
-    const unsigned int ls_dof_idx;
-    const VectorType * level_set_as_heaviside;
-
+    const unsigned int          ls_dof_idx;
+    const VectorType *          level_set_as_heaviside;
+    const MaterialData<double> *material_data;
 
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
@@ -117,7 +117,8 @@ namespace MeltPoolDG::Heat
                          const unsigned int                              vel_dof_idx_in = 0,
                          const VectorType *                              velocity_in    = nullptr,
                          const unsigned int                              ls_dof_idx_in  = 0,
-                         const VectorType *level_set_as_heaviside_in                    = nullptr)
+                         const VectorType *          level_set_as_heaviside_in          = nullptr,
+                         const MaterialData<double> *material_data_in                   = nullptr)
       // clang-format off
     : scratch_data           ( scratch_data_in           )
     , data                   ( data_in                   )
@@ -129,8 +130,9 @@ namespace MeltPoolDG::Heat
     , velocity               ( velocity_in               )
     , ls_dof_idx             ( ls_dof_idx_in             )
     , level_set_as_heaviside ( level_set_as_heaviside_in )
+, material_data(material_data_in)
     {
-      AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside) ,
+      AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside && material_data) ,
           ExcMessage("Two-phase flow must come with a velocity! Abort..."));
 
       if (bc)
@@ -480,14 +482,14 @@ namespace MeltPoolDG::Heat
         weight = UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
 
       const auto density      = UtilityFunctions::interpolate(weight,
-                                                         /*other dens*/ data.density / 2,
-                                                         data.density);
+                                                         material_data->gas.density,
+                                                         material_data->liquid.density);
       const auto capacity     = UtilityFunctions::interpolate(weight,
-                                                          /*other cap*/ data.capacity / 2,
-                                                          data.capacity);
+                                                          material_data->gas.capacity,
+                                                          material_data->liquid.capacity);
       const auto conductivity = UtilityFunctions::interpolate(weight,
-                                                              /*other cond*/ data.conductivity / 2,
-                                                              data.conductivity);
+                                                              material_data->gas.conductivity,
+                                                              material_data->liquid.conductivity);
       return std::make_tuple(density, capacity, conductivity);
     }
   };
