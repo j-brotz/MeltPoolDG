@@ -649,12 +649,30 @@ namespace MeltPoolDG
                   return -d;
               }
           }
+        else if constexpr (dim == 1)
+          {
+            /**
+             *        lower left      upper right
+             *    (-)     (0) +--(+)---+ (1)  (-)    --> x
+             */
+            Point<dim> center;
+            for (int d = 0; d < dim; ++d)
+              center[d] = 0.5 * (upper_right_corner[d] + lower_left_corner[d]);
+            if (p[0] <= lower_left_corner[0])
+              return -p.distance(lower_left_corner); /* point is outside of the rectangle */
+            else if (p[0] >= upper_right_corner[0])
+              return -p.distance(upper_right_corner); /* point is outside of the rectangle */
+            else if (p[0] <= center[0])
+              return p.distance(
+                lower_left_corner); /* point is inside the left half of the rectangle */
+            else
+              return p.distance(
+                upper_right_corner); /* point is inside the right half of the rectangle */
+          }
         else
-          AssertThrow(false, ExcMessage("Rectangular manifold: dim must be 2"));
+          AssertThrow(false, ExcMessage("Rectangular manifold: dim must be 1,2 or 3."));
         return 0.0;
       }
-
-
     } // namespace DistanceFunctions
   }   // namespace UtilityFunctions
 } // namespace MeltPoolDG

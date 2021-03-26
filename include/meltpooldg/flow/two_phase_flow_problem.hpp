@@ -21,6 +21,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 // MeltPoolDG
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
+#include <meltpooldg/evaporation/evaporation_operation_marching_cube.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
@@ -80,7 +81,25 @@ namespace MeltPoolDG::Flow
                 evaporation_operation->get_evaporative_mass_flux() =
                   base_in->parameters.evapor.evaporative_mass_flux;
 
-              evaporation_operation->compute_evaporation_velocity();
+              if (base_in->parameters.evapor.formulation_source_term_continuity == "diffuse")
+                evaporation_operation->compute_evaporation_velocity();
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+              else if (base_in->parameters.evapor.formulation_source_term_continuity == "sharp")
+                Evaporation::EvaporationOperationMarchingCube<dim>::compute_evaporation_velocity(
+                  *scratch_data,
+                  evaporation_operation->get_velocity(),
+                  evaporation_operation->get_evaporative_mass_flux(),
+                  level_set_operation.get_level_set_as_heaviside(),
+                  level_set_operation.get_normal_vector(),
+                  base_in->parameters.evapor.density_liquid,
+                  base_in->parameters.evapor.density_gas,
+                  evapor_vel_dof_idx,
+                  ls_hanging_nodes_dof_idx,
+                  ls_quad_idx,
+                  normal_dof_idx);
+#endif
+              else
+                AssertThrow(false, ExcNotImplemented());
             }
 
           level_set_operation.solve(dt, flow_operation->get_velocity());
@@ -132,11 +151,28 @@ namespace MeltPoolDG::Flow
           if (evaporation_operation)
             {
               scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
-              evaporation_operation->compute_mass_balance_source_term(
-                mass_balance_rhs,
-                flow_operation->get_dof_handler_idx_pressure(),
-                flow_operation->get_quad_idx_pressure(),
-                true /* zero out force rhs */);
+
+              if (base_in->parameters.evapor.formulation_source_term_continuity == "diffuse")
+                evaporation_operation->compute_mass_balance_source_term(
+                  mass_balance_rhs,
+                  flow_operation->get_dof_handler_idx_pressure(),
+                  flow_operation->get_quad_idx_pressure(),
+                  true /* zero out force rhs */);
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+              else if (base_in->parameters.evapor.formulation_source_term_continuity == "sharp")
+                Evaporation::EvaporationOperationMarchingCube<dim>::
+                  compute_mass_balance_source_term_sharp(
+                    *scratch_data,
+                    mass_balance_rhs,
+                    evaporation_operation->get_evaporative_mass_flux(),
+                    level_set_operation.get_level_set(),
+                    base_in->parameters.evapor.density_liquid,
+                    base_in->parameters.evapor.density_gas,
+                    ls_hanging_nodes_dof_idx,
+                    flow_operation->get_dof_handler_idx_pressure());
+#endif
+              else
+                AssertThrow(false, ExcNotImplemented());
             }
 
           // ... solve melt pool operation
