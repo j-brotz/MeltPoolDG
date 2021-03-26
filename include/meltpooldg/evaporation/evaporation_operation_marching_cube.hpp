@@ -5,10 +5,11 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-#  include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
+#ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <adaflo/sharp_interface_util.h> //@todo: will be replace by the utility function of deal.II as soon the PR is merged
+#endif
 
 namespace MeltPoolDG::Evaporation
 {
@@ -159,6 +160,16 @@ namespace MeltPoolDG::Evaporation
                                            const unsigned int      evapor_dof_idx,
                                            const unsigned int      pressure_dof_idx)
     {
+      (void)scratch_data;
+      (void)mass_balance_rhs;
+      (void)evaporative_mass_flux;
+      (void)level_set_vector;
+      (void)rho_l;
+      (void)rho_g;
+      (void)evapor_dof_idx;
+      (void)pressure_dof_idx;
+
+#ifdef MELT_POOL_DG_WITH_ADAFLO
       if constexpr (dim > 1) // @todo: otherwise i am getting a compiling error atm
         {
           auto surface_quad =
@@ -277,7 +288,7 @@ namespace MeltPoolDG::Evaporation
         {
           Assert(false, ExcNotImplemented());
         }
+#endif
     }
   };
 } // namespace MeltPoolDG::Evaporation
-#endif
