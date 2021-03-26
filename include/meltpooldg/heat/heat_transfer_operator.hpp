@@ -468,18 +468,24 @@ namespace MeltPoolDG::Heat
     /*
      * @return \c std::tuple with density, capacity and conductivity
      */
-    template <typename vaule_type>
-    std::tuple<vaule_type, vaule_type, vaule_type>
-    get_two_phase_material_parameters(const vaule_type &ls_heaviside_val) const
+    std::tuple<VectorizedArrayType, VectorizedArrayType, VectorizedArrayType>
+    get_two_phase_material_parameters(const VectorizedArrayType &ls_heaviside_val) const
     {
       // todo Input material parameters for two phase
-      const auto density      = UtilityFunctions::interpolate(ls_heaviside_val,
+
+      VectorizedArrayType weight;
+      if (data.variable_properties_over_interface)
+        weight = ls_heaviside_val;
+      else
+        weight = UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
+
+      const auto density      = UtilityFunctions::interpolate(weight,
                                                          /*other dens*/ data.density / 2,
                                                          data.density);
-      const auto capacity     = UtilityFunctions::interpolate(ls_heaviside_val,
+      const auto capacity     = UtilityFunctions::interpolate(weight,
                                                           /*other cap*/ data.capacity / 2,
                                                           data.capacity);
-      const auto conductivity = UtilityFunctions::interpolate(ls_heaviside_val,
+      const auto conductivity = UtilityFunctions::interpolate(weight,
                                                               /*other cond*/ data.conductivity / 2,
                                                               data.conductivity);
       return std::make_tuple(density, capacity, conductivity);

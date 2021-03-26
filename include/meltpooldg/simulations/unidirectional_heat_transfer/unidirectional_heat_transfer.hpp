@@ -102,9 +102,8 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   class HorizontalLevelSetHeaviside : public Function<dim>
   {
   public:
-    HorizontalLevelSetHeaviside(double eps)
+    HorizontalLevelSetHeaviside()
       : Function<dim>(1)
-      , eps(eps)
     {}
 
     double
@@ -115,7 +114,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     }
 
   private:
-    const double eps;
+    const double eps   = 0.01;
     const double level = 0.05;
   };
 
@@ -209,8 +208,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
                                     this->parameters.heat.velocity),
                                   "heat_transfer");
 
-      this->template attach_initial_condition(std::make_shared<HorizontalLevelSetHeaviside<dim>>(
-                                                this->parameters.heat.two_phase_interface_width),
+      this->template attach_initial_condition(std::make_shared<HorizontalLevelSetHeaviside<dim>>(),
                                               "prescribed_level_set");
     }
 

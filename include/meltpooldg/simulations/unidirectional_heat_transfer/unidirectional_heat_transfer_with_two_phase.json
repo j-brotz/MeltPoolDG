@@ -17,7 +17,7 @@
     "heat density": "7850.0",
     "heat velocity": "0.01",
     "heat two phase": "true",
-    "heat two phase interface width": "0.0",
+    "heat variable properties over interface": "false",
     "heat start time": "0.0",
     "heat time step size": "0.001",
     "heat end time": "1.0",
