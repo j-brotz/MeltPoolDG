@@ -26,7 +26,15 @@ namespace MeltPoolDG::Evaporation
    *                                             lg
    *  with the domain of interest Ω, the test functions w, the liquid-gaseous
    *  interface Γ_lg, the fluid velocity field u, density of the liquid phase ρl
-   *  and density of the gaseous phase ρg .
+   *  and density of the gaseous phase ρg.
+   *
+   *  The evaporation velocity is then computed as follows
+   *
+   *          /  .
+   *          |  m / ρl    if phi > 0
+   *  u = n   |  .
+   *       Γ  |  m / ρg    else
+   *          \
    */
 
   template <int dim>
@@ -267,14 +275,7 @@ namespace MeltPoolDG::Evaporation
         }
       else
         {
-          (void)scratch_data;
-          (void)mass_balance_rhs;
-          (void)evaporative_mass_flux;
-          (void)level_set_vector;
-          (void)rho_l;
-          (void)rho_g;
-          (void)evapor_dof_idx;
-          (void)pressure_dof_idx;
+          Assert(false, ExcNotImplemented());
         }
     }
   };
