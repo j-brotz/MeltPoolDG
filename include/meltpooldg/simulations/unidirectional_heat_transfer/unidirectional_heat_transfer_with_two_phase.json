@@ -17,13 +17,13 @@
     "heat density": "7850.0",
     "heat velocity": "0.01",
     "heat two phase": "true",
+    "heat two phase interface width": "0.0",
     "heat start time": "0.0",
     "heat time step size": "0.001",
     "heat end time": "1.0",
     "heat max n steps": "100",
     "heat solver rel tolerance rhs": "1e-12",
-    "heat nlsolve residual tolerance": "1e-6",
-    "heat nlsolve max nonlinear iterations": "20"
+    "heat nlsolve residual tolerance": "1e-6"
   },
   "paraview": {
     "paraview do output": "true",

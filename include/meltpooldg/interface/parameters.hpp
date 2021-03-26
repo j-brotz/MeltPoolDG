@@ -150,15 +150,16 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
-    number                      emissivity             = 0.0;
-    number                      convection_coefficient = 0.0;
-    number                      temperature_infinity   = 0.0;
-    bool                        do_matrix_free         = true;
-    number                      density                = 0.0;
-    number                      conductivity           = 0.0;
-    number                      capacity               = 0.0;
-    number                      velocity               = 0.0;
-    bool                        two_phase              = false;
+    number                      emissivity                = 0.0;
+    number                      convection_coefficient    = 0.0;
+    number                      temperature_infinity      = 0.0;
+    bool                        do_matrix_free            = true;
+    number                      density                   = 0.0;
+    number                      conductivity              = 0.0;
+    number                      capacity                  = 0.0;
+    number                      velocity                  = 0.0;
+    bool                        two_phase                 = false;
+    number                      two_phase_interface_width = 0.0;
     TimeSteppingData<number>    time_stepping;
     NonlinearSolverData<number> nlsolve;
     SolverData<number>          solver;
@@ -778,6 +779,9 @@ namespace MeltPoolDG
         prm.add_parameter("heat two phase",
                           heat.two_phase,
                           "Set this parameter for two phase flow.");
+        prm.add_parameter("heat two phase interface width",
+                          heat.two_phase_interface_width,
+                          "Width of two phase interface smear region.");
       }
       prm.leave_subsection();
       /*
