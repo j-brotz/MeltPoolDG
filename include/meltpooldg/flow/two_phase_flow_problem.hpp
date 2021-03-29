@@ -139,10 +139,14 @@ namespace MeltPoolDG::Flow
               level_set_operation.get_level_set_as_heaviside(),
               level_set_operation.get_curvature(),
               heat_operation->get_temperature(),
+              level_set_operation.get_normal_vector(),
               base_in->parameters.flow.surface_tension_coefficient,
               base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
               base_in->parameters.flow.surface_tension_reference_temperature,
+              base_in->parameters.flow.surface_tension_coefficient_residual_fraction,
               ls_dof_idx,
+              curv_dof_idx,
+              normal_dof_idx,
               vel_dof_idx,
               flow_operation->get_quad_idx_velocity(),
               temp_dof_idx,
@@ -183,16 +187,11 @@ namespace MeltPoolDG::Flow
               const double density_liquid =
                 base_in->parameters.flow.density + base_in->parameters.flow.density_difference;
 
-              melt_pool_operation->solve(
-                vel_force_rhs,
-                level_set_operation.get_level_set_as_heaviside(),
-                level_set_operation.get_curvature(),
-                base_in->parameters.flow.surface_tension_coefficient,
-                base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
-                base_in->parameters.flow.surface_tension_reference_temperature,
-                density_gas,
-                density_liquid,
-                dt);
+              melt_pool_operation->solve(vel_force_rhs,
+                                         level_set_operation.get_level_set_as_heaviside(),
+                                         density_gas,
+                                         density_liquid,
+                                         dt);
             }
 
           //  ... and set the resulting forces within the Navier-Stokes solver
