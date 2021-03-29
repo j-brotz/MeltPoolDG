@@ -11,6 +11,8 @@
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/table_handler.h>
 
+#include <filesystem>
+
 using namespace dealii;
 
 // @ todo: !!! clean-up and refactoring !!!
@@ -46,7 +48,19 @@ namespace MeltPoolDG
       , triangulation(triangulation_in)
       , pcout(std::cout, (Utilities::MPI::this_mpi_process(mpi_communicator) == 0))
       , do_simplex(!triangulation.all_reference_cells_are_hyper_cube())
-    {}
+    {
+      // check if the requested paraview directory exists and if not create the directory
+      AssertThrow(!std::filesystem::exists(pv_data.directory) ||
+                    std::filesystem::is_directory(pv_data.directory),
+                  ExcMessage("You are trying to create a folder with the name <" +
+                             std::string(pv_data.directory) +
+                             ">. However, a file with the same name already exists! "
+                             "Possible solutions could be to either rename the output "
+                             "folder or to rename/move the existing file."));
+
+      if (!std::filesystem::exists(pv_data.directory))
+        std::filesystem::create_directory(pv_data.directory);
+    }
 
     /*
      *  This function collects and performs all relevant postprocessing steps.
@@ -82,7 +96,7 @@ namespace MeltPoolDG
       data_out.set_flags(flags);
 
       data_out.build_patches(mapping);
-      data_out.write_vtu_with_pvtu_record(pv_data.directory,
+      data_out.write_vtu_with_pvtu_record(pv_data.directory + "/",
                                           pv_data.filename,
                                           time_step,
                                           mpi_communicator,
