@@ -69,7 +69,7 @@ namespace MeltPoolDG
           velocity_vec_old_old,
           scratch_data.get_cell_diameters(),
           scratch_data.get_constraint(advec_diff_dof_idx),
-          scratch_data.get_pcout(advec_diff_dof_idx),
+          scratch_data.get_pcout(),
           bcs,
           scratch_data.get_matrix_free(),
           adaflo_params,
