@@ -1,0 +1,25 @@
+level_set_1: 33
+level_set_2: 33
+level_set_1 ∪ level_set_2 : 33
+level_set_1 ∩ level_set_2 : 33
+level_set_1 - level_set_2 : 33
+level_set_1: 33
+level_set_2: 33
+level_set_1 ∪ level_set_2 : 33
+level_set_1 ∩ level_set_2 : 33
+level_set_1 - level_set_2 : 33
+level_set_1: 14.0357
+level_set_2: 14.2829
+level_set_1 ∪ level_set_2 : 18.3848
+level_set_1 ∩ level_set_2 : 7.93725
+level_set_1 - level_set_2 : 11.5758
+level_set_1: 29.8664
+level_set_2: 29.7489
+level_set_1 ∪ level_set_2 : 27.4044
+level_set_1 ∩ level_set_2 : 32.0312
+level_set_1 - level_set_2 : 30.9031
+level_set_1: 146.164
+level_set_2: 146.642
+level_set_1 ∪ level_set_2 : 155.512
+level_set_1 ∩ level_set_2 : 136.689
+level_set_1 - level_set_2 : 141.789
