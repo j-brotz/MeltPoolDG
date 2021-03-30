@@ -1,4 +1,5 @@
 #pragma once
+#include <deal.II/numerics/vector_tools.h>
 
 namespace dealii
 {
@@ -210,5 +211,42 @@ namespace MeltPoolDG
       return vec;
     }
 
+    template <int dim, typename VectorType>
+    double
+    compute_stable_l2_norm(const VectorType &        solution,
+                           const Triangulation<dim> &triangulation,
+                           const Mapping<dim> &      mapping,
+                           const DoFHandler<dim> &   dof_handler,
+                           const Quadrature<dim> &   quadrature)
+    {
+      Vector<float> difference_per_cell(triangulation.n_active_cells());
+
+      dealii::VectorTools::integrate_difference(mapping,
+                                                dof_handler,
+                                                solution,
+                                                Functions::ZeroFunction<dim>(
+                                                  internal::n_components(dof_handler)),
+                                                difference_per_cell,
+                                                quadrature,
+                                                dealii::VectorTools::L2_norm);
+
+      return dealii::VectorTools::compute_global_error(triangulation,
+                                                       difference_per_cell,
+                                                       dealii::VectorTools::L2_norm);
+    }
+
+    template <int dim, typename VectorType>
+    double
+    compute_stable_l2_norm(const VectorType &      solution,
+                           const ScratchData<dim> &scratch_data,
+                           const unsigned int      dof_idx,
+                           const unsigned int      quad_idx)
+    {
+      return compute_stable_l2_norm<dim, VectorType>(solution,
+                                                     scratch_data.get_triangulation(dof_idx),
+                                                     scratch_data.get_mapping(),
+                                                     scratch_data.get_dof_handler(dof_idx),
+                                                     scratch_data.get_quadrature(quad_idx));
+    }
   } // namespace VectorTools
 } // namespace MeltPoolDG
