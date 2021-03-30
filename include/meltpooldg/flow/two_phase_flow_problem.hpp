@@ -347,15 +347,18 @@ namespace MeltPoolDG::Flow
       // @todo: fill level set
       if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
         {
-          heat_operation =
-            std::make_shared<Heat::HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
-                                                               *scratch_data,
-                                                               base_in->parameters.heat,
-                                                               temp_dof_idx,
-                                                               temp_dof_idx,
-                                                               temp_quad_idx,
-                                                               vel_dof_idx,
-                                                               &flow_operation->get_velocity());
+          heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
+            base_in->get_bc("heat_transfer"),
+            *scratch_data,
+            base_in->parameters.heat,
+            temp_dof_idx,
+            temp_dof_idx,
+            temp_quad_idx,
+            vel_dof_idx,
+            &flow_operation->get_velocity(),
+            ls_dof_idx,
+            &level_set_operation.get_level_set_as_heaviside(),
+            &base_in->parameters.material);
 
           /*
            *    compute initial conditions of the temperature field

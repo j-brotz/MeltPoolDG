@@ -15,6 +15,7 @@
 #include <meltpooldg/simulations/stefans_problem/stefans_problem.hpp>
 #include <meltpooldg/simulations/stefans_problem/stefans_problem_with_flow.hpp>
 #include <meltpooldg/simulations/thermo_capillary_droplet/thermo_capillary_droplet.hpp>
+#include <meltpooldg/simulations/thermo_capillary_two_droplets/thermo_capillary_two_droplets.hpp>
 #include <meltpooldg/simulations/unidirectional_heat_transfer/unidirectional_heat_transfer.hpp>
 #include <meltpooldg/simulations/vortex_bubble/vortex_bubble.hpp>
 
@@ -75,6 +76,10 @@ namespace MeltPoolDG
             parameter_file, mpi_communicator);
         else if (simulation_name == "thermo_capillary_droplet")
           return std::make_shared<ThermoCapillaryDroplet::SimulationThermoCapillaryDroplet<dim>>(
+            parameter_file, mpi_communicator);
+        else if (simulation_name == "thermo_capillary_two_droplets")
+          return std::make_shared<
+            ThermoCapillaryTwoDroplets::SimulationThermoCapillaryTwoDroplets<dim>>(
             parameter_file, mpi_communicator);
         /* add your simulation here*/
         else
