@@ -56,7 +56,7 @@ namespace MeltPoolDG
                              std::string(pv_data.directory) +
                              ">. However, a file with the same name already exists! "
                              "Possible solutions could be to either rename the output "
-                             "folder or to rename/move the existing file."));
+                             "folder in the parameter file or to rename/move the existing file."));
 
       if (!std::filesystem::exists(pv_data.directory))
         std::filesystem::create_directory(pv_data.directory);
