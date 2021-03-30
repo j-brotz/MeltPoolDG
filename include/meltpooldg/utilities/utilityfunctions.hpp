@@ -5,14 +5,26 @@
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/fe/fe_dgq.h>
+#include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_tools.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
+
+#include <deal.II/matrix_free/matrix_free.h>
+
+#include <meltpooldg/utilities/fe_integrator.hpp>
 
 namespace MeltPoolDG
 {
   using namespace dealii;
   using VectorType = LinearAlgebra::distributed::Vector<double>;
+
+  enum BooleanType
+  {
+    Union,
+    Intersection,
+    Subtraction
+  };
 
   namespace TypeDefs
   {
@@ -213,6 +225,68 @@ namespace MeltPoolDG
                                                                   VectorizedArray<double>(limit),
                                                                   1.0,
                                                                   0.0);
+    }
+
+    /**
+     * For two indicator vectors, representing e.g. implicit geometries, this function computes a
+     * boolean operation and returns the resulting vector. The user has to take care on distributing
+     * relevant constraints afterwards.
+     */
+    template <typename VectorType>
+    VectorType
+    merge_two_indicator_fields(const VectorType &indicator_1,
+                               const VectorType &indicator_2,
+                               BooleanType       type                     = BooleanType::Union,
+                               const double      indicator_value_interior = 1.0,
+                               const double      indicator_value_exterior = -1.0)
+    {
+      AssertThrow(indicator_1.size() == indicator_2.size(),
+                  ExcMessage("The two level set vectors to be merged must be of equal length."));
+
+      AssertThrow(indicator_value_interior != indicator_value_exterior,
+                  ExcMessage("The indicator value in the interior of the implicit geometry must be "
+                             "different than the one in the exterior. Make sure that the function "
+                             "arguments indicator_value_interior and indicator_value_exterior are "
+                             "set correctly."));
+
+      AssertThrow(indicator_1.linfty_norm() ==
+                    std::max(indicator_value_exterior, indicator_value_interior),
+                  ExcMessage(
+                    "The maximum indicator value does not correspond to the given bounds "
+                    "of indicator_value_interior and indicator_value_exterior. Make sure that "
+                    "the indicator_value_interior and indicator_value_exterior comply with the "
+                    "indicator field."));
+
+      VectorType merge_indicator(indicator_1);
+
+      bool is_interior_larger_than_exterior = indicator_value_interior > indicator_value_exterior;
+
+      for (const auto &i : indicator_1.locally_owned_elements())
+        switch (type)
+          {
+            case BooleanType::Union:
+              merge_indicator[i] = (is_interior_larger_than_exterior) ?
+                                     std::max(indicator_1[i], indicator_2[i]) :
+                                     std::min(indicator_1[i], indicator_2[i]);
+              break;
+            case BooleanType::Intersection:
+              merge_indicator[i] = (is_interior_larger_than_exterior) ?
+                                     std::min(indicator_1[i], indicator_2[i]) :
+                                     std::max(indicator_1[i], indicator_2[i]);
+              break;
+            case BooleanType::Subtraction:
+              merge_indicator[i] =
+                (indicator_1[i] == indicator_2[i] && indicator_1[i] == indicator_value_interior) ?
+                  indicator_value_exterior :
+                  indicator_1[i];
+              break;
+            default:
+              AssertThrow(false, ExcNotImplemented());
+          }
+
+      merge_indicator.compress(VectorOperation::insert);
+
+      return merge_indicator;
     }
 
     namespace CharacteristicFunctions
