@@ -186,12 +186,10 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
       this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
 
       this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::shared_ptr<Function<dim>>(
-                                                  new Functions::ZeroFunction<dim>(dim)),
+                                                std::make_shared<InitialValuesTemperature<dim>>(),
                                                 "heat_transfer");
       this->attach_dirichlet_boundary_condition(upper_bc,
-                                                std::shared_ptr<Function<dim>>(
-                                                  new Functions::ZeroFunction<dim>(dim)),
+                                                std::make_shared<InitialValuesTemperature<dim>>(),
                                                 "heat_transfer");
 
       if constexpr (dim == 2)

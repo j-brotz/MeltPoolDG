@@ -5,7 +5,7 @@
     "dimension": "2",
     "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "5",
+    "global refinements": "4",
     "problem name": "two_phase_flow_with_heat_transfer",
     "gravity": "0.0"
   },

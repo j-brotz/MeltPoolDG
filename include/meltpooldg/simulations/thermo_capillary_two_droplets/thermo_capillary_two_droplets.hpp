@@ -51,16 +51,16 @@
  *    Ca = 0.041666
  *
  * droplet:
- *    rho    = 20 kg/m³
- *    mu     = 9.6e-4  N/m²s
- *    lambda = 9.6e-8 W/m/K
- *    cp     = 4e-6 J/kg/K
+ *    rho_i    = 20 kg/m³
+ *    mu_i     = 9.6e-4  N/m²s
+ *    lambda_i = 9.6e-8 W/m/K
+ *    cp_i     = 4e-6 J/kg/K
  *
  * ambient fluid:
- *    rho    = 500 kg/m³
- *    mu     = 0.024 N/m²s
- *    lambda = 2.4e-6 W/m/K
- *    cp     = 1e-4 J/kg/K
+ *    rho_0    = 500 kg/m³
+ *    mu_0     = 0.024 N/m²s
+ *    lambda_0 = 2.4e-6 W/m/K
+ *    cp_0     = 1e-4 J/kg/K
  *
  * surface tension coefficient: 0.025239459 N/m
  * temperature-dependent surface tension coefficient: 0.005047892 N/m/K
@@ -68,9 +68,10 @@
  * T1 = 290 K
  * T2 = 290 + 16 * a * ∇T = 293.333 K
  *
- * reference scales
- *    Ur = 0.043817804
- *    tr = 1
+ * reference velocity
+ *    Ur = simga_T * a * ∇T / mu_0 = 0.043817804 m/s
+ * reference time scale
+ *    tr = a / Ur = 1 s
  */
 
 namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
@@ -214,13 +215,10 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
       this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
 
       this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::make_shared<Functions::ConstantFunction<dim>>(
-                                                  reference_temperautre),
+                                                std::make_shared<InitialValuesTemperature<dim>>(),
                                                 "heat_transfer");
       this->attach_dirichlet_boundary_condition(upper_bc,
-                                                std::make_shared<Functions::ConstantFunction<dim>>(
-                                                  reference_temperautre +
-                                                  z_outer * temperature_gradient),
+                                                std::make_shared<InitialValuesTemperature<dim>>(),
                                                 "heat_transfer");
 
       if constexpr (dim == 2)
