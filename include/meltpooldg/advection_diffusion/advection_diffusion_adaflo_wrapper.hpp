@@ -40,6 +40,7 @@ namespace MeltPoolDG
                                         std::shared_ptr<SimulationBase<dim>> base_in,
                                         std::string operation_name = "advection_diffusion")
         : scratch_data(scratch_data)
+        , pcout(scratch_data.get_pcout(1))
       {
         /**
          * set parameters of adaflo
@@ -69,7 +70,7 @@ namespace MeltPoolDG
           velocity_vec_old_old,
           scratch_data.get_cell_diameters(),
           scratch_data.get_constraint(advec_diff_dof_idx),
-          scratch_data.get_pcout(),
+          pcout,
           bcs,
           scratch_data.get_matrix_free(),
           adaflo_params,
@@ -317,6 +318,7 @@ namespace MeltPoolDG
        *  Diagonal preconditioner @todo
        */
       DiagonalPreconditioner<double> preconditioner;
+      const ConditionalOStream       pcout;
     };
   } // namespace AdvectionDiffusion
 } // namespace MeltPoolDG
