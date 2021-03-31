@@ -130,8 +130,12 @@ namespace MeltPoolDG
         normal_vec_operation->compute_normal(true);
 
         for (unsigned int d = 0; d < dim; ++d)
-          scratch_data.get_pcout() << " |n|_" << d << "=" << std::setw(15) << std::setprecision(10)
-                                   << std::left << get_solution_normal_vector().block(d).l2_norm();
+          scratch_data.get_pcout()
+            << " |n|_" << d << "=" << std::setw(15) << std::setprecision(10) << std::left
+            << VectorTools::compute_L2_norm<dim>(get_solution_normal_vector().block(d),
+                                                 scratch_data,
+                                                 normal_vec_adaflo_params.dof_index_normal,
+                                                 normal_vec_adaflo_params.quad_index);
 
         scratch_data.get_pcout() << std::endl;
       }

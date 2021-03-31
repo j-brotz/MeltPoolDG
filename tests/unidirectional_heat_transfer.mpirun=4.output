@@ -1,5 +1,5 @@
-t= 0.0001    Newton Raphson solver converged: ||solution||=1.87031
-t= 0.0002    Newton Raphson solver converged: ||solution||=1.83297
-t= 0.0003    Newton Raphson solver converged: ||solution||=1.8024
-t= 0.0004    Newton Raphson solver converged: ||solution||=1.77698
-t= 0.0005    Newton Raphson solver converged: ||solution||=1.75575
+t= 0.0001    Newton Raphson solver converged: ||solution||=0.00564198
+t= 0.0002    Newton Raphson solver converged: ||solution||=0.00553556
+t= 0.0003    Newton Raphson solver converged: ||solution||=0.00544694
+t= 0.0004    Newton Raphson solver converged: ||solution||=0.00537273
+t= 0.0005    Newton Raphson solver converged: ||solution||=0.00531056

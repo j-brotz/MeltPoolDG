@@ -129,8 +129,11 @@ namespace MeltPoolDG
 
         const auto &pcout = scratch_data->get_pcout();
         pcout << "\t |ϕ|2 = " << std::setw(15) << std::left << std::setprecision(10)
-              << solution_advected_field.l2_norm() << std::endl;
-
+              << VectorTools::compute_L2_norm<dim>(solution_advected_field,
+                                                   *scratch_data,
+                                                   advec_diff_dof_idx,
+                                                   advec_diff_quad_idx)
+              << std::endl;
         advection_velocity.zero_out_ghosts();
       }
 

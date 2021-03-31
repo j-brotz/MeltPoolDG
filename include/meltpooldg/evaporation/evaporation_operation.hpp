@@ -206,7 +206,11 @@ namespace MeltPoolDG::Evaporation
 
       scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
 
-      scratch_data->get_pcout() << "    | evapor: |u|2 = " << evaporation_velocity.l2_norm()
+      scratch_data->get_pcout() << "    | evapor: |u|2 = "
+                                << VectorTools::compute_L2_norm<dim>(evaporation_velocity,
+                                                                     *scratch_data,
+                                                                     evapor_vel_dof_idx,
+                                                                     ls_quad_idx)
                                 << std::endl;
 
       evaporation_velocity.zero_out_ghosts();

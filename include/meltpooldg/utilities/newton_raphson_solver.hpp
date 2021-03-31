@@ -14,6 +14,7 @@ namespace MeltPoolDG
     const NonlinearSolverData<double> &nlsolve_data;
 
     const unsigned int dof_idx;
+    const unsigned int quad_idx;
     const VectorType & solution_old;
     VectorType &       solution;
 
@@ -34,6 +35,7 @@ namespace MeltPoolDG
     NewtonRaphsonSolver(const ScratchData<dim> &                    scratch_data,
                         const NonlinearSolverData<double> &         nlsolve_data,
                         const unsigned int                          dof_idx,
+                        const unsigned int                          quad_idx,
                         const VectorType &                          solution_old,
                         VectorType &                                solution,
                         const std::function<void(VectorType &rhs)> &create_rhs,
@@ -42,6 +44,7 @@ namespace MeltPoolDG
       : scratch_data(scratch_data)
       , nlsolve_data(nlsolve_data)
       , dof_idx(dof_idx)
+      , quad_idx(quad_idx)
       , solution_old(solution_old)
       , solution(solution)
       , max_number_of_iterations(nlsolve_data.max_nonlinear_iterations +
@@ -75,7 +78,8 @@ namespace MeltPoolDG
           if (is_converged())
             {
               scratch_data.get_pcout()
-                << "Newton Raphson solver converged: ||solution||=" << solution.l2_norm()
+                << "Newton Raphson solver converged: ||solution||="
+                << VectorTools::compute_L2_norm<dim>(solution, scratch_data, dof_idx, quad_idx)
                 << std::endl;
               return;
             }

@@ -125,7 +125,10 @@ namespace MeltPoolDG
         pcout << " \t";
         for (unsigned int d = 0; d < dim; ++d)
           pcout << "|n_" << d << "| = " << std::setprecision(11) << std::setw(15) << std::left
-                << solution_normal_vector.block(d).l2_norm();
+                << VectorTools::compute_L2_norm<dim>(solution_normal_vector.block(d),
+                                                     *scratch_data,
+                                                     normal_dof_idx,
+                                                     normal_quad_idx);
         pcout << std::endl;
       }
 

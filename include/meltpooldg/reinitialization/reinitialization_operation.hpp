@@ -218,7 +218,12 @@ namespace MeltPoolDG
         pcout << "\t |ΔΨ|∞ = " << std::setw(15) << std::left << std::setprecision(10)
               << src.linfty_norm();
         pcout << " |ΔΨ|²/dT = " << std::setw(15) << std::left << std::setprecision(10)
-              << src.l2_norm() / d_tau << "|" << std::endl;
+              << VectorTools::compute_L2_norm<dim>(src,
+                                                   *scratch_data,
+                                                   reinit_dof_idx,
+                                                   reinit_quad_idx) /
+                   d_tau
+              << "|" << std::endl;
       }
 
       const BlockVectorType &
