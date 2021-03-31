@@ -263,7 +263,7 @@ namespace MeltPoolDG::LevelSet
       advected_field.copy_locally_owned_data_from(src);
       advected_field.update_ghost_values();
 
-      scratch_data.get_pcout() << "| GMRES: i=" << std::setw(5) << std::left << iter;
+      scratch_data.get_pcout(1) << "| GMRES: i=" << std::setw(5) << std::left << iter;
       scratch_data.get_pcout() << "\t |ϕ|2 = " << std::setw(15) << std::left
                                << std::setprecision(10) << advected_field.l2_norm() << std::endl;
       advected_field.zero_out_ghosts();
