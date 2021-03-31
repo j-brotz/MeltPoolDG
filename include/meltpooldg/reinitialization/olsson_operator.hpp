@@ -42,9 +42,9 @@ namespace MeltPoolDG
         , eps(constant_epsilon)
         , eps_scale_factor(eps_scale_factor)
         , normal_vec(n_in)
-        , cut_value_norm_normal_vector(
-            std::max(std::pow(GridTools::volume<dim>(scratch_data->get_triangulation(),
-                                                     scratch_data->get_mapping()),
+        , tolerance_normal_vector(
+            std::max(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(),
+                                                     scratch_data.get_mapping()),
                               1. / dim) *
                        1e-3,
                      1e-16))
@@ -106,7 +106,7 @@ namespace MeltPoolDG
               fe_values.get_function_gradients(
                 levelset_old, grad_psi_at_q); // compute gradients of old solution at tau_n
               NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
-                fe_values, this->normal_vec, normal_at_q, cut_value_normal_vector);
+                fe_values, this->normal_vec, normal_at_q, tolerance_normal_vector);
 
               for (const unsigned int q_index : fe_values.quadrature_point_indices())
                 {
@@ -196,7 +196,7 @@ namespace MeltPoolDG
 
                     const auto n_phi =
                       MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
-                                                              cut_value_normal_vector);
+                                                              tolerance_normal_vector);
 
                     levelset.submit_value(phi, q_index);
                     levelset.submit_gradient(this->d_tau * eps_ * scalar_product(grad_phi, n_phi) *
@@ -258,7 +258,7 @@ namespace MeltPoolDG
                     const scalar val = psi.get_value(q_index);
                     const auto   n_phi =
                       MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
-                                                              cut_value_normal_vector);
+                                                              tolerance_normal_vector);
 
                     psi.submit_gradient(this->d_tau * compressive_flux(val) * n_phi -
                                           this->d_tau * eps_ *
@@ -293,7 +293,7 @@ namespace MeltPoolDG
       double                 eps = -1.0;
       double                 eps_scale_factor;
       const BlockVectorType &normal_vec;
-      const double           cut_value_norm_normal_vector;
+      const double           tolerance_normal_vector;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG
