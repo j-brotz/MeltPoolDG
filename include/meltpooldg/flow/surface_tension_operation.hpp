@@ -135,6 +135,12 @@ namespace MeltPoolDG::Flow
       solution_curvature.update_ghost_values();
       temperature.update_ghost_values();
       solution_normal_vector.update_ghost_values();
+      const double cut_value_norm_normal_vector =
+        std::max(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(),
+                                                 scratch_data.get_mapping()),
+                          1. / dim) *
+                   1e-3,
+                 1e-16);
 
       scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
         [&](const auto &matrix_free,
@@ -161,12 +167,6 @@ namespace MeltPoolDG::Flow
           const double &d_alpha0       = temperature_dependent_surface_tension_coefficient;
           const double  alpha_residual = alpha0 * surface_tension_coefficient_residual_fraction;
           const auto    T0 = VectorizedArray<double>(surface_tension_reference_temperature);
-          auto          cut_value_norm_normal_vector =
-            std::max(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(),
-                                                     scratch_data.get_mapping()),
-                              1. / dim) *
-                       1e-3,
-                     1e-16);
 
           for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
             {
