@@ -1,11 +1,11 @@
-    | reini: τ= 4.1735e-06	 |ΔΨ|∞ = 0.643562787     |ΔΨ|²/dT = 5.359829256     |
+    | reini: τ= 4.1735e-06	 |ΔΨ|∞ = 0.6435627869    |ΔΨ|²/dT = 5.359829256     |
     | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.1964001194    |ΔΨ|²/dT = 1.630139286     |
 |k| = 0.016010697     
 current laser position: 0 0
 current laser intensity: 1
 t= 5e-07     	 |ϕ|2 = 0.00014455826  
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.2423702054    |ΔΨ|²/dT = 1.042147032     |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.1295632021    |ΔΨ|²/dT = 0.596590849     |
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.2423702057    |ΔΨ|²/dT = 1.042147032     |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.1295632022    |ΔΨ|²/dT = 0.596590849     |
 |k| = 0.014075666385  
     | two phase flow: total mass = 6.6370760093e-05
 current laser position: 0 0
@@ -14,9 +14,9 @@ current laser intensity: 1
 Time step #1, advancing from t_n-1 = 0 to t = 5e-07 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
 t= 1e-06     	 |ϕ|2 = 0.0001445694424
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.2187709354    |ΔΨ|²/dT = 0.6138882663    |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.0967751971    |ΔΨ|²/dT = 0.3130520636    |
-|k| = 0.014087967895  
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.2187709357    |ΔΨ|²/dT = 0.6138882663    |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.09677519715   |ΔΨ|²/dT = 0.3130520636    |
+|k| = 0.014087967173  
     | two phase flow: total mass = 6.6094642769e-05
 current laser position: 0 0
 current laser intensity: 1
@@ -24,80 +24,80 @@ current laser intensity: 1
 Time step #2, advancing from t_n-1 = 5e-07 to t = 1e-06 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
 t= 1.5e-06   	 |ϕ|2 = 0.0001447825238
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1873701575    |ΔΨ|²/dT = 0.487017799     |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.07813809871   |ΔΨ|²/dT = 0.2184095957    |
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1873701578    |ΔΨ|²/dT = 0.487017799     |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.07813809876   |ΔΨ|²/dT = 0.2184095957    |
 |k| = 0.014093563256  
-    | two phase flow: total mass = 6.5979566014e-05
+    | two phase flow: total mass = 6.5979566015e-05
 current laser position: 0 0
 current laser intensity: 1
 
 Time step #3, advancing from t_n-1 = 1e-06 to t = 1.5e-06 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
 t= 2e-06     	 |ϕ|2 = 0.0001449407003
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1749684676    |ΔΨ|²/dT = 0.4626479732    |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.071722921     |ΔΨ|²/dT = 0.198381595     |
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1749684678    |ΔΨ|²/dT = 0.4626479732    |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.07172292105   |ΔΨ|²/dT = 0.198381595     |
 |k| = 0.014096029769  
-    | two phase flow: total mass = 6.5931370273e-05
+    | two phase flow: total mass = 6.5931370274e-05
 current laser position: 0 0
 current laser intensity: 1
 
 Time step #4, advancing from t_n-1 = 1.5e-06 to t = 2e-06 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
 t= 2.5e-06   	 |ϕ|2 = 0.0001450287578
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1711681118    |ΔΨ|²/dT = 0.4638313493    |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06981052945   |ΔΨ|²/dT = 0.1981312835    |
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1711681108    |ΔΨ|²/dT = 0.4638312724    |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06981052894   |ΔΨ|²/dT = 0.1981312643    |
 |k| = 0.014097090977  
-    | two phase flow: total mass = 6.5911172667e-05
+    | two phase flow: total mass = 6.5911172594e-05
 current laser position: 0 0
 current laser intensity: 1
 
 Time step #5, advancing from t_n-1 = 2e-06 to t = 2.5e-06 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
-t= 3e-06     	 |ϕ|2 = 0.00014507158  
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1701074909    |ΔΨ|²/dT = 0.4676195933    |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06925744987   |ΔΨ|²/dT = 0.2003192214    |
-|k| = 0.014097574895  
-    | two phase flow: total mass = 6.5902548818e-05
+t= 3e-06     	 |ϕ|2 = 0.0001450715789
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1701074642    |ΔΨ|²/dT = 0.4676203213    |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06925743529   |ΔΨ|²/dT = 0.2003195179    |
+|k| = 0.014097574654  
+    | two phase flow: total mass = 6.5902551305e-05
 current laser position: 0 0
 current laser intensity: 1
 
 Time step #6, advancing from t_n-1 = 2.5e-06 to t = 3e-06 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
-t= 3.5e-06   	 |ϕ|2 = 0.0001450908727
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1698480072    |ΔΨ|²/dT = 0.4702998176    |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06910942929   |ΔΨ|²/dT = 0.2019076672    |
-|k| = 0.014097878176  
-    | two phase flow: total mass = 6.5898309688e-05
+t= 3.5e-06   	 |ϕ|2 = 0.0001450908714
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1698476658    |ΔΨ|²/dT = 0.4703381745    |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06910932814   |ΔΨ|²/dT = 0.2019201011    |
+|k| = 0.01409787357   
+    | two phase flow: total mass = 6.5898346261e-05
 current laser position: 0 0
 current laser intensity: 1
 
 Time step #7, advancing from t_n-1 = 3e-06 to t = 3.5e-06 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
-t= 4e-06     	 |ϕ|2 = 0.000145098718 
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1698380869    |ΔΨ|²/dT = 0.4718618164    |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06909316283   |ΔΨ|²/dT = 0.2028233229    |
-|k| = 0.014098176994  
-    | two phase flow: total mass = 6.589539612e-05
+t= 4e-06     	 |ϕ|2 = 0.0001450986096
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1698380053    |ΔΨ|²/dT = 0.4718562774    |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06909314529   |ΔΨ|²/dT = 0.2028182913    |
+|k| = 0.014098173271  
+    | two phase flow: total mass = 6.5895429438e-05
 current laser position: 0 0
 current laser intensity: 1
 
 Time step #8, advancing from t_n-1 = 3.5e-06 to t = 4e-06 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
-t= 4.5e-06   	 |ϕ|2 = 0.0001451013783
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1699141602    |ΔΨ|²/dT = 0.4726474423    |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.0691236459    |ΔΨ|²/dT = 0.2033149401    |
-|k| = 0.014098570423  
-    | two phase flow: total mass = 6.589225587e-05
+t= 4.5e-06   	 |ϕ|2 = 0.0001451014377
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1699135841    |ΔΨ|²/dT = 0.4726702218    |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06912342294   |ΔΨ|²/dT = 0.2033205834    |
+|k| = 0.014098564886  
+    | two phase flow: total mass = 6.5892301813e-05
 current laser position: 0 0
 current laser intensity: 1
 
 Time step #9, advancing from t_n-1 = 4e-06 to t = 4.5e-06 (dt = 5e-07). 
 Warning: nonlinear iteration did not converge!
-t= 5e-06     	 |ϕ|2 = 0.0001451017212
-    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1700213867    |ΔΨ|²/dT = 0.4731435197    |
-    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06917170037   |ΔΨ|²/dT = 0.2036367241    |
-|k| = 0.014099097142  
-    | two phase flow: total mass = 6.588827026e-05
+t= 5e-06     	 |ϕ|2 = 0.0001451016136
+    | reini: τ= 4.173501459e-06	 |ΔΨ|∞ = 0.1700197728    |ΔΨ|²/dT = 0.473215569     |
+    | reini: τ= 8.347002919e-06	 |ΔΨ|∞ = 0.06917082605   |ΔΨ|²/dT = 0.2036608834    |
+|k| = 0.014099071913  
+    | two phase flow: total mass = 6.5888498291e-05
 current laser position: 0 0
 current laser intensity: 1
 
