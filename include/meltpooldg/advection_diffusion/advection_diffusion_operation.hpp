@@ -125,8 +125,9 @@ namespace MeltPoolDG
         solution_advected_field = src;
         solution_advected_field.update_ghost_values();
 
+        scratch_data->get_pcout(1) << "| GMRES: i=" << std::setw(5) << std::left << iter;
+
         const auto &pcout = scratch_data->get_pcout();
-        pcout << "| GMRES: i=" << std::setw(5) << std::left << iter;
         pcout << "\t |ϕ|2 = " << std::setw(15) << std::left << std::setprecision(10)
               << solution_advected_field.l2_norm() << std::endl;
 

@@ -214,7 +214,7 @@ namespace MeltPoolDG
         solution_level_set.update_ghost_values();
 
         const ConditionalOStream &pcout = scratch_data->get_pcout();
-        pcout << "| CG: i=" << std::setw(5) << std::left << iter;
+        scratch_data->get_pcout(1) << "| CG: i=" << std::setw(5) << std::left << iter;
         pcout << "\t |ΔΨ|∞ = " << std::setw(15) << std::left << std::setprecision(10)
               << src.linfty_norm();
         pcout << " |ΔΨ|²/dT = " << std::setw(15) << std::left << std::setprecision(10)

@@ -51,7 +51,7 @@ namespace MeltPoolDG
     {
       this->pcout.clear();
 
-      for (unsigned int i = 0; i <= max_verbosity_level; ++i)
+      for (unsigned int i = 0; i <= 10; ++i)
         this->pcout.push_back(
           ConditionalOStream(std::cout,
                              (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) == 0 &&
