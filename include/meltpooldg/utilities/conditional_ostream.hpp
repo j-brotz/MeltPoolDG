@@ -1,0 +1,33 @@
+/* ---------------------------------------------------------------------
+ *
+ * Author: Peter Münch, TUM, March 2021
+ *
+ * ---------------------------------------------------------------------*/
+
+#pragma once
+
+namespace MeltPoolDG
+{
+  using namespace dealii;
+
+
+  class ConditionalOStream : public dealii::ConditionalOStream
+  {
+  public:
+    ConditionalOStream(std::ostream &stream, const bool active = true)
+      : dealii::ConditionalOStream(stream, active)
+      , output_stream(stream)
+      , f(stream.flags())
+    {}
+
+    ~ConditionalOStream()
+    {
+      output_stream.flags(f);
+    }
+
+  private:
+    std::ostream &          output_stream;
+    std::ios_base::fmtflags f;
+  };
+
+} // namespace MeltPoolDG

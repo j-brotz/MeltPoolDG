@@ -22,6 +22,7 @@
 // DoFTools
 #include <deal.II/dofs/dof_tools.h>
 
+#include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
@@ -416,7 +417,7 @@ namespace MeltPoolDG
       return this->partitioner[dof_idx];
     }
 
-    const ConditionalOStream &
+    const ConditionalOStream
     get_pcout(const unsigned int level = 0) const
     {
       AssertIndexRange(level, pcout.size());
