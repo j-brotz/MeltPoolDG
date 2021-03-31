@@ -1,40 +1,40 @@
 t= 0.01      
 +------------------------------------------------------------+
-iter lin solve ||residual||   ||solution_update||
+ iter lin solve   ||residual||||solution_update||
 +------------------------------------------------------------+
              40    9.66679e+02 ✗     9.14727e-01 ✗ 
              40    1.40588e-04 ✗     1.33032e-07 ✗ 
              43    4.63720e-09 ✓     2.60421e-12 ✓ 
-Newton Raphson solver converged: ||solution||=3.29999e+04
-t= 2.00000e-02
+Newton Raphson solver converged: ||solution||=33000
+t= 0.02      
 +------------------------------------------------------------+
-iter lin solve ||residual||   ||solution_update||
+ iter lin solve   ||residual||||solution_update||
 +------------------------------------------------------------+
              40    9.09806e+02 ✗     8.34002e-01 ✗ 
              40    1.18937e-04 ✗     1.12545e-07 ✗ 
              44    4.85060e-09 ✓     2.70093e-12 ✓ 
-Newton Raphson solver converged: ||solution||=3.29998e+04
-t= 3.00000e-02
+Newton Raphson solver converged: ||solution||=33000
+t= 0.03      
 +------------------------------------------------------------+
-iter lin solve ||residual||   ||solution_update||
+ iter lin solve   ||residual||||solution_update||
 +------------------------------------------------------------+
              41    8.64542e+02 ✗     7.64672e-01 ✗ 
              40    1.01375e-04 ✗     9.59267e-08 ✗ 
              43    4.73835e-09 ✓     2.64908e-12 ✓ 
-Newton Raphson solver converged: ||solution||=3.29996e+04
-t= 4.00000e-02
+Newton Raphson solver converged: ||solution||=33000
+t= 0.04      
 +------------------------------------------------------------+
-iter lin solve ||residual||   ||solution_update||
+ iter lin solve   ||residual||||solution_update||
 +------------------------------------------------------------+
              41    8.28498e+02 ✗     7.05029e-01 ✗ 
              40    8.70475e-05 ✗     8.23695e-08 ✗ 
              44    4.29869e-09 ✓     2.58653e-12 ✓ 
-Newton Raphson solver converged: ||solution||=3.29995e+04
-t= 5.00000e-02
+Newton Raphson solver converged: ||solution||=33000
+t= 0.05      
 +------------------------------------------------------------+
-iter lin solve ||residual||   ||solution_update||
+ iter lin solve   ||residual||||solution_update||
 +------------------------------------------------------------+
              41    7.99693e+02 ✗     6.53617e-01 ✗ 
              40    7.52907e-05 ✗     7.12445e-08 ✗ 
              44    4.76400e-09 ✓     2.87951e-12 ✓ 
-Newton Raphson solver converged: ||solution||=3.29994e+04
+Newton Raphson solver converged: ||solution||=32999
