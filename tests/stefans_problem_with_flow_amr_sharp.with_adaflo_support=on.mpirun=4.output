@@ -25,7 +25,6 @@ t= 0.0005     	|n_0| = 3.5753216273e-08|n_1| = 5.0961123705
     | two phase flow: total mass = 0.50497698404
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005). 
-  Residual/iterations: [0.00871/ILU/16] [8.62e-06/17] [7.05e-10/conv.]
 t= 0.001      	|n_0| = 8.8503948943e-08|n_1| = 5.0154307096   
     | evapor: |u|2 = 3.329156867
 	 |ϕ|2 = 0.9600634429   
@@ -40,7 +39,6 @@ t= 0.001      	|n_0| = 8.8503948943e-08|n_1| = 5.0154307096
     | two phase flow: total mass = 0.50497894222
 
 Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005). 
-  Residual/iterations: [0.0344/ILU/12] [2.46e-06/17] [2.89e-10/conv.]
 t= 0.0015     	|n_0| = 9.3426198013e-08|n_1| = 4.9887165743   
     | evapor: |u|2 = 3.3309222731
 	 |ϕ|2 = 0.9593686017   
@@ -55,7 +53,6 @@ t= 0.0015     	|n_0| = 9.3426198013e-08|n_1| = 4.9887165743
     | two phase flow: total mass = 0.5049808625
 
 Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005). 
-  Residual/iterations: [0.0459/ILU/12] [3.27e-06/17] [3.83e-10/conv.]
 t= 0.002      	|n_0| = 8.2256318883e-08|n_1| = 4.9826034838   
     | evapor: |u|2 = 3.3316993024
 	 |ϕ|2 = 0.959211156    
@@ -70,4 +67,3 @@ t= 0.002      	|n_0| = 8.2256318883e-08|n_1| = 4.9826034838
     | two phase flow: total mass = 0.50498276854
 
 Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005). 
-  Residual/iterations: [0.0115/ILU/12] [7.94e-07/14] [4.13e-10/conv.]

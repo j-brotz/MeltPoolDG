@@ -17,7 +17,7 @@
                 "velocity degree": "2"
             },
             "Output options": {
-                "output verbosity": "1",
+                "output verbosity": "0",
                 "output walltimes": "0"
             },
             "Time stepping": {

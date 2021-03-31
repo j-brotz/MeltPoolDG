@@ -18,7 +18,6 @@ t= 0.0005    	 |ϕ|2 = 0.00546948798
 Newton Raphson solver converged: ||solution||=1.6737188826
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005). 
-  Residual/iterations: [6.8e-05/ILUs/29] [1.66e-07/29] [1.36e-09/7] [4.09e-10/conv.]
 t= 0.001     	 |ϕ|2 = 0.005469848402 
  	|n_0| = 5.3385974251   |n_1| = 5.3385973157   
     | reini: τ= 9e-05     	 |ΔΨ|∞ = 0.0001482538791 |ΔΨ|²/dT = 0.001166135575  |
@@ -31,7 +30,6 @@ t= 0.001     	 |ϕ|2 = 0.005469848402
 Newton Raphson solver converged: ||solution||=1.6737188484
 
 Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005). 
-  Residual/iterations: [5.82e-05/ILUs/29] [3.03e-08/18] [4.9e-10/conv.]
 t= 0.0015    	 |ϕ|2 = 0.005469913711 
  	|n_0| = 5.3390868076   |n_1| = 5.3390865954   
     | reini: τ= 9e-05     	 |ΔΨ|∞ = 0.0001146782032 |ΔΨ|²/dT = 0.00111408284   |
@@ -44,7 +42,6 @@ t= 0.0015    	 |ϕ|2 = 0.005469913711
 Newton Raphson solver converged: ||solution||=1.6737188739
 
 Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005). 
-  Residual/iterations: [2.05e-05/29] [5.67e-09/11] [4.62e-10/conv.]
 t= 0.002     	 |ϕ|2 = 0.005469922908 
  	|n_0| = 5.3391589782   |n_1| = 5.3391588871   
     | reini: τ= 9e-05     	 |ΔΨ|∞ = 0.000129388579  |ΔΨ|²/dT = 0.001435271047  |
@@ -57,4 +54,3 @@ t= 0.002     	 |ϕ|2 = 0.005469922908
 Newton Raphson solver converged: ||solution||=1.6737188696
 
 Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005). 
-  Residual/iterations: [1.22e-05/29] [4.08e-09/10] [4.57e-10/conv.]
