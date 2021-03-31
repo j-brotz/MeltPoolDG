@@ -15,55 +15,75 @@
 /**
  * This example is derived from
  *
- * Meier et al. 2020
- * "A novel smoothed particle hydrodynamics formulation
- * for thermo-capillary phase change problems with focus on metal additive
- * manufacturing melt pool modeling"
- *
- * and
- *
- * C. Ma, D. Bothe 2011, "Direct numerical simulation of thermocapillary flow
- * based on the Volume of Fluid method"
+ * Nas, S., & Tryggvason, G. (2003). Thermocapillary interaction of two bubbles or drops.
+ * International Journal of Multiphase Flow, 29(7), 1117-1135.
+ * https://doi.org/10.1016/S0301-9322(03)0008
  *
  *                 T2 = fixed
  *                  no slip
- *            +-------------------+
- *            |                   |
- *            |                   |
- *            |       -----       |
- *   sym      |      --   --      |   sym
- * T Neumann  |     --     --     |   T Neumann
- *            |      --   --      |
- *            |       -----       |
- *            |                   |
- *            +-------------------+
+ *            +----------------------------------------+                    -
+ *            |                                        |                    |
+ *            |                                        |                    |
+ *            |                                        |                    |
+ *            |                        -----           |                    |
+ *            |                       --   --          |                    |
+ *            |                      --     --         |                    |
+ *            |                       --   --          |                   16a
+ *            |          -----         -----           |                    |
+ *   sym      |         --   --          |-a-|         |  sym               |
+ * T Neumann  |        --     --                       |   T Neumann        |
+ *            |         --   --                        |                    |
+ *            |          -----                         |                    |
+ *            |                                        |                    |
+ *            |                                        |                    |
+ *            +----------------------------------------+                    -
  *                   no slip
  *                  T1 = fixed
  *
+ *            |----------------- 8a --------------------|
+ *
+ * droplet radius: a = 0.043817805 m
+ * droplet positions: (2.9a, 4a), (5.1a, 5.8a)
+ *
+ * characteristics:
+ *    Re = 40
+ *    Ma = 40
+ *    Ca = 0.041666
+ *
  * droplet:
- *    rho    = 250 kg/m³
- *    mu     = 0.012 N/m²s
- *    lambda = 1.2e-6 W/m/K
- *    cp     = 5e-5 J/kg/K
+ *    rho_i    = 20 kg/m³
+ *    mu_i     = 9.6e-4  N/m²s
+ *    lambda_i = 9.6e-8 W/m/K
+ *    cp_i     = 4e-6 J/kg/K
  *
  * ambient fluid:
- *    rho    = 500 kg/m³
- *    mu     = 0.024 N/m²s
- *    lambda = 2.4e-6 W/m/K
- *    cp     = 1e-4 J/kg/K
+ *    rho_0    = 500 kg/m³
+ *    mu_0     = 0.024 N/m²s
+ *    lambda_0 = 2.4e-6 W/m/K
+ *    cp_0     = 1e-4 J/kg/K
  *
- * droplet radius: a=1.44e-3 m
- * surface tension coefficient: 0.01 N/m
- * temperature-dependent surface tension coefficient: 0.002 N/m/K
+ * surface tension coefficient: 0.025239459 N/m
+ * temperature-dependent surface tension coefficient: 0.005047892 N/m/K
+ * ∇T = 4.754459964 K/m
  * T1 = 290 K
- * T2 = 290 + 4 * a * 200 K/m = 291.152 K
+ * T2 = 290 + 16 * a * ∇T = 293.333 K
+ *
+ * reference velocity
+ *    Ur = simga_T * a * ∇T / mu_0 = 0.043817804 m/s
+ * reference time scale
+ *    tr = a / Ur = 1 s
  */
 
-namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
+namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
 {
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
+  static constexpr double radius                = 0.043817805;
+  static constexpr double x_outer               = 8. * radius;
+  static constexpr double z_outer               = 16. * radius;
+  static constexpr double reference_temperautre = 290.;
+  static constexpr double temperature_gradient  = 4.754459964;
 
   template <int dim>
   class InitialValuesLS : public Function<dim>
@@ -77,12 +97,19 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      Point<dim> center = dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0);
+      Point<dim> center1 = dim == 2 ? Point<dim>(2.9 * radius, 4.0 * radius) :
+                                      Point<dim>(2.9 * radius, 0, 4.0 * radius);
 
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, a), eps);
+      Point<dim> center2 = dim == 2 ? Point<dim>(5.1 * radius, 5.8 * radius) :
+                                      Point<dim>(5.1 * radius, 0, 5.8 * radius);
+
+      if ((p - center1).norm() < (p - center2).norm()) // closer to first droplet center
+        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+          UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center1, radius), eps);
+      else // closer to second droplet center
+        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+          UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center2, radius), eps);
     }
-    const double a = 1.44e-3;
 
     double eps;
   };
@@ -99,19 +126,19 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      return 290 + 200 * (p[dim - 1] + 2 * a);
+      return reference_temperautre + p[dim - 1] * temperature_gradient;
     }
-    const double a = 1.44e-3;
   };
   /*
    *      This class collects all relevant input data for the level set simulation
    */
 
   template <int dim>
-  class SimulationThermoCapillaryDroplet : public SimulationBase<dim>
+  class SimulationThermoCapillaryTwoDroplets : public SimulationBase<dim>
   {
   public:
-    SimulationThermoCapillaryDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
+    SimulationThermoCapillaryTwoDroplets(std::string    parameter_file,
+                                         const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
     {
       this->set_parameters();
@@ -120,6 +147,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     void
     create_spatial_discretization() override
     {
+#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
       if (this->parameters.base.do_simplex)
         {
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -129,6 +157,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
             parallel::shared::Triangulation<dim>::Settings::partition_metis);
         }
       else
+#endif
         {
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
@@ -137,19 +166,17 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
       if constexpr ((dim == 2) || (dim == 3))
         {
           // create mesh
-          const Point<dim> bottom_left =
-            (dim == 2) ? Point<dim>(x_min, x_min) : Point<dim>(x_min, x_min, x_min);
+          const Point<dim> bottom_left = (dim == 2) ? Point<dim>(0, 0) : Point<dim>(0, 0, 0);
           const Point<dim> top_right =
-            (dim == 2) ? Point<dim>(x_max, x_max) : Point<dim>(x_max, x_max, x_max);
+            (dim == 2) ? Point<dim>(x_outer, z_outer) : Point<dim>(x_outer, 0, z_outer);
 
+          // create mesh
+          std::vector<unsigned int> subdivisions(
+            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+          subdivisions[dim - 1] *= 2;
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (this->parameters.base.do_simplex)
             {
-              // create mesh
-              std::vector<unsigned int> subdivisions(
-                dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
-              subdivisions[dim - 1] *= 2;
-
               GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
                                                                        subdivisions,
                                                                        bottom_left,
@@ -158,8 +185,10 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
           else
 #endif
             {
-              GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
-              this->triangulation->refine_global(this->parameters.base.global_refinements);
+              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        subdivisions,
+                                                        bottom_left,
+                                                        top_right);
             }
         }
       else
@@ -198,13 +227,13 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
             for (const auto &face : cell->face_iterators())
               if ((face->at_boundary()))
                 {
-                  if (face->center()[1] == x_min)
+                  if (face->center()[1] == 0.0)
                     face->set_boundary_id(lower_bc);
-                  else if (face->center()[1] == x_max)
+                  else if (face->center()[1] == z_outer)
                     face->set_boundary_id(upper_bc);
-                  else if (face->center()[0] == x_min)
+                  else if (face->center()[0] == 0.0)
                     face->set_boundary_id(left_bc);
-                  else if (face->center()[0] == x_max)
+                  else if (face->center()[0] == x_outer)
                     face->set_boundary_id(right_bc);
                 }
         }
@@ -233,15 +262,10 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
       AssertThrow(eps > 0, ExcNotImplemented());
 
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
-      this->attach_initial_condition(
-        std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
+      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+                                     "navier_stokes_u");
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(),
                                      "heat_transfer");
     }
-
-  private:
-    const double a     = 1.44e-3;
-    const double x_min = -2 * a;
-    const double x_max = 2 * a;
   };
-} // namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
+} // namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets

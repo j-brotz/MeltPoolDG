@@ -251,12 +251,14 @@ namespace MeltPoolDG::Flow
       scratch_data->attach_dof_handler(dof_handler);
       scratch_data->attach_dof_handler(dof_handler);
       scratch_data->attach_dof_handler(dof_handler_evapor);
+      scratch_data->attach_dof_handler(dof_handler);
 
       ls_hanging_nodes_dof_idx =
         scratch_data->attach_constraint_matrix(ls_hanging_node_constraints);
       ls_dof_idx         = scratch_data->attach_constraint_matrix(ls_constraints_dirichlet);
       reinit_dof_idx     = scratch_data->attach_constraint_matrix(reinit_constraints_dirichlet);
       evapor_vel_dof_idx = scratch_data->attach_constraint_matrix(evapor_hanging_node_constraints);
+      temp_dof_idx       = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
 
       /*
        *  create quadrature rule
@@ -347,15 +349,18 @@ namespace MeltPoolDG::Flow
       // @todo: fill level set
       if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
         {
-          heat_operation =
-            std::make_shared<Heat::HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
-                                                               *scratch_data,
-                                                               base_in->parameters.heat,
-                                                               temp_dof_idx,
-                                                               temp_dof_idx,
-                                                               temp_quad_idx,
-                                                               vel_dof_idx,
-                                                               &flow_operation->get_velocity());
+          heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
+            base_in->get_bc("heat_transfer"),
+            *scratch_data,
+            base_in->parameters.heat,
+            temp_dof_idx,
+            temp_dof_idx,
+            temp_quad_idx,
+            vel_dof_idx,
+            &flow_operation->get_velocity(),
+            ls_dof_idx,
+            &level_set_operation.get_level_set_as_heaviside(),
+            &base_in->parameters.material);
 
           /*
            *    compute initial conditions of the temperature field
@@ -523,6 +528,25 @@ namespace MeltPoolDG::Flow
         }
       ls_constraints_dirichlet.close();
       ls_constraints_dirichlet.merge(
+        ls_hanging_node_constraints,
+        AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+
+      temp_constraints_dirichlet.clear();
+      temp_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
+      if (base_in->get_bc("heat_transfer") && !base_in->get_dirichlet_bc("heat_transfer").empty())
+        {
+          for (const auto &bc : base_in->get_dirichlet_bc(
+                 "heat_transfer")) // @todo: add name of bc at a more central place
+            {
+              dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
+                                                               dof_handler,
+                                                               bc.first,
+                                                               *bc.second,
+                                                               temp_constraints_dirichlet);
+            }
+        }
+      temp_constraints_dirichlet.close();
+      temp_constraints_dirichlet.merge(
         ls_hanging_node_constraints,
         AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
@@ -869,6 +893,7 @@ namespace MeltPoolDG::Flow
     AffineConstraints<double> ls_hanging_node_constraints;
     AffineConstraints<double> reinit_constraints_dirichlet;
     AffineConstraints<double> evapor_hanging_node_constraints;
+    AffineConstraints<double> temp_constraints_dirichlet;
 
     VectorType vel_force_rhs;
     VectorType mass_balance_rhs;
@@ -878,12 +903,13 @@ namespace MeltPoolDG::Flow
     unsigned int ls_quad_idx;
     unsigned int reinit_dof_idx;
     unsigned int evapor_vel_dof_idx;
+    unsigned int temp_dof_idx;
 
     const unsigned int &reinit_hanging_nodes_dof_idx = ls_hanging_nodes_dof_idx;
     const unsigned int &curv_dof_idx                 = ls_hanging_nodes_dof_idx;
     const unsigned int &normal_dof_idx               = ls_hanging_nodes_dof_idx;
-    const unsigned int &temp_dof_idx                 = ls_hanging_nodes_dof_idx;
     const unsigned int &temp_quad_idx                = ls_quad_idx;
+    const unsigned int &temp_hanging_nodes_dof_idx   = ls_hanging_nodes_dof_idx;
 
     unsigned int vel_dof_idx;
     unsigned int pressure_dof_idx;
