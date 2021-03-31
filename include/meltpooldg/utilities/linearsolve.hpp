@@ -33,8 +33,10 @@ namespace MeltPoolDG
           const unsigned int        max_iterations    = 10000,
           const PreconditionerType &preconditioner    = PreconditionIdentity())
     {
-      SolverControl solver_control(max_iterations, rel_tolerance_rhs * rhs.l2_norm());
-      SolverType    solver(solver_control);
+      (void)rel_tolerance_rhs;
+      ReductionControl solver_control(max_iterations, 1e-20, 1e-10);
+      // SolverControl solver_control(max_iterations, rel_tolerance_rhs * rhs.l2_norm());
+      SolverType solver(solver_control);
 
       solver.solve(system_matrix, solution, rhs, preconditioner);
 

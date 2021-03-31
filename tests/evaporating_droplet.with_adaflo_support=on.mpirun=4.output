@@ -1,23 +1,23 @@
-    | reini: τ= 0.0674751 	 |ΔΨ|∞ = 0.00416434149   |ΔΨ|²/dT = 0.02315189466   |
-    | reini: τ= 0.1349501991	 |ΔΨ|∞ = 0.002199502627  |ΔΨ|²/dT = 0.01121872693   |
+    | reini: τ= 0.0674751 	 |ΔΨ|∞ = 0.004164341528  |ΔΨ|²/dT = 0.02315189466   |
+    | reini: τ= 0.1349501991	 |ΔΨ|∞ = 0.002199502645  |ΔΨ|²/dT = 0.01121872693   |
 |k| = 16.058917519    
-t= 0.01      	 |ϕ|2 = 3.912109719    
-    | reini: τ= 0.06747509957	 |ΔΨ|∞ = 0.1085887082    |ΔΨ|²/dT = 0.3850256148    |
-    | reini: τ= 0.1349501991	 |ΔΨ|∞ = 0.03923420736   |ΔΨ|²/dT = 0.2759736714    |
+t= 0.01      	 |ϕ|2 = 3.91210996     
+    | reini: τ= 0.06747509957	 |ΔΨ|∞ = 0.1085887092    |ΔΨ|²/dT = 0.3850255936    |
+    | reini: τ= 0.1349501991	 |ΔΨ|∞ = 0.03923420683   |ΔΨ|²/dT = 0.2759736709    |
 |k| = 15.416432935    
-    | two phase flow: total mass = 0.3918901557
-    | evaporation: jump in the velocity field = -21.555346982
-    | evapor: |m|2 = 0.9293376899
+    | two phase flow: total mass = 0.39189015589
+    | evaporation: jump in the velocity field = -21.555346987
+    | evapor: |m|2 = 0.92933768997
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.01 (dt = 0.01). 
 Warning: nonlinear iteration did not converge!
-t= 0.02      	 |ϕ|2 = 3.925347952    
-    | reini: τ= 0.06747509957	 |ΔΨ|∞ = 0.3041491214    |ΔΨ|²/dT = 0.8347657374    |
-    | reini: τ= 0.1349501991	 |ΔΨ|∞ = 0.1043858444    |ΔΨ|²/dT = 0.5989906928    |
+t= 0.02      	 |ϕ|2 = 3.925348494    
+    | reini: τ= 0.06747509957	 |ΔΨ|∞ = 0.3041492002    |ΔΨ|²/dT = 0.834765738     |
+    | reini: τ= 0.1349501991	 |ΔΨ|∞ = 0.104385828     |ΔΨ|²/dT = 0.5989906927    |
 |k| = 14.212078134    
-    | two phase flow: total mass = 0.20538538366
-    | evaporation: jump in the velocity field = -14.937271599
-    | evapor: |m|2 = 0.71243075382
+    | two phase flow: total mass = 0.20538538394
+    | evaporation: jump in the velocity field = -14.937271601
+    | evapor: |m|2 = 0.71243075394
 
 Time step #2, advancing from t_n-1 = 0.01 to t = 0.02 (dt = 0.01). 
 Warning: nonlinear iteration did not converge!
