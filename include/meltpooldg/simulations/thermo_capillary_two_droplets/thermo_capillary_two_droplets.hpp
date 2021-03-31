@@ -30,8 +30,8 @@
  *            |                      --     --         |                    |
  *            |                       --   --          |                   16a
  *            |          -----         -----           |                    |
- *   sym      |         --   --          |-a-|         |  sym               |
- * T Neumann  |        --     --                       |   T Neumann        |
+ *   periodic |         --   --          |-a-|         |  periodic          |
+ *            |        --     --                       |                    |
  *            |         --   --                        |                    |
  *            |          -----                         |                    |
  *            |                                        |                    |
@@ -69,7 +69,7 @@
  * T2 = 290 + 16 * a * ∇T = 293.333 K
  *
  * reference velocity
- *    Ur = simga_T * a * ∇T / mu_0 = 0.043817804 m/s
+ *    Ur = sigma_T * a * ∇T / mu_0 = 0.043817804 m/s
  * reference time scale
  *    tr = a / Ur = 1 s
  */
@@ -209,18 +209,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
       const types::boundary_id left_bc  = 3;
       const types::boundary_id right_bc = 4;
 
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
-      this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-      this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
-
-      this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
-      this->attach_dirichlet_boundary_condition(upper_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
-
       if constexpr (dim == 2)
         {
           for (const auto &cell : this->triangulation->cell_iterators())
@@ -241,6 +229,17 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
         {
           AssertThrow(false, ExcNotImplemented());
         }
+
+      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
+      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
+      this->attach_periodic_boundary_condition(0, left_bc, right_bc, "navier_stokes_u");
+
+      this->attach_dirichlet_boundary_condition(lower_bc,
+                                                std::make_shared<InitialValuesTemperature<dim>>(),
+                                                "heat_transfer");
+      this->attach_dirichlet_boundary_condition(upper_bc,
+                                                std::make_shared<InitialValuesTemperature<dim>>(),
+                                                "heat_transfer");
     }
 
     void

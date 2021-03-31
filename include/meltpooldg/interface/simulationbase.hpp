@@ -205,6 +205,30 @@ namespace MeltPoolDG
       bc.push_back(id);
     }
 
+    /**
+     * Attach periodic boundary condition.
+     *
+     * \param direction refers to the space direction in which periodicity is enforced. When
+     * matching periodic faces this vector component is ignored.
+     */
+    void
+    attach_periodic_boundary_condition(const unsigned           direction,
+                                       const types::boundary_id id_in,
+                                       const types::boundary_id id_out,
+                                       const std::string        operation_name)
+    {
+      if (!boundary_conditions_map[operation_name])
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+
+      auto &bc = boundary_conditions_map[operation_name]->periodic_bc;
+      bc.push_back(std::make_tuple(direction, id_in, id_out));
+
+      std::vector<GridTools::PeriodicFacePair<typename Triangulation<dim>::cell_iterator>>
+        periodic_faces;
+      GridTools::collect_periodic_faces(*triangulation, id_in, id_out, direction, periodic_faces);
+      triangulation->add_periodicity(periodic_faces);
+    }
+
     void
     attach_radiation_boundary_condition(types::boundary_id id, const std::string operation_name)
     {
@@ -318,6 +342,12 @@ namespace MeltPoolDG
       // if (!boundary_conditions_map[operation_name])
       //AssertThrow(false, ExcMessage("get_symmetry_id: requested boundary condition not found")); // @todo temporarily disabled due to compatibility with level set operation of adaflo
       return boundary_conditions_map[operation_name]->symmetry_bc;
+    }
+
+    const auto &
+    get_periodic_bc(const std::string operation_name)
+    {
+      return boundary_conditions_map[operation_name]->periodic_bc;
     }
 
     const std::vector<types::boundary_id> &

@@ -45,6 +45,11 @@ namespace MeltPoolDG::Flow
         {
           for (const auto &symmetry_id : base_in->get_symmetry_id("navier_stokes_u"))
             navier_stokes.set_symmetry_boundary(symmetry_id);
+          for (const auto &periodic_bc : base_in->get_periodic_bc("navier_stokes_u"))
+            {
+              const auto [direction, id_in, id_out] = periodic_bc;
+              navier_stokes.set_periodic_direction(direction, id_in, id_out);
+            }
           for (const auto &no_slip_id : base_in->get_no_slip_id("navier_stokes_u"))
             navier_stokes.set_no_slip_boundary(no_slip_id);
           for (const auto &dirichlet_bc : base_in->get_dirichlet_bc("navier_stokes_u"))
