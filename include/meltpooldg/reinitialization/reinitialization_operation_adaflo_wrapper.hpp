@@ -12,6 +12,7 @@
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulationbase.hpp>
 #  include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
+#  include <meltpooldg/utilities/conditional_ostream.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>
@@ -42,6 +43,7 @@ namespace MeltPoolDG
                                       const VectorType &        initial_solution_level_set,
                                       const Parameters<double> &parameters)
         : scratch_data(scratch_data)
+        , pcout(scratch_data.get_pcout())
       {
         /**
          * set parameters of adaflo
@@ -87,7 +89,7 @@ namespace MeltPoolDG
           increment,
           level_set,
           rhs,
-          scratch_data.get_pcout(),
+          pcout,
           preconditioner,
           last_concentration_range, // @todo
           reinit_params_adaflo,
@@ -283,6 +285,7 @@ namespace MeltPoolDG
       bool                                   first_reinit_step;
       bool                                   force_compute_normal = true;
       std::function<void(bool)>              compute_normal;
+      const ConditionalOStream               pcout;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG
