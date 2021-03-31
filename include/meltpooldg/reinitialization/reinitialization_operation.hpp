@@ -223,7 +223,7 @@ namespace MeltPoolDG
                                                    reinit_dof_idx,
                                                    reinit_quad_idx) /
                    d_tau
-              << "|" << std::endl;
+              << " |" << std::endl;
       }
 
       const BlockVectorType &

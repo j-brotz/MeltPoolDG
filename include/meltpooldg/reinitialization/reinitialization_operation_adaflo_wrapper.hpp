@@ -149,7 +149,7 @@ namespace MeltPoolDG
                                                reinit_params_adaflo.dof_index_ls,
                                                reinit_params_adaflo.quad_index) /
                dt
-          << "|" << std::endl;
+          << " |" << std::endl;
         force_compute_normal = false;
       }
 
