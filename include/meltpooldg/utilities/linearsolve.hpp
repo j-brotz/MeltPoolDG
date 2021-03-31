@@ -34,7 +34,7 @@ namespace MeltPoolDG
           const PreconditionerType &preconditioner    = PreconditionIdentity())
     {
       (void)rel_tolerance_rhs;
-      ReductionControl solver_control(max_iterations, 1e-20, 1e-10);
+      ReductionControl solver_control(max_iterations, 1e-50, 1e-12);
       // SolverControl solver_control(max_iterations, rel_tolerance_rhs * rhs.l2_norm());
       SolverType solver(solver_control);
 
