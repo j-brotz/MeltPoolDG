@@ -60,12 +60,12 @@ namespace MeltPoolDG
     {
       solution.zero_out_ghosts();
 
-      scratch_data.get_pcout() << std::endl;
-      scratch_data.get_pcout() << "+" << std::string(60, '-') << "+" << std::endl;
-      scratch_data.get_pcout() << std::setw(15) << "iter lin solve" << std::setw(15)
-                               << "||residual||" << std::setw(15) << "||solution_update||"
-                               << std::endl;
-      scratch_data.get_pcout() << "+" << std::string(60, '-') << "+" << std::endl;
+      scratch_data.get_pcout(1) << std::endl;
+      scratch_data.get_pcout(1) << "+" << std::string(60, '-') << "+" << std::endl;
+      scratch_data.get_pcout(1) << std::setw(15) << "iter lin solve" << std::setw(15)
+                                << "||residual||" << std::setw(15) << "||solution_update||"
+                                << std::endl;
+      scratch_data.get_pcout(1) << "+" << std::string(60, '-') << "+" << std::endl;
 
       int i = 0;
       while (i < max_number_of_iterations)
@@ -116,12 +116,12 @@ namespace MeltPoolDG
       bool residual_converged   = res_norm < residual_tolerance;
       bool correction_converged = update_norm < field_correction_tolerance;
 
-      scratch_data.get_pcout() << std::right << std::setw(15) << std::scientific
-                               << std::setprecision(5) << res_norm
-                               << print_checkmark(residual_converged);
-      scratch_data.get_pcout() << std::right << std::setw(15) << std::scientific
-                               << std::setprecision(5) << update_norm
-                               << print_checkmark(correction_converged) << std::endl;
+      scratch_data.get_pcout(1) << std::right << std::setw(15) << std::scientific
+                                << std::setprecision(5) << res_norm
+                                << print_checkmark(residual_converged);
+      scratch_data.get_pcout(1) << std::right << std::setw(15) << std::scientific
+                                << std::setprecision(5) << update_norm
+                                << print_checkmark(correction_converged) << std::endl;
 
       return residual_converged && correction_converged;
     }
@@ -143,7 +143,7 @@ namespace MeltPoolDG
 
       create_rhs(rhs);
       int iter = solve_linear_system(solution_update, rhs);
-      scratch_data.get_pcout() << std::right << std::setw(15) << std::setprecision(0) << iter;
+      scratch_data.get_pcout(1) << std::right << std::setw(15) << std::setprecision(0) << iter;
     }
   };
 
