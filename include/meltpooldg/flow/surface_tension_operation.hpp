@@ -161,6 +161,12 @@ namespace MeltPoolDG::Flow
           const double &d_alpha0       = temperature_dependent_surface_tension_coefficient;
           const double  alpha_residual = alpha0 * surface_tension_coefficient_residual_fraction;
           const auto    T0 = VectorizedArray<double>(surface_tension_reference_temperature);
+          auto          cut_value_norm_normal_vector =
+            std::max(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(),
+                                                     scratch_data.get_mapping()),
+                              1. / dim) *
+                       1e-3,
+                     1e-16);
 
           for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
             {
@@ -186,7 +192,8 @@ namespace MeltPoolDG::Flow
                 {
                   const auto delta = level_set.get_gradient(q_index).norm();
                   const auto n =
-                    MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index), 1e-10);
+                    MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
+                                                            cut_value_norm_normal_vector);
 
                   const auto T      = temperature_val.get_value(q_index);
                   const auto grad_T = temperature_val.get_gradient(q_index);
