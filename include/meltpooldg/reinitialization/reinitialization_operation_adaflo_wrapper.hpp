@@ -87,7 +87,7 @@ namespace MeltPoolDG
           increment,
           level_set,
           rhs,
-          scratch_data.get_pcout(reinit_dof_idx),
+          scratch_data.get_pcout(),
           preconditioner,
           last_concentration_range, // @todo
           reinit_params_adaflo,
@@ -142,9 +142,14 @@ namespace MeltPoolDG
                                               compute_normal);
         scratch_data.get_pcout() << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
                                  << std::setprecision(10) << increment.linfty_norm();
-        scratch_data.get_pcout() << " |ΔΨ|²/dT = " << std::setw(15) << std::left
-                                 << std::setprecision(10) << increment.l2_norm() / dt << "|"
-                                 << std::endl;
+        scratch_data.get_pcout()
+          << " |ΔΨ|²/dT = " << std::setw(15) << std::left << std::setprecision(10)
+          << VectorTools::compute_L2_norm<dim>(increment,
+                                               scratch_data,
+                                               reinit_params_adaflo.dof_index_ls,
+                                               reinit_params_adaflo.quad_index) /
+               dt
+          << "|" << std::endl;
         force_compute_normal = false;
       }
 
