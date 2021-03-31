@@ -38,7 +38,7 @@ namespace MeltPoolDG
     std::vector<types::boundary_id>                                           no_slip_bc;
     std::vector<types::boundary_id>                                           fix_pressure_constant;
     std::vector<types::boundary_id>                                           symmetry_bc;
-    std::vector<std::tuple<unsigned, types::boundary_id, types::boundary_id>> periodic_bc;
+    std::vector<std::tuple<types::boundary_id, types::boundary_id, unsigned>> periodic_bc;
     std::vector<types::boundary_id>                                           open_boundary_bc;
     std::vector<types::boundary_id>                                           radiation_bc;
     std::vector<types::boundary_id>                                           convection_bc;

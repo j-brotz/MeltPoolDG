@@ -212,16 +212,17 @@ namespace MeltPoolDG
      * matching periodic faces this vector component is ignored.
      */
     void
-    attach_periodic_boundary_condition(const unsigned           direction,
-                                       const types::boundary_id id_in,
+    attach_periodic_boundary_condition(const types::boundary_id id_in,
                                        const types::boundary_id id_out,
-                                       const std::string        operation_name)
+                                       const unsigned           direction)
     {
-      if (!boundary_conditions_map[operation_name])
-        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+      AssertThrow(direction < dim,
+                  ExcMessage("Coordinate direction must be between 0 and the dim"));
+      if (!boundary_conditions_map["periodic"])
+        boundary_conditions_map["periodic"] = std::make_shared<BoundaryConditions<dim>>();
 
-      auto &bc = boundary_conditions_map[operation_name]->periodic_bc;
-      bc.push_back(std::make_tuple(direction, id_in, id_out));
+      auto &bc = boundary_conditions_map["periodic"]->periodic_bc;
+      bc.push_back(std::make_tuple(id_in, id_out, direction));
 
       std::vector<GridTools::PeriodicFacePair<typename Triangulation<dim>::cell_iterator>>
         periodic_faces;
@@ -345,9 +346,9 @@ namespace MeltPoolDG
     }
 
     const auto &
-    get_periodic_bc(const std::string operation_name)
+    get_periodic_bc()
     {
-      return boundary_conditions_map[operation_name]->periodic_bc;
+      return boundary_conditions_map["periodic"]->periodic_bc;
     }
 
     const std::vector<types::boundary_id> &

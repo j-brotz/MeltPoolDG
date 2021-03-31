@@ -232,7 +232,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
 
       this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
       this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
-      this->attach_periodic_boundary_condition(0, left_bc, right_bc, "navier_stokes_u");
+      this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
 
       this->attach_dirichlet_boundary_condition(lower_bc,
                                                 std::make_shared<InitialValuesTemperature<dim>>(),

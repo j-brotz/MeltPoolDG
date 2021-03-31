@@ -354,7 +354,7 @@ namespace MeltPoolDG::Flow
             *scratch_data,
             base_in->parameters.heat,
             temp_dof_idx,
-            temp_dof_idx,
+            temp_hanging_nodes_dof_idx,
             temp_quad_idx,
             vel_dof_idx,
             &flow_operation->get_velocity(),
@@ -510,7 +510,6 @@ namespace MeltPoolDG::Flow
       ls_hanging_node_constraints.reinit(
         scratch_data->get_locally_relevant_dofs(ls_hanging_nodes_dof_idx));
       DoFTools::make_hanging_node_constraints(dof_handler, ls_hanging_node_constraints);
-      ls_hanging_node_constraints.close();
 
       ls_constraints_dirichlet.clear();
       ls_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(ls_dof_idx));
@@ -526,10 +525,6 @@ namespace MeltPoolDG::Flow
                                                                ls_constraints_dirichlet);
             }
         }
-      ls_constraints_dirichlet.close();
-      ls_constraints_dirichlet.merge(
-        ls_hanging_node_constraints,
-        AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
       temp_constraints_dirichlet.clear();
       temp_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
@@ -545,10 +540,6 @@ namespace MeltPoolDG::Flow
                                                                temp_constraints_dirichlet);
             }
         }
-      temp_constraints_dirichlet.close();
-      temp_constraints_dirichlet.merge(
-        ls_hanging_node_constraints,
-        AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
       reinit_constraints_dirichlet.clear();
       reinit_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs());
@@ -565,16 +556,50 @@ namespace MeltPoolDG::Flow
                                                                reinit_constraints_dirichlet);
             }
         }
-      reinit_constraints_dirichlet.close();
-      reinit_constraints_dirichlet.merge(
-        ls_hanging_node_constraints,
-        AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
       evapor_hanging_node_constraints.clear();
       evapor_hanging_node_constraints.reinit(
         scratch_data->get_locally_relevant_dofs(evapor_vel_dof_idx));
       DoFTools::make_hanging_node_constraints(dof_handler_evapor, evapor_hanging_node_constraints);
+
+      // periodic constraints
+      if (base_in->get_bc("periodic") && !base_in->get_periodic_bc().empty())
+        {
+          for (const auto &bc : base_in->get_periodic_bc())
+            {
+              const auto [id_in, id_out, direction] = bc;
+              DoFTools::make_periodicity_constraints(
+                dof_handler, id_in, id_out, direction, ls_hanging_node_constraints);
+              DoFTools::make_periodicity_constraints(
+                dof_handler, id_in, id_out, direction, ls_constraints_dirichlet);
+              DoFTools::make_periodicity_constraints(
+                dof_handler, id_in, id_out, direction, reinit_constraints_dirichlet);
+              DoFTools::make_periodicity_constraints(
+                dof_handler_evapor, id_in, id_out, direction, evapor_hanging_node_constraints);
+              DoFTools::make_periodicity_constraints(
+                dof_handler, id_in, id_out, direction, temp_constraints_dirichlet);
+            }
+        }
+
+      // finalize constraints
+      ls_hanging_node_constraints.close();
+
+      ls_constraints_dirichlet.close();
+      ls_constraints_dirichlet.merge(
+        ls_hanging_node_constraints,
+        AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+
+      reinit_constraints_dirichlet.close();
+      reinit_constraints_dirichlet.merge(
+        ls_hanging_node_constraints,
+        AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+
       evapor_hanging_node_constraints.close();
+
+      temp_constraints_dirichlet.close();
+      temp_constraints_dirichlet.merge(
+        ls_hanging_node_constraints,
+        AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
       scratch_data->build();
 
