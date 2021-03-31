@@ -143,7 +143,7 @@ namespace MeltPoolDG
           true); // @todo: adaflo does not use the boolean function argument
 
         scratch_data.get_pcout()
-          << " |k|=" << std::setw(15) << std::setprecision(10) << std::left
+          << " |k| = " << std::setw(15) << std::setprecision(10) << std::left
           << VectorTools::compute_L2_norm<dim>(get_curvature(),
                                                scratch_data,
                                                curv_adaflo_params.dof_index_curvature,

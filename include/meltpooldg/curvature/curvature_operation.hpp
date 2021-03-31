@@ -119,7 +119,8 @@ namespace MeltPoolDG
               << VectorTools::compute_L2_norm<dim>(solution_curvature,
                                                    *scratch_data,
                                                    curv_dof_idx,
-                                                   curv_quad_idx);
+                                                   curv_quad_idx)
+              << " ";
         pcout << std::endl;
       }
 

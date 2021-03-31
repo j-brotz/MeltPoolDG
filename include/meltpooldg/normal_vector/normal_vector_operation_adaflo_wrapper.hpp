@@ -135,7 +135,8 @@ namespace MeltPoolDG
             << VectorTools::compute_L2_norm<dim>(get_solution_normal_vector().block(d),
                                                  scratch_data,
                                                  normal_vec_adaflo_params.dof_index_normal,
-                                                 normal_vec_adaflo_params.quad_index);
+                                                 normal_vec_adaflo_params.quad_index)
+            << " ";
 
         scratch_data.get_pcout() << std::endl;
       }
