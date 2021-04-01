@@ -65,8 +65,8 @@ namespace MeltPoolDG
       , curv_dof_idx( curv_dof_idx_in )
       , curv_quad_idx( curv_quad_idx_in )
       , normal_dof_idx( normal_dof_idx_in )
-      , cut_value_norm_normal_vector(
-          std::max(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(), scratch_data.get_mapping()),1./dim) * 1e-3, 1e-16))
+      , cut_value_norm_normal_vector(1e-2)
+          //std::max(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(), scratch_data.get_mapping()),1./dim) * 1e-3, 1e-16))
       {
         this->reset_indices(curv_dof_idx_in, curv_quad_idx_in);
       }

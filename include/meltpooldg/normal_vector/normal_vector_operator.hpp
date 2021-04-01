@@ -213,7 +213,7 @@ namespace MeltPoolDG
         for (auto &n : unit_normal_at_quadrature)
           {
             const double n_norm = n.norm();
-            if (n_norm >= zero)
+            if (n_norm > zero)
               n /= n_norm; //@todo: add exception if norm is zero
             else
               n = 0.0;

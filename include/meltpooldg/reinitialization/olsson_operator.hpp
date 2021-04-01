@@ -42,12 +42,12 @@ namespace MeltPoolDG
         , eps(constant_epsilon)
         , eps_scale_factor(eps_scale_factor)
         , normal_vec(n_in)
-        , tolerance_normal_vector(
-            std::max(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(),
-                                                     scratch_data.get_mapping()),
-                              1. / dim) *
-                       1e-3,
-                     1e-16))
+        , tolerance_normal_vector(1.e-2)
+      // std::max(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(),
+      // scratch_data.get_mapping()),
+      // 1. / dim) *
+      // 1e-3,
+      // 1e-16))
       {
         this->reset_indices(dof_idx_in, quad_idx_in);
       }
