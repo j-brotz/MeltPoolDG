@@ -363,6 +363,10 @@ namespace MeltPoolDG
                                              {},
                                              locally_relevant_solution,
                                              estimated_error_per_cell);
+          auto vec = Utilities::MPI::gather(MPI_COMM_WORLD, estimated_error_per_cell.l2_norm());
+
+          for (auto &i : vec)
+            scratch_data->get_pcout() << "|kelly| = " << i << std::endl;
 
           parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
             tria,
@@ -390,7 +394,6 @@ namespace MeltPoolDG
                                      base_in->parameters.amr,
                                      dof_handler,
                                      time_iterator.get_current_time_step_number());
-        constraints.distribute(advec_diff_operation->get_advected_field());
       }
 
     private:
