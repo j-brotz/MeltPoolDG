@@ -816,10 +816,10 @@ namespace MeltPoolDG::Flow
                                                   scratch_data->get_quadrature(ls_quad_idx),
                                                   dealii::VectorTools::L2_norm);
 
-        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
           tria,
           estimated_error_per_cell,
-          base_in->parameters.amr.upper_perc_to_refine,
+          base_in->parameters.amr.upper_perc_to_refine * 0.25,
           base_in->parameters.amr.lower_perc_to_coarsen);
 
         return true;

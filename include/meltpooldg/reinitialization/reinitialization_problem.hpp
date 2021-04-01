@@ -267,10 +267,10 @@ namespace MeltPoolDG
                                              locally_relevant_solution,
                                              estimated_error_per_cell);
 
-          parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+          parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
             tria,
             estimated_error_per_cell,
-            base_in->parameters.amr.upper_perc_to_refine,
+            base_in->parameters.amr.upper_perc_to_refine * 0.25,
             base_in->parameters.amr.lower_perc_to_coarsen);
 
           return true;
