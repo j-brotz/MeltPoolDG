@@ -148,6 +148,8 @@ namespace MeltPoolDG
 
         matrix.compress(VectorOperation::add);
         rhs.compress(VectorOperation::add);
+
+        this->normal_vec.zero_out_ghosts();
       }
 
       /*
@@ -170,6 +172,7 @@ namespace MeltPoolDG
 
         AssertThrow(eps_ > 0.0, ExcMessage("reinitialization operator: epsilon must be set"));
 
+        this->normal_vec.update_ghost_values();
 
         scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
           [&](const auto &, auto &dst, const auto &src, auto cell_range) {
@@ -210,6 +213,8 @@ namespace MeltPoolDG
           dst,
           src,
           true);
+
+        this->normal_vec.zero_out_ghosts();
       }
 
       void
@@ -273,6 +278,8 @@ namespace MeltPoolDG
           dst,
           src,
           true);
+
+        this->normal_vec.zero_out_ghosts();
       }
 
       void

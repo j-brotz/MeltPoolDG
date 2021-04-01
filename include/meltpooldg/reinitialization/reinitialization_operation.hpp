@@ -206,8 +206,13 @@ namespace MeltPoolDG
                                                              reinit_data.solver.max_iterations,
                                                              *preconditioner);
               }
+
+            scratch_data->get_pcout()
+              << "| matrix | " << std::setw(15) << std::left << std::setprecision(15)
+              << reinit_operator->system_matrix.frobenius_norm() << std::endl;
           }
         scratch_data->get_constraint(reinit_dof_idx).distribute(src);
+        solution_level_set.zero_out_ghosts();
 
         solution_level_set += src;
 
