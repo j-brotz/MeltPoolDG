@@ -217,8 +217,20 @@ namespace MeltPoolDG
         scratch_data->get_pcout(1) << "| CG: i=" << std::setw(5) << std::left << iter;
         scratch_data->get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
                                    << std::setprecision(10) << src.linfty_norm();
+        pcout << " |Ψ RHS|² = " << std::setw(15) << std::left << std::setprecision(10)
+              << VectorTools::compute_L2_norm<dim>(rhs,
+                                                   *scratch_data,
+                                                   reinit_dof_idx,
+                                                   reinit_quad_idx)
+              << " |" << std::endl;
         pcout << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(10)
               << VectorTools::compute_L2_norm<dim>(src,
+                                                   *scratch_data,
+                                                   reinit_dof_idx,
+                                                   reinit_quad_idx)
+              << " |" << std::endl;
+        pcout << " |phi_update|² = " << std::setw(15) << std::left << std::setprecision(10)
+              << VectorTools::compute_L2_norm<dim>(solution_level_set,
                                                    *scratch_data,
                                                    reinit_dof_idx,
                                                    reinit_quad_idx)
