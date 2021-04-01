@@ -81,7 +81,17 @@ namespace MeltPoolDG
             output_results(time_iterator.get_current_time_step_number());
 
             if (base_in->parameters.amr.do_amr)
-              refine_mesh(base_in);
+              {
+                refine_mesh(base_in);
+                scratch_data->get_pcout()
+                  << "number of dofs: " << dof_handler_velocity.n_dofs() << std::endl;
+                auto vec =
+                  Utilities::MPI::gather(MPI_COMM_WORLD,
+                                         dof_handler_velocity.get_triangulation().n_active_cells());
+
+                for (auto &i : vec)
+                  scratch_data->get_pcout() << "|cells| = " << i << std::endl;
+              }
           }
       }
 
