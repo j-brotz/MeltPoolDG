@@ -78,7 +78,7 @@ namespace MeltPoolDG
           if (is_converged())
             {
               scratch_data.get_pcout()
-                << "Newton Raphson solver converged: ||solution||="
+                << "Newton Raphson solver converged: ||solution|| = "
                 << VectorTools::compute_L2_norm<dim>(solution, scratch_data, dof_idx, quad_idx)
                 << std::endl;
               return;

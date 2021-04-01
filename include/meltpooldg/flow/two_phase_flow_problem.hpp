@@ -203,6 +203,20 @@ namespace MeltPoolDG::Flow
           // solver Navier-Stokes problem
           flow_operation->solve();
 
+          scratch_data->get_pcout()
+            << " |velocity| = " << std::setprecision(15)
+            << VectorTools::compute_L2_norm<dim>(flow_operation->get_velocity(),
+                                                 *scratch_data,
+                                                 flow_operation->get_dof_handler_idx_velocity(),
+                                                 flow_operation->get_quad_idx_velocity())
+            << std::endl;
+          scratch_data->get_pcout()
+            << " |p| = " << std::setprecision(15)
+            << VectorTools::compute_L2_norm<dim>(flow_operation->get_pressure(),
+                                                 *scratch_data,
+                                                 flow_operation->get_dof_handler_idx_pressure(),
+                                                 flow_operation->get_quad_idx_pressure())
+            << std::endl;
           // ... and output the results to vtk files.
           output_results(n);
 

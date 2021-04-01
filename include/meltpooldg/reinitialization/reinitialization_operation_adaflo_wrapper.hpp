@@ -142,15 +142,14 @@ namespace MeltPoolDG
                                               1 /*stab_steps @todo*/,
                                               0 /*diff_steps @todo*/,
                                               compute_normal);
-        scratch_data.get_pcout() << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
-                                 << std::setprecision(10) << increment.linfty_norm();
+        scratch_data.get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
+                                  << std::setprecision(10) << increment.linfty_norm();
         scratch_data.get_pcout()
-          << " |ΔΨ|²/dT = " << std::setw(15) << std::left << std::setprecision(10)
+          << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(10)
           << VectorTools::compute_L2_norm<dim>(increment,
                                                scratch_data,
                                                reinit_params_adaflo.dof_index_ls,
-                                               reinit_params_adaflo.quad_index) /
-               dt
+                                               reinit_params_adaflo.quad_index)
           << " |" << std::endl;
         force_compute_normal = false;
       }

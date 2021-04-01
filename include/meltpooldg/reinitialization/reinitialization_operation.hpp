@@ -215,14 +215,13 @@ namespace MeltPoolDG
 
         const ConditionalOStream &pcout = scratch_data->get_pcout();
         scratch_data->get_pcout(1) << "| CG: i=" << std::setw(5) << std::left << iter;
-        pcout << "\t |ΔΨ|∞ = " << std::setw(15) << std::left << std::setprecision(10)
-              << src.linfty_norm();
-        pcout << " |ΔΨ|²/dT = " << std::setw(15) << std::left << std::setprecision(10)
+        scratch_data->get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
+                                   << std::setprecision(10) << src.linfty_norm();
+        pcout << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(10)
               << VectorTools::compute_L2_norm<dim>(src,
                                                    *scratch_data,
                                                    reinit_dof_idx,
-                                                   reinit_quad_idx) /
-                   d_tau
+                                                   reinit_quad_idx)
               << " |" << std::endl;
       }
 
