@@ -129,11 +129,10 @@ namespace MeltPoolDG
         solution_advected_field.copy_locally_owned_data_from(src);
         solution_advected_field.update_ghost_values();
 
-        scratch_data->get_pcout() << "|matrix|= "
-                                  << advec_diff_operator->system_matrix.frobenius_norm()
-                                  << std::endl;
-        scratch_data->get_pcout() << "|rhs|= " << rhs.l2_norm() << std::endl;
-        scratch_data->get_pcout() << "|src|= " << src.l2_norm() << std::endl;
+        scratch_data->get_pcout(2)
+          << "|matrix|= " << advec_diff_operator->system_matrix.frobenius_norm() << std::endl;
+        scratch_data->get_pcout(2) << "|rhs|= " << rhs.l2_norm() << std::endl;
+        scratch_data->get_pcout(2) << "|src|= " << src.l2_norm() << std::endl;
 
         scratch_data->get_pcout(1) << "| GMRES: i=" << std::setw(5) << std::left << iter;
 

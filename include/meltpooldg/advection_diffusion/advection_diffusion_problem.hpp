@@ -83,14 +83,14 @@ namespace MeltPoolDG
             if (base_in->parameters.amr.do_amr)
               {
                 refine_mesh(base_in);
-                scratch_data->get_pcout()
+                scratch_data->get_pcout(1)
                   << "number of dofs: " << dof_handler_velocity.n_dofs() << std::endl;
                 auto vec =
                   Utilities::MPI::gather(MPI_COMM_WORLD,
                                          dof_handler_velocity.get_triangulation().n_active_cells());
 
                 for (auto &i : vec)
-                  scratch_data->get_pcout() << "|cells| = " << i << std::endl;
+                  scratch_data->get_pcout(1) << "|cells| = " << i << std::endl;
               }
           }
       }
@@ -374,9 +374,6 @@ namespace MeltPoolDG
                                              locally_relevant_solution,
                                              estimated_error_per_cell);
           auto vec = Utilities::MPI::gather(MPI_COMM_WORLD, estimated_error_per_cell.l2_norm());
-
-          for (auto &i : vec)
-            scratch_data->get_pcout() << "|kelly| = " << std::setprecision(15) << i << std::endl;
 
           parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
             tria,
