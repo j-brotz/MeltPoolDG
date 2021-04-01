@@ -80,6 +80,8 @@ namespace MeltPoolDG
       {
         advection_velocity.update_ghost_values();
 
+        scratch_data->get_pcout() << "|vel|= " << advection_velocity.l2_norm() << std::endl;
+
         create_operator(advection_velocity);
 
         VectorType src, rhs;
@@ -90,6 +92,8 @@ namespace MeltPoolDG
         advec_diff_operator->set_time_increment(dt);
 
         int iter = 0;
+
+        solution_advected_field.update_ghost_values();
 
         if (this->advec_diff_data.do_matrix_free)
           {
@@ -122,8 +126,14 @@ namespace MeltPoolDG
 
         scratch_data->get_constraint(advec_diff_dof_idx).distribute(src);
 
-        solution_advected_field = src;
+        solution_advected_field.copy_locally_owned_data_from(src);
         solution_advected_field.update_ghost_values();
+
+        scratch_data->get_pcout() << "|matrix|= "
+                                  << advec_diff_operator->system_matrix.frobenius_norm()
+                                  << std::endl;
+        scratch_data->get_pcout() << "|rhs|= " << rhs.l2_norm() << std::endl;
+        scratch_data->get_pcout() << "|src|= " << src.l2_norm() << std::endl;
 
         scratch_data->get_pcout(1) << "| GMRES: i=" << std::setw(5) << std::left << iter;
 
