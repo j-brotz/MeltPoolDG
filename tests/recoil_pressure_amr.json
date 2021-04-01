@@ -39,7 +39,7 @@
         "upper perc to refine": "     0.3",
         "lower perc to coarsen":     "0.1",
         "max grid refinement level": "8",
-        "n initial refinement cycles": "3"
+        "n initial refinement cycles": "2"
       },
     "curvature": {
         "curv implementation": "adaflo",
