@@ -376,7 +376,7 @@ namespace MeltPoolDG
           auto vec = Utilities::MPI::gather(MPI_COMM_WORLD, estimated_error_per_cell.l2_norm());
 
           for (auto &i : vec)
-            scratch_data->get_pcout() << "|kelly| = " << i << std::endl;
+            scratch_data->get_pcout() << "|kelly| = " << std::setprecision(15) << i << std::endl;
 
           parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
             tria,
