@@ -158,7 +158,7 @@ namespace MeltPoolDG
             src_rhs.copy_locally_owned_data_from(solution_level_set);
             src_rhs.update_ghost_values();
             reinit_operator->create_rhs(rhs, src_rhs);
-            iter = LinearSolve<VectorType, SolverCG<VectorType>, OperatorBase<double>>::solve(
+            iter = LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
               *reinit_operator, src, rhs);
           }
         else
@@ -217,19 +217,19 @@ namespace MeltPoolDG
         scratch_data->get_pcout(1) << "| CG: i=" << std::setw(5) << std::left << iter;
         scratch_data->get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
                                    << std::setprecision(10) << src.linfty_norm();
-        pcout << " |Ψ RHS|² = " << std::setw(15) << std::left << std::setprecision(10)
+        pcout << " |Ψ RHS|² = " << std::setw(15) << std::left << std::setprecision(15)
               << VectorTools::compute_L2_norm<dim>(rhs,
                                                    *scratch_data,
                                                    reinit_dof_idx,
                                                    reinit_quad_idx)
               << " |" << std::endl;
-        pcout << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(10)
+        pcout << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(15)
               << VectorTools::compute_L2_norm<dim>(src,
                                                    *scratch_data,
                                                    reinit_dof_idx,
                                                    reinit_quad_idx)
               << " |" << std::endl;
-        pcout << " |phi_update|² = " << std::setw(15) << std::left << std::setprecision(10)
+        pcout << " |phi_update|² = " << std::setw(15) << std::left << std::setprecision(15)
               << VectorTools::compute_L2_norm<dim>(solution_level_set,
                                                    *scratch_data,
                                                    reinit_dof_idx,

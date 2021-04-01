@@ -144,7 +144,7 @@ namespace MeltPoolDG
                                               compute_normal);
         scratch_data.get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
                                   << std::setprecision(10) << increment.linfty_norm();
-        scratch_data.get_pcout()
+        scratch_data.get_pcout(0)
           << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(10)
           << VectorTools::compute_L2_norm<dim>(increment,
                                                scratch_data,
