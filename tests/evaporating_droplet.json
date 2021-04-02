@@ -29,6 +29,7 @@
     "reinit scale factor epsilon": "1.0"
   },
   "normal vector": { 
+    "normal vec damping scale factor" : "4",
     "normal vec do matrix free": "true"
   },
   "curvature" : {
