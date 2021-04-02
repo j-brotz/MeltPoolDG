@@ -363,10 +363,6 @@ namespace MeltPoolDG::Flow
        */
       if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
         {
-          /**
-           * @todo[PM]: print to level 0 -> needs test output to be updated
-           */
-          scratch_data->get_pcout(1) << "setup heat problem" << std::endl;
           heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
             base_in->get_bc("heat_transfer"),
             *scratch_data,
