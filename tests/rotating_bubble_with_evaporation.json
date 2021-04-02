@@ -34,10 +34,12 @@
     "reinit constant epsilon": "0.01"
   },
   "normal vector": { 
+    "normal vec damping scale factor": "4",
     "normal vec do matrix free": "true",
     "normal vec implementation": "meltpooldg"
   },
-  "curvature":{ 
+  "curvature": { 
+    "curv damping scale factor": "0.5",
     "curv do matrix free": "true",
     "curv implementation": "meltpooldg"
   },
@@ -49,6 +51,6 @@
     "evapor ls value gas": "-1"
   },
   "paraview" : {
-    "paraview do output": "false"
+    "paraview do output": "true"
   }
 }

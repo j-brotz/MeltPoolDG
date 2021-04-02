@@ -136,6 +136,16 @@ namespace MeltPoolDG::Flow
       temperature.update_ghost_values();
       solution_normal_vector.update_ghost_values();
 
+      double tolerance_normal_vector(
+        std::min(1e-2,
+                 std::max(std::pow(10,
+                                   UtilityFunctions::get_exponent_power_ten(std::pow(
+                                     GridTools::volume<dim>(scratch_data.get_triangulation(),
+                                                            scratch_data.get_mapping()),
+                                     1. / dim))) *
+                            1e-3,
+                          1e-12)));
+
       scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
         [&](const auto &matrix_free,
             auto &      force_rhs,
@@ -186,7 +196,8 @@ namespace MeltPoolDG::Flow
                 {
                   const auto delta = level_set.get_gradient(q_index).norm();
                   const auto n =
-                    MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index), 1e-10);
+                    MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
+                                                            tolerance_normal_vector);
 
                   const auto T      = temperature_val.get_value(q_index);
                   const auto grad_T = temperature_val.get_gradient(q_index);

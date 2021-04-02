@@ -22,7 +22,6 @@ namespace MeltPoolDG
     SimulationBase(std::string parameter_file_in, MPI_Comm mpi_communicator_in)
       : parameter_file(parameter_file_in)
       , mpi_communicator(mpi_communicator_in)
-      , pcout(std::cout, Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
     {
       set_parameters();
     }
@@ -376,7 +375,6 @@ namespace MeltPoolDG
   public:
     const std::string                             parameter_file;
     const MPI_Comm                                mpi_communicator;
-    const dealii::ConditionalOStream              pcout;
     Parameters<double>                            parameters;
     std::shared_ptr<Triangulation<dim, spacedim>> triangulation;
 

@@ -37,6 +37,15 @@ namespace MeltPoolDG
                                                   LinearAlgebra::distributed::Vector<number>,
                                                   LinearAlgebra::distributed::BlockVector<number>>
     {
+    private:
+      const ScratchData<dim> &scratch_data;
+
+      double             damping;
+      const unsigned int curv_dof_idx;
+      const unsigned int curv_quad_idx;
+      const unsigned int normal_dof_idx;
+      const double       tolerance_normal_vector;
+
     public:
       using VectorType          = LinearAlgebra::distributed::Vector<number>;
       using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
@@ -56,6 +65,9 @@ namespace MeltPoolDG
       , curv_dof_idx( curv_dof_idx_in )
       , curv_quad_idx( curv_quad_idx_in )
       , normal_dof_idx( normal_dof_idx_in )
+        , tolerance_normal_vector(std::min(1e-2, 
+            std::max(std::pow(10, UtilityFunctions::get_exponent_power_ten(std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(), scratch_data.get_mapping()),1./dim))) * 1e-3, 
+                   1e-12)))
       {
         this->reset_indices(curv_dof_idx_in, curv_quad_idx_in);
       }
@@ -103,7 +115,7 @@ namespace MeltPoolDG
               curvature_cell_rhs    = 0.0;
 
               NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
-                normal_values, solution_normal_vector_in, normal_at_q);
+                normal_values, solution_normal_vector_in, normal_at_q, tolerance_normal_vector);
 
               for (const unsigned int q_index : curv_values.quadrature_point_indices())
                 {
@@ -187,7 +199,8 @@ namespace MeltPoolDG
                 for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
                   {
                     const auto n_phi =
-                      MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index));
+                      MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
+                                                              tolerance_normal_vector);
                     curvature.submit_gradient(n_phi, q_index);
                   }
 
@@ -198,14 +211,6 @@ namespace MeltPoolDG
           src,
           true /*zero out dst*/);
       }
-
-    private:
-      const ScratchData<dim> &scratch_data;
-
-      double             damping;
-      const unsigned int curv_dof_idx;
-      const unsigned int curv_quad_idx;
-      const unsigned int normal_dof_idx;
     };
   } // namespace Curvature
 } // namespace MeltPoolDG

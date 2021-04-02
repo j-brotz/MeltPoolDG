@@ -14,6 +14,7 @@ namespace MeltPoolDG
     const NonlinearSolverData<double> &nlsolve_data;
 
     const unsigned int dof_idx;
+    const unsigned int quad_idx;
     const VectorType & solution_old;
     VectorType &       solution;
 
@@ -34,6 +35,7 @@ namespace MeltPoolDG
     NewtonRaphsonSolver(const ScratchData<dim> &                    scratch_data,
                         const NonlinearSolverData<double> &         nlsolve_data,
                         const unsigned int                          dof_idx,
+                        const unsigned int                          quad_idx,
                         const VectorType &                          solution_old,
                         VectorType &                                solution,
                         const std::function<void(VectorType &rhs)> &create_rhs,
@@ -42,6 +44,7 @@ namespace MeltPoolDG
       : scratch_data(scratch_data)
       , nlsolve_data(nlsolve_data)
       , dof_idx(dof_idx)
+      , quad_idx(quad_idx)
       , solution_old(solution_old)
       , solution(solution)
       , max_number_of_iterations(nlsolve_data.max_nonlinear_iterations +
@@ -60,12 +63,12 @@ namespace MeltPoolDG
     {
       solution.zero_out_ghosts();
 
-      scratch_data.get_pcout() << std::endl;
-      scratch_data.get_pcout() << "+" << std::string(60, '-') << "+" << std::endl;
-      scratch_data.get_pcout() << std::setw(15) << "iter lin solve" << std::setw(15)
-                               << "||residual||" << std::setw(15) << "||solution_update||"
-                               << std::endl;
-      scratch_data.get_pcout() << "+" << std::string(60, '-') << "+" << std::endl;
+      scratch_data.get_pcout(1) << std::endl;
+      scratch_data.get_pcout(1) << "+" << std::string(60, '-') << "+" << std::endl;
+      scratch_data.get_pcout(1) << std::setw(15) << "iter lin solve" << std::setw(15)
+                                << "||residual||" << std::setw(15) << "||solution_update||"
+                                << std::endl;
+      scratch_data.get_pcout(1) << "+" << std::string(60, '-') << "+" << std::endl;
 
       int i = 0;
       while (i < max_number_of_iterations)
@@ -75,7 +78,8 @@ namespace MeltPoolDG
           if (is_converged())
             {
               scratch_data.get_pcout()
-                << "Newton Raphson solver converged: ||solution||=" << solution.l2_norm()
+                << "Newton Raphson solver converged: ||solution|| = "
+                << VectorTools::compute_L2_norm<dim>(solution, scratch_data, dof_idx, quad_idx)
                 << std::endl;
               return;
             }
@@ -116,12 +120,12 @@ namespace MeltPoolDG
       bool residual_converged   = res_norm < residual_tolerance;
       bool correction_converged = update_norm < field_correction_tolerance;
 
-      scratch_data.get_pcout() << std::right << std::setw(15) << std::scientific
-                               << std::setprecision(5) << res_norm
-                               << print_checkmark(residual_converged);
-      scratch_data.get_pcout() << std::right << std::setw(15) << std::scientific
-                               << std::setprecision(5) << update_norm
-                               << print_checkmark(correction_converged) << std::endl;
+      scratch_data.get_pcout(1) << std::right << std::setw(15) << std::scientific
+                                << std::setprecision(5) << res_norm
+                                << print_checkmark(residual_converged);
+      scratch_data.get_pcout(1) << std::right << std::setw(15) << std::scientific
+                                << std::setprecision(5) << update_norm
+                                << print_checkmark(correction_converged) << std::endl;
 
       return residual_converged && correction_converged;
     }
@@ -143,7 +147,7 @@ namespace MeltPoolDG
 
       create_rhs(rhs);
       int iter = solve_linear_system(solution_update, rhs);
-      scratch_data.get_pcout() << std::right << std::setw(15) << std::setprecision(0) << iter;
+      scratch_data.get_pcout(1) << std::right << std::setw(15) << std::setprecision(0) << iter;
     }
   };
 

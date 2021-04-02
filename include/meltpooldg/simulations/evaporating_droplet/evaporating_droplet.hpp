@@ -80,7 +80,6 @@ namespace MeltPoolDG
                 5 * (this->parameters.base.do_simplex ?
                        Utilities::pow(2, this->parameters.base.global_refinements) :
                        1));
-              subdivisions[dim - 1] *= 2;
 
               const Point<dim> bottom_left;
               const Point<dim> top_right = (dim == 2 ? Point<dim>(4, 4) : Point<dim>(4, 4, 4));
