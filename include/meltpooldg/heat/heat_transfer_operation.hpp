@@ -121,7 +121,7 @@ namespace MeltPoolDG::Heat
       const auto solve_linear_system = [&](VectorType &      solution_update,
                                            const VectorType &rhs) -> int {
         return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
-          *heat_operator, solution_update, rhs, heat_data.solver.rel_tolerance_rhs);
+          *heat_operator, solution_update, rhs, heat_data.solver.rel_tolerance);
       };
 
       auto newton = NewtonRaphsonSolver<dim>(scratch_data,

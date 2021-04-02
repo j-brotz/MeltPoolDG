@@ -9,7 +9,7 @@
   },
     "adaptive meshing" : {
     "do amr":                    "true",
-    "upper perc to refine": "     0.3",
+    "upper perc to refine": "     0.1",
     "lower perc to coarsen": "    0.00",
     "max grid refinement level": "8"
   },

@@ -18,7 +18,7 @@
     "heat time step size": "0.01",
     "heat end time": "1.0",
     "heat max n steps": "100",
-    "heat solver rel tolerance rhs": "1e-12",
+    "heat solver rel tolerance": "1e-12",
     "heat nlsolve residual tolerance": "5e-9"
   },
   "paraview": {

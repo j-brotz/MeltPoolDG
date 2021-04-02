@@ -50,8 +50,8 @@
     "adaptive meshing": {
         "do amr": "true",
         "do not modify boundary cells": "false",
-        "upper perc to refine": "     0.4",
-        "lower perc to coarsen": "0.15",
+        "upper perc to refine": "     0.1",
+        "lower perc to coarsen": "0.05",
         "n initial refinement cycles": "5",
         "max grid refinement level": "7",
         "every n step": "1"

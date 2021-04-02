@@ -20,7 +20,7 @@ namespace MeltPoolDG
     std::string  preconditioner_type = "Identity";
     std::string  solver_type         = "GMRES";
     unsigned int max_iterations      = 10000;
-    number       rel_tolerance_rhs   = 1e-12;
+    number       rel_tolerance       = 1e-12;
   };
 
   template <typename number = double>
@@ -626,8 +626,8 @@ namespace MeltPoolDG
           reinit.solver.max_iterations,
           "Set the maximum number of iterations for solving the linear system of equations.");
         prm.add_parameter(
-          "reinit rel tolerance rhs",
-          reinit.solver.rel_tolerance_rhs,
+          "reinit rel tolerance",
+          reinit.solver.rel_tolerance,
           "Set the relative tolerance for a successful solution of the linear system of equations.");
         prm.add_parameter(
           "reinit implementation",
@@ -760,8 +760,8 @@ namespace MeltPoolDG
           heat.solver.max_iterations,
           "Set the maximum number of iterations for solving the linear system of equations.");
         prm.add_parameter(
-          "heat solver rel tolerance rhs",
-          heat.solver.rel_tolerance_rhs,
+          "heat solver rel tolerance",
+          heat.solver.rel_tolerance,
           "Set the relative tolerance for a successful solution of the linear system of equations.");
         prm.add_parameter(
           "heat nlsolve max nonlinear iterations",
