@@ -414,7 +414,7 @@ namespace MeltPoolDG
       return this->partitioner[dof_idx];
     }
 
-    const ConditionalOStream &
+    const ConditionalOStream
     get_pcout(const unsigned int dof_idx = 0) const
     {
       return pout[dof_idx];

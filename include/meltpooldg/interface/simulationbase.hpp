@@ -7,6 +7,7 @@
 #include <meltpooldg/interface/boundaryconditions.hpp>
 #include <meltpooldg/interface/fieldconditions.hpp>
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 // c++
 #include <memory>
 
@@ -214,19 +215,22 @@ namespace MeltPoolDG
     void
     attach_periodic_boundary_condition(const types::boundary_id id_in,
                                        const types::boundary_id id_out,
-                                       const unsigned           direction)
+                                       const int                direction)
     {
-      AssertThrow(direction < dim,
-                  ExcMessage("Coordinate direction must be between 0 and the dim"));
-      if (!boundary_conditions_map["periodic"])
-        boundary_conditions_map["periodic"] = std::make_shared<BoundaryConditions<dim>>();
+      if (!periodic_boundary_conditions)
+        periodic_boundary_conditions = std::make_shared<PeriodicBoundaryConditions<dim>>();
 
-      auto &bc = boundary_conditions_map["periodic"]->periodic_bc;
-      bc.push_back(std::make_tuple(id_in, id_out, direction));
+      periodic_boundary_conditions->attach_boundary_condition(id_in, id_out, direction);
 
+      // distribute periodic bc to the triangulation
       std::vector<GridTools::PeriodicFacePair<typename Triangulation<dim>::cell_iterator>>
         periodic_faces;
-      GridTools::collect_periodic_faces(*triangulation, id_in, id_out, direction, periodic_faces);
+
+      Assert(this->triangulation,
+             ExcMessage("You try to pass periodic faces but the triangulation "
+                        "is still empty."))
+
+        GridTools::collect_periodic_faces(*triangulation, id_in, id_out, direction, periodic_faces);
       triangulation->add_periodicity(periodic_faces);
     }
 
@@ -348,7 +352,7 @@ namespace MeltPoolDG
     const auto &
     get_periodic_bc()
     {
-      return boundary_conditions_map["periodic"]->periodic_bc;
+      return periodic_boundary_conditions->get_periodic_bc();
     }
 
     const std::vector<types::boundary_id> &
@@ -379,5 +383,6 @@ namespace MeltPoolDG
   private:
     std::map<std::string, std::shared_ptr<FieldConditions<dim>>>    field_conditions_map;
     std::map<std::string, std::shared_ptr<BoundaryConditions<dim>>> boundary_conditions_map;
+    std::shared_ptr<PeriodicBoundaryConditions<dim>>                periodic_boundary_conditions;
   };
 } // namespace MeltPoolDG

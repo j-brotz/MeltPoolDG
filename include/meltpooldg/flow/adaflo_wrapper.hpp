@@ -66,13 +66,10 @@ namespace MeltPoolDG::Flow
       /*
        * Periodic boundary conditions
        */
-      if (base_in->get_bc("periodic") && !base_in->get_periodic_bc().empty())
+      for (const auto &periodic_bc : base_in->get_periodic_bc())
         {
-          for (const auto &periodic_bc : base_in->get_periodic_bc())
-            {
-              const auto [id_in, id_out, direction] = periodic_bc;
-              navier_stokes.set_periodic_direction(direction, id_in, id_out);
-            }
+          const auto [id_in, id_out, direction] = periodic_bc;
+          navier_stokes.set_periodic_direction(direction, id_in, id_out);
         }
       /*
        * Initial conditions of the navier stokes problem

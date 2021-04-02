@@ -346,7 +346,7 @@ namespace MeltPoolDG::Flow
       /*
        *    initialize the heat operation class
        */
-      // @todo: fill level set
+      scratch_data->get_pcout() << "setup heat problem" << std::endl;
       if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
         {
           heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
@@ -563,22 +563,19 @@ namespace MeltPoolDG::Flow
       DoFTools::make_hanging_node_constraints(dof_handler_evapor, evapor_hanging_node_constraints);
 
       // periodic constraints
-      if (base_in->get_bc("periodic") && !base_in->get_periodic_bc().empty())
+      for (const auto &bc : base_in->get_periodic_bc())
         {
-          for (const auto &bc : base_in->get_periodic_bc())
-            {
-              const auto [id_in, id_out, direction] = bc;
-              DoFTools::make_periodicity_constraints(
-                dof_handler, id_in, id_out, direction, ls_hanging_node_constraints);
-              DoFTools::make_periodicity_constraints(
-                dof_handler, id_in, id_out, direction, ls_constraints_dirichlet);
-              DoFTools::make_periodicity_constraints(
-                dof_handler, id_in, id_out, direction, reinit_constraints_dirichlet);
-              DoFTools::make_periodicity_constraints(
-                dof_handler_evapor, id_in, id_out, direction, evapor_hanging_node_constraints);
-              DoFTools::make_periodicity_constraints(
-                dof_handler, id_in, id_out, direction, temp_constraints_dirichlet);
-            }
+          const auto [id_in, id_out, direction] = bc;
+          DoFTools::make_periodicity_constraints(
+            dof_handler, id_in, id_out, direction, ls_hanging_node_constraints);
+          DoFTools::make_periodicity_constraints(
+            dof_handler, id_in, id_out, direction, ls_constraints_dirichlet);
+          DoFTools::make_periodicity_constraints(
+            dof_handler, id_in, id_out, direction, reinit_constraints_dirichlet);
+          DoFTools::make_periodicity_constraints(
+            dof_handler_evapor, id_in, id_out, direction, evapor_hanging_node_constraints);
+          DoFTools::make_periodicity_constraints(
+            dof_handler, id_in, id_out, direction, temp_constraints_dirichlet);
         }
 
       // finalize constraints
