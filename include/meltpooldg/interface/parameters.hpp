@@ -20,7 +20,7 @@ namespace MeltPoolDG
     std::string  preconditioner_type = "Identity";
     std::string  solver_type         = "GMRES";
     unsigned int max_iterations      = 10000;
-    number       rel_tolerance_rhs   = 1e-8;
+    number       rel_tolerance_rhs   = 1e-12;
   };
 
   template <typename number = double>
