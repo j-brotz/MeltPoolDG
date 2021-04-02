@@ -14,7 +14,7 @@
     "flow surface tension coefficient": "0.00",
     "flow start time": "0.0",
     "flow end time": "0.02",
-    "flow time step size": "0.005"
+    "flow time step size": "0.001"
   },
   "levelset" : {
     "ls do reinitialization": "true",
