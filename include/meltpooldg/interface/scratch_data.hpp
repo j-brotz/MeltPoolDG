@@ -46,7 +46,9 @@ namespace MeltPoolDG
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
 
   public:
-    ScratchData(const unsigned int max_verbosity_level = 0, const bool do_matrix_free = true)
+    ScratchData(const unsigned int max_verbosity_level = 0,
+                const bool         do_matrix_free      = true,
+                const MPI_Comm     mpi_communicator    = MPI_COMM_WORLD)
       : do_matrix_free(do_matrix_free)
     {
       this->pcout.clear();
@@ -54,7 +56,7 @@ namespace MeltPoolDG
       for (unsigned int i = 0; i <= 10; ++i)
         this->pcout.push_back(
           ConditionalOStream(std::cout,
-                             (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) == 0 &&
+                             (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 &&
                                (i <= max_verbosity_level)));
     }
 

@@ -17,15 +17,6 @@
     "ls do matrix free": "true",
     "ls implementation": "meltpooldg"
   },
-  "adaptive meshing" : {
-    "do amr":                    "false",
-    "do not modify boundary cells": "false",
-    "upper perc to refine": "     0.15",
-    "lower perc to coarsen":     "0.15",
-    "n initial refinement cycles": "5",
-    "max grid refinement level": "8",
-    "every n step": "1"
-  },
   "reinitialization" : {
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",

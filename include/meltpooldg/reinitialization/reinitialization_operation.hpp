@@ -158,7 +158,7 @@ namespace MeltPoolDG
             src_rhs.copy_locally_owned_data_from(solution_level_set);
             src_rhs.update_ghost_values();
             reinit_operator->create_rhs(rhs, src_rhs);
-            iter = LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
+            iter = LinearSolve<VectorType, SolverCG<VectorType>, OperatorBase<double>>::solve(
               *reinit_operator, src, rhs);
           }
         else
@@ -183,7 +183,7 @@ namespace MeltPoolDG
                   TrilinosWrappers::PreconditionBase>::solve(reinit_operator->system_matrix,
                                                              src,
                                                              rhs,
-                                                             reinit_data.solver.rel_tolerance_rhs,
+                                                             reinit_data.solver.rel_tolerance,
                                                              reinit_data.solver.max_iterations,
                                                              *preconditioner);
               }
@@ -202,7 +202,7 @@ namespace MeltPoolDG
                   TrilinosWrappers::PreconditionBase>::solve(reinit_operator->system_matrix,
                                                              src,
                                                              rhs,
-                                                             reinit_data.solver.rel_tolerance_rhs,
+                                                             reinit_data.solver.rel_tolerance,
                                                              reinit_data.solver.max_iterations,
                                                              *preconditioner);
               }
