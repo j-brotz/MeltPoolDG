@@ -130,7 +130,7 @@ namespace MeltPoolDG
         normal_vec_operation->compute_normal(true);
 
         for (unsigned int d = 0; d < dim; ++d)
-          scratch_data.get_pcout(1)
+          scratch_data.get_pcout(0)
             << " |n|_" << d << "=" << std::setw(15) << std::setprecision(10) << std::left
             << VectorTools::compute_L2_norm<dim>(get_solution_normal_vector().block(d),
                                                  scratch_data,

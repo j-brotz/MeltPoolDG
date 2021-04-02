@@ -170,12 +170,9 @@ namespace MeltPoolDG::Evaporation
                 MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
                                                         tolerance_normal_vector);
 
-              evapor_vel[q_index] =
-                n_phi * evap_flux.get_value(q_index) *
-                (ls.get_value(q_index) * std::abs(1. / evaporation_data.density_liquid -
-                                                  1. / evaporation_data.density_gas) +
-                 1. / evaporation_data.density_gas);
-
+              evapor_vel[q_index] = n_phi * evap_flux.get_value(q_index) *
+                                    (ls.get_value(q_index) / evaporation_data.density_liquid +
+                                     (1. - ls.get_value(q_index)) / evaporation_data.density_gas);
 
               // The normal vector field is oriented such that the normal vector points from
               // the negative level set value (= default for representing the gas phase) to the

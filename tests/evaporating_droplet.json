@@ -2,7 +2,7 @@
   "base" : {
     "problem name": "two_phase_flow_with_evaporation",
     "application name": "evaporating_droplet",
-    "global refinements": "4",
+    "global refinements": "3",
     "dimension": "2",
     "degree": "1",
     "gravity": "0.00",
@@ -14,7 +14,7 @@
     "flow surface tension coefficient": "0.00",
     "flow start time": "0.0",
     "flow end time": "0.02",
-    "flow time step size": "0.01"
+    "flow time step size": "0.005"
   },
   "levelset" : {
     "ls do reinitialization": "true",
@@ -26,22 +26,21 @@
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit scale factor epsilon": "1.707"
+    "reinit scale factor epsilon": "1.0"
   },
   "normal vector": { 
-    "normal vec do matrix free": "true",
-    "normal vec implementation": "adaflo" 
+    "normal vec do matrix free": "true"
   },
   "curvature" : {
     "curv do matrix free": "true"
   },
   "paraview" : {
-    "paraview do output": "false"
+    "paraview do output": "true"
   },
   "evaporation" : {
     "evapor evaporative mass flux": "1.0e-3",
     "evapor density liquid": "1",
-    "evapor density gas": "0.0001",
+    "evapor density gas": "0.001",
     "evapor ls value liquid":"1",
     "evapor ls value gas": "-1"
   },
