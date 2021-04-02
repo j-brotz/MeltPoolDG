@@ -238,7 +238,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
                                                 std::make_shared<InitialValuesTemperature<dim>>(),
                                                 "heat_transfer");
 
-      if (this->parameters.base.do_simplex)
+      if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 

@@ -40,7 +40,6 @@ namespace MeltPoolDG
                                         std::shared_ptr<SimulationBase<dim>> base_in,
                                         std::string operation_name = "advection_diffusion")
         : scratch_data(scratch_data)
-        , pcout(scratch_data.get_pcout(0))
         , pcout(scratch_data.get_pcout(1))
       {
         /**

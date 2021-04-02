@@ -43,7 +43,6 @@ namespace MeltPoolDG
                                       const VectorType &        initial_solution_level_set,
                                       const Parameters<double> &parameters)
         : scratch_data(scratch_data)
-        , pcout(scratch_data.get_pcout(0))
         , pcout(scratch_data.get_pcout(1))
       {
         /**
