@@ -171,12 +171,12 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
             (dim == 2) ? Point<dim>(x_outer, z_outer) : Point<dim>(x_outer, 0, z_outer);
 
           // create mesh
-          std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
-          subdivisions[dim - 1] *= 2;
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (this->parameters.base.do_simplex)
             {
+              std::vector<unsigned int> subdivisions(
+                dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+              subdivisions[dim - 1] *= 2;
               GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
                                                                        subdivisions,
                                                                        bottom_left,
@@ -185,10 +185,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
           else
 #endif
             {
-              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                        subdivisions,
-                                                        bottom_left,
-                                                        top_right);
+              GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
             }
         }
       else
@@ -240,6 +237,9 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
       this->attach_dirichlet_boundary_condition(upper_bc,
                                                 std::make_shared<InitialValuesTemperature<dim>>(),
                                                 "heat_transfer");
+
+      if (this->parameters.base.do_simplex)
+        this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
     void
