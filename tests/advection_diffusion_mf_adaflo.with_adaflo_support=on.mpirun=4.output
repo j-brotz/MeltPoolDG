@@ -1,5 +1,5 @@
-t= 0.01        Concentration advance: advect [0/74] |phi|= 33.18588056     |phi_n-1|= 33.28828444     |phi_n-2|= 33.28828444    
-t= 0.02        Concentration advance: advect [0/74] |phi|= 33.09781006     |phi_n-1|= 33.18588056     |phi_n-2|= 33.28828444    
-t= 0.03        Concentration advance: advect [0/88] |phi|= 33.0210963      |phi_n-1|= 33.09781006     |phi_n-2|= 33.18588056    
-t= 0.04        Concentration advance: advect [0/72] |phi|= 32.95339977     |phi_n-1|= 33.0210963      |phi_n-2|= 33.09781006    
-t= 0.05        Concentration advance: advect [0/72] |phi|= 32.89284997     |phi_n-1|= 32.95339977     |phi_n-2|= 33.0210963     
+t= 0.01       |phi|= 1.986614481     |phi_n-1|= 1.99044348      |phi_n-2|= 1.99044348     
+t= 0.02       |phi|= 1.983190683     |phi_n-1|= 1.986614481     |phi_n-2|= 1.99044348     
+t= 0.03       |phi|= 1.98009503      |phi_n-1|= 1.983190683     |phi_n-2|= 1.986614481    
+t= 0.04       |phi|= 1.977264056     |phi_n-1|= 1.98009503      |phi_n-2|= 1.983190683    
+t= 0.05       |phi|= 1.97464426      |phi_n-1|= 1.977264056     |phi_n-2|= 1.98009503     

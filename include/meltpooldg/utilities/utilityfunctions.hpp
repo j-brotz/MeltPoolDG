@@ -748,5 +748,16 @@ namespace MeltPoolDG
         return 0.0;
       }
     } // namespace DistanceFunctions
-  }   // namespace UtilityFunctions
+      // return the exponent to the power of ten of an expression like 5*10^5 --> return 5
+    int
+    get_exponent_power_ten(const double x)
+    {
+      if (x >= 1e-16) // positive number
+        return floor(log10(x));
+      else if (x <= 1e-16) // negative number
+        return floor(log10(abs(x)));
+      else // number close to 0
+        return 0;
+    }
+  } // namespace UtilityFunctions
 } // namespace MeltPoolDG

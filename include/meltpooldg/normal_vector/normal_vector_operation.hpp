@@ -120,11 +120,16 @@ namespace MeltPoolDG
         for (unsigned int d = 0; d < dim; ++d)
           scratch_data->get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
 
-        const ConditionalOStream &pcout = scratch_data->get_pcout();
-        pcout << "| normal vector:         i=" << iter << " \t";
+        scratch_data->get_pcout(1) << "| normal vector:         i=" << iter;
+        const ConditionalOStream &pcout = scratch_data->get_pcout(0);
+        pcout << " \t";
         for (unsigned int d = 0; d < dim; ++d)
-          pcout << "|n_" << d << "| = " << std::setprecision(11) << std::setw(15) << std::left
-                << solution_normal_vector.block(d).l2_norm();
+          pcout << " |n_" << d << "| = " << std::setprecision(11) << std::setw(15) << std::left
+                << VectorTools::compute_L2_norm<dim>(solution_normal_vector.block(d),
+                                                     *scratch_data,
+                                                     normal_dof_idx,
+                                                     normal_quad_idx)
+                << " ";
         pcout << std::endl;
       }
 

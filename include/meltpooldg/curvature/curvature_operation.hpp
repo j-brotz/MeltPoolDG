@@ -114,9 +114,13 @@ namespace MeltPoolDG
         scratch_data->get_constraint(curv_dof_idx).distribute(solution_curvature);
 
         const ConditionalOStream &pcout = scratch_data->get_pcout();
-        pcout << "| curvature:         i=" << iter << " \t";
+        scratch_data->get_pcout(1) << "| curvature:         i=" << iter << " \t";
         pcout << "|k| = " << std::setprecision(11) << std::setw(15) << std::left
-              << solution_curvature.l2_norm();
+              << VectorTools::compute_L2_norm<dim>(solution_curvature,
+                                                   *scratch_data,
+                                                   curv_dof_idx,
+                                                   curv_quad_idx)
+              << " ";
         pcout << std::endl;
       }
 

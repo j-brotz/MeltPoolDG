@@ -12,6 +12,7 @@
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulationbase.hpp>
 #  include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
+#  include <meltpooldg/utilities/conditional_ostream.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>
@@ -43,6 +44,7 @@ namespace MeltPoolDG
                                       const Parameters<double> &parameters)
         : scratch_data(scratch_data)
         , pcout(scratch_data.get_pcout(0))
+        , pcout(scratch_data.get_pcout(1))
       {
         /**
          * set parameters of adaflo
@@ -141,11 +143,15 @@ namespace MeltPoolDG
                                               1 /*stab_steps @todo*/,
                                               0 /*diff_steps @todo*/,
                                               compute_normal);
-        scratch_data.get_pcout() << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
-                                 << std::setprecision(10) << increment.linfty_norm();
-        scratch_data.get_pcout() << " |ΔΨ|²/dT = " << std::setw(15) << std::left
-                                 << std::setprecision(10) << increment.l2_norm() / dt << "|"
-                                 << std::endl;
+        scratch_data.get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
+                                  << std::setprecision(10) << increment.linfty_norm();
+        scratch_data.get_pcout(0)
+          << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(10)
+          << VectorTools::compute_L2_norm<dim>(increment,
+                                               scratch_data,
+                                               reinit_params_adaflo.dof_index_ls,
+                                               reinit_params_adaflo.quad_index)
+          << " |" << std::endl;
         force_compute_normal = false;
       }
 
