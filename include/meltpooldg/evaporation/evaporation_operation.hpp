@@ -49,7 +49,7 @@ namespace MeltPoolDG::Evaporation
     const unsigned int evapor_vel_dof_idx;
     const unsigned int ls_hanging_nodes_dof_idx;
     const unsigned int ls_quad_idx;
-    const double       cut_value_norm_normal_vector;
+    const double       tolerance_normal_vector;
     /**
      * evaporative mass flux
      */
@@ -80,12 +80,15 @@ namespace MeltPoolDG::Evaporation
       , evapor_vel_dof_idx(evapor_vel_dof_idx_in)
       , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx_in)
       , ls_quad_idx(ls_quad_idx_in)
-      , cut_value_norm_normal_vector(
-          std::max(std::pow(GridTools::volume<dim>(scratch_data->get_triangulation(),
-                                                   scratch_data->get_mapping()),
-                            1. / dim) *
-                     1e-3,
-                   1e-16))
+      , tolerance_normal_vector(
+          std::min(1e-2,
+                   std::max(std::pow(10,
+                                     UtilityFunctions::get_exponent_power_ten(std::pow(
+                                       GridTools::volume<dim>(scratch_data->get_triangulation(),
+                                                              scratch_data->get_mapping()),
+                                       1. / dim))) *
+                              1e-3,
+                            1e-12)))
     {
       reinit();
     }
@@ -165,7 +168,7 @@ namespace MeltPoolDG::Evaporation
             {
               const auto n_phi =
                 MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
-                                                        cut_value_norm_normal_vector);
+                                                        tolerance_normal_vector);
 
               evapor_vel[q_index] =
                 n_phi * evap_flux.get_value(q_index) *
