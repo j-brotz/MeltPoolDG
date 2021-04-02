@@ -49,6 +49,7 @@ namespace MeltPoolDG::Evaporation
     const unsigned int evapor_vel_dof_idx;
     const unsigned int ls_hanging_nodes_dof_idx;
     const unsigned int ls_quad_idx;
+    const double       tolerance_normal_vector;
     /**
      * evaporative mass flux
      */
@@ -79,6 +80,15 @@ namespace MeltPoolDG::Evaporation
       , evapor_vel_dof_idx(evapor_vel_dof_idx_in)
       , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx_in)
       , ls_quad_idx(ls_quad_idx_in)
+      , tolerance_normal_vector(
+          std::min(1e-2,
+                   std::max(std::pow(10,
+                                     UtilityFunctions::get_exponent_power_ten(std::pow(
+                                       GridTools::volume<dim>(scratch_data->get_triangulation(),
+                                                              scratch_data->get_mapping()),
+                                       1. / dim))) *
+                              1e-3,
+                            1e-12)))
     {
       reinit();
     }
@@ -157,14 +167,12 @@ namespace MeltPoolDG::Evaporation
           for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
             {
               const auto n_phi =
-                MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index));
+                MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
+                                                        tolerance_normal_vector);
 
-              evapor_vel[q_index] =
-                n_phi * evap_flux.get_value(q_index) *
-                (ls.get_value(q_index) * std::abs(1. / evaporation_data.density_liquid -
-                                                  1. / evaporation_data.density_gas) +
-                 1. / evaporation_data.density_gas);
-
+              evapor_vel[q_index] = n_phi * evap_flux.get_value(q_index) *
+                                    (ls.get_value(q_index) / evaporation_data.density_liquid +
+                                     (1. - ls.get_value(q_index)) / evaporation_data.density_gas);
 
               // The normal vector field is oriented such that the normal vector points from
               // the negative level set value (= default for representing the gas phase) to the
@@ -198,8 +206,12 @@ namespace MeltPoolDG::Evaporation
 
       scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
 
-      scratch_data->get_pcout() << "    | evapor: |u|2 = " << evaporation_velocity.l2_norm()
-                                << std::endl;
+      scratch_data->get_pcout(1) << "    | evapor: |u|2 = "
+                                 << VectorTools::compute_L2_norm<dim>(evaporation_velocity,
+                                                                      *scratch_data,
+                                                                      evapor_vel_dof_idx,
+                                                                      ls_quad_idx)
+                                 << std::endl;
 
       evaporation_velocity.zero_out_ghosts();
     }

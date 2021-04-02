@@ -203,6 +203,20 @@ namespace MeltPoolDG::Flow
           // solver Navier-Stokes problem
           flow_operation->solve();
 
+          scratch_data->get_pcout()
+            << " |velocity| = " << std::setprecision(15)
+            << VectorTools::compute_L2_norm<dim>(flow_operation->get_velocity(),
+                                                 *scratch_data,
+                                                 flow_operation->get_dof_handler_idx_velocity(),
+                                                 flow_operation->get_quad_idx_velocity())
+            << std::endl;
+          scratch_data->get_pcout()
+            << " |p| = " << std::setprecision(15)
+            << VectorTools::compute_L2_norm<dim>(flow_operation->get_pressure(),
+                                                 *scratch_data,
+                                                 flow_operation->get_dof_handler_idx_pressure(),
+                                                 flow_operation->get_quad_idx_pressure())
+            << std::endl;
           // ... and output the results to vtk files.
           output_results(n);
 
@@ -234,7 +248,8 @@ namespace MeltPoolDG::Flow
       /*
        *  setup scratch data
        */
-      scratch_data = std::make_shared<ScratchData<dim>>(/*do_matrix_free*/ true);
+      scratch_data = std::make_shared<ScratchData<dim>>(base_in->parameters.base.verbosity_level,
+                                                        /*do_matrix_free*/ true);
 
       /*
        *  setup mapping
@@ -801,10 +816,10 @@ namespace MeltPoolDG::Flow
                                                   scratch_data->get_quadrature(ls_quad_idx),
                                                   dealii::VectorTools::L2_norm);
 
-        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
           tria,
           estimated_error_per_cell,
-          base_in->parameters.amr.upper_perc_to_refine,
+          base_in->parameters.amr.upper_perc_to_refine * 0.25,
           base_in->parameters.amr.lower_perc_to_coarsen);
 
         return true;

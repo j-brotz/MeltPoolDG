@@ -98,7 +98,8 @@ namespace MeltPoolDG
         /*
          *  setup scratch data
          */
-        scratch_data = std::make_shared<ScratchData<dim>>(/* do_matrix_free */ true);
+        scratch_data = std::make_shared<ScratchData<dim>>(base_in->parameters.base.verbosity_level,
+                                                          /* do_matrix_free */ true);
         /*
          *  setup mapping
          */

@@ -22,9 +22,8 @@ jobs:
                   mkdir build                                           && \ 
                   cd build                                              && \ 
                   cmake -DCMAKE_CXX_FLAGS="-Werror" ..                  && \ 
-                  make -j2";
-
-         # TODO: enable tests again
+                  make -j2                                              && \
+                  ctest -V -j2";
 
          echo $command
          docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
@@ -50,9 +49,8 @@ jobs:
           mkdir MeltPoolDG-build                                && \ 
           cd MeltPoolDG-build                                   && \
           cmake -DCMAKE_CXX_FLAGS="-Werror" ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && \
-          make -j2";
-
-         # TODO: enable tests again
+          make -j2                                              && \
+          ctest -V -R 'unit_tests/|tests/' ";
 
          echo $command
          docker run -t dealii/dealii:master-focal /bin/sh -c "$command";

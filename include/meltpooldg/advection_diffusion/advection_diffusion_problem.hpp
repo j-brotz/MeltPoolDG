@@ -81,7 +81,17 @@ namespace MeltPoolDG
             output_results(time_iterator.get_current_time_step_number());
 
             if (base_in->parameters.amr.do_amr)
-              refine_mesh(base_in);
+              {
+                refine_mesh(base_in);
+                scratch_data->get_pcout(1)
+                  << "number of dofs: " << dof_handler_velocity.n_dofs() << std::endl;
+                auto vec =
+                  Utilities::MPI::gather(MPI_COMM_WORLD,
+                                         dof_handler_velocity.get_triangulation().n_active_cells());
+
+                for (auto &i : vec)
+                  scratch_data->get_pcout(1) << "|cells| = " << i << std::endl;
+              }
           }
       }
 
@@ -191,7 +201,8 @@ namespace MeltPoolDG
          */
         {
           scratch_data =
-            std::make_shared<ScratchData<dim>>(base_in->parameters.advec_diff.do_matrix_free);
+            std::make_shared<ScratchData<dim>>(base_in->parameters.base.verbosity_level,
+                                               base_in->parameters.advec_diff.do_matrix_free);
           /*
            *  setup mapping
            */
@@ -362,11 +373,12 @@ namespace MeltPoolDG
                                              {},
                                              locally_relevant_solution,
                                              estimated_error_per_cell);
+          auto vec = Utilities::MPI::gather(MPI_COMM_WORLD, estimated_error_per_cell.l2_norm());
 
-          parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+          parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
             tria,
             estimated_error_per_cell,
-            base_in->parameters.amr.upper_perc_to_refine,
+            base_in->parameters.amr.upper_perc_to_refine * 0.25,
             base_in->parameters.amr.lower_perc_to_coarsen);
 
           return true;
@@ -389,7 +401,6 @@ namespace MeltPoolDG
                                      base_in->parameters.amr,
                                      dof_handler,
                                      time_iterator.get_current_time_step_number());
-        constraints.distribute(advec_diff_operation->get_advected_field());
       }
 
     private:

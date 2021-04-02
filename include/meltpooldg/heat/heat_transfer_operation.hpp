@@ -127,12 +127,15 @@ namespace MeltPoolDG::Heat
       auto newton = NewtonRaphsonSolver<dim>(scratch_data,
                                              heat_data.nlsolve,
                                              temp_dof_idx,
+                                             temp_quad_idx,
                                              temperature_old,
                                              temperature,
                                              create_rhs,
                                              solve_linear_system);
 
       newton.solve();
+
+      //@todo: add output
     }
 
     void

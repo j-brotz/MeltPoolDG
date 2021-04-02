@@ -22,6 +22,7 @@
 // DoFTools
 #include <deal.II/dofs/dof_tools.h>
 
+#include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
@@ -45,14 +46,23 @@ namespace MeltPoolDG
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
 
   public:
-    ScratchData(const bool do_matrix_free = true)
+    ScratchData(const unsigned int max_verbosity_level = 0, const bool do_matrix_free = true)
       : do_matrix_free(do_matrix_free)
-    {}
+    {
+      this->pcout.clear();
+
+      for (unsigned int i = 0; i <= 10; ++i)
+        this->pcout.push_back(
+          ConditionalOStream(std::cout,
+                             (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)) == 0 &&
+                               (i <= max_verbosity_level)));
+    }
 
     ScratchData(const ScratchData &scratch_data)
     {
+      do_matrix_free = scratch_data.do_matrix_free;
+
       //@todo: check if mapping is deleted
-      this->do_matrix_free = scratch_data.do_matrix_free;
       this->reinit(scratch_data.get_mapping(),
                    scratch_data.get_dof_handlers(),
                    scratch_data.get_constraints(),
@@ -130,7 +140,6 @@ namespace MeltPoolDG
       this->locally_owned_dofs.clear();
       this->locally_relevant_dofs.clear();
       this->partitioner.clear();
-      this->pout.clear();
 
       int dof_idx = 0;
       for (const auto &dof : dof_handler)
@@ -160,10 +169,6 @@ namespace MeltPoolDG
             std::make_shared<Utilities::MPI::Partitioner>(this->get_locally_owned_dofs(dof_idx),
                                                           this->get_locally_relevant_dofs(dof_idx),
                                                           this->get_mpi_comm(dof_idx)));
-          this->pout.push_back(
-            ConditionalOStream(std::cout,
-                               Utilities::MPI::this_mpi_process(this->get_mpi_comm(dof_idx)) == 0));
-
           dof_idx += 1;
         }
     }
@@ -270,7 +275,7 @@ namespace MeltPoolDG
       this->cell_diameters.clear();
       this->locally_owned_dofs.clear();
       this->locally_relevant_dofs.clear();
-      this->pout.clear();
+      this->pcout.clear();
     }
 
     /**
@@ -414,15 +419,16 @@ namespace MeltPoolDG
       return this->partitioner[dof_idx];
     }
 
-    const ConditionalOStream &
-    get_pcout(const unsigned int dof_idx = 0) const
+    const ConditionalOStream
+    get_pcout(const unsigned int level = 0) const
     {
-      return pout[dof_idx];
+      AssertIndexRange(level, pcout.size());
+      return pcout[level];
     }
 
   private:
     bool                                                      do_matrix_free;
-    std::vector<ConditionalOStream>                           pout;
+    std::vector<ConditionalOStream>                           pcout;
     std::shared_ptr<Mapping<dim, spacedim>>                   mapping;
     std::vector<const DoFHandler<dim, spacedim> *>            dof_handler;
     std::vector<const AffineConstraints<number> *>            constraint;

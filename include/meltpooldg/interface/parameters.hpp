@@ -20,7 +20,7 @@ namespace MeltPoolDG
     std::string  preconditioner_type = "Identity";
     std::string  solver_type         = "GMRES";
     unsigned int max_iterations      = 10000;
-    number       rel_tolerance_rhs   = 1e-8;
+    number       rel_tolerance_rhs   = 1e-12;
   };
 
   template <typename number = double>
@@ -56,6 +56,7 @@ namespace MeltPoolDG
     bool         do_print_parameters = true;
     bool         do_simplex          = false;
     number       gravity             = 0.0;
+    unsigned int verbosity_level     = 0;
   };
 
   struct AdaptiveMeshingData
@@ -391,11 +392,12 @@ namespace MeltPoolDG
 #endif
     }
 
+    template <typename T>
     void
-    print_parameters(const dealii::ConditionalOStream &pcout)
+    print_parameters(T &pcout)
     {
       if (base.do_print_parameters)
-        prm.print_parameters(pcout.get_stream(), ParameterHandler::OutputStyle::Text);
+        prm.print_parameters(pcout, ParameterHandler::OutputStyle::Text);
     }
 
     void
@@ -448,6 +450,10 @@ namespace MeltPoolDG
                           "Sets this parameter to true to list parameters in output");
         prm.add_parameter("do simplex", base.do_simplex, "Use simplices");
         prm.add_parameter("gravity", base.gravity, "Set the value for the gravity");
+        prm.add_parameter(
+          "verbosity level",
+          base.verbosity_level,
+          "Sets the maximum verbosity level of the console output. Set this parameter to 0 in case of test files.");
       }
       prm.leave_subsection();
       /*

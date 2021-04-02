@@ -20,7 +20,7 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
      ")
 endif ()
 
-FIND_PACKAGE(deal.II 9.2.0 QUIET
+FIND_PACKAGE(deal.II 9.3 QUIET
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
   )
 IF(NOT ${deal.II_FOUND})

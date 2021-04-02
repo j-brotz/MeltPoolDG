@@ -158,7 +158,7 @@ namespace MeltPoolDG
             src_rhs.copy_locally_owned_data_from(solution_level_set);
             src_rhs.update_ghost_values();
             reinit_operator->create_rhs(rhs, src_rhs);
-            iter = LinearSolve<VectorType, SolverCG<VectorType>, OperatorBase<double>>::solve(
+            iter = LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
               *reinit_operator, src, rhs);
           }
         else
@@ -206,19 +206,40 @@ namespace MeltPoolDG
                                                              reinit_data.solver.max_iterations,
                                                              *preconditioner);
               }
+
+            scratch_data->get_pcout()
+              << "| matrix | " << std::setw(15) << std::left << std::setprecision(15)
+              << reinit_operator->system_matrix.frobenius_norm() << std::endl;
           }
         scratch_data->get_constraint(reinit_dof_idx).distribute(src);
+        solution_level_set.zero_out_ghosts();
 
         solution_level_set += src;
 
         solution_level_set.update_ghost_values();
 
-        const ConditionalOStream &pcout = scratch_data->get_pcout(reinit_dof_idx);
-        pcout << "| CG: i=" << std::setw(5) << std::left << iter;
-        pcout << "\t |ΔΨ|∞ = " << std::setw(15) << std::left << std::setprecision(10)
-              << src.linfty_norm();
-        pcout << " |ΔΨ|²/dT = " << std::setw(15) << std::left << std::setprecision(10)
-              << src.l2_norm() / d_tau << "|" << std::endl;
+        const ConditionalOStream &pcout = scratch_data->get_pcout();
+        scratch_data->get_pcout(1) << "| CG: i=" << std::setw(5) << std::left << iter;
+        scratch_data->get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
+                                   << std::setprecision(10) << src.linfty_norm();
+        pcout << " |Ψ RHS|² = " << std::setw(15) << std::left << std::setprecision(15)
+              << VectorTools::compute_L2_norm<dim>(rhs,
+                                                   *scratch_data,
+                                                   reinit_dof_idx,
+                                                   reinit_quad_idx)
+              << " |" << std::endl;
+        pcout << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(15)
+              << VectorTools::compute_L2_norm<dim>(src,
+                                                   *scratch_data,
+                                                   reinit_dof_idx,
+                                                   reinit_quad_idx)
+              << " |" << std::endl;
+        pcout << " |phi_update|² = " << std::setw(15) << std::left << std::setprecision(15)
+              << VectorTools::compute_L2_norm<dim>(solution_level_set,
+                                                   *scratch_data,
+                                                   reinit_dof_idx,
+                                                   reinit_quad_idx)
+              << " |" << std::endl;
       }
 
       const BlockVectorType &
