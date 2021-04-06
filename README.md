@@ -8,6 +8,7 @@ This project depends on the following third-party libraries:
 - deal.II
 - p4est
 - Trilinos
+- METIS (optional)
 - adaflo (optional)
 
 Before installing deal.II, you have to install the two libraries p4est and Trilinos. More information for that you can find here for p4est (https://www.dealii.org/9.2.0/external-libs/p4est.html) and here for Trilinos (https://www.dealii.org/9.2.0/external-libs/trilinos.html).  
@@ -21,7 +22,15 @@ git clone git@github.com:dealii/dealii.git
 To configure the deal.II library, you have to use now these arguments for cmake:
 
  ```bash
-cmake -D CMAKE_INSTALL_PREFIX=/path/to/install/dir -D P4EST_DIR=/path/to/installation -D DEAL_II_WITH_P4EST=ON -D DEAL_II_WITH_MPI=ON -D TRILINOS_DIR=/path/to/trilinos -D DEAL_II_WITH_TRILINOS=ON -D DEAL_II_WITH_SIMPLEX_SUPPORT=ON ../deal.II
+cmake -D CMAKE_INSTALL_PREFIX=/path/to/install/dir \
+      -D P4EST_DIR=/path/to/installation \
+      -D DEAL_II_WITH_P4EST=ON \
+      -D DEAL_II_WITH_MPI=ON \
+      -D TRILINOS_DIR=/path/to/trilinos \
+      -D DEAL_II_WITH_TRILINOS=ON \
+      -D DEAL_II_WITH_METIS=ON \
+      -D DEAL_II_WITH_SIMPLEX_SUPPORT=ON \
+      ../deal.II
 ```
  
 then compiling as usual:
