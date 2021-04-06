@@ -46,9 +46,9 @@ namespace MeltPoolDG
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<number>;
 
   public:
-    ScratchData(const unsigned int max_verbosity_level = 0,
-                const bool         do_matrix_free      = true,
-                const MPI_Comm     mpi_communicator    = MPI_COMM_WORLD)
+    ScratchData(const MPI_Comm     mpi_communicator,
+                const unsigned int max_verbosity_level,
+                const bool         do_matrix_free)
       : do_matrix_free(do_matrix_free)
     {
       this->pcout.clear();

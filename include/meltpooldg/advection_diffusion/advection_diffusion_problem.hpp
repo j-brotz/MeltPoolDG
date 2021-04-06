@@ -201,7 +201,8 @@ namespace MeltPoolDG
          */
         {
           scratch_data =
-            std::make_shared<ScratchData<dim>>(base_in->parameters.base.verbosity_level,
+            std::make_shared<ScratchData<dim>>(base_in->mpi_communicator,
+                                               base_in->parameters.base.verbosity_level,
                                                base_in->parameters.advec_diff.do_matrix_free);
           /*
            *  setup mapping

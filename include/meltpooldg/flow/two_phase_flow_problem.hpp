@@ -248,7 +248,8 @@ namespace MeltPoolDG::Flow
       /*
        *  setup scratch data
        */
-      scratch_data = std::make_shared<ScratchData<dim>>(base_in->parameters.base.verbosity_level,
+      scratch_data = std::make_shared<ScratchData<dim>>(base_in->mpi_communicator,
+                                                        base_in->parameters.base.verbosity_level,
                                                         /*do_matrix_free*/ true);
 
       /*
