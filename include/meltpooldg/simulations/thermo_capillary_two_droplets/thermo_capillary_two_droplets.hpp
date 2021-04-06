@@ -175,7 +175,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
           if (this->parameters.base.do_simplex)
             {
               std::vector<unsigned int> subdivisions(
-                dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+                dim, 4 * Utilities::pow(2, this->parameters.base.global_refinements));
               subdivisions[dim - 1] *= 2;
               GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
                                                                        subdivisions,
@@ -185,7 +185,12 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
           else
 #endif
             {
-              GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
+              std::vector<unsigned int> subdivisions(dim, 4);
+              subdivisions[dim - 1] *= 2;
+              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        subdivisions,
+                                                        bottom_left,
+                                                        top_right);
             }
         }
       else
