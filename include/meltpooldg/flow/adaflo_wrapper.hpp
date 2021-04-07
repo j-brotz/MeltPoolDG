@@ -64,6 +64,14 @@ namespace MeltPoolDG::Flow
             navier_stokes.fix_pressure_constant(fix_pressure_constant_id);
         }
       /*
+       * Periodic boundary conditions
+       */
+      for (const auto &periodic_bc : base_in->get_periodic_bc())
+        {
+          const auto [id_in, id_out, direction] = periodic_bc;
+          navier_stokes.set_periodic_direction(direction, id_in, id_out);
+        }
+      /*
        * Initial conditions of the navier stokes problem
        */
       AssertThrow(

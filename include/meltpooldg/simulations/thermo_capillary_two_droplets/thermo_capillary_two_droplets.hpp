@@ -30,8 +30,8 @@
  *            |                      --     --         |                    |
  *            |                       --   --          |                   16a
  *            |          -----         -----           |                    |
- *   sym      |         --   --          |-a-|         |  sym               |
- * T Neumann  |        --     --                       |   T Neumann        |
+ *   periodic |         --   --          |-a-|         |  periodic          |
+ *            |        --     --                       |                    |
  *            |         --   --                        |                    |
  *            |          -----                         |                    |
  *            |                                        |                    |
@@ -69,7 +69,7 @@
  * T2 = 290 + 16 * a * ∇T = 293.333 K
  *
  * reference velocity
- *    Ur = simga_T * a * ∇T / mu_0 = 0.043817804 m/s
+ *    Ur = sigma_T * a * ∇T / mu_0 = 0.043817804 m/s
  * reference time scale
  *    tr = a / Ur = 1 s
  */
@@ -171,12 +171,12 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
             (dim == 2) ? Point<dim>(x_outer, z_outer) : Point<dim>(x_outer, 0, z_outer);
 
           // create mesh
-          std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
-          subdivisions[dim - 1] *= 2;
 #ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (this->parameters.base.do_simplex)
             {
+              std::vector<unsigned int> subdivisions(
+                dim, 4 * Utilities::pow(2, this->parameters.base.global_refinements));
+              subdivisions[dim - 1] *= 2;
               GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
                                                                        subdivisions,
                                                                        bottom_left,
@@ -185,6 +185,8 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
           else
 #endif
             {
+              std::vector<unsigned int> subdivisions(dim, 4);
+              subdivisions[dim - 1] *= 2;
               GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
                                                         subdivisions,
                                                         bottom_left,
@@ -209,18 +211,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
       const types::boundary_id left_bc  = 3;
       const types::boundary_id right_bc = 4;
 
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
-      this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-      this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
-
-      this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
-      this->attach_dirichlet_boundary_condition(upper_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
-                                                "heat_transfer");
-
       if constexpr (dim == 2)
         {
           for (const auto &cell : this->triangulation->cell_iterators())
@@ -241,6 +231,20 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
         {
           AssertThrow(false, ExcNotImplemented());
         }
+
+      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
+      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
+      this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+
+      this->attach_dirichlet_boundary_condition(lower_bc,
+                                                std::make_shared<InitialValuesTemperature<dim>>(),
+                                                "heat_transfer");
+      this->attach_dirichlet_boundary_condition(upper_bc,
+                                                std::make_shared<InitialValuesTemperature<dim>>(),
+                                                "heat_transfer");
+
+      if (!this->parameters.base.do_simplex)
+        this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
     void

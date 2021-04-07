@@ -22,6 +22,7 @@ namespace MeltPoolDG
     no_slip_bc,
     fix_pressure_constant,
     symmetry_bc,
+    periodic_bc,
     open_boundary_bc,
     radiation_bc,
     convection_bc,

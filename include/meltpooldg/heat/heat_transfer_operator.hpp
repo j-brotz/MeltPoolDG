@@ -168,20 +168,26 @@ namespace MeltPoolDG::Heat
       if (level_set_as_heaviside)
         MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
 
-      scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
-        [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
+      double dummy;
+      MeltPoolDG::VectorTools::update_ghost_values(src);
+      dst = 0;
+      scratch_data.get_matrix_free().template loop<double, double>(
+        [&](const auto &matrix_free, auto &, const auto &, auto cell_range) {
           tangent_cell_loop(matrix_free, dst, src, cell_range);
         }, // cell loop
         [&]([[maybe_unused]] const auto &matrix_free,
             [[maybe_unused]] auto &      dst,
             [[maybe_unused]] const auto &src,
             [[maybe_unused]] auto        face_range) { /*do nothing*/ }, // internal face loop
-        [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
+        [&](const auto &matrix_free, auto &, const auto &, auto face_range) {
           tangent_boundary_loop(matrix_free, dst, src, face_range); // boundary face loop
         },
-        dst,
-        src,
+        dummy,
+        dummy,
         true /*zero dst vector*/);
+      src.zero_out_ghost_values();
+      dst.compress(VectorOperation::add);
+
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
       if (velocity)
         MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
@@ -190,10 +196,10 @@ namespace MeltPoolDG::Heat
     }
 
     void
-    tangent_cell_loop(const MatrixFree<dim, number> &        matrix_free,
-                      VectorType &                           dst,
-                      const VectorType &                     src,
-                      std::pair<unsigned int, unsigned int> &cell_range) const
+    tangent_cell_loop(const MatrixFree<dim, number> &       matrix_free,
+                      VectorType &                          dst,
+                      const VectorType &                    src,
+                      std::pair<unsigned int, unsigned int> cell_range) const
     {
       FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
@@ -251,10 +257,10 @@ namespace MeltPoolDG::Heat
      * compute the tangent of Robin-type boundary conditions for convection and radiation
      */
     void
-    tangent_boundary_loop(const MatrixFree<dim, number> &        matrix_free,
-                          VectorType &                           dst,
-                          const VectorType &                     src,
-                          std::pair<unsigned int, unsigned int> &face_range) const
+    tangent_boundary_loop(const MatrixFree<dim, number> &       matrix_free,
+                          VectorType &                          dst,
+                          const VectorType &                    src,
+                          std::pair<unsigned int, unsigned int> face_range) const
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
                                              true /*is_interior_face*/,
@@ -302,10 +308,10 @@ namespace MeltPoolDG::Heat
     }
 
     void
-    rhs_cell_loop(const MatrixFree<dim, number> &        matrix_free,
-                  VectorType &                           dst,
-                  const VectorType &                     src, /* temperature_old*/
-                  std::pair<unsigned int, unsigned int> &cell_range) const
+    rhs_cell_loop(const MatrixFree<dim, number> &       matrix_free,
+                  VectorType &                          dst,
+                  const VectorType &                    src, /* temperature_old*/
+                  std::pair<unsigned int, unsigned int> cell_range) const
     {
       FECellIntegrator<dim, 1, number> temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number> temp_vals_old(matrix_free, temp_dof_idx, this->quad_idx);
@@ -384,10 +390,10 @@ namespace MeltPoolDG::Heat
      * @todo: add equations
      */
     void
-    rhs_boundary_loop(const MatrixFree<dim, number> &        matrix_free,
-                      VectorType &                           dst,
-                      [[maybe_unused]] const VectorType &    src,
-                      std::pair<unsigned int, unsigned int> &face_range) const
+    rhs_boundary_loop(const MatrixFree<dim, number> &       matrix_free,
+                      VectorType &                          dst,
+                      [[maybe_unused]] const VectorType &   src,
+                      std::pair<unsigned int, unsigned int> face_range) const
     {
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
                                              true /* is interior face*/,
@@ -453,20 +459,26 @@ namespace MeltPoolDG::Heat
         MeltPoolDG::VectorTools::update_ghost_values(*velocity);
       if (level_set_as_heaviside)
         MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
-      scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
-        [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
+
+      double dummy;
+      MeltPoolDG::VectorTools::update_ghost_values(src);
+      scratch_data.get_matrix_free().template loop<double, double>(
+        [&](const auto &matrix_free, auto &, const auto &, auto cell_range) {
           rhs_cell_loop(matrix_free, dst, src, cell_range);
         },
         [&]([[maybe_unused]] const auto &matrix_free,
             [[maybe_unused]] auto &      dst,
             [[maybe_unused]] const auto &src,
             [[maybe_unused]] auto        face_range) { /*do nothing*/ }, // face loop
-        [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
+        [&](const auto &matrix_free, auto &, const auto &, auto face_range) {
           rhs_boundary_loop(matrix_free, dst, src, face_range);
         },
-        dst,
-        src,
+        dummy,
+        dummy,
         false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
+      src.zero_out_ghost_values();
+      dst.compress(VectorOperation::add);
+
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
       if (velocity)
         MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
