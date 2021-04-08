@@ -5,7 +5,7 @@
     "dimension": "2",
     "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "5",
+    "global refinements": "3",
     "problem name": "two_phase_flow_with_heat_transfer",
     "gravity": "0.0"
   },
@@ -29,7 +29,7 @@
     "flow surface tension coefficient": "0.023040369",
     "flow temperature dependent surface tension coefficient": "0.002",
     "flow start time": "0.0",
-    "flow end time": "115.2",
+    "flow end time": "0.25",
     "flow time step size": "0.05"
   },
   "Navier-Stokes": {
@@ -55,7 +55,7 @@
         "scheme": "bdf_2"
       },
       "Output options": {
-        "output verbosity": "2",
+        "output verbosity": "0",
         "output walltimes": "0"
       }
     }
@@ -84,7 +84,6 @@
     "curv implementation": "meltpooldg"
   },
   "paraview": {
-    "paraview directory": "output_thermo_capillary/",
-    "paraview do output": "true"
+    "paraview do output": "false"
   }
 }
