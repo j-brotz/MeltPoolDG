@@ -19,6 +19,10 @@
  * International Journal of Multiphase Flow, 29(7), 1117-1135.
  * https://doi.org/10.1016/S0301-9322(03)0008
  *
+ * Balcázar, N., Rigola, J., Castro, J., & Oliva, A. (2016). A level-set model for thermocapillary
+ * motion of deformable fluid particles. International Journal of Heat and Fluid Flow, 62, 324-343.
+ * https://doi.org/10.1016/j.ijheatfluidflow.2016.09.015
+ *
  *                 T2 = fixed
  *                  no slip
  *            +----------------------------------------+                    -
@@ -42,7 +46,7 @@
  *
  *            |----------------- 8a --------------------|
  *
- * droplet radius: a = 0.043817805 m
+ * droplet radius: a = 0.048 m
  * droplet positions: (2.9a, 4a), (5.1a, 5.8a)
  *
  * characteristics:
@@ -51,10 +55,10 @@
  *    Ca = 0.041666
  *
  * droplet:
- *    rho_i    = 20 kg/m³
- *    mu_i     = 9.6e-4  N/m²s
- *    lambda_i = 9.6e-8 W/m/K
- *    cp_i     = 4e-6 J/kg/K
+ *    rho_i    = 250 kg/m³
+ *    mu_i     = 0.012  N/m²s
+ *    lambda_i = 1.2e-6 W/m/K
+ *    cp_i     = 5e-5 J/kg/K
  *
  * ambient fluid:
  *    rho_0    = 500 kg/m³
@@ -62,16 +66,16 @@
  *    lambda_0 = 2.4e-6 W/m/K
  *    cp_0     = 1e-4 J/kg/K
  *
- * surface tension coefficient: 0.025239459 N/m
- * temperature-dependent surface tension coefficient: 0.005047892 N/m/K
- * ∇T = 4.754459964 K/m
- * T1 = 290 K
- * T2 = 290 + 16 * a * ∇T = 293.333 K
+ * surface tension coefficient: 0.023040369 N/m
+ * temperature-dependent surface tension coefficient: 0.002 N/m/K
+ * ∇T = 10 K/m
+ * T1 = 0 K
+ * T2 = 0 + 16 * a * ∇T = 7.68 K
  *
  * reference velocity
- *    Ur = sigma_T * a * ∇T / mu_0 = 0.043817804 m/s
+ *    Ur = sigma_T * a * ∇T / mu_0 = 0.04 m/s
  * reference time scale
- *    tr = a / Ur = 1 s
+ *    tr = a / Ur = 1.2 s
  */
 
 namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
@@ -79,11 +83,11 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-  static constexpr double radius                = 0.043817805;
+  static constexpr double radius                = 0.048;
   static constexpr double x_outer               = 8. * radius;
   static constexpr double z_outer               = 16. * radius;
-  static constexpr double reference_temperautre = 290.;
-  static constexpr double temperature_gradient  = 4.754459964;
+  static constexpr double reference_temperautre = 0.0;
+  static constexpr double temperature_gradient  = 10.;
 
   template <int dim>
   class InitialValuesLS : public Function<dim>

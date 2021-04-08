@@ -5,7 +5,7 @@
     "dimension": "2",
     "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "4",
+    "global refinements": "5",
     "problem name": "two_phase_flow_with_heat_transfer",
     "gravity": "0.0"
   },
@@ -17,20 +17,20 @@
     "material gas capacity": "1e-4",
     "material gas conductivity": "2.4e-6",
     "material gas density": "500",
-    "material liquid capacity": "4e-6",
-    "material liquid conductivity": "9.6e-8",
-    "material liquid density": "20"
+    "material liquid capacity": "5e-5",
+    "material liquid conductivity": "1.2e-6",
+    "material liquid density": "250"
   },
   "flow": {
     "flow density": "500",
     "flow viscosity": "0.024",
-    "flow density difference": "-480.",
-    "flow viscosity difference": "-0.02304",
-    "flow surface tension coefficient": "0.025239459",
-    "flow temperature dependent surface tension coefficient": "0.005047892",
+    "flow density difference": "-250.",
+    "flow viscosity difference": "-0.012",
+    "flow surface tension coefficient": "0.023040369",
+    "flow temperature dependent surface tension coefficient": "0.002",
     "flow start time": "0.0",
-    "flow end time": "110.0",
-    "flow time step size": "0.1"
+    "flow end time": "115.2",
+    "flow time step size": "0.05"
   },
   "Navier-Stokes": {
     "adaflo": {
