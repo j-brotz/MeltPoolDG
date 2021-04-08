@@ -55,7 +55,7 @@
         "scheme": "bdf_2"
       },
       "Output options": {
-        "output verbosity": "2",
+        "output verbosity": "0",
         "output walltimes": "0"
       }
     }

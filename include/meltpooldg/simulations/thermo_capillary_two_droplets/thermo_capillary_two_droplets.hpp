@@ -19,9 +19,13 @@
  * International Journal of Multiphase Flow, 29(7), 1117-1135.
  * https://doi.org/10.1016/S0301-9322(03)00084-3
  *
+ * and
+ *
  * Balcázar, N., Rigola, J., Castro, J., & Oliva, A. (2016). A level-set model for thermocapillary
  * motion of deformable fluid particles. International Journal of Heat and Fluid Flow, 62, 324-343.
  * https://doi.org/10.1016/j.ijheatfluidflow.2016.09.015
+ *
+ * In contrast to the papers' cases the two droplets can coalesce here.
  *
  *                 T2 = fixed
  *                  no slip
@@ -93,7 +97,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
   static constexpr double radius                = 0.048;
   static constexpr double x_outer               = 8. * radius;
   static constexpr double z_outer               = 16. * radius;
-  static constexpr double reference_temperautre = 0.0;
+  static constexpr double reference_temperature = 0.0;
   static constexpr double temperature_gradient  = 10.;
 
   template <int dim>
@@ -137,7 +141,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      return reference_temperautre + p[dim - 1] * temperature_gradient;
+      return reference_temperature + p[dim - 1] * temperature_gradient;
     }
   };
   /*
@@ -253,6 +257,8 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
       this->attach_dirichlet_boundary_condition(upper_bc,
                                                 std::make_shared<InitialValuesTemperature<dim>>(),
                                                 "heat_transfer");
+
+      this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
 
       if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
