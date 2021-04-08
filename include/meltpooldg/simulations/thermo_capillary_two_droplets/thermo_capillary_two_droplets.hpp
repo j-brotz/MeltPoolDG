@@ -17,7 +17,7 @@
  *
  * Nas, S., & Tryggvason, G. (2003). Thermocapillary interaction of two bubbles or drops.
  * International Journal of Multiphase Flow, 29(7), 1117-1135.
- * https://doi.org/10.1016/S0301-9322(03)0008
+ * https://doi.org/10.1016/S0301-9322(03)00084-3
  *
  * Balcázar, N., Rigola, J., Castro, J., & Oliva, A. (2016). A level-set model for thermocapillary
  * motion of deformable fluid particles. International Journal of Heat and Fluid Flow, 62, 324-343.
@@ -66,16 +66,23 @@
  *    lambda_0 = 2.4e-6 W/m/K
  *    cp_0     = 1e-4 J/kg/K
  *
- * surface tension coefficient: 0.023040369 N/m
- * temperature-dependent surface tension coefficient: 0.002 N/m/K
- * ∇T = 10 K/m
- * T1 = 0 K
- * T2 = 0 + 16 * a * ∇T = 7.68 K
+ * surface tension coefficient:
+ *    sigma_0 = 0.023040369 N/m
+ * temperature-dependent surface tension coefficient:
+ *    sigma_T = 0.002 N/m/K
+ *
+ * temperature:
+ *    ∇T = 10 K/m
+ *    T1 = 0 K
+ *    T2 = 0 + 16 * a * ∇T = 7.68 K
  *
  * reference velocity
  *    Ur = sigma_T * a * ∇T / mu_0 = 0.04 m/s
  * reference time scale
  *    tr = a / Ur = 1.2 s
+ *
+ * time step size
+ *    Δt = 0.1 * min( a / Ur , a^1.5 * ( (rho_0 + rho_i)/(4 * pi * sigma_0) )^0.5 ) = 0.05 s
  */
 
 namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
