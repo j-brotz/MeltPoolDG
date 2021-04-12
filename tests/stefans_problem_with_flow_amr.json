@@ -14,7 +14,8 @@
     "flow surface tension coefficient": "0.",
     "flow start time": "0.0",
     "flow end time": "0.002",
-    "flow time step size": "0.005"
+    "flow time step size": "0.005",
+    "flow variable properties over interface": "consistent_with_evaporation"
   },
   "Navier-Stokes" : {
     "adaflo" : {
@@ -23,6 +24,7 @@
         "dimension"          : "2",
         "global refinements" : "0",
         "velocity degree"    : "2",
+        "formulation convective term momentum balance": "convective",
         "Solver" : {
           "linearization scheme"         : "coupled implicit Newton",
           "NL max iterations"            : "10",
