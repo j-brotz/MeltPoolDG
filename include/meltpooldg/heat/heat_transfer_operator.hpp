@@ -168,25 +168,20 @@ namespace MeltPoolDG::Heat
       if (level_set_as_heaviside)
         MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
 
-      double dummy;
-      MeltPoolDG::VectorTools::update_ghost_values(src);
-      dst = 0;
-      scratch_data.get_matrix_free().template loop<double, double>(
-        [&](const auto &matrix_free, auto &, const auto &, auto cell_range) {
+      scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
+        [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
           tangent_cell_loop(matrix_free, dst, src, cell_range);
         }, // cell loop
         [&]([[maybe_unused]] const auto &matrix_free,
             [[maybe_unused]] auto &      dst,
             [[maybe_unused]] const auto &src,
             [[maybe_unused]] auto        face_range) { /*do nothing*/ }, // internal face loop
-        [&](const auto &matrix_free, auto &, const auto &, auto face_range) {
+        [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
           tangent_boundary_loop(matrix_free, dst, src, face_range); // boundary face loop
         },
-        dummy,
-        dummy,
+        dst,
+        src,
         true /*zero dst vector*/);
-      src.zero_out_ghost_values();
-      dst.compress(VectorOperation::add);
 
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
       if (velocity)
@@ -460,24 +455,20 @@ namespace MeltPoolDG::Heat
       if (level_set_as_heaviside)
         MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
 
-      double dummy;
-      MeltPoolDG::VectorTools::update_ghost_values(src);
-      scratch_data.get_matrix_free().template loop<double, double>(
-        [&](const auto &matrix_free, auto &, const auto &, auto cell_range) {
+      scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
+        [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
           rhs_cell_loop(matrix_free, dst, src, cell_range);
         },
         [&]([[maybe_unused]] const auto &matrix_free,
             [[maybe_unused]] auto &      dst,
             [[maybe_unused]] const auto &src,
             [[maybe_unused]] auto        face_range) { /*do nothing*/ }, // face loop
-        [&](const auto &matrix_free, auto &, const auto &, auto face_range) {
+        [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
           rhs_boundary_loop(matrix_free, dst, src, face_range);
         },
-        dummy,
-        dummy,
+        dst,
+        src,
         false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
-      src.zero_out_ghost_values();
-      dst.compress(VectorOperation::add);
 
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
       if (velocity)
