@@ -349,6 +349,28 @@ namespace MeltPoolDG
           base.problem_name == "two_phase_flow_with_heat_transfer")
         {
           adaflo_params.parse_parameters(parameter_filename);
+
+          if (base.problem_name == "melt_pool_with_evaporation" ||
+              base.problem_name == "two_phase_flow_with_evaporation")
+            {
+              if (evapor.formulation_source_term_continuity != "sharp")
+                {
+                  AssertThrow(
+                    adaflo_params.params.beta_convective_term_momentum_balance == 0,
+                    ExcMessage(
+                      "For the consideration of phase change, the convective "
+                      "formulation of the momentum balance in the Navier-Stokes equations "
+                      "must be chosen: Navier-Stokes: adaflo: Navier-Stokes: {formulation convective "
+                      "term momentum balance: convective }"));
+
+                  AssertThrow(flow.variable_properties_over_interface ==
+                                "consistent_with_evaporation",
+                              ExcMessage(
+                                "For the consideration of phase change, the density "
+                                "has to be interpolated consistently with the continuity equation "
+                                "including phase change."));
+                }
+            }
           // WARNING: by setting the differences to a non-zero value we force
           //   adaflo to assume that we are running a simulation with variable
           //   coefficients, i.e., it allocates memory for the data structures

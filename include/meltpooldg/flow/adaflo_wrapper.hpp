@@ -37,6 +37,7 @@ namespace MeltPoolDG::Flow
       , navier_stokes(base_in->parameters.adaflo_params.get_parameters(),
                       *const_cast<Triangulation<dim> *>(&scratch_data.get_triangulation()),
                       &timer)
+      , adaflo_params(base_in->parameters.adaflo_params.get_parameters())
     {
       /*
        * Boundary conditions for the velocity field
@@ -91,7 +92,6 @@ namespace MeltPoolDG::Flow
       this->dof_index_hanging_nodes_u =
         scratch_data.attach_constraint_matrix(navier_stokes.get_hanging_node_constraints_u());
 
-      const auto &adaflo_params = base_in->parameters.adaflo_params.get_parameters();
 
       this->quad_index_u =
         adaflo_params.use_simplex_mesh ?
@@ -101,6 +101,11 @@ namespace MeltPoolDG::Flow
         adaflo_params.use_simplex_mesh ?
           scratch_data.attach_quadrature(QGaussSimplex<dim>(adaflo_params.velocity_degree)) :
           scratch_data.attach_quadrature(QGauss<1>(adaflo_params.velocity_degree));
+
+      // dof handler for output of densities and viscosities
+      dof_handler_parameters.reinit(*base_in->triangulation);
+      dof_index_parameters = scratch_data.attach_dof_handler(dof_handler_parameters);
+      scratch_data.attach_constraint_matrix(constraints_parameters);
     }
 
     void
@@ -121,6 +126,16 @@ namespace MeltPoolDG::Flow
     {
       // clear constraints and setup hanging node constraints
       navier_stokes.distribute_dofs();
+
+#  ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
+      if (adaflo_params.use_simplex_mesh)
+        dof_handler_parameters.distribute_dofs(
+          FE_SimplexP<dim>(navier_stokes.get_dof_handler_u().get_fe().tensor_degree()));
+      else
+#  endif
+        dof_handler_parameters.distribute_dofs(
+          FE_Q<dim>(navier_stokes.get_dof_handler_u().get_fe().tensor_degree()));
+
       // fill constraints_u and constraints_p
       navier_stokes.initialize_data_structures();
     }
@@ -159,7 +174,7 @@ namespace MeltPoolDG::Flow
     LinearAlgebra::distributed::Vector<double> &
     get_velocity_old() override
     {
-      return navier_stokes.solution.block(0);
+      return navier_stokes.solution_old.block(0);
     }
 
     const DoFHandler<dim> &
@@ -225,7 +240,7 @@ namespace MeltPoolDG::Flow
     LinearAlgebra::distributed::Vector<double> &
     get_pressure_old() override
     {
-      return navier_stokes.solution.block(1);
+      return navier_stokes.solution_old.block(1);
     }
 
     const DoFHandler<dim> &
@@ -361,38 +376,36 @@ namespace MeltPoolDG::Flow
       /**
        *  density
        */
-      scratch_data.initialize_dof_vector(density, dof_index_p);
+      scratch_data.initialize_dof_vector(density, dof_index_parameters);
       UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
         density,
         scratch_data.get_matrix_free(),
-        dof_index_p,
-        quad_index_p,
-        scratch_data.get_fe(dof_index_p).tensor_degree(),     // fe_degree,
-        scratch_data.get_fe(dof_index_p).tensor_degree() + 1, // fe_degree,
+        dof_index_parameters,
+        quad_index_u,
+        scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
+        scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
         [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
           return get_density(cell, quad);
         });
 
-      get_hanging_node_constraints_pressure().distribute(density);
       density.update_ghost_values();
-      data_out.add_data_vector(get_dof_handler_pressure(), density, "density");
+      data_out.add_data_vector(dof_handler_parameters, density, "density");
       /**
        *  viscosity
        */
-      scratch_data.initialize_dof_vector(viscosity, dof_index_p);
+      scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
       UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
         viscosity,
         scratch_data.get_matrix_free(),
-        dof_index_p,
-        quad_index_p,
-        scratch_data.get_fe(dof_index_p).tensor_degree(),     // fe_degree,
-        scratch_data.get_fe(dof_index_p).tensor_degree() + 1, // fe_degree,
+        dof_index_parameters,
+        quad_index_u,
+        scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
+        scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
         [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
           return get_viscosity(cell, quad);
         });
-      get_hanging_node_constraints_pressure().distribute(viscosity);
       viscosity.update_ghost_values();
-      data_out.add_data_vector(get_dof_handler_pressure(), viscosity, "viscosity");
+      data_out.add_data_vector(dof_handler_parameters, viscosity, "viscosity");
     }
 
   private:
@@ -407,9 +420,12 @@ namespace MeltPoolDG::Flow
      */
     NavierStokes<dim> navier_stokes;
 
+    const FlowParameters &adaflo_params;
+
     unsigned int dof_index_u;
     unsigned int dof_index_p;
     unsigned int dof_index_hanging_nodes_u;
+    unsigned int dof_index_parameters;
 
     unsigned int quad_index_u;
     unsigned int quad_index_p;
@@ -418,6 +434,9 @@ namespace MeltPoolDG::Flow
      */
     VectorType density;
     VectorType viscosity;
+
+    DoFHandler<dim>           dof_handler_parameters;
+    AffineConstraints<double> constraints_parameters;
   };
 } // namespace MeltPoolDG::Flow
 #endif

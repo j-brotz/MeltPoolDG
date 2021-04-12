@@ -13,7 +13,8 @@
     "flow surface tension coefficient": "0.00",
     "flow start time": "0.0",
     "flow end time": "1.0",
-    "flow time step size": "0.005"
+    "flow time step size": "0.005",
+    "flow variable properties over interface": "consistent_with_evaporation"
   },
   "levelset" : {
     "ls do reinitialization": "true",
@@ -52,6 +53,7 @@
         "dimension"         : "2",
         "global refinements" : "0",
         "velocity degree"    : "2",
+        "formulation convective term momentum balance": "convective",
         "Solver" : {
            "linearization scheme"         : "coupled implicit Newton",
           "NL max iterations"            : "10",

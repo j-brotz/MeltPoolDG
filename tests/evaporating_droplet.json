@@ -54,6 +54,7 @@
         "dimension"         : "2",
         "global refinements" : "0",
         "velocity degree"    : "2",
+        "formulation convective term momentum balance": "convective",
         "Solver" : {
            "linearization scheme"         : "coupled implicit Newton",
           "NL max iterations"            : "10",
