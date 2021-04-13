@@ -117,10 +117,6 @@ namespace MeltPoolDG
   {
     int          velocity_degree                                   = -1;
     int          velocity_n_q_points_1d                            = -1;
-    number       density                                           = -1.0;
-    number       density_difference                                = 0.0;
-    number       viscosity                                         = -1.0;
-    number       viscosity_difference                              = 0.0;
     number       surface_tension_coefficient                       = 0.0;
     number       temperature_dependent_surface_tension_coefficient = 0.0;
     number       surface_tension_reference_temperature             = 0.0;
@@ -156,9 +152,6 @@ namespace MeltPoolDG
     number                      convection_coefficient             = 0.0;
     number                      temperature_infinity               = 0.0;
     bool                        do_matrix_free                     = true;
-    number                      density                            = 0.0;
-    number                      conductivity                       = 0.0;
-    number                      capacity                           = 0.0;
     number                      velocity                           = 0.0;
     bool                        two_phase                          = false;
     bool                        variable_properties_over_interface = false;
@@ -244,19 +237,27 @@ namespace MeltPoolDG
   template <typename number = double>
   struct MaterialData
   {
-    struct Liquid
+    /**
+     * Default material. In case of two-phase flow; heaviside == 0
+     */
+    struct First
     {
       number capacity     = 0.0;
       number conductivity = 0.0;
       number density      = 0.0;
-    } liquid;
+      number viscosity    = 0.0;
+    } first;
 
-    struct Gas
+    /**
+     * Secondary material. In case of two-phase-flow; heaviside == 1
+     */
+    struct Second
     {
       number capacity     = 0.0;
       number conductivity = 0.0;
       number density      = 0.0;
-    } gas;
+      number viscosity    = 0.0;
+    } second;
   };
 
   template <typename number = double>
@@ -379,23 +380,25 @@ namespace MeltPoolDG
           //   NavierStokesMatrix::begin_viscosity(). However, we do not actually
           //   use these values, since we fill the density and viscosity
           //   differently.
-          adaflo_params.params.density_diff   = 1.0;
+          adaflo_params.params.density_diff   = 1.0; // TODO ?
           adaflo_params.params.viscosity_diff = 1.0;
 
-          if ((evapor.density_gas > 0) && (evapor.density_liquid > 0))
+          if (material.first.density > 0.0)
             {
-              flow.density = (evapor.density_gas > 0.0) && (evapor.ls_value_gas == -1) ?
-                               evapor.density_gas :
-                               evapor.density_liquid;
-
-              flow.density_difference = (flow.density == evapor.density_gas) ?
-                                          evapor.density_liquid - evapor.density_gas :
-                                          evapor.density_gas - evapor.density_liquid;
+              adaflo_params.params.density = material.first.density;
+              adaflo_params.params.density_diff =
+                (material.second.density > 0.0) ? material.first.density - material.second.density :
+                                                  0.0;
             }
-          else
-            flow.density = (flow.density > 0.0) ? flow.density : adaflo_params.params.density;
+          if (material.first.viscosity > 0.0)
+            {
+              adaflo_params.params.viscosity = material.first.viscosity;
+              adaflo_params.params.viscosity_diff =
+                (material.second.viscosity > 0.0) ?
+                  material.first.viscosity - material.second.viscosity :
+                  0.0;
+            }
 
-          flow.viscosity = (flow.viscosity > 0.0) ? flow.viscosity : adaflo_params.params.viscosity;
           flow.velocity_degree        = (flow.velocity_degree > 0.0) ?
                                           flow.velocity_degree :
                                           adaflo_params.params.velocity_degree;
@@ -706,15 +709,6 @@ namespace MeltPoolDG
         prm.add_parameter("flow n q points 1d",
                           flow.velocity_n_q_points_1d,
                           "number of 1d quadrature points for the velocity field of the flow");
-        prm.add_parameter("flow density", flow.density, "density of the flow field");
-        prm.add_parameter("flow density difference",
-                          flow.density_difference,
-                          "density difference of the two-phase flow field");
-        prm.add_parameter("flow viscosity", flow.viscosity, "viscosity of the flow field");
-        prm.add_parameter("flow viscosity difference",
-                          flow.viscosity_difference,
-                          "viscosity difference of the two-phase flow field");
-        prm.add_parameter("flow density", flow.density, "density of the flow field");
         prm.add_parameter("flow surface tension coefficient",
                           flow.surface_tension_coefficient,
                           "constant coefficient for calculating surface tension");
@@ -823,11 +817,6 @@ namespace MeltPoolDG
         prm.add_parameter("heat max n steps",
                           heat.time_stepping.max_n_steps,
                           "Sets the maximum number of time steps");
-        prm.add_parameter("heat conductivity",
-                          heat.conductivity,
-                          "Conductivity for the heat problem.");
-        prm.add_parameter("heat capacity", heat.capacity, "Heat capacity for the heat problem.");
-        prm.add_parameter("heat density", heat.density, "Density for the heat problem.");
         prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
         prm.add_parameter("heat two phase",
                           heat.two_phase,
@@ -999,16 +988,20 @@ namespace MeltPoolDG
        */
       prm.enter_subsection("material");
       {
-        prm.add_parameter("material liquid capacity", material.liquid.capacity, "liquid capacity");
-        prm.add_parameter("material liquid conductivity",
-                          material.liquid.conductivity,
-                          "liquid conductivity");
-        prm.add_parameter("material liquid density", material.liquid.density, "liquid density");
-        prm.add_parameter("material gas capacity", material.gas.capacity, "gas capacity");
-        prm.add_parameter("material gas conductivity",
-                          material.gas.conductivity,
-                          "gas conductivity");
-        prm.add_parameter("material gas density", material.gas.density, "gas density");
+        prm.add_parameter("material first capacity", material.first.capacity, "capacity");
+        prm.add_parameter("material first conductivity",
+                          material.first.conductivity,
+                          "conductivity");
+        prm.add_parameter("material first density", material.first.density, "density");
+        prm.add_parameter("material first viscosity", material.first.viscosity, "viscosity");
+        prm.add_parameter("material second capacity",
+                          material.second.capacity,
+                          "secondary capacity");
+        prm.add_parameter("material second conductivity",
+                          material.second.conductivity,
+                          "secondary conductivity");
+        prm.add_parameter("material second density", material.second.density, "secondary density");
+        prm.add_parameter("material second viscosity", material.second.viscosity, "viscosity");
       }
       prm.leave_subsection();
       /*

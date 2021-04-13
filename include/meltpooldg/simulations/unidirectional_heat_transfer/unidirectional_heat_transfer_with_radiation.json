@@ -11,15 +11,17 @@
   "heat": {
     "heat emissivity": "0.98",
     "heat temperature infinity": "300.0",
-    "heat conductivity": "55.563",
-    "heat capacity": "460",
-    "heat density": "7850.0",
     "heat start time": "0.0",
     "heat time step size": "0.01",
     "heat end time": "1.0",
     "heat max n steps": "100",
     "heat solver rel tolerance": "1e-12",
     "heat nlsolve residual tolerance": "5e-9"
+  },
+  "material": {
+    "material first conductivity": "55.563",
+    "material first capacity": "460",
+    "material first density": "7850.0"
   },
   "paraview": {
     "paraview do output": "true",

@@ -199,12 +199,11 @@ namespace MeltPoolDG::Flow
             }
 
           // ... solve melt pool operation
-          // It is assumed that flow.density represents the density of the gas phase
+          // It is assumed that material.first.density represents the density of the gas phase
           if (melt_pool_operation)
             {
-              const double density_gas = base_in->parameters.flow.density;
-              const double density_liquid =
-                base_in->parameters.flow.density + base_in->parameters.flow.density_difference;
+              const double density_gas    = base_in->parameters.material.first.density;
+              const double density_liquid = base_in->parameters.material.second.density;
 
               melt_pool_operation->solve(vel_force_rhs,
                                          level_set_operation.get_level_set_as_heaviside(),
@@ -387,14 +386,14 @@ namespace MeltPoolDG::Flow
             base_in->get_bc("heat_transfer"),
             *scratch_data,
             base_in->parameters.heat,
+            base_in->parameters.material,
             temp_dof_idx,
             temp_hanging_nodes_dof_idx,
             temp_quad_idx,
             vel_dof_idx,
             &flow_operation->get_velocity(),
             ls_dof_idx,
-            &level_set_operation.get_level_set_as_heaviside(),
-            &base_in->parameters.material);
+            &level_set_operation.get_level_set_as_heaviside());
 
           /*
            *    compute initial conditions of the temperature field
@@ -459,9 +458,8 @@ namespace MeltPoolDG::Flow
        */
       if (melt_pool_operation)
         {
-          const double density_gas = base_in->parameters.flow.density;
-          const double density_liquid =
-            base_in->parameters.flow.density + base_in->parameters.flow.density_difference;
+          const double density_gas    = base_in->parameters.material.first.density;
+          const double density_liquid = base_in->parameters.material.second.density;
 
           melt_pool_operation->set_initial_condition(
             level_set_operation.get_level_set_as_heaviside(),
@@ -712,31 +710,31 @@ namespace MeltPoolDG::Flow
                     }
                   else
                     flow_operation->get_density(cell, q) =
-                      parameters.flow.density + parameters.flow.density_difference * indicator;
+                      UtilityFunctions::interpolate(indicator,
+                                                    parameters.material.first.density,
+                                                    parameters.material.second.density);
 
                   // set viscosity
                   flow_operation->get_viscosity(cell, q) =
-                    parameters.flow.viscosity + parameters.flow.viscosity_difference * indicator;
+                    UtilityFunctions::interpolate(indicator,
+                                                  parameters.material.first.viscosity,
+                                                  parameters.material.second.viscosity);
 
                   // check if no spurious densities or viscosities are computed
                   const double min_density =
-                    std::min(parameters.flow.density,
-                             parameters.flow.density + parameters.flow.density_difference);
+                    std::min(parameters.material.first.density, parameters.material.second.density);
                   const double max_density =
-                    std::max(parameters.flow.density,
-                             parameters.flow.density + parameters.flow.density_difference);
+                    std::max(parameters.material.first.density, parameters.material.second.density);
 
                   for (auto dens : flow_operation->get_density(cell, q))
                     if (min_density > dens || dens > max_density)
                       std::cout << "WARNING: density does not comply with input:" << dens
                                 << std::endl;
 
-                  const double min_viscosity =
-                    std::min(parameters.flow.viscosity,
-                             parameters.flow.viscosity + parameters.flow.viscosity_difference);
-                  const double max_viscosity =
-                    std::max(parameters.flow.viscosity,
-                             parameters.flow.viscosity + parameters.flow.viscosity_difference);
+                  const double min_viscosity = std::min(parameters.material.first.viscosity,
+                                                        parameters.material.second.viscosity);
+                  const double max_viscosity = std::max(parameters.material.first.viscosity,
+                                                        parameters.material.second.viscosity);
 
                   for (auto visc : flow_operation->get_viscosity(cell, q))
                     if (min_viscosity > visc || visc > max_viscosity)
@@ -748,8 +746,9 @@ namespace MeltPoolDG::Flow
                        v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
                        ++v)
                     {
-                      mass += (parameters.flow.density +
-                               parameters.flow.density_difference * ls_values.get_value(q)[v]) *
+                      mass += UtilityFunctions::interpolate(ls_values.get_value(q)[v],
+                                                            parameters.material.first.density,
+                                                            parameters.material.second.density) *
                               ls_values.JxW(q)[v];
                     }
                 }

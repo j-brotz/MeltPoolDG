@@ -55,14 +55,14 @@ namespace MeltPoolDG::Heat
     HeatTransferOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
                           const ScratchData<dim> &                        scratch_data_in,
                           const HeatData<double> &                        heat_data_in,
+                          const MaterialData<double> &                    material_data,
                           const unsigned int                              temp_dof_idx_in,
-                          const unsigned int          temp_hanging_nodes_dof_idx_in,
-                          const unsigned int          temp_quad_idx_in,
-                          const unsigned int          vel_dof_idx_in            = 0,
-                          VectorType *                velocity_in               = nullptr,
-                          const unsigned int          ls_dof_idx_in             = 0,
-                          VectorType *                level_set_as_heaviside_in = nullptr,
-                          const MaterialData<double> *material_data_in          = nullptr)
+                          const unsigned int temp_hanging_nodes_dof_idx_in,
+                          const unsigned int temp_quad_idx_in,
+                          const unsigned int vel_dof_idx_in            = 0,
+                          VectorType *       velocity_in               = nullptr,
+                          const unsigned int ls_dof_idx_in             = 0,
+                          VectorType *       level_set_as_heaviside_in = nullptr)
       : scratch_data(scratch_data_in)
       , heat_data(heat_data_in)
       , temp_dof_idx(temp_dof_idx_in)
@@ -76,6 +76,7 @@ namespace MeltPoolDG::Heat
       heat_operator = std::make_shared<HeatTransferOperator<dim>>(bc_data,
                                                                   scratch_data,
                                                                   heat_data,
+                                                                  material_data,
                                                                   temp_dof_idx,
                                                                   temp_quad_idx,
                                                                   temperature,
@@ -83,8 +84,7 @@ namespace MeltPoolDG::Heat
                                                                   vel_dof_idx,
                                                                   velocity,
                                                                   ls_dof_idx,
-                                                                  level_set_as_heaviside,
-                                                                  material_data_in);
+                                                                  level_set_as_heaviside);
     }
 
     void

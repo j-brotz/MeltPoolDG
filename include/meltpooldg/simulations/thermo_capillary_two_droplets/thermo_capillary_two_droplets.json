@@ -14,18 +14,16 @@
     "heat variable properties over interface": "false"
   },
   "material": {
-    "material gas capacity": "1e-4",
-    "material gas conductivity": "2.4e-6",
-    "material gas density": "500",
-    "material liquid capacity": "5e-5",
-    "material liquid conductivity": "1.2e-6",
-    "material liquid density": "250"
+    "material first capacity": "1e-4",
+    "material first conductivity": "2.4e-6",
+    "material first density": "500",
+    "material first viscosity": "0.024",
+    "material second capacity": "5e-5",
+    "material second conductivity": "1.2e-6",
+    "material second density": "250",
+    "material second viscosity": "0.012"
   },
   "flow": {
-    "flow density": "500",
-    "flow viscosity": "0.024",
-    "flow density difference": "-250.",
-    "flow viscosity difference": "-0.012",
     "flow surface tension coefficient": "0.023040369",
     "flow temperature dependent surface tension coefficient": "0.002",
     "flow start time": "0.0",
