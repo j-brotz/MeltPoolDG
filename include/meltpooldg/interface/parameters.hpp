@@ -227,8 +227,6 @@ namespace MeltPoolDG
   {
     number      evaporative_mass_flux_scale_factor = 1.0;
     number      evaporative_mass_flux              = 0.0;
-    number      density_liquid                     = 0.0;
-    number      density_gas                        = 0.0;
     number      ls_value_liquid                    = 1.0;
     number      ls_value_gas                       = -1.0;
     std::string formulation_source_term_continuity = "diffuse";
@@ -380,7 +378,7 @@ namespace MeltPoolDG
           //   NavierStokesMatrix::begin_viscosity(). However, we do not actually
           //   use these values, since we fill the density and viscosity
           //   differently.
-          adaflo_params.params.density_diff   = 1.0; // TODO ?
+          adaflo_params.params.density_diff   = 1.0;
           adaflo_params.params.viscosity_diff = 1.0;
 
           if (material.first.density > 0.0)
@@ -962,12 +960,6 @@ namespace MeltPoolDG
         prm.add_parameter("evapor evaporative mass flux",
                           evapor.evaporative_mass_flux,
                           "Mass flux due to evaporation (SI unit in kg/m²s).");
-        prm.add_parameter("evapor density liquid",
-                          evapor.density_liquid,
-                          "Density value of the liquid fluid.");
-        prm.add_parameter("evapor density gas",
-                          evapor.density_gas,
-                          "Density value of the gaseous fluid.");
         prm.add_parameter("evapor ls value liquid",
                           evapor.ls_value_liquid,
                           "Set the level set value corresponding to the liquid domain.",

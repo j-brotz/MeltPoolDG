@@ -46,10 +46,12 @@
   },
   "evaporation": {
     "evapor evaporative mass flux": "1.0e-3",
-    "evapor density liquid": "1",
-    "evapor density gas": "0.001",
     "evapor ls value liquid": "1",
     "evapor ls value gas": "-1"
+  },
+  "material": {
+    "material first density": "0.001",
+    "material second density": "1"
   },
   "Navier-Stokes": {
     "adaflo": {

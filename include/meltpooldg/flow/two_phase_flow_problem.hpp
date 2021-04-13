@@ -103,8 +103,8 @@ namespace MeltPoolDG::Flow
                   evaporation_operation->get_evaporative_mass_flux(),
                   level_set_operation.get_level_set_as_heaviside(),
                   level_set_operation.get_normal_vector(),
-                  base_in->parameters.evapor.density_liquid,
-                  base_in->parameters.evapor.density_gas,
+                  base_in->parameters.material.second.density,
+                  base_in->parameters.material.first.density,
                   evapor_vel_dof_idx,
                   ls_hanging_nodes_dof_idx,
                   ls_quad_idx,
@@ -189,8 +189,8 @@ namespace MeltPoolDG::Flow
                     mass_balance_rhs,
                     evaporation_operation->get_evaporative_mass_flux(),
                     level_set_operation.get_level_set(),
-                    base_in->parameters.evapor.density_liquid,
-                    base_in->parameters.evapor.density_gas,
+                    base_in->parameters.material.second.density,
+                    base_in->parameters.material.first.density,
                     ls_hanging_nodes_dof_idx,
                     flow_operation->get_dof_handler_idx_pressure());
 #endif
@@ -703,8 +703,8 @@ namespace MeltPoolDG::Flow
                   if (parameters.flow.variable_properties_over_interface ==
                       "consistent_with_evaporation")
                     {
-                      const double &rho_g = parameters.evapor.density_gas;
-                      const double &rho_l = parameters.evapor.density_liquid;
+                      const double rho_g = parameters.material.first.density;
+                      const double rho_l = parameters.material.second.density;
                       flow_operation->get_density(cell, q) =
                         rho_g / (1. + (rho_g / rho_l - 1) * ls_values.get_value(q));
                     }

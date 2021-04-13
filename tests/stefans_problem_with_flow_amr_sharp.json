@@ -77,8 +77,6 @@
   },
   "evaporation": {
     "evapor evaporative mass flux": "1.e-3",
-    "evapor density liquid": "1.0",
-    "evapor density gas": "0.01",
     "evapor ls value liquid": "1",
     "evapor ls value gas": "-1",
     "evapor formulation source term continuity": "sharp"
