@@ -965,20 +965,30 @@ namespace MeltPoolDG
        */
       prm.enter_subsection("material");
       {
-        prm.add_parameter("material first capacity", material.first.capacity, "capacity");
+        prm.add_parameter("material first capacity",
+                          material.first.capacity,
+                          "capacity of the primary material (level-set = 0)");
         prm.add_parameter("material first conductivity",
                           material.first.conductivity,
-                          "conductivity");
-        prm.add_parameter("material first density", material.first.density, "density");
-        prm.add_parameter("material first viscosity", material.first.viscosity, "viscosity");
+                          "conductivity of the primary material (level-set = 0)");
+        prm.add_parameter("material first density",
+                          material.first.density,
+                          "density of the primary material (level-set = 0)");
+        prm.add_parameter("material first viscosity",
+                          material.first.viscosity,
+                          "viscosity of the primary material (level-set = 0)");
         prm.add_parameter("material second capacity",
                           material.second.capacity,
-                          "secondary capacity");
+                          "capacity of the secondary material (level-set = 1)");
         prm.add_parameter("material second conductivity",
                           material.second.conductivity,
-                          "secondary conductivity");
-        prm.add_parameter("material second density", material.second.density, "secondary density");
-        prm.add_parameter("material second viscosity", material.second.viscosity, "viscosity");
+                          "conductivity of the secondary material (level-set = 1)");
+        prm.add_parameter("material second density",
+                          material.second.density,
+                          "density of the secondary material (level-set = 1)");
+        prm.add_parameter("material second viscosity",
+                          material.second.viscosity,
+                          "viscosity of the secondary material (level-set = 1)");
       }
       prm.leave_subsection();
       /*

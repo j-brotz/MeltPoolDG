@@ -176,8 +176,10 @@ namespace MeltPoolDG::Evaporation
                                                         tolerance_normal_vector);
 
               evapor_vel[q_index] = n_phi * evap_flux.get_value(q_index) *
-                                    (ls.get_value(q_index) / material.second.density +
-                                     (1. - ls.get_value(q_index)) / material.first.density);
+                                    UtilityFunctions::interpolate(ls.get_value(q_index),
+                                                                  1. / material.first.density,
+                                                                  1. / material.second.density);
+
 
               // The normal vector field is oriented such that the normal vector points from
               // the negative level set value (= default for representing the gas phase) to the
