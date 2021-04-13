@@ -42,11 +42,7 @@
     "mp domain y max": "0.0002",
     "mp boiling temperature": "3000.",
     "mp liquid absorptivity": "0.5",
-    "mp liquid conductivity": "35.95",
-    "mp liquid capacity": "965",
-    "mp gas absorptivity": "0",
-    "mp gas conductivity": "10",
-    "mp gas capacity": "0"
+    "mp gas absorptivity": "0"
   },
   "levelset": {
     "ls do reinitialization": "true",

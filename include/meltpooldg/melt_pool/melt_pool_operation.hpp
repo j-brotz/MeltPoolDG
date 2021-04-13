@@ -88,7 +88,9 @@ namespace MeltPoolDG
         /*
          *  initialize the laser operation class
          */
-        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data, data_in.laser);
+        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data,
+                                                                      data_in.laser,
+                                                                      data_in.material);
         /*
          *  Initialize the laser operation
          */

@@ -207,8 +207,6 @@ namespace MeltPoolDG
     struct Liquid
     {
       number absorptivity     = 0.0;
-      number conductivity     = 0.0;
-      number capacity         = 0.0;
       number melt_pool_radius = 0.0;
       number melt_pool_depth  = 0.0;
       number melting_point    = 0.0;
@@ -217,8 +215,6 @@ namespace MeltPoolDG
     struct Gas
     {
       number absorptivity = 0.0;
-      number conductivity = 0.0;
-      number capacity     = 0.0;
     } gas;
   };
 
@@ -922,12 +918,6 @@ namespace MeltPoolDG
         prm.add_parameter("mp liquid absorptivity",
                           mp.liquid.absorptivity,
                           "Absorptivity of the liquid part of domain");
-        prm.add_parameter("mp liquid conductivity",
-                          mp.liquid.conductivity,
-                          "Conductivity of the liquid part of domain");
-        prm.add_parameter("mp liquid capacity",
-                          mp.liquid.capacity,
-                          "Capacity of the liquid part of domain");
         prm.add_parameter("mp liquid melt pool radius",
                           mp.liquid.melt_pool_radius,
                           "Set the radius of the liquid parts of the melt pool ellipse "
@@ -941,13 +931,8 @@ namespace MeltPoolDG
         prm.add_parameter("mp gas absorptivity",
                           mp.gas.absorptivity,
                           "Absorptivity of the gaseous part of domain");
-        prm.add_parameter("mp gas conductivity",
-                          mp.gas.conductivity,
-                          "Conductivity of the gaseous part of domain");
-        prm.add_parameter("mp gas capacity",
-                          mp.gas.capacity,
-                          "Capacity of the gaseous part of domain");
       }
+
       prm.leave_subsection();
       /*
        *  evaporation
