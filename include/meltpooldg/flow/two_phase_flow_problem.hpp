@@ -55,6 +55,18 @@ namespace MeltPoolDG::Flow
 
       while (!time_iterator.is_finished())
         {
+          // In the melt pool simulations, the solid domain
+          // can be considered as rigid by setting the constraints
+          // for the velocity field to zero. If the solid domain
+          // changes, the AffineConstraints for the velocity field
+          // will be updated accordingly. In this case, also the
+          // constrained indices in matrix-free have to be updated
+          // which is done in the following by rebuilding matrix-free.
+          //
+          // @todo: alternative (better performing) solution?
+          if (base_in->parameters.mp.set_velocity_to_zero_in_solid)
+            scratch_data->build();
+
           const auto dt = time_iterator.get_next_time_increment();
           const auto n  = time_iterator.get_current_time_step_number();
 
