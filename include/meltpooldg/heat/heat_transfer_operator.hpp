@@ -120,41 +120,38 @@ namespace MeltPoolDG::Heat
                          const VectorType *                              velocity_in    = nullptr,
                          const unsigned int                              ls_dof_idx_in  = 0,
                          const VectorType *level_set_as_heaviside_in                    = nullptr)
-      // clang-format off
-        :
+      : scratch_data(scratch_data_in)
+      , data(data_in)
+      , material(material_data_in)
+      , temp_dof_idx(temp_dof_idx_in)
+      , temp_quad_idx(temp_quad_idx_in)
+      , temperature(temperature_in)
+      , heat_source(heat_source_in)
+      , vel_dof_idx(vel_dof_idx_in)
+      , velocity(velocity_in)
+      , ls_dof_idx(ls_dof_idx_in)
+      , level_set_as_heaviside(level_set_as_heaviside_in)
+    {
+      AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside),
+                  ExcMessage("Two-phase flow must come with a velocity! Abort..."));
+      AssertThrow(material.first.conductivity > 0.0 && material.first.density > 0.0,
+                  ExcMessage(
+                    "The material's conductivity and density must be greater than zero! Abort..."));
+      AssertThrow(
+        !level_set_as_heaviside ||
+          (material.second.conductivity > 0.0 && material.second.density > 0.0),
+        ExcMessage(
+          "The secondary material's conductivity and density must be greater than zero! Abort..."));
 
-        scratch_data ( scratch_data_in           )
-        , data(data_in)
-        , material(material_data_in)
-        , temp_dof_idx(temp_dof_idx_in)
-        , temp_quad_idx(temp_quad_idx_in)
-        , temperature(temperature_in)
-        , heat_source(heat_source_in)
-        , vel_dof_idx(vel_dof_idx_in)
-        , velocity(velocity_in)
-        , ls_dof_idx(ls_dof_idx_in)
-        , level_set_as_heaviside(level_set_as_heaviside_in) {
-            AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside),
-                        ExcMessage("Two-phase flow must come with a velocity! Abort..."));
-            AssertThrow(
-                    material.first.conductivity > 0.0 && material.first.density > 0.0,
-                    ExcMessage(
-                            "The material's conductivity and density must be greater than zero! Abort..."));
-            AssertThrow(!level_set_as_heaviside ||
-                        (material.second.conductivity > 0.0 &&
-                         material.second.density > 0.0),
-                        ExcMessage(
-                                "The secondary material's conductivity and density must be greater than zero! Abort..."));
-
-            if (bc) {
-                bc_convection_indices = bc->convection_bc;
-                bc_radiation_indices = bc->radiation_bc;
-                neumann_bc = bc->neumann_bc;
-            }
-
-            this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
+      if (bc)
+        {
+          bc_convection_indices = bc->convection_bc;
+          bc_radiation_indices  = bc->radiation_bc;
+          neumann_bc            = bc->neumann_bc;
         }
-    // clang-format on
+
+      this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
+    }
 
     void
     assemble_matrixbased([[maybe_unused]] const VectorType &advected_field_old,
@@ -210,6 +207,10 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
+      VectorizedArrayType capacity     = material.first.capacity;
+      VectorizedArrayType conductivity = material.first.conductivity;
+      VectorizedArrayType density      = material.first.density;
+
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           temp_vals.reinit(cell);
@@ -229,16 +230,11 @@ namespace MeltPoolDG::Heat
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              VectorizedArrayType conductivity, density, capacity;
               if (level_set_as_heaviside)
-                std::tie(density, capacity, conductivity) =
-                  get_two_phase_material_parameters(ls_vals.get_value(q_index));
-              else
-                {
-                  density      = material.first.density;
-                  capacity     = material.first.capacity;
-                  conductivity = material.first.conductivity;
-                }
+                get_two_phase_material_parameters(ls_vals.get_value(q_index),
+                                                  capacity,
+                                                  conductivity,
+                                                  density);
 
               auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
@@ -324,6 +320,9 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
+      VectorizedArrayType capacity     = material.first.capacity;
+      VectorizedArrayType conductivity = material.first.conductivity;
+      VectorizedArrayType density      = material.first.density;
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
@@ -355,16 +354,11 @@ namespace MeltPoolDG::Heat
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
-              VectorizedArrayType conductivity, density, capacity;
               if (level_set_as_heaviside)
-                std::tie(density, capacity, conductivity) =
-                  get_two_phase_material_parameters(ls_vals.get_value(q_index));
-              else
-                {
-                  density      = material.first.density;
-                  capacity     = material.first.capacity;
-                  conductivity = material.first.conductivity;
-                }
+                get_two_phase_material_parameters(ls_vals.get_value(q_index),
+                                                  capacity,
+                                                  conductivity,
+                                                  density);
 
               auto val = density * capacity *
                            (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) *
@@ -492,8 +486,11 @@ namespace MeltPoolDG::Heat
     /*
      * @return \c std::tuple with density, capacity and conductivity
      */
-    std::tuple<VectorizedArrayType, VectorizedArrayType, VectorizedArrayType>
-    get_two_phase_material_parameters(const VectorizedArrayType &ls_heaviside_val) const
+    void
+    get_two_phase_material_parameters(const VectorizedArrayType &ls_heaviside_val,
+                                      VectorizedArrayType &      capacity,
+                                      VectorizedArrayType &      conductivity,
+                                      VectorizedArrayType &      density) const
     {
       // todo Input material parameters for two phase
 
@@ -503,14 +500,13 @@ namespace MeltPoolDG::Heat
       else
         weight = UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
 
-      const auto density =
-        UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
-      const auto capacity =
+      capacity =
         UtilityFunctions::interpolate(weight, material.first.capacity, material.second.capacity);
-      const auto conductivity = UtilityFunctions::interpolate(weight,
-                                                              material.first.conductivity,
-                                                              material.second.conductivity);
-      return std::make_tuple(density, capacity, conductivity);
+      conductivity = UtilityFunctions::interpolate(weight,
+                                                   material.first.conductivity,
+                                                   material.second.conductivity);
+      density =
+        UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
     }
   };
 } // namespace MeltPoolDG::Heat

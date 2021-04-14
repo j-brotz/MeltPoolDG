@@ -232,7 +232,7 @@ namespace MeltPoolDG
   struct MaterialData
   {
     /**
-     * Default material. In case of two-phase flow; heaviside == 0
+     * Default material. In case of two-phase flow; heaviside(level set) == 0
      */
     struct First
     {
@@ -243,7 +243,7 @@ namespace MeltPoolDG
     } first;
 
     /**
-     * Secondary material. In case of two-phase-flow; heaviside == 1
+     * Secondary material. In case of two-phase-flow; heaviside(level set) == 1
      */
     struct Second
     {
@@ -965,18 +965,22 @@ namespace MeltPoolDG
        */
       prm.enter_subsection("material");
       {
-        prm.add_parameter("material first capacity",
-                          material.first.capacity,
-                          "capacity of the primary material (level-set = 0)");
-        prm.add_parameter("material first conductivity",
-                          material.first.conductivity,
-                          "conductivity of the primary material (level-set = 0)");
-        prm.add_parameter("material first density",
-                          material.first.density,
-                          "density of the primary material (level-set = 0)");
-        prm.add_parameter("material first viscosity",
-                          material.first.viscosity,
-                          "viscosity of the primary material (level-set = 0)");
+        prm.add_parameter(
+          "material first capacity",
+          material.first.capacity,
+          "capacity of the primary material (in case of two-phases corresponding to level-set = -1)");
+        prm.add_parameter(
+          "material first conductivity",
+          material.first.conductivity,
+          "conductivity of the primary material (in case of two-phases corresponding to level-set = -1)");
+        prm.add_parameter(
+          "material first density",
+          material.first.density,
+          "density of the primary material (in case of two-phases corresponding to level-set = -1)");
+        prm.add_parameter(
+          "material first viscosity",
+          material.first.viscosity,
+          "viscosity of the primary material (in case of two-phases corresponding to level-set = -1)");
         prm.add_parameter("material second capacity",
                           material.second.capacity,
                           "capacity of the secondary material (level-set = 1)");

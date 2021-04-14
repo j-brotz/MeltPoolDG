@@ -53,7 +53,6 @@
         "dimension": "2",
         "global refinements": "0",
         "velocity degree": "2",
-        "velocity degree": "2",
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
           "NL max iterations": "10",

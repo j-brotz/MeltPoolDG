@@ -9,7 +9,7 @@
     "problem name": "two_phase_flow_with_heat_transfer",
     "gravity": "0.0"
   },
-  "he./at": {
+  "heat": {
     "heat two phase": "true",
     "heat variable properties over interface": "false"
   },

@@ -17,7 +17,7 @@
   "material": {
     "material first viscosity": "0.001",
     "material second viscosity": "0.01",
-    "material first density": "0.001",
+    "material first density": "0.01",
     "material second density": "1"
   },
   "levelset": {
