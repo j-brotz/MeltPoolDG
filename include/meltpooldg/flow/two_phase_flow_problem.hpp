@@ -143,26 +143,33 @@ namespace MeltPoolDG::Flow
               false /* false means not to zero out the vorce vector */);
 
           // ... c) temperature-dependent surface tension
-          if (!melt_pool_operation && heat_operation &&
-              base_in->parameters.flow.temperature_dependent_surface_tension_coefficient > 0.0)
-            Flow::SurfaceTensionOperation<dim>::compute_temperature_dependent_surface_tension(
-              *scratch_data,
-              vel_force_rhs,
-              level_set_operation.get_level_set_as_heaviside(),
-              level_set_operation.get_curvature(),
-              heat_operation->get_temperature(),
-              level_set_operation.get_normal_vector(),
-              base_in->parameters.flow.surface_tension_coefficient,
-              base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
-              base_in->parameters.flow.surface_tension_reference_temperature,
-              base_in->parameters.flow.surface_tension_coefficient_residual_fraction,
-              ls_dof_idx,
-              curv_dof_idx,
-              normal_dof_idx,
-              vel_dof_idx,
-              flow_operation->get_quad_idx_velocity(),
-              temp_dof_idx,
-              false /*false means add to force vector*/);
+          if ((melt_pool_operation || heat_operation) &&
+              std::abs(base_in->parameters.flow.temperature_dependent_surface_tension_coefficient) >
+                0.0)
+            {
+              // @todo: REFACTOR!!!
+              const auto &temperature = (melt_pool_operation) ?
+                                          melt_pool_operation->get_temperature() :
+                                          heat_operation->get_temperature();
+              Flow::SurfaceTensionOperation<dim>::compute_temperature_dependent_surface_tension(
+                *scratch_data,
+                vel_force_rhs,
+                level_set_operation.get_level_set_as_heaviside(),
+                level_set_operation.get_curvature(),
+                temperature,
+                level_set_operation.get_normal_vector(),
+                base_in->parameters.flow.surface_tension_coefficient,
+                base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
+                base_in->parameters.flow.surface_tension_reference_temperature,
+                base_in->parameters.flow.surface_tension_coefficient_residual_fraction,
+                ls_dof_idx,
+                curv_dof_idx,
+                normal_dof_idx,
+                vel_dof_idx,
+                flow_operation->get_quad_idx_velocity(),
+                temp_dof_idx,
+                false /*false means add to force vector*/);
+            }
 
           if (evaporation_operation)
             {
