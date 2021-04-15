@@ -99,7 +99,8 @@ As an example the simulation of the newly created "vortex_bubble" is demonstrate
 make -j 4 
 mpirun -np 4 ./meltpooldg ../include/meltpooldg/simulations/vortex_bubble/vortex_bubble.json
 ```
+# Gallery
 
-
+<img src="https://user-images.githubusercontent.com/70260016/114845314-f6dcdb80-9ddb-11eb-85d4-f9f3df3acc14.gif" width="50%" height="50%">
 
 
