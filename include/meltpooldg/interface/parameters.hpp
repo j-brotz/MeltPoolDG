@@ -345,6 +345,18 @@ namespace MeltPoolDG
         {
           adaflo_params.parse_parameters(parameter_filename);
 
+          AssertThrow(adaflo_params.params.density == 1.0, // 1.0 is the default value from adaflo
+                      ExcMessage(
+                        "It seems that you specified the density parameter "
+                        "within the adaflo section, which is ignored by MeltPoolDG. "
+                        "Please use the >material: material first density:< section instead. "));
+
+          AssertThrow(adaflo_params.params.viscosity == 1.0, // 1.0 is the default value from adaflo
+                      ExcMessage(
+                        "It seems that you specified the viscosity parameter "
+                        "within the adaflo section, which is ignored by MeltPoolDG. "
+                        "Please use the >material: material first density:< section instead. "));
+
           if (base.problem_name == "melt_pool_with_evaporation" ||
               base.problem_name == "two_phase_flow_with_evaporation")
             {
@@ -379,6 +391,7 @@ namespace MeltPoolDG
 
           if (material.first.density > 0.0)
             {
+              // adaflo assumes the parameter density to be the one of heaviside == 0
               adaflo_params.params.density = material.first.density;
               adaflo_params.params.density_diff =
                 (material.second.density > 0.0) ? material.first.density - material.second.density :
@@ -386,6 +399,7 @@ namespace MeltPoolDG
             }
           if (material.first.viscosity > 0.0)
             {
+              // adaflo assumes the parameter viscosity to be the one of heaviside == 0
               adaflo_params.params.viscosity = material.first.viscosity;
               adaflo_params.params.viscosity_diff =
                 (material.second.viscosity > 0.0) ?
