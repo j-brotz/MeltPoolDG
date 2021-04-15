@@ -1,5 +1,5 @@
 {
-  "base" : {
+  "base": {
     "problem name": "level_set",
     "application name": "vortex_bubble",
     "dimension": "2",
@@ -7,29 +7,28 @@
     "degree": "1",
     "do print parameters": "false"
   },
-  "levelset" : {
+  "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls do print l2norm": "true",
-    "ls time integration scheme" : "crank_nicolson",
+    "ls time integration scheme": "crank_nicolson",
     "ls start time": "0.0",
     "ls end time": "0.05",
     "ls time step size": "0.01",
     "ls do matrix free": "true"
   },
-  "reinitialization" : {
+  "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
     "reinit do print l2norm": "true",
     "reinit eps scale factor": "0.5"
   },
-  "normal vector": { 
+  "normal vector": {
     "normal vec damping scale factor": "0.5",
     "normal vec do matrix free": "true"
   },
-  "paraview":
-  {
-    "paraview do output" : "false"
+  "paraview": {
+    "paraview do output": "false"
   }
 }
