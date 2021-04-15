@@ -19,6 +19,12 @@ jobs:
         extensions: 'hpp,cpp'
         clangFormatVersion: 11
         inplace: true
-    - run: |
+    - name: code-formating
+      run: |
+        git diff
+        git diff-files --quiet || exit $?
+    - name: json-formating
+      run: |
+        scripts/format-all-json
         git diff
         git diff-files --quiet || exit $?
