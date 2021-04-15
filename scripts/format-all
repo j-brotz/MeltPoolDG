@@ -1,0 +1,4 @@
+#!/bin/sh
+
+scripts/format-all-code
+scripts/format-all-json
