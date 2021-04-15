@@ -23,12 +23,12 @@
     "heat nlsolve residual tolerance": "1e-6"
   },
   "material": {
-    "material liquid capacity": "460",
-    "material liquid conductivity": "55.563",
-    "material liquid density": "7850",
-    "material gas capacity": "230",
-    "material gas conductivity": "27.7815",
-    "material gas density": "3925"
+    "material first capacity": "230",
+    "material first conductivity": "27.7815",
+    "material first density": "3925",
+    "material second capacity": "460",
+    "material second conductivity": "55.563",
+    "material second density": "7850"
   },
   "paraview": {
     "paraview do output": "false"

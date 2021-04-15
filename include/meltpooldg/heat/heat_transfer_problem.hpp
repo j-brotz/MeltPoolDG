@@ -206,26 +206,20 @@ namespace MeltPoolDG::Heat
         }
 
       /*
-       *    two-phase material properties
-       */
-      MaterialData<double> *material_data_ptr;
-      if (base_in->parameters.heat.two_phase)
-        material_data_ptr = &base_in->parameters.material;
-      /*
        *    initialize the heat operation class
        */
       heat_operation =
         std::make_shared<HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
                                                      *scratch_data,
                                                      base_in->parameters.heat,
+                                                     base_in->parameters.material,
                                                      temp_dof_idx,
                                                      temp_hanging_nodes_dof_idx,
                                                      temp_quad_idx,
                                                      velocity_dof_idx,
                                                      velocity_ptr,
                                                      level_set_dof_idx,
-                                                     level_set_as_heaviside_ptr,
-                                                     material_data_ptr);
+                                                     level_set_as_heaviside_ptr);
 
       heat_operation->set_initial_condition(initial_solution);
 

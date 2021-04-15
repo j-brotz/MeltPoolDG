@@ -1,14 +1,14 @@
 {
-  "base" : {
+  "base": {
     "problem name": "advection_diffusion",
     "application name": "advection_diffusion",
     "dimension": "2",
     "global refinements": "5",
     "degree": "1",
     "do print parameters": "false",
-    "do simplex" : "true"
+    "do simplex": "true"
   },
-  "advection diffusion" : {
+  "advection diffusion": {
     "advec diff implementation": "adaflo",
     "advec diff diffusivity": "0.000000",
     "advec diff time integration scheme": "crank_nicolson",
@@ -18,9 +18,7 @@
     "advec diff do matrix free": "true",
     "advec diff do print l2norm": "true"
   },
-  "paraview" : {
+  "paraview": {
     "paraview do output": "true"
   }
-
-
 }

@@ -1,5 +1,5 @@
 {
-  "base" : {
+  "base": {
     "problem name": "level_set_with_evaporation",
     "application name": "stefans_problem",
     "dimension": "2",
@@ -7,40 +7,42 @@
     "degree": "1",
     "do print parameters": "false"
   },
-  "levelset" : {
+  "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls do print l2norm": "true",
-    "ls time integration scheme" : "crank_nicolson",
+    "ls time integration scheme": "crank_nicolson",
     "ls start time": "0.0",
     "ls end time": "0.01",
     "ls time step size": "0.002",
     "ls do matrix free": "true",
     "ls implementation": "meltpooldg"
   },
-  "reinitialization" : {
+  "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
     "reinit implementation": "meltpooldg",
-    "reinit constant epsilon":"0.01"
+    "reinit constant epsilon": "0.01"
   },
-  "normal vector": { 
+  "normal vector": {
     "normal vec do matrix free": "true",
     "normal vec implementation": "meltpooldg"
   },
-  "curvature":{ 
+  "curvature": {
     "curv do matrix free": "true",
     "curv implementation": "meltpooldg"
   },
-  "evaporation" : {
+  "evaporation": {
     "evapor evaporative mass flux": "1.0e-4",
-    "evapor density liquid": "1",
-    "evapor density gas": "0.01",
-    "evapor ls value liquid":"-1",
+    "evapor ls value liquid": "-1",
     "evapor ls value gas": "1"
   },
-  "paraview" : {
+  "material": {
+    "material first density": "0.01",
+    "material second density": "1"
+  },
+  "paraview": {
     "paraview do output": "false"
   }
 }

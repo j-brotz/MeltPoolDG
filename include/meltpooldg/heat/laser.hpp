@@ -25,6 +25,8 @@ namespace MeltPoolDG::Heat
      *  Laser parameters
      */
     const LaserData<double> laser_data;
+
+    const MaterialData<double> material;
     /*
      *  Center of the laser
      */
@@ -39,9 +41,12 @@ namespace MeltPoolDG::Heat
     double laser_intensity;
 
   public:
-    LaserOperation(const ScratchData<dim> &scratch_data_in, const LaserData<double> laser_data_in)
+    LaserOperation(const ScratchData<dim> &    scratch_data_in,
+                   const LaserData<double>     laser_data_in,
+                   const MaterialData<double> &material_data_in)
       : scratch_data(scratch_data_in)
       , laser_data(laser_data_in)
+      , material(material_data_in)
       , laser_position(
           MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(laser_data.center))
     {}
@@ -175,12 +180,14 @@ namespace MeltPoolDG::Heat
           weight = (level_set_value_is_gas == -1) ? sharp_heaviside : (1. - sharp_heaviside);
         }
 
-      const double absorptivity = mp_data.gas.absorptivity +
-                                  weight * (mp_data.liquid.absorptivity - mp_data.gas.absorptivity);
-      const double conductivity = mp_data.gas.conductivity +
-                                  weight * (mp_data.liquid.conductivity - mp_data.gas.conductivity);
+      const double absorptivity = UtilityFunctions::interpolate(weight,
+                                                                mp_data.gas.absorptivity,
+                                                                mp_data.liquid.absorptivity);
+      const double conductivity = UtilityFunctions::interpolate(weight,
+                                                                material.first.conductivity,
+                                                                material.second.conductivity);
       const double capacity =
-        mp_data.gas.capacity + weight * (mp_data.liquid.capacity - mp_data.gas.capacity);
+        UtilityFunctions::interpolate(weight, material.first.capacity, material.second.capacity);
 
       const double density             = density_gas + weight * (density_liquid - density_gas);
       const double thermal_diffusivity = conductivity / (density * capacity);

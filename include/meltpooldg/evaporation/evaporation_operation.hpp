@@ -37,6 +37,8 @@ namespace MeltPoolDG::Evaporation
      *  parameters controlling the evaporation
      */
     EvaporationData<double> evaporation_data;
+
+    const MaterialData<double> &material;
     /**
      * references to solutions needed for the computation
      */
@@ -74,6 +76,7 @@ namespace MeltPoolDG::Evaporation
                          const unsigned int                             ls_quad_idx_in)
       : scratch_data(scratch_data_in)
       , evaporation_data(base_in->parameters.evapor)
+      , material(base_in->parameters.material)
       , level_set_as_heaviside(level_set_as_heaviside_in)
       , normal_vector(normal_vector_in)
       , normal_dof_idx(normal_dof_idx_in)
@@ -90,6 +93,8 @@ namespace MeltPoolDG::Evaporation
                               1e-3,
                             1e-12)))
     {
+      AssertThrow(material.first.density > 0.0 && material.second.density > 0.0,
+                  ExcMessage("The materials' densities must be greater than zero! Abort..."));
       reinit();
     }
 
@@ -171,8 +176,10 @@ namespace MeltPoolDG::Evaporation
                                                         tolerance_normal_vector);
 
               evapor_vel[q_index] = n_phi * evap_flux.get_value(q_index) *
-                                    (ls.get_value(q_index) / evaporation_data.density_liquid +
-                                     (1. - ls.get_value(q_index)) / evaporation_data.density_gas);
+                                    UtilityFunctions::interpolate(ls.get_value(q_index),
+                                                                  1. / material.first.density,
+                                                                  1. / material.second.density);
+
 
               // The normal vector field is oriented such that the normal vector points from
               // the negative level set value (= default for representing the gas phase) to the
@@ -258,8 +265,8 @@ namespace MeltPoolDG::Evaporation
 
               for (unsigned int q_index = 0; q_index < mass_flux.n_q_points; ++q_index)
                 {
-                  mass_flux.submit_value((1. / evaporation_data.density_liquid -
-                                          1. / evaporation_data.density_gas) *
+                  mass_flux.submit_value((1. / material.second.density -
+                                          1. / material.first.density) *
                                            heaviside.get_gradient(q_index).norm() *
                                            evap_flux.get_value(q_index),
                                          q_index);
@@ -268,10 +275,9 @@ namespace MeltPoolDG::Evaporation
                        v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
                        ++v)
                     {
-                      mass +=
-                        (1. / evaporation_data.density_liquid - 1. / evaporation_data.density_gas) *
-                        heaviside.get_gradient(q_index).norm()[v] *
-                        evap_flux.get_value(q_index)[v] * mass_flux.JxW(q_index)[v];
+                      mass += (1. / material.second.density - 1. / material.first.density) *
+                              heaviside.get_gradient(q_index).norm()[v] *
+                              evap_flux.get_value(q_index)[v] * mass_flux.JxW(q_index)[v];
                     }
                 }
 

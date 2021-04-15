@@ -88,7 +88,9 @@ namespace MeltPoolDG
         /*
          *  initialize the laser operation class
          */
-        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data, data_in.laser);
+        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data,
+                                                                      data_in.laser,
+                                                                      data_in.material);
         /*
          *  Initialize the laser operation
          */
@@ -100,6 +102,7 @@ namespace MeltPoolDG
           std::make_shared<Heat::HeatTransferOperation<dim>>(heat_bc,
                                                              *scratch_data,
                                                              data_in.heat,
+                                                             data_in.material,
                                                              temp_dof_idx,
                                                              temp_dof_idx, //@todo: hanging nodes
                                                              temp_quad_idx,

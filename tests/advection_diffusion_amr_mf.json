@@ -1,5 +1,5 @@
 {
-  "base" : {
+  "base": {
     "problem name": "advection_diffusion",
     "application name": "advection_diffusion",
     "dimension": "2",
@@ -7,23 +7,23 @@
     "degree": "1",
     "do print parameters": "false"
   },
-    "adaptive meshing" : {
-    "do amr":                    "true",
+  "adaptive meshing": {
+    "do amr": "true",
     "upper perc to refine": "     0.1",
     "lower perc to coarsen": "    0.00",
     "max grid refinement level": "8"
   },
-  "advection diffusion" : {
+  "advection diffusion": {
     "advec diff diffusivity": "0.000000",
     "advec diff implementation": "meltpooldg",
-    "advec diff integration scheme" : "crank_nicolson",
+    "advec diff integration scheme": "crank_nicolson",
     "advec diff start time": "0.0",
     "advec diff end time": "0.06",
     "advec diff time step size": "0.01",
     "advec diff do matrix free": "true",
     "advec diff do print l2norm": "true"
   },
-  "paraview" : {
+  "paraview": {
     "paraview do output": "false"
   }
 }
