@@ -92,7 +92,6 @@ namespace MeltPoolDG::Flow
       this->dof_index_hanging_nodes_u =
         scratch_data.attach_constraint_matrix(navier_stokes.get_hanging_node_constraints_u());
 
-
       this->quad_index_u =
         adaflo_params.use_simplex_mesh ?
           scratch_data.attach_quadrature(QGaussSimplex<dim>(adaflo_params.velocity_degree + 1)) :
@@ -109,11 +108,13 @@ namespace MeltPoolDG::Flow
     }
 
     void
-    initialize(std::shared_ptr<SimulationBase<dim>> base_in)
+    set_initial_condition(const Function<dim> &initial_field_function_velocity)
     {
+      navier_stokes.solution.zero_out_ghosts();
+      navier_stokes.solution_old.zero_out_ghosts();
       dealii::VectorTools::interpolate(navier_stokes.mapping,
                                        navier_stokes.get_dof_handler_u(),
-                                       *base_in->get_initial_condition("navier_stokes_u"),
+                                       initial_field_function_velocity,
                                        navier_stokes.solution.block(0));
 
       navier_stokes.get_constraints_u().distribute(navier_stokes.solution.block(0));

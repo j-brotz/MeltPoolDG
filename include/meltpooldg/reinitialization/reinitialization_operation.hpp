@@ -120,7 +120,7 @@ namespace MeltPoolDG
        *  solution procedure.
        */
       void
-      update_initial_solution(const VectorType &solution_level_set_in) override
+      set_initial_condition(const VectorType &solution_level_set_in) override
       {
         /*
          *    copy the given solution into the member variable
@@ -134,6 +134,13 @@ namespace MeltPoolDG
          *    operator class
          */
         normal_vector_operation->solve(solution_level_set);
+      }
+
+      void
+      update_dof_idx(const unsigned int &reinit_dof_idx_in) override
+      {
+        reinit_dof_idx = reinit_dof_idx_in;
+        create_operator();
       }
 
       void
@@ -328,8 +335,6 @@ namespace MeltPoolDG
         if (!reinit_data.solver.do_matrix_free)
           reinit_operator->initialize_matrix_based<dim>(*scratch_data);
       }
-
-
 
     private:
       std::shared_ptr<const ScratchData<dim>> scratch_data;

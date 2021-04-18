@@ -41,7 +41,10 @@ namespace MeltPoolDG
       reinit() = 0;
 
       virtual void
-      update_initial_solution(
+      update_dof_idx(const unsigned int &reinit_dof_idx_in) = 0;
+
+      virtual void
+      set_initial_condition(
         const LinearAlgebra::distributed::Vector<double> &solution_level_set_in) = 0;
 
       virtual const LinearAlgebra::distributed::Vector<double> &

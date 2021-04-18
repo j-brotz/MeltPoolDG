@@ -323,11 +323,6 @@ namespace MeltPoolDG::Flow
 
       setup_dof_system(base_in, false);
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-      dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->initialize(base_in);
-#else
-      AssertThrow(false, ExcNotImplemented());
-#endif
       /*
        *  initialize the time stepping scheme
        */
@@ -349,24 +344,10 @@ namespace MeltPoolDG::Flow
           "  this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), 'level_set') "));
 
       /*
-       *    compute intial conditions of the level set
-       */
-      VectorType initial_solution;
-      scratch_data->initialize_dof_vector(initial_solution, ls_dof_idx);
-
-      dealii::VectorTools::project(scratch_data->get_mapping(),
-                                   dof_handler,
-                                   ls_constraints_dirichlet,
-                                   scratch_data->get_quadrature(ls_quad_idx),
-                                   *base_in->get_initial_condition("level_set"),
-                                   initial_solution);
-      initial_solution.update_ghost_values();
-      /*
        *    initialize the levelset operation class
+       *    and setup initial conditions
        */
       level_set_operation.initialize(scratch_data,
-                                     initial_solution,
-                                     flow_operation->get_velocity(),
                                      base_in,
                                      ls_dof_idx,
                                      ls_hanging_nodes_dof_idx,
@@ -394,21 +375,6 @@ namespace MeltPoolDG::Flow
             &flow_operation->get_velocity(),
             ls_dof_idx,
             &level_set_operation.get_level_set_as_heaviside());
-
-          /*
-           *    compute initial conditions of the temperature field
-           */
-          scratch_data->initialize_dof_vector(initial_solution, temp_dof_idx);
-
-          dealii::VectorTools::project(scratch_data->get_mapping(),
-                                       dof_handler,
-                                       scratch_data->get_constraint(temp_dof_idx),
-                                       scratch_data->get_quadrature(temp_quad_idx),
-                                       *base_in->get_initial_condition("heat_transfer"),
-                                       initial_solution);
-          initial_solution.update_ghost_values();
-
-          heat_operation->set_initial_condition(initial_solution);
         }
 
       /*
@@ -452,21 +418,10 @@ namespace MeltPoolDG::Flow
           temp_quad_idx,
           base_in->parameters.flow.start_time,
           evaporation_operation == nullptr);
-
       /*
-       * set initial condition of the melt pool class
+       *  set initial conditions
        */
-      if (melt_pool_operation)
-        {
-          const double density_gas    = base_in->parameters.material.first.density;
-          const double density_liquid = base_in->parameters.material.second.density;
-
-          melt_pool_operation->set_initial_condition(
-            level_set_operation.get_level_set_as_heaviside(),
-            level_set_operation.get_level_set(),
-            density_gas,
-            density_liquid);
-        }
+      set_initial_condition(base_in);
       /*
        *  initialize postprocessor
        */
@@ -502,7 +457,49 @@ namespace MeltPoolDG::Flow
             scratch_data->get_pcout() << std::endl;
 
             refine_mesh(base_in);
+            /*
+             *  set initial conditions after initial AMR
+             */
+            set_initial_condition(base_in);
           }
+    }
+
+    void
+    set_initial_condition(std::shared_ptr<SimulationBase<dim>> base_in)
+    {
+      /**
+       *  set initial condition of the velocity field
+       */
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+      dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())
+        ->set_initial_condition(*base_in->get_initial_condition("navier_stokes_u"));
+#else
+      AssertThrow(false, ExcNotImplemented());
+#endif
+      /*
+       *  set initial conditions of the level set field
+       */
+      level_set_operation.set_initial_condition(*base_in->get_initial_condition("level_set"),
+                                                flow_operation->get_velocity());
+      /*
+       *  set initial conditions of the temperature field
+       */
+      if (heat_operation)
+        heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+      /*
+       * set initial condition of the melt pool class
+       */
+      if (melt_pool_operation)
+        {
+          const double density_gas    = base_in->parameters.material.first.density;
+          const double density_liquid = base_in->parameters.material.second.density;
+
+          melt_pool_operation->set_initial_condition(
+            level_set_operation.get_level_set_as_heaviside(),
+            level_set_operation.get_level_set(),
+            density_gas,
+            density_liquid);
+        }
     }
 
     void

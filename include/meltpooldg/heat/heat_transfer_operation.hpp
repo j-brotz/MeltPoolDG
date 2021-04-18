@@ -88,12 +88,17 @@ namespace MeltPoolDG::Heat
     }
 
     void
-    set_initial_condition(const VectorType &initial_temperature_field)
+    set_initial_condition(const Function<dim> &initial_field_function_temperature)
     {
       reinit();
 
-      temperature.copy_locally_owned_data_from(initial_temperature_field);
-      temperature_old.copy_locally_owned_data_from(initial_temperature_field);
+      dealii::VectorTools::project(scratch_data.get_mapping(),
+                                   scratch_data.get_dof_handler(temp_dof_idx),
+                                   scratch_data.get_constraint(temp_dof_idx),
+                                   scratch_data.get_quadrature(temp_quad_idx),
+                                   initial_field_function_temperature,
+                                   temperature);
+      temperature_old.copy_locally_owned_data_from(temperature);
     }
 
     void

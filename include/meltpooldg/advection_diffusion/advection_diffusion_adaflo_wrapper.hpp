@@ -34,19 +34,21 @@ namespace MeltPoolDG
        * Constructor.
        */
       AdvectionDiffusionOperationAdaflo(const ScratchData<dim> &scratch_data,
-                                        const int advec_diff_dof_idx, // @todo: set zero inside?
-                                        const int advec_diff_quad_idx,
-                                        const int velocity_dof_idx,
+                                        const int               advec_diff_zero_dirichlet_dof_idx,
+                                        const int               advec_diff_dirichlet_dof_idx,
+                                        const int               advec_diff_quad_idx,
+                                        const int               velocity_dof_idx,
                                         std::shared_ptr<SimulationBase<dim>> base_in,
                                         std::string operation_name = "advection_diffusion")
         : scratch_data(scratch_data)
         , pcout(scratch_data.get_pcout(1))
+        , dirichlet_dof_idx(advec_diff_dirichlet_dof_idx)
       {
         /**
          * set parameters of adaflo
          */
         set_adaflo_parameters(base_in->parameters,
-                              advec_diff_dof_idx,
+                              advec_diff_zero_dirichlet_dof_idx,
                               advec_diff_quad_idx,
                               velocity_dof_idx);
         /*
@@ -69,7 +71,7 @@ namespace MeltPoolDG
           velocity_vec_old,
           velocity_vec_old_old,
           scratch_data.get_cell_diameters(),
-          scratch_data.get_constraint(advec_diff_dof_idx),
+          scratch_data.get_constraint(advec_diff_zero_dirichlet_dof_idx),
           pcout,
           bcs,
           scratch_data.get_matrix_free(),
@@ -96,21 +98,24 @@ namespace MeltPoolDG
                                                      preconditioner);
       }
 
+      /**
+       *  set initial solution of advected field
+       */
       void
-      set_initial_condition(const VectorType &initial_solution_advected_field,
-                            const VectorType &velocity_vec_in) override
+      set_initial_condition(const Function<dim> &initial_field_function,
+                            const VectorType &   initial_velocity) override
       {
-        /**
-         *  set initial solution of advected field
-         */
-        advected_field.copy_locally_owned_data_from(initial_solution_advected_field);
+        initialize_vectors();
+        dealii::VectorTools::project(scratch_data.get_mapping(),
+                                     scratch_data.get_dof_handler(adaflo_params.dof_index_ls),
+                                     scratch_data.get_constraint(dirichlet_dof_idx),
+                                     scratch_data.get_quadrature(adaflo_params.quad_index),
+                                     initial_field_function,
+                                     advected_field);
         advected_field_old     = advected_field;
         advected_field_old_old = advected_field;
 
-        /**
-         *  set velocity
-         */
-        set_velocity(velocity_vec_in);
+        set_velocity(initial_velocity, true /* initial step */);
       }
 
       /**
@@ -239,15 +244,24 @@ namespace MeltPoolDG
       }
 
       void
-      set_velocity(const LinearAlgebra::distributed::Vector<double> &vec)
+      set_velocity(const LinearAlgebra::distributed::Vector<double> &vec, bool initial_step = false)
       {
         velocity_vec_old_old.zero_out_ghosts();
         velocity_vec_old.zero_out_ghosts();
         velocity_vec.zero_out_ghosts();
 
-        velocity_vec_old_old = velocity_vec_old;
-        velocity_vec_old     = velocity_vec;
-        velocity_vec         = vec;
+        if (initial_step)
+          {
+            velocity_vec_old_old = vec;
+            velocity_vec_old     = vec;
+            velocity_vec         = vec;
+          }
+        else
+          {
+            velocity_vec_old_old = velocity_vec_old;
+            velocity_vec_old     = velocity_vec;
+            velocity_vec         = vec;
+          }
 
         velocity_vec_old_old.update_ghost_values();
         velocity_vec_old.update_ghost_values();
@@ -319,6 +333,10 @@ namespace MeltPoolDG
        */
       DiagonalPreconditioner<double> preconditioner;
       const ConditionalOStream       pcout;
+      /**
+       *  dof idx for constraints with dirichlet values (relevant for dirichlet neq 0)
+       */
+      unsigned int dirichlet_dof_idx;
     };
   } // namespace AdvectionDiffusion
 } // namespace MeltPoolDG

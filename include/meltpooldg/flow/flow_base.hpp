@@ -19,6 +19,9 @@ namespace MeltPoolDG
       virtual void
       solve() = 0;
 
+      virtual void
+      set_initial_condition(const Function<dim> &) = 0;
+
       virtual const LinearAlgebra::distributed::Vector<double> &
       get_velocity() const = 0;
 

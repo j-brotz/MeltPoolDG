@@ -249,38 +249,12 @@ namespace MeltPoolDG
                                    base_in->parameters.advec_diff.max_n_steps,
                                    false});
 
-        /*
-         *  set initial conditions of the levelset function
-         */
-        AssertThrow(
-          base_in->get_initial_condition("advection_diffusion"),
-          ExcMessage(
-            "It seems that your SimulationBase object does not contain "
-            "a valid initial field function for the level set field. A shared_ptr to your initial field "
-            "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
-            "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), "
-            "'advection_diffusion') "));
-        VectorType initial_solution;
-        scratch_data->initialize_dof_vector(initial_solution);
 
-        dealii::VectorTools::project(scratch_data->get_mapping(),
-                                     dof_handler,
-                                     constraints,
-                                     scratch_data->get_quadrature(),
-                                     *base_in->get_initial_condition("advection_diffusion"),
-                                     initial_solution);
-
-        initial_solution.update_ghost_values();
-        /*
-         *    initialize the advection-diffusion operation class
-         */
-        compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
         if (base_in->parameters.advec_diff.implementation == "meltpooldg")
           {
             advec_diff_operation = std::make_shared<AdvectionDiffusionOperation<dim>>();
 
             advec_diff_operation->initialize(scratch_data,
-                                             initial_solution,
                                              base_in->parameters,
                                              advec_diff_dof_idx,
                                              advec_diff_hanging_nodes_dof_idx,
@@ -294,16 +268,29 @@ namespace MeltPoolDG
             advec_diff_operation =
               std::make_shared<AdvectionDiffusionOperationAdaflo<dim>>(*scratch_data,
                                                                        advec_diff_adaflo_dof_idx,
+                                                                       advec_diff_dof_idx,
                                                                        advec_diff_quad_idx,
                                                                        velocity_dof_idx,
                                                                        base_in);
             advec_diff_operation->reinit();
-
-            advec_diff_operation->set_initial_condition(initial_solution, advection_velocity);
           }
 #endif
         else
           AssertThrow(false, ExcNotImplemented());
+        /*
+         *  set initial conditions for the advected field
+         */
+        AssertThrow(
+          base_in->get_initial_condition("advection_diffusion"),
+          ExcMessage(
+            "It seems that your SimulationBase object does not contain "
+            "a valid initial field function for the level set field. A shared_ptr to your initial field "
+            "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
+            "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), "
+            "'advection_diffusion') "));
+        compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
+        advec_diff_operation->set_initial_condition(
+          *base_in->get_initial_condition("advection_diffusion"), advection_velocity);
         /*
          *  initialize postprocessor
          */

@@ -193,14 +193,16 @@ namespace MeltPoolDG
               reinit_dof_idx,
               reinit_quad_idx,
               normal_dof_idx, // normal vec @todo
-              solution_level_set,
               base_in->parameters);
           }
 #endif
         else
           AssertThrow(false, ExcNotImplemented());
 
-        reinit_operation->update_initial_solution(solution_level_set);
+        /*
+         * set initial conditions
+         */
+        reinit_operation->set_initial_condition(solution_level_set);
       }
 
       void
@@ -286,7 +288,7 @@ namespace MeltPoolDG
 
           VectorType temp(reinit_operation->get_level_set());
           temp.copy_locally_owned_data_from(reinit_operation->get_level_set());
-          reinit_operation->update_initial_solution(temp);
+          reinit_operation->set_initial_condition(temp);
         };
 
         const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
