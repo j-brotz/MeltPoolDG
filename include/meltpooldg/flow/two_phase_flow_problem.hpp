@@ -82,6 +82,7 @@ namespace MeltPoolDG::Flow
                */
               level_set_operation.update_normal_vector();
 
+              //@todo: shift options to evaporation operation
               if (melt_pool_operation)
                 evaporation_operation->compute_evaporative_mass_flux_from_temperature(
                   melt_pool_operation->get_temperature(),
@@ -89,12 +90,23 @@ namespace MeltPoolDG::Flow
                   base_in->parameters.mp.boiling_temperature,
                   base_in->parameters.recoil.pressure_constant,
                   base_in->parameters.recoil.temperature_constant);
-              else
+              else if (std::abs(base_in->parameters.evapor.evaporative_mass_flux) >
+                       0.0) // constant value
                 evaporation_operation->get_evaporative_mass_flux() =
                   base_in->parameters.evapor.evaporative_mass_flux;
+              else if (base_in->parameters.evapor.formulation_evaporative_mass_flux ==
+                       "temperature dependent")
+                evaporation_operation->compute_evaporative_mass_flux_from_temperature(
+                  heat_operation->get_temperature(), temp_dof_idx);
+              else if (base_in->parameters.evapor.formulation_evaporative_mass_flux ==
+                       "temperature dependent interface const")
+                evaporation_operation
+                  ->compute_evaporative_mass_flux_from_temperature_const_over_interface(
+                    level_set_operation.get_distance_to_level_set());
 
               if (base_in->parameters.evapor.formulation_source_term_continuity == "diffuse")
-                evaporation_operation->compute_evaporation_velocity();
+                evaporation_operation->compute_evaporation_velocity(
+                  base_in->parameters.flow.variable_properties_over_interface);
 #ifdef MELT_POOL_DG_WITH_ADAFLO
               else if (base_in->parameters.evapor.formulation_source_term_continuity == "sharp")
                 Evaporation::EvaporationOperationMarchingCube<dim>::compute_evaporation_velocity(
@@ -115,14 +127,20 @@ namespace MeltPoolDG::Flow
             }
 
           level_set_operation.solve(dt, flow_operation->get_velocity());
-
           // update the two phases
           update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
 
+          // solve heat problem
           if (!melt_pool_operation && heat_operation)
             {
-              heat_operation->solve(dt);
+              // solve only in case of temperature dependent evaporative mass flux
+              if ((evaporation_operation &&
+                   base_in->parameters.evapor.formulation_evaporative_mass_flux.find(
+                     "temperature dependent") != std::string::npos) ||
+                  base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
+                heat_operation->solve(dt);
             }
+
 
           // accumulate forces: a) gravity force
           compute_gravity_force(vel_force_rhs, base_in->parameters.base.gravity, true);
@@ -135,10 +153,9 @@ namespace MeltPoolDG::Flow
               level_set_operation.get_level_set_as_heaviside(),
               level_set_operation.get_curvature(),
               base_in->parameters.flow.surface_tension_coefficient,
-              ls_dof_idx,
+              ls_hanging_nodes_dof_idx,
               curv_dof_idx,
-              // flow_operation->get_dof_handler_idx_velocity(),
-              flow_operation->get_dof_handler_idx_hanging_nodes_velocity(),
+              flow_operation->get_dof_handler_idx_velocity(),
               flow_operation->get_quad_idx_velocity(),
               false /* false means not to zero out the vorce vector */);
 
@@ -162,7 +179,7 @@ namespace MeltPoolDG::Flow
                 base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
                 base_in->parameters.flow.surface_tension_reference_temperature,
                 base_in->parameters.flow.surface_tension_coefficient_residual_fraction,
-                ls_dof_idx,
+                ls_hanging_nodes_dof_idx,
                 curv_dof_idx,
                 normal_dof_idx,
                 vel_dof_idx,
@@ -176,11 +193,13 @@ namespace MeltPoolDG::Flow
               scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
 
               if (base_in->parameters.evapor.formulation_source_term_continuity == "diffuse")
-                evaporation_operation->compute_mass_balance_source_term(
-                  mass_balance_rhs,
-                  flow_operation->get_dof_handler_idx_pressure(),
-                  flow_operation->get_quad_idx_pressure(),
-                  true /* zero out force rhs */);
+                {
+                  evaporation_operation->compute_mass_balance_source_term(
+                    mass_balance_rhs,
+                    flow_operation->get_dof_handler_idx_pressure(),
+                    flow_operation->get_quad_idx_pressure(),
+                    true /* zero out force rhs */);
+                }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
               else if (base_in->parameters.evapor.formulation_source_term_continuity == "sharp")
                 Evaporation::EvaporationOperationMarchingCube<dim>::
@@ -358,21 +377,32 @@ namespace MeltPoolDG::Flow
        *    initialize the heat operation class
        */
       if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
-        {
-          heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
-            base_in->get_bc("heat_transfer"),
-            *scratch_data,
-            base_in->parameters.heat,
-            base_in->parameters.material,
-            temp_dof_idx,
-            temp_hanging_nodes_dof_idx,
-            temp_quad_idx,
-            vel_dof_idx,
-            &flow_operation->get_velocity(),
-            ls_dof_idx,
-            &level_set_operation.get_level_set_as_heaviside());
-        }
-
+        heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
+          base_in->get_bc("heat_transfer"),
+          *scratch_data,
+          base_in->parameters.heat,
+          base_in->parameters.material,
+          temp_dof_idx,
+          temp_hanging_nodes_dof_idx,
+          temp_quad_idx,
+          vel_dof_idx,
+          &flow_operation->get_velocity(),
+          ls_hanging_nodes_dof_idx,
+          &level_set_operation.get_level_set_as_heaviside());
+      else if (base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation")
+        heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
+          base_in->get_bc("heat_transfer"),
+          *scratch_data,
+          base_in->parameters.heat,
+          base_in->parameters.material,
+          temp_dof_idx,
+          temp_hanging_nodes_dof_idx,
+          temp_quad_idx,
+          vel_dof_idx,
+          &flow_operation->get_velocity(),
+          ls_hanging_nodes_dof_idx,
+          &level_set_operation.get_level_set_as_heaviside(),
+          &base_in->parameters.evapor);
       /*
        *    initialize the evaporation class
        */
@@ -387,14 +417,15 @@ namespace MeltPoolDG::Flow
             normal_dof_idx,
             evapor_vel_dof_idx,
             ls_hanging_nodes_dof_idx,
-            ls_quad_idx);
+            ls_quad_idx,
+            &heat_operation->get_temperature(),
+            temp_dof_idx);
 
-          level_set_operation.setup_with_evaporation(
-            temp_dof_idx,
-            flow_operation->get_dof_handler_idx_hanging_nodes_velocity(),
-            evapor_vel_dof_idx,
-            flow_operation->get_velocity(),
-            evaporation_operation->get_velocity());
+          // configure also the level set problem with evaporation
+          level_set_operation.setup_with_evaporation(flow_operation->get_dof_handler_idx_velocity(),
+                                                     evapor_vel_dof_idx,
+                                                     flow_operation->get_velocity(),
+                                                     evaporation_operation->get_velocity());
         }
 
       /*
@@ -415,7 +446,7 @@ namespace MeltPoolDG::Flow
           base_in->parameters.flow.start_time,
           evaporation_operation == nullptr);
       /*
-       *  set initial conditions
+       *  set initial conditions of all operations
        */
       set_initial_condition(base_in);
       /*
@@ -480,7 +511,10 @@ namespace MeltPoolDG::Flow
       /*
        *  set initial conditions of the temperature field
        */
-      if (heat_operation)
+      if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer" ||
+          (base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation" &&
+           base_in->parameters.evapor.formulation_evaporative_mass_flux.find(
+             "temperature dependent") != std::string::npos))
         heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
       /*
        * set initial condition of the melt pool class
@@ -592,13 +626,7 @@ namespace MeltPoolDG::Flow
           DoFTools::make_periodicity_constraints(
             dof_handler, id_in, id_out, direction, ls_hanging_node_constraints);
           DoFTools::make_periodicity_constraints(
-            dof_handler, id_in, id_out, direction, ls_constraints_dirichlet);
-          DoFTools::make_periodicity_constraints(
-            dof_handler, id_in, id_out, direction, reinit_constraints_dirichlet);
-          DoFTools::make_periodicity_constraints(
             dof_handler_evapor, id_in, id_out, direction, evapor_hanging_node_constraints);
-          DoFTools::make_periodicity_constraints(
-            dof_handler, id_in, id_out, direction, temp_constraints_dirichlet);
         }
 
       // finalize constraints
@@ -649,7 +677,7 @@ namespace MeltPoolDG::Flow
        */
       if (evaporation_operation)
         {
-          evaporation_operation->reinit();
+          evaporation_operation->reinit(); // @todo -- needed?
           scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
         }
     }
@@ -675,7 +703,7 @@ namespace MeltPoolDG::Flow
       scratch_data->get_matrix_free().template cell_loop<double, VectorType>(
         [&](const auto &matrix_free, auto &, const auto &src, auto macro_cells) {
           FECellIntegrator<dim, 1, double> ls_values(matrix_free,
-                                                     ls_dof_idx,
+                                                     ls_hanging_nodes_dof_idx,
                                                      flow_operation->get_quad_idx_velocity());
 
           for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)

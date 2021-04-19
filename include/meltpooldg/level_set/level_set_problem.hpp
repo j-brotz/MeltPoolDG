@@ -213,8 +213,7 @@ namespace MeltPoolDG
             evaporation_operation->get_evaporative_mass_flux() =
               base_in->parameters.evapor.evaporative_mass_flux;
 
-            level_set_operation.setup_with_evaporation(ls_hanging_nodes_dof_idx,
-                                                       vel_dof_idx,
+            level_set_operation.setup_with_evaporation(vel_dof_idx,
                                                        vel_dof_idx,
                                                        advection_velocity,
                                                        evaporation_operation->get_velocity());

@@ -254,8 +254,7 @@ namespace MeltPoolDG
        *  with evaporation
        */
       void
-      setup_with_evaporation(const unsigned int temp_dof_idx_in,
-                             const unsigned int flow_vel_dof_idx_in,
+      setup_with_evaporation(const unsigned int flow_vel_dof_idx_in,
                              const unsigned int evapor_vel_dof_idx_in,
                              const VectorType & advection_velocity,
                              const VectorType & evaporation_velocity)
@@ -268,7 +267,6 @@ namespace MeltPoolDG
                                                                  ls_dof_idx,
                                                                  ls_hanging_nodes_dof_idx,
                                                                  ls_quad_idx,
-                                                                 temp_dof_idx_in,
                                                                  flow_vel_dof_idx_in,
                                                                  evapor_vel_dof_idx_in);
       }
