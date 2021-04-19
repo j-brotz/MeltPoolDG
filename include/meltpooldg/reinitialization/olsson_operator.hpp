@@ -242,7 +242,6 @@ namespace MeltPoolDG
           return 0.5 * (make_vectorized_array<number>(1.) - phi * phi);
         };
 
-
         scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
           [&](const auto &, auto &dst, const auto &src, auto macro_cells) {
             FECellIntegrator<dim, 1, number>   psi(scratch_data.get_matrix_free(),

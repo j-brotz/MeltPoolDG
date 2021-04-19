@@ -159,29 +159,11 @@ namespace MeltPoolDG
 
         setup_dof_system(base_in, false);
 
-        // set initial conditions of the levelset function
-        AssertThrow(
-          base_in->get_initial_condition("level_set"),
-          ExcMessage(
-            "It seems that your SimulationBase object does not contain "
-            "a valid initial field function for the level set field. A shared_ptr to your initial field "
-            "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
-            "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), "
-            "'level_set') "));
-
-        scratch_data->initialize_dof_vector(initial_solution);
-        dealii::VectorTools::project(scratch_data->get_mapping(),
-                                     dof_handler,
-                                     constraints_dirichlet,
-                                     scratch_data->get_quadrature(),
-                                     *base_in->get_initial_condition("level_set"),
-                                     initial_solution);
-
-        initial_solution.update_ghost_values();
+        /*
+         * initialize the levelset operation class
+         */
 
         level_set_operation.initialize(scratch_data,
-                                       initial_solution,
-                                       advection_velocity,
                                        base_in,
                                        ls_dof_idx,
                                        ls_hanging_nodes_dof_idx,
@@ -193,6 +175,31 @@ namespace MeltPoolDG
                                        vel_dof_idx,
                                        ls_zero_bc_idx);
 
+        /*
+         * set initial conditions
+         */
+        AssertThrow(
+          base_in->get_initial_condition("level_set"),
+          ExcMessage(
+            "It seems that your SimulationBase object does not contain "
+            "a valid initial field function for the level set field. A shared_ptr to your initial field "
+            "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
+            "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), "
+            "'level_set') "));
+        AssertThrow(base_in->get_advection_field("level_set"),
+                    ExcMessage(
+                      "It seems that your SimulationBase object does not contain "
+                      "a valid advection velocity. A shared_ptr to your advection velocity "
+                      "function, e.g., AdvectionFunc<dim> must be specified as follows: "
+                      "this->attach_advection_field(std::make_shared<AdvecFunc<dim>>(), "
+                      "'level_set') "));
+        compute_advection_velocity(*base_in->get_advection_field("level_set"));
+        level_set_operation.set_initial_condition(*base_in->get_initial_condition("level_set"),
+                                                  advection_velocity);
+
+        /*
+         * configure level set with evaporation if requested
+         */
         if (base_in->parameters.base.problem_name == "level_set_with_evaporation")
           {
             evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
@@ -226,7 +233,6 @@ namespace MeltPoolDG
                                                scratch_data->get_mapping(),
                                                scratch_data->get_triangulation(ls_dof_idx));
 
-        // initialize variables
         output_results(0);
         /*
          *    Do initial refinement steps if requested
@@ -238,6 +244,12 @@ namespace MeltPoolDG
               scratch_data->get_pcout()
                 << "cycle: " << i << " n_dofs: " << dof_handler.n_dofs() << "(ls)" << std::endl;
               refine_mesh(base_in);
+              /*
+               *  set initial conditions after initial AMR
+               */
+              compute_advection_velocity(*base_in->get_advection_field("level_set"));
+              level_set_operation.set_initial_condition(
+                *base_in->get_initial_condition("level_set"), advection_velocity);
             }
       }
 
@@ -315,16 +327,6 @@ namespace MeltPoolDG
          *  create the matrix-free object
          */
         scratch_data->build();
-
-        // initialize the levelset operation class
-        AssertThrow(base_in->get_advection_field("level_set"),
-                    ExcMessage(
-                      " It seems that your SimulationBase object does not contain "
-                      "a valid advection velocity. A shared_ptr to your advection velocity "
-                      "function, e.g., AdvectionFunc<dim> must be specified as follows: "
-                      "this->attach_advection_field(std::make_shared<AdvecFunc<dim>>(), "
-                      "'level_set') "));
-        compute_advection_velocity(*base_in->get_advection_field("level_set"));
 
         if (do_reinit)
           {

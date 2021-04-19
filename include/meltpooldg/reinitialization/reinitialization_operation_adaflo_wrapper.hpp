@@ -40,7 +40,6 @@ namespace MeltPoolDG
                                       const int                 reinit_dof_idx,
                                       const int                 reinit_quad_idx,
                                       const int                 normal_dof_idx,
-                                      const VectorType &        initial_solution_level_set,
                                       const Parameters<double> &parameters)
         : scratch_data(scratch_data)
         , pcout(scratch_data.get_pcout(1))
@@ -49,22 +48,6 @@ namespace MeltPoolDG
          * set parameters of adaflo
          */
         set_adaflo_parameters(parameters, reinit_dof_idx, reinit_quad_idx, normal_dof_idx);
-        /**
-         *  initialize the dof vectors
-         */
-        initialize_vectors();
-        /**
-         *  set initial solution of level set
-         */
-
-        level_set.copy_locally_owned_data_from(initial_solution_level_set);
-
-        compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
-                                    reinit_dof_idx,
-                                    cell_diameters,
-                                    cell_diameter_min,
-                                    cell_diameter_max);
-
         /*
          * initialize normal_vector_operation from adaflo
          */
@@ -72,6 +55,9 @@ namespace MeltPoolDG
           std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
             scratch_data, reinit_dof_idx, normal_dof_idx, reinit_quad_idx, level_set, parameters);
 
+        /*
+         * setup lambda function to compute the normal vector
+         */
         compute_normal = [&](bool do_compute_normal) {
           if (do_compute_normal && force_compute_normal)
             normal_vector_operation_adaflo->solve(level_set);
@@ -95,17 +81,32 @@ namespace MeltPoolDG
           reinit_params_adaflo,
           first_reinit_step,
           scratch_data.get_matrix_free());
-
         /**
-         *  initialize the dof vectors
+         *  initialize the dof vectors and compute the preconditioner
          */
         reinit();
+      }
 
-        /**
-         *  set initial solution of level set
-         */
+      void
+      update_dof_idx(const unsigned int &reinit_dof_idx) override
+      {
+        reinit_params_adaflo.dof_index_ls = reinit_dof_idx;
 
-        level_set.copy_locally_owned_data_from(initial_solution_level_set);
+        reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
+          normal_vector_operation_adaflo->get_solution_normal_vector(),
+          scratch_data.get_cell_diameters(),
+          cell_diameter_max,
+          cell_diameter_min,
+          scratch_data.get_constraint(reinit_dof_idx),
+          increment,
+          level_set,
+          rhs,
+          pcout,
+          preconditioner,
+          last_concentration_range, // @todo
+          reinit_params_adaflo,
+          first_reinit_step,
+          scratch_data.get_matrix_free());
       }
 
       void
@@ -200,9 +201,12 @@ namespace MeltPoolDG
       }
 
       void
-      update_initial_solution(const VectorType &level_set_in) override
+      set_initial_condition(const VectorType &level_set_in) override
       {
-        (void)level_set_in;
+        /**
+         * initialize advected field dof vectors
+         */
+        scratch_data.initialize_dof_vector(level_set, reinit_params_adaflo.dof_index_ls);
         level_set.copy_locally_owned_data_from(level_set_in);
         force_compute_normal = true;
       }

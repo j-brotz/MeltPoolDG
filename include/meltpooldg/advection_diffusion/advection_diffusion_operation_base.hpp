@@ -25,16 +25,14 @@ namespace MeltPoolDG
       solve(const double dt, const LinearAlgebra::distributed::Vector<double> &velocity) = 0;
 
       virtual void
-      initialize(const std::shared_ptr<const ScratchData<dim>> &   scratch_data_in,
-                 const LinearAlgebra::distributed::Vector<double> &solution_advected_field_in,
-                 const Parameters<double> &                        data_in,
-                 const unsigned int                                advec_diff_dof_idx_in,
-                 const unsigned int                                advec_diff_hanging_nodes_idx_in,
-                 const unsigned int                                advec_diff_quad_idx_in,
-                 const unsigned int                                velocity_dof_idx_in)
+      initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
+                 const Parameters<double> &                     data_in,
+                 const unsigned int                             advec_diff_dof_idx_in,
+                 const unsigned int                             advec_diff_hanging_nodes_idx_in,
+                 const unsigned int                             advec_diff_quad_idx_in,
+                 const unsigned int                             velocity_dof_idx_in)
       {
         (void)scratch_data_in;
-        (void)solution_advected_field_in;
         (void)data_in;
         (void)advec_diff_dof_idx_in;
         (void)advec_diff_hanging_nodes_idx_in;
@@ -50,12 +48,11 @@ namespace MeltPoolDG
       }
 
       virtual void
-      set_initial_condition(
-        const LinearAlgebra::distributed::Vector<double> &initial_solution_advected_field,
-        const LinearAlgebra::distributed::Vector<double> &velocity_vec_in)
+      set_initial_condition(const Function<dim> &initial_field_function,
+                            const VectorType &   initial_velocity)
       {
-        (void)initial_solution_advected_field;
-        (void)velocity_vec_in;
+        (void)initial_field_function;
+        (void)initial_velocity;
         AssertThrow(false, ExcNotImplemented());
       }
 

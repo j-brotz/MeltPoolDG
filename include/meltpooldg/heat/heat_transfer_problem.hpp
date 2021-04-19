@@ -166,21 +166,6 @@ namespace MeltPoolDG::Heat
           "a valid initial field function for the temperature field. A shared_ptr to your initial field "
           "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
           "  this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), 'temperature') "));
-
-      /*
-       *    compute initial conditions of the temperature field
-       */
-      VectorType initial_solution;
-      scratch_data->initialize_dof_vector(initial_solution, temp_dof_idx);
-
-      dealii::VectorTools::project(scratch_data->get_mapping(),
-                                   dof_handler,
-                                   temp_constraints,
-                                   scratch_data->get_quadrature(temp_quad_idx),
-                                   *base_in->get_initial_condition("heat_transfer"),
-                                   initial_solution);
-      initial_solution.update_ghost_values();
-
       /*
        *    set velocity field
        */
@@ -221,7 +206,7 @@ namespace MeltPoolDG::Heat
                                                      level_set_dof_idx,
                                                      level_set_as_heaviside_ptr);
 
-      heat_operation->set_initial_condition(initial_solution);
+      heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
 
       /*
        *  initialize postprocessor

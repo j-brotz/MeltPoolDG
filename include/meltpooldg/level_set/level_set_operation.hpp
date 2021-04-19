@@ -63,11 +63,11 @@ namespace MeltPoolDG
       unsigned int ls_hanging_nodes_dof_idx;
       unsigned int ls_quad_idx;
       unsigned int curv_dof_idx;
-      unsigned int normal_dof_idx;
+      unsigned int reinit_dof_idx;
 
       double reinit_constant_epsilon     = 0; //@todo: better solution
       double reinit_scale_factor_epsilon = 0; //@todo: better solution
-
+      int    max_reinit_steps            = 0;
       /*
        *    This is the surface_tension vector calculated after level set and reinitialization
        * update
@@ -82,8 +82,6 @@ namespace MeltPoolDG
 
       void
       initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const VectorType &                             solution_level_set_in,
-                 const VectorType &                             advection_velocity,
                  std::shared_ptr<SimulationBase<dim>>           base_in,
                  const unsigned int                             ls_dof_idx_in,
                  const unsigned int                             ls_hanging_nodes_dof_idx_in,
@@ -95,12 +93,13 @@ namespace MeltPoolDG
                  const unsigned int                             vel_dof_idx,
                  const unsigned int                             ls_zero_bc_idx = 0)
       {
-        // parameters = data_in;
         scratch_data             = scratch_data_in;
         ls_dof_idx               = ls_dof_idx_in;
         ls_hanging_nodes_dof_idx = ls_hanging_nodes_dof_idx_in;
         ls_quad_idx              = ls_quad_idx_in;
         curv_dof_idx             = curv_dof_idx_in;
+        reinit_dof_idx           = reinit_dof_idx_in;
+        max_reinit_steps         = base_in->parameters.reinit.max_n_steps;
         /*
          *  set the level set data
          */
@@ -112,12 +111,10 @@ namespace MeltPoolDG
         if ((base_in->parameters.advec_diff.implementation ==
              "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
           {
-            (void)advection_velocity;
             (void)ls_zero_bc_idx;
             advec_diff_operation =
               std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperation<dim>>();
             advec_diff_operation->initialize(scratch_data,
-                                             solution_level_set_in, // copy
                                              base_in->parameters,
                                              ls_dof_idx,
                                              ls_hanging_nodes_dof_idx_in,
@@ -130,12 +127,15 @@ namespace MeltPoolDG
           {
             advec_diff_operation =
               std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperationAdaflo<dim>>(
-                *scratch_data, ls_zero_bc_idx, ls_quad_idx_in, vel_dof_idx, base_in, "level_set");
+                *scratch_data,
+                ls_zero_bc_idx,
+                ls_dof_idx,
+                ls_quad_idx_in,
+                vel_dof_idx,
+                base_in,
+                "level_set");
 
             advec_diff_operation->reinit();
-
-            advec_diff_operation->set_initial_condition(solution_level_set_in, // copy
-                                                        advection_velocity);
           }
 #endif
         else
@@ -168,61 +168,11 @@ namespace MeltPoolDG
                 reinit_hanging_nodes_dof_idx_in,
                 ls_quad_idx_in,
                 normal_dof_idx_in,
-                advec_diff_operation->get_advected_field(),
                 base_in->parameters);
           }
 #endif
         else
           AssertThrow(false, ExcNotImplemented());
-        /*
-         * 1) The initial solution of the level set equation will be reinitialized first WITHOUT
-         *    dirichlet constraints of the reinitialization.
-         */
-        do_reinitialization();
-        reinit_time_iterator.reset_max_n_time_steps(base_in->parameters.reinit.max_n_steps);
-        /*
-         * 2) From now on, the initial solution of the level set equation will be reinitialized
-         *    with dirichlet constraints of the reinitialization.
-         */
-        if (reinit_dof_idx_in != reinit_hanging_nodes_dof_idx_in)
-          {
-            auto normal_vec_temp = reinit_operation->get_normal_vector();
-
-            if ((base_in->parameters.reinit.implementation ==
-                 "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
-              {
-                reinit_operation =
-                  std::make_shared<Reinitialization::ReinitializationOperation<dim>>();
-                reinit_operation->initialize(scratch_data,
-                                             base_in->parameters,
-                                             reinit_dof_idx_in,
-                                             ls_quad_idx_in,
-                                             normal_dof_idx_in);
-              }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-            else if ((base_in->parameters.reinit.implementation == "adaflo") ||
-                     (base_in->parameters.ls.implementation == "adaflo"))
-              {
-                AssertThrow(base_in->parameters.reinit.solver.do_matrix_free, ExcNotImplemented());
-                reinit_operation =
-                  std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
-                    *scratch_data,
-                    reinit_dof_idx_in,
-                    ls_quad_idx_in,
-                    normal_dof_idx_in,
-                    advec_diff_operation->get_advected_field(),
-                    base_in->parameters);
-              }
-#endif
-            else
-              AssertThrow(false, ExcNotImplemented());
-
-            reinit_operation->get_normal_vector() = normal_vec_temp;
-          }
-        /*
-         *    compute the smoothened function
-         */
-        transform_level_set_to_smooth_heaviside();
         /*
          *    initialize the curvature operation class
          */
@@ -237,15 +187,6 @@ namespace MeltPoolDG
                                             ls_quad_idx_in,
                                             normal_dof_idx_in,
                                             ls_dof_idx);
-            /*
-             *    compute the curvature of the initial level set field
-             */
-            curvature_operation->solve(advec_diff_operation->get_advected_field());
-            /*
-             *    correct the curvature value far away from the zero level set
-             */
-            if (level_set_data.do_curvature_correction)
-              correct_curvature_values();
           }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
         else if ((base_in->parameters.curv.implementation == "adaflo") ||
@@ -260,14 +201,54 @@ namespace MeltPoolDG
               ls_quad_idx,
               advec_diff_operation->get_advected_field(),
               base_in->parameters);
-
-            curvature_operation->solve(advec_diff_operation->get_advected_field());
           }
 #endif
         else
           AssertThrow(false, ExcNotImplemented());
-
-        // this->reinit();
+      }
+      /**
+       * set initial condition
+       */
+      void
+      set_initial_condition(const Function<dim> &initial_field_function_level_set,
+                            const VectorType &   initial_velocity_in)
+      {
+        advec_diff_operation->set_initial_condition(initial_field_function_level_set,
+                                                    initial_velocity_in);
+        /*
+         * 1) The initial solution of the level set equation will be reinitialized first WITHOUT
+         *    dirichlet constraints of the reinitialization.
+         */
+        do_reinitialization();
+        reinit_time_iterator.reset_max_n_time_steps(max_reinit_steps);
+        /*
+         * 2) From now on, the initial solution of the level set equation will be reinitialized
+         *    with dirichlet constraints of the reinitialization.
+         *
+         * MS:
+         * This is needed when the initial level set field should be reinitializated WITHOUT
+         * dirichlet constraints and subsequently certain (constrained) dofs of the level set
+         * should not change anymore due to reinitialization. This is needed in the
+         * MeltPoolOperation, where the level set values in the solid domain should not change
+         * anymore after initial reinitialization. This is up to now the only case where dirichlet
+         * constraints for reinitialization are set.
+         *
+         *    @todo: check if this really needed for the melt pool simulations
+         */
+        reinit_operation->update_dof_idx(reinit_dof_idx);
+        /*
+         *    compute the smoothened function
+         */
+        transform_level_set_to_smooth_heaviside();
+        /*
+         *    compute the curvature of the initial level set field
+         */
+        curvature_operation->solve(advec_diff_operation->get_advected_field());
+        /*
+         *    correct the curvature value far away from the zero level set
+         */
+        if (level_set_data.do_curvature_correction)
+          correct_curvature_values();
       }
       /**
        *  with evaporation
@@ -308,7 +289,7 @@ namespace MeltPoolDG
       void
       update_normal_vector()
       {
-        reinit_operation->update_initial_solution(get_level_set());
+        reinit_operation->set_initial_condition(get_level_set());
       }
 
       void
@@ -438,7 +419,7 @@ namespace MeltPoolDG
       {
         if (level_set_data.do_reinitialization)
           {
-            reinit_operation->update_initial_solution(advec_diff_operation->get_advected_field());
+            reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
 
             while (!reinit_time_iterator.is_finished())
               {

@@ -40,7 +40,6 @@ namespace MeltPoolDG
 
       void
       initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const VectorType &                             solution_advected_field_in,
                  const Parameters<double> &                     data_in,
                  const unsigned int                             advec_diff_dof_idx_in,
                  const unsigned int                             advec_diff_hanging_nodes_dof_idx_in,
@@ -57,15 +56,26 @@ namespace MeltPoolDG
          */
         this->advec_diff_data = data_in.advec_diff;
         /*
-         *  set the initial solution of the advected field
-         */
-        scratch_data->initialize_dof_vector(solution_advected_field, advec_diff_dof_idx);
-        solution_advected_field.copy_locally_owned_data_from(solution_advected_field_in);
-        solution_advected_field.update_ghost_values();
-        /*
          *  set the parameters for the advection_diffusion problem
          */
         set_advection_diffusion_parameters(data_in);
+      }
+
+      /**
+       * Provide a field function for the initial solution of the advected field
+       */
+      void
+      set_initial_condition(const Function<dim> &initial_field_function,
+                            const VectorType &   initial_velocity) override
+      {
+        (void)initial_velocity;
+        reinit();
+        dealii::VectorTools::project(scratch_data->get_mapping(),
+                                     scratch_data->get_dof_handler(advec_diff_dof_idx),
+                                     scratch_data->get_constraint(advec_diff_dof_idx),
+                                     scratch_data->get_quadrature(advec_diff_quad_idx),
+                                     initial_field_function,
+                                     solution_advected_field);
       }
 
       void
