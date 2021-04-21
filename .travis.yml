@@ -28,27 +28,9 @@ before_script:
 script:
   - if [ "$STEP" = "compile_and_test" ]; then
       if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then 
-         adress=https://github.com/$TRAVIS_REPO_SLUG;
-         branch=$TRAVIS_BRANCH;
+         docker run -i -t dealii/dealii:master-focal /bin/sh -c "git clone https://github.com/kronbichler/adaflo.git && mkdir adaflo-build && cd adaflo-build && cmake -D BUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ../adaflo && make -j2 adaflo && git clone https://github.com/$TRAVIS_REPO_SLUG MeltPoolDG && cd MeltPoolDG && git checkout $TRAVIS_BRANCH && cd .. && mkdir MeltPoolDG-build && cd MeltPoolDG-build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && make -j2 && ctest -V -R 'unit_tests/|tests/'";
       else
-         adress=https://github.com/$TRAVIS_PULL_REQUEST_SLUG;
-         branch=$TRAVIS_PULL_REQUEST_BRANCH;
+         docker run -i -t dealii/dealii:master-focal /bin/sh -c "git clone https://github.com/kronbichler/adaflo.git && mkdir adaflo-build && cd adaflo-build && cmake -D BUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ../adaflo && make -j2 adaflo && git clone https://github.com/$TRAVIS_PULL_REQUEST_SLUG MeltPoolDG && cd MeltPoolDG && git checkout $TRAVIS_PULL_REQUEST_BRANCH && cd .. && mkdir MeltPoolDG-build && cd MeltPoolDG-build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && make -j2 && ctest -V -R 'unit_tests/|tests/'";
       fi
     fi
-    command="git clone https://github.com/kronbichler/adaflo.git    && \
-              mkdir adaflo-build                                    && \
-              cd adaflo-build                                       && \
-              cmake -D BUILD_SHARED_LIBS=ON ../adaflo               && \
-              make -j2 adaflo                                       && \
-              git clone $adress MeltPoolDG                          && \
-              cd MeltPoolDG                                         && \
-              git checkout $branch                                  && \
-              cd ..                                                 && \
-              mkdir MeltPoolDG-build                                && \
-              cd MeltPoolDG-build                                   && \
-              cmake -DCMAKE_CXX_FLAGS="-Werror" ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && \
-              make -j2                                              && \
-          ctest -V -R 'unit_tests/|tests/' ";
-    echo $command;
-    docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
-              
+ 
