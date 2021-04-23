@@ -150,9 +150,25 @@ namespace MeltPoolDG::Heat
           }
         else if (heat_data.solver.preconditioner_type == "AMG")
           {
-            heat_operator->compute_system_matrix();
+            using Preconditioner = TrilinosWrappers::PreconditionAMG;
 
-            return 0;
+            TrilinosWrappers::SparseMatrix system_matrix;
+            heat_operator->compute_system_matrix(system_matrix);
+
+            TrilinosWrappers::PreconditionAMG                 preconditioner;
+            TrilinosWrappers::PreconditionAMG::AdditionalData amg_data;
+
+            preconditioner.initialize(system_matrix, amg_data);
+
+            return LinearSolve<VectorType,
+                               SolverGMRES<VectorType>,
+                               OperatorBase<double>,
+                               Preconditioner>::solve(*heat_operator,
+                                                      solution_update,
+                                                      rhs,
+                                                      heat_data.solver.rel_tolerance,
+                                                      heat_data.solver.max_iterations,
+                                                      preconditioner);
           }
         else
           return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(

@@ -308,8 +308,11 @@ namespace MeltPoolDG::Heat
         }
     }
 
-    void compute_system_matrix(/*TODO*/) const
+    void
+    compute_system_matrix(TrilinosWrappers::SparseMatrix &system_matrix) const
     {
+      (void)system_matrix;
+
       {
         const auto                            matrix_free = scratch_data.get_matrix_free();
         std::pair<unsigned int, unsigned int> cell_range;
