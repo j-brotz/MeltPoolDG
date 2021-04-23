@@ -779,7 +779,7 @@ namespace MeltPoolDG
           heat.solver.solver_type,
           "Set this parameter for choosing a solver type. At the moment GMRES or CG solvers "
           " are supported");
-        prm.add_parameter("heat preconditioner type",
+        prm.add_parameter("heat solver preconditioner type",
                           heat.solver.preconditioner_type,
                           "Set this parameter for choosing a preconditioner type",
                           Patterns::Selection("Identity|inverse mass matrix"));
