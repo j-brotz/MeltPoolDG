@@ -311,185 +311,191 @@ namespace MeltPoolDG::Heat
     void
     compute_system_matrix(TrilinosWrappers::SparseMatrix &system_matrix) const
     {
-      {
-        const auto                            matrix_free = scratch_data.get_matrix_free();
-        std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
+      if (true)
+        {
+          const auto &                          matrix_free = scratch_data.get_matrix_free();
+          std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
 
-        FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
-        FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
-        FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+          FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
+          FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
+                                                           vel_dof_idx,
+                                                           this->quad_idx);
+          FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
-        VectorizedArrayType capacity     = material.first.capacity;
-        VectorizedArrayType conductivity = material.first.conductivity;
-        VectorizedArrayType density      = material.first.density;
+          VectorizedArrayType capacity     = material.first.capacity;
+          VectorizedArrayType conductivity = material.first.conductivity;
+          VectorizedArrayType density      = material.first.density;
 
-        const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
+          const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
 
-        for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
-          {
-            unsigned int const n_filled_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
+          for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+            {
+              unsigned int const n_filled_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
 
-            FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
-            std::fill_n(matrices,
-                        VectorizedArray<number>::size(),
-                        FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+              FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
+              std::fill_n(matrices,
+                          VectorizedArray<number>::size(),
+                          FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
 
-            if (velocity)
-              {
-                velocity_vals.reinit(cell);
-                velocity_vals.gather_evaluate(*velocity, true, false);
-              }
+              if (velocity)
+                {
+                  velocity_vals.reinit(cell);
+                  velocity_vals.gather_evaluate(*velocity, true, false);
+                }
 
-            if (level_set_as_heaviside)
-              {
-                ls_vals.reinit(cell);
-                ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
-              }
+              if (level_set_as_heaviside)
+                {
+                  ls_vals.reinit(cell);
+                  ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
+                }
 
-            temp_vals.reinit(cell);
+              temp_vals.reinit(cell);
 
-            for (unsigned int j = 0; j < dofs_per_cell; ++j)
-              {
-                for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                  temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
+              for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                {
+                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                    temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
 
-                temp_vals.evaluate(true, true);
+                  temp_vals.evaluate(true, true);
 
-                for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
-                  {
-                    if (level_set_as_heaviside)
-                      get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                        capacity,
-                                                        conductivity,
-                                                        density);
+                  for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
+                    {
+                      if (level_set_as_heaviside)
+                        get_two_phase_material_parameters(ls_vals.get_value(q_index),
+                                                          capacity,
+                                                          conductivity,
+                                                          density);
 
-                    auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
+                      auto val =
+                        density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
-                    if (velocity)
-                      {
-                        val += density * capacity * temp_vals.get_gradient(q_index) *
-                               velocity_vals.get_value(q_index);
-                      }
+                      if (velocity)
+                        {
+                          val += density * capacity * temp_vals.get_gradient(q_index) *
+                                 velocity_vals.get_value(q_index);
+                        }
 
-                    temp_vals.submit_value(val, q_index);
+                      temp_vals.submit_value(val, q_index);
 
-                    auto val_grad = conductivity * temp_vals.get_gradient(q_index);
+                      auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
-                    temp_vals.submit_gradient(val_grad, q_index);
-                  }
-                temp_vals.integrate(true, true);
+                      temp_vals.submit_gradient(val_grad, q_index);
+                    }
+                  temp_vals.integrate(true, true);
 
-                for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                  for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                    matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
-              }
+                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                    for (unsigned int v = 0; v < n_filled_lanes; ++v)
+                      matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
+                }
 
-            for (unsigned int v = 0; v < n_filled_lanes; v++)
-              {
-                auto cell_v = matrix_free.get_cell_iterator(cell, v);
+              for (unsigned int v = 0; v < n_filled_lanes; v++)
+                {
+                  auto cell_v = matrix_free.get_cell_iterator(cell, v);
 
-                std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
-                cell_v->get_dof_indices(dof_indices);
+                  std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+                  cell_v->get_dof_indices(dof_indices);
 
-                auto temp = dof_indices;
-                for (unsigned int j = 0; j < dof_indices.size(); j++)
-                  dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+                  auto temp = dof_indices;
+                  for (unsigned int j = 0; j < dof_indices.size(); j++)
+                    dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
 
-                scratch_data.get_constraint(temp_dof_idx)
-                  .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
-              }
-          }
-      }
+                  scratch_data.get_constraint(temp_dof_idx)
+                    .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
+                }
+            }
+        }
 
-      {
-        const auto                            matrix_free = scratch_data.get_matrix_free();
-        std::pair<unsigned int, unsigned int> face_range  = {
-          matrix_free.n_inner_face_batches(),
-          matrix_free.n_inner_face_batches() + matrix_free.n_boundary_face_batches()};
+      if (true /*TODO*/)
+        {
+          const auto &                          matrix_free = scratch_data.get_matrix_free();
+          std::pair<unsigned int, unsigned int> face_range  = {
+            matrix_free.n_inner_face_batches(),
+            matrix_free.n_inner_face_batches() + matrix_free.n_boundary_face_batches()};
 
-        FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
-                                               true /*is_interior_face*/,
-                                               temp_dof_idx,
-                                               this->quad_idx);
-        FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
-                                                   true /*is_interior_face*/,
-                                                   temp_dof_idx,
-                                                   this->quad_idx);
+          FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
+                                                 true /*is_interior_face*/,
+                                                 temp_dof_idx,
+                                                 this->quad_idx);
+          FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
+                                                     true /*is_interior_face*/,
+                                                     temp_dof_idx,
+                                                     this->quad_idx);
 
-        const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
+          const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
 
-        for (unsigned int face = face_range.first; face < face_range.second; face++)
-          {
-            temp_vals.reinit(face);
-            temp_vals.gather_evaluate(temperature, true, false);
+          for (unsigned int face = face_range.first; face < face_range.second; face++)
+            {
+              temp_vals.reinit(face);
+              temp_vals.gather_evaluate(temperature, true, false);
 
-            dQ_dT.reinit(face);
+              dQ_dT.reinit(face);
 
-            unsigned int const n_filled_lanes = matrix_free.n_active_entries_per_face_batch(face);
+              unsigned int const n_filled_lanes = matrix_free.n_active_entries_per_face_batch(face);
 
-            FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
-            std::fill_n(matrices,
-                        VectorizedArray<number>::size(),
-                        FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+              FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
+              std::fill_n(matrices,
+                          VectorizedArray<number>::size(),
+                          FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
 
-            for (unsigned int j = 0; j < dofs_per_cell; ++j)
-              {
-                for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                  dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
+              for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                {
+                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                    dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
 
-                dQ_dT.evaluate(true, false);
+                  dQ_dT.evaluate(true, false);
 
-                types::boundary_id bc_index = matrix_free.get_boundary_id(face);
+                  types::boundary_id bc_index = matrix_free.get_boundary_id(face);
 
-                bool do_radiation =
-                  (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
-                   bc_radiation_indices.end());
+                  bool do_radiation = (std::find(bc_radiation_indices.begin(),
+                                                 bc_radiation_indices.end(),
+                                                 bc_index) != bc_radiation_indices.end());
 
-                bool do_convection = (std::find(bc_convection_indices.begin(),
-                                                bc_convection_indices.end(),
-                                                bc_index) != bc_convection_indices.end());
+                  bool do_convection = (std::find(bc_convection_indices.begin(),
+                                                  bc_convection_indices.end(),
+                                                  bc_index) != bc_convection_indices.end());
 
-                for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
-                  {
-                    auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
+                  for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
+                    {
+                      auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
 
-                    VectorizedArray<double> temp = 0;
+                      VectorizedArray<double> temp = 0;
 
-                    if (do_convection)
-                      temp += data.convection_coefficient * inc_temp_vals_at_q;
-                    if (do_radiation)
-                      temp += 4. * data.emissivity * stefan_boltzmann *
-                              pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
+                      if (do_convection)
+                        temp += data.convection_coefficient * inc_temp_vals_at_q;
+                      if (do_radiation)
+                        temp += 4. * data.emissivity * stefan_boltzmann *
+                                pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
 
-                    dQ_dT.submit_value(temp, q_index);
-                  }
-                dQ_dT.integrate(true, false);
+                      dQ_dT.submit_value(temp, q_index);
+                    }
+                  dQ_dT.integrate(true, false);
 
-                for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                  for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                    matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
-              }
+                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                    for (unsigned int v = 0; v < n_filled_lanes; ++v)
+                      matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
+                }
 
-            for (unsigned int v = 0; v < n_filled_lanes; v++)
-              {
-                unsigned int const cell_number = matrix_free.get_face_info(face).cells_interior[v];
+              for (unsigned int v = 0; v < n_filled_lanes; v++)
+                {
+                  unsigned int const cell_number =
+                    matrix_free.get_face_info(face).cells_interior[v];
 
-                auto cell_v =
-                  matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
-                                                cell_number % VectorizedArray<number>::size());
+                  auto cell_v =
+                    matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
+                                                  cell_number % VectorizedArray<number>::size());
 
-                std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
-                cell_v->get_dof_indices(dof_indices);
+                  std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+                  cell_v->get_dof_indices(dof_indices);
 
-                auto temp = dof_indices;
-                for (unsigned int j = 0; j < dof_indices.size(); j++)
-                  dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+                  auto temp = dof_indices;
+                  for (unsigned int j = 0; j < dof_indices.size(); j++)
+                    dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
 
-                scratch_data.get_constraint(temp_dof_idx)
-                  .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
-              }
-          }
-      }
+                  scratch_data.get_constraint(temp_dof_idx)
+                    .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
+                }
+            }
+        }
     }
 
     void
