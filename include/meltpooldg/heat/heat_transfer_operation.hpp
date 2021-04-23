@@ -153,6 +153,25 @@ namespace MeltPoolDG::Heat
             using Preconditioner = TrilinosWrappers::PreconditionAMG;
 
             TrilinosWrappers::SparseMatrix system_matrix;
+
+            const auto &dof_handler = scratch_data.get_dof_handler(temp_dof_idx);
+
+            const auto owned_dofs = dof_handler.locally_owned_dofs();
+
+            IndexSet relevant_dofs;
+            DoFTools::extract_locally_relevant_dofs(dof_handler, relevant_dofs);
+
+            DynamicSparsityPattern dsp(relevant_dofs);
+            DoFTools::make_sparsity_pattern(dof_handler,
+                                            dsp,
+                                            scratch_data.get_constraint(temp_dof_idx));
+
+            SparsityTools::distribute_sparsity_pattern(dsp,
+                                                       owned_dofs,
+                                                       MPI_COMM_WORLD,
+                                                       relevant_dofs);
+            system_matrix.reinit(owned_dofs, owned_dofs, dsp, MPI_COMM_WORLD);
+
             heat_operator->compute_system_matrix(system_matrix);
 
             TrilinosWrappers::PreconditionAMG                 preconditioner;
