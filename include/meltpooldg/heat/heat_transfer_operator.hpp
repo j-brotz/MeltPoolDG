@@ -325,8 +325,17 @@ namespace MeltPoolDG::Heat
         VectorizedArrayType conductivity = material.first.conductivity;
         VectorizedArrayType density      = material.first.density;
 
+        const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
+
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
+            unsigned int const n_filled_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
+
+            FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
+            std::fill_n(matrices,
+                        VectorizedArray<number>::size(),
+                        FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+
             if (velocity)
               {
                 velocity_vals.reinit(cell);
@@ -341,7 +350,7 @@ namespace MeltPoolDG::Heat
 
             temp_vals.reinit(cell);
 
-            for (unsigned int i = 0; i < temp_vals.dofs_per_cell; ++i)
+            for (unsigned int j = 0; j < temp_vals.dofs_per_cell; ++j)
               {
                 temp_vals.evaluate(true, true);
 
@@ -368,6 +377,25 @@ namespace MeltPoolDG::Heat
                     temp_vals.submit_gradient(val_grad, q_index);
                   }
                 temp_vals.integrate(true, true);
+
+                for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                  for (unsigned int v = 0; v < n_filled_lanes; ++v)
+                    matrices[v](i, j) = ls_vals.begin_dof_values()[i][v];
+              }
+
+            for (unsigned int v = 0; v < n_filled_lanes; v++)
+              {
+                auto cell_v = matrix_free.get_cell_iterator(cell, v);
+
+                std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+                cell_v->get_dof_indices(dof_indices);
+
+                auto temp = dof_indices;
+                for (unsigned int j = 0; j < dof_indices.size(); j++)
+                  dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+
+                scratch_data.get_constraint(temp_dof_idx)
+                  .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
               }
           }
       }
