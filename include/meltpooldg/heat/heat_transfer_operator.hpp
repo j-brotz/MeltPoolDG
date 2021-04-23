@@ -327,9 +327,6 @@ namespace MeltPoolDG::Heat
 
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
-            temp_vals.reinit(cell);
-            temp_vals.evaluate(true, true);
-
             if (velocity)
               {
                 velocity_vals.reinit(cell);
@@ -342,29 +339,36 @@ namespace MeltPoolDG::Heat
                 ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
               }
 
-            for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
+            temp_vals.reinit(cell);
+
+            for (unsigned int i = 0; i < temp_vals.dofs_per_cell; ++i)
               {
-                if (level_set_as_heaviside)
-                  get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                    capacity,
-                                                    conductivity,
-                                                    density);
+                temp_vals.evaluate(true, true);
 
-                auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
-
-                if (velocity)
+                for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
                   {
-                    val += density * capacity * temp_vals.get_gradient(q_index) *
-                           velocity_vals.get_value(q_index);
+                    if (level_set_as_heaviside)
+                      get_two_phase_material_parameters(ls_vals.get_value(q_index),
+                                                        capacity,
+                                                        conductivity,
+                                                        density);
+
+                    auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
+
+                    if (velocity)
+                      {
+                        val += density * capacity * temp_vals.get_gradient(q_index) *
+                               velocity_vals.get_value(q_index);
+                      }
+
+                    temp_vals.submit_value(val, q_index);
+
+                    auto val_grad = conductivity * temp_vals.get_gradient(q_index);
+
+                    temp_vals.submit_gradient(val_grad, q_index);
                   }
-
-                temp_vals.submit_value(val, q_index);
-
-                auto val_grad = conductivity * temp_vals.get_gradient(q_index);
-
-                temp_vals.submit_gradient(val_grad, q_index);
+                temp_vals.integrate(true, true);
               }
-            temp_vals.integrate(true, true);
           }
       }
 
@@ -383,37 +387,41 @@ namespace MeltPoolDG::Heat
 
         for (unsigned int face = face_range.first; face < face_range.second; face++)
           {
-            dQ_dT.reinit(face);
-            dQ_dT.evaluate(true, false);
-
             temp_vals.reinit(face);
             temp_vals.gather_evaluate(temperature, true, false);
 
-            types::boundary_id bc_index = matrix_free.get_boundary_id(face);
+            dQ_dT.reinit(face);
 
-            bool do_radiation =
-              (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
-               bc_radiation_indices.end());
-
-            bool do_convection =
-              (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
-               bc_convection_indices.end());
-
-            for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
+            for (unsigned int i = 0; i < dQ_dT.dofs_per_cell; ++i)
               {
-                auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
+                dQ_dT.evaluate(true, false);
 
-                VectorizedArray<double> temp = 0;
+                types::boundary_id bc_index = matrix_free.get_boundary_id(face);
 
-                if (do_convection)
-                  temp += data.convection_coefficient * inc_temp_vals_at_q;
-                if (do_radiation)
-                  temp += 4. * data.emissivity * stefan_boltzmann *
-                          pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
+                bool do_radiation =
+                  (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
+                   bc_radiation_indices.end());
 
-                dQ_dT.submit_value(temp, q_index);
+                bool do_convection = (std::find(bc_convection_indices.begin(),
+                                                bc_convection_indices.end(),
+                                                bc_index) != bc_convection_indices.end());
+
+                for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
+                  {
+                    auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
+
+                    VectorizedArray<double> temp = 0;
+
+                    if (do_convection)
+                      temp += data.convection_coefficient * inc_temp_vals_at_q;
+                    if (do_radiation)
+                      temp += 4. * data.emissivity * stefan_boltzmann *
+                              pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
+
+                    dQ_dT.submit_value(temp, q_index);
+                  }
+                dQ_dT.integrate(true, false);
               }
-            dQ_dT.integrate(true, false);
           }
       }
     }
