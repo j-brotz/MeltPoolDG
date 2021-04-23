@@ -311,11 +311,9 @@ namespace MeltPoolDG::Heat
     void
     compute_system_matrix(TrilinosWrappers::SparseMatrix &system_matrix) const
     {
-      (void)system_matrix;
-
       {
         const auto                            matrix_free = scratch_data.get_matrix_free();
-        std::pair<unsigned int, unsigned int> cell_range;
+        std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
 
         FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
         FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
@@ -350,8 +348,11 @@ namespace MeltPoolDG::Heat
 
             temp_vals.reinit(cell);
 
-            for (unsigned int j = 0; j < temp_vals.dofs_per_cell; ++j)
+            for (unsigned int j = 0; j < dofs_per_cell; ++j)
               {
+                for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                  temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
+
                 temp_vals.evaluate(true, true);
 
                 for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -402,7 +403,9 @@ namespace MeltPoolDG::Heat
 
       {
         const auto                            matrix_free = scratch_data.get_matrix_free();
-        std::pair<unsigned int, unsigned int> face_range;
+        std::pair<unsigned int, unsigned int> face_range  = {
+          matrix_free.n_inner_face_batches(),
+          matrix_free.n_inner_face_batches() + matrix_free.n_boundary_face_batches()};
 
         FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
                                                true /*is_interior_face*/,
@@ -413,6 +416,8 @@ namespace MeltPoolDG::Heat
                                                    temp_dof_idx,
                                                    this->quad_idx);
 
+        const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
+
         for (unsigned int face = face_range.first; face < face_range.second; face++)
           {
             temp_vals.reinit(face);
@@ -420,8 +425,18 @@ namespace MeltPoolDG::Heat
 
             dQ_dT.reinit(face);
 
-            for (unsigned int i = 0; i < dQ_dT.dofs_per_cell; ++i)
+            unsigned int const n_filled_lanes = matrix_free.n_active_entries_per_face_batch(face);
+
+            FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
+            std::fill_n(matrices,
+                        VectorizedArray<number>::size(),
+                        FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+
+            for (unsigned int j = 0; j < dofs_per_cell; ++j)
               {
+                for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                  dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
+
                 dQ_dT.evaluate(true, false);
 
                 types::boundary_id bc_index = matrix_free.get_boundary_id(face);
@@ -449,6 +464,29 @@ namespace MeltPoolDG::Heat
                     dQ_dT.submit_value(temp, q_index);
                   }
                 dQ_dT.integrate(true, false);
+
+                for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                  for (unsigned int v = 0; v < n_filled_lanes; ++v)
+                    matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
+              }
+
+            for (unsigned int v = 0; v < n_filled_lanes; v++)
+              {
+                unsigned int const cell_number = matrix_free.get_face_info(face).cells_interior[v];
+
+                auto cell_v =
+                  matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
+                                                cell_number % VectorizedArray<number>::size());
+
+                std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+                cell_v->get_dof_indices(dof_indices);
+
+                auto temp = dof_indices;
+                for (unsigned int j = 0; j < dof_indices.size(); j++)
+                  dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+
+                scratch_data.get_constraint(temp_dof_idx)
+                  .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
               }
           }
       }
