@@ -381,7 +381,7 @@ namespace MeltPoolDG::Heat
 
                 for (unsigned int i = 0; i < dofs_per_cell; ++i)
                   for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                    matrices[v](i, j) = ls_vals.begin_dof_values()[i][v];
+                    matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
               }
 
             for (unsigned int v = 0; v < n_filled_lanes; v++)
