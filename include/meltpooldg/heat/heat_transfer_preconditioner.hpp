@@ -17,9 +17,14 @@ namespace MeltPoolDG::Heat
     using vector_type = VectorType;
 
     MassMatrix(const MatrixFree<dim, Number, VectorizedArrayType> &matrix_free,
+               const MaterialData<Number> &                        material_data,
+               const double                                        d_tau_inv,
                const unsigned int                                  dof_idx,
                const unsigned int                                  quad_idx)
       : matrix_free(matrix_free)
+      , density(material_data.first.density)
+      , capacity(material_data.first.capacity)
+      , d_tau_inv(d_tau_inv)
       , dof_idx(dof_idx)
       , quad_idx(quad_idx)
     {}
@@ -36,7 +41,7 @@ namespace MeltPoolDG::Heat
               phi.reinit(cell);
               phi.gather_evaluate(src, true, false, false);
               for (unsigned int q = 0; q < phi.n_q_points; ++q)
-                phi.submit_value(phi.get_value(q), q);
+                phi.submit_value(density * capacity * d_tau_inv * phi.get_value(q), q);
               phi.integrate_scatter(true, false, dst);
             }
         },
@@ -47,6 +52,9 @@ namespace MeltPoolDG::Heat
 
   private:
     const MatrixFree<dim, Number, VectorizedArrayType> &matrix_free;
+    const double                                        density;
+    const double                                        capacity;
+    const double                                        d_tau_inv;
     const unsigned int                                  dof_idx;
     const unsigned int                                  quad_idx;
   };

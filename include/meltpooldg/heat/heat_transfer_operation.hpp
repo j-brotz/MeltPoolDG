@@ -52,6 +52,8 @@ namespace MeltPoolDG::Heat
 
     std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
 
+    const MaterialData<double> &material_data;
+
   public:
     HeatTransferOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
                           const ScratchData<dim> &                        scratch_data_in,
@@ -73,6 +75,7 @@ namespace MeltPoolDG::Heat
       , velocity(velocity_in)
       , ls_dof_idx(ls_dof_idx_in)
       , level_set_as_heaviside(level_set_as_heaviside_in)
+      , material_data(material_data)
     {
       heat_operator = std::make_shared<HeatTransferOperator<dim>>(bc_data,
                                                                   scratch_data,
@@ -126,15 +129,14 @@ namespace MeltPoolDG::Heat
 
       const auto solve_linear_system = [&](VectorType &      solution_update,
                                            const VectorType &rhs) -> int {
-        if (heat_data.solver.preconditioner_type == "inverse mass matrix")
+        if (heat_data.solver.preconditioner_type == "Inverse mass matrix")
           {
             using PreconditionerOperator = MassMatrix<dim, double, VectorizedArray<double>>;
             using Preconditioner         = InverseMassMatrix<PreconditionerOperator>;
 
-            PreconditionerOperator precondition_operator(scratch_data.get_matrix_free(),
-                                                         temp_dof_idx,
-                                                         temp_quad_idx);
-            Preconditioner         preconditioner(precondition_operator);
+            PreconditionerOperator precondition_operator(
+              scratch_data.get_matrix_free(), material_data, 1.0 / dt, temp_dof_idx, temp_quad_idx);
+            Preconditioner preconditioner(precondition_operator);
 
             return LinearSolve<VectorType,
                                SolverGMRES<VectorType>,
