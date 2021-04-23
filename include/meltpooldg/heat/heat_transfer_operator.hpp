@@ -7,6 +7,7 @@
 
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
+#include <deal.II/matrix_free/tools.h>
 // MeltPoolDG
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
@@ -306,6 +307,79 @@ namespace MeltPoolDG::Heat
             }
           dQ_dT.integrate_scatter(true, false, dst);
         }
+    }
+
+    void
+    compute_inverse_diagonal(VectorType &diagonal) const
+    {
+      scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
+
+      // note: not thread safe!!!
+      const auto &                       matrix_free = scratch_data.get_matrix_free();
+      FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+
+      VectorizedArrayType capacity     = material.first.capacity;
+      VectorizedArrayType conductivity = material.first.conductivity;
+      VectorizedArrayType density      = material.first.density;
+
+      unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+      // compute diagonal ...
+      MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
+        matrix_free,
+        diagonal,
+        [&](auto &temp_vals) {
+          const unsigned int current_cell_index = temp_vals.get_current_cell_index();
+
+          if (old_cell_index != current_cell_index)
+            {
+              if (velocity)
+                {
+                  velocity_vals.reinit(current_cell_index);
+                  velocity_vals.gather_evaluate(*velocity, true, false);
+                }
+
+              if (level_set_as_heaviside)
+                {
+                  ls_vals.reinit(current_cell_index);
+                  ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
+                }
+              old_cell_index = current_cell_index;
+            }
+
+          temp_vals.evaluate(true, true);
+
+          for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
+            {
+              if (level_set_as_heaviside)
+                get_two_phase_material_parameters(ls_vals.get_value(q_index),
+                                                  capacity,
+                                                  conductivity,
+                                                  density);
+
+              auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
+
+              if (velocity)
+                {
+                  val += density * capacity * temp_vals.get_gradient(q_index) *
+                         velocity_vals.get_value(q_index);
+                }
+
+              temp_vals.submit_value(val, q_index);
+
+              auto val_grad = conductivity * temp_vals.get_gradient(q_index);
+
+              temp_vals.submit_gradient(val_grad, q_index);
+            }
+          temp_vals.integrate(true, true);
+        },
+        temp_dof_idx,
+        this->quad_idx);
+
+      // ... and convert it
+      for (auto &i : diagonal)
+        i = (std::abs(i) > 1.0e-10) ? (1.0 / i) : 1.0;
     }
 
     void
