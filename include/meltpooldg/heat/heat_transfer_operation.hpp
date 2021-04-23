@@ -9,6 +9,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
+#include <meltpooldg/heat/heat_transfer_preconditioner.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -125,8 +126,33 @@ namespace MeltPoolDG::Heat
 
       const auto solve_linear_system = [&](VectorType &      solution_update,
                                            const VectorType &rhs) -> int {
-        return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
-          *heat_operator, solution_update, rhs, heat_data.solver.rel_tolerance);
+        if (heat_data.solver.preconditioner_type == "inverse mass matrix")
+          {
+            using PreconditionerOperator = MassMatrix<dim, double, VectorizedArray<double>>;
+            using Preconditioner         = InverseMassMatrix<PreconditionerOperator>;
+
+            PreconditionerOperator precondition_operator(scratch_data.get_matrix_free(),
+                                                         temp_dof_idx,
+                                                         temp_quad_idx);
+            Preconditioner         preconditioner(precondition_operator);
+
+            return LinearSolve<VectorType,
+                               SolverGMRES<VectorType>,
+                               OperatorBase<double>,
+                               Preconditioner>::solve(*heat_operator,
+                                                      solution_update,
+                                                      rhs,
+                                                      heat_data.solver.rel_tolerance,
+                                                      heat_data.solver.max_iterations,
+                                                      preconditioner);
+          }
+        else
+          return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
+            *heat_operator,
+            solution_update,
+            rhs,
+            heat_data.solver.rel_tolerance,
+            heat_data.solver.max_iterations);
       };
 
       auto newton = NewtonRaphsonSolver<dim>(scratch_data,
@@ -139,8 +165,6 @@ namespace MeltPoolDG::Heat
                                              solve_linear_system);
 
       newton.solve();
-
-      //@todo: add output
     }
 
     void
