@@ -148,6 +148,12 @@ namespace MeltPoolDG::Heat
                                                       heat_data.solver.max_iterations,
                                                       preconditioner);
           }
+        else if (heat_data.solver.preconditioner_type == "AMG")
+          {
+            heat_operator->compute_system_matrix();
+
+            return 0;
+          }
         else
           return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
             *heat_operator,
