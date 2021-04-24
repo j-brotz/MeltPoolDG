@@ -479,7 +479,7 @@ namespace MeltPoolDG::Heat
             }
         }
 
-      if (true /*TODO*/)
+      if (false /*TODO: make optional*/)
         {
           const auto &                          matrix_free = scratch_data.get_matrix_free();
           std::pair<unsigned int, unsigned int> face_range  = {
@@ -570,6 +570,8 @@ namespace MeltPoolDG::Heat
                 }
             }
         }
+
+      system_matrix.compress(VectorOperation::add);
     }
 
     void

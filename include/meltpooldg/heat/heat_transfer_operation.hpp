@@ -189,6 +189,47 @@ namespace MeltPoolDG::Heat
                                                       heat_data.solver.max_iterations,
                                                       preconditioner);
           }
+        else if (heat_data.solver.preconditioner_type == "ILU")
+          {
+            using Preconditioner = TrilinosWrappers::PreconditionILU;
+
+            TrilinosWrappers::SparseMatrix system_matrix;
+
+            const auto &dof_handler = scratch_data.get_dof_handler(temp_dof_idx);
+
+            const auto owned_dofs = dof_handler.locally_owned_dofs();
+
+            IndexSet relevant_dofs;
+            DoFTools::extract_locally_relevant_dofs(dof_handler, relevant_dofs);
+
+            DynamicSparsityPattern dsp(relevant_dofs);
+            DoFTools::make_sparsity_pattern(dof_handler,
+                                            dsp,
+                                            scratch_data.get_constraint(temp_dof_idx));
+
+            SparsityTools::distribute_sparsity_pattern(dsp,
+                                                       owned_dofs,
+                                                       MPI_COMM_WORLD,
+                                                       relevant_dofs);
+            system_matrix.reinit(owned_dofs, owned_dofs, dsp, MPI_COMM_WORLD);
+
+            heat_operator->compute_system_matrix(system_matrix);
+
+            TrilinosWrappers::PreconditionILU                 preconditioner;
+            TrilinosWrappers::PreconditionILU::AdditionalData amg_data;
+
+            preconditioner.initialize(system_matrix, amg_data);
+
+            return LinearSolve<VectorType,
+                               SolverGMRES<VectorType>,
+                               OperatorBase<double>,
+                               Preconditioner>::solve(*heat_operator,
+                                                      solution_update,
+                                                      rhs,
+                                                      heat_data.solver.rel_tolerance,
+                                                      heat_data.solver.max_iterations,
+                                                      preconditioner);
+          }
         else if (heat_data.solver.preconditioner_type == "Diagonal")
           {
             using Preconditioner = DiagonalMatrix<VectorType>;
@@ -219,7 +260,10 @@ namespace MeltPoolDG::Heat
             scratch_data.initialize_dof_vector(diag, temp_dof_idx);
 
             for (const auto i : diag.locally_owned_elements())
-              diag[i] = 1.0 / system_matrix(i, i);
+              diag[i] = system_matrix(i, i);
+            for (auto &i : diag)
+              i = (std::abs(i) > 1.0e-10) ? (1.0 / i) : 1.0;
+
             diag.update_ghost_values();
 
 
@@ -254,13 +298,20 @@ namespace MeltPoolDG::Heat
                                                       heat_data.solver.max_iterations,
                                                       preconditioner);
           }
+        else if (heat_data.solver.preconditioner_type == "Identity")
+          {
+            return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
+              *heat_operator,
+              solution_update,
+              rhs,
+              heat_data.solver.rel_tolerance,
+              heat_data.solver.max_iterations);
+          }
         else
-          return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
-            *heat_operator,
-            solution_update,
-            rhs,
-            heat_data.solver.rel_tolerance,
-            heat_data.solver.max_iterations);
+          {
+            AssertThrow(false, ExcNotImplemented());
+            return 0;
+          }
       };
 
       auto newton = NewtonRaphsonSolver<dim>(scratch_data,

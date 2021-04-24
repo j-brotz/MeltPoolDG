@@ -783,7 +783,7 @@ namespace MeltPoolDG
                           heat.solver.preconditioner_type,
                           "Set this parameter for choosing a preconditioner type",
                           Patterns::Selection(
-                            "Identity|Inverse mass matrix|AMG|Diagonal|DiagonalReduced"));
+                            "Identity|Inverse mass matrix|AMG|Diagonal|DiagonalReduced|ILU"));
         prm.add_parameter(
           "heat solver max iterations",
           heat.solver.max_iterations,
