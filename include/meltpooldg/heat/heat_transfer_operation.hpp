@@ -9,7 +9,6 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
-#include <meltpooldg/heat/heat_transfer_preconditioner.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -129,26 +128,7 @@ namespace MeltPoolDG::Heat
 
       const auto solve_linear_system = [&](VectorType &      solution_update,
                                            const VectorType &rhs) -> int {
-        if (heat_data.solver.preconditioner_type == "Inverse mass matrix")
-          {
-            using PreconditionerOperator = MassMatrix<dim, double, VectorizedArray<double>>;
-            using Preconditioner         = InverseMassMatrix<PreconditionerOperator>;
-
-            PreconditionerOperator precondition_operator(
-              scratch_data.get_matrix_free(), material_data, 1.0 / dt, temp_dof_idx, temp_quad_idx);
-            Preconditioner preconditioner(precondition_operator);
-
-            return LinearSolve<VectorType,
-                               SolverGMRES<VectorType>,
-                               OperatorBase<double>,
-                               Preconditioner>::solve(*heat_operator,
-                                                      solution_update,
-                                                      rhs,
-                                                      heat_data.solver.rel_tolerance,
-                                                      heat_data.solver.max_iterations,
-                                                      preconditioner);
-          }
-        else if (heat_data.solver.preconditioner_type == "AMG")
+        if (heat_data.solver.preconditioner_type == "AMG")
           {
             using Preconditioner = TrilinosWrappers::PreconditionAMG;
 
