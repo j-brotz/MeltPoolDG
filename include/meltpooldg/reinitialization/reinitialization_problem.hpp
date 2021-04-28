@@ -76,7 +76,8 @@ namespace MeltPoolDG
 
             reinit_operation->solve(d_tau);
 
-            output_results(time_iterator.get_current_time_step_number());
+            output_results(time_iterator.get_current_time_step_number(),
+                           time_iterator.get_current_time());
 
             if (base_in->parameters.amr.do_amr)
               refine_mesh(base_in);
@@ -306,11 +307,12 @@ namespace MeltPoolDG
        *  Creating paraview output
        */
       void
-      output_results(const unsigned int time_step) const
+      output_results(const unsigned int time_step, const double time) const
       {
-        post_processor->process(time_step, [&](DataOut<dim> &data_out) {
-          reinit_operation->attach_output_vectors(data_out);
-        });
+        post_processor->process(
+          time_step,
+          [&](DataOut<dim> &data_out) { reinit_operation->attach_output_vectors(data_out); },
+          time);
       }
 
     private:
