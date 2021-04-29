@@ -151,7 +151,9 @@ namespace MeltPoolDG::Heat
           }
         else
           {
-            heat_operator->compute_system_matrix(heat_transfer_preconditioner.get_system_matrix());
+            heat_operator->compute_system_matrix(
+              heat_transfer_preconditioner.get_system_matrix(),
+              true /*consider exact system matrix including boundary terms*/);
 
             auto preconditioner =
               LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),

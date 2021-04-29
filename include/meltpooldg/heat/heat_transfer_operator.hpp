@@ -332,6 +332,7 @@ namespace MeltPoolDG::Heat
         [&](auto &temp_vals) {
           const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
+          // hack that this operation is only done once
           if (old_cell_index != current_cell_index)
             {
               if (velocity)
@@ -361,10 +362,8 @@ namespace MeltPoolDG::Heat
               auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
               if (velocity)
-                {
-                  val += density * capacity * temp_vals.get_gradient(q_index) *
-                         velocity_vals.get_value(q_index);
-                }
+                val += density * capacity * temp_vals.get_gradient(q_index) *
+                       velocity_vals.get_value(q_index);
 
               temp_vals.submit_value(val, q_index);
 
@@ -383,80 +382,18 @@ namespace MeltPoolDG::Heat
     }
 
     void
-    compute_system_matrix(TrilinosWrappers::SparseMatrix &system_matrix) const
+    compute_system_matrix(TrilinosWrappers::SparseMatrix &system_matrix,
+                          bool                            include_boundary_terms = false) const
     {
-      // note: not thread safe!!!
-      const auto &                       matrix_free = scratch_data.get_matrix_free();
-      FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
-      FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
-
-      VectorizedArrayType capacity     = material.first.capacity;
-      VectorizedArrayType conductivity = material.first.conductivity;
-      VectorizedArrayType density      = material.first.density;
-
-      unsigned int old_cell_index = numbers::invalid_unsigned_int;
-
-      // compute matrix (only cell contributions)
-      MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
-        matrix_free,
-        scratch_data.get_constraint(temp_dof_idx),
-        system_matrix,
-        [&](auto &temp_vals) {
-          const unsigned int current_cell_index = temp_vals.get_current_cell_index();
-
-          if (old_cell_index != current_cell_index)
-            {
-              if (velocity)
-                {
-                  velocity_vals.reinit(current_cell_index);
-                  velocity_vals.gather_evaluate(*velocity, true, false);
-                }
-
-              if (level_set_as_heaviside)
-                {
-                  ls_vals.reinit(current_cell_index);
-                  ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
-                }
-              old_cell_index = current_cell_index;
-            }
-
-          temp_vals.evaluate(true, true);
-
-          for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
-            {
-              if (level_set_as_heaviside)
-                get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                  capacity,
-                                                  conductivity,
-                                                  density);
-
-              auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
-
-              if (velocity)
-                {
-                  val += density * capacity * temp_vals.get_gradient(q_index) *
-                         velocity_vals.get_value(q_index);
-                }
-
-              temp_vals.submit_value(val, q_index);
-
-              auto val_grad = conductivity * temp_vals.get_gradient(q_index);
-
-              temp_vals.submit_gradient(val_grad, q_index);
-            }
-          temp_vals.integrate(true, true);
-        },
-        temp_dof_idx,
-        this->quad_idx);
-
-      return; // below one can compute the complete system matrix
-
-      if (true) // cell integrals
+      MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
+      if (velocity)
+        MeltPoolDG::VectorTools::update_ghost_values(*velocity);
+      if (level_set_as_heaviside)
+        MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
+      if (!include_boundary_terms)
         {
-          const auto &                          matrix_free = scratch_data.get_matrix_free();
-          std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
-
-          FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
+          // note: not thread safe!!!
+          const auto &                       matrix_free = scratch_data.get_matrix_free();
           FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
                                                            vel_dof_idx,
                                                            this->quad_idx);
@@ -466,178 +403,259 @@ namespace MeltPoolDG::Heat
           VectorizedArrayType conductivity = material.first.conductivity;
           VectorizedArrayType density      = material.first.density;
 
-          const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
+          unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
-          for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
-            {
-              unsigned int const n_filled_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
+          // compute matrix (only cell contributions)
+          MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+            matrix_free,
+            scratch_data.get_constraint(temp_dof_idx),
+            system_matrix,
+            [&](auto &temp_vals) {
+              const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
-              FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
-              std::fill_n(matrices,
-                          VectorizedArray<number>::size(),
-                          FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
-
-              if (velocity)
+              if (old_cell_index != current_cell_index)
                 {
-                  velocity_vals.reinit(cell);
-                  velocity_vals.gather_evaluate(*velocity, true, false);
-                }
-
-              if (level_set_as_heaviside)
-                {
-                  ls_vals.reinit(cell);
-                  ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
-                }
-
-              temp_vals.reinit(cell);
-
-              for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                {
-                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                    temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
-
-                  temp_vals.evaluate(true, true);
-
-                  for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
+                  if (velocity)
                     {
-                      if (level_set_as_heaviside)
-                        get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                          capacity,
-                                                          conductivity,
-                                                          density);
-
-                      auto val =
-                        density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
-
-                      if (velocity)
-                        {
-                          val += density * capacity * temp_vals.get_gradient(q_index) *
-                                 velocity_vals.get_value(q_index);
-                        }
-
-                      temp_vals.submit_value(val, q_index);
-
-                      auto val_grad = conductivity * temp_vals.get_gradient(q_index);
-
-                      temp_vals.submit_gradient(val_grad, q_index);
+                      velocity_vals.reinit(current_cell_index);
+                      velocity_vals.gather_evaluate(*velocity, true, false);
                     }
-                  temp_vals.integrate(true, true);
 
-                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                    for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                      matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
+                  if (level_set_as_heaviside)
+                    {
+                      ls_vals.reinit(current_cell_index);
+                      ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
+                    }
+                  old_cell_index = current_cell_index;
                 }
 
-              for (unsigned int v = 0; v < n_filled_lanes; v++)
+              temp_vals.evaluate(true, true);
+
+              for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
                 {
-                  auto cell_v = matrix_free.get_cell_iterator(cell, v);
+                  if (level_set_as_heaviside)
+                    get_two_phase_material_parameters(ls_vals.get_value(q_index),
+                                                      capacity,
+                                                      conductivity,
+                                                      density);
 
-                  std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
-                  cell_v->get_dof_indices(dof_indices);
+                  auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
-                  auto temp = dof_indices;
-                  for (unsigned int j = 0; j < dof_indices.size(); j++)
-                    dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+                  if (velocity)
+                    {
+                      val += density * capacity * temp_vals.get_gradient(q_index) *
+                             velocity_vals.get_value(q_index);
+                    }
 
-                  scratch_data.get_constraint(temp_dof_idx)
-                    .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
+                  temp_vals.submit_value(val, q_index);
+
+                  auto val_grad = conductivity * temp_vals.get_gradient(q_index);
+
+                  temp_vals.submit_gradient(val_grad, q_index);
                 }
-            }
-        }
+              temp_vals.integrate(true, true);
+            },
+            temp_dof_idx,
+            this->quad_idx);
 
-      if (true /*TODO: make optional*/) // boundary integral
+          return; // below one can compute the complete system matrix
+        }
+      else
         {
-          const auto &                          matrix_free = scratch_data.get_matrix_free();
-          std::pair<unsigned int, unsigned int> face_range  = {
-            matrix_free.n_inner_face_batches(),
-            matrix_free.n_inner_face_batches() + matrix_free.n_boundary_face_batches()};
+          {
+            const auto &                          matrix_free = scratch_data.get_matrix_free();
+            std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
 
-          FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
-                                                 true /*is_interior_face*/,
-                                                 temp_dof_idx,
-                                                 this->quad_idx);
-          FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
-                                                     true /*is_interior_face*/,
-                                                     temp_dof_idx,
-                                                     this->quad_idx);
+            FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
+            FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
+                                                             vel_dof_idx,
+                                                             this->quad_idx);
+            FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
-          const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
+            VectorizedArrayType capacity     = material.first.capacity;
+            VectorizedArrayType conductivity = material.first.conductivity;
+            VectorizedArrayType density      = material.first.density;
 
-          for (unsigned int face = face_range.first; face < face_range.second; face++)
-            {
-              temp_vals.reinit(face);
-              temp_vals.gather_evaluate(temperature, true, false);
+            const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
 
-              dQ_dT.reinit(face);
+            for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+              {
+                unsigned int const n_filled_lanes =
+                  matrix_free.n_active_entries_per_cell_batch(cell);
 
-              unsigned int const n_filled_lanes = matrix_free.n_active_entries_per_face_batch(face);
+                FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
+                std::fill_n(matrices,
+                            VectorizedArray<number>::size(),
+                            FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
 
-              FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
-              std::fill_n(matrices,
-                          VectorizedArray<number>::size(),
-                          FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+                if (velocity)
+                  {
+                    velocity_vals.reinit(cell);
+                    velocity_vals.gather_evaluate(*velocity, true, false);
+                  }
 
-              for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                {
-                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                    dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
+                if (level_set_as_heaviside)
+                  {
+                    ls_vals.reinit(cell);
+                    ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
+                  }
 
-                  dQ_dT.evaluate(true, false);
+                temp_vals.reinit(cell);
 
-                  types::boundary_id bc_index = matrix_free.get_boundary_id(face);
+                for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                  {
+                    for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                      temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
 
-                  bool do_radiation = (std::find(bc_radiation_indices.begin(),
-                                                 bc_radiation_indices.end(),
-                                                 bc_index) != bc_radiation_indices.end());
+                    temp_vals.evaluate(true, true);
 
-                  bool do_convection = (std::find(bc_convection_indices.begin(),
-                                                  bc_convection_indices.end(),
-                                                  bc_index) != bc_convection_indices.end());
+                    for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
+                      {
+                        if (level_set_as_heaviside)
+                          get_two_phase_material_parameters(ls_vals.get_value(q_index),
+                                                            capacity,
+                                                            conductivity,
+                                                            density);
 
-                  for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
-                    {
-                      auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
+                        auto val =
+                          density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
-                      VectorizedArray<double> temp = 0;
+                        if (velocity)
+                          {
+                            val += density * capacity * temp_vals.get_gradient(q_index) *
+                                   velocity_vals.get_value(q_index);
+                          }
 
-                      if (do_convection)
-                        temp += data.convection_coefficient * inc_temp_vals_at_q;
-                      if (do_radiation)
-                        temp += 4. * data.emissivity * stefan_boltzmann *
-                                pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
+                        temp_vals.submit_value(val, q_index);
 
-                      dQ_dT.submit_value(temp, q_index);
-                    }
-                  dQ_dT.integrate(true, false);
+                        auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
-                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                    for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                      matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
-                }
+                        temp_vals.submit_gradient(val_grad, q_index);
+                      }
+                    temp_vals.integrate(true, true);
 
-              for (unsigned int v = 0; v < n_filled_lanes; v++)
-                {
-                  unsigned int const cell_number =
-                    matrix_free.get_face_info(face).cells_interior[v];
+                    for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                      for (unsigned int v = 0; v < n_filled_lanes; ++v)
+                        matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
+                  }
 
-                  auto cell_v =
-                    matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
-                                                  cell_number % VectorizedArray<number>::size());
+                for (unsigned int v = 0; v < n_filled_lanes; v++)
+                  {
+                    auto cell_v = matrix_free.get_cell_iterator(cell, v);
 
-                  std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
-                  cell_v->get_dof_indices(dof_indices);
+                    std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+                    cell_v->get_dof_indices(dof_indices);
 
-                  auto temp = dof_indices;
-                  for (unsigned int j = 0; j < dof_indices.size(); j++)
-                    dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+                    auto temp = dof_indices;
+                    for (unsigned int j = 0; j < dof_indices.size(); j++)
+                      dof_indices[j] =
+                        temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
 
-                  scratch_data.get_constraint(temp_dof_idx)
-                    .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
-                }
-            }
+                    scratch_data.get_constraint(temp_dof_idx)
+                      .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
+                  }
+              }
+          }
+          // boundary_integral
+          {
+            const auto &                          matrix_free = scratch_data.get_matrix_free();
+            std::pair<unsigned int, unsigned int> face_range  = {
+              matrix_free.n_inner_face_batches(),
+              matrix_free.n_inner_face_batches() + matrix_free.n_boundary_face_batches()};
+
+            FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
+                                                   true /*is_interior_face*/,
+                                                   temp_dof_idx,
+                                                   this->quad_idx);
+            FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
+                                                       true /*is_interior_face*/,
+                                                       temp_dof_idx,
+                                                       this->quad_idx);
+
+            const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
+
+            for (unsigned int face = face_range.first; face < face_range.second; face++)
+              {
+                temp_vals.reinit(face);
+                temp_vals.gather_evaluate(temperature, true, false);
+
+                dQ_dT.reinit(face);
+
+                unsigned int const n_filled_lanes =
+                  matrix_free.n_active_entries_per_face_batch(face);
+
+                FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
+                std::fill_n(matrices,
+                            VectorizedArray<number>::size(),
+                            FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+
+                for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                  {
+                    for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                      dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
+
+                    dQ_dT.evaluate(true, false);
+
+                    types::boundary_id bc_index = matrix_free.get_boundary_id(face);
+
+                    bool do_radiation = (std::find(bc_radiation_indices.begin(),
+                                                   bc_radiation_indices.end(),
+                                                   bc_index) != bc_radiation_indices.end());
+
+                    bool do_convection = (std::find(bc_convection_indices.begin(),
+                                                    bc_convection_indices.end(),
+                                                    bc_index) != bc_convection_indices.end());
+
+                    for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
+                      {
+                        auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
+
+                        VectorizedArray<double> temp = 0;
+
+                        if (do_convection)
+                          temp += data.convection_coefficient * inc_temp_vals_at_q;
+                        if (do_radiation)
+                          temp += 4. * data.emissivity * stefan_boltzmann *
+                                  pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
+
+                        dQ_dT.submit_value(temp, q_index);
+                      }
+                    dQ_dT.integrate(true, false);
+
+                    for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                      for (unsigned int v = 0; v < n_filled_lanes; ++v)
+                        matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
+                  }
+
+                for (unsigned int v = 0; v < n_filled_lanes; v++)
+                  {
+                    unsigned int const cell_number =
+                      matrix_free.get_face_info(face).cells_interior[v];
+
+                    auto cell_v =
+                      matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
+                                                    cell_number % VectorizedArray<number>::size());
+
+                    std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+                    cell_v->get_dof_indices(dof_indices);
+
+                    auto temp = dof_indices;
+                    for (unsigned int j = 0; j < dof_indices.size(); j++)
+                      dof_indices[j] =
+                        temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+
+                    scratch_data.get_constraint(temp_dof_idx)
+                      .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
+                  }
+              }
+          }
         }
-
       system_matrix.compress(VectorOperation::add);
+      MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+      if (velocity)
+        MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      if (level_set_as_heaviside)
+        MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
     }
 
     void
