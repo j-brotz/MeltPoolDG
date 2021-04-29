@@ -134,8 +134,17 @@ namespace MeltPoolDG::Heat
 
       const auto solve_linear_system = [&](VectorType &      solution_update,
                                            const VectorType &rhs) -> int {
-        if (heat_data.solver.preconditioner_type == "Diagonal" ||
-            heat_data.solver.preconditioner_type == "DiagonalReduced")
+        if (heat_data.solver.preconditioner_type == "Identity")
+          {
+            return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
+              *heat_operator,
+              solution_update,
+              rhs,
+              heat_data.solver.rel_tolerance,
+              heat_data.solver.max_iterations);
+          }
+        else if (heat_data.solver.preconditioner_type == "Diagonal" ||
+                 heat_data.solver.preconditioner_type == "DiagonalReduced")
 
           {
             auto preconditioner = heat_transfer_preconditioner.get_diagonal_preconditioner(
@@ -149,11 +158,11 @@ namespace MeltPoolDG::Heat
               heat_data.solver.max_iterations,
               preconditioner);
           }
-        else
+        else if (heat_data.solver.preconditioner_type == "AMG" ||
+                 heat_data.solver.preconditioner_type == "AMGReduced")
           {
-            heat_operator->compute_system_matrix(
-              heat_transfer_preconditioner.get_system_matrix(),
-              true /*consider exact system matrix including boundary terms*/);
+            heat_operator->compute_system_matrix(heat_transfer_preconditioner.get_system_matrix(),
+                                                 heat_data.solver.preconditioner_type == "AMG");
 
             auto preconditioner =
               LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),
@@ -166,6 +175,11 @@ namespace MeltPoolDG::Heat
               heat_data.solver.rel_tolerance,
               heat_data.solver.max_iterations,
               *preconditioner);
+          }
+        else
+          {
+            AssertThrow(false, ExcNotImplemented());
+            return 0;
           }
       };
 
