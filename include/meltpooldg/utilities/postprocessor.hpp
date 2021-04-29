@@ -37,6 +37,8 @@ namespace MeltPoolDG
 
     DataOut<dim> data_out;
 
+    std::vector<std::pair<double, std::string>> times_and_names;
+
   public:
     Postprocessor(const MPI_Comm              mpi_communicator_in,
                   const ParaviewData<double> &pv_data_in,
@@ -108,7 +110,6 @@ namespace MeltPoolDG
       // write a pvd file relating the pvtu-file with a simulation time
       if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
         {
-          static std::vector<std::pair<double, std::string>> times_and_names;
           times_and_names.emplace_back(time, pvtu_filename);
           std::ofstream pvd_output(pv_data.directory + "/" + pv_data.filename + ".pvd");
           DataOutBase::write_pvd_record(pvd_output, times_and_names);
