@@ -251,7 +251,7 @@ namespace MeltPoolDG::LevelSet
             rhs, advected_field, scratch_data, this->dof_idx, ls_hanging_nodes_dof_idx);
 
           iter =
-            LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(*this,
+            LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(*this,
                                                                                           src,
                                                                                           rhs);
         }

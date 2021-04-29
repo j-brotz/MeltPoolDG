@@ -9,6 +9,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
+#include <meltpooldg/heat/heat_transfer_preconditioner.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -53,6 +54,8 @@ namespace MeltPoolDG::Heat
 
     const MaterialData<double> &material_data;
 
+    HeatTransferPreconditioner<dim> heat_transfer_preconditioner;
+
   public:
     HeatTransferOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
                           const ScratchData<dim> &                        scratch_data_in,
@@ -75,6 +78,7 @@ namespace MeltPoolDG::Heat
       , ls_dof_idx(ls_dof_idx_in)
       , level_set_as_heaviside(level_set_as_heaviside_in)
       , material_data(material_data)
+      , heat_transfer_preconditioner(scratch_data, temp_dof_idx)
     {
       heat_operator = std::make_shared<HeatTransferOperator<dim>>(bc_data,
                                                                   scratch_data,
@@ -94,6 +98,8 @@ namespace MeltPoolDG::Heat
     set_initial_condition(const Function<dim> &initial_field_function_temperature)
     {
       reinit();
+
+      heat_transfer_preconditioner.reinit();
 
       dealii::VectorTools::project(scratch_data.get_mapping(),
                                    scratch_data.get_dof_handler(temp_dof_idx),
@@ -128,169 +134,36 @@ namespace MeltPoolDG::Heat
 
       const auto solve_linear_system = [&](VectorType &      solution_update,
                                            const VectorType &rhs) -> int {
-        if (heat_data.solver.preconditioner_type == "AMG")
+        if (heat_data.solver.preconditioner_type == "Diagonal" ||
+            heat_data.solver.preconditioner_type == "DiagonalReduced")
+
           {
-            using Preconditioner = TrilinosWrappers::PreconditionAMG;
+            auto preconditioner = heat_transfer_preconditioner.get_diagonal_preconditioner(
+              heat_data.solver.preconditioner_type, heat_operator);
 
-            TrilinosWrappers::SparseMatrix system_matrix;
-
-            const auto &dof_handler = scratch_data.get_dof_handler(temp_dof_idx);
-
-            const auto owned_dofs = dof_handler.locally_owned_dofs();
-
-            IndexSet relevant_dofs;
-            DoFTools::extract_locally_relevant_dofs(dof_handler, relevant_dofs);
-
-            DynamicSparsityPattern dsp(relevant_dofs);
-            DoFTools::make_sparsity_pattern(dof_handler,
-                                            dsp,
-                                            scratch_data.get_constraint(temp_dof_idx));
-
-            SparsityTools::distribute_sparsity_pattern(dsp,
-                                                       owned_dofs,
-                                                       MPI_COMM_WORLD,
-                                                       relevant_dofs);
-            system_matrix.reinit(owned_dofs, owned_dofs, dsp, MPI_COMM_WORLD);
-
-            heat_operator->compute_system_matrix(system_matrix);
-
-            TrilinosWrappers::PreconditionAMG                 preconditioner;
-            TrilinosWrappers::PreconditionAMG::AdditionalData amg_data;
-
-            preconditioner.initialize(system_matrix, amg_data);
-
-            return LinearSolve<VectorType,
-                               SolverGMRES<VectorType>,
-                               OperatorBase<double>,
-                               Preconditioner>::solve(*heat_operator,
-                                                      solution_update,
-                                                      rhs,
-                                                      heat_data.solver.rel_tolerance,
-                                                      heat_data.solver.max_iterations,
-                                                      preconditioner);
-          }
-        else if (heat_data.solver.preconditioner_type == "ILU")
-          {
-            using Preconditioner = TrilinosWrappers::PreconditionILU;
-
-            TrilinosWrappers::SparseMatrix system_matrix;
-
-            const auto &dof_handler = scratch_data.get_dof_handler(temp_dof_idx);
-
-            const auto owned_dofs = dof_handler.locally_owned_dofs();
-
-            IndexSet relevant_dofs;
-            DoFTools::extract_locally_relevant_dofs(dof_handler, relevant_dofs);
-
-            DynamicSparsityPattern dsp(relevant_dofs);
-            DoFTools::make_sparsity_pattern(dof_handler,
-                                            dsp,
-                                            scratch_data.get_constraint(temp_dof_idx));
-
-            SparsityTools::distribute_sparsity_pattern(dsp,
-                                                       owned_dofs,
-                                                       MPI_COMM_WORLD,
-                                                       relevant_dofs);
-            system_matrix.reinit(owned_dofs, owned_dofs, dsp, MPI_COMM_WORLD);
-
-            heat_operator->compute_system_matrix(system_matrix);
-
-            TrilinosWrappers::PreconditionILU                 preconditioner;
-            TrilinosWrappers::PreconditionILU::AdditionalData amg_data;
-
-            preconditioner.initialize(system_matrix, amg_data);
-
-            return LinearSolve<VectorType,
-                               SolverGMRES<VectorType>,
-                               OperatorBase<double>,
-                               Preconditioner>::solve(*heat_operator,
-                                                      solution_update,
-                                                      rhs,
-                                                      heat_data.solver.rel_tolerance,
-                                                      heat_data.solver.max_iterations,
-                                                      preconditioner);
-          }
-        else if (heat_data.solver.preconditioner_type == "Diagonal")
-          {
-            using Preconditioner = DiagonalMatrix<VectorType>;
-
-            TrilinosWrappers::SparseMatrix system_matrix;
-
-            const auto &dof_handler = scratch_data.get_dof_handler(temp_dof_idx);
-
-            const auto owned_dofs = dof_handler.locally_owned_dofs();
-
-            IndexSet relevant_dofs;
-            DoFTools::extract_locally_relevant_dofs(dof_handler, relevant_dofs);
-
-            DynamicSparsityPattern dsp(relevant_dofs);
-            DoFTools::make_sparsity_pattern(dof_handler,
-                                            dsp,
-                                            scratch_data.get_constraint(temp_dof_idx));
-
-            SparsityTools::distribute_sparsity_pattern(dsp,
-                                                       owned_dofs,
-                                                       MPI_COMM_WORLD,
-                                                       relevant_dofs);
-            system_matrix.reinit(owned_dofs, owned_dofs, dsp, MPI_COMM_WORLD);
-
-            heat_operator->compute_system_matrix(system_matrix);
-
-            VectorType diag;
-            scratch_data.initialize_dof_vector(diag, temp_dof_idx);
-
-            for (const auto i : diag.locally_owned_elements())
-              diag[i] = system_matrix(i, i);
-            for (auto &i : diag)
-              i = (std::abs(i) > 1.0e-10) ? (1.0 / i) : 1.0;
-
-            diag.update_ghost_values();
-
-
-            DiagonalMatrix<VectorType> preconditioner(diag);
-
-            return LinearSolve<VectorType,
-                               SolverGMRES<VectorType>,
-                               OperatorBase<double>,
-                               Preconditioner>::solve(*heat_operator,
-                                                      solution_update,
-                                                      rhs,
-                                                      heat_data.solver.rel_tolerance,
-                                                      heat_data.solver.max_iterations,
-                                                      preconditioner);
-          }
-        else if (heat_data.solver.preconditioner_type == "DiagonalReduced")
-          {
-            using Preconditioner = DiagonalMatrix<VectorType>;
-
-            VectorType diag;
-            heat_operator->compute_inverse_diagonal(diag);
-
-            DiagonalMatrix<VectorType> preconditioner(diag);
-
-            return LinearSolve<VectorType,
-                               SolverGMRES<VectorType>,
-                               OperatorBase<double>,
-                               Preconditioner>::solve(*heat_operator,
-                                                      solution_update,
-                                                      rhs,
-                                                      heat_data.solver.rel_tolerance,
-                                                      heat_data.solver.max_iterations,
-                                                      preconditioner);
-          }
-        else if (heat_data.solver.preconditioner_type == "Identity")
-          {
-            return LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
+            return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
               *heat_operator,
               solution_update,
               rhs,
               heat_data.solver.rel_tolerance,
-              heat_data.solver.max_iterations);
+              heat_data.solver.max_iterations,
+              preconditioner);
           }
         else
           {
-            AssertThrow(false, ExcNotImplemented());
-            return 0;
+            heat_operator->compute_system_matrix(heat_transfer_preconditioner.get_system_matrix());
+
+            auto preconditioner =
+              LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),
+                                                heat_data.solver.preconditioner_type);
+
+            return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
+              *heat_operator,
+              solution_update,
+              rhs,
+              heat_data.solver.rel_tolerance,
+              heat_data.solver.max_iterations,
+              *preconditioner);
           }
       };
 

@@ -117,7 +117,7 @@ namespace MeltPoolDG
               advec_diff_dof_idx,
               advec_diff_hanging_nodes_dof_idx);
 
-            iter = LinearSolve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>::solve(
+            iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
               *advec_diff_operator, src, rhs);
           }
         else
@@ -130,7 +130,7 @@ namespace MeltPoolDG
             advec_diff_operator->assemble_matrixbased(solution_advected_field,
                                                       advec_diff_operator->system_matrix,
                                                       rhs);
-            iter = LinearSolve<VectorType, SolverGMRES<VectorType>, SparseMatrixType>::solve(
+            iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, SparseMatrixType>(
               advec_diff_operator->system_matrix, src, rhs);
           }
 

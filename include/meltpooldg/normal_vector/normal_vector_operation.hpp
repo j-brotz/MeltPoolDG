@@ -98,12 +98,10 @@ namespace MeltPoolDG
         if (normal_vector_data.do_matrix_free)
           {
             normal_vector_operator->create_rhs(rhs, solution_levelset_in);
-            iter = LinearSolve<
-              BlockVectorType,
-              SolverCG<BlockVectorType>,
-              OperatorBase<double, BlockVectorType, VectorType>>::solve(*normal_vector_operator,
-                                                                        solution_normal_vector,
-                                                                        rhs);
+            iter = LinearSolve::solve<BlockVectorType,
+                                      SolverCG<BlockVectorType>,
+                                      OperatorBase<double, BlockVectorType, VectorType>>(
+              *normal_vector_operator, solution_normal_vector, rhs);
           }
         else
           {
@@ -112,7 +110,7 @@ namespace MeltPoolDG
                                                          rhs);
 
             for (unsigned int d = 0; d < dim; ++d)
-              iter = LinearSolve<VectorType, SolverCG<VectorType>, SparseMatrixType>::solve(
+              iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, SparseMatrixType>(
                 normal_vector_operator->system_matrix,
                 solution_normal_vector.block(d),
                 rhs.block(d));
