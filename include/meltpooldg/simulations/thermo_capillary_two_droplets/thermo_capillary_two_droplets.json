@@ -5,12 +5,14 @@
     "dimension": "2",
     "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "5",
+    "global refinements": "9",
     "problem name": "two_phase_flow_with_heat_transfer",
-    "gravity": "0.0"
+    "gravity": "0.0",
+    "verbosity level": "1"
   },
   "heat": {
     "heat two phase": "true",
+    "heat solver preconditioner type": "AMG",
     "heat variable properties over interface": "false"
   },
   "material": {

@@ -93,12 +93,10 @@ namespace MeltPoolDG
           {
             curvature_operator->create_rhs(rhs,
                                            normal_vector_operation.get_solution_normal_vector());
-            iter = LinearSolve<
-              VectorType,
-              SolverCG<VectorType>,
-              OperatorBase<double, VectorType, BlockVectorType>>::solve(*curvature_operator,
-                                                                        solution_curvature,
-                                                                        rhs);
+            iter = LinearSolve::solve<VectorType,
+                                      SolverCG<VectorType>,
+                                      OperatorBase<double, VectorType, BlockVectorType>>(
+              *curvature_operator, solution_curvature, rhs);
           }
         else
           {
@@ -107,7 +105,7 @@ namespace MeltPoolDG
               curvature_operator->system_matrix,
               rhs);
 
-            iter = LinearSolve<VectorType, SolverCG<VectorType>, SparseMatrixType>::solve(
+            iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, SparseMatrixType>(
               curvature_operator->system_matrix, solution_curvature, rhs);
           }
 

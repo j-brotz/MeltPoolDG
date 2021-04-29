@@ -779,6 +779,10 @@ namespace MeltPoolDG
           heat.solver.solver_type,
           "Set this parameter for choosing a solver type. At the moment GMRES or CG solvers "
           " are supported");
+        prm.add_parameter("heat solver preconditioner type",
+                          heat.solver.preconditioner_type,
+                          "Set this parameter for choosing a preconditioner type",
+                          Patterns::Selection("Identity|AMG|AMGReduced|Diagonal|DiagonalReduced"));
         prm.add_parameter(
           "heat solver max iterations",
           heat.solver.max_iterations,

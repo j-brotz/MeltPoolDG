@@ -165,7 +165,7 @@ namespace MeltPoolDG
             src_rhs.copy_locally_owned_data_from(solution_level_set);
             src_rhs.update_ghost_values();
             reinit_operator->create_rhs(rhs, src_rhs);
-            iter = LinearSolve<VectorType, SolverCG<VectorType>, OperatorBase<double>>::solve(
+            iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<double>>(
               *reinit_operator, src, rhs);
           }
         else
@@ -177,41 +177,35 @@ namespace MeltPoolDG
 
             if (reinit_data.solver.solver_type == "CG")
               {
-                auto preconditioner = LinearSolve<VectorType,
-                                                  SolverCG<VectorType>,
-                                                  SparseMatrixType,
-                                                  TrilinosWrappers::PreconditionBase>::
-                  setup_preconditioner(reinit_operator->system_matrix,
-                                       reinit_data.solver.preconditioner_type);
-                iter = LinearSolve<
-                  VectorType,
-                  SolverCG<VectorType>,
-                  SparseMatrixType,
-                  TrilinosWrappers::PreconditionBase>::solve(reinit_operator->system_matrix,
-                                                             src,
-                                                             rhs,
-                                                             reinit_data.solver.rel_tolerance,
-                                                             reinit_data.solver.max_iterations,
-                                                             *preconditioner);
+                auto preconditioner =
+                  LinearSolve::setup_preconditioner(reinit_operator->system_matrix,
+                                                    reinit_data.solver.preconditioner_type);
+                iter = LinearSolve::solve<VectorType,
+                                          SolverCG<VectorType>,
+                                          SparseMatrixType,
+                                          TrilinosWrappers::PreconditionBase>(
+                  reinit_operator->system_matrix,
+                  src,
+                  rhs,
+                  reinit_data.solver.rel_tolerance,
+                  reinit_data.solver.max_iterations,
+                  *preconditioner);
               }
             else if (reinit_data.solver.solver_type == "GMRES")
               {
-                auto preconditioner = LinearSolve<VectorType,
-                                                  SolverGMRES<VectorType>,
-                                                  SparseMatrixType,
-                                                  TrilinosWrappers::PreconditionBase>::
-                  setup_preconditioner(reinit_operator->system_matrix,
-                                       reinit_data.solver.preconditioner_type);
-                iter = LinearSolve<
-                  VectorType,
-                  SolverGMRES<VectorType>,
-                  SparseMatrixType,
-                  TrilinosWrappers::PreconditionBase>::solve(reinit_operator->system_matrix,
-                                                             src,
-                                                             rhs,
-                                                             reinit_data.solver.rel_tolerance,
-                                                             reinit_data.solver.max_iterations,
-                                                             *preconditioner);
+                auto preconditioner =
+                  LinearSolve::setup_preconditioner(reinit_operator->system_matrix,
+                                                    reinit_data.solver.preconditioner_type);
+                iter = LinearSolve::solve<VectorType,
+                                          SolverGMRES<VectorType>,
+                                          SparseMatrixType,
+                                          TrilinosWrappers::PreconditionBase>(
+                  reinit_operator->system_matrix,
+                  src,
+                  rhs,
+                  reinit_data.solver.rel_tolerance,
+                  reinit_data.solver.max_iterations,
+                  *preconditioner);
               }
 
             scratch_data->get_pcout()

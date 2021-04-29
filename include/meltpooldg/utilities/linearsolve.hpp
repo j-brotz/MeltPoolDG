@@ -18,13 +18,13 @@ using namespace dealii;
 
 namespace MeltPoolDG
 {
-  template <typename VectorType,
-            typename SolverType         = SolverGMRES<VectorType>,
-            typename OperatorType       = TrilinosWrappers::SparseMatrix,
-            typename PreconditionerType = PreconditionIdentity>
   class LinearSolve
   {
   public:
+    template <typename VectorType,
+              typename SolverType         = SolverGMRES<VectorType>,
+              typename OperatorType       = TrilinosWrappers::SparseMatrix,
+              typename PreconditionerType = PreconditionIdentity>
     static int
     solve(const OperatorType &      system_matrix,
           VectorType &              solution,
@@ -69,5 +69,4 @@ namespace MeltPoolDG
         AssertThrow(false, ExcMessage("The requested preconditioner type is not implemented."))
     }
   };
-
 } // namespace MeltPoolDG
