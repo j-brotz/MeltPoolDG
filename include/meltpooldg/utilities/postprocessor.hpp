@@ -89,7 +89,7 @@ namespace MeltPoolDG
 
   private:
     void
-    write_paraview_files(const int n_time_step, const double time)
+    write_paraview_files(const unsigned int n_time_step, const double time)
     {
       DataOutBase::VtkFlags flags;
       if ((do_simplex == false) && (dim > 1))
@@ -109,7 +109,7 @@ namespace MeltPoolDG
       if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
         {
           static std::vector<std::pair<double, std::string>> times_and_names;
-          times_and_names.push_back(std::pair<double, std::string>(time, pvtu_filename));
+          times_and_names.emplace_back(time, pvtu_filename);
           std::ofstream pvd_output(pv_data.directory + "/" + pv_data.filename + ".pvd");
           DataOutBase::write_pvd_record(pvd_output, times_and_names);
         }
