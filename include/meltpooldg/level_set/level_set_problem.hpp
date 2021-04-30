@@ -74,7 +74,8 @@ namespace MeltPoolDG
 
 
             // do paraview output if requested
-            output_results(time_iterator.get_current_time_step_number());
+            output_results(time_iterator.get_current_time_step_number(),
+                           time_iterator.get_current_time());
 
             if (base_in->parameters.amr.do_amr)
               refine_mesh(base_in);
@@ -233,7 +234,7 @@ namespace MeltPoolDG
                                                scratch_data->get_mapping(),
                                                scratch_data->get_triangulation(ls_dof_idx));
 
-        output_results(0);
+        output_results(0, base_in->parameters.ls.start_time);
         /*
          *    Do initial refinement steps if requested
          */
@@ -356,7 +357,7 @@ namespace MeltPoolDG
        *  This function is to create paraview output
        */
       void
-      output_results(const unsigned int time_step) const
+      output_results(const unsigned int time_step, const double time) const
       {
         const auto attach_output_vectors = [&](DataOut<dim> &data_out) {
           level_set_operation.attach_output_vectors(data_out);
@@ -375,7 +376,7 @@ namespace MeltPoolDG
                                    std::vector<std::string>(dim, "velocity"),
                                    vector_component_interpretation);
         };
-        post_processor->process(time_step, attach_output_vectors);
+        post_processor->process(time_step, attach_output_vectors, time);
       }
 
       /*

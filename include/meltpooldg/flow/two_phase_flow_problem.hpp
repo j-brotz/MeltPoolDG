@@ -236,7 +236,7 @@ namespace MeltPoolDG::Flow
                                                  flow_operation->get_quad_idx_pressure())
             << std::endl;
           // ... and output the results to vtk files.
-          output_results(n);
+          output_results(n, time_iterator.get_current_time());
 
           if (base_in->parameters.amr.do_amr)
             refine_mesh(base_in);
@@ -435,7 +435,7 @@ namespace MeltPoolDG::Flow
        *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
        *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
        */
-      output_results(0);
+      output_results(0, base_in->parameters.flow.start_time);
       /*
        *    Do initial refinement steps if requested
        */
@@ -799,7 +799,7 @@ namespace MeltPoolDG::Flow
      *  This function is to create paraview output
      */
     void
-    output_results(const unsigned int n_time_step)
+    output_results(const unsigned int n_time_step, const double current_time)
     {
       /**
        * collect all relevant output data
@@ -820,7 +820,7 @@ namespace MeltPoolDG::Flow
       /**
        * do the output operation
        */
-      post_processor->process(n_time_step, attach_output_vectors);
+      post_processor->process(n_time_step, attach_output_vectors, current_time);
     }
     /*
      *  perform mesh refinement

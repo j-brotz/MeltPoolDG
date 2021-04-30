@@ -37,6 +37,8 @@ namespace MeltPoolDG
 
     DataOut<dim> data_out;
 
+    std::vector<std::pair<double, std::string>> times_and_names;
+
   public:
     Postprocessor(const MPI_Comm              mpi_communicator_in,
                   const ParaviewData<double> &pv_data_in,
@@ -68,13 +70,14 @@ namespace MeltPoolDG
     void
     process(const int                                  n_time_step,
             const std::function<void(DataOut<dim> &)> &attach_output_vectors,
+            const double                               time           = -1.0,
             const std::function<void()> &              post_operation = {})
     {
       if ((pv_data.do_output) && !(n_time_step % pv_data.write_frequency))
         {
           attach_output_vectors(data_out);
 
-          write_paraview_files(n_time_step);
+          write_paraview_files(n_time_step, time);
 
           if (pv_data.print_boundary_id)
             print_boundary_ids();
@@ -88,7 +91,7 @@ namespace MeltPoolDG
 
   private:
     void
-    write_paraview_files(const double time_step)
+    write_paraview_files(const unsigned int n_time_step, const double time)
     {
       DataOutBase::VtkFlags flags;
       if ((do_simplex == false) && (dim > 1))
@@ -96,12 +99,21 @@ namespace MeltPoolDG
       data_out.set_flags(flags);
 
       data_out.build_patches(mapping);
-      data_out.write_vtu_with_pvtu_record(pv_data.directory + "/",
-                                          pv_data.filename,
-                                          time_step,
-                                          mpi_communicator,
-                                          pv_data.n_digits_timestep,
-                                          pv_data.n_groups);
+      const std::string pvtu_filename =
+        data_out.write_vtu_with_pvtu_record(pv_data.directory + "/",
+                                            pv_data.filename,
+                                            n_time_step,
+                                            mpi_communicator,
+                                            pv_data.n_digits_timestep,
+                                            pv_data.n_groups);
+
+      // write a pvd file relating the pvtu-file with a simulation time
+      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
+        {
+          times_and_names.emplace_back(time, pvtu_filename);
+          std::ofstream pvd_output(pv_data.directory + "/" + pv_data.filename + ".pvd");
+          DataOutBase::write_pvd_record(pvd_output, times_and_names);
+        }
     }
 
     void

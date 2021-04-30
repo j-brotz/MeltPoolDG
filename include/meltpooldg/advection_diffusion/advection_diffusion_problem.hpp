@@ -78,7 +78,8 @@ namespace MeltPoolDG
             /*
              *  do paraview output if requested
              */
-            output_results(time_iterator.get_current_time_step_number());
+            output_results(time_iterator.get_current_time_step_number(),
+                           time_iterator.get_current_time());
 
             if (base_in->parameters.amr.do_amr)
               {
@@ -322,7 +323,7 @@ namespace MeltPoolDG
        *  perform output of results
        */
       void
-      output_results(const unsigned int time_step)
+      output_results(const unsigned int time_step, const double current_time)
       {
         const auto attach_output_vectors = [&](DataOut<dim> &data_out) {
           advec_diff_operation->attach_output_vectors(data_out);
@@ -336,7 +337,7 @@ namespace MeltPoolDG
                                    std::vector<std::string>(dim, "velocity"),
                                    vector_component_interpretation);
         };
-        post_processor->process(time_step, attach_output_vectors);
+        post_processor->process(time_step, attach_output_vectors, current_time);
       }
 
       /*
