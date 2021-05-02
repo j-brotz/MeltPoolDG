@@ -162,7 +162,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     void
     create_spatial_discretization() override
     {
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
       if (this->parameters.base.do_simplex)
         {
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -172,7 +171,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
             parallel::shared::Triangulation<dim>::Settings::partition_metis);
         }
       else
-#endif
         {
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
@@ -186,7 +184,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
             (dim == 2) ? Point<dim>(x_outer, z_outer) : Point<dim>(x_outer, 0, z_outer);
 
           // create mesh
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (this->parameters.base.do_simplex)
             {
               std::vector<unsigned int> subdivisions(
@@ -198,7 +195,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
                                                                        top_right);
             }
           else
-#endif
             {
               std::vector<unsigned int> subdivisions(dim, 4);
               subdivisions[dim - 1] *= 2;

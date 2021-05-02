@@ -106,7 +106,6 @@ namespace MeltPoolDG
               const Point<dim> top_right =
                 (dim == 2) ? Point<dim>(x_max, y_max) : Point<dim>(x_max, x_max, y_max);
 
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
               if (this->parameters.base.do_simplex)
                 {
                   // create mesh
@@ -120,7 +119,6 @@ namespace MeltPoolDG
                                                                            top_right);
                 }
               else
-#endif
                 {
                   GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
                   this->triangulation->refine_global(this->parameters.base.global_refinements);

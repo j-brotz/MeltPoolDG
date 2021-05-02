@@ -142,7 +142,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
           const Point<dim> top_right =
             (dim == 2) ? Point<dim>(x_max, x_max) : Point<dim>(x_max, x_max, x_max);
 
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (this->parameters.base.do_simplex)
             {
               // create mesh
@@ -156,7 +155,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
                                                                        top_right);
             }
           else
-#endif
             {
               GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
               this->triangulation->refine_global(this->parameters.base.global_refinements);

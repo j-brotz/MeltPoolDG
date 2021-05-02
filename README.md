@@ -35,7 +35,6 @@ cmake -D CMAKE_INSTALL_PREFIX=/path/to/install/dir \
       -D TRILINOS_DIR=/path/to/trilinos \
       -D DEAL_II_WITH_TRILINOS=ON \
       -D DEAL_II_WITH_METIS=ON \
-      -D DEAL_II_WITH_SIMPLEX_SUPPORT=ON \
       ../deal.II
 ```
  

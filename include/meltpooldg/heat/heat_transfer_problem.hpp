@@ -107,12 +107,10 @@ namespace MeltPoolDG::Heat
       /*
        *  setup mapping
        */
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
       if (base_in->parameters.base.do_simplex)
         scratch_data->set_mapping(
           MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
       else
-#endif
         scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
 
       scratch_data->attach_dof_handler(dof_handler);
@@ -133,14 +131,12 @@ namespace MeltPoolDG::Heat
       /*
        *  create quadrature rule
        */
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
       if (base_in->parameters.base.do_simplex)
         {
           temp_quad_idx = scratch_data->attach_quadrature(
             QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
         }
       else
-#endif
         {
           temp_quad_idx =
             scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
@@ -237,7 +233,6 @@ namespace MeltPoolDG::Heat
     void
     setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in, const bool do_reinit = true)
     {
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
       if (base_in->parameters.base.do_simplex)
         {
           dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
@@ -246,7 +241,6 @@ namespace MeltPoolDG::Heat
           dof_handler_level_set.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
         }
       else
-#endif
         {
           dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
           dof_handler_velocity.distribute_dofs(
