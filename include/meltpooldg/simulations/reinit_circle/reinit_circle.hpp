@@ -100,7 +100,6 @@ namespace MeltPoolDG
                 std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
             }
 
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (this->parameters.base.do_simplex)
             {
               GridGenerator::subdivided_hyper_cube_with_simplices(
@@ -110,7 +109,6 @@ namespace MeltPoolDG
                 right_domain);
             }
           else
-#endif
             {
               GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
               this->triangulation->refine_global(this->parameters.base.global_refinements);

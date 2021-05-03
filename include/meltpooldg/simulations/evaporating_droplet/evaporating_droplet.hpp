@@ -84,7 +84,6 @@ namespace MeltPoolDG
               const Point<dim> bottom_left;
               const Point<dim> top_right = (dim == 2 ? Point<dim>(4, 4) : Point<dim>(4, 4, 4));
 
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
               if (this->parameters.base.do_simplex)
                 {
                   GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
@@ -93,7 +92,6 @@ namespace MeltPoolDG
                                                                            top_right);
                 }
               else
-#endif
                 {
                   GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
                                                             subdivisions,

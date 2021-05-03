@@ -128,12 +128,10 @@ namespace MeltPoolDG::Flow
       // clear constraints and setup hanging node constraints
       navier_stokes.distribute_dofs();
 
-#  ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
       if (adaflo_params.use_simplex_mesh)
         dof_handler_parameters.distribute_dofs(
           FE_SimplexP<dim>(navier_stokes.get_dof_handler_u().get_fe().tensor_degree()));
       else
-#  endif
         dof_handler_parameters.distribute_dofs(
           FE_Q<dim>(navier_stokes.get_dof_handler_u().get_fe().tensor_degree()));
 

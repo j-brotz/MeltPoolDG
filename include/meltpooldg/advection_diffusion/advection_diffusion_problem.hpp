@@ -181,7 +181,6 @@ namespace MeltPoolDG
         dof_handler.reinit(*base_in->triangulation);
         dof_handler_velocity.reinit(*base_in->triangulation);
 
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
         if (base_in->parameters.base.do_simplex)
           {
             fe = std::make_unique<FE_SimplexP<dim>>(base_in->parameters.base.degree);
@@ -190,7 +189,6 @@ namespace MeltPoolDG
                                               dim);
           }
         else
-#endif
           {
             fe = std::make_unique<FE_Q<dim>>(base_in->parameters.base.degree);
             fe_velocity =
@@ -208,22 +206,18 @@ namespace MeltPoolDG
           /*
            *  setup mapping
            */
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
           if (base_in->parameters.base.do_simplex)
             scratch_data->set_mapping(
               MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
           else
-#endif
             scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
-            /*
-             *  create quadrature rule
-             */
-#ifdef DEAL_II_WITH_SIMPLEX_SUPPORT
+          /*
+           *  create quadrature rule
+           */
           if (base_in->parameters.base.do_simplex)
             advec_diff_quad_idx = scratch_data->attach_quadrature(
               QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
           else
-#endif
             advec_diff_quad_idx =
               scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
 
