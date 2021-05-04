@@ -209,6 +209,7 @@ namespace MeltPoolDG::Heat
     {
       scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
       scratch_data.get_constraint(temp_dof_idx).distribute(temperature_old);
+      scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(heat_source);
     }
 
     void

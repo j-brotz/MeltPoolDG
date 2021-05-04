@@ -351,12 +351,15 @@ namespace MeltPoolDG
           constraints.distribute(locally_relevant_solution);
           locally_relevant_solution.update_ghost_values();
 
-          KellyErrorEstimator<dim>::estimate(scratch_data->get_dof_handler(advec_diff_dof_idx),
+          KellyErrorEstimator<dim>::estimate(scratch_data->get_mapping(),
+                                             scratch_data->get_dof_handler(advec_diff_dof_idx),
                                              scratch_data->get_face_quadrature(advec_diff_quad_idx),
-                                             {},
+                                             {}, // empty means estimate the error based on the
+                                                 // generalized Poisson equation with dirichlet bc
                                              locally_relevant_solution,
                                              estimated_error_per_cell);
-          auto vec = Utilities::MPI::gather(MPI_COMM_WORLD, estimated_error_per_cell.l2_norm());
+          auto vec = Utilities::MPI::gather(scratch_data->get_mpi_comm(),
+                                            estimated_error_per_cell.l2_norm());
 
           parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
             tria,
