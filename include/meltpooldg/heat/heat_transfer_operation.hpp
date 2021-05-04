@@ -99,8 +99,6 @@ namespace MeltPoolDG::Heat
     {
       reinit();
 
-      heat_transfer_preconditioner.reinit();
-
       dealii::VectorTools::project(scratch_data.get_mapping(),
                                    scratch_data.get_dof_handler(temp_dof_idx),
                                    scratch_data.get_constraint(temp_dof_idx),
@@ -116,6 +114,7 @@ namespace MeltPoolDG::Heat
       scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
       scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
       scratch_data.initialize_dof_vector(heat_source, temp_dof_idx);
+      heat_transfer_preconditioner.reinit();
     }
 
     void
