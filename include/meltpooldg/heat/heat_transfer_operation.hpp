@@ -166,7 +166,7 @@ namespace MeltPoolDG::Heat
 
             auto preconditioner =
               LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),
-                                                heat_data.solver.preconditioner_type);
+                                                "AMG");
 
             return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
               *heat_operator,
