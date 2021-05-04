@@ -155,6 +155,7 @@ namespace MeltPoolDG
     number                      velocity                           = 0.0;
     bool                        two_phase                          = false;
     bool                        variable_properties_over_interface = false;
+    bool                        solidification                     = false;
     TimeSteppingData<number>    time_stepping;
     NonlinearSolverData<number> nlsolve;
     SolverData<number>          solver;
@@ -252,6 +253,19 @@ namespace MeltPoolDG
       number density      = 0.0;
       number viscosity    = 0.0;
     } second;
+
+    /**
+     * Solid material.
+     */
+    struct Solid
+    {
+      number capacity     = 0.0;
+      number conductivity = 0.0;
+      number density      = 0.0;
+    } solid;
+
+    number solidus_temperature  = 0.0;
+    number liquidus_temperature = 0.0;
   };
 
   template <typename number = double>
@@ -836,7 +850,10 @@ namespace MeltPoolDG
         prm.add_parameter(
           "heat variable properties over interface",
           heat.variable_properties_over_interface,
-          "Set this parameter to smear the material properites over the two-phase interface.");
+          "Set this parameter to true to smear the material properites over the two-phase interface.");
+        prm.add_parameter("heat solidification",
+                          heat.solidification,
+                          "Set this parameter to true to consider solidification.");
       }
       prm.leave_subsection();
       /*
@@ -1011,6 +1028,21 @@ namespace MeltPoolDG
         prm.add_parameter("material second viscosity",
                           material.second.viscosity,
                           "viscosity of the secondary material (level-set = 1)");
+        prm.add_parameter("material solid capacity",
+                          material.solid.capacity,
+                          "capacity of the solid phase");
+        prm.add_parameter("material solid conductivity",
+                          material.solid.conductivity,
+                          "conductivity of the solid phase");
+        prm.add_parameter("material solid density",
+                          material.solid.density,
+                          "density of the solid phase");
+        prm.add_parameter("material solidus temperature",
+                          material.solidus_temperature,
+                          "Solidus temperature");
+        prm.add_parameter("material liquidus temperature",
+                          material.liquidus_temperature,
+                          "Liquidus temperature");
       }
       prm.leave_subsection();
       /*

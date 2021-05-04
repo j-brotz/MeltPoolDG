@@ -1,0 +1,33 @@
+{
+  "base": {
+    "application name": "solidification_slab",
+    "degree": "1",
+    "dimension": "1",
+    "global refinements": "10",
+    "problem name": "heat_transfer",
+    "do print parameters": "false"
+  },
+  "heat": {
+    "heat start time": "0.0",
+    "heat time step size": "200.0",
+    "heat end time": "1000.0",
+    "heat max n steps": "5",
+    "heat solidification": "true",
+    "heat solver rel tolerance": "1e-12",
+    "heat solver preconditioner type": "Diagonal",
+    "heat nlsolve residual tolerance": "1e-8"
+  },
+  "material": {
+    "material second capacity": "4226.0",
+    "material second conductivity": "0.556",
+    "material second density": "1000.0",
+    "material solid capacity": "1762.0",
+    "material solid conductivity": "2.22",
+    "material solid density": "1000.0",
+    "material solidus temperature": "272.5",
+    "material liquidus temperature": "273.5"
+  },
+  "paraview": {
+    "paraview do output": "false"
+  }
+}

@@ -11,6 +11,7 @@
 #include <meltpooldg/simulations/rising_bubble/rising_bubble.hpp>
 #include <meltpooldg/simulations/rotating_bubble/rotating_bubble.hpp>
 #include <meltpooldg/simulations/slotted_disc/slotted_disc.hpp>
+#include <meltpooldg/simulations/solidification_slab/solidification_slab.hpp>
 #include <meltpooldg/simulations/spurious_currents/spurious_currents.hpp>
 #include <meltpooldg/simulations/stefans_problem/stefans_problem.hpp>
 #include <meltpooldg/simulations/stefans_problem/stefans_problem_with_flow.hpp>
@@ -80,6 +81,9 @@ namespace MeltPoolDG
         else if (simulation_name == "thermo_capillary_two_droplets")
           return std::make_shared<
             ThermoCapillaryTwoDroplets::SimulationThermoCapillaryTwoDroplets<dim>>(
+            parameter_file, mpi_communicator);
+        else if (simulation_name == "solidification_slab")
+          return std::make_shared<SolidificationSlab::SimulationSolidificationSlab<dim>>(
             parameter_file, mpi_communicator);
         /* add your simulation here*/
         else
