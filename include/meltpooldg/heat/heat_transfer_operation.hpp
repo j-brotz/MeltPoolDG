@@ -159,14 +159,18 @@ namespace MeltPoolDG::Heat
               preconditioner);
           }
         else if (heat_data.solver.preconditioner_type == "AMG" ||
-                 heat_data.solver.preconditioner_type == "AMGReduced")
+                 heat_data.solver.preconditioner_type == "AMGReduced" ||
+                 heat_data.solver.preconditioner_type == "ILU" ||
+                 heat_data.solver.preconditioner_type == "ILUReduced")
           {
             heat_operator->compute_system_matrix(heat_transfer_preconditioner.get_system_matrix(),
-                                                 heat_data.solver.preconditioner_type == "AMG");
+                                                 heat_data.solver.preconditioner_type == "AMG" ||
+                                                   heat_data.solver.preconditioner_type == "ILU");
 
+            // take the first three letters as relevant preconditioner type
             auto preconditioner =
               LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),
-                                                "AMG");
+                                                heat_data.solver.preconditioner_type.substr(0, 3));
 
             return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
               *heat_operator,
