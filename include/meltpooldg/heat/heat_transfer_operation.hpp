@@ -99,8 +99,6 @@ namespace MeltPoolDG::Heat
     {
       reinit();
 
-      heat_transfer_preconditioner.reinit();
-
       dealii::VectorTools::project(scratch_data.get_mapping(),
                                    scratch_data.get_dof_handler(temp_dof_idx),
                                    scratch_data.get_constraint(temp_dof_idx),
@@ -116,6 +114,7 @@ namespace MeltPoolDG::Heat
       scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
       scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
       scratch_data.initialize_dof_vector(heat_source, temp_dof_idx);
+      heat_transfer_preconditioner.reinit();
     }
 
     void
@@ -159,14 +158,20 @@ namespace MeltPoolDG::Heat
               preconditioner);
           }
         else if (heat_data.solver.preconditioner_type == "AMG" ||
-                 heat_data.solver.preconditioner_type == "AMGReduced")
+                 heat_data.solver.preconditioner_type == "AMGReduced" ||
+                 heat_data.solver.preconditioner_type == "ILU" ||
+                 heat_data.solver.preconditioner_type == "ILUReduced")
           {
+            const std::string precondition_base_type =
+              heat_data.solver.preconditioner_type.find("AMG") != std::string::npos ? "AMG" : "ILU";
             heat_operator->compute_system_matrix(heat_transfer_preconditioner.get_system_matrix(),
-                                                 heat_data.solver.preconditioner_type == "AMG");
+                                                 heat_data.solver.preconditioner_type ==
+                                                   precondition_base_type);
 
+            // take the first three letters as relevant preconditioner type
             auto preconditioner =
               LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),
-                                                heat_data.solver.preconditioner_type);
+                                                precondition_base_type);
 
             return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
               *heat_operator,
