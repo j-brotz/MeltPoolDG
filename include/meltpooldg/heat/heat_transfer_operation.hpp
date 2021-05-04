@@ -162,14 +162,16 @@ namespace MeltPoolDG::Heat
                  heat_data.solver.preconditioner_type == "ILU" ||
                  heat_data.solver.preconditioner_type == "ILUReduced")
           {
+            const std::string precondition_base_type =
+              heat_data.solver.preconditioner_type.find("AMG") != std::string::npos ? "AMG" : "ILU";
             heat_operator->compute_system_matrix(heat_transfer_preconditioner.get_system_matrix(),
-                                                 heat_data.solver.preconditioner_type == "AMG" ||
-                                                   heat_data.solver.preconditioner_type == "ILU");
+                                                 heat_data.solver.preconditioner_type ==
+                                                   precondition_base_type);
 
             // take the first three letters as relevant preconditioner type
             auto preconditioner =
               LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),
-                                                heat_data.solver.preconditioner_type.substr(0, 3));
+                                                precondition_base_type);
 
             return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
               *heat_operator,
