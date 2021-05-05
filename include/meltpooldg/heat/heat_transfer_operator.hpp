@@ -239,7 +239,7 @@ namespace MeltPoolDG::Heat
           temp_vals.reinit(cell);
           temp_vals.read_dof_values(src);
 
-          tangent_local_cell_operation(cell, temp_vals, temp_lin_vals, velocity_vals, ls_vals);
+          tangent_local_cell_operation(temp_vals, temp_lin_vals, velocity_vals, ls_vals, true);
 
           temp_vals.distribute_local_to_global(dst);
         }
@@ -268,7 +268,7 @@ namespace MeltPoolDG::Heat
           dQ_dT.reinit(face);
           dQ_dT.read_dof_values(src);
 
-          tangent_local_boundary_operation(face, dQ_dT, temp_vals, true /*do reinit faces*/);
+          tangent_local_boundary_operation(dQ_dT, temp_vals, true /*do reinit faces*/);
 
           dQ_dT.distribute_local_to_global(dst);
         }
@@ -294,15 +294,10 @@ namespace MeltPoolDG::Heat
         [&](auto &temp_vals) {
           const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
-          tangent_local_cell_operation(current_cell_index,
-                                       temp_vals,
-                                       temp_lin_vals,
-                                       velocity_vals,
-                                       ls_vals,
-                                       old_cell_index != current_cell_index);
+          tangent_local_cell_operation(
+            temp_vals, temp_lin_vals, velocity_vals, ls_vals, old_cell_index != current_cell_index);
 
-          if (old_cell_index != current_cell_index)
-            old_cell_index = current_cell_index;
+          old_cell_index = current_cell_index;
         },
         temp_dof_idx,
         this->quad_idx);
@@ -341,20 +336,16 @@ namespace MeltPoolDG::Heat
             [&](auto &temp_vals) {
               const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
-              tangent_local_cell_operation(current_cell_index,
-                                           temp_vals,
+              tangent_local_cell_operation(temp_vals,
                                            temp_lin_vals,
                                            velocity_vals,
                                            ls_vals,
                                            old_cell_index != current_cell_index);
 
-              if (old_cell_index != current_cell_index)
-                old_cell_index = current_cell_index;
+              old_cell_index = current_cell_index;
             },
             temp_dof_idx,
             this->quad_idx);
-
-          return; // below one can compute the complete system matrix
         }
       else
         {
@@ -376,7 +367,7 @@ namespace MeltPoolDG::Heat
             // cell integral
             for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
               {
-                unsigned int const n_filled_lanes =
+                const unsigned int n_filled_lanes =
                   matrix_free.n_active_entries_per_cell_batch(cell);
 
                 FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
@@ -386,16 +377,13 @@ namespace MeltPoolDG::Heat
 
                 temp_vals.reinit(cell);
 
-                bool do_reinit_cell = true;
-
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
                   {
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
 
                     tangent_local_cell_operation(
-                      cell, temp_vals, temp_lin_vals, velocity_vals, ls_vals, do_reinit_cell);
-                    do_reinit_cell = false;
+                      temp_vals, temp_lin_vals, velocity_vals, ls_vals, j == 0 /*do_reinit_cell*/);
 
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       for (unsigned int v = 0; v < n_filled_lanes; ++v)
@@ -439,10 +427,9 @@ namespace MeltPoolDG::Heat
 
             for (unsigned int face = face_range.first; face < face_range.second; face++)
               {
-                bool do_reinit_face = true;
                 dQ_dT.reinit(face);
 
-                unsigned int const n_filled_lanes =
+                const unsigned int n_filled_lanes =
                   matrix_free.n_active_entries_per_face_batch(face);
 
                 FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
@@ -455,8 +442,7 @@ namespace MeltPoolDG::Heat
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
 
-                    tangent_local_boundary_operation(face, dQ_dT, temp_vals, do_reinit_face);
-                    do_reinit_face = false;
+                    tangent_local_boundary_operation(dQ_dT, temp_vals, j == 0 /*do_reinit_face*/);
 
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       for (unsigned int v = 0; v < n_filled_lanes; ++v)
@@ -697,18 +683,19 @@ namespace MeltPoolDG::Heat
 
   private:
     /**
-     * This function executes the local cell operation for computing the tangent. The source vector
-     * and the current cell has to be already passed to temp_vals a priori. Afterwards the dof
-     * values held by temp vals have to be distributed by calling
-     * temp_vals.distribute_local_to_global(dst).
+     * This function executes the local cell operation for computing the tangent.
+     *
+     * @note The function assumes that @p temp_vals has been already initialized
+     *   and the dof-values of @p temp_vals are already set a priori. Afterwards, the
+     *   dof-values held by @p temp_vals can be written back to the global vector via
+     *   temp_vals.distribute_local_to_global(dst).
      */
     void
-    tangent_local_cell_operation(const unsigned int                  cell,
-                                 FECellIntegrator<dim, 1, number> &  temp_vals,
+    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  temp_vals,
                                  FECellIntegrator<dim, 1, number> &  temp_lin_vals,
                                  FECellIntegrator<dim, dim, number> &velocity_vals,
                                  FECellIntegrator<dim, 1, number> &  ls_vals,
-                                 const bool                          do_reinit_cells = true) const
+                                 const bool                          do_reinit_cells) const
     {
       VectorizedArrayType capacity     = material.first.capacity;
       VectorizedArrayType conductivity = material.first.conductivity;
@@ -724,19 +711,19 @@ namespace MeltPoolDG::Heat
         {
           if (velocity)
             {
-              velocity_vals.reinit(cell);
+              velocity_vals.reinit(temp_vals.get_current_cell_index());
               velocity_vals.gather_evaluate(*velocity, true, false);
             }
 
           if (level_set_as_heaviside)
             {
-              ls_vals.reinit(cell);
+              ls_vals.reinit(temp_vals.get_current_cell_index());
               ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
             }
 
           if (data.solidification)
             {
-              temp_lin_vals.reinit(cell);
+              temp_lin_vals.reinit(temp_vals.get_current_cell_index());
               temp_lin_vals.gather_evaluate(temperature, true, true);
             }
         }
@@ -787,32 +774,34 @@ namespace MeltPoolDG::Heat
     }
 
     /**
-     * This function executes the local boundary operation for computing the tangent. The source
-     * vector and the current cell has to be already passed to temp_vals a priori. Afterwards the
-     * dof values held by temp vals have to be distributed by calling
-     * temp_vals.distribute_local_to_global(dst).
+     * This function executes the local boundary operation for computing the tangent.
+     *
+     * @note The function assumes that @p temp_vals has been already initialized
+     *   and the dof-values of @p temp_vals are already set a priori. Afterwards, the
+     *   dof-values held by @p temp_vals can be written back to the global vector via
+     *   temp_vals.distribute_local_to_global(dst).
      */
     void
-    tangent_local_boundary_operation(const unsigned int                face,
-                                     FEFaceIntegrator<dim, 1, number> &dQ_dT,
+    tangent_local_boundary_operation(FEFaceIntegrator<dim, 1, number> &dQ_dT,
                                      FEFaceIntegrator<dim, 1, number> &temp_vals,
-                                     const bool                        do_reinit_face = true) const
+                                     const bool                        do_reinit_face) const
     {
       dQ_dT.evaluate(true, false);
 
       if (do_reinit_face)
         {
-          temp_vals.reinit(face);
+          temp_vals.reinit(dQ_dT.get_current_cell_index());
           temp_vals.gather_evaluate(temperature, true, false);
         }
 
-      types::boundary_id bc_index = scratch_data.get_matrix_free().get_boundary_id(face);
+      const types::boundary_id bc_index =
+        scratch_data.get_matrix_free().get_boundary_id(dQ_dT.get_current_cell_index());
 
-      bool do_radiation =
+      const bool do_radiation =
         (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
          bc_radiation_indices.end());
 
-      bool do_convection =
+      const bool do_convection =
         (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
          bc_convection_indices.end());
 
