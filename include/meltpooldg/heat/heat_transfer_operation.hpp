@@ -114,7 +114,16 @@ namespace MeltPoolDG::Heat
       scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
       scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
       scratch_data.initialize_dof_vector(heat_source, temp_dof_idx);
-      heat_transfer_preconditioner.reinit();
+      /*
+       * setup sparsity pattern of system matrix only if the latter is
+       * needed for computing the preconditioner
+       */
+      if (heat_data.solver.preconditioner_type == "Diagonal" ||
+          heat_data.solver.preconditioner_type == "AMG" ||
+          heat_data.solver.preconditioner_type == "AMGReduced" ||
+          heat_data.solver.preconditioner_type == "ILU" ||
+          heat_data.solver.preconditioner_type == "ILUReduced")
+        heat_transfer_preconditioner.reinit();
     }
 
     void
