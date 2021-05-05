@@ -234,83 +234,14 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
-      VectorizedArrayType capacity     = material.first.capacity;
-      VectorizedArrayType conductivity = material.first.conductivity;
-      VectorizedArrayType density      = material.first.density;
-
-      VectorizedArrayType d_capacity_dT     = 0.0;
-      VectorizedArrayType d_conductivity_dT = 0.0;
-      VectorizedArrayType d_density_dT      = 0.0;
-
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           temp_vals.reinit(cell);
-          temp_vals.gather_evaluate(src, true, true);
+          temp_vals.read_dof_values(src);
 
-          if (velocity)
-            {
-              velocity_vals.reinit(cell);
-              velocity_vals.gather_evaluate(*velocity, true, false);
-            }
+          tangent_local_cell_operation(temp_vals, temp_lin_vals, velocity_vals, ls_vals, true);
 
-          if (level_set_as_heaviside)
-            {
-              ls_vals.reinit(cell);
-              ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
-            }
-
-          if (data.solidification)
-            {
-              temp_lin_vals.reinit(cell);
-              temp_lin_vals.gather_evaluate(temperature, true, true);
-            }
-
-          for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
-            {
-              if (level_set_as_heaviside)
-                {
-                  get_material_parameters_with_two_phase_flow(capacity,
-                                                              conductivity,
-                                                              density,
-                                                              ls_vals.get_value(q_index));
-                }
-
-              if (data.solidification)
-                {
-                  get_material_parameters_with_solidification(capacity,
-                                                              conductivity,
-                                                              density,
-                                                              temp_lin_vals.get_value(q_index));
-                  get_material_parameter_derivatives_with_solidification(d_capacity_dT,
-                                                                         d_conductivity_dT,
-                                                                         d_density_dT,
-                                                                         temp_lin_vals.get_value(
-                                                                           q_index));
-                }
-
-              auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
-
-              if (velocity)
-                {
-                  val += density * capacity * temp_vals.get_gradient(q_index) *
-                         velocity_vals.get_value(q_index);
-                }
-
-              auto val_grad = conductivity * temp_vals.get_gradient(q_index);
-
-              if (data.solidification)
-                {
-                  val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
-                              temp_vals.get_value(q_index);
-                  val += (d_capacity_dT * density + d_density_dT * capacity) *
-                         temp_lin_vals.get_value(q_index) * this->d_tau_inv *
-                         temp_vals.get_value(q_index);
-                }
-
-              temp_vals.submit_value(val, q_index);
-              temp_vals.submit_gradient(val_grad, q_index);
-            }
-          temp_vals.integrate_scatter(true, true, dst);
+          temp_vals.distribute_local_to_global(dst);
         }
     }
 
@@ -335,36 +266,11 @@ namespace MeltPoolDG::Heat
       for (unsigned int face = face_range.first; face < face_range.second; face++)
         {
           dQ_dT.reinit(face);
-          dQ_dT.gather_evaluate(src, true, false);
+          dQ_dT.read_dof_values(src);
 
-          temp_vals.reinit(face);
-          temp_vals.gather_evaluate(temperature, true, false);
+          tangent_local_boundary_operation(dQ_dT, temp_vals, true /*do reinit faces*/);
 
-          types::boundary_id bc_index = matrix_free.get_boundary_id(face);
-
-          bool do_radiation =
-            (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
-             bc_radiation_indices.end());
-
-          bool do_convection =
-            (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
-             bc_convection_indices.end());
-
-          for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
-            {
-              auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
-
-              VectorizedArray<double> temp = 0;
-
-              if (do_convection)
-                temp += data.convection_coefficient * inc_temp_vals_at_q;
-              if (do_radiation)
-                temp += 4. * data.emissivity * stefan_boltzmann *
-                        pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
-
-              dQ_dT.submit_value(temp, q_index);
-            }
-          dQ_dT.integrate_scatter(true, false, dst);
+          dQ_dT.distribute_local_to_global(dst);
         }
     }
 
@@ -379,14 +285,6 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
-      VectorizedArrayType capacity     = material.first.capacity;
-      VectorizedArrayType conductivity = material.first.conductivity;
-      VectorizedArrayType density      = material.first.density;
-
-      VectorizedArrayType d_capacity_dT     = 0.0;
-      VectorizedArrayType d_conductivity_dT = 0.0;
-      VectorizedArrayType d_density_dT      = 0.0;
-
       unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
       // compute diagonal ...
@@ -396,81 +294,15 @@ namespace MeltPoolDG::Heat
         [&](auto &temp_vals) {
           const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
-          // hack that this operation is only done once
-          if (old_cell_index != current_cell_index)
-            {
-              if (velocity)
-                {
-                  velocity_vals.reinit(current_cell_index);
-                  velocity_vals.gather_evaluate(*velocity, true, false);
-                }
+          tangent_local_cell_operation(
+            temp_vals, temp_lin_vals, velocity_vals, ls_vals, old_cell_index != current_cell_index);
 
-              if (level_set_as_heaviside)
-                {
-                  ls_vals.reinit(current_cell_index);
-                  ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
-                }
-
-              if (data.solidification)
-                {
-                  temp_lin_vals.reinit(current_cell_index);
-                  temp_lin_vals.gather_evaluate(temperature, true, true);
-                }
-
-              old_cell_index = current_cell_index;
-            }
-
-          temp_vals.evaluate(true, true);
-
-          for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
-            {
-              if (level_set_as_heaviside)
-                {
-                  get_material_parameters_with_two_phase_flow(capacity,
-                                                              conductivity,
-                                                              density,
-                                                              ls_vals.get_value(q_index));
-                }
-
-              if (data.solidification)
-                {
-                  get_material_parameters_with_solidification(capacity,
-                                                              conductivity,
-                                                              density,
-                                                              temp_lin_vals.get_value(q_index));
-                  get_material_parameter_derivatives_with_solidification(d_capacity_dT,
-                                                                         d_conductivity_dT,
-                                                                         d_density_dT,
-                                                                         temp_lin_vals.get_value(
-                                                                           q_index));
-                }
-
-              auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
-
-              if (velocity)
-                val += density * capacity * temp_vals.get_gradient(q_index) *
-                       velocity_vals.get_value(q_index);
-
-              auto val_grad = conductivity * temp_vals.get_gradient(q_index);
-
-              if (data.solidification)
-                {
-                  val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
-                              temp_vals.get_value(q_index);
-                  val += (d_capacity_dT * density + d_density_dT * capacity) *
-                         temp_lin_vals.get_value(q_index) * this->d_tau_inv *
-                         temp_vals.get_value(q_index);
-                }
-
-              temp_vals.submit_value(val, q_index);
-              temp_vals.submit_gradient(val_grad, q_index);
-            }
-          temp_vals.integrate(true, true);
+          old_cell_index = current_cell_index;
         },
         temp_dof_idx,
         this->quad_idx);
 
-      // ... and convert it
+      // ... and invert it
       for (auto &i : diagonal)
         i = (std::abs(i) > 1.0e-10) ? (1.0 / i) : 1.0;
     }
@@ -494,14 +326,6 @@ namespace MeltPoolDG::Heat
           FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
           FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
-          VectorizedArrayType capacity     = material.first.capacity;
-          VectorizedArrayType conductivity = material.first.conductivity;
-          VectorizedArrayType density      = material.first.density;
-
-          VectorizedArrayType d_capacity_dT     = 0.0;
-          VectorizedArrayType d_conductivity_dT = 0.0;
-          VectorizedArrayType d_density_dT      = 0.0;
-
           unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
           // compute matrix (only cell contributions)
@@ -512,82 +336,16 @@ namespace MeltPoolDG::Heat
             [&](auto &temp_vals) {
               const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
-              if (old_cell_index != current_cell_index)
-                {
-                  if (velocity)
-                    {
-                      velocity_vals.reinit(current_cell_index);
-                      velocity_vals.gather_evaluate(*velocity, true, false);
-                    }
+              tangent_local_cell_operation(temp_vals,
+                                           temp_lin_vals,
+                                           velocity_vals,
+                                           ls_vals,
+                                           old_cell_index != current_cell_index);
 
-                  if (level_set_as_heaviside)
-                    {
-                      ls_vals.reinit(current_cell_index);
-                      ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
-                    }
-
-                  if (data.solidification)
-                    {
-                      temp_lin_vals.reinit(current_cell_index);
-                      temp_lin_vals.gather_evaluate(temperature, true, true);
-                    }
-
-                  old_cell_index = current_cell_index;
-                }
-
-              temp_vals.evaluate(true, true);
-
-              for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
-                {
-                  if (level_set_as_heaviside)
-                    {
-                      get_material_parameters_with_two_phase_flow(capacity,
-                                                                  conductivity,
-                                                                  density,
-                                                                  ls_vals.get_value(q_index));
-                    }
-
-                  if (data.solidification)
-                    {
-                      get_material_parameters_with_solidification(capacity,
-                                                                  conductivity,
-                                                                  density,
-                                                                  temp_lin_vals.get_value(q_index));
-                      get_material_parameter_derivatives_with_solidification(
-                        d_capacity_dT,
-                        d_conductivity_dT,
-                        d_density_dT,
-                        temp_lin_vals.get_value(q_index));
-                    }
-
-                  auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
-
-                  if (velocity)
-                    {
-                      val += density * capacity * temp_vals.get_gradient(q_index) *
-                             velocity_vals.get_value(q_index);
-                    }
-
-                  auto val_grad = conductivity * temp_vals.get_gradient(q_index);
-
-                  if (data.solidification)
-                    {
-                      val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
-                                  temp_vals.get_value(q_index);
-                      val += (d_capacity_dT * density + d_density_dT * capacity) *
-                             temp_lin_vals.get_value(q_index) * this->d_tau_inv *
-                             temp_vals.get_value(q_index);
-                    }
-
-                  temp_vals.submit_value(val, q_index);
-                  temp_vals.submit_gradient(val_grad, q_index);
-                }
-              temp_vals.integrate(true, true);
+              old_cell_index = current_cell_index;
             },
             temp_dof_idx,
             this->quad_idx);
-
-          return; // below one can compute the complete system matrix
         }
       else
         {
@@ -604,43 +362,18 @@ namespace MeltPoolDG::Heat
                                                            temp_dof_idx,
                                                            this->quad_idx);
 
-            VectorizedArrayType capacity     = material.first.capacity;
-            VectorizedArrayType conductivity = material.first.conductivity;
-            VectorizedArrayType density      = material.first.density;
-
-            VectorizedArrayType d_capacity_dT     = 0.0;
-            VectorizedArrayType d_conductivity_dT = 0.0;
-            VectorizedArrayType d_density_dT      = 0.0;
-
             const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
 
+            // cell integral
             for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
               {
-                unsigned int const n_filled_lanes =
+                const unsigned int n_filled_lanes =
                   matrix_free.n_active_entries_per_cell_batch(cell);
 
                 FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
                 std::fill_n(matrices,
                             VectorizedArray<number>::size(),
                             FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
-
-                if (velocity)
-                  {
-                    velocity_vals.reinit(cell);
-                    velocity_vals.gather_evaluate(*velocity, true, false);
-                  }
-
-                if (level_set_as_heaviside)
-                  {
-                    ls_vals.reinit(cell);
-                    ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
-                  }
-
-                if (data.solidification)
-                  {
-                    temp_lin_vals.reinit(cell);
-                    temp_lin_vals.gather_evaluate(temperature, true, true);
-                  }
 
                 temp_vals.reinit(cell);
 
@@ -649,53 +382,8 @@ namespace MeltPoolDG::Heat
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
 
-                    temp_vals.evaluate(true, true);
-
-                    for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
-                      {
-                        if (level_set_as_heaviside)
-                          {
-                            get_material_parameters_with_two_phase_flow(capacity,
-                                                                        conductivity,
-                                                                        density,
-                                                                        ls_vals.get_value(q_index));
-                          }
-
-                        if (data.solidification)
-                          {
-                            get_material_parameters_with_solidification(
-                              capacity, conductivity, density, temp_lin_vals.get_value(q_index));
-                            get_material_parameter_derivatives_with_solidification(
-                              d_capacity_dT,
-                              d_conductivity_dT,
-                              d_density_dT,
-                              temp_lin_vals.get_value(q_index));
-                          }
-
-                        auto val =
-                          density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
-
-                        if (velocity)
-                          {
-                            val += density * capacity * temp_vals.get_gradient(q_index) *
-                                   velocity_vals.get_value(q_index);
-                          }
-
-                        auto val_grad = conductivity * temp_vals.get_gradient(q_index);
-
-                        if (data.solidification)
-                          {
-                            val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
-                                        temp_vals.get_value(q_index);
-                            val += (d_capacity_dT * density + d_density_dT * capacity) *
-                                   temp_lin_vals.get_value(q_index) * this->d_tau_inv *
-                                   temp_vals.get_value(q_index);
-                          }
-
-                        temp_vals.submit_value(val, q_index);
-                        temp_vals.submit_gradient(val_grad, q_index);
-                      }
-                    temp_vals.integrate(true, true);
+                    tangent_local_cell_operation(
+                      temp_vals, temp_lin_vals, velocity_vals, ls_vals, j == 0 /*do_reinit_cell*/);
 
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       for (unsigned int v = 0; v < n_filled_lanes; ++v)
@@ -739,12 +427,9 @@ namespace MeltPoolDG::Heat
 
             for (unsigned int face = face_range.first; face < face_range.second; face++)
               {
-                temp_vals.reinit(face);
-                temp_vals.gather_evaluate(temperature, true, false);
-
                 dQ_dT.reinit(face);
 
-                unsigned int const n_filled_lanes =
+                const unsigned int n_filled_lanes =
                   matrix_free.n_active_entries_per_face_batch(face);
 
                 FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
@@ -757,33 +442,7 @@ namespace MeltPoolDG::Heat
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
 
-                    dQ_dT.evaluate(true, false);
-
-                    types::boundary_id bc_index = matrix_free.get_boundary_id(face);
-
-                    bool do_radiation = (std::find(bc_radiation_indices.begin(),
-                                                   bc_radiation_indices.end(),
-                                                   bc_index) != bc_radiation_indices.end());
-
-                    bool do_convection = (std::find(bc_convection_indices.begin(),
-                                                    bc_convection_indices.end(),
-                                                    bc_index) != bc_convection_indices.end());
-
-                    for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
-                      {
-                        auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
-
-                        VectorizedArray<double> temp = 0;
-
-                        if (do_convection)
-                          temp += data.convection_coefficient * inc_temp_vals_at_q;
-                        if (do_radiation)
-                          temp += 4. * data.emissivity * stefan_boltzmann *
-                                  pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
-
-                        dQ_dT.submit_value(temp, q_index);
-                      }
-                    dQ_dT.integrate(true, false);
+                    tangent_local_boundary_operation(dQ_dT, temp_vals, j == 0 /*do_reinit_face*/);
 
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       for (unsigned int v = 0; v < n_filled_lanes; ++v)
@@ -813,6 +472,7 @@ namespace MeltPoolDG::Heat
               }
           }
         }
+
       system_matrix.compress(VectorOperation::add);
       MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
       if (velocity)
@@ -1022,6 +682,146 @@ namespace MeltPoolDG::Heat
     }
 
   private:
+    /**
+     * This function executes the local cell operation for computing the tangent.
+     *
+     * @note The function assumes that @p temp_vals has been already initialized
+     *   and the dof-values of @p temp_vals are already set a priori. Afterwards, the
+     *   dof-values held by @p temp_vals can be written back to the global vector via
+     *   temp_vals.distribute_local_to_global(dst).
+     */
+    void
+    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  temp_vals,
+                                 FECellIntegrator<dim, 1, number> &  temp_lin_vals,
+                                 FECellIntegrator<dim, dim, number> &velocity_vals,
+                                 FECellIntegrator<dim, 1, number> &  ls_vals,
+                                 const bool                          do_reinit_cells) const
+    {
+      VectorizedArrayType capacity     = material.first.capacity;
+      VectorizedArrayType conductivity = material.first.conductivity;
+      VectorizedArrayType density      = material.first.density;
+
+      VectorizedArrayType d_capacity_dT     = 0.0;
+      VectorizedArrayType d_conductivity_dT = 0.0;
+      VectorizedArrayType d_density_dT      = 0.0;
+
+      temp_vals.evaluate(true, true);
+
+      if (do_reinit_cells)
+        {
+          if (velocity)
+            {
+              velocity_vals.reinit(temp_vals.get_current_cell_index());
+              velocity_vals.gather_evaluate(*velocity, true, false);
+            }
+
+          if (level_set_as_heaviside)
+            {
+              ls_vals.reinit(temp_vals.get_current_cell_index());
+              ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
+            }
+
+          if (data.solidification)
+            {
+              temp_lin_vals.reinit(temp_vals.get_current_cell_index());
+              temp_lin_vals.gather_evaluate(temperature, true, true);
+            }
+        }
+
+      for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
+        {
+          if (level_set_as_heaviside)
+            {
+              get_material_parameters_with_two_phase_flow(capacity,
+                                                          conductivity,
+                                                          density,
+                                                          ls_vals.get_value(q_index));
+            }
+
+          if (data.solidification)
+            {
+              get_material_parameters_with_solidification(capacity,
+                                                          conductivity,
+                                                          density,
+                                                          temp_lin_vals.get_value(q_index));
+              get_material_parameter_derivatives_with_solidification(
+                d_capacity_dT, d_conductivity_dT, d_density_dT, temp_lin_vals.get_value(q_index));
+            }
+
+          auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
+
+          if (velocity)
+            {
+              val += density * capacity * temp_vals.get_gradient(q_index) *
+                     velocity_vals.get_value(q_index);
+            }
+
+          auto val_grad = conductivity * temp_vals.get_gradient(q_index);
+
+          if (data.solidification)
+            {
+              val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
+                          temp_vals.get_value(q_index);
+              val += (d_capacity_dT * density + d_density_dT * capacity) *
+                     temp_lin_vals.get_value(q_index) * this->d_tau_inv *
+                     temp_vals.get_value(q_index);
+            }
+
+          temp_vals.submit_value(val, q_index);
+          temp_vals.submit_gradient(val_grad, q_index);
+        }
+      temp_vals.integrate(true, true);
+    }
+
+    /**
+     * This function executes the local boundary operation for computing the tangent.
+     *
+     * @note The function assumes that @p temp_vals has been already initialized
+     *   and the dof-values of @p temp_vals are already set a priori. Afterwards, the
+     *   dof-values held by @p temp_vals can be written back to the global vector via
+     *   temp_vals.distribute_local_to_global(dst).
+     */
+    void
+    tangent_local_boundary_operation(FEFaceIntegrator<dim, 1, number> &dQ_dT,
+                                     FEFaceIntegrator<dim, 1, number> &temp_vals,
+                                     const bool                        do_reinit_face) const
+    {
+      dQ_dT.evaluate(true, false);
+
+      if (do_reinit_face)
+        {
+          temp_vals.reinit(dQ_dT.get_current_cell_index());
+          temp_vals.gather_evaluate(temperature, true, false);
+        }
+
+      const types::boundary_id bc_index =
+        scratch_data.get_matrix_free().get_boundary_id(dQ_dT.get_current_cell_index());
+
+      const bool do_radiation =
+        (std::find(bc_radiation_indices.begin(), bc_radiation_indices.end(), bc_index) !=
+         bc_radiation_indices.end());
+
+      const bool do_convection =
+        (std::find(bc_convection_indices.begin(), bc_convection_indices.end(), bc_index) !=
+         bc_convection_indices.end());
+
+      for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
+        {
+          auto inc_temp_vals_at_q = dQ_dT.get_value(q_index);
+
+          VectorizedArray<double> temp = 0;
+
+          if (do_convection)
+            temp += data.convection_coefficient * inc_temp_vals_at_q;
+          if (do_radiation)
+            temp += 4. * data.emissivity * stefan_boltzmann *
+                    pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
+
+          dQ_dT.submit_value(temp, q_index);
+        }
+      dQ_dT.integrate(true, false);
+    }
+
     /*
      * Determine material parameters (capacity, conductivity and density) for
      * solidification/melting. In the mushy zone (between solidus and liquidus temperature) the
