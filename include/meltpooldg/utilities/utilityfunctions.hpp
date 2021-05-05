@@ -330,6 +330,34 @@ namespace MeltPoolDG
       return (1. - ls) * val1 + ls * val2;
     }
 
+    template <typename number>
+    VectorizedArray<number>
+    limit_to_bounds(const VectorizedArray<number> &in,
+                    const number                   lower_limit,
+                    const number                   upper_limit)
+    {
+      const auto ub =
+        compare_and_apply_mask<SIMDComparison::greater_than>(in, upper_limit, upper_limit, in);
+      return compare_and_apply_mask<SIMDComparison::less_than>(ub, lower_limit, lower_limit, ub);
+    }
+
+    /**
+     * This function returns 1.0 if the \p in value is between (excluding) the \p lower_limit and
+     * \p upper_limit. Otherwise, this function returns 0.0.
+     */
+    template <typename number>
+    VectorizedArray<number>
+    is_between(const VectorizedArray<number> &in,
+               const number                   lower_limit,
+               const number                   upper_limit)
+    {
+      return compare_and_apply_mask<SIMDComparison::less_than>(
+        in,
+        upper_limit,
+        compare_and_apply_mask<SIMDComparison::greater_than>(in, lower_limit, 1.0, 0.0),
+        0.0);
+    }
+
     namespace DistanceFunctions
     {
       template <int dim>

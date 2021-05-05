@@ -18,24 +18,25 @@ namespace MeltPoolDG::Heat
 
   /*
    * This operator computes the residual and its consistent tangent of the discretized heat
-   * equation
+   * equation with temperature dependent material properties:
+   * ρ^(n) = ρ(T^(n)), c_p^(n) = c_p(T^(n)), k^(n) = k(T^(n))
    *
-   *                    1   /                                     \
-   *  R(T_b^(n+1)) =   ---  | N_a, ρ c_p ( N_b T_b^(n+1) - T^(n)) |
-   *                   dt   \                                     /
-   *                                                               Ω
-   *                 /                             \
-   *               + | N_a, ρ c_p u ∇N_b T_b^(n+1) |
-   *                 \                             /
-   *                                                Ω
-   *                 /                              \
-   *               + | N_a, ρ c_p N_b T_b^(n+1) ∇·u |    (this term is not yet considered @todo)
-   *                 \                              /
-   *                                                 Ω
-   *                 /                         \
-   *               + | ∇N_a, k ∇N_b T_b^(n+1)) |
-   *                 \                         /
-   *                                            Ω
+   *                    1   /                                                               \
+   *  R(T_b^(n+1)) =   ---  | N_a, ( N_b ρ^(n+1) c_p^(n+1) T_b^(n+1) - ρ^(n) c_p^(n) T^(n)) |
+   *                   dt   \                                                               /
+   *                                                                                         Ω
+   *                 /                                         \
+   *               + | N_a, ρ^(n+1) c_p^(n+1) u ∇N_b T_b^(n+1) |
+   *                 \                                         /
+   *                                                            Ω
+   *                 /                                          \
+   *               + | N_a, ρ^(n+1) c_p^(n+1) N_b T_b^(n+1) ∇·u |    (this term is not yet considered @todo)
+   *                 \                                          /
+   *                                                            Ω
+   *                 /                               \
+   *               + | ∇N_a, k^(n+1) ∇N_b T_b^(n+1)) |
+   *                 \                               /
+   *                                                  Ω
    *                 /    _   \     /    _  \
    *               - | w, q_s |  -  | w, q  | = 0
    *                 \        /     \       /
@@ -43,14 +44,22 @@ namespace MeltPoolDG::Heat
    *                                          N
    *
    *
-   *  dR(T^(n+1))    1   /                \     /                              \
-   *  ----------- = ---  | N_a, ρ c_p N_b |  +  | N_a, ρ c_p  ( ∇N_b u + ∇·u ) |
-   *  dT_b^(n+1)     dt  \                /     \                              /
-   *                                       Ω                                    Ω
-   *                  /              \
-   *              +   | ∇N_a, k ∇N_b |
-   *                  \              /
-   *                                  Ω
+   *  dR(T^(n+1))    1   /                            \
+   *  ----------- = ---  | N_a, ρ^(n+1) c_p^(n+1) N_b |
+   *  dT_b^(n+1)     dt  \                            /
+   *                                                   Ω
+   *                1   /       d ρ |                            d c_p |                      \
+   *              + --  | N_a, -----| c_p^(n+1) T_b^(n+1) N_b + -------| ρ^(n+1) T_b^(n+1) N_b |
+   *                dt  \       d T |                             d T  |                      /
+   *                                |(n+1)                             |(n+1)                 Ω
+   *                  /                       d k |               \
+   *              +   | ∇N_a, k^(n+1) ∇N_b + -----| T_b^(n+1) ∇N_b |
+   *                  \                       d T |               /
+   *                                              |(n+1)           Ω
+   *                 /                                         \
+   *              +  | N_a, ρ^(n+1) c_p^(n+1) ( ∇N_b u + ∇·u ) |
+   *                 \                                         /
+   *                                                            Ω
    *                            _
    *                 /        d q       \
    *              -  | N_a, ---------   |
@@ -69,7 +78,7 @@ namespace MeltPoolDG::Heat
    *
    *  q = α (T-T∞)
    *
-   * with the convection coeficient alpha.
+   * with the convection coefficient denoted as α.
    *
    * We assume that the density and the specific heat capacity do not dependent on the temperature.
    */
@@ -135,14 +144,30 @@ namespace MeltPoolDG::Heat
     {
       AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside),
                   ExcMessage("Two-phase flow must come with a velocity! Abort..."));
-      AssertThrow(material.first.conductivity > 0.0 && material.first.density > 0.0,
-                  ExcMessage(
-                    "The material's conductivity and density must be greater than zero! Abort..."));
+      AssertThrow(
+        (material.first.conductivity > 0.0 && material.first.density > 0.0) || data.solidification,
+        ExcMessage("The material's conductivity and density must be greater than zero! Abort..."));
       AssertThrow(
         !level_set_as_heaviside ||
           (material.second.conductivity > 0.0 && material.second.density > 0.0),
         ExcMessage(
           "The secondary material's conductivity and density must be greater than zero! Abort..."));
+      AssertThrow(
+        !data.solidification || (material.solid.conductivity > 0.0 && material.solid.density > 0.0),
+        ExcMessage(
+          "In case of solidification the solid's conductivity and density must be greater than zero! Abort..."));
+      AssertThrow(
+        !data.solidification ||
+          (material.second.conductivity > 0.0 && material.second.density > 0.0),
+        ExcMessage(
+          "In case of solidification the liquid's (material.second) conductivity and density must be greater than zero! Abort..."));
+      AssertThrow(
+        !data.solidification || material.liquidus_temperature > material.solidus_temperature,
+        ExcMessage(
+          "In case of solidification the liquidus temperature must be greater than the solidus temperature! Abort..."));
+      AssertThrow(!(data.solidification && level_set_as_heaviside),
+                  ExcMessage(
+                    "Solidification and two-phase flow heat don't work together (yet)! Abort..."));
 
       if (bc)
         {
@@ -207,10 +232,15 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
       VectorizedArrayType capacity     = material.first.capacity;
       VectorizedArrayType conductivity = material.first.conductivity;
       VectorizedArrayType density      = material.first.density;
+
+      VectorizedArrayType d_capacity_dT     = 0.0;
+      VectorizedArrayType d_conductivity_dT = 0.0;
+      VectorizedArrayType d_density_dT      = 0.0;
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
@@ -229,13 +259,34 @@ namespace MeltPoolDG::Heat
               ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
             }
 
+          if (data.solidification)
+            {
+              temp_lin_vals.reinit(cell);
+              temp_lin_vals.gather_evaluate(temperature, true, true);
+            }
+
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
               if (level_set_as_heaviside)
-                get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                  capacity,
-                                                  conductivity,
-                                                  density);
+                {
+                  get_material_parameters_with_two_phase_flow(capacity,
+                                                              conductivity,
+                                                              density,
+                                                              ls_vals.get_value(q_index));
+                }
+
+              if (data.solidification)
+                {
+                  get_material_parameters_with_solidification(capacity,
+                                                              conductivity,
+                                                              density,
+                                                              temp_lin_vals.get_value(q_index));
+                  get_material_parameter_derivatives_with_solidification(d_capacity_dT,
+                                                                         d_conductivity_dT,
+                                                                         d_density_dT,
+                                                                         temp_lin_vals.get_value(
+                                                                           q_index));
+                }
 
               auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
@@ -245,10 +296,18 @@ namespace MeltPoolDG::Heat
                          velocity_vals.get_value(q_index);
                 }
 
-              temp_vals.submit_value(val, q_index);
-
               auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
+              if (data.solidification)
+                {
+                  val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
+                              temp_vals.get_value(q_index);
+                  val += (d_capacity_dT * density + d_density_dT * capacity) *
+                         temp_lin_vals.get_value(q_index) * this->d_tau_inv *
+                         temp_vals.get_value(q_index);
+                }
+
+              temp_vals.submit_value(val, q_index);
               temp_vals.submit_gradient(val_grad, q_index);
             }
           temp_vals.integrate_scatter(true, true, dst);
@@ -318,10 +377,15 @@ namespace MeltPoolDG::Heat
       const auto &                       matrix_free = scratch_data.get_matrix_free();
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
       VectorizedArrayType capacity     = material.first.capacity;
       VectorizedArrayType conductivity = material.first.conductivity;
       VectorizedArrayType density      = material.first.density;
+
+      VectorizedArrayType d_capacity_dT     = 0.0;
+      VectorizedArrayType d_conductivity_dT = 0.0;
+      VectorizedArrayType d_density_dT      = 0.0;
 
       unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -346,6 +410,13 @@ namespace MeltPoolDG::Heat
                   ls_vals.reinit(current_cell_index);
                   ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
                 }
+
+              if (data.solidification)
+                {
+                  temp_lin_vals.reinit(current_cell_index);
+                  temp_lin_vals.gather_evaluate(temperature, true, true);
+                }
+
               old_cell_index = current_cell_index;
             }
 
@@ -354,10 +425,25 @@ namespace MeltPoolDG::Heat
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
               if (level_set_as_heaviside)
-                get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                  capacity,
-                                                  conductivity,
-                                                  density);
+                {
+                  get_material_parameters_with_two_phase_flow(capacity,
+                                                              conductivity,
+                                                              density,
+                                                              ls_vals.get_value(q_index));
+                }
+
+              if (data.solidification)
+                {
+                  get_material_parameters_with_solidification(capacity,
+                                                              conductivity,
+                                                              density,
+                                                              temp_lin_vals.get_value(q_index));
+                  get_material_parameter_derivatives_with_solidification(d_capacity_dT,
+                                                                         d_conductivity_dT,
+                                                                         d_density_dT,
+                                                                         temp_lin_vals.get_value(
+                                                                           q_index));
+                }
 
               auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
@@ -365,10 +451,18 @@ namespace MeltPoolDG::Heat
                 val += density * capacity * temp_vals.get_gradient(q_index) *
                        velocity_vals.get_value(q_index);
 
-              temp_vals.submit_value(val, q_index);
-
               auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
+              if (data.solidification)
+                {
+                  val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
+                              temp_vals.get_value(q_index);
+                  val += (d_capacity_dT * density + d_density_dT * capacity) *
+                         temp_lin_vals.get_value(q_index) * this->d_tau_inv *
+                         temp_vals.get_value(q_index);
+                }
+
+              temp_vals.submit_value(val, q_index);
               temp_vals.submit_gradient(val_grad, q_index);
             }
           temp_vals.integrate(true, true);
@@ -398,10 +492,15 @@ namespace MeltPoolDG::Heat
                                                            vel_dof_idx,
                                                            this->quad_idx);
           FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+          FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
           VectorizedArrayType capacity     = material.first.capacity;
           VectorizedArrayType conductivity = material.first.conductivity;
           VectorizedArrayType density      = material.first.density;
+
+          VectorizedArrayType d_capacity_dT     = 0.0;
+          VectorizedArrayType d_conductivity_dT = 0.0;
+          VectorizedArrayType d_density_dT      = 0.0;
 
           unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -426,6 +525,13 @@ namespace MeltPoolDG::Heat
                       ls_vals.reinit(current_cell_index);
                       ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
                     }
+
+                  if (data.solidification)
+                    {
+                      temp_lin_vals.reinit(current_cell_index);
+                      temp_lin_vals.gather_evaluate(temperature, true, true);
+                    }
+
                   old_cell_index = current_cell_index;
                 }
 
@@ -434,10 +540,25 @@ namespace MeltPoolDG::Heat
               for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
                 {
                   if (level_set_as_heaviside)
-                    get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                      capacity,
-                                                      conductivity,
-                                                      density);
+                    {
+                      get_material_parameters_with_two_phase_flow(capacity,
+                                                                  conductivity,
+                                                                  density,
+                                                                  ls_vals.get_value(q_index));
+                    }
+
+                  if (data.solidification)
+                    {
+                      get_material_parameters_with_solidification(capacity,
+                                                                  conductivity,
+                                                                  density,
+                                                                  temp_lin_vals.get_value(q_index));
+                      get_material_parameter_derivatives_with_solidification(
+                        d_capacity_dT,
+                        d_conductivity_dT,
+                        d_density_dT,
+                        temp_lin_vals.get_value(q_index));
+                    }
 
                   auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
@@ -447,10 +568,18 @@ namespace MeltPoolDG::Heat
                              velocity_vals.get_value(q_index);
                     }
 
-                  temp_vals.submit_value(val, q_index);
-
                   auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
+                  if (data.solidification)
+                    {
+                      val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
+                                  temp_vals.get_value(q_index);
+                      val += (d_capacity_dT * density + d_density_dT * capacity) *
+                             temp_lin_vals.get_value(q_index) * this->d_tau_inv *
+                             temp_vals.get_value(q_index);
+                    }
+
+                  temp_vals.submit_value(val, q_index);
                   temp_vals.submit_gradient(val_grad, q_index);
                 }
               temp_vals.integrate(true, true);
@@ -471,10 +600,17 @@ namespace MeltPoolDG::Heat
                                                              vel_dof_idx,
                                                              this->quad_idx);
             FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+            FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free,
+                                                           temp_dof_idx,
+                                                           this->quad_idx);
 
             VectorizedArrayType capacity     = material.first.capacity;
             VectorizedArrayType conductivity = material.first.conductivity;
             VectorizedArrayType density      = material.first.density;
+
+            VectorizedArrayType d_capacity_dT     = 0.0;
+            VectorizedArrayType d_conductivity_dT = 0.0;
+            VectorizedArrayType d_density_dT      = 0.0;
 
             const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
 
@@ -500,6 +636,12 @@ namespace MeltPoolDG::Heat
                     ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
                   }
 
+                if (data.solidification)
+                  {
+                    temp_lin_vals.reinit(cell);
+                    temp_lin_vals.gather_evaluate(temperature, true, true);
+                  }
+
                 temp_vals.reinit(cell);
 
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
@@ -512,10 +654,23 @@ namespace MeltPoolDG::Heat
                     for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
                       {
                         if (level_set_as_heaviside)
-                          get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                            capacity,
-                                                            conductivity,
-                                                            density);
+                          {
+                            get_material_parameters_with_two_phase_flow(capacity,
+                                                                        conductivity,
+                                                                        density,
+                                                                        ls_vals.get_value(q_index));
+                          }
+
+                        if (data.solidification)
+                          {
+                            get_material_parameters_with_solidification(
+                              capacity, conductivity, density, temp_lin_vals.get_value(q_index));
+                            get_material_parameter_derivatives_with_solidification(
+                              d_capacity_dT,
+                              d_conductivity_dT,
+                              d_density_dT,
+                              temp_lin_vals.get_value(q_index));
+                          }
 
                         auto val =
                           density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
@@ -526,10 +681,18 @@ namespace MeltPoolDG::Heat
                                    velocity_vals.get_value(q_index);
                           }
 
-                        temp_vals.submit_value(val, q_index);
-
                         auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
+                        if (data.solidification)
+                          {
+                            val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
+                                        temp_vals.get_value(q_index);
+                            val += (d_capacity_dT * density + d_density_dT * capacity) *
+                                   temp_lin_vals.get_value(q_index) * this->d_tau_inv *
+                                   temp_vals.get_value(q_index);
+                          }
+
+                        temp_vals.submit_value(val, q_index);
                         temp_vals.submit_gradient(val_grad, q_index);
                       }
                     temp_vals.integrate(true, true);
@@ -674,6 +837,11 @@ namespace MeltPoolDG::Heat
       VectorizedArrayType conductivity = material.first.conductivity;
       VectorizedArrayType density      = material.first.density;
 
+      VectorizedArrayType capacity_old     = material.first.capacity;
+      VectorizedArrayType conductivity_old = material.first.conductivity;
+      VectorizedArrayType density_old      = material.first.density;
+
+
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           temp_vals.reinit(cell);
@@ -681,7 +849,7 @@ namespace MeltPoolDG::Heat
           temp_vals.evaluate(true, true);
 
           temp_vals_old.reinit(cell);
-          temp_vals_old.read_dof_values_plain(src);
+          temp_vals_old.read_dof_values_plain(src); // = temperature_old
           temp_vals_old.evaluate(true, false);
 
           heat_source_vals.reinit(cell);
@@ -705,15 +873,36 @@ namespace MeltPoolDG::Heat
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
             {
               if (level_set_as_heaviside)
-                get_two_phase_material_parameters(ls_vals.get_value(q_index),
-                                                  capacity,
-                                                  conductivity,
-                                                  density);
+                {
+                  get_material_parameters_with_two_phase_flow(capacity,
+                                                              conductivity,
+                                                              density,
+                                                              ls_vals.get_value(q_index));
+                }
+
+              if (data.solidification)
+                {
+                  get_material_parameters_with_solidification(capacity,
+                                                              conductivity,
+                                                              density,
+                                                              temp_vals.get_value(q_index));
+                  get_material_parameters_with_solidification(capacity_old,
+                                                              conductivity_old,
+                                                              density_old,
+                                                              temp_vals_old.get_value(q_index));
+                }
 
               auto val = density * capacity *
                            (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) *
                            this->d_tau_inv -
                          heat_source_vals.get_value(q_index);
+              // todo use old material parameters in case of two phase flow
+
+              if (data.solidification)
+                {
+                  val -= (density_old * capacity_old - density * capacity) *
+                         temp_vals_old.get_value(q_index) * this->d_tau_inv;
+                }
 
               if (velocity)
                 {
@@ -834,16 +1023,80 @@ namespace MeltPoolDG::Heat
 
   private:
     /*
-     * @return \c std::tuple with density, capacity and conductivity
+     * Determine material parameters (capacity, conductivity and density) for
+     * solidification/melting. In the mushy zone (between solidus and liquidus temperature) the
+     * material parameters are linearly interpolated between the solid's and fluid's values.
+     *
+     * @TODO, handle variable fluid parameters. ATM the fluid's parameters are assumed to be
+     * material.second.<..>
      */
     void
-    get_two_phase_material_parameters(const VectorizedArrayType &ls_heaviside_val,
-                                      VectorizedArrayType &      capacity,
-                                      VectorizedArrayType &      conductivity,
-                                      VectorizedArrayType &      density) const
+    get_material_parameters_with_solidification(VectorizedArrayType &      capacity,
+                                                VectorizedArrayType &      conductivity,
+                                                VectorizedArrayType &      density,
+                                                const VectorizedArrayType &temperature) const
     {
-      // todo Input material parameters for two phase
+      /*
+       * Compute the solid fraction for a temperature between the liquidus and the solidus
+       * temperature. If the temperature is equal to the liquidus temperature, then the solid
+       * fraction is zero. If the temperature is equal to the solidus temperature, then the solid
+       * fraction is one.
+       */
+      const auto solid_fraction =
+        UtilityFunctions::limit_to_bounds((material.liquidus_temperature - temperature) /
+                                            (material.liquidus_temperature -
+                                             material.solidus_temperature),
+                                          0.0,
+                                          1.0);
 
+      capacity     = UtilityFunctions::interpolate(solid_fraction,
+                                               material.second.capacity,
+                                               material.solid.capacity);
+      conductivity = UtilityFunctions::interpolate(solid_fraction,
+                                                   material.second.conductivity,
+                                                   material.solid.conductivity);
+      density      = UtilityFunctions::interpolate(solid_fraction,
+                                              material.second.density,
+                                              material.solid.density);
+    }
+
+    /*
+     * Determine derivatives of the material parameters (capacity, conductivity and density) with
+     * respect to the temperature for solidification/melting. In the mushy zone (between solidus and
+     * liquidus temperature) the material parameters are linearly interpolated between the solid's
+     * and fluid's values, so this function return the slope of that linear function. Outside the
+     * mushy zone the parameters are constant and this function returns zeros.
+     */
+    void
+    get_material_parameter_derivatives_with_solidification(
+      VectorizedArrayType &      d_capacity_dT,
+      VectorizedArrayType &      d_conductivity_dT,
+      VectorizedArrayType &      d_density_dT,
+      const VectorizedArrayType &temperature) const
+    {
+      const auto is_in_mushy_zone = UtilityFunctions::is_between(temperature,
+                                                                 material.solidus_temperature,
+                                                                 material.liquidus_temperature);
+      const auto mushy_zone_capacity_derivative =
+        (material.second.capacity - material.solid.capacity) /
+        (material.liquidus_temperature - material.solidus_temperature);
+      d_capacity_dT = is_in_mushy_zone * mushy_zone_capacity_derivative;
+      const auto mushy_zone_conductivity_derivative =
+        (material.second.conductivity - material.solid.conductivity) /
+        (material.liquidus_temperature - material.solidus_temperature);
+      d_conductivity_dT = is_in_mushy_zone * mushy_zone_conductivity_derivative;
+      const auto mushy_zone_density_derivative =
+        (material.second.density - material.solid.density) /
+        (material.liquidus_temperature - material.solidus_temperature);
+      d_density_dT = is_in_mushy_zone * mushy_zone_density_derivative;
+    }
+
+    void
+    get_material_parameters_with_two_phase_flow(VectorizedArrayType &      capacity,
+                                                VectorizedArrayType &      conductivity,
+                                                VectorizedArrayType &      density,
+                                                const VectorizedArrayType &ls_heaviside_val) const
+    {
       VectorizedArrayType weight;
       if (data.variable_properties_over_interface)
         weight = ls_heaviside_val;
