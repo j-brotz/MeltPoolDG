@@ -178,7 +178,7 @@ namespace MeltPoolDG::Evaporation
           evaporative_mass_flux.update_ghost_values();
           const unsigned int n_subdivisions = 3;
 
-          GridGenerator::MarchingCubeAlgorithm<dim> mc(
+          GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(
             scratch_data.get_mapping(),
             scratch_data.get_dof_handler(pressure_dof_idx).get_fe(), // todo
             n_subdivisions);
@@ -205,7 +205,7 @@ namespace MeltPoolDG::Evaporation
                     std::vector<::CellData<dim - 1>> surface_cells;
 
                     // run marching cube algorithm
-                    mc.process_cell(cell, level_set_vector, surface_vertices, surface_cells);
+                    mc.process_cell(cell, level_set_vector, 0.0, surface_vertices, surface_cells);
 
                     if (surface_vertices.size() == 0)
                       return {}; // cell is not cut by interface -> no quadrature points have the be
