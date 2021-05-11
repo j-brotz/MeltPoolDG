@@ -227,10 +227,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                                                 std::make_shared<Functions::ConstantFunction<dim>>(
                                                   this->parameters.evapor.boiling_temperature + 5.),
                                                 "heat_transfer");
+
       // @todo: had to comment out the following line to not get a partitioner error --> maybe its
       //        the corner nodes have both -- dirichlet and PBC?
-      // this->attach_dirichlet_boundary_condition(
-      // lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1), "level_set");
+      this->attach_dirichlet_boundary_condition(
+        lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1), "level_set");
 
       if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
