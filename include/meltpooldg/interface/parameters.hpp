@@ -227,6 +227,11 @@ namespace MeltPoolDG
     number      ls_value_liquid                    = 1.0;
     number      ls_value_gas                       = -1.0;
     std::string formulation_source_term_continuity = "diffuse";
+    std::string formulation_evaporative_mass_flux  = "constant"; // todo: recoil_pressure Schrage
+    number      coefficient                        = 0.0;
+    number      latent_heat_of_evaporation         = 0.0;
+    number      molar_mass                         = 0.0;
+    number      boiling_temperature                = 0.0;
   };
 
   template <typename number = double>
@@ -384,12 +389,12 @@ namespace MeltPoolDG
                       "must be chosen: Navier-Stokes: adaflo: Navier-Stokes: {formulation convective "
                       "term momentum balance: convective }"));
 
-                  AssertThrow(flow.variable_properties_over_interface ==
-                                "consistent_with_evaporation",
-                              ExcMessage(
-                                "For the consideration of phase change, the density "
-                                "has to be interpolated consistently with the continuity equation "
-                                "including phase change."));
+                  // AssertThrow(flow.variable_properties_over_interface ==
+                  //"consistent_with_evaporation",
+                  // ExcMessage(
+                  //"For the consideration of phase change, the density "
+                  //"has to be interpolated consistently with the continuity equation "
+                  //"including phase change."));
                 }
             }
           // WARNING: by setting the differences to a non-zero value we force
@@ -994,6 +999,21 @@ namespace MeltPoolDG
                           "Select how the additional source term due to evaporation in the"
                           " continuity equation is computed.",
                           Patterns::Selection("diffuse|sharp"));
+        prm.add_parameter(
+          "evapor formulation evaporative mass flux",
+          evapor.formulation_evaporative_mass_flux,
+          "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) "
+          "will be calculated.",
+          Patterns::Selection(
+            "constant|temperature dependent|recoil pressure dependent|temperature dependent interface const"));
+        prm.add_parameter("evapor coefficient", evapor.coefficient, "Evaporation coefficient.");
+        prm.add_parameter("evapor latent heat of evaporation",
+                          evapor.latent_heat_of_evaporation,
+                          "Latent heat of evaporation (J/kg).");
+        prm.add_parameter("evapor molar mass", evapor.molar_mass, "Molar mass (mol/kg).");
+        prm.add_parameter("evapor boiling temperature",
+                          evapor.boiling_temperature,
+                          "Boiling temperature (K).");
       }
       prm.leave_subsection();
       /*

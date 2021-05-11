@@ -87,6 +87,17 @@ namespace MeltPoolDG
       this->system_matrix.reinit(dsp);
     }
 
+    /**
+     * Compute the modified right-handside for (inhomogeneous) dirichlet boundary conditions G
+     *
+     * A * x = B
+     *
+     * We actually solve
+     *
+     * A * x_0 = b - A * G
+     *
+     * with zero Dirichlet boundary conditions.
+     */
     template <int dim>
     void
     create_rhs_and_apply_dirichlet_mf(DoFVectorType &         rhs,
@@ -103,7 +114,6 @@ namespace MeltPoolDG
        * Vector)
        */
       this->vmult(rhs, bc_values);
-
       /*
        * Modify right-hand side
        */

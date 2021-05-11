@@ -62,12 +62,13 @@ namespace MeltPoolDG::Heat
                           const HeatData<double> &                        heat_data_in,
                           const MaterialData<double> &                    material_data,
                           const unsigned int                              temp_dof_idx_in,
-                          const unsigned int temp_hanging_nodes_dof_idx_in,
-                          const unsigned int temp_quad_idx_in,
-                          const unsigned int vel_dof_idx_in            = 0,
-                          VectorType *       velocity_in               = nullptr,
-                          const unsigned int ls_dof_idx_in             = 0,
-                          VectorType *       level_set_as_heaviside_in = nullptr)
+                          const unsigned int             temp_hanging_nodes_dof_idx_in,
+                          const unsigned int             temp_quad_idx_in,
+                          const unsigned int             vel_dof_idx_in            = 0,
+                          VectorType *                   velocity_in               = nullptr,
+                          const unsigned int             ls_dof_idx_in             = 0,
+                          VectorType *                   level_set_as_heaviside_in = nullptr,
+                          const EvaporationData<double> *evapor_data_in            = nullptr)
       : scratch_data(scratch_data_in)
       , heat_data(heat_data_in)
       , temp_dof_idx(temp_dof_idx_in)
@@ -91,7 +92,10 @@ namespace MeltPoolDG::Heat
                                                                   vel_dof_idx,
                                                                   velocity,
                                                                   ls_dof_idx,
-                                                                  level_set_as_heaviside);
+                                                                  level_set_as_heaviside,
+                                                                  evapor_data_in);
+
+      reinit();
     }
 
     void

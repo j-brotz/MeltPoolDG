@@ -1,27 +1,30 @@
 {
   "base": {
     "problem name": "two_phase_flow_with_evaporation",
-    "application name": "evaporating_droplet",
+    "application name": "evaporating_droplet_with_heat",
     "global refinements": "3",
     "dimension": "2",
     "degree": "1",
-    "gravity": "0.00",
+    "gravity": "0.0",
+    "verbosity level": "0",
     "do print parameters": "false"
   },
   "flow": {
-    "flow surface tension coefficient": "0.00",
+    "flow surface tension coefficient": "0.1",
     "flow start time": "0.0",
-    "flow end time": "0.02",
+    "flow end time": "0.03",
     "flow time step size": "0.001",
     "flow variable properties over interface": "consistent_with_evaporation"
   },
   "material": {
-    "material first viscosity": "0.001",
-    "material second viscosity": "0.01",
-    "material first density": "0.001",
-    "material second density": "1",
-    "material first conductivity": "1e-16",
-    "material second conductivity": "1e-16"
+    "material first capacity": "200",
+    "material first conductivity": "1",
+    "material first density": "5",
+    "material first viscosity": "0.005",
+    "material second capacity": "400",
+    "material second conductivity": "40",
+    "material second density": "200",
+    "material second viscosity": "0.1"
   },
   "levelset": {
     "ls do reinitialization": "true",
@@ -33,7 +36,8 @@
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit scale factor epsilon": "1.0"
+    "reinit do print l2norm": "true",
+    "reinit scale factor epsilon": "1.707"
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
@@ -44,12 +48,25 @@
     "curv do matrix free": "true"
   },
   "paraview": {
+    "paraview directory": "evaporating_droplet_test",
     "paraview do output": "true"
   },
+  "heat": {
+    "heat two phase": "true",
+    "heat variable properties over interface": "true",
+    "heat solver preconditioner type": "AMG",
+    "heat solver rel tolerance": "1e-12",
+    "heat nlsolve residual tolerance": "1e-6",
+    "heat nlsolve field correction tolerance": "1e-7",
+    "heat nlsolve max nonlinear iterations": "15"
+  },
   "evaporation": {
-    "evapor evaporative mass flux": "1.0e-3",
-    "evapor ls value liquid": "1",
-    "evapor ls value gas": "-1"
+    "evapor formulation evaporative mass flux": "temperature dependent",
+    "evapor evaporative mass flux": "0.000000",
+    "evapor boiling temperature": "1.",
+    "evapor molar mass": "0.01801528",
+    "evapor latent heat of evaporation": "1.e3",
+    "evapor coefficient": "0.01"
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -70,7 +87,7 @@
         }
       },
       "Output options": {
-        "output verbosity": "0",
+        "output verbosity": "1",
         "output walltimes": "0"
       },
       "Time stepping": {

@@ -11,6 +11,7 @@
 // MeltPoolDG
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/physical_constants.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -61,6 +62,12 @@ namespace MeltPoolDG::Heat
    *                 \                                         /
    *                                                            Ω
    *                            _
+   *                 /        d q_s     \
+   *              -  | N_a, ---------   |
+   *                 \       dT_b^(n+1) /
+   *                                     Ω
+   *
+   *                            _
    *                 /        d q       \
    *              -  | N_a, ---------   |
    *                 \       dT_b^(n+1) /
@@ -71,16 +78,19 @@ namespace MeltPoolDG::Heat
    * specific heat capacity c_p and the conductivity k, source/sink terms q_s and prescribed
    * fluxes q along Neumann boundaries. The heat flux may result from radiative losses
    *
+   *  _
    *  q = σ ϵ (T^4-T∞^4)
    *
    * with the Stefan-Boltzmann constant σ, the emissivity ϵ and the temperature of the surroundings
    * T∞ as well as convective losses
    *
+   *  _
    *  q = α (T-T∞)
    *
    * with the convection coefficient denoted as α.
    *
    * We assume that the density and the specific heat capacity do not dependent on the temperature.
+   *
    */
 
   template <int dim, typename number = double>
@@ -99,8 +109,6 @@ namespace MeltPoolDG::Heat
     const unsigned int          temp_dof_idx;
     const unsigned int          temp_quad_idx;
 
-    const double stefan_boltzmann = 5.67e-8; // W/(mK^4) // @todo move -- where?
-
     const VectorType &temperature;
     std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
                                     neumann_bc; //@todo find a nice way to provide BC
@@ -109,13 +117,17 @@ namespace MeltPoolDG::Heat
 
     const VectorType &heat_source;
 
-    // optional flow velocity for internal convection
+    // optional: flow velocity for internal convection
     const unsigned int vel_dof_idx;
     const VectorType * velocity;
 
-    // optional level-set heaviside field for two phase flow
+    // optional: level-set heaviside field for two phase flow
     const unsigned int ls_dof_idx;
     const VectorType * level_set_as_heaviside;
+
+    // optional: two phase flow with evaporation
+    const EvaporationData<double> *evapor_data;
+    double                         evaporation_heat_transfer_coefficient = 0;
 
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
@@ -129,7 +141,8 @@ namespace MeltPoolDG::Heat
                          const unsigned int                              vel_dof_idx_in = 0,
                          const VectorType *                              velocity_in    = nullptr,
                          const unsigned int                              ls_dof_idx_in  = 0,
-                         const VectorType *level_set_as_heaviside_in                    = nullptr)
+                         const VectorType *             level_set_as_heaviside_in       = nullptr,
+                         const EvaporationData<double> *evapor_data_in                  = nullptr)
       : scratch_data(scratch_data_in)
       , data(data_in)
       , material(material_data_in)
@@ -141,6 +154,7 @@ namespace MeltPoolDG::Heat
       , velocity(velocity_in)
       , ls_dof_idx(ls_dof_idx_in)
       , level_set_as_heaviside(level_set_as_heaviside_in)
+      , evapor_data(evapor_data_in)
     {
       AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside),
                   ExcMessage("Two-phase flow must come with a velocity! Abort..."));
@@ -174,6 +188,36 @@ namespace MeltPoolDG::Heat
           bc_convection_indices = bc->convection_bc;
           bc_radiation_indices  = bc->radiation_bc;
           neumann_bc            = bc->neumann_bc;
+        }
+
+      if (evapor_data)
+        {
+          /*
+           * optional: two-phase flow with evaporation
+           *
+           * compute evporative heat transfer coefficient to be considered in the heat flux due to
+           * evaporation
+           *
+           * q_evapor = α_v · h_v · <(T-T_boiling)> · δ
+           *            ^______^                       Γ
+           *              evaporation_heat_transfer_coefficient
+           *
+           * where α_v is the evaporative mass transfer coefficient and T_boiling the boiling
+           * temperature, δ the smooth delta function and <...> Macaulay brackets.
+           *
+           */
+          evaporation_heat_transfer_coefficient =
+            2. * evapor_data->coefficient * std::pow(evapor_data->latent_heat_of_evaporation, 2) *
+            material.first.density /
+            ((2 - evapor_data->coefficient) *
+             std::sqrt(2. * numbers::PI * PhysicalConstants::universal_gas_constant /
+                       evapor_data->molar_mass) *
+             std::pow(evapor_data->boiling_temperature, 1.5));
+
+          // @todo: consistent integration into heat operation will be done as a follow up PR
+          if (evapor_data->formulation_evaporative_mass_flux ==
+              "temperature dependent interface const")
+            AssertThrow(false, ExcNotImplemented());
         }
 
       this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
@@ -527,7 +571,7 @@ namespace MeltPoolDG::Heat
             {
               ls_vals.reinit(cell);
               ls_vals.read_dof_values_plain(*level_set_as_heaviside);
-              ls_vals.evaluate(true, false);
+              ls_vals.evaluate(true, evapor_data);
             }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -565,9 +609,24 @@ namespace MeltPoolDG::Heat
                 }
 
               if (velocity)
+                val += density * capacity * temp_vals.get_gradient(q_index) *
+                       velocity_vals.get_value(q_index);
+
+              if (level_set_as_heaviside && evapor_data)
                 {
-                  val += density * capacity * temp_vals.get_gradient(q_index) *
-                         velocity_vals.get_value(q_index);
+                  /*
+                   * compute the heat sink due to evaporation
+                   *          .
+                   *    q_s = m h_v = α_v · h_v · <(T - T_v)> · δ
+                   *                  ^______^                   Γ
+                   *                    evaporation_heat_transfer_coefficient
+                   */
+                  val += compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                    temp_vals.get_value(q_index),
+                    evapor_data->boiling_temperature,
+                    evaporation_heat_transfer_coefficient * ls_vals.get_gradient(q_index).norm() *
+                      (temp_vals.get_value(q_index) - evapor_data->boiling_temperature),
+                    0.0);
                 }
 
               temp_vals.submit_value(-val,
@@ -636,7 +695,7 @@ namespace MeltPoolDG::Heat
                           dQ_dT.get_normal_vector(q_index);
                 }
               if (do_radiation)
-                temp -= data.emissivity * stefan_boltzmann *
+                temp -= data.emissivity * PhysicalConstants::stefan_boltzmann_constant *
                         (pow<double>(temp_vals, 4) - std::pow(data.temperature_infinity, 4));
               if (do_convection)
                 temp -= data.convection_coefficient * (temp_vals - data.temperature_infinity);
@@ -718,10 +777,10 @@ namespace MeltPoolDG::Heat
           if (level_set_as_heaviside)
             {
               ls_vals.reinit(temp_vals.get_current_cell_index());
-              ls_vals.gather_evaluate(*level_set_as_heaviside, true, false);
+              ls_vals.gather_evaluate(*level_set_as_heaviside, true, evapor_data);
             }
 
-          if (data.solidification)
+          if (data.solidification || evapor_data)
             {
               temp_lin_vals.reinit(temp_vals.get_current_cell_index());
               temp_lin_vals.gather_evaluate(temperature, true, true);
@@ -765,6 +824,22 @@ namespace MeltPoolDG::Heat
               val += (d_capacity_dT * density + d_density_dT * capacity) *
                      temp_lin_vals.get_value(q_index) * this->d_tau_inv *
                      temp_vals.get_value(q_index);
+            }
+
+          if (level_set_as_heaviside && evapor_data)
+            {
+              /*
+               * compute the contribution to the tangent from the heat sink due to evaporation
+               *
+               *   d q_s
+               *   ----- =  α_v · h_v · H(T-T_v) · δ
+               *   d  T     ^______^                Γ
+               *              evaporation_heat_transfer_coefficient
+               */
+              val += evaporation_heat_transfer_coefficient *
+                     UtilityFunctions::heaviside(temp_lin_vals.get_value(q_index) -
+                                                 evapor_data->boiling_temperature) *
+                     ls_vals.get_gradient(q_index).norm() * temp_vals.get_value(q_index);
             }
 
           temp_vals.submit_value(val, q_index);
@@ -814,7 +889,7 @@ namespace MeltPoolDG::Heat
           if (do_convection)
             temp += data.convection_coefficient * inc_temp_vals_at_q;
           if (do_radiation)
-            temp += 4. * data.emissivity * stefan_boltzmann *
+            temp += 4. * data.emissivity * PhysicalConstants::stefan_boltzmann_constant *
                     pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
 
           dQ_dT.submit_value(temp, q_index);

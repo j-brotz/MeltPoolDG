@@ -4,8 +4,14 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/base/mpi_remote_point_evaluation.h>
+
+#include <deal.II/numerics/vector_tools_evaluate.h>
+
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
+#include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
 
 namespace MeltPoolDG::Evaporation
 {
@@ -51,7 +57,16 @@ namespace MeltPoolDG::Evaporation
     const unsigned int evapor_vel_dof_idx;
     const unsigned int ls_hanging_nodes_dof_idx;
     const unsigned int ls_quad_idx;
-    const double       tolerance_normal_vector;
+    /*
+     * cut-off value for normalizing the normal vector field
+     */
+    const double tolerance_normal_vector;
+    /*
+     * optional: temperature-dependent evaporation
+     */
+    const VectorType *temperature;
+    const double      temp_dof_idx;
+    double            evaporation_mass_transfer_coefficient = 0.0;
     /**
      * evaporative mass flux
      */
@@ -73,7 +88,10 @@ namespace MeltPoolDG::Evaporation
                          const unsigned int                             normal_dof_idx_in,
                          const unsigned int                             evapor_vel_dof_idx_in,
                          const unsigned int                             ls_hanging_nodes_dof_idx_in,
-                         const unsigned int                             ls_quad_idx_in)
+                         const unsigned int                             ls_quad_idx_in,
+                         const VectorType *                             temperature  = nullptr,
+                         const unsigned int                             temp_dof_idx = 0)
+
       : scratch_data(scratch_data_in)
       , evaporation_data(base_in->parameters.evapor)
       , material(base_in->parameters.material)
@@ -92,10 +110,30 @@ namespace MeltPoolDG::Evaporation
                                        1. / dim))) *
                               1e-3,
                             1e-12)))
+      , temperature(temperature)
+      , temp_dof_idx(temp_dof_idx)
+
     {
       AssertThrow(material.first.density > 0.0 && material.second.density > 0.0,
                   ExcMessage("The materials' densities must be greater than zero! Abort..."));
       reinit();
+      // @todo: provide static function
+      if (evaporation_data.formulation_evaporative_mass_flux.find("temperature dependent") !=
+          std::string::npos)
+        {
+          AssertThrow(
+            std::abs(evaporation_data.boiling_temperature) > 1e-12,
+            ExcMessage(
+              "The boiling temperature must not be zero to compte the evaporation mass transfer coefficient"));
+
+          evaporation_mass_transfer_coefficient =
+            2. * evaporation_data.coefficient * evaporation_data.latent_heat_of_evaporation *
+            material.first.density /
+            ((2. - evaporation_data.coefficient) *
+             std::sqrt(2. * numbers::PI * PhysicalConstants::universal_gas_constant /
+                       evaporation_data.molar_mass) *
+             std::pow(evaporation_data.boiling_temperature, 1.5));
+        }
     }
 
     void
@@ -106,13 +144,133 @@ namespace MeltPoolDG::Evaporation
       scratch_data->initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
     }
 
+
     void
-    compute_evaporative_mass_flux_from_temperature(const VectorType & temperature,
-                                                   const unsigned int temp_dof_idx,
-                                                   const double &     boiling_temperature,
-                                                   const double &     pressure_constant    = 0.0,
-                                                   const double &     temperature_constant = 0.0)
+    compute_evaporative_mass_flux_from_temperature_const_over_interface(const VectorType &distance)
     {
+      /*
+       * collect evaluation points
+       */
+      distance.update_ghost_values();
+      normal_vector.update_ghost_values();
+
+      FEValues<dim, dim> ls_values(
+        scratch_data->get_mapping(),
+        scratch_data->get_fe(ls_hanging_nodes_dof_idx),
+        Quadrature<dim>(
+          scratch_data->get_fe(ls_hanging_nodes_dof_idx).base_element(0).get_unit_support_points()),
+        update_quadrature_points);
+
+      std::vector<Point<dim>>              evaluation_points;
+      std::vector<types::global_dof_index> dof_indices;
+
+      const unsigned int n_q_points = ls_values.get_quadrature().size();
+
+      // temporary values at cell nodes nodes
+      Vector<double>                       hs_temp(n_q_points);
+      Vector<double>                       distance_temp(n_q_points);
+      std::vector<Vector<double>>          normal_temp(dim, Vector<double>(n_q_points));
+      std::vector<Point<dim>>              normalized_normal_temp(n_q_points, Point<dim>());
+      std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points);
+
+      auto bounding_box    = GridTools::compute_bounding_box(scratch_data->get_triangulation());
+      auto boundary_points = bounding_box.get_boundary_points();
+
+      for (const auto &cell :
+           scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
+        {
+          if (cell->is_locally_owned())
+            {
+              ls_values.reinit(cell);
+
+              cell->get_dof_indices(temp_local_dof_indices);
+
+              cell->get_dof_values(level_set_as_heaviside, hs_temp);
+              cell->get_dof_values(distance, distance_temp);
+              for (unsigned int d = 0; d < dim; ++d)
+                cell->get_dof_values(normal_vector.block(d), normal_temp[d]);
+
+              // normalize normal vector values
+              for (unsigned int d = 0; d < dim; ++d)
+                for (unsigned int q = 0; q < n_q_points; ++q)
+                  normalized_normal_temp[q][d] = normal_temp[d][q];
+
+              for (auto &n : normalized_normal_temp)
+                n = n / n.norm();
+
+              for (const auto q : ls_values.quadrature_point_indices())
+                {
+                  if (hs_temp[q] < 1.0 && hs_temp[q] > 0.0)
+                    {
+                      // compute corresponding point at level set == 0.0
+
+                      Point<dim> evaluation_point_temp = Point<dim>();
+                      for (unsigned int d = 0; d < dim; ++d)
+                        {
+                          evaluation_point_temp[d] =
+                            ls_values.quadrature_point(q)[d] -
+                            distance_temp[q] * normalized_normal_temp[q][d];
+
+                          // check if point is outside domain and if so then project it back to the
+                          // domain
+                          if (evaluation_point_temp[d] < boundary_points.first[d])
+                            evaluation_point_temp[d] = boundary_points.first[d];
+                          else if (evaluation_point_temp[d] > boundary_points.second[d])
+                            evaluation_point_temp[d] = boundary_points.second[d];
+                        }
+
+                      evaluation_points.push_back(evaluation_point_temp);
+                      dof_indices.push_back(temp_local_dof_indices[q]);
+                    }
+                }
+            }
+        }
+
+      /*
+       * get temperature values at evaluation points
+       */
+      Utilities::MPI::RemotePointEvaluation<dim, dim> cache;
+
+      temperature->update_ghost_values();
+      const auto temperature_evaluation_values =
+        dealii::VectorTools::evaluate_at_points<1>(scratch_data->get_mapping(),
+                                                   scratch_data->get_dof_handler(temp_dof_idx),
+                                                   *temperature,
+                                                   evaluation_points,
+                                                   cache,
+                                                   dealii::VectorTools::EvaluationFlags::max);
+      temperature->zero_out_ghosts();
+
+      Assert(temperature_evaluation_values.size() == evaluation_points.size(),
+             ExcMessage("The size of vectors must match."));
+
+      /*
+       * compute evaporative mass flux
+       */
+      evaporative_mass_flux.zero_out_ghosts();
+      evaporative_mass_flux = 0.0;
+
+      for (unsigned int i = 0; i < evaluation_points.size(); i++)
+        {
+          evaporative_mass_flux[dof_indices[i]] =
+            (temperature_evaluation_values[i] >= evaporation_data.boiling_temperature) ?
+              evaporation_mass_transfer_coefficient *
+                (temperature_evaluation_values[i] - evaporation_data.boiling_temperature) :
+              0.0;
+        }
+
+      evaporative_mass_flux.update_ghost_values();
+    }
+
+    void
+    compute_evaporative_mass_flux_from_temperature(
+      const VectorType & temperature,
+      const unsigned int temp_dof_idx,
+      const double &     boiling_temperature  = 0.0, //@todo: remove from meltpool
+      const double &     pressure_constant    = 0.0,
+      const double &     temperature_constant = 0.0)
+    {
+      temperature.update_ghost_values();
       const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
 
       std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
@@ -122,16 +280,28 @@ namespace MeltPoolDG::Evaporation
           {
             cell->get_dof_indices(local_dof_indices);
             for (unsigned int i = 0; i < dofs_per_cell; ++i)
-              evaporative_mass_flux[local_dof_indices[i]] =
-                compute_temperature_dependent_mass_flux_rate(temperature[local_dof_indices[i]],
-                                                             pressure_constant,
-                                                             temperature_constant,
-                                                             boiling_temperature);
+              if (evaporation_data.formulation_evaporative_mass_flux == "temperature dependent")
+                {
+                  evaporative_mass_flux[local_dof_indices[i]] =
+                    compute_temperature_dependent_mass_flux_rate(temperature[local_dof_indices[i]]);
+                }
+              else if (evaporation_data.formulation_evaporative_mass_flux ==
+                       "recoil pressure dependent")
+                {
+                  evaporative_mass_flux[local_dof_indices[i]] =
+                    compute_temperature_dependent_mass_flux_rate_from_recoil_pressure(
+                      temperature[local_dof_indices[i]],
+                      pressure_constant,
+                      temperature_constant,
+                      boiling_temperature);
+                }
           }
+      temperature.zero_out_ghosts();
     }
 
     void
-    compute_evaporation_velocity()
+    compute_evaporation_velocity(
+      const std::string &interpolation_type_parameters = "consistent_with_evaporation")
     {
       level_set_as_heaviside.update_ghost_values();
       normal_vector.update_ghost_values();
@@ -175,11 +345,24 @@ namespace MeltPoolDG::Evaporation
                 MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
                                                         tolerance_normal_vector);
 
-              evapor_vel[q_index] = n_phi * evap_flux.get_value(q_index) *
+              //              ρ
+              // evaluate  ------
+              //            dρ/dΦ
+              VectorizedArray<double> rho_d_rho_d_phi = 1.0;
+
+              if (interpolation_type_parameters == "true")
+                {
+                  // clang-format off
+                  rho_d_rho_d_phi = (ls.get_value(q_index) * material.second.density + (1.-ls.get_value(q_index) * material.first.density)) 
+                    / //-----------------------------------------------------------------------------------------------------
+                                                    (material.second.density - material.first.density);
+                  // clang-format on
+                }
+
+              evapor_vel[q_index] = n_phi * evap_flux.get_value(q_index) * rho_d_rho_d_phi *
                                     UtilityFunctions::interpolate(ls.get_value(q_index),
                                                                   1. / material.first.density,
                                                                   1. / material.second.density);
-
 
               // The normal vector field is oriented such that the normal vector points from
               // the negative level set value (= default for representing the gas phase) to the
@@ -187,7 +370,8 @@ namespace MeltPoolDG::Evaporation
               // gas phase corresponds to a level set value of 1, the sign of the normal vector
               // has to be changed.
               if (evaporation_data.ls_value_gas == 1.0)
-                evapor_vel[q_index] *= -1.0;
+                AssertThrow(false, ExcNotImplemented());
+              // evapor_vel[q_index] *= -1.0;
             }
         }
       level_set_as_heaviside.zero_out_ghosts();
@@ -230,6 +414,9 @@ namespace MeltPoolDG::Evaporation
                                      bool               zero_out)
     {
       evaporative_mass_flux.update_ghost_values();
+      if (temperature)
+        temperature->update_ghost_values();
+
 
       double mass = 0.0;
 
@@ -396,10 +583,11 @@ namespace MeltPoolDG::Evaporation
      * equation is implemented anyhow
      */
     inline double
-    compute_temperature_dependent_mass_flux_rate(const double &T,
-                                                 const double &pressure_constant,
-                                                 const double &temperature_constant,
-                                                 const double &boiling_temperature)
+    compute_temperature_dependent_mass_flux_rate_from_recoil_pressure(
+      const double &T,
+      const double &pressure_constant,
+      const double &temperature_constant,
+      const double &boiling_temperature)
     {
       // according to Meier 2020
       const double cs = 1.0;  // sticking coefficent
@@ -409,6 +597,17 @@ namespace MeltPoolDG::Evaporation
                  MeltPool::RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(
                    T, pressure_constant, temperature_constant, boiling_temperature) *
                  std::sqrt(Cm / T) :
+               0.0;
+    }
+
+    /**
+     *  According to Hardt and Wondra
+     */
+    inline double
+    compute_temperature_dependent_mass_flux_rate(const double &T)
+    {
+      return (T >= evaporation_data.boiling_temperature) ?
+               evaporation_mass_transfer_coefficient * (T - evaporation_data.boiling_temperature) :
                0.0;
     }
   };

@@ -5,6 +5,8 @@
 // simulations
 #include <meltpooldg/simulations/advection_diffusion/advection_diffusion.hpp>
 #include <meltpooldg/simulations/evaporating_droplet/evaporating_droplet.hpp>
+#include <meltpooldg/simulations/evaporating_droplet/evaporating_droplet_with_heat.hpp>
+#include <meltpooldg/simulations/film_boiling/film_boiling.hpp>
 #include <meltpooldg/simulations/flow_past_cylinder/flow_past_cylinder.hpp>
 #include <meltpooldg/simulations/recoil_pressure/recoil_pressure.hpp>
 #include <meltpooldg/simulations/reinit_circle/reinit_circle.hpp>
@@ -14,6 +16,8 @@
 #include <meltpooldg/simulations/solidification_slab/solidification_slab.hpp>
 #include <meltpooldg/simulations/spurious_currents/spurious_currents.hpp>
 #include <meltpooldg/simulations/stefans_problem/stefans_problem.hpp>
+#include <meltpooldg/simulations/stefans_problem/stefans_problem1_with_flow_and_heat.hpp>
+#include <meltpooldg/simulations/stefans_problem/stefans_problem2_with_flow_and_heat.hpp>
 #include <meltpooldg/simulations/stefans_problem/stefans_problem_with_flow.hpp>
 #include <meltpooldg/simulations/thermo_capillary_droplet/thermo_capillary_droplet.hpp>
 #include <meltpooldg/simulations/thermo_capillary_two_droplets/thermo_capillary_two_droplets.hpp>
@@ -68,8 +72,20 @@ namespace MeltPoolDG
         else if (simulation_name == "stefans_problem_with_flow")
           return std::make_shared<StefansProblemWithFlow::SimulationStefansProblemWithFlow<dim>>(
             parameter_file, mpi_communicator);
+        else if (simulation_name == "stefans_problem1_with_flow_and_heat")
+          return std::make_shared<
+            StefansProblem1WithFlowAndHeat::SimulationStefansProblem1WithFlowAndHeat<dim>>(
+            parameter_file, mpi_communicator);
+        else if (simulation_name == "stefans_problem2_with_flow_and_heat")
+          return std::make_shared<
+            StefansProblem2WithFlowAndHeat::SimulationStefansProblem2WithFlowAndHeat<dim>>(
+            parameter_file, mpi_communicator);
         else if (simulation_name == "evaporating_droplet")
           return std::make_shared<EvaporatingDroplet::SimulationEvaporatingDroplet<dim>>(
+            parameter_file, mpi_communicator);
+        else if (simulation_name == "evaporating_droplet_with_heat")
+          return std::make_shared<
+            EvaporatingDropletWithHeat::SimulationEvaporatingDropletWithHeat<dim>>(
             parameter_file, mpi_communicator);
         else if (simulation_name == "unidirectional_heat_transfer")
           return std::make_shared<
@@ -85,6 +101,10 @@ namespace MeltPoolDG
         else if (simulation_name == "solidification_slab")
           return std::make_shared<SolidificationSlab::SimulationSolidificationSlab<dim>>(
             parameter_file, mpi_communicator);
+        else if (simulation_name == "film_boiling")
+          return std::make_shared<FilmBoiling::SimulationFilmBoiling<dim>>(parameter_file,
+                                                                           mpi_communicator);
+
         /* add your simulation here*/
         else
           AssertThrow(false,

@@ -35,8 +35,8 @@
   },
   "evaporation": {
     "evapor evaporative mass flux": "1.0e-4",
-    "evapor ls value liquid": "-1",
-    "evapor ls value gas": "1"
+    "evapor ls value liquid": "1",
+    "evapor ls value gas": "-1"
   },
   "material": {
     "material first density": "0.01",
