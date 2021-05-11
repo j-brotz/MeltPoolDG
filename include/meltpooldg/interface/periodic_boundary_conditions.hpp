@@ -4,6 +4,8 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/types.h>
 
 namespace MeltPoolDG
 {

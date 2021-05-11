@@ -6,12 +6,17 @@
 #pragma once
 #include <deal.II/base/mpi_remote_point_evaluation.h>
 
+#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
+#include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
-
 
 namespace MeltPoolDG::Evaporation
 {

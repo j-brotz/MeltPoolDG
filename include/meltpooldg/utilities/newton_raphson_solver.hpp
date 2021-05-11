@@ -3,9 +3,16 @@
  * Author: Magdalena Schreter, TUM, March 2021
  *
  * ---------------------------------------------------------------------*/
+#include <deal.II/lac/generic_linear_algebra.h>
+
+#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG
 {
+  using namespace dealii;
+
   template <int dim, typename VectorType = LinearAlgebra::distributed::Vector<double>>
   class NewtonRaphsonSolver
   {
@@ -77,10 +84,10 @@ namespace MeltPoolDG
 
           if (is_converged())
             {
-              scratch_data.get_pcout()
-                << "Newton Raphson solver converged: ||solution|| = "
-                << VectorTools::compute_L2_norm<dim>(solution, scratch_data, dof_idx, quad_idx)
-                << std::endl;
+              scratch_data.get_pcout() << "Newton Raphson solver converged: ||solution|| = "
+                                       << MeltPoolDG::VectorTools::compute_L2_norm<dim>(
+                                            solution, scratch_data, dof_idx, quad_idx)
+                                       << std::endl;
               return;
             }
 

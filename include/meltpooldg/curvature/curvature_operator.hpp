@@ -38,6 +38,12 @@ namespace MeltPoolDG
                                                   LinearAlgebra::distributed::BlockVector<number>>
     {
     private:
+      using VectorType          = LinearAlgebra::distributed::Vector<number>;
+      using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
+      using VectorizedArrayType = VectorizedArray<number>;
+      using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
+      using vector              = Tensor<1, dim, VectorizedArray<number>>;
+      using scalar              = VectorizedArray<number>;
       const ScratchData<dim> &scratch_data;
 
       double             damping;
@@ -47,13 +53,6 @@ namespace MeltPoolDG
       const double       tolerance_normal_vector;
 
     public:
-      using VectorType          = LinearAlgebra::distributed::Vector<number>;
-      using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
-      using VectorizedArrayType = VectorizedArray<number>;
-      using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
-      using vector              = Tensor<1, dim, VectorizedArray<number>>;
-      using scalar              = VectorizedArray<number>;
-
       // clang-format off
       CurvatureOperator( const ScratchData<dim>& scratch_data_in,
                          const double            damping_in,

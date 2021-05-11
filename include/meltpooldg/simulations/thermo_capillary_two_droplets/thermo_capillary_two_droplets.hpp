@@ -3,6 +3,7 @@
 #include <deal.II/base/function.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/tria.h>
 
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
@@ -166,7 +167,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
         {
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (::Triangulation<dim>::none),
+            (Triangulation<dim>::none),
             false,
             parallel::shared::Triangulation<dim>::Settings::partition_metis);
         }

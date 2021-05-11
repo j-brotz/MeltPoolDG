@@ -7,7 +7,6 @@
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 // MeltPoolDG
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>

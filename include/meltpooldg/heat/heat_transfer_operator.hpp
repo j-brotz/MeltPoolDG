@@ -9,9 +9,11 @@
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/tools.h>
 // MeltPoolDG
+#include <meltpooldg/interface/boundaryconditions.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Heat
 {

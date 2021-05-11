@@ -1,100 +1,137 @@
-##
-#  CMake script
-##
+project(MeltPoolDG)
 
-MESSAGE("_________________________________________________________________________________")
-MESSAGE("                                                                                 ")
-MESSAGE("                              MeltPoolDG                                         ")
-MESSAGE("                                                                                 ")
-MESSAGE("_________________________________________________________________________________")
+message("_________________________________________________________________________________")
+message("                                                                                 ")
+message("                              MeltPoolDG                                         ")
+message("                                                                                 ")
+message("_________________________________________________________________________________")
 
-
-# this is the standard deal.II search mechanism, including check for Trilinos and p4est
-cmake_minimum_required(VERSION 3.3)  
+# this is the standard deal.II search mechanism, including check for Trilinos
+# and p4est
+cmake_minimum_required(VERSION 3.3)
 set(CMAKE_CXX_STANDARD 20)
 
-## avoid in-source compilation
+# avoid in-source compilation
 set(DEFAULT_OUT_OF_SOURCE_FOLDER "build")
-if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-  message(FATAL_ERROR "In-source builds not allowed. Change to ${DEFAULT_OUT_OF_SOURCE_FOLDER} folder and run then cmake
-     ")
-endif ()
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  message(
+    FATAL_ERROR
+      "In-source builds not allowed. Change to ${DEFAULT_OUT_OF_SOURCE_FOLDER} folder and run then cmake")
+endif()
 
-FIND_PACKAGE(deal.II 9.3 QUIET
-  HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
+# ##############################################################################
+# set default build type
+# ##############################################################################
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+  message("-- Setting to default CMAKE_BUILD_TYPE Debug")
+else()
+  message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# ##############################################################################
+# find deal.II
+# ##############################################################################
+
+find_package(deal.II 9.3 QUIET 
+  HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR})
+if(NOT ${deal.II_FOUND})
+  message(
+    FATAL_ERROR
+      "\n"
+      "*** Could not locate deal.II. ***\n\n"
+      "You may want to either pass a flag -DDEAL_II_DIR=/path/to/deal.II to cmake\n"
+      "or set an environment variable \"DEAL_II_DIR\" that contains this path.")
+endif()
+
+message("-- deal.II found: ${DEAL_II_DIR}")
+
+# ##############################################################################
+# find p4est
+# ##############################################################################
+if(NOT DEAL_II_WITH_P4EST)
+  message(
+    FATAL_ERROR
+      "\nThis library requires a deal.II installation built with support for p4est but it appears to be missing!\n"
   )
-IF(NOT ${deal.II_FOUND})
-  MESSAGE(FATAL_ERROR "\n"
-    "*** Could not locate deal.II. ***\n\n"
-    "You may want to either pass a flag -DDEAL_II_DIR=/path/to/deal.II to cmake\n"
-    "or set an environment variable \"DEAL_II_DIR\" that contains this path."
-    )
-ENDIF()
+endif()
 
-MESSAGE("-- deal.II found: ${DEAL_II_DIR}")
+# ##############################################################################
+# find trilinos
+# ##############################################################################
+if(NOT DEAL_II_WITH_TRILINOS)
+  message(
+    FATAL_ERROR
+      "\nThis library requires a deal.II installation built with support for Trilinos but it appears to be missing!\n"
+  )
+endif()
+deal_ii_initialize_cached_variables()
 
-IF(NOT DEAL_II_WITH_P4EST)
-  MESSAGE(FATAL_ERROR
-    "\nThis library requires a deal.II installation built with support for p4est but it appears to be missing!\n"
-    )
-ENDIF()
-
-IF(NOT DEAL_II_WITH_TRILINOS)
-  MESSAGE(FATAL_ERROR
-    "\nThis library requires a deal.II installation built with support for Trilinos but it appears to be missing!\n"
-    )
-ENDIF()
-
-DEAL_II_INITIALIZE_CACHED_VARIABLES()
-
-# Set the source files to be compiled
-# temporarilly disabled as long as no source files in meltpooldg exists
-SET(TARGET_SRC meltpooldg.cpp)
+# ##############################################################################
+# build meltpooldg library
+# ##############################################################################
+set(libName "meltpooldg")
 
 # Set the include directory and the name of the project
-INCLUDE_DIRECTORIES(include ${CMAKE_CURRENT_BINARY_DIR}/include)
+include_directories(include ${CMAKE_CURRENT_BINARY_DIR}/include)
 
-PROJECT(MeltPoolDG)
+file(GLOB_RECURSE sources "${CMAKE_SOURCE_DIR}/include/*.hpp"
+     "${CMAKE_SOURCE_DIR}/source/*.cpp" "${CMAKE_SOURCE_DIR}/source/**/*.cpp")
 
-SET(projectName "meltpooldg")
+add_library(${libName} STATIC ${sources})
 
-message("-- building project: ${CMAKE_PROJECT_NAME}")
-ADD_EXECUTABLE(${projectName} 
-                meltpooldg.cpp)
+deal_ii_setup_target(${libName})
 
-FIND_LIBRARY(ADAFLO adaflo HINTS ${ADAFLO_LIB})
-IF(ADAFLO)
-  MESSAGE("-- Adaflo found: ${ADAFLO}") 
-  TARGET_COMPILE_DEFINITIONS(${projectName} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
-  TARGET_INCLUDE_DIRECTORIES(${projectName} PUBLIC ${ADAFLO_INCLUDE})
-  TARGET_LINK_LIBRARIES(${projectName} ${ADAFLO})
-  SET(DEAL_II_WITH_ADAFLO_SUPPORT ON )
-ENDIF()
+# ##############################################################################
+# create executable
+# ##############################################################################
+
+set(projectName "meltpooldg-temp")
+
+message("-- building executable: meltpooldg")
+add_executable(${projectName} meltpooldg.cpp)
+deal_ii_setup_target(${projectName})
+
+target_link_libraries(${projectName} ${libName})
+# rename executable to meltpooldg
+set_target_properties(${projectName} PROPERTIES OUTPUT_NAME ${libName})
+
+# ##############################################################################
+# link to adaflo (optional)
+# ##############################################################################
+
+find_library(ADAFLO adaflo HINTS ${ADAFLO_LIB})
+if(ADAFLO)
+  message("-- Adaflo found: ${ADAFLO}")
+  target_compile_definitions(${projectName} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
+  target_include_directories(${projectName} PUBLIC ${ADAFLO_INCLUDE})
+  target_link_libraries(${projectName} ${ADAFLO})
+  set(DEAL_II_WITH_ADAFLO_SUPPORT ON)
+endif()
 
 # Define custom targets to easily switch the build type:
-ADD_CUSTOM_TARGET(debug
+add_custom_target(
+  debug
   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
-  COMMENT "Switch CMAKE_BUILD_TYPE to Debug\nPlease call 'make' to build the debug project"
-  )
+  COMMENT
+    "Switch CMAKE_BUILD_TYPE to Debug\nPlease call 'make' to build the debug project"
+)
 
-ADD_CUSTOM_TARGET(release
+add_custom_target(
+  release
   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
-  COMMENT "Switch CMAKE_BUILD_TYPE to Release\nPlease call 'make' to build the release project"
-  )
+  COMMENT
+    "Switch CMAKE_BUILD_TYPE to Release\nPlease call 'make' to build the release project"
+)
 
-DEAL_II_INITIALIZE_CACHED_VARIABLES()
+if(EXISTS ${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt)
+  set(DEAL_II_HAVE_TESTS_DIRECTORY TRUE)
+endif()
 
-IF(EXISTS ${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt)
-  SET(DEAL_II_HAVE_TESTS_DIRECTORY TRUE)
-ENDIF()
-
-
-DEAL_II_SETUP_TARGET(${projectName})
-
-#tests
-SET(_n_tests "0")
+# tests
+set(_n_tests "0")
 enable_testing()
-ADD_SUBDIRECTORY(tests)
-ADD_SUBDIRECTORY(unit_tests)
-
-
+add_subdirectory(tests)
+add_subdirectory(unit_tests)

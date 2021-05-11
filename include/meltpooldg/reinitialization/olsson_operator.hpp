@@ -4,6 +4,9 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 // MeltPoolDG
@@ -33,7 +36,7 @@ namespace MeltPoolDG
 
     public:
       OlssonOperator(const ScratchData<dim> &scratch_data_in,
-                     const BlockVectorType & n_in,
+                     BlockVectorType &       n_in,
                      const double &          constant_epsilon,
                      const double &          eps_scale_factor,
                      const unsigned int      dof_idx_in,
@@ -287,22 +290,22 @@ namespace MeltPoolDG
       void
       set_normal_vector_field(const BlockVectorType &normal_vector)
       {
-        this->normal_vec.reinit(dim);
+        normal_vec.reinit(dim);
         for (unsigned int d = 0; d < dim; ++d)
           {
             scratch_data.initialize_dof_vector(this->normal_vec.block(d), this->dof_idx);
-            this->normal_vec.block(d).copy_locally_owned_data_from(normal_vector.block(d));
+            normal_vec.block(d).copy_locally_owned_data_from(normal_vector.block(d));
           }
-        this->normal_vec.update_ghost_values();
+        normal_vec.update_ghost_values();
       }
 
     private:
       const ScratchData<dim> &scratch_data;
 
-      double                 eps = -1.0;
-      double                 eps_scale_factor;
-      const BlockVectorType &normal_vec;
-      const double           tolerance_normal_vector;
+      double           eps = -1.0;
+      double           eps_scale_factor;
+      BlockVectorType &normal_vec;
+      const double     tolerance_normal_vector;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG

@@ -1,6 +1,8 @@
 #pragma once
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/interface/scratch_data.hpp>
+
 namespace dealii
 {
   template <typename Number, std::size_t N>

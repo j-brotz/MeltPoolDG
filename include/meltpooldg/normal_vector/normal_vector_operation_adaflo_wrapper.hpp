@@ -16,6 +16,7 @@
 #  include <meltpooldg/interface/parameters.hpp>
 #  include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
 #  include <meltpooldg/utilities/utilityfunctions.hpp>
+#  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/block_matrix_extension.h>
 #  include <adaflo/level_set_okz_compute_normal.h>
@@ -132,10 +133,11 @@ namespace MeltPoolDG
         for (unsigned int d = 0; d < dim; ++d)
           scratch_data.get_pcout(0)
             << " |n|_" << d << "=" << std::setw(15) << std::setprecision(10) << std::left
-            << VectorTools::compute_L2_norm<dim>(get_solution_normal_vector().block(d),
-                                                 scratch_data,
-                                                 normal_vec_adaflo_params.dof_index_normal,
-                                                 normal_vec_adaflo_params.quad_index)
+            << MeltPoolDG::VectorTools::compute_L2_norm<dim>(
+                 get_solution_normal_vector().block(d),
+                 scratch_data,
+                 normal_vec_adaflo_params.dof_index_normal,
+                 normal_vec_adaflo_params.quad_index)
             << " ";
 
         scratch_data.get_pcout(1) << std::endl;
