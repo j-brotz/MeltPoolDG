@@ -140,8 +140,9 @@ namespace MeltPoolDG::Heat
       temperature_old = temperature;
 
       const auto create_rhs = [&](VectorType &rhs) {
-        heat_operator->create_rhs_and_apply_dirichlet_mf(
-          rhs, temperature_old, scratch_data, temp_dof_idx, temp_hanging_nodes_dof_idx);
+        // solely homogeneous dirichlet bc are distributed for the
+        // corrected temperature field in the newton solver
+        heat_operator->create_rhs(rhs, temperature_old);
       };
 
       const auto solve_linear_system = [&](VectorType &      solution_update,
