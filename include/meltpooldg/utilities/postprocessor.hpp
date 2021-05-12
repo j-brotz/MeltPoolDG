@@ -11,6 +11,8 @@
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/table_handler.h>
 
+#include <meltpooldg/utilities/utilityfunctions.hpp>
+
 #include <filesystem>
 
 using namespace dealii;
@@ -19,6 +21,9 @@ using namespace dealii;
 
 namespace MeltPoolDG
 {
+  template <int dim>
+  using GenericDataOut = DataOut<dim>; // TODO[PM]: create a new class
+
   template <int dim>
   class Postprocessor
   {
@@ -34,8 +39,6 @@ namespace MeltPoolDG
     const Triangulation<dim> &  triangulation;
     ConditionalOStream          pcout;
     bool                        do_simplex;
-
-    DataOut<dim> data_out;
 
     std::vector<std::pair<double, std::string>> times_and_names;
 
@@ -73,11 +76,13 @@ namespace MeltPoolDG
             const double                               time           = -1.0,
             const std::function<void()> &              post_operation = {})
     {
+      GenericDataOut<dim> data_out;
+
       if ((pv_data.do_output) && !(n_time_step % pv_data.write_frequency))
         {
           attach_output_vectors(data_out);
 
-          write_paraview_files(n_time_step, time);
+          write_paraview_files(n_time_step, time, data_out);
 
           if (pv_data.print_boundary_id)
             print_boundary_ids();
@@ -85,14 +90,16 @@ namespace MeltPoolDG
 
       if (post_operation)
         post_operation();
-
-      data_out.clear();
     }
 
   private:
     void
-    write_paraview_files(const unsigned int n_time_step, const double time)
+    write_paraview_files(const unsigned int   n_time_step,
+                         const double         time,
+                         GenericDataOut<dim> &data_out)
     {
+      // TODO[PM]: convert GenericDataOut to DatOut
+
       DataOutBase::VtkFlags flags;
       if ((do_simplex == false) && (dim > 1))
         flags.write_higher_order_cells = true;

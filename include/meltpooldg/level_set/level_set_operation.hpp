@@ -381,7 +381,7 @@ namespace MeltPoolDG
       }
 
       void
-      attach_output_vectors(DataOut<dim> &data_out) const
+      attach_output_vectors(GenericDataOut<dim> &data_out) const
       {
         MeltPoolDG::VectorTools::update_ghost_values(get_level_set(),
                                                      get_curvature(),
