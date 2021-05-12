@@ -1,4 +1,5 @@
 #pragma once
+// clang-format off
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/table_handler.h>
 
@@ -19,6 +20,7 @@
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 #include <filesystem>
+// clang-format on
 
 using namespace dealii;
 
