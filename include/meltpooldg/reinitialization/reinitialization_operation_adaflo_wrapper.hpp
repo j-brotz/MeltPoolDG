@@ -190,14 +190,16 @@ namespace MeltPoolDG
       attach_output_vectors(DataOut<dim> &data_out) const
       {
         get_level_set().update_ghost_values();
-        data_out.attach_dof_handler(
-          scratch_data.get_dof_handler(reinit_params_adaflo.dof_index_ls));
-        data_out.add_data_vector(get_level_set(), "psi");
+        data_out.add_data_vector(scratch_data.get_dof_handler(reinit_params_adaflo.dof_index_ls),
+                                 get_level_set(),
+                                 "psi");
 
         //@todo: attach_output_vectors from normal_vector_operation
         get_normal_vector().update_ghost_values();
         for (unsigned int d = 0; d < dim; ++d)
-          data_out.add_data_vector(get_normal_vector().block(d), "normal_" + std::to_string(d));
+          data_out.add_data_vector(scratch_data.get_dof_handler(reinit_params_adaflo.dof_index_ls),
+                                   get_normal_vector().block(d),
+                                   "normal_" + std::to_string(d));
       }
 
       void
