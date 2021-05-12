@@ -3,6 +3,7 @@
  * Author: Magdalena Schreter, TUM, March 2021
  *
  * ---------------------------------------------------------------------*/
+#pragma once
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/interface/parameters.hpp>

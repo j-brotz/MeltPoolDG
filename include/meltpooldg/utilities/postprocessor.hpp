@@ -1,5 +1,4 @@
 #pragma once
-// for distributed vectors/matrices
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/table_handler.h>
 
