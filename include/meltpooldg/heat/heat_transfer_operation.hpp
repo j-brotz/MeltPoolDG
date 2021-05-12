@@ -232,7 +232,7 @@ namespace MeltPoolDG::Heat
     }
 
     void
-    attach_output_vectors(DataOut<dim> &data_out) const
+    attach_output_vectors(GenericDataOut<dim> &data_out) const
     {
       MeltPoolDG::VectorTools::update_ghost_values(temperature, temperature_old, heat_source);
       if (velocity)

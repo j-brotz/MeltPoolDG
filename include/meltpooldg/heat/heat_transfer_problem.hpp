@@ -324,7 +324,7 @@ namespace MeltPoolDG::Heat
       /**
        * collect all relevant output data
        */
-      const auto attach_output_vectors = [&](DataOut<dim> &data_out) {
+      const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
         heat_operation->attach_output_vectors(data_out);
       };
       /**

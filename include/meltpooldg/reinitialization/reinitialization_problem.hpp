@@ -305,7 +305,7 @@ namespace MeltPoolDG
       {
         post_processor->process(
           time_step,
-          [&](DataOut<dim> &data_out) { reinit_operation->attach_output_vectors(data_out); },
+          [&](GenericDataOut<dim> &data_out) { reinit_operation->attach_output_vectors(data_out); },
           time);
       }
 

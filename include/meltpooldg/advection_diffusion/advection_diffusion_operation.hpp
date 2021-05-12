@@ -188,7 +188,7 @@ namespace MeltPoolDG
       }
 
       void
-      attach_output_vectors(DataOut<dim> &data_out) const
+      attach_output_vectors(GenericDataOut<dim> &data_out) const
       {
         solution_advected_field.update_ghost_values();
         data_out.add_data_vector(scratch_data->get_dof_handler(advec_diff_dof_idx),
