@@ -8,8 +8,11 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <deal.II/numerics/data_out.h>
+
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/heat/heat_transfer_preconditioner.hpp>
+#include <meltpooldg/utilities/linearsolve.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

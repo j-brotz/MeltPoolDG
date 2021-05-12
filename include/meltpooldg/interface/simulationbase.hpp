@@ -3,6 +3,8 @@
 #include <deal.II/base/exceptions.h>
 
 #include <deal.II/distributed/tria.h>
+
+#include <deal.II/grid/grid_tools.h>
 // MeltPoolDG
 #include <meltpooldg/interface/boundaryconditions.hpp>
 #include <meltpooldg/interface/fieldconditions.hpp>

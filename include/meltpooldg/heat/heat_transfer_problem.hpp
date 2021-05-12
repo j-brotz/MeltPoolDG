@@ -4,8 +4,23 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/distributed/grid_refinement.h>
+
+#include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_simplex_p.h>
+#include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/mapping.h>
+#include <deal.II/fe/mapping_fe.h>
+
+#include <deal.II/numerics/error_estimator.h>
+
+#include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/interface/problembase.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/postprocessor.hpp>
+#include <meltpooldg/utilities/timeiterator.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Heat
 {

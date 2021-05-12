@@ -6,6 +6,7 @@
 #pragma once
 // for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/matrix_free/fe_evaluation.h>

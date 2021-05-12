@@ -124,7 +124,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
         {
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
-            (::Triangulation<dim>::none),
+            (Triangulation<dim>::none),
             false,
             parallel::shared::Triangulation<dim>::Settings::partition_metis);
         }

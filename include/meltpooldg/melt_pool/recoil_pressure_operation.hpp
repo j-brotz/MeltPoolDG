@@ -6,6 +6,7 @@
 #pragma once
 // MeltPoolDG
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/interface/scratch_data.hpp>
 
 namespace MeltPoolDG::MeltPool
 {

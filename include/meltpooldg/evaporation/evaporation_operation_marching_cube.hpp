@@ -5,6 +5,9 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
+
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO

@@ -13,6 +13,8 @@
 //// for distributed triangulation
 #include <deal.II/distributed/tria_base.h>
 // for dof_handler type
+#include <deal.II/distributed/grid_refinement.h>
+
 #include <deal.II/dofs/dof_handler.h>
 // for data_out
 #include <deal.II/base/data_out_base.h>
@@ -20,16 +22,21 @@
 #include <deal.II/numerics/data_out.h>
 // for FE_Q<dim> type
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_system.h>
 // for mapping
+#include <deal.II/fe/fe_simplex_p.h>
 #include <deal.II/fe/mapping.h>
+#include <deal.II/fe/mapping_fe.h>
 
 #include <deal.II/grid/grid_out.h>
 // MeltPoolDG
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/interface/problembase.hpp>
+#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/timeiterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

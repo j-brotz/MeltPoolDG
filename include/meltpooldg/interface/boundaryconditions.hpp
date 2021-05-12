@@ -9,6 +9,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 
 namespace MeltPoolDG
 {
@@ -67,13 +68,13 @@ namespace MeltPoolDG
         return BoundaryTypes::convection_bc;
       else
         {
-          AssertThrow(false, ExcMessage("for specified boundary_id: " + std::string(id)));
+          AssertThrow(false, ExcMessage("for specified boundary_id: " + std::to_string(id)));
           return BoundaryTypes::undefined;
         }
     }
 
     void
-    verify_boundaries(const unsigned int &total_number_of_bc)
+    verify_boundaries([[maybe_unused]] const unsigned int &total_number_of_bc)
     {
       // @todo: add a procedure to verify if boundary conditions are set correctly
       AssertThrow(

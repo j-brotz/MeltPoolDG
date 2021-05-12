@@ -8,13 +8,16 @@
 #include <deal.II/base/data_out_base.h>
 #include <deal.II/base/index_set.h>
 
+#include <deal.II/distributed/grid_refinement.h>
 #include <deal.II/distributed/tria_base.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_tools.h>
+#include <deal.II/fe/fe_simplex_p.h>
+#include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/mapping.h>
+#include <deal.II/fe/mapping_fe.h>
 
 #include <deal.II/grid/grid_out.h>
 
@@ -31,6 +34,7 @@
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/melt_pool/melt_pool_operation.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/timeiterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

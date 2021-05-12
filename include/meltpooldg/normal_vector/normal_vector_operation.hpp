@@ -6,8 +6,6 @@
 #pragma once
 // for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
-// for using smart pointers
-#include <deal.II/base/smartpointer.h>
 
 // MeltPoolDG
 #include <meltpooldg/interface/operator_base.hpp>
@@ -15,6 +13,7 @@
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/linearsolve.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG
 {
@@ -123,10 +122,10 @@ namespace MeltPoolDG
         pcout << " \t";
         for (unsigned int d = 0; d < dim; ++d)
           pcout << " |n_" << d << "| = " << std::setprecision(11) << std::setw(15) << std::left
-                << VectorTools::compute_L2_norm<dim>(solution_normal_vector.block(d),
-                                                     *scratch_data,
-                                                     normal_dof_idx,
-                                                     normal_quad_idx)
+                << MeltPoolDG::VectorTools::compute_L2_norm<dim>(solution_normal_vector.block(d),
+                                                                 *scratch_data,
+                                                                 normal_dof_idx,
+                                                                 normal_quad_idx)
                 << " ";
         pcout << std::endl;
       }
