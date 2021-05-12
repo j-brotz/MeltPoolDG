@@ -184,11 +184,12 @@ namespace MeltPoolDG
       }
 
       void
-      attach_output_vectors(DataOut<dim> &data_out) const
+      attach_output_vectors(GenericDataOut<dim> &data_out) const
       {
         advected_field.update_ghost_values();
-        data_out.attach_dof_handler(scratch_data.get_dof_handler(adaflo_params.dof_index_ls));
-        data_out.add_data_vector(advected_field, "advected_field");
+        data_out.add_data_vector(scratch_data.get_dof_handler(adaflo_params.dof_index_ls),
+                                 advected_field,
+                                 "advected_field");
       }
 
       const LinearAlgebra::distributed::Vector<double> &

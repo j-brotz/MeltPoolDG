@@ -383,7 +383,7 @@ namespace MeltPoolDG
       }
 
       void
-      attach_output_vectors(DataOut<dim> &data_out) const
+      attach_output_vectors(GenericDataOut<dim> &data_out) const
       {
         MeltPoolDG::VectorTools::update_ghost_values(get_level_set(),
                                                      get_curvature(),
@@ -393,26 +393,35 @@ namespace MeltPoolDG
         /*
          *  output advected field
          */
-        data_out.attach_dof_handler(scratch_data->get_dof_handler(ls_dof_idx));
-        data_out.add_data_vector(get_level_set(), "level_set");
+        data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+                                 get_level_set(),
+                                 "level_set");
 
         /*
          *  output normal vector field
          */
         for (unsigned int d = 0; d < dim; ++d)
-          data_out.add_data_vector(get_normal_vector().block(d), "normal_" + std::to_string(d));
+          data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+                                   get_normal_vector().block(d),
+                                   "normal_" + std::to_string(d));
         /*
          *  output curvature
          */
-        data_out.add_data_vector(get_curvature(), "curvature");
+        data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+                                 get_curvature(),
+                                 "curvature");
         /*
          *  output heaviside
          */
-        data_out.add_data_vector(level_set_as_heaviside, "heaviside");
+        data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+                                 level_set_as_heaviside,
+                                 "heaviside");
         /*
          *  output distance function
          */
-        data_out.add_data_vector(distance_to_level_set, "distance");
+        data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+                                 distance_to_level_set,
+                                 "distance");
       }
       void
       do_reinitialization()

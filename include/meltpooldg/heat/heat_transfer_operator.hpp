@@ -662,7 +662,8 @@ namespace MeltPoolDG::Heat
       for (unsigned int face = face_range.first; face < face_range.second; face++)
         {
           dQ_dT.reinit(face);
-          dQ_dT.gather_evaluate(temperature, true, false);
+          dQ_dT.read_dof_values_plain(temperature);
+          dQ_dT.evaluate(true, false);
 
           const types::boundary_id bc_index = matrix_free.get_boundary_id(face);
 

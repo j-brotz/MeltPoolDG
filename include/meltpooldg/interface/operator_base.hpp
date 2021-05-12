@@ -107,21 +107,31 @@ namespace MeltPoolDG
                                       const unsigned int      dof_no_bc_idx)
     {
       this->reset_indices(dof_no_bc_idx, this->quad_idx);
+
+      DoFVectorType temp_rhs;
+      scratch_data.initialize_dof_vector(temp_rhs, dof_no_bc_idx);
+
+      DoFVectorType temp_src;
+      scratch_data.initialize_dof_vector(temp_src, dof_no_bc_idx);
+      temp_src.copy_locally_owned_data_from(src);
+
       DoFVectorType bc_values;
-      scratch_data.initialize_bc_vector(bc_values, dof_idx);
+      scratch_data.initialize_dof_vector(bc_values, dof_no_bc_idx);
+      scratch_data.get_constraint(dof_idx).distribute(bc_values);
       /*
        * perform matrix-vector multiplication (with unconstrained system and constrained set in
        * Vector)
        */
-      this->vmult(rhs, bc_values);
+      this->vmult(temp_rhs, bc_values);
       /*
        * Modify right-hand side
        */
-      rhs *= -1.0;
-      this->create_rhs(rhs, src);
+      temp_rhs *= -1.0;
+      this->create_rhs(temp_rhs, temp_src);
       /*
        * Clear constrained values
        */
+      rhs.copy_locally_owned_data_from(temp_rhs);
       scratch_data.get_constraint(dof_idx).set_zero(rhs);
       this->reset_indices(dof_idx, this->quad_idx);
     }

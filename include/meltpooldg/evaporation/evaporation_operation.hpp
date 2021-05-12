@@ -514,7 +514,7 @@ namespace MeltPoolDG::Evaporation
     }
 
     void
-    attach_output_vectors(DataOut<dim> &data_out) const
+    attach_output_vectors(GenericDataOut<dim> &data_out) const
     {
       /*
        *  evaporation velocity

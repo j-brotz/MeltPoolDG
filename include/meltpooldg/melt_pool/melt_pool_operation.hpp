@@ -252,7 +252,7 @@ namespace MeltPoolDG
       }
 
       void
-      attach_output_vectors(DataOut<dim> &data_out) const
+      attach_output_vectors(GenericDataOut<dim> &data_out) const
       {
         heat_operation->attach_output_vectors(data_out);
         MeltPoolDG::VectorTools::update_ghost_values(solid, liquid);

@@ -357,7 +357,7 @@ namespace MeltPoolDG
       void
       output_results(const unsigned int time_step, const double time) const
       {
-        const auto attach_output_vectors = [&](DataOut<dim> &data_out) {
+        const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
           level_set_operation.attach_output_vectors(data_out);
           if (evaporation_operation)
             evaporation_operation->attach_output_vectors(data_out);
