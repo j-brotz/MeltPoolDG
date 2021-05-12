@@ -58,6 +58,9 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
+  static constexpr double x_min = 0.0;
+  static constexpr double x_max = 0.1;
+
   /*
    *      This class collects all relevant input data for the level set simulation
    */
@@ -65,15 +68,21 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   class LinearTemp : public Function<dim>
   {
   public:
-    LinearTemp()
+    LinearTemp(const double left_temperature = 0.0, const double right_temperature = 0.1)
       : Function<dim>(1, 0)
+      , left_temp(left_temperature)
+      , right_temp(right_temperature)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      return p[0];
+      return left_temp + (right_temp - left_temp) * (p[0] - x_min) / (x_max - x_min);
     }
+
+  private:
+    const double left_temp;
+    const double right_temp;
   };
 
   template <int dim>
@@ -197,8 +206,11 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     void
     set_field_conditions() final
     {
-      if (this->parameters.heat.emissivity > 0.0 ||
-          this->parameters.heat.convection_coefficient > 0.0)
+      if (this->parameters.heat.solidification)
+        this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(1960.0, 1980.0),
+                                       "heat_transfer");
+      else if (this->parameters.heat.emissivity > 0.0 ||
+               this->parameters.heat.convection_coefficient > 0.0)
         this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
                                        "heat_transfer");
       else
@@ -211,9 +223,5 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       this->template attach_initial_condition(std::make_shared<HorizontalLevelSetHeaviside<dim>>(),
                                               "prescribed_level_set");
     }
-
-  private:
-    const double x_min = 0.0;
-    const double x_max = 0.1;
   };
 } // namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer

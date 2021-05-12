@@ -22,57 +22,67 @@ namespace MeltPoolDG::Heat
    * equation with temperature dependent material properties:
    * ρ^(n) = ρ(T^(n)), c_p^(n) = c_p(T^(n)), k^(n) = k(T^(n))
    *
-   *                    1   /                                                               \
-   *  R(T_b^(n+1)) =   ---  | N_a, ( N_b ρ^(n+1) c_p^(n+1) T_b^(n+1) - ρ^(n) c_p^(n) T^(n)) |
-   *                   dt   \                                                               /
-   *                                                                                         Ω
-   *                 /                                         \
-   *               + | N_a, ρ^(n+1) c_p^(n+1) u ∇N_b T_b^(n+1) |
-   *                 \                                         /
-   *                                                            Ω
-   *                 /                                          \
-   *               + | N_a, ρ^(n+1) c_p^(n+1) N_b T_b^(n+1) ∇·u |    (this term is not yet considered @todo)
-   *                 \                                          /
-   *                                                            Ω
+   *                  1  /                                                               \
+   *  R(T_b^(n+1)) = --- | N_a, ( ρ^(n+1) c_p^(n+1) N_b T_b^(n+1) - ρ^(n) c_p^(n) T^(n)) |
+   *                 dt  \                                                               /
+   *                                                                                      Ω
    *                 /                               \
    *               + | ∇N_a, k^(n+1) ∇N_b T_b^(n+1)) |
    *                 \                               /
    *                                                  Ω
-   *                 /    _   \     /    _  \
-   *               - | w, q_s |  -  | w, q  | = 0
-   *                 \        /     \       /
-   *                           Ω             Γ
-   *                                          N
-   *
-   *
-   *  dR(T^(n+1))    1   /                            \
-   *  ----------- = ---  | N_a, ρ^(n+1) c_p^(n+1) N_b |
-   *  dT_b^(n+1)     dt  \                            /
-   *                                                   Ω
-   *                1   /       d ρ |                            d c_p |                      \
-   *              + --  | N_a, -----| c_p^(n+1) T_b^(n+1) N_b + -------| ρ^(n+1) T_b^(n+1) N_b |
-   *                dt  \       d T |                             d T  |                      /
-   *                                |(n+1)                             |(n+1)                 Ω
-   *                  /                       d k |               \
-   *              +   | ∇N_a, k^(n+1) ∇N_b + -----| T_b^(n+1) ∇N_b |
-   *                  \                       d T |               /
-   *                                              |(n+1)           Ω
    *                 /                                         \
-   *              +  | N_a, ρ^(n+1) c_p^(n+1) ( ∇N_b u + ∇·u ) |
+   *               + | N_a, ρ^(n+1) c_p^(n+1) ∇N_b T_b^(n+1) u |
    *                 \                                         /
    *                                                            Ω
-   *                            _
-   *                 /        d q_s     \
-   *              -  | N_a, ---------   |
-   *                 \       dT_b^(n+1) /
-   *                                     Ω
+   *                 /       d ρ c_p |                                \
+   *               + | N_a, ---------| ∇N_b T_b^(n+1) N_b T_b^(n+1) u |
+   *                 \         d T   |                                /
+   *                                 |(n+1)                            Ω
+   *                 /                                          \
+   *               + | N_a, ρ^(n+1) c_p^(n+1) N_b T_b^(n+1) ∇·u |    (this term is not yet considered @todo)
+   *                 \                                          /
+   *                                                             Ω
+   *                 /      _   \     /      _  \
+   *               - | N_a, q_s |  -  | N_a, q  | = 0
+   *                 \          /     \         /
+   *                             Ω               Γ
+   *                                              N
    *
-   *                            _
-   *                 /        d q       \
-   *              -  | N_a, ---------   |
-   *                 \       dT_b^(n+1) /
-   *                                     Γ
-   *                                      N
+   *
+   *  dR(T^(n+1))    1  /                            \
+   *  ----------- = --- | N_a, ρ^(n+1) c_p^(n+1) N_b |
+   *  dT_b^(n+1)     dt \                            /
+   *                                                  Ω
+   *                1  /       d ρ c_p |                   \
+   *              + -- | N_a, ---------| N_b T_b^(n+1) N_b |
+   *                dt \         d T   |                   /
+   *                                   |(n+1)               Ω
+   *                /                       d k |                    \
+   *              + | ∇N_a, k^(n+1) ∇N_b + -----| N_b T_b^(n+1) ∇N_b |
+   *                \                       d T |                    /
+   *                                            |(n+1)                Ω
+   *                /                                             \
+   *              + | N_a, ρ^(n+1) c_p^(n+1) ( ∇N_b u + N_b ∇·u ) |
+   *                \                                             /
+   *                                                               Ω
+   *                /       d ρ c_p |                                    \
+   *              + | N_a, ---------| N_b T_b^(n+1) ( ∇N_b u + N_b ∇·u ) |
+   *                \         d T   |                                    /
+   *                                |(n+1)                                Ω
+   *                /         d ρ c_p |                      \
+   *              + | N_a, 2 ---------| ∇N_b T_b^(n+1) N_b u |
+   *                \           d T   |                      /
+   *                                  |(n+1)                  Ω
+   *                /       d^2 ρ c_p |                                \
+   *              + | N_a, -----------| ∇N_b T_b^(n+1) N_b T_b^(n+1) u |
+   *                \          d T^2  |                                /
+   *                                  |(n+1)                            Ω
+   *                            _                      _
+   *                /        d q_s     \    /        d q       \
+   *              - | N_a, ---------   |  - | N_a, ---------   |
+   *                \       dT_b^(n+1) /    \       dT_b^(n+1) /
+   *                                    Ω                       Γ
+   *                                                             N
    *
    * with shape functions N_a and N_b, nodal temperature values T_b^(n+1), the density ρ, the
    * specific heat capacity c_p and the conductivity k, source/sink terms q_s and prescribed
@@ -545,6 +555,10 @@ namespace MeltPoolDG::Heat
       VectorizedArrayType conductivity_old = material.first.conductivity;
       VectorizedArrayType density_old      = material.first.density;
 
+      VectorizedArrayType d_capacity_dT     = 0.0;
+      VectorizedArrayType d_conductivity_dT = 0.0;
+      VectorizedArrayType d_density_dT      = 0.0;
+
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
@@ -602,6 +616,8 @@ namespace MeltPoolDG::Heat
                          heat_source_vals.get_value(q_index);
               // todo use old material parameters in case of two phase flow
 
+              auto val_grad = conductivity * temp_vals.get_gradient(q_index);
+
               if (data.solidification)
                 {
                   val -= (density_old * capacity_old - density * capacity) *
@@ -609,8 +625,19 @@ namespace MeltPoolDG::Heat
                 }
 
               if (velocity)
-                val += density * capacity * temp_vals.get_gradient(q_index) *
-                       velocity_vals.get_value(q_index);
+                {
+                  val += density * capacity * temp_vals.get_gradient(q_index) *
+                         velocity_vals.get_value(q_index);
+                }
+
+              if (velocity && data.solidification)
+                {
+                  get_material_parameter_derivatives_with_solidification(
+                    d_capacity_dT, d_conductivity_dT, d_density_dT, temp_vals.get_value(q_index));
+                  val += (d_capacity_dT * density + d_density_dT * capacity) *
+                         temp_vals.get_value(q_index) * temp_vals.get_gradient(q_index) *
+                         velocity_vals.get_value(q_index);
+                }
 
               if (level_set_as_heaviside && evapor_data)
                 {
@@ -629,11 +656,8 @@ namespace MeltPoolDG::Heat
                     0.0);
                 }
 
-              temp_vals.submit_value(-val,
+              temp_vals.submit_value(-1.0 * val,
                                      q_index); // negative sign since residual is moved to rhs
-
-              auto val_grad = conductivity * temp_vals.get_gradient(q_index);
-
               temp_vals.submit_gradient(-1.0 * val_grad,
                                         q_index); // -1 since residual is moved to rhs
             }
@@ -765,6 +789,9 @@ namespace MeltPoolDG::Heat
       VectorizedArrayType d_conductivity_dT = 0.0;
       VectorizedArrayType d_density_dT      = 0.0;
 
+      VectorizedArrayType d2_capacity_dT2 = 0.0;
+      VectorizedArrayType d2_density_dT2  = 0.0;
+
       temp_vals.evaluate(true, true);
 
       if (do_reinit_cells)
@@ -810,13 +837,13 @@ namespace MeltPoolDG::Heat
 
           auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
 
+          auto val_grad = conductivity * temp_vals.get_gradient(q_index);
+
           if (velocity)
             {
               val += density * capacity * temp_vals.get_gradient(q_index) *
                      velocity_vals.get_value(q_index);
             }
-
-          auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
           if (data.solidification)
             {
@@ -825,6 +852,20 @@ namespace MeltPoolDG::Heat
               val += (d_capacity_dT * density + d_density_dT * capacity) *
                      temp_lin_vals.get_value(q_index) * this->d_tau_inv *
                      temp_vals.get_value(q_index);
+            }
+
+          if (velocity && data.solidification)
+            {
+              get_material_parameter_second_derivatives_with_solidification(
+                d2_capacity_dT2, d2_density_dT2, temp_lin_vals.get_value(q_index));
+              val += (d_capacity_dT * density + d_density_dT * capacity) *
+                     (2.0 * temp_lin_vals.get_value(q_index) * temp_vals.get_gradient(q_index) +
+                      temp_vals.get_value(q_index) * temp_lin_vals.get_gradient(q_index)) *
+                     velocity_vals.get_value(q_index);
+              val += (d2_capacity_dT2 * density + 2.0 * d_capacity_dT * d_density_dT +
+                      d2_density_dT2 * capacity) *
+                     temp_lin_vals.get_value(q_index) * temp_lin_vals.get_gradient(q_index) *
+                     velocity_vals.get_value(q_index) * temp_vals.get_value(q_index);
             }
 
           if (level_set_as_heaviside && evapor_data)
@@ -965,6 +1006,22 @@ namespace MeltPoolDG::Heat
         (material.second.density - material.solid.density) /
         (material.liquidus_temperature - material.solidus_temperature);
       d_density_dT = is_in_mushy_zone * mushy_zone_density_derivative;
+    }
+
+    /*
+     * Determine second derivatives of the material parameters (capacity and density) with
+     * respect to the temperature for solidification/melting.
+     */
+    void
+    get_material_parameter_second_derivatives_with_solidification(
+      VectorizedArrayType &      d2_capacity_dT2,
+      VectorizedArrayType &      d2_density_dT2,
+      const VectorizedArrayType &temperature) const
+    {
+      // TODO no second derivatives yet
+      (void)temperature;
+      d2_capacity_dT2 = 0.0;
+      d2_density_dT2  = 0.0;
     }
 
     void
