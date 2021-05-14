@@ -781,7 +781,7 @@ namespace MeltPoolDG
     /**
      * Return the exponent to the power of ten of an expression like 5*10^5 --> return 5
      */
-    int
+    inline int
     get_exponent_power_ten(const double x)
     {
       if (x >= 1e-16) // positive number
