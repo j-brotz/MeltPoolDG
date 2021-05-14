@@ -80,7 +80,7 @@ include_directories(include ${CMAKE_CURRENT_BINARY_DIR}/include)
 file(GLOB_RECURSE sources "${CMAKE_SOURCE_DIR}/include/*.hpp"
      "${CMAKE_SOURCE_DIR}/source/*.cpp" "${CMAKE_SOURCE_DIR}/source/**/*.cpp")
 
-add_library(${libName} STATIC ${sources})
+add_library(${libName} ${sources})
 
 deal_ii_setup_target(${libName})
 
