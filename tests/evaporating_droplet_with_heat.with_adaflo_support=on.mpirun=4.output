@@ -19,7 +19,7 @@ t= 0.001      	 |n_0| = 2.9128173104     |n_1| = 2.9128172774
  	 |n_0| = 2.913082209      |n_1| = 2.9130820986    
 |k| = 0.77617077114   
     | two phase flow: total mass = 0.28435149909
-Newton Raphson solver converged: ||solution|| = 0.14967288655
+Newton Raphson solver converged: ||solution|| = 1.49673e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -39,7 +39,7 @@ t= 0.002      	 |n_0| = 2.913082209      |n_1| = 2.9130820986
  	 |n_0| = 2.9134564694     |n_1| = 2.9134564595    
 |k| = 0.77612388982   
     | two phase flow: total mass = 0.28433092568
-Newton Raphson solver converged: ||solution|| = 0.17087643435
+Newton Raphson solver converged: ||solution|| = 1.70876e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -59,7 +59,7 @@ t= 0.003      	 |n_0| = 2.9134564694     |n_1| = 2.9134564595
  	 |n_0| = 2.9136494552     |n_1| = 2.913649568     
 |k| = 0.77609423284   
     | two phase flow: total mass = 0.28427986781
-Newton Raphson solver converged: ||solution|| = 0.18815623798
+Newton Raphson solver converged: ||solution|| = 1.88156e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -79,7 +79,7 @@ t= 0.004      	 |n_0| = 2.9136494552     |n_1| = 2.913649568
  	 |n_0| = 2.913665888      |n_1| = 2.9136659089    
 |k| = 0.7760777355    
     | two phase flow: total mass = 0.28420924939
-Newton Raphson solver converged: ||solution|| = 0.20218935265
+Newton Raphson solver converged: ||solution|| = 2.02189e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -99,7 +99,7 @@ t= 0.005      	 |n_0| = 2.913665888      |n_1| = 2.9136659089
  	 |n_0| = 2.9135943129     |n_1| = 2.9135944023    
 |k| = 0.7760567804    
     | two phase flow: total mass = 0.28412332807
-Newton Raphson solver converged: ||solution|| = 0.21395958971
+Newton Raphson solver converged: ||solution|| = 2.13960e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -119,7 +119,7 @@ t= 0.006      	 |n_0| = 2.9135943129     |n_1| = 2.9135944023
  	 |n_0| = 2.9134607969     |n_1| = 2.9134606707    
 |k| = 0.77603083162   
     | two phase flow: total mass = 0.28402194911
-Newton Raphson solver converged: ||solution|| = 0.22412235087
+Newton Raphson solver converged: ||solution|| = 2.24122e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -139,7 +139,7 @@ t= 0.007      	 |n_0| = 2.9134607969     |n_1| = 2.9134606707
  	 |n_0| = 2.9132581871     |n_1| = 2.9132581314    
 |k| = 0.77600265063   
     | two phase flow: total mass = 0.28390537733
-Newton Raphson solver converged: ||solution|| = 0.23309512643
+Newton Raphson solver converged: ||solution|| = 2.33095e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -159,7 +159,7 @@ t= 0.008      	 |n_0| = 2.9132581871     |n_1| = 2.9132581314
  	 |n_0| = 2.9129930015     |n_1| = 2.9129928836    
 |k| = 0.77597258851   
     | two phase flow: total mass = 0.2837742832
-Newton Raphson solver converged: ||solution|| = 0.24115233852
+Newton Raphson solver converged: ||solution|| = 2.41152e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -179,7 +179,7 @@ t= 0.009      	 |n_0| = 2.9129930015     |n_1| = 2.9129928836
  	 |n_0| = 2.9126933475     |n_1| = 2.9126934032    
 |k| = 0.77593617336   
     | two phase flow: total mass = 0.28362682453
-Newton Raphson solver converged: ||solution|| = 0.24848212304
+Newton Raphson solver converged: ||solution|| = 2.48482e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -199,7 +199,7 @@ t= 0.01       	 |n_0| = 2.9126933475     |n_1| = 2.9126934032
  	 |n_0| = 2.9123365136     |n_1| = 2.9123366317    
 |k| = 0.77589577954   
     | two phase flow: total mass = 0.28346171902
-Newton Raphson solver converged: ||solution|| = 0.25521849115
+Newton Raphson solver converged: ||solution|| = 2.55218e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -219,7 +219,7 @@ t= 0.011      	 |n_0| = 2.9123365136     |n_1| = 2.9123366317
  	 |n_0| = 2.9119086783     |n_1| = 2.9119087466    
 |k| = 0.77585221826   
     | two phase flow: total mass = 0.28327968959
-Newton Raphson solver converged: ||solution|| = 0.26146023876
+Newton Raphson solver converged: ||solution|| = 2.61460e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -239,7 +239,7 @@ t= 0.012      	 |n_0| = 2.9119086783     |n_1| = 2.9119087466
  	 |n_0| = 2.9114072183     |n_1| = 2.9114071457    
 |k| = 0.77580652423   
     | two phase flow: total mass = 0.28308218773
-Newton Raphson solver converged: ||solution|| = 0.26728216582
+Newton Raphson solver converged: ||solution|| = 2.67282e-01
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -259,9 +259,9 @@ t= 0.013      	 |n_0| = 2.9114072183     |n_1| = 2.9114071457
  	 |n_0| = 2.9108424332     |n_1| = 2.9108423896    
 |k| = 0.77575912593   
     | two phase flow: total mass = 0.28286995293
-Newton Raphson solver converged: ||solution|| = 0.272742327
-    | evaporation: jump in the velocity field = -4.070081406e-10
-    | evapor: |m|2 = 7.9759109921e-11
+Newton Raphson solver converged: ||solution|| = 2.72742e-01
+    | evaporation: jump in the velocity field = -4.0701e-10
+    | evapor: |m|2 = 7.9759e-11
 
 Time step #13, advancing from t_n-1 = 0.012 to t = 0.013 (dt = 0.001). 
   Residual/iterations: [1.35e-06/14] [3.41e-10/conv.]
@@ -279,9 +279,9 @@ t= 0.014      	 |n_0| = 2.9108424332     |n_1| = 2.9108423896
  	 |n_0| = 2.9102441905     |n_1| = 2.9102442078    
 |k| = 0.77570481324   
     | two phase flow: total mass = 0.28263948586
-Newton Raphson solver converged: ||solution|| = 0.27788671116
-    | evaporation: jump in the velocity field = -3.0682771588e-09
-    | evapor: |m|2 = 6.1773931661e-10
+Newton Raphson solver converged: ||solution|| = 2.77887e-01
+    | evaporation: jump in the velocity field = -3.0683e-09
+    | evapor: |m|2 = 6.1774e-10
 
 Time step #14, advancing from t_n-1 = 0.013 to t = 0.014 (dt = 0.001). 
   Residual/iterations: [1.32e-06/14] [3.2e-10/conv.]
@@ -299,9 +299,9 @@ t= 0.015      	 |n_0| = 2.9102441905     |n_1| = 2.9102442078
  	 |n_0| = 2.9095851827     |n_1| = 2.9095852934    
 |k| = 0.77564555365   
     | two phase flow: total mass = 0.2823894754
-Newton Raphson solver converged: ||solution|| = 0.28275236031
-    | evaporation: jump in the velocity field = -3.8137121093e-09
-    | evapor: |m|2 = 7.8099369417e-10
+Newton Raphson solver converged: ||solution|| = 2.82752e-01
+    | evaporation: jump in the velocity field = -3.8137e-09
+    | evapor: |m|2 = 7.8099e-10
 
 Time step #15, advancing from t_n-1 = 0.014 to t = 0.015 (dt = 0.001). 
   Residual/iterations: [1.32e-06/14] [3.32e-10/conv.]
@@ -319,9 +319,9 @@ t= 0.016      	 |n_0| = 2.9095851827     |n_1| = 2.9095852934
  	 |n_0| = 2.9088520855     |n_1| = 2.90885208      
 |k| = 0.7755819821    
     | two phase flow: total mass = 0.28212056059
-Newton Raphson solver converged: ||solution|| = 0.2873696176
-    | evaporation: jump in the velocity field = -3.3797940795e-09
-    | evapor: |m|2 = 7.0834127206e-10
+Newton Raphson solver converged: ||solution|| = 2.87370e-01
+    | evaporation: jump in the velocity field = -3.3798e-09
+    | evapor: |m|2 = 7.0834e-10
 
 Time step #16, advancing from t_n-1 = 0.015 to t = 0.016 (dt = 0.001). 
   Residual/iterations: [1.3e-06/ILU/14] [3.11e-10/conv.]
@@ -339,9 +339,9 @@ t= 0.017      	 |n_0| = 2.9088520855     |n_1| = 2.90885208
  	 |n_0| = 2.9080417958     |n_1| = 2.9080419975    
 |k| = 0.77551508589   
     | two phase flow: total mass = 0.28183391723
-Newton Raphson solver converged: ||solution|| = 0.29176368848
-    | evaporation: jump in the velocity field = -2.4149473471e-09
-    | evapor: |m|2 = 5.2295048778e-10
+Newton Raphson solver converged: ||solution|| = 2.91764e-01
+    | evaporation: jump in the velocity field = -2.4149e-09
+    | evapor: |m|2 = 5.2295e-10
 
 Time step #17, advancing from t_n-1 = 0.016 to t = 0.017 (dt = 0.001). 
   Residual/iterations: [1.26e-06/14] [2.93e-10/conv.]
@@ -359,9 +359,9 @@ t= 0.018      	 |n_0| = 2.9080417958     |n_1| = 2.9080419975
  	 |n_0| = 2.9071574618     |n_1| = 2.9071575149    
 |k| = 0.77544536571   
     | two phase flow: total mass = 0.28153078882
-Newton Raphson solver converged: ||solution|| = 0.29595571338
-    | evaporation: jump in the velocity field = -1.407412808e-09
-    | evapor: |m|2 = 3.1874308658e-10
+Newton Raphson solver converged: ||solution|| = 2.95956e-01
+    | evaporation: jump in the velocity field = -1.4074e-09
+    | evapor: |m|2 = 3.1874e-10
 
 Time step #18, advancing from t_n-1 = 0.017 to t = 0.018 (dt = 0.001). 
   Residual/iterations: [1.22e-06/14] [2.74e-10/conv.]
@@ -379,9 +379,9 @@ t= 0.019      	 |n_0| = 2.9071574618     |n_1| = 2.9071575149
  	 |n_0| = 2.9062033292     |n_1| = 2.9062034571    
 |k| = 0.77537366319   
     | two phase flow: total mass = 0.28121234154
-Newton Raphson solver converged: ||solution|| = 0.29996369995
-    | evaporation: jump in the velocity field = -6.4694337293e-10
-    | evapor: |m|2 = 1.5393501565e-10
+Newton Raphson solver converged: ||solution|| = 2.99964e-01
+    | evaporation: jump in the velocity field = -6.4694e-10
+    | evapor: |m|2 = 1.5394e-10
 
 Time step #19, advancing from t_n-1 = 0.018 to t = 0.019 (dt = 0.001). 
   Residual/iterations: [1.17e-06/14] [2.56e-10/conv.]
@@ -399,9 +399,9 @@ t= 0.02       	 |n_0| = 2.9062033292     |n_1| = 2.9062034571
  	 |n_0| = 2.9051929511     |n_1| = 2.9051928399    
 |k| = 0.77530121205   
     | two phase flow: total mass = 0.28087853132
-Newton Raphson solver converged: ||solution|| = 0.3038030894
-    | evaporation: jump in the velocity field = -1.492199911e-08
-    | evapor: |m|2 = 2.4940500206e-09
+Newton Raphson solver converged: ||solution|| = 3.03803e-01
+    | evaporation: jump in the velocity field = -1.4922e-08
+    | evapor: |m|2 = 2.4941e-09
 
 Time step #20, advancing from t_n-1 = 0.019 to t = 0.02 (dt = 0.001). 
   Residual/iterations: [1.12e-06/13] [4.8e-10/conv.]
@@ -419,9 +419,9 @@ t= 0.021      	 |n_0| = 2.9051929511     |n_1| = 2.9051928399
  	 |n_0| = 2.9041315081     |n_1| = 2.9041314417    
 |k| = 0.77522595368   
     | two phase flow: total mass = 0.28052730302
-Newton Raphson solver converged: ||solution|| = 0.30748725757
-    | evaporation: jump in the velocity field = -5.042686263e-07
-    | evapor: |m|2 = 6.9121118614e-08
+Newton Raphson solver converged: ||solution|| = 3.07487e-01
+    | evaporation: jump in the velocity field = -5.0427e-07
+    | evapor: |m|2 = 6.9121e-08
 
 Time step #21, advancing from t_n-1 = 0.02 to t = 0.021 (dt = 0.001). 
   Residual/iterations: [1.1e-06/15] [2.89e-10/conv.]
@@ -439,9 +439,9 @@ t= 0.022      	 |n_0| = 2.9041315081     |n_1| = 2.9041314417
  	 |n_0| = 2.9030107532     |n_1| = 2.9030108201    
 |k| = 0.77514555247   
     | two phase flow: total mass = 0.28015630853
-Newton Raphson solver converged: ||solution|| = 0.31102785038
-    | evaporation: jump in the velocity field = -2.5210318348e-06
-    | evapor: |m|2 = 3.1025612711e-07
+Newton Raphson solver converged: ||solution|| = 3.11028e-01
+    | evaporation: jump in the velocity field = -2.521e-06
+    | evapor: |m|2 = 3.1026e-07
 
 Time step #22, advancing from t_n-1 = 0.021 to t = 0.022 (dt = 0.001). 
   Residual/iterations: [1.85e-06/17] [2.98e-10/conv.]
@@ -459,9 +459,9 @@ t= 0.023      	 |n_0| = 2.9030107532     |n_1| = 2.9030108201
  	 |n_0| = 2.9018174756     |n_1| = 2.9018173694    
 |k| = 0.77506127447   
     | two phase flow: total mass = 0.27976581346
-Newton Raphson solver converged: ||solution|| = 0.31443497139
-    | evaporation: jump in the velocity field = -4.5418820683e-06
-    | evapor: |m|2 = 5.8000911421e-07
+Newton Raphson solver converged: ||solution|| = 3.14435e-01
+    | evaporation: jump in the velocity field = -4.5419e-06
+    | evapor: |m|2 = 5.8001e-07
 
 Time step #23, advancing from t_n-1 = 0.022 to t = 0.023 (dt = 0.001). 
   Residual/iterations: [5.05e-06/ILU/16] [3.26e-10/conv.]
@@ -479,9 +479,9 @@ t= 0.024      	 |n_0| = 2.9018174756     |n_1| = 2.9018173694
  	 |n_0| = 2.9005469459     |n_1| = 2.9005468711    
 |k| = 0.77497376546   
     | two phase flow: total mass = 0.27935683632
-Newton Raphson solver converged: ||solution|| = 0.31771781659
-    | evaporation: jump in the velocity field = -6.304855307e-06
-    | evapor: |m|2 = 8.2009103965e-07
+Newton Raphson solver converged: ||solution|| = 3.17718e-01
+    | evaporation: jump in the velocity field = -6.3049e-06
+    | evapor: |m|2 = 8.2009e-07
 
 Time step #24, advancing from t_n-1 = 0.023 to t = 0.024 (dt = 0.001). 
   Residual/iterations: [1.55e-06/14] [3.62e-10/conv.]
@@ -499,9 +499,9 @@ t= 0.025      	 |n_0| = 2.9005469459     |n_1| = 2.9005468711
  	 |n_0| = 2.8992008092     |n_1| = 2.8992008303    
 |k| = 0.77488394464   
     | two phase flow: total mass = 0.27893044345
-Newton Raphson solver converged: ||solution|| = 0.32088449246
-    | evaporation: jump in the velocity field = -7.8199764222e-06
-    | evapor: |m|2 = 1.0288824886e-06
+Newton Raphson solver converged: ||solution|| = 3.20884e-01
+    | evaporation: jump in the velocity field = -7.82e-06
+    | evapor: |m|2 = 1.0289e-06
 
 Time step #25, advancing from t_n-1 = 0.024 to t = 0.025 (dt = 0.001). 
   Residual/iterations: [1.29e-06/13] [4.81e-10/conv.]
@@ -519,9 +519,9 @@ t= 0.026      	 |n_0| = 2.8992008092     |n_1| = 2.8992008303
  	 |n_0| = 2.8977828042     |n_1| = 2.8977828056    
 |k| = 0.7747922557    
     | two phase flow: total mass = 0.27848762748
-Newton Raphson solver converged: ||solution|| = 0.32394239616
-    | evaporation: jump in the velocity field = -9.099881598e-06
-    | evapor: |m|2 = 1.2073297818e-06
+Newton Raphson solver converged: ||solution|| = 3.23942e-01
+    | evaporation: jump in the velocity field = -9.0999e-06
+    | evapor: |m|2 = 1.2073e-06
 
 Time step #26, advancing from t_n-1 = 0.025 to t = 0.026 (dt = 0.001). 
   Residual/iterations: [1.11e-06/13] [4.12e-10/conv.]
@@ -539,9 +539,9 @@ t= 0.027      	 |n_0| = 2.8977828042     |n_1| = 2.8977828056
  	 |n_0| = 2.8962972534     |n_1| = 2.8962970948    
 |k| = 0.77469977771   
     | two phase flow: total mass = 0.27802920885
-Newton Raphson solver converged: ||solution|| = 0.32689810655
-    | evaporation: jump in the velocity field = -1.0158602679e-05
-    | evapor: |m|2 = 1.3569364405e-06
+Newton Raphson solver converged: ||solution|| = 3.26898e-01
+    | evaporation: jump in the velocity field = -1.0159e-05
+    | evapor: |m|2 = 1.3569e-06
 
 Time step #27, advancing from t_n-1 = 0.026 to t = 0.027 (dt = 0.001). 
   Residual/iterations: [1.05e-06/13] [3.82e-10/conv.]
@@ -559,9 +559,9 @@ t= 0.028      	 |n_0| = 2.8962972534     |n_1| = 2.8962970948
  	 |n_0| = 2.8947489545     |n_1| = 2.8947486577    
 |k| = 0.77460698109   
     | two phase flow: total mass = 0.27755561787
-Newton Raphson solver converged: ||solution|| = 0.32975760107
-    | evaporation: jump in the velocity field = -1.1013068798e-05
-    | evapor: |m|2 = 1.4794428388e-06
+Newton Raphson solver converged: ||solution|| = 3.29758e-01
+    | evaporation: jump in the velocity field = -1.1013e-05
+    | evapor: |m|2 = 1.4794e-06
 
 Time step #28, advancing from t_n-1 = 0.027 to t = 0.028 (dt = 0.001). 
   Residual/iterations: [9.95e-07/13] [3.62e-10/conv.]
@@ -579,9 +579,9 @@ t= 0.029      	 |n_0| = 2.8947489545     |n_1| = 2.8947486577
  	 |n_0| = 2.8931397809     |n_1| = 2.8931394599    
 |k| = 0.7745139272    
     | two phase flow: total mass = 0.27706702705
-Newton Raphson solver converged: ||solution|| = 0.33252632115
-    | evaporation: jump in the velocity field = -1.1715399781e-05
-    | evapor: |m|2 = 1.5767274978e-06
+Newton Raphson solver converged: ||solution|| = 3.32526e-01
+    | evaporation: jump in the velocity field = -1.1715e-05
+    | evapor: |m|2 = 1.5767e-06
 
 Time step #29, advancing from t_n-1 = 0.028 to t = 0.029 (dt = 0.001). 
   Residual/iterations: [9.41e-07/13] [3.65e-10/conv.]
@@ -599,9 +599,9 @@ t= 0.03       	 |n_0| = 2.8931397809     |n_1| = 2.8931394599
  	 |n_0| = 2.8914697508     |n_1| = 2.8914695036    
 |k| = 0.77442092249   
     | two phase flow: total mass = 0.27656373051
-Newton Raphson solver converged: ||solution|| = 0.3352092071
-    | evaporation: jump in the velocity field = -1.2323660432e-05
-    | evapor: |m|2 = 1.6509081613e-06
+Newton Raphson solver converged: ||solution|| = 3.35209e-01
+    | evaporation: jump in the velocity field = -1.2324e-05
+    | evapor: |m|2 = 1.6509e-06
 
 Time step #30, advancing from t_n-1 = 0.029 to t = 0.03 (dt = 0.001). 
   Residual/iterations: [8.67e-07/13] [3.66e-10/conv.]

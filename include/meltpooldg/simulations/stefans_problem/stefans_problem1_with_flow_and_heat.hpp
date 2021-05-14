@@ -21,15 +21,51 @@
 
 /**
  *
- * @todo
- * !!!! STILL WIP !!!!
- *
  * This example is derived from
  *
  * Hardt, S., and F. Wondra. "Evaporation model for interfacial flows based on a continuum-field
  * representation of the source terms." Journal of Computational Physics 227.11 (2008): 5871-5895.
  *
  * and represents the example denoted as "Stefan's Problem 1".
+ *
+ * The parameters listed in the paper are:
+ *
+ * domain size [0.0, 0.001] discretized in 1d by 1000 cells
+ *
+ * Initial interface location: 1e-6 m (we modified it to 2.e-5, otherwise the level set would range
+ * into the wall)
+ *
+ * boiling temperature:             373.15 K
+ * temperature of the heating wall: 383.15 K
+ *
+ * gas (vapor) phase:
+ *    -- density:      1 kg/m^3
+ *    -- viscosity:    0.0001 Pa/s
+ *    -- conductivity: 1e-2 W/(mK)
+ *    -- capacity:     1000 J/(kgK)
+ *
+ * liquid phase:
+ *    -- density:      1 kg/m^3
+ *    -- viscosity:    0.01 Pa/s
+ *    -- conductivity: 1 W/(mK) (Note: thermal diffusivity of the liquid phase was increased by
+ * order of magnitudes)
+ *    -- capacity:     1000 J/(kgK)
+ *
+ * Enthalpy of evaporation: 10^6 J/kg
+ * Surface tension coefficient: 0.01 N/m
+ *
+ * NOTE: Due to the equal densities in the two phases, no flow velocities will be induced.
+ *
+ * NOTE: We assumed the conductivity to be the same in the gas and the fluid phase.
+ *
+ * NOTE: In the publication, they did not use the evaporative mass flux calculated according to
+ * Schrage's theory. At the moment, it is unclear how the mass flux is calculated. Thus, at the
+ * moment a comparison with the presented analytical solution is not possible.
+ *
+ * We had to specify the enthalpy of evaporation as 10^2 and the evaporation coefficient of 1.
+ * Otherwise, the evaporative mass flux would have been unrealistically high.
+ *
+ * @todo: Find a way to compare with the analytical solution.
  */
 
 namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
@@ -37,36 +73,42 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
+  static constexpr double x_min       = 0.0;
+  static constexpr double y_min       = 0.0;
+  static constexpr double y_max       = 1.e-3;
+  static constexpr double y_interface = 2.e-5;
+  static constexpr double T_bottom    = 383.15;
+  static constexpr double T_sat       = 373.15;
 
   template <int dim>
   class InitialValuesLS : public Function<dim>
   {
   public:
-    InitialValuesLS(const double x_min,
-                    const double x_max,
-                    const double y_min,
-                    const double y_interface)
+    InitialValuesLS(const double x_max, const double eps)
       : Function<dim>()
-      , x_min(x_min)
       , x_max(x_max)
-      , y_min(y_min)
-      , y_interface(y_interface)
+      , eps(eps)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      Point<dim> lower_left  = dim == 1 ? Point<dim>(y_min) :
-                               dim == 2 ? Point<dim>(x_min, y_min) :
-                                          Point<dim>(x_min, x_min, y_min);
-      Point<dim> upper_right = dim == 1 ? Point<dim>(y_interface) :
-                               dim == 2 ? Point<dim>(x_max, y_interface) :
-                                          Point<dim>(x_max, x_max, y_interface);
+      Point<dim> left  = dim == 1 ? Point<dim>(y_interface) :
+                         dim == 2 ? Point<dim>(x_min, y_interface) :
+                                    Point<dim>(x_min, x_min, y_interface);
+      Point<dim> right = dim == 1 ? Point<dim>(0) /* not relevant */ :
+                         dim == 2 ? Point<dim>(x_max, y_interface) :
+                                    Point<dim>(x_max, x_max, y_interface);
 
-      return -UtilityFunctions::CharacteristicFunctions::sgn(
-        DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
+
+      if (p[dim - 1] >= y_interface)
+        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+          DistanceFunctions::infinite_line<dim>(p, left, right), eps);
+      else
+        return -UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+          DistanceFunctions::infinite_line<dim>(p, left, right), eps);
     }
-    double x_min, x_max, y_min, y_interface;
+    double x_max, eps;
   };
 
   template <int dim>
@@ -80,12 +122,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      const double T_bottom = 383.15;
-      const double T_sat    = 373.15;
-      if (p[dim - 1] > 0.0002)
-        return T_sat;
-      else
-        return T_bottom - (T_bottom - T_sat) / 2.e-4 * p[dim - 1];
+      return T_bottom - (T_bottom - T_sat) / y_interface * p[dim - 1];
     }
   };
   /*
@@ -99,6 +136,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     SimulationStefansProblem1WithFlowAndHeat(std::string    parameter_file,
                                              const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
+      , x_max(y_max / std::pow(dim, this->parameters.base.global_refinements))
+
     {
       this->set_parameters();
     }
@@ -119,6 +158,15 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
         }
+
+      const unsigned int n_elements_per_edge =
+        std::pow(dim, this->parameters.base.global_refinements);
+      std::vector<unsigned int> refinements(dim, 1);
+
+      if (dim > 1)
+        refinements[dim - 1] = n_elements_per_edge;
+      else
+        refinements[0] = this->parameters.base.global_refinements;
 
       // create mesh
       const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
@@ -142,8 +190,10 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
         }
       else
         {
-          GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
-          this->triangulation->refine_global(this->parameters.base.global_refinements);
+          GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                    refinements,
+                                                    bottom_left,
+                                                    top_right);
         }
     }
 
@@ -164,6 +214,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
           // lower part = gas; upper part = liquid
           this->attach_dirichlet_boundary_condition(
             upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(1.0), "level_set");
+          this->attach_dirichlet_boundary_condition(
+            lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
           this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
           // no volume expansion in case of equal densities
           this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
@@ -240,19 +292,32 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(
-        std::make_shared<InitialValuesLS<dim>>(x_min, x_max, y_min, y_interface), "level_set");
+      double eps = 0.0;
+      if (this->parameters.reinit.implementation == "adaflo" ||
+          this->parameters.ls.implementation == "adaflo")
+        eps = this->parameters.reinit.constant_epsilon > 0.0 ?
+                this->parameters.reinit.constant_epsilon :
+                GridTools::minimal_cell_diameter(*this->triangulation) /
+                  this->parameters.base.degree / std::sqrt(dim);
+      else
+        eps = this->parameters.reinit.constant_epsilon > 0.0 ?
+                this->parameters.reinit.constant_epsilon :
+                GridTools::minimal_cell_diameter(*this->triangulation) / std::sqrt(dim) *
+                  this->parameters.reinit.scale_factor_epsilon;
+
+      AssertThrow(eps > 0, ExcNotImplemented());
+
+      this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(x_max, eps),
+                                     "level_set");
       this->attach_initial_condition(
         std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
+      // this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_sat),
+      //"heat_transfer");
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(),
                                      "heat_transfer");
     }
 
   private:
-    const double x_min       = 0.0;
-    const double x_max       = 1.0e-3;
-    const double y_min       = 0.0;
-    const double y_max       = 1.e-3;
-    const double y_interface = 2.e-4;
+    const double x_max;
   };
 } // namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
