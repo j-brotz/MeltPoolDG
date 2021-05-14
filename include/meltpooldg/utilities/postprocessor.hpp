@@ -27,7 +27,40 @@ using namespace dealii;
 namespace MeltPoolDG
 {
   template <int dim>
-  using GenericDataOut = DataOut<dim>; // TODO[PM]: create a new class
+  class GenericDataOut
+  {
+  public:
+    using VectorType = LinearAlgebra::distributed::Vector<double>;
+
+    void
+    add_data_vector(const DoFHandler<dim> &         dof_handler,
+                    const VectorType &              data,
+                    const std::vector<std::string> &names,
+                    const std::vector<DataComponentInterpretation::DataComponentInterpretation>
+                      &data_component_interpretation =
+                        std::vector<DataComponentInterpretation::DataComponentInterpretation>())
+    {
+      entries.emplace_back(&dof_handler, &data, names, data_component_interpretation);
+    }
+
+    void
+    add_data_vector(const DoFHandler<dim> &dof_handler,
+                    const VectorType &     data,
+                    const std::string &    name)
+    {
+      entries.emplace_back(&dof_handler,
+                           &data,
+                           std::vector<std::string>{name},
+                           std::vector<DataComponentInterpretation::DataComponentInterpretation>{
+                             DataComponentInterpretation::component_is_scalar});
+    }
+
+    std::vector<std::tuple<const DoFHandler<dim> *,
+                           const VectorType *,
+                           const std::vector<std::string>,
+                           std::vector<DataComponentInterpretation::DataComponentInterpretation>>>
+      entries;
+  };
 
   template <int dim>
   class Postprocessor
@@ -76,10 +109,10 @@ namespace MeltPoolDG
      *  This function collects and performs all relevant postprocessing steps.
      */
     void
-    process(const int                                  n_time_step,
-            const std::function<void(DataOut<dim> &)> &attach_output_vectors,
-            const double                               time           = -1.0,
-            const std::function<void()> &              post_operation = {})
+    process(const int                                         n_time_step,
+            const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
+            const double                                      time           = -1.0,
+            const std::function<void()> &                     post_operation = {})
     {
       GenericDataOut<dim> data_out;
 
@@ -101,9 +134,15 @@ namespace MeltPoolDG
     void
     write_paraview_files(const unsigned int   n_time_step,
                          const double         time,
-                         GenericDataOut<dim> &data_out)
+                         GenericDataOut<dim> &generic_data_out)
     {
-      // TODO[PM]: convert GenericDataOut to DatOut
+      DataOut<dim> data_out;
+
+      for (const auto &data : generic_data_out.entries)
+        data_out.add_data_vector(*std::get<0>(data),
+                                 *std::get<1>(data),
+                                 std::get<2>(data),
+                                 std::get<3>(data));
 
       DataOutBase::VtkFlags flags;
       if ((do_simplex == false) && (dim > 1))
