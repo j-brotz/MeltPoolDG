@@ -18,12 +18,11 @@
     "heat solidification": "true",
     "heat solver rel tolerance": "1e-12",
     "heat solver preconditioner type": "ILU",
-    "heat nlsolve residual tolerance": "1e-6",
-    "heat nlsolve max nonlinear iterations": "100"
+    "heat nlsolve residual tolerance": "1e-7"
   },
   "material": {
     "material second conductivity": "55.563",
-    "material second capacity": "460",
+    "material second capacity": "460.0",
     "material second density": "7850.0",
     "material solid conductivity": "17.0",
     "material solid capacity": "700.0",

@@ -91,6 +91,7 @@ namespace MeltPoolDG::Heat
                                                                   temp_dof_idx,
                                                                   temp_quad_idx,
                                                                   temperature,
+                                                                  temperature_old,
                                                                   heat_source,
                                                                   vel_dof_idx,
                                                                   velocity,
