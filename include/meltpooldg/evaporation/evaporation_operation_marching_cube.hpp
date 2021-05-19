@@ -186,10 +186,13 @@ namespace MeltPoolDG::Evaporation
             scratch_data.get_dof_handler(pressure_dof_idx).get_fe(), // todo
             n_subdivisions);
 
-          FEPointEvaluation<1, dim> mass_flux(
-            scratch_data.get_mapping(), scratch_data.get_dof_handler(evapor_dof_idx).get_fe());
+          FEPointEvaluation<1, dim> mass_flux(scratch_data.get_mapping(),
+                                              scratch_data.get_dof_handler(evapor_dof_idx).get_fe(),
+                                              update_values);
           FEPointEvaluation<1, dim> rhs_continuity(
-            scratch_data.get_mapping(), scratch_data.get_dof_handler(pressure_dof_idx).get_fe());
+            scratch_data.get_mapping(),
+            scratch_data.get_dof_handler(pressure_dof_idx).get_fe(),
+            update_values);
 
           std::vector<double>                  buffer;
           std::vector<types::global_dof_index> local_dof_indices;
@@ -257,6 +260,9 @@ namespace MeltPoolDG::Evaporation
                   const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
                   const ArrayView<const double>     JxW(weights.data(), n_points);
 
+                  mass_flux.reinit(cell, unit_points);
+                  rhs_continuity.reinit(cell, unit_points);
+
                   // gather mass_flux
                   scratch_data.get_constraint(evapor_dof_idx)
                     .get_dof_values(evaporative_mass_flux,
@@ -265,10 +271,7 @@ namespace MeltPoolDG::Evaporation
                                     buffer.end());
 
                   // evaluate mass_flux
-                  mass_flux.evaluate(cell,
-                                     unit_points,
-                                     make_array_view(buffer),
-                                     EvaluationFlags::values);
+                  mass_flux.evaluate(make_array_view(buffer), EvaluationFlags::values);
 
                   for (unsigned int q = 0; q < n_points; ++q)
                     rhs_continuity.submit_value(mass_flux.get_value(q) * (1. / rho_l - 1. / rho_g) *
@@ -276,7 +279,7 @@ namespace MeltPoolDG::Evaporation
                                                 q);
 
                   // integrate rhs term of the continuity equation
-                  rhs_continuity.integrate(cell, unit_points, buffer, EvaluationFlags::values);
+                  rhs_continuity.integrate(buffer, EvaluationFlags::values);
 
                   scratch_data.get_constraint(evapor_dof_idx)
                     .distribute_local_to_global(buffer, local_dof_indices, mass_balance_rhs);
