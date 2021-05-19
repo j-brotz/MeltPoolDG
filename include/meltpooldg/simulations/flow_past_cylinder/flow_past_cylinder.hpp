@@ -13,6 +13,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -38,7 +39,7 @@ namespace MeltPoolDG
           const double radius = 0.1;
 
           return UtilityFunctions::CharacteristicFunctions::sgn(
-            UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+            DistanceFunctions::spherical_manifold<dim>(p, center, radius));
         }
       };
 

@@ -7,6 +7,7 @@
 
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 // c++
@@ -121,10 +122,10 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
 
       if ((p - center1).norm() < (p - center2).norm()) // closer to first droplet center
         return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center1, radius), eps);
+          DistanceFunctions::spherical_manifold<dim>(p, center1, radius), eps);
       else // closer to second droplet center
         return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center2, radius), eps);
+          DistanceFunctions::spherical_manifold<dim>(p, center2, radius), eps);
     }
 
     double eps;

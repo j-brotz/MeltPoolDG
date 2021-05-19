@@ -6,6 +6,7 @@
 
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 // c++
@@ -80,7 +81,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
       Point<dim> center = dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0);
 
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, a), eps);
+        DistanceFunctions::spherical_manifold<dim>(p, center, a), eps);
     }
     const double a = 1.44e-3;
 

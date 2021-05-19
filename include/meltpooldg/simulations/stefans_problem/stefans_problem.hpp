@@ -15,6 +15,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 namespace MeltPoolDG::Simulation::StefansProblem
@@ -46,7 +47,7 @@ namespace MeltPoolDG::Simulation::StefansProblem
         dim == 2 ? Point<dim>(x_max, y_interface) : Point<dim>(x_max, x_max, y_interface);
 
       return UtilityFunctions::CharacteristicFunctions::sgn(
-        UtilityFunctions::DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
+        DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
     }
     double x_min, x_max, y_min, y_interface;
   };

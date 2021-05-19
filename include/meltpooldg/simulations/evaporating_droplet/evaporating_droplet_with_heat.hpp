@@ -14,6 +14,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -36,7 +37,7 @@ namespace MeltPoolDG
         Point<dim>   center = dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0);
         const double radius = 0.02;
         return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius), eps);
+          DistanceFunctions::spherical_manifold<dim>(p, center, radius), eps);
       }
 
       const double eps = 0.0;

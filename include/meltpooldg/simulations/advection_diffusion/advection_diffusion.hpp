@@ -14,6 +14,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 namespace MeltPoolDG
@@ -41,14 +42,14 @@ namespace MeltPoolDG
           Point<dim>   center = dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5);
           const double radius = 0.25;
           return UtilityFunctions::CharacteristicFunctions::sgn(
-            UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+            DistanceFunctions::spherical_manifold<dim>(p, center, radius));
 
           /*
            *  Alternatively, a tanh function could be used, corresponding to the
            *  analytic solution of the reinitialization problem
            */
           // return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          // UtilityFunctions::DistanceFunctions::spherical_manifold<dim>( p, center, radius ),
+          // DistanceFunctions::spherical_manifold<dim>( p, center, radius ),
           // this->epsInterface
           //);
         }
