@@ -1,5 +1,5 @@
-t= 200       Newton Raphson solver converged: ||solution|| = 282.87
-t= 400       Newton Raphson solver converged: ||solution|| = 282.81
-t= 600       Newton Raphson solver converged: ||solution|| = 282.766
-t= 800       Newton Raphson solver converged: ||solution|| = 282.729
-t= 1000      Newton Raphson solver converged: ||solution|| = 282.697
+t= 200       Newton Raphson solver converged: ||solution|| = 2.82870e+02
+t= 400       Newton Raphson solver converged: ||solution|| = 2.82810e+02
+t= 600       Newton Raphson solver converged: ||solution|| = 2.82766e+02
+t= 800       Newton Raphson solver converged: ||solution|| = 2.82729e+02
+t= 1000      Newton Raphson solver converged: ||solution|| = 2.82697e+02
