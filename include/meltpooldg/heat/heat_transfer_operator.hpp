@@ -944,14 +944,23 @@ namespace MeltPoolDG::Heat
                                                 VectorizedArrayType &      density,
                                                 const VectorizedArrayType &temperature) const
     {
-      /*
-       * Compute the solid fraction for a temperature between the liquidus and the solidus
-       * temperature. If the temperature is equal to the liquidus temperature, then the solid
-       * fraction is zero. If the temperature is equal to the solidus temperature, then the solid
-       * fraction is one.
-       */
-      const auto solid_fraction = UtilityFunctions::limit_to_bounds(
-        (material.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
+      const auto solid_fraction = calculate_solid_fraction(temperature);
+
+      if (solid_fraction == VectorizedArrayType(0.0))
+        {
+          capacity     = material.second.capacity;
+          conductivity = material.second.conductivity;
+          density      = material.second.density;
+          return;
+        }
+      if (solid_fraction == VectorizedArrayType(1.0))
+        {
+          capacity     = material.solid.capacity;
+          conductivity = material.solid.conductivity;
+          density      = material.solid.density;
+          return;
+        }
+
       capacity     = UtilityFunctions::interpolate_cubic(solid_fraction,
                                                      material.second.capacity,
                                                      material.solid.capacity);
@@ -977,8 +986,15 @@ namespace MeltPoolDG::Heat
       VectorizedArrayType &      d_density_dT,
       const VectorizedArrayType &temperature) const
     {
-      const auto solid_fraction = UtilityFunctions::limit_to_bounds(
-        (material.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
+      const auto solid_fraction = calculate_solid_fraction(temperature);
+
+      if (solid_fraction == VectorizedArrayType(0.0) || solid_fraction == VectorizedArrayType(1.0))
+        {
+          d_capacity_dT     = 0.0;
+          d_conductivity_dT = 0.0;
+          d_density_dT      = 0.0;
+          return;
+        }
 
       d_capacity_dT = -1.0 * inv_mushy_interval *
                       UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
@@ -1014,6 +1030,19 @@ namespace MeltPoolDG::Heat
                                                    material.second.conductivity);
       density =
         UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
+    }
+
+    /*
+     * Compute the solid fraction for a temperature between the liquidus and the solidus
+     * temperature. If the temperature is equal to the liquidus temperature, then the solid
+     * fraction is zero. If the temperature is equal to the solidus temperature, then the solid
+     * fraction is one. In between there is a linear interpolation.
+     */
+    VectorizedArrayType
+    calculate_solid_fraction(const VectorizedArrayType &temperature) const
+    {
+      return UtilityFunctions::limit_to_bounds(
+        (material.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
     }
   };
 } // namespace MeltPoolDG::Heat
