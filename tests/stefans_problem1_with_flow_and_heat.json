@@ -80,7 +80,8 @@
   },
   "curvature": {
     "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "curv damping scale factor": "4"
   },
   "evaporation": {
     "evapor formulation evaporative mass flux": "temperature dependent",

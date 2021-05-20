@@ -7,7 +7,7 @@
     "gravity": "0.",
     "degree": "1",
     "do print parameters": "false",
-    "verbosity level": "1"
+    "verbosity level": "0"
   },
   "flow": {
     "flow surface tension coefficient": "0.0",
@@ -76,7 +76,8 @@
   },
   "normal vector": {
     "normal vec do matrix free": "true",
-    "normal vec implementation": "meltpooldg"
+    "normal vec implementation": "meltpooldg",
+    "normal vec damping scale factor": "4"
   },
   "curvature": {
     "curv do matrix free": "true",
@@ -98,8 +99,6 @@
     "heat nlsolve residual tolerance": "1e-7"
   },
   "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output_stefan_1/",
-    "paraview filename": "solution_1d"
+    "paraview do output": "false"
   }
 }
