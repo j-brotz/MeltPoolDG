@@ -88,7 +88,8 @@ namespace MeltPoolDG
       /*
        *  This pointer will point to your user-defined normal vector operator.
        */
-      std::unique_ptr<OperatorBase<double, BlockVectorType, VectorType>> normal_vector_operator;
+      std::unique_ptr<OperatorBase<dim, double, BlockVectorType, VectorType>>
+        normal_vector_operator;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

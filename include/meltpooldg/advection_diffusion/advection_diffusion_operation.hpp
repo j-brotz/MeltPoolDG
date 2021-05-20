@@ -83,7 +83,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     /*
      *  This pointer will point to your user-defined advection_diffusion operator.
      */
-    std::unique_ptr<OperatorBase<double>> advec_diff_operator;
+    std::unique_ptr<OperatorBase<dim, double>> advec_diff_operator;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

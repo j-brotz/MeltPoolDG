@@ -30,7 +30,7 @@ namespace MeltPoolDG::NormalVector
   NormalVectorOperation<dim>::reinit()
   {
     if (!normal_vector_data.do_matrix_free)
-      normal_vector_operator->initialize_matrix_based<dim>(*scratch_data);
+      normal_vector_operator->initialize_matrix_based(*scratch_data);
   }
 
   template <int dim>
@@ -49,7 +49,7 @@ namespace MeltPoolDG::NormalVector
         normal_vector_operator->create_rhs(rhs, solution_levelset_in);
         iter = LinearSolve::solve<BlockVectorType,
                                   SolverCG<BlockVectorType>,
-                                  OperatorBase<double, BlockVectorType, VectorType>>(
+                                  OperatorBase<dim, double, BlockVectorType, VectorType>>(
           *normal_vector_operator, solution_normal_vector, rhs);
       }
     else
@@ -105,7 +105,7 @@ namespace MeltPoolDG::NormalVector
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
     if (!normal_vector_data.do_matrix_free)
-      normal_vector_operator->initialize_matrix_based<dim>(*scratch_data);
+      normal_vector_operator->initialize_matrix_based(*scratch_data);
   }
 
 

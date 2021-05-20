@@ -9,7 +9,8 @@ namespace MeltPoolDG
 {
   using namespace dealii;
 
-  template <typename number           = double,
+  template <int dim,
+            typename number           = double,
             typename DoFVectorType    = LinearAlgebra::distributed::Vector<number>,
             typename SrcRhsVectorType = DoFVectorType>
   class OperatorBase
@@ -54,38 +55,13 @@ namespace MeltPoolDG
     {}
 
     void
-    set_time_increment(const double dt)
-    {
-      d_tau     = dt;
-      d_tau_inv = 1. / d_tau;
-    }
+    set_time_increment(const double dt);
 
     void
-    reset_indices(const unsigned int dof_idx_in, const unsigned int quad_idx_in)
-    {
-      this->dof_idx  = dof_idx_in;
-      this->quad_idx = quad_idx_in;
-    }
+    reset_indices(const unsigned int dof_idx_in, const unsigned int quad_idx_in);
 
-    template <int dim>
     void
-    initialize_matrix_based(const ScratchData<dim> &scratch_data)
-    {
-      const MPI_Comm mpi_communicator = scratch_data.get_mpi_comm(this->dof_idx);
-      dsp.reinit(scratch_data.get_locally_owned_dofs(this->dof_idx),
-                 scratch_data.get_locally_owned_dofs(this->dof_idx),
-                 scratch_data.get_locally_relevant_dofs(this->dof_idx),
-                 mpi_communicator);
-
-      DoFTools::make_sparsity_pattern(scratch_data.get_dof_handler(this->dof_idx),
-                                      this->dsp,
-                                      scratch_data.get_constraint(this->dof_idx),
-                                      true,
-                                      Utilities::MPI::this_mpi_process(mpi_communicator));
-      this->dsp.compress();
-
-      this->system_matrix.reinit(dsp);
-    }
+    initialize_matrix_based(const ScratchData<dim> &scratch_data);
 
     /**
      * Compute the modified right-handside for (inhomogeneous) dirichlet boundary conditions G
@@ -98,49 +74,15 @@ namespace MeltPoolDG
      *
      * with zero Dirichlet boundary conditions.
      */
-    template <int dim>
     void
     create_rhs_and_apply_dirichlet_mf(DoFVectorType &         rhs,
                                       const SrcRhsVectorType &src,
                                       const ScratchData<dim> &scratch_data,
                                       const unsigned int      dof_idx,
-                                      const unsigned int      dof_no_bc_idx)
-    {
-      this->reset_indices(dof_no_bc_idx, this->quad_idx);
-
-      DoFVectorType temp_rhs;
-      scratch_data.initialize_dof_vector(temp_rhs, dof_no_bc_idx);
-
-      DoFVectorType temp_src;
-      scratch_data.initialize_dof_vector(temp_src, dof_no_bc_idx);
-      temp_src.copy_locally_owned_data_from(src);
-
-      DoFVectorType bc_values;
-      scratch_data.initialize_dof_vector(bc_values, dof_no_bc_idx);
-      scratch_data.get_constraint(dof_idx).distribute(bc_values);
-      /*
-       * perform matrix-vector multiplication (with unconstrained system and constrained set in
-       * Vector)
-       */
-      this->vmult(temp_rhs, bc_values);
-      /*
-       * Modify right-hand side
-       */
-      temp_rhs *= -1.0;
-      this->create_rhs(temp_rhs, temp_src);
-      /*
-       * Clear constrained values
-       */
-      rhs.copy_locally_owned_data_from(temp_rhs);
-      scratch_data.get_constraint(dof_idx).set_zero(rhs);
-      this->reset_indices(dof_idx, this->quad_idx);
-    }
+                                      const unsigned int      dof_no_bc_idx);
 
     const SparseMatrixType &
-    get_system_matrix() const
-    {
-      return this->system_matrix;
-    }
+    get_system_matrix() const;
 
     double              d_tau     = 0.0;
     double              d_tau_inv = 0.0;

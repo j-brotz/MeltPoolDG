@@ -117,7 +117,7 @@ namespace MeltPoolDG::Reinitialization
         src_rhs.copy_locally_owned_data_from(solution_level_set);
         src_rhs.update_ghost_values();
         reinit_operator->create_rhs(rhs, src_rhs);
-        iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<double>>(
+        iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
           *reinit_operator, src, rhs);
       }
     else
@@ -275,7 +275,7 @@ namespace MeltPoolDG::Reinitialization
          */
 
         if (!reinit_data.solver.do_matrix_free)
-          reinit_operator->initialize_matrix_based<dim>(*scratch_data);
+          reinit_operator->initialize_matrix_based(*scratch_data);
   }
 
   template <int dim>
@@ -283,7 +283,7 @@ namespace MeltPoolDG::Reinitialization
   ReinitializationOperation<dim>::update_operator()
   {
     if (!reinit_data.solver.do_matrix_free)
-      reinit_operator->initialize_matrix_based<dim>(*scratch_data);
+      reinit_operator->initialize_matrix_based(*scratch_data);
   }
 
   template class ReinitializationOperation<1>;

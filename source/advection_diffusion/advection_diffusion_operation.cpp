@@ -90,7 +90,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                                advec_diff_dof_idx,
                                                                advec_diff_hanging_nodes_dof_idx);
 
-        iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
+        iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
           *advec_diff_operator, src, rhs);
       }
     else
@@ -199,7 +199,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
     if (!this->advec_diff_data.do_matrix_free)
-      advec_diff_operator->initialize_matrix_based<dim>(*scratch_data);
+      advec_diff_operator->initialize_matrix_based(*scratch_data);
   }
 
   template class AdvectionDiffusionOperation<1>;

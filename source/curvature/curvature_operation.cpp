@@ -51,12 +51,10 @@ namespace MeltPoolDG::Curvature
     if (curvature_data.do_matrix_free)
       {
         curvature_operator->create_rhs(rhs, normal_vector_operation.get_solution_normal_vector());
-        iter =
-          LinearSolve::solve<VectorType,
-                             SolverCG<VectorType>,
-                             OperatorBase<double, VectorType, BlockVectorType>>(*curvature_operator,
-                                                                                solution_curvature,
-                                                                                rhs);
+        iter = LinearSolve::solve<VectorType,
+                                  SolverCG<VectorType>,
+                                  OperatorBase<dim, double, VectorType, BlockVectorType>>(
+          *curvature_operator, solution_curvature, rhs);
       }
     else
       {
@@ -108,7 +106,7 @@ namespace MeltPoolDG::Curvature
   CurvatureOperation<dim>::reinit()
   {
     if (!curvature_data.do_matrix_free)
-      curvature_operator->initialize_matrix_based<dim>(*scratch_data);
+      curvature_operator->initialize_matrix_based(*scratch_data);
     normal_vector_operation.reinit();
   }
 
@@ -125,7 +123,7 @@ namespace MeltPoolDG::Curvature
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
     if (!curvature_data.do_matrix_free)
-      curvature_operator->initialize_matrix_based<dim>(*scratch_data);
+      curvature_operator->initialize_matrix_based(*scratch_data);
   }
 
   template class CurvatureOperation<1>;

@@ -23,7 +23,8 @@ namespace MeltPoolDG
   {
     template <int dim, typename number = double>
     class NormalVectorOperator
-      : public OperatorBase<number,
+      : public OperatorBase<dim,
+                            number,
                             LinearAlgebra::distributed::BlockVector<number>,
                             LinearAlgebra::distributed::Vector<number>>
     {

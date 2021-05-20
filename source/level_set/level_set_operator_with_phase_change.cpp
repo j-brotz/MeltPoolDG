@@ -192,7 +192,8 @@ namespace MeltPoolDG::LevelSet
         this->create_rhs_and_apply_dirichlet_mf(
           rhs, advected_field, scratch_data, ls_dof_idx, ls_hanging_nodes_dof_idx);
 
-        iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(*this,
+        iter =
+          LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(*this,
                                                                                              src,
                                                                                              rhs);
       }

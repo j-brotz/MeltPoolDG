@@ -24,7 +24,8 @@ namespace MeltPoolDG::AdvectionDiffusion
   using namespace dealii;
 
   template <int dim, typename number = double>
-  class AdvectionDiffusionOperator : public OperatorBase<number,
+  class AdvectionDiffusionOperator : public OperatorBase<dim,
+                                                         number,
                                                          LinearAlgebra::distributed::Vector<number>,
                                                          LinearAlgebra::distributed::Vector<number>>
   {

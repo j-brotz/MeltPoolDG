@@ -22,7 +22,8 @@ namespace MeltPoolDG
     using namespace dealii;
 
     template <int dim, typename number = double>
-    class OlssonOperator : public OperatorBase<number,
+    class OlssonOperator : public OperatorBase<dim,
+                                               number,
                                                LinearAlgebra::distributed::Vector<number>,
                                                LinearAlgebra::distributed::Vector<number>>
     {
