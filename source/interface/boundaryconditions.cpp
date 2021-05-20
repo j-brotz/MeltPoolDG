@@ -2,6 +2,37 @@
 
 namespace MeltPoolDG
 {
+  template <int dim>
+  BoundaryTypes
+  BoundaryConditions<dim>::get_boundary_type(types::boundary_id id)
+  {
+    if (dirichlet_bc.find(id) != dirichlet_bc.end())
+      return BoundaryTypes::dirichlet_bc;
+    else if (neumann_bc.find(id) != neumann_bc.end())
+      return BoundaryTypes::neumann_bc;
+    else if (std::find(outflow.begin(), outflow.end(), id) != outflow.end())
+      return BoundaryTypes::outflow;
+    else if (std::find(no_slip_bc.begin(), no_slip_bc.end(), id) != no_slip_bc.end())
+      return BoundaryTypes::no_slip_bc;
+    else if (std::find(fix_pressure_constant.begin(), fix_pressure_constant.end(), id) !=
+             fix_pressure_constant.end())
+      return BoundaryTypes::fix_pressure_constant;
+    else if (std::find(symmetry_bc.begin(), symmetry_bc.end(), id) != symmetry_bc.end())
+      return BoundaryTypes::symmetry_bc;
+    else if (std::find(open_boundary_bc.begin(), open_boundary_bc.end(), id) !=
+             open_boundary_bc.end())
+      return BoundaryTypes::open_boundary_bc;
+    else if (std::find(radiation_bc.begin(), radiation_bc.end(), id) != radiation_bc.end())
+      return BoundaryTypes::radiation_bc;
+    else if (std::find(convection_bc.begin(), convection_bc.end(), id) != convection_bc.end())
+      return BoundaryTypes::convection_bc;
+    else
+      {
+        AssertThrow(false, ExcMessage("for specified boundary_id: " + std::to_string(id)));
+        return BoundaryTypes::undefined;
+      }
+  }
+
   template struct BoundaryConditions<1>;
   template struct BoundaryConditions<2>;
   template struct BoundaryConditions<3>;
