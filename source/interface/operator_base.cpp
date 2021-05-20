@@ -89,4 +89,13 @@ namespace MeltPoolDG
     return this->system_matrix;
   }
   template class OperatorBase<double>;
+  template class OperatorBase<double,
+                              LinearAlgebra::distributed::Vector<double>,
+                              LinearAlgebra::distributed::BlockVector<double>>;
+  template class OperatorBase<double,
+                              LinearAlgebra::distributed::BlockVector<double>,
+                              LinearAlgebra::distributed::Vector<double>>;
+  template class OperatorBase<double,
+                              LinearAlgebra::distributed::BlockVector<double>,
+                              LinearAlgebra::distributed::BlockVector<double>>;
 } // namespace MeltPoolDG
