@@ -36,7 +36,7 @@ t= 0.0005    |vel|= 0
  |phi_update|² = 0.0054698484018445 |
  	 |n_0| = 5.3385972977     |n_1| = 5.3385975361    
 |k| = 26.554019451    
-Newton Raphson solver converged: ||solution|| = 1.6737188613
+Newton Raphson solver converged: ||solution|| = 1.67372e+00
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005). 
  |velocity| = 1.15222352131666e-06
@@ -61,7 +61,7 @@ t= 0.001     |vel|= 0.0256101964724115
  |phi_update|² = 0.00546991382725577 |
  	 |n_0| = 5.3390864142     |n_1| = 5.339086533     
 |k| = 26.551239968    
-Newton Raphson solver converged: ||solution|| = 1.673718895
+Newton Raphson solver converged: ||solution|| = 1.67372e+00
 
 Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005). 
  |velocity| = 2.06926571353387e-06
@@ -86,7 +86,7 @@ t= 0.0015    |vel|= 0.0459963892288176
  |phi_update|² = 0.00546992302406581 |
  	 |n_0| = 5.3391585407     |n_1| = 5.3391587752    
 |k| = 26.549769881    
-Newton Raphson solver converged: ||solution|| = 1.673718869
+Newton Raphson solver converged: ||solution|| = 1.67372e+00
 
 Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005). 
  |velocity| = 2.79539134240706e-06
@@ -110,8 +110,8 @@ t= 0.002     |vel|= 0.0621412190961418
  |ΔΨ|² = 3.84543226951851e-08 |
  |phi_update|² = 0.00546992407180679 |
  	 |n_0| = 5.339169163      |n_1| = 5.3391697444    
-|k| = 26.551874646    
-Newton Raphson solver converged: ||solution|| = 1.6737188426
+|k| = 26.551874169    
+Newton Raphson solver converged: ||solution|| = 1.67372e+00
 
 Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005). 
  |velocity| = 3.38931464020779e-06
