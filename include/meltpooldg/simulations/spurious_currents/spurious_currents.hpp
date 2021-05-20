@@ -13,6 +13,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -41,12 +42,12 @@ namespace MeltPoolDG
             center[d] = 0.02 + 0.01 * d;
 
           return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-            UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, 0.5), eps);
+            DistanceFunctions::spherical_manifold<dim>(p, center, 0.5), eps);
 
           // Alternative if no signed distance function should be used in the beginning:
           //
           // return UtilityFunctions::CharacteristicFunctions::sgn(
-          // UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, 0.5));
+          // DistanceFunctions::spherical_manifold<dim>(p, center, 0.5));
         }
 
         double eps = 0.0;

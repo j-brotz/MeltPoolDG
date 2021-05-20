@@ -15,6 +15,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 #include <iostream>
@@ -39,7 +40,7 @@ public:
     (void)component;
 
     return UtilityFunctions::CharacteristicFunctions::sgn(
-      UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+      DistanceFunctions::spherical_manifold<dim>(p, center, radius));
   }
 
   Point<dim> center;
@@ -62,7 +63,7 @@ public:
     (void)component;
 
     return -UtilityFunctions::CharacteristicFunctions::sgn(
-      UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+      DistanceFunctions::spherical_manifold<dim>(p, center, radius));
   }
 
   Point<dim> center;
@@ -86,7 +87,7 @@ public:
 
     return UtilityFunctions::CharacteristicFunctions::heaviside(
       UtilityFunctions::CharacteristicFunctions::sgn(
-        UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius)),
+        DistanceFunctions::spherical_manifold<dim>(p, center, radius)),
       0);
   }
 
@@ -111,7 +112,7 @@ public:
 
     return UtilityFunctions::CharacteristicFunctions::heaviside(
       -UtilityFunctions::CharacteristicFunctions::sgn(
-        UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius)),
+        DistanceFunctions::spherical_manifold<dim>(p, center, radius)),
       0);
   }
 
@@ -135,7 +136,7 @@ public:
     (void)component;
 
     return 5 * UtilityFunctions::CharacteristicFunctions::sgn(
-                 UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius)) +
+                 DistanceFunctions::spherical_manifold<dim>(p, center, radius)) +
            1.0;
   }
 

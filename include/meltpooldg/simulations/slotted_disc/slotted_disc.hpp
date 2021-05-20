@@ -14,6 +14,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 namespace MeltPoolDG
@@ -56,70 +57,62 @@ namespace MeltPoolDG
             {
               if (p[0] >= pA[0] && p[0] <= pD[0])
                 { // region 10 and 11
-                  d_AB  = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pA, 0.0);
-                  d_CD  = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pD, 0.0);
+                  d_AB  = DistanceFunctions::spherical_manifold<dim>(p, pA, 0.0);
+                  d_CD  = DistanceFunctions::spherical_manifold<dim>(p, pD, 0.0);
                   d_min = std::max(d_AB, d_CD);
                 }
               else
                 { // boundary region of 10 and 11
-                  d_AB = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pA, 0.0);
-                  d_CD = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pD, 0.0);
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::max(d_AB, d_CD);
-                  d_min = std::max(d_manifold, d_min);
+                  d_AB       = DistanceFunctions::spherical_manifold<dim>(p, pA, 0.0);
+                  d_CD       = DistanceFunctions::spherical_manifold<dim>(p, pD, 0.0);
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::max(d_AB, d_CD);
+                  d_min      = std::max(d_manifold, d_min);
                 }
             }
           else if (p[1] >= pB[1])
             {
               if (p[0] <= pB[0])
                 { // region 3
-                  d_BC = std::abs(
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pB, 0.0));
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_BC, d_manifold);
+                  d_BC       = std::abs(DistanceFunctions::spherical_manifold<dim>(p, pB, 0.0));
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_BC, d_manifold);
                 }
               else if (p[0] >= pC[0])
                 { // region 4
-                  d_BC = std::abs(
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pC, 0.0));
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_BC, d_manifold);
+                  d_BC       = std::abs(DistanceFunctions::spherical_manifold<dim>(p, pC, 0.0));
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_BC, d_manifold);
                 }
               else if (p[0] > pB[0] && p[0] < pC[0])
                 { // region 2
-                  d_BC = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pB, pC);
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_BC, d_manifold);
+                  d_BC       = DistanceFunctions::infinite_line<dim>(p, pB, pC);
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_BC, d_manifold);
                 }
             }
           else if (p[0] > center[0] - radius && p[0] < center[0] + radius) // region 1, 5-7, 8, 9
             {
               if (p[0] > pB[0] && p[0] < pC[0]) // region 5-7
                 {
-                  d_AB  = -UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pA, pB);
-                  d_BC  = -UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pB, pC);
-                  d_CD  = -UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pC, pD);
+                  d_AB  = -DistanceFunctions::infinite_line<dim>(p, pA, pB);
+                  d_BC  = -DistanceFunctions::infinite_line<dim>(p, pB, pC);
+                  d_CD  = -DistanceFunctions::infinite_line<dim>(p, pC, pD);
                   d_min = std::max(d_AB, d_BC);
                   d_min = std::max(d_CD, d_min);
                 }
               else
                 {
-                  d_AB = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pA, pB);
-                  d_CD = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pC, pD);
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_AB, d_CD);
-                  d_min = std::min(d_min, d_manifold);
+                  d_AB       = DistanceFunctions::infinite_line<dim>(p, pA, pB);
+                  d_CD       = DistanceFunctions::infinite_line<dim>(p, pC, pD);
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_AB, d_CD);
+                  d_min      = std::min(d_min, d_manifold);
                 }
             }
           else
             { // outer region
-              d_min =
-                UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+              d_min = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
             }
 
           // return the smallest distance
@@ -159,68 +152,62 @@ namespace MeltPoolDG
             {
               if (p[0] >= pA[0] && p[0] <= pD[0])
                 { // region 10 and 11
-                  d_AB  = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pA, 0.0);
-                  d_CD  = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pD, 0.0);
+                  d_AB  = DistanceFunctions::spherical_manifold<dim>(p, pA, 0.0);
+                  d_CD  = DistanceFunctions::spherical_manifold<dim>(p, pD, 0.0);
                   d_min = std::min(d_AB, d_CD);
                 }
               else
                 { // boundary region of 10 and 11
-                  d_AB = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pA, 0.0);
-                  d_CD = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pD, 0.0);
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_AB, d_CD);
-                  d_min = std::min(d_manifold, d_min);
+                  d_AB       = DistanceFunctions::spherical_manifold<dim>(p, pA, 0.0);
+                  d_CD       = DistanceFunctions::spherical_manifold<dim>(p, pD, 0.0);
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_AB, d_CD);
+                  d_min      = std::min(d_manifold, d_min);
                 }
             }
           else if (p[1] >= pB[1])
             {
               if (p[0] <= pB[0])
                 { // region 3
-                  d_BC = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pB, 0.0);
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_BC, d_manifold);
+                  d_BC       = DistanceFunctions::spherical_manifold<dim>(p, pB, 0.0);
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_BC, d_manifold);
                 }
               else if (p[0] >= pC[0])
                 { // region 4
-                  d_BC = UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, pC, 0.0);
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_BC, d_manifold);
+                  d_BC       = DistanceFunctions::spherical_manifold<dim>(p, pC, 0.0);
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_BC, d_manifold);
                 }
               else if (p[0] > pB[0] && p[0] < pC[0])
                 { // region 2
-                  d_BC = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pB, pC);
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_BC, d_manifold);
+                  d_BC       = DistanceFunctions::infinite_line<dim>(p, pB, pC);
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_BC, d_manifold);
                 }
             }
           else if (p[0] > center[0] - radius && p[0] < center[0] + radius) // region 1, 5-7, 8, 9
             {
               if (p[0] > pB[0] && p[0] < pC[0]) // region 5-7
                 {
-                  d_AB  = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pA, pB);
-                  d_BC  = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pB, pC);
-                  d_CD  = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pC, pD);
+                  d_AB  = DistanceFunctions::infinite_line<dim>(p, pA, pB);
+                  d_BC  = DistanceFunctions::infinite_line<dim>(p, pB, pC);
+                  d_CD  = DistanceFunctions::infinite_line<dim>(p, pC, pD);
                   d_min = std::min(d_AB, d_BC);
                   d_min = std::min(d_CD, d_min);
                 }
               else
                 {
-                  d_AB = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pA, pB);
-                  d_CD = UtilityFunctions::DistanceFunctions::infinite_line<dim>(p, pC, pD);
-                  d_manifold =
-                    UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
-                  d_min = std::min(d_AB, d_CD);
-                  d_min = std::min(d_min, d_manifold);
+                  d_AB       = DistanceFunctions::infinite_line<dim>(p, pA, pB);
+                  d_CD       = DistanceFunctions::infinite_line<dim>(p, pC, pD);
+                  d_manifold = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+                  d_min      = std::min(d_AB, d_CD);
+                  d_min      = std::min(d_min, d_manifold);
                 }
             }
           else
             { // outer region
-              d_min =
-                UtilityFunctions::DistanceFunctions::spherical_manifold<dim>(p, center, radius);
+              d_min = DistanceFunctions::spherical_manifold<dim>(p, center, radius);
             }
 
           // return the smallest distance

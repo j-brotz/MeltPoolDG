@@ -9,6 +9,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/distance_functions.hpp>
 
 /**
  * This example represents a simple test example for heat transfer.
