@@ -54,64 +54,10 @@ namespace MeltPoolDG
                  const Parameters<double> &                     data_in,
                  const unsigned int                             reinit_dof_idx_in,
                  const unsigned int                             reinit_quad_idx_in,
-                 const unsigned int                             normal_dof_idx_in) override
-      {
-        scratch_data    = scratch_data_in;
-        reinit_dof_idx  = reinit_dof_idx_in;
-        reinit_quad_idx = reinit_quad_idx_in;
-        normal_dof_idx  = normal_dof_idx_in;
-        scratch_data->initialize_dof_vector(solution_level_set, reinit_dof_idx);
-        /*
-         *    initialize the (local) parameters of the reinitialization
-         *    from the global user-defined parameters
-         */
-        set_reinitialization_parameters(data_in);
-        /*
-         *    initialize normal_vector_field
-         */
-        AssertThrow(data_in.normal_vec.do_matrix_free == data_in.reinit.solver.do_matrix_free,
-                    ExcMessage("For the reinitialization problem both the "
-                               " normal vector and the reinitialization operation have to be "
-                               " computed either matrix-based or matrix-free."));
-
-        if (data_in.normal_vec.implementation == "meltpooldg")
-          {
-            normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperation<dim>>();
-
-            normal_vector_operation->initialize(
-              scratch_data_in, data_in, normal_dof_idx, reinit_quad_idx, reinit_dof_idx);
-          }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-        else if (data_in.normal_vec.implementation == "adaflo")
-          {
-            AssertThrow(data_in.normal_vec.do_matrix_free, ExcNotImplemented());
-
-            normal_vector_operation =
-              std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-                *scratch_data_in,
-                reinit_dof_idx, //@todo -- this is actually ls dof idx; must this be added??
-                normal_dof_idx,
-                reinit_quad_idx,
-                solution_level_set,
-                data_in);
-          }
-#endif
-        else
-          AssertThrow(false, ExcNotImplemented());
-        /*
-         *   create reinitialization operator. This class supports matrix-based
-         *   and matrix-free computation.
-         */
-        create_operator();
-      }
+                 const unsigned int                             normal_dof_idx_in) override;
 
       void
-      reinit() override
-      {
-        scratch_data->initialize_dof_vector(solution_level_set, reinit_dof_idx);
-        update_operator();
-        normal_vector_operation->reinit();
-      }
+      reinit() override;
 
       /*
        *  By calling the reinitialize function, (1) the solution_level_set field
@@ -120,218 +66,42 @@ namespace MeltPoolDG
        *  solution procedure.
        */
       void
-      set_initial_condition(const VectorType &solution_level_set_in) override
-      {
-        /*
-         *    copy the given solution into the member variable
-         */
-        scratch_data->initialize_dof_vector(solution_level_set, reinit_dof_idx);
-        solution_level_set.copy_locally_owned_data_from(solution_level_set_in);
-        solution_level_set.update_ghost_values();
-        /*
-         *    update the normal vector field corresponding to the given solution of the
-         *    level set; the normal vector field is called by reference within the
-         *    operator class
-         */
-        normal_vector_operation->solve(solution_level_set);
-      }
+      set_initial_condition(const VectorType &solution_level_set_in) override;
 
       void
-      update_dof_idx(const unsigned int &reinit_dof_idx_in) override
-      {
-        reinit_dof_idx = reinit_dof_idx_in;
-        create_operator();
-      }
+      update_dof_idx(const unsigned int &reinit_dof_idx_in) override;
 
       void
-      solve(const double d_tau) override
-      {
-        /**
-         * update the distributed sparsity pattern for matrix-based amr
-         */
-        VectorType src, rhs;
-
-        scratch_data->initialize_dof_vector(src, reinit_dof_idx);
-        scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
-
-        reinit_operator->set_time_increment(d_tau);
-
-        int iter = 0;
-
-        if (reinit_data.solver.do_matrix_free)
-          {
-            VectorType src_rhs;
-            scratch_data->initialize_dof_vector(src_rhs, reinit_dof_idx);
-            src_rhs.copy_locally_owned_data_from(solution_level_set);
-            src_rhs.update_ghost_values();
-            reinit_operator->create_rhs(rhs, src_rhs);
-            iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<double>>(
-              *reinit_operator, src, rhs);
-          }
-        else
-          {
-            reinit_operator->system_matrix.reinit(reinit_operator->dsp);
-            reinit_operator->assemble_matrixbased(solution_level_set,
-                                                  reinit_operator->system_matrix,
-                                                  rhs);
-
-            if (reinit_data.solver.solver_type == "CG")
-              {
-                auto preconditioner =
-                  LinearSolve::setup_preconditioner(reinit_operator->system_matrix,
-                                                    reinit_data.solver.preconditioner_type);
-                iter = LinearSolve::solve<VectorType,
-                                          SolverCG<VectorType>,
-                                          SparseMatrixType,
-                                          TrilinosWrappers::PreconditionBase>(
-                  reinit_operator->system_matrix,
-                  src,
-                  rhs,
-                  reinit_data.solver.rel_tolerance,
-                  reinit_data.solver.max_iterations,
-                  *preconditioner);
-              }
-            else if (reinit_data.solver.solver_type == "GMRES")
-              {
-                auto preconditioner =
-                  LinearSolve::setup_preconditioner(reinit_operator->system_matrix,
-                                                    reinit_data.solver.preconditioner_type);
-                iter = LinearSolve::solve<VectorType,
-                                          SolverGMRES<VectorType>,
-                                          SparseMatrixType,
-                                          TrilinosWrappers::PreconditionBase>(
-                  reinit_operator->system_matrix,
-                  src,
-                  rhs,
-                  reinit_data.solver.rel_tolerance,
-                  reinit_data.solver.max_iterations,
-                  *preconditioner);
-              }
-
-            scratch_data->get_pcout()
-              << "| matrix | " << std::setw(15) << std::left << std::setprecision(15)
-              << reinit_operator->system_matrix.frobenius_norm() << std::endl;
-          }
-        scratch_data->get_constraint(reinit_dof_idx).distribute(src);
-        solution_level_set.zero_out_ghosts();
-
-        solution_level_set += src;
-
-        solution_level_set.update_ghost_values();
-
-        const ConditionalOStream &pcout = scratch_data->get_pcout();
-        scratch_data->get_pcout(1) << "| CG: i=" << std::setw(5) << std::left << iter;
-        scratch_data->get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
-                                   << std::setprecision(10) << src.linfty_norm();
-        pcout << " |Ψ RHS|² = " << std::setw(15) << std::left << std::setprecision(15)
-              << VectorTools::compute_L2_norm<dim>(rhs,
-                                                   *scratch_data,
-                                                   reinit_dof_idx,
-                                                   reinit_quad_idx)
-              << " |" << std::endl;
-        pcout << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(15)
-              << VectorTools::compute_L2_norm<dim>(src,
-                                                   *scratch_data,
-                                                   reinit_dof_idx,
-                                                   reinit_quad_idx)
-              << " |" << std::endl;
-        pcout << " |phi_update|² = " << std::setw(15) << std::left << std::setprecision(15)
-              << VectorTools::compute_L2_norm<dim>(solution_level_set,
-                                                   *scratch_data,
-                                                   reinit_dof_idx,
-                                                   reinit_quad_idx)
-              << " |" << std::endl;
-      }
+      solve(const double d_tau) override;
 
       const BlockVectorType &
-      get_normal_vector() const override
-      {
-        return normal_vector_operation->get_solution_normal_vector();
-      }
+      get_normal_vector() const override;
 
       const VectorType &
-      get_level_set() const override
-      {
-        return solution_level_set;
-      }
+      get_level_set() const override;
 
       VectorType &
-      get_level_set() override
-      {
-        return solution_level_set;
-      }
+      get_level_set() override;
 
       BlockVectorType &
-      get_normal_vector() override
-      {
-        return normal_vector_operation->get_solution_normal_vector();
-      }
+      get_normal_vector() override;
 
       void
-      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
-      {
-        vectors.push_back(&solution_level_set);
-      }
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
 
       void
-      attach_output_vectors(GenericDataOut<dim> &data_out) const
-      {
-        solution_level_set.update_ghost_values();
-        data_out.add_data_vector(scratch_data->get_dof_handler(reinit_dof_idx),
-                                 get_level_set(),
-                                 "psi");
-
-        //@todo: attach_output_vectors from normal_vector_operation
-        get_normal_vector().update_ghost_values();
-        for (unsigned int d = 0; d < dim; ++d)
-          data_out.add_data_vector(scratch_data->get_dof_handler(reinit_dof_idx),
-                                   get_normal_vector().block(d),
-                                   "normal_" + std::to_string(d));
-      }
+      attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
 
     private:
       void
-      set_reinitialization_parameters(const Parameters<double> &data_in)
-      {
-        reinit_data = data_in.reinit;
-      }
+      set_reinitialization_parameters(const Parameters<double> &data_in);
 
       void
-      create_operator()
-      {
-        if (reinit_data.modeltype == "olsson2007")
-          {
-            reinit_operator = std::make_unique<OlssonOperator<dim, double>>(
-              *scratch_data,
-              normal_vector_operation->get_solution_normal_vector(),
-              reinit_data.constant_epsilon,
-              reinit_data.scale_factor_epsilon,
-              reinit_dof_idx,
-              reinit_quad_idx);
-          }
-        /*
-         * add your desired operators here
-         *
-         * else if (reinit_data.reinitmodel == "my_model")
-         *    ....
-         */
-        else
-          AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."))
-            /*
-             *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
-             *  apply it to the system matrix. This functionality is part of the OperatorBase class.
-             */
+      create_operator();
 
-            if (!reinit_data.solver.do_matrix_free)
-              reinit_operator->initialize_matrix_based<dim>(*scratch_data);
-      }
       void
-      update_operator()
-      {
-        if (!reinit_data.solver.do_matrix_free)
-          reinit_operator->initialize_matrix_based<dim>(*scratch_data);
-      }
+      update_operator();
 
     private:
       std::shared_ptr<const ScratchData<dim>> scratch_data;

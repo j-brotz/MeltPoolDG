@@ -11,6 +11,7 @@
 
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulationbase.hpp>
+#  include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #  include <meltpooldg/utilities/conditional_ostream.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
@@ -40,219 +41,50 @@ namespace MeltPoolDG
                                       const int                 reinit_dof_idx,
                                       const int                 reinit_quad_idx,
                                       const int                 normal_dof_idx,
-                                      const Parameters<double> &parameters)
-        : scratch_data(scratch_data)
-        , pcout(scratch_data.get_pcout(1))
-      {
-        /**
-         * set parameters of adaflo
-         */
-        set_adaflo_parameters(parameters, reinit_dof_idx, reinit_quad_idx, normal_dof_idx);
-        /*
-         * initialize normal_vector_operation from adaflo
-         */
-        normal_vector_operation_adaflo =
-          std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-            scratch_data, reinit_dof_idx, normal_dof_idx, reinit_quad_idx, level_set, parameters);
-
-        /*
-         * setup lambda function to compute the normal vector
-         */
-        compute_normal = [&](bool do_compute_normal) {
-          if (do_compute_normal && force_compute_normal)
-            normal_vector_operation_adaflo->solve(level_set);
-        };
-
-        /*
-         * initialize reinitialization operation from adaflo
-         */
-        reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
-          normal_vector_operation_adaflo->get_solution_normal_vector(),
-          scratch_data.get_cell_diameters(),
-          cell_diameter_max,
-          cell_diameter_min,
-          scratch_data.get_constraint(reinit_dof_idx),
-          increment,
-          level_set,
-          rhs,
-          pcout,
-          preconditioner,
-          last_concentration_range, // @todo
-          reinit_params_adaflo,
-          first_reinit_step,
-          scratch_data.get_matrix_free());
-        /**
-         *  initialize the dof vectors and compute the preconditioner
-         */
-        reinit();
-      }
+                                      const Parameters<double> &parameters);
 
       void
-      update_dof_idx(const unsigned int &reinit_dof_idx) override
-      {
-        reinit_params_adaflo.dof_index_ls = reinit_dof_idx;
-
-        reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
-          normal_vector_operation_adaflo->get_solution_normal_vector(),
-          scratch_data.get_cell_diameters(),
-          cell_diameter_max,
-          cell_diameter_min,
-          scratch_data.get_constraint(reinit_dof_idx),
-          increment,
-          level_set,
-          rhs,
-          pcout,
-          preconditioner,
-          last_concentration_range, // @todo
-          reinit_params_adaflo,
-          first_reinit_step,
-          scratch_data.get_matrix_free());
-      }
+      update_dof_idx(const unsigned int &reinit_dof_idx) override;
 
       void
-      reinit() override
-      {
-        initialize_vectors();
-
-        compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
-                                    reinit_params_adaflo.dof_index_ls,
-                                    cell_diameters,
-                                    cell_diameter_min,
-                                    cell_diameter_max);
-
-        /**
-         * initialize the preconditioner
-         */
-        initialize_mass_matrix_diagonal<dim, double>(scratch_data.get_matrix_free(),
-                                                     scratch_data.get_constraint(
-                                                       reinit_params_adaflo.dof_index_ls),
-                                                     reinit_params_adaflo.dof_index_ls,
-                                                     reinit_params_adaflo.quad_index,
-                                                     preconditioner);
-
-        normal_vector_operation_adaflo->reinit();
-      }
+      reinit() override;
 
       /**
        * Solver time step
        */
       void
-      solve(const double dt) override
-      {
-        reinit_operation_adaflo->reinitialize(dt,
-                                              1 /*stab_steps @todo*/,
-                                              0 /*diff_steps @todo*/,
-                                              compute_normal);
-        scratch_data.get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
-                                  << std::setprecision(10) << increment.linfty_norm();
-        scratch_data.get_pcout(0)
-          << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(10)
-          << VectorTools::compute_L2_norm<dim>(increment,
-                                               scratch_data,
-                                               reinit_params_adaflo.dof_index_ls,
-                                               reinit_params_adaflo.quad_index)
-          << " |" << std::endl;
-        force_compute_normal = false;
-      }
+      solve(const double dt) override;
 
       const LinearAlgebra::distributed::Vector<double> &
-      get_level_set() const override
-      {
-        return level_set;
-      }
+      get_level_set() const override;
 
       LinearAlgebra::distributed::Vector<double> &
-      get_level_set() override
-      {
-        return level_set;
-      }
+      get_level_set() override;
 
       const LinearAlgebra::distributed::BlockVector<double> &
-      get_normal_vector() const override
-      {
-        return normal_vector_operation_adaflo->get_solution_normal_vector();
-      }
+      get_normal_vector() const override;
 
       LinearAlgebra::distributed::BlockVector<double> &
-      get_normal_vector() override
-      {
-        return normal_vector_operation_adaflo->get_solution_normal_vector();
-      }
-
+      get_normal_vector() override;
 
       void
-      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override
-      {
-        vectors.push_back(&level_set);
-      }
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 
       void
-      attach_output_vectors(GenericDataOut<dim> &data_out) const
-      {
-        get_level_set().update_ghost_values();
-        data_out.add_data_vector(scratch_data.get_dof_handler(reinit_params_adaflo.dof_index_ls),
-                                 get_level_set(),
-                                 "psi");
-
-        //@todo: attach_output_vectors from normal_vector_operation
-        get_normal_vector().update_ghost_values();
-        for (unsigned int d = 0; d < dim; ++d)
-          data_out.add_data_vector(scratch_data.get_dof_handler(reinit_params_adaflo.dof_index_ls),
-                                   get_normal_vector().block(d),
-                                   "normal_" + std::to_string(d));
-      }
+      attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
       void
-      set_initial_condition(const VectorType &level_set_in) override
-      {
-        /**
-         * initialize advected field dof vectors
-         */
-        scratch_data.initialize_dof_vector(level_set, reinit_params_adaflo.dof_index_ls);
-        level_set.copy_locally_owned_data_from(level_set_in);
-        force_compute_normal = true;
-      }
+      set_initial_condition(const VectorType &level_set_in) override;
 
     private:
       void
       set_adaflo_parameters(const Parameters<double> &parameters,
                             const int                 reinit_dof_idx,
                             const int                 reinit_quad_idx,
-                            const int                 normal_dof_idx)
-      {
-        reinit_params_adaflo.time.start_time           = 0.0;
-        reinit_params_adaflo.time.end_time             = 1e8;
-        reinit_params_adaflo.time.time_step_size_start = parameters.reinit.dtau;
-        reinit_params_adaflo.time.time_step_size_min   = parameters.reinit.dtau;
-        reinit_params_adaflo.time.time_step_size_max   = parameters.reinit.dtau;
-
-        //@todo?
-        // if (parameters.reinit.time_integration_scheme == "implicit_euler")
-        // reinit_params_adaflo.time.time_step_scheme =
-        // TimeSteppingParameters::Scheme::implicit_euler;
-        //
-        reinit_params_adaflo.time.time_stepping_cfl   = 0.8;  //@ todo
-        reinit_params_adaflo.time.time_stepping_coef2 = 10.0; //@ todo capillary number
-
-        reinit_params_adaflo.dof_index_ls     = reinit_dof_idx;
-        reinit_params_adaflo.dof_index_normal = normal_dof_idx;
-        reinit_params_adaflo.quad_index       = reinit_quad_idx;
-        reinit_params_adaflo.do_iteration     = false; //@ todo
-      }
+                            const int                 normal_dof_idx);
 
       void
-      initialize_vectors()
-      {
-        /**
-         * initialize advected field dof vectors
-         */
-        scratch_data.initialize_dof_vector(level_set, reinit_params_adaflo.dof_index_ls);
-        /**
-         * initialize vectors for the solution of the linear system
-         */
-        scratch_data.initialize_dof_vector(rhs, reinit_params_adaflo.dof_index_ls);
-        scratch_data.initialize_dof_vector(increment, reinit_params_adaflo.dof_index_ls);
-      }
+      initialize_vectors();
 
     private:
       const ScratchData<dim> &scratch_data;

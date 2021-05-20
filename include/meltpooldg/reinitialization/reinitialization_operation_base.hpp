@@ -29,15 +29,7 @@ namespace MeltPoolDG
                  const Parameters<double> &                     data_in,
                  const unsigned int                             reinit_dof_idx_in,
                  const unsigned int                             reinit_quad_idx_in,
-                 const unsigned int                             normal_dof_idx_in)
-      {
-        (void)scratch_data_in;
-        (void)data_in;
-        (void)reinit_dof_idx_in;
-        (void)reinit_quad_idx_in;
-        (void)normal_dof_idx_in;
-        AssertThrow(false, ExcNotImplemented());
-      }
+                 const unsigned int                             normal_dof_idx_in);
 
       virtual void
       reinit() = 0;

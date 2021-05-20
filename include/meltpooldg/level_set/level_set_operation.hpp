@@ -9,6 +9,7 @@
 // DoFTools
 #include <deal.II/dofs/dof_tools.h>
 // MeltPoolDG
+#include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/curvature/curvature_operation.hpp>
 #include <meltpooldg/curvature/curvature_operation_adaflo_wrapper.hpp>
