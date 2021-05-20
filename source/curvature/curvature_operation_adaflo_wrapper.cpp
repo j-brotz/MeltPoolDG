@@ -3,6 +3,172 @@
 
 namespace MeltPoolDG::Curvature
 {
+  template <int dim>
+  CurvatureOperationAdaflo<dim>::CurvatureOperationAdaflo(const ScratchData<dim> &scratch_data,
+                                                          const int         advec_diff_dof_idx,
+                                                          const int         normal_vec_dof_idx,
+                                                          const int         curv_dof_idx,
+                                                          const int         curv_quad_idx,
+                                                          const VectorType &advected_field,
+                                                          const Parameters<double> &data_in)
+    : scratch_data(scratch_data)
+  {
+    (void)normal_vec_dof_idx;
+
+    /**
+     * set parameters of adaflo
+     */
+    set_adaflo_parameters(data_in, advec_diff_dof_idx, curv_dof_idx, curv_quad_idx);
+
+    /**
+     * initialize the projection matrix
+     */
+    projection_matrix     = std::make_shared<BlockMatrixExtension>();
+    ilu_projection_matrix = std::make_shared<BlockILUExtension>();
+
+    /*
+     * initialize normal_vector_operation from adaflo
+     */
+    normal_vector_operation_adaflo =
+      std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
+        scratch_data, advec_diff_dof_idx, curv_dof_idx, curv_quad_idx, advected_field, data_in);
+    /*
+     * initialize adaflo operation for computing curvature
+     */
+    curvature_operation = std::make_shared<LevelSetOKZSolverComputeCurvature<dim>>(
+      scratch_data.get_cell_diameters(),
+      normal_vector_operation_adaflo->get_solution_normal_vector(),
+      scratch_data.get_constraint(curv_dof_idx),
+      scratch_data.get_constraint(
+        curv_dof_idx),   // @todo -- check adaflo --> hanging node constraints??
+      cell_diameter_max, // @todo
+      rhs,
+      curv_adaflo_params,
+      curvature_field,
+      advected_field,
+      scratch_data.get_matrix_free(),
+      preconditioner,
+      projection_matrix,
+      ilu_projection_matrix);
+
+    this->reinit(); // TODO?
+  }
+
+  template <int dim>
+  void
+  CurvatureOperationAdaflo<dim>::reinit()
+  {
+    /**
+     *  initialize the dof vectors
+     */
+    initialize_vectors();
+
+    compute_cell_diameters<dim>(scratch_data.get_matrix_free(),
+                                curv_adaflo_params.dof_index_ls,
+                                cell_diameters,
+                                cell_diameter_min,
+                                cell_diameter_max);
+
+    /**
+     * initialize the preconditioner -->  @todo: currently not used in adaflo
+     */
+    initialize_mass_matrix_diagonal<dim, double>(scratch_data.get_matrix_free(),
+                                                 scratch_data.get_constraint(
+                                                   curv_adaflo_params.dof_index_curvature),
+                                                 curv_adaflo_params.dof_index_curvature,
+                                                 curv_adaflo_params.quad_index,
+                                                 preconditioner);
+
+    initialize_projection_matrix<dim, double, VectorizedArray<double>>(
+      scratch_data.get_matrix_free(),
+      scratch_data.get_constraint(curv_adaflo_params.dof_index_curvature),
+      curv_adaflo_params.dof_index_curvature,
+      curv_adaflo_params.quad_index,
+      cell_diameter_max, // @todo
+      cell_diameter_min, // @todo
+      cell_diameters,
+      *projection_matrix,
+      *ilu_projection_matrix);
+
+    normal_vector_operation_adaflo->reinit();
+  }
+
+  template <int dim>
+  void
+  CurvatureOperationAdaflo<dim>::solve(const VectorType &advected_field)
+  {
+    (void)advected_field;
+    initialize_vectors();
+    normal_vector_operation_adaflo->solve(
+      advected_field); //@todo check how advected_field is processed
+    curvature_operation->compute_curvature(
+      true); // @todo: adaflo does not use the boolean function argument
+
+    scratch_data.get_pcout()
+      << " |k| = " << std::setw(15) << std::setprecision(10) << std::left
+      << VectorTools::compute_L2_norm<dim>(get_curvature(),
+                                           scratch_data,
+                                           curv_adaflo_params.dof_index_curvature,
+                                           curv_adaflo_params.quad_index);
+
+    scratch_data.get_pcout() << std::endl;
+  }
+
+  template <int dim>
+  const LinearAlgebra::distributed::Vector<double> &
+  CurvatureOperationAdaflo<dim>::get_curvature() const
+  {
+    return curvature_field;
+  }
+
+  template <int dim>
+  LinearAlgebra::distributed::Vector<double> &
+  CurvatureOperationAdaflo<dim>::get_curvature()
+  {
+    return curvature_field;
+  }
+
+  template <int dim>
+  const LinearAlgebra::distributed::BlockVector<double> &
+  CurvatureOperationAdaflo<dim>::get_normal_vector() const
+  {
+    return normal_vector_operation_adaflo->get_solution_normal_vector();
+  }
+
+  template <int dim>
+  void
+  CurvatureOperationAdaflo<dim>::set_adaflo_parameters(const Parameters<double> &parameters,
+                                                       const int                 advec_diff_dof_idx,
+                                                       const int                 curv_dof_idx,
+                                                       const int                 curv_quad_idx)
+  {
+    (void)parameters;
+    curv_adaflo_params.dof_index_ls            = advec_diff_dof_idx;
+    curv_adaflo_params.dof_index_curvature     = curv_dof_idx; //@ todo
+    curv_adaflo_params.dof_index_normal        = curv_dof_idx;
+    curv_adaflo_params.quad_index              = curv_quad_idx;
+    curv_adaflo_params.epsilon                 = 1.0;   //@ todo
+    curv_adaflo_params.approximate_projections = false; //@ todo
+    curv_adaflo_params.curvature_correction    = false; //@ todo
+    // curv_adaflo_params.damping_scale_factor = parameters.normal_vec.damping_scale_factor; //@
+    // todo
+  }
+
+  template <int dim>
+  void
+  CurvatureOperationAdaflo<dim>::initialize_vectors()
+  {
+    /**
+     * initialize advected field dof vectors
+     */
+    scratch_data.initialize_dof_vector(curvature_field, curv_adaflo_params.dof_index_curvature);
+    scratch_data.initialize_dof_vector(normal_vec_dummy, curv_adaflo_params.dof_index_curvature);
+    /**
+     * initialize vectors for the solution of the linear system
+     */
+    scratch_data.initialize_dof_vector(rhs, curv_adaflo_params.dof_index_curvature);
+  }
+
   template class CurvatureOperationAdaflo<1>;
   template class CurvatureOperationAdaflo<2>;
   template class CurvatureOperationAdaflo<3>;
