@@ -66,7 +66,7 @@ test(const MPI_Comm &mpi_comm)
 
   GridGenerator::hyper_cube(triangulation, 0, domain_size);
 
-  triangulation.refine_global(6);
+  triangulation.refine_global(4);
 
   auto q_gauss = QGauss<dim>(degree + 1);
   auto fe_q    = FE_Q<dim>(degree);
