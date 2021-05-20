@@ -6,6 +6,8 @@
 #pragma once
 #include <deal.II/dofs/dof_handler.h>
 
+#include <meltpooldg/utilities/postprocessor.hpp>
+
 namespace MeltPoolDG
 {
   namespace Flow

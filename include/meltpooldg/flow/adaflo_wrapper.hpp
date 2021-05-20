@@ -7,11 +7,14 @@
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 
+#  include <deal.II/fe/fe_simplex_p.h>
+
 #  include <deal.II/lac/generic_linear_algebra.h>
 
 #  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #  include <meltpooldg/flow/flow_base.hpp>
 #  include <meltpooldg/interface/scratch_data.hpp>
+#  include <meltpooldg/interface/simulationbase.hpp>
 #  include <meltpooldg/utilities/utilityfunctions.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
