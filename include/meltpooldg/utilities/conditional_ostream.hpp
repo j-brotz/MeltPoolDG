@@ -14,16 +14,9 @@ namespace MeltPoolDG
   class ConditionalOStream : public dealii::ConditionalOStream
   {
   public:
-    ConditionalOStream(std::ostream &stream, const bool active = true)
-      : dealii::ConditionalOStream(stream, active)
-      , output_stream(stream)
-      , f(stream.flags())
-    {}
+    ConditionalOStream(std::ostream &stream, const bool active = true);
 
-    ~ConditionalOStream()
-    {
-      output_stream.flags(f);
-    }
+    ~ConditionalOStream();
 
   private:
     std::ostream &          output_stream;
