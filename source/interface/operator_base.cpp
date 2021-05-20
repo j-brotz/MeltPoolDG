@@ -58,7 +58,6 @@ namespace MeltPoolDG
     SrcRhsVectorType temp_src;
     scratch_data.initialize_dof_vector(temp_src, dof_no_bc_idx);
     temp_src = src;
-    // temp_src.copy_locally_owned_data_from(src);
 
     DoFVectorType bc_values;
     scratch_data.initialize_dof_vector(bc_values, dof_no_bc_idx);
@@ -76,7 +75,6 @@ namespace MeltPoolDG
     /*
      * Clear constrained values
      */
-    // rhs.copy_locally_owned_data_from(temp_rhs);
     rhs = temp_rhs;
     scratch_data.get_constraint(dof_idx).set_zero(rhs);
     this->reset_indices(dof_idx, this->quad_idx);
