@@ -130,6 +130,7 @@ namespace MeltPoolDG::Heat
 
     const VectorType &heat_source;
 
+
     // optional: flow velocity for internal convection
     const unsigned int vel_dof_idx;
     const VectorType * velocity;
@@ -141,6 +142,15 @@ namespace MeltPoolDG::Heat
     // optional: two phase flow with evaporation
     const EvaporationData<double> *evapor_data;
     double                         evaporation_heat_transfer_coefficient = 0;
+    VectorType *                   evaporative_mass_flux                 = nullptr;
+
+    /*
+     * contribution to heat source due to evaporation;
+     * just for output purposes
+     */
+    mutable VectorType                                        evapor_heat_source;
+    mutable std::vector<std::vector<VectorizedArray<double>>> q_vapor;
+
 
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
@@ -226,14 +236,15 @@ namespace MeltPoolDG::Heat
              std::sqrt(2. * numbers::PI * PhysicalConstants::universal_gas_constant /
                        evapor_data->molar_mass) *
              std::pow(evapor_data->boiling_temperature, 1.5));
-
-          // @todo: consistent integration into heat operation will be done as a follow up PR
-          if (evapor_data->formulation_evaporative_mass_flux ==
-              "temperature dependent interface const")
-            AssertThrow(false, ExcNotImplemented());
         }
 
       this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
+    }
+
+    void
+    register_evaporative_mass_flux(VectorType *evaporative_mass_flux_in)
+    {
+      evaporative_mass_flux = evaporative_mass_flux_in;
     }
 
     void
@@ -549,6 +560,7 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, 1, number> heat_source_vals(matrix_free, temp_dof_idx, this->quad_idx);
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
       VectorizedArrayType capacity     = material.first.capacity;
       VectorizedArrayType conductivity = material.first.conductivity;
@@ -562,6 +574,8 @@ namespace MeltPoolDG::Heat
       VectorizedArrayType d_conductivity_dT = 0.0;
       VectorizedArrayType d_density_dT      = 0.0;
 
+      q_vapor.resize(scratch_data.get_matrix_free().n_cell_batches(),
+                     std::vector<VectorizedArray<double>>(temp_vals.n_q_points));
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
@@ -589,6 +603,13 @@ namespace MeltPoolDG::Heat
               ls_vals.reinit(cell);
               ls_vals.read_dof_values_plain(*level_set_as_heaviside);
               ls_vals.evaluate(true, evapor_data);
+            }
+
+          if (evaporative_mass_flux)
+            {
+              evapor_vals.reinit(cell);
+              evapor_vals.read_dof_values_plain(*evaporative_mass_flux);
+              evapor_vals.evaluate(true, false);
             }
 
           for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -644,19 +665,34 @@ namespace MeltPoolDG::Heat
 
               if (level_set_as_heaviside && evapor_data)
                 {
-                  /*
-                   * compute the heat sink due to evaporation
-                   *          .
-                   *    q_s = m h_v = α_v · h_v · <(T - T_v)> · δ
-                   *                  ^______^                   Γ
-                   *                    evaporation_heat_transfer_coefficient
-                   */
-                  val += compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
-                    temp_vals.get_value(q_index),
-                    evapor_data->boiling_temperature,
-                    evaporation_heat_transfer_coefficient * ls_vals.get_gradient(q_index).norm() *
-                      (temp_vals.get_value(q_index) - evapor_data->boiling_temperature),
-                    0.0);
+                  VectorizedArrayType temp;
+                  if (evaporative_mass_flux)
+                    /*
+                     * compute the heat sink due to evaporation
+                     *          .
+                     *    q_s = m h_v · δ
+                     *                   Γ
+                     */
+                    temp = evapor_vals.get_value(q_index) *
+                           evapor_data->latent_heat_of_evaporation *
+                           ls_vals.get_gradient(q_index).norm();
+                  else
+                    /*
+                     * compute the heat sink due to evaporation
+                     *          .
+                     *    q_s = m h_v = α_v · h_v · <(T - T_v)> · δ
+                     *                  ^______^                   Γ
+                     *                    evaporation_heat_transfer_coefficient
+                     */
+                    temp = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+                      temp_vals.get_value(q_index),
+                      evapor_data->boiling_temperature,
+                      evaporation_heat_transfer_coefficient * ls_vals.get_gradient(q_index).norm() *
+                        (temp_vals.get_value(q_index) - evapor_data->boiling_temperature),
+                      0.0);
+
+                  q_vapor[cell][q_index] = -temp;
+                  val += temp;
                 }
 
               temp_vals.submit_value(-1.0 * val,
@@ -766,6 +802,34 @@ namespace MeltPoolDG::Heat
         MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
       if (level_set_as_heaviside)
         MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
+
+      MeltPoolDG::VectorTools::zero_out_ghosts(heat_source);
+    }
+
+    void
+    attach_output_vectors(GenericDataOut<dim> &data_out) const
+    {
+      if (evapor_data)
+        {
+          scratch_data.initialize_dof_vector(evapor_heat_source, temp_dof_idx);
+          if (!q_vapor.empty())
+            UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+              evapor_heat_source,
+              scratch_data.get_matrix_free(),
+              temp_dof_idx,
+              this->quad_idx,
+              scratch_data.get_degree(temp_dof_idx),     // fe_degree of the resulting vector
+              scratch_data.get_degree(temp_dof_idx) + 1, // n_q_points_1d of cell operation
+              [&](const unsigned int cell, const unsigned int quad)
+                -> const VectorizedArray<double> & { return q_vapor[cell][quad]; });
+          evapor_heat_source.update_ghost_values();
+
+          data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                                   evapor_heat_source,
+                                   "evporative_heat_source");
+        }
+      else
+        (void)data_out;
     }
 
   private:
@@ -881,10 +945,11 @@ namespace MeltPoolDG::Heat
                *   d  T     ^______^                Γ
                *              evaporation_heat_transfer_coefficient
                */
-              val += evaporation_heat_transfer_coefficient *
-                     UtilityFunctions::heaviside(temp_lin_vals.get_value(q_index) -
-                                                 evapor_data->boiling_temperature) *
-                     ls_vals.get_gradient(q_index).norm() * temp_vals.get_value(q_index);
+              if (!evaporative_mass_flux)
+                val += evaporation_heat_transfer_coefficient *
+                       UtilityFunctions::heaviside(temp_lin_vals.get_value(q_index) -
+                                                   evapor_data->boiling_temperature) *
+                       ls_vals.get_gradient(q_index).norm() * temp_vals.get_value(q_index);
             }
 
           temp_vals.submit_value(val, q_index);

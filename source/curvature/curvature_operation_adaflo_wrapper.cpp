@@ -104,7 +104,8 @@ namespace MeltPoolDG::Curvature
     curvature_operation->compute_curvature(
       true); // @todo: adaflo does not use the boolean function argument
 
-    scratch_data.get_pcout()
+    const int verbosity_l2_norm = dim > 1 ? 0 : 1;
+    scratch_data.get_pcout(verbosity_l2_norm)
       << " |k| = " << std::setw(15) << std::setprecision(10) << std::left
       << VectorTools::compute_L2_norm<dim>(get_curvature(),
                                            scratch_data,

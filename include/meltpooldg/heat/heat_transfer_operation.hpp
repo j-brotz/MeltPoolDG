@@ -102,6 +102,12 @@ namespace MeltPoolDG::Heat
     }
 
     void
+    register_evaporative_mass_flux(VectorType *evaporative_mass_flux_in)
+    {
+      heat_operator->register_evaporative_mass_flux(evaporative_mass_flux_in);
+    }
+
+    void
     set_initial_condition(const Function<dim> &initial_field_function_temperature)
     {
       reinit();
@@ -247,7 +253,6 @@ namespace MeltPoolDG::Heat
       if (level_set_as_heaviside)
         MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
 
-
       /**
        *  temperature
        */
@@ -266,6 +271,10 @@ namespace MeltPoolDG::Heat
       data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
                                heat_source,
                                "heat_source");
+      /**
+       *  evaporative heat source/sink
+       */
+      heat_operator->attach_output_vectors(data_out);
     }
 
     const VectorType &

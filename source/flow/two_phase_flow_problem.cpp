@@ -370,6 +370,11 @@ namespace MeltPoolDG::Flow
           &heat_operation->get_temperature(),
           temp_dof_idx);
 
+        if (base_in->parameters.evapor.formulation_evaporative_mass_flux ==
+            "temperature dependent interface const")
+          heat_operation->register_evaporative_mass_flux(
+            &evaporation_operation->get_evaporative_mass_flux());
+
         // configure also the level set problem with evaporation
         level_set_operation.setup_with_evaporation(flow_operation->get_dof_handler_idx_velocity(),
                                                    evapor_vel_dof_idx,

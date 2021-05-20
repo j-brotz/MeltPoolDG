@@ -93,8 +93,10 @@ namespace MeltPoolDG::NormalVector
     initialize_vectors();
     normal_vec_operation->compute_normal(true);
 
+    const int verbosity_l2_norm = dim > 1 ? 0 : 1;
+
     for (unsigned int d = 0; d < dim; ++d)
-      scratch_data.get_pcout(0)
+      scratch_data.get_pcout(verbosity_l2_norm)
         << " |n|_" << d << "=" << std::setw(15) << std::setprecision(10) << std::left
         << MeltPoolDG::VectorTools::compute_L2_norm<dim>(get_solution_normal_vector().block(d),
                                                          scratch_data,
