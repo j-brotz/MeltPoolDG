@@ -106,7 +106,8 @@ namespace MeltPoolDG::Heat
    */
 
   template <int dim, typename number = double>
-  class HeatTransferOperator : public OperatorBase<number,
+  class HeatTransferOperator : public OperatorBase<dim,
+                                                   number,
                                                    LinearAlgebra::distributed::Vector<number>,
                                                    LinearAlgebra::distributed::Vector<number>>
   {

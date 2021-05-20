@@ -108,7 +108,7 @@ namespace MeltPoolDG
       /*
        *  This shared pointer will point to your user-defined reinitialization operator.
        */
-      std::unique_ptr<OperatorBase<double>> reinit_operator;
+      std::unique_ptr<OperatorBase<dim, double>> reinit_operator;
       /*
        *   Computation of the normal vectors
        */

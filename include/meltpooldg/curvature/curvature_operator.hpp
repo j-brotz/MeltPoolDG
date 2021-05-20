@@ -26,7 +26,8 @@ namespace MeltPoolDG::Curvature
    *
    */
   template <int dim, typename number = double>
-  class CurvatureOperator : public OperatorBase<number,
+  class CurvatureOperator : public OperatorBase<dim,
+                                                number,
                                                 LinearAlgebra::distributed::Vector<number>,
                                                 LinearAlgebra::distributed::BlockVector<number>>
   {

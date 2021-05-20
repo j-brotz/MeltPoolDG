@@ -9,7 +9,8 @@ namespace MeltPoolDG
 {
   using namespace dealii;
 
-  template <typename number           = double,
+  template <int dim,
+            typename number           = double,
             typename DoFVectorType    = LinearAlgebra::distributed::Vector<number>,
             typename SrcRhsVectorType = DoFVectorType>
   class OperatorBase
@@ -59,7 +60,6 @@ namespace MeltPoolDG
     void
     reset_indices(const unsigned int dof_idx_in, const unsigned int quad_idx_in);
 
-    template <int dim>
     void
     initialize_matrix_based(const ScratchData<dim> &scratch_data);
 
@@ -74,7 +74,6 @@ namespace MeltPoolDG
      *
      * with zero Dirichlet boundary conditions.
      */
-    template <int dim>
     void
     create_rhs_and_apply_dirichlet_mf(DoFVectorType &         rhs,
                                       const SrcRhsVectorType &src,

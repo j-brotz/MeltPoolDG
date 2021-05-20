@@ -81,7 +81,7 @@ namespace MeltPoolDG
       reinit() override
       {
         if (!normal_vector_data.do_matrix_free)
-          normal_vector_operator->initialize_matrix_based<dim>(*scratch_data);
+          normal_vector_operator->initialize_matrix_based(*scratch_data);
       }
 
       void
@@ -99,7 +99,7 @@ namespace MeltPoolDG
             normal_vector_operator->create_rhs(rhs, solution_levelset_in);
             iter = LinearSolve::solve<BlockVectorType,
                                       SolverCG<BlockVectorType>,
-                                      OperatorBase<double, BlockVectorType, VectorType>>(
+                                      OperatorBase<dim, double, BlockVectorType, VectorType>>(
               *normal_vector_operator, solution_normal_vector, rhs);
           }
         else
@@ -160,7 +160,7 @@ namespace MeltPoolDG
          *  apply it to the system matrix. This functionality is part of the OperatorBase class.
          */
         if (!normal_vector_data.do_matrix_free)
-          normal_vector_operator->initialize_matrix_based<dim>(*scratch_data);
+          normal_vector_operator->initialize_matrix_based(*scratch_data);
       }
 
     private:
@@ -168,7 +168,8 @@ namespace MeltPoolDG
       /*
        *  This pointer will point to your user-defined normal vector operator.
        */
-      std::unique_ptr<OperatorBase<double, BlockVectorType, VectorType>> normal_vector_operator;
+      std::unique_ptr<OperatorBase<dim, double, BlockVectorType, VectorType>>
+        normal_vector_operator;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

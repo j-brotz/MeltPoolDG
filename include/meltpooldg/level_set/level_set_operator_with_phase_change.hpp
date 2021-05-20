@@ -24,7 +24,8 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename number = double>
   class LevelSetOperatorWithPhaseChange
-    : public OperatorBase<number,
+    : public OperatorBase<dim,
+                          number,
                           LinearAlgebra::distributed::Vector<number>,
                           LinearAlgebra::distributed::Vector<number>>
   {

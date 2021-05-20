@@ -77,7 +77,7 @@ namespace MeltPoolDG::Curvature
     /*
      *  This pointer will point to your user-defined curvature operator.
      */
-    std::unique_ptr<OperatorBase<double, VectorType, BlockVectorType>> curvature_operator;
+    std::unique_ptr<OperatorBase<dim, double, VectorType, BlockVectorType>> curvature_operator;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

@@ -152,12 +152,13 @@ namespace MeltPoolDG::Heat
                                            const VectorType &rhs) -> int {
         if (heat_data.solver.preconditioner_type == "Identity")
           {
-            return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
-              *heat_operator,
-              solution_update,
-              rhs,
-              heat_data.solver.rel_tolerance,
-              heat_data.solver.max_iterations);
+            return LinearSolve::solve<VectorType,
+                                      SolverGMRES<VectorType>,
+                                      OperatorBase<dim, double>>(*heat_operator,
+                                                                 solution_update,
+                                                                 rhs,
+                                                                 heat_data.solver.rel_tolerance,
+                                                                 heat_data.solver.max_iterations);
           }
         else if (heat_data.solver.preconditioner_type == "Diagonal" ||
                  heat_data.solver.preconditioner_type == "DiagonalReduced")
@@ -166,13 +167,14 @@ namespace MeltPoolDG::Heat
             auto preconditioner = heat_transfer_preconditioner.get_diagonal_preconditioner(
               heat_data.solver.preconditioner_type, heat_operator);
 
-            return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
-              *heat_operator,
-              solution_update,
-              rhs,
-              heat_data.solver.rel_tolerance,
-              heat_data.solver.max_iterations,
-              preconditioner);
+            return LinearSolve::solve<VectorType,
+                                      SolverGMRES<VectorType>,
+                                      OperatorBase<dim, double>>(*heat_operator,
+                                                                 solution_update,
+                                                                 rhs,
+                                                                 heat_data.solver.rel_tolerance,
+                                                                 heat_data.solver.max_iterations,
+                                                                 preconditioner);
           }
         else if (heat_data.solver.preconditioner_type == "AMG" ||
                  heat_data.solver.preconditioner_type == "AMGReduced" ||
@@ -190,13 +192,14 @@ namespace MeltPoolDG::Heat
               LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),
                                                 precondition_base_type);
 
-            return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<double>>(
-              *heat_operator,
-              solution_update,
-              rhs,
-              heat_data.solver.rel_tolerance,
-              heat_data.solver.max_iterations,
-              *preconditioner);
+            return LinearSolve::solve<VectorType,
+                                      SolverGMRES<VectorType>,
+                                      OperatorBase<dim, double>>(*heat_operator,
+                                                                 solution_update,
+                                                                 rhs,
+                                                                 heat_data.solver.rel_tolerance,
+                                                                 heat_data.solver.max_iterations,
+                                                                 *preconditioner);
           }
         else
           {
