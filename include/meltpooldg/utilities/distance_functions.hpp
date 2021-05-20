@@ -292,122 +292,27 @@ namespace MeltPoolDG::DistanceFunctions
       }
     else if constexpr (dim == 2)
       {
-        Point<dim> center;
-        for (int d = 0; d < dim; ++d)
-          center[d] = 0.5 * (upper_right_corner[d] + lower_left_corner[d]);
-
-
-        /// define corner points depending on the given lower_left_corner and upper_right_corner
-        std::vector<Point<dim>> corner(dim * dim);
-        corner[0]    = lower_left_corner;
-        corner[1]    = lower_left_corner;
-        corner[1][1] = upper_right_corner[1];
-        corner[2]    = upper_right_corner;
-        corner[3]    = lower_left_corner;
-        corner[3][0] = upper_right_corner[0];
-
-        /**
-         *       y
-         *       ^
-         *       |    sign(d)=-
-         *                         upper right
-         *   (1) +---------------+ (2)
-         *       |               |
-         *       |               |
-         *       |   sign(d)=+   |
-         *       |               |
-         *       |               |
-         *       |               |
-         *       +---------------+       --> x
-         *    (0)                (3)
-         *  lower_left
-         *
-         *
-         */
-
-        // lower left corner
-        if ((p[0] <= center[0]) && (p[1] <= center[1]))
-          {
-            // point is inside of rectangle
-            if ((p[0] >= corner[0][0]) && (p[1] >= corner[0][1]))
-              {
-                return std::min({-spherical_manifold(p, corner[0], 0.0),
-                                 infinite_line<dim>(p, corner[0], corner[1]),
-                                 infinite_line<dim>(p, corner[3], corner[0])});
-              }
-            // point is outside of rectangle and below right of corner (0)
-            else if ((p[0] >= corner[0][0]) && (p[1] <= corner[0][1]))
-              return -std::min({-spherical_manifold(p, corner[0], 0.0),
-                                infinite_line<dim>(p, corner[3], corner[0])});
-            else if ((p[0] <= corner[0][0]) && (p[1] >= corner[0][1]))
-              return -std::min({-spherical_manifold(p, corner[0], 0.0),
-                                infinite_line<dim>(p, corner[0], corner[1])});
-            // point is outside of rectangle and below right corner (0)
-            else
-              return spherical_manifold(p, corner[0], 0.0);
-          }
-        // upper left corner
-        else if ((p[0] <= center[0]) && (p[1] > center[1]))
-          {
-            // point is inside of rectangle
-            if ((p[0] >= corner[1][0]) && (p[1] <= corner[1][1]))
-              {
-                return std::min({-spherical_manifold(p, corner[1], 0.0),
-                                 infinite_line<dim>(p, corner[0], corner[1]),
-                                 infinite_line<dim>(p, corner[1], corner[2])});
-              }
-            // point is outside of rectangle and above right of corner (1)
-            else if ((p[0] > corner[1][0]) && (p[1] > corner[1][1]))
-              return -std::min({-spherical_manifold(p, corner[1], 0.0),
-                                infinite_line<dim>(p, corner[1], corner[2])});
-            // point is outside of rectangle and below left of corner (1)
-            else if ((p[0] < corner[1][0]) && (p[1] < corner[1][1]))
-              return -std::min({-spherical_manifold(p, corner[1], 0.0),
-                                infinite_line<dim>(p, corner[0], corner[1])});
-            // point is outside of rectangle and above left of corner (1)
-            else
-              return spherical_manifold(p, corner[1], 0.0);
-          }
-        // upper right corner
-        else if ((p[0] >= center[0]) && (p[1] >= center[1]))
-          {
-            // point is inside of rectangle
-            if ((p[0] <= corner[2][0]) && (p[1] <= corner[2][1]))
-              {
-                return std::min({-spherical_manifold(p, corner[2], 0.0),
-                                 infinite_line<dim>(p, corner[1], corner[2]),
-                                 infinite_line<dim>(p, corner[2], corner[3])});
-              }
-            // point is outside of rectangle and below right of corner (2)
-            else if ((p[0] > corner[2][0]) && (p[1] < corner[2][1]))
-              return -std::min({-spherical_manifold(p, corner[2], 0.0),
-                                infinite_line<dim>(p, corner[2], corner[3])});
-            // point is outside of rectangle and above right of corner (2)
-            else if ((p[0] < corner[2][0]) && (p[1] > corner[2][1]))
-              return -std::min({-spherical_manifold(p, corner[2], 0.0),
-                                infinite_line<dim>(p, corner[1], corner[2])});
-            else
-              return spherical_manifold(p, corner[2], 0.0);
-          }
-        // lower right corner
-        else if ((p[0] >= center[0]) && (p[1] < center[1]))
-          {
-            if ((p[0] <= corner[3][0]) && (p[1] >= corner[3][1]))
-              {
-                return std::min({-spherical_manifold(p, corner[3], 0.0),
-                                 infinite_line<dim>(p, corner[2], corner[3]),
-                                 infinite_line<dim>(p, corner[3], corner[0])});
-              }
-            // point is outside of rectangle and above right of corner (3)
-            else if ((p[0] > corner[3][0]) && (p[1] > corner[3][1]))
-              return -std::min({-spherical_manifold(p, corner[3], 0.0),
-                                infinite_line<dim>(p, corner[2], corner[3])});
-            else if ((p[0] < corner[3][0]) && (p[1] < corner[3][1]))
-              return -std::min({-spherical_manifold(p, corner[3], 0.0),
-                                infinite_line<dim>(p, corner[3], corner[0])});
-            else
-              return spherical_manifold(p, corner[3], 0.0);
-          }
+        if (lower_left_corner[0] <= p[0] && p[0] <= upper_right_corner[0] &&
+            lower_left_corner[1] <= p[1] && p[1] <= upper_right_corner[1])
+          // inside
+          return std::min({p[0] - lower_left_corner[0],
+                           upper_right_corner[0] - p[0],
+                           p[1] - lower_left_corner[1],
+                           upper_right_corner[1] - p[1]});
+        else if (lower_left_corner[0] <= p[0] && p[0] <= upper_right_corner[0])
+          // top or bottom
+          return -std::min(std::abs(lower_left_corner[1] - p[1]),
+                           std::abs(p[1] - upper_right_corner[1]));
+        else if (lower_left_corner[1] <= p[1] && p[1] <= upper_right_corner[1])
+          // left or right
+          return -std::min(std::abs(lower_left_corner[0] - p[0]),
+                           std::abs(p[0] - upper_right_corner[0]));
+        else
+          // corner
+          return -std::min({p.distance(lower_left_corner),
+                            p.distance(upper_right_corner),
+                            p.distance(Point<2>(lower_left_corner[0], upper_right_corner[1])),
+                            p.distance(Point<2>(upper_right_corner[0], lower_left_corner[1]))});
       }
     else if constexpr (dim == 1)
       {
