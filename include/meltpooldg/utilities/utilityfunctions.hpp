@@ -50,6 +50,13 @@ namespace MeltPoolDG
       const std::function<const VectorizedArray<double> &(const unsigned int cell,
                                                           const unsigned int q)> &cell_operation)
     {
+      AssertThrow(matrix_free.get_dof_handler(dof_idx)
+                    .get_triangulation()
+                    .all_reference_cells_are_hyper_cube(),
+                  ExcMessage(
+                    "The filling of a DoF Vector from a cell operation is currently only supported "
+                    "for hex meshes."));
+
       FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
       FE_Q<1>                 fe_fine(fe_degree);
 
@@ -67,9 +74,9 @@ namespace MeltPoolDG
       FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
 
       // @todo: replace n_q_points_1D argument completely from fe_eval?
-      // AssertThrow(fe_eval.n_q_points == std::pow(n_q_points_1D, dim),
-      // ExcMessage("The number of quadrature points in 1D must comply with the number of "
-      //"quadrature points of the cell operation."));
+      AssertThrow(fe_eval.n_q_points == std::pow(n_q_points_1D, dim),
+                  ExcMessage("The number of quadrature points in 1D must comply with the number of "
+                             "quadrature points of the cell operation."));
 
       for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
         {
@@ -116,6 +123,13 @@ namespace MeltPoolDG
         const unsigned int cell,
         const unsigned int q)> &                              cell_operation)
     {
+      AssertThrow(matrix_free.get_dof_handler(dof_idx)
+                    .get_triangulation()
+                    .all_reference_cells_are_hyper_cube(),
+                  ExcMessage(
+                    "The filling of a DoF Vector from a cell operation is currently only supported "
+                    "for hex meshes."));
+
       FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
       FE_Q<1>                 fe_fine(fe_degree);
 

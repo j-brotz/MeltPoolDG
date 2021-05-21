@@ -381,16 +381,18 @@ namespace MeltPoolDG::Flow
      *  density
      */
     scratch_data.initialize_dof_vector(density, dof_index_parameters);
-    UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
-      density,
-      scratch_data.get_matrix_free(),
-      dof_index_parameters,
-      quad_index_u,
-      scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
-      scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
-      [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-        return get_density(cell, quad);
-      });
+
+    if (scratch_data.is_hex_mesh())
+      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+        density,
+        scratch_data.get_matrix_free(),
+        dof_index_parameters,
+        quad_index_u,
+        scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
+        scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
+        [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
+          return get_density(cell, quad);
+        });
 
     density.update_ghost_values();
     data_out.add_data_vector(dof_handler_parameters, density, "density");
@@ -398,16 +400,17 @@ namespace MeltPoolDG::Flow
      *  viscosity
      */
     scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
-    UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
-      viscosity,
-      scratch_data.get_matrix_free(),
-      dof_index_parameters,
-      quad_index_u,
-      scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
-      scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
-      [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-        return get_viscosity(cell, quad);
-      });
+    if (scratch_data.is_hex_mesh())
+      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+        viscosity,
+        scratch_data.get_matrix_free(),
+        dof_index_parameters,
+        quad_index_u,
+        scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
+        scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
+        [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
+          return get_viscosity(cell, quad);
+        });
     viscosity.update_ghost_values();
     data_out.add_data_vector(dof_handler_parameters, viscosity, "viscosity");
   }

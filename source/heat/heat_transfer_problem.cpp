@@ -299,7 +299,7 @@ namespace MeltPoolDG::Heat
       heat_operation->attach_output_vectors(data_out);
     };
 
-    GenericDataOut<dim> generic_data_out;
+    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(), time);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing

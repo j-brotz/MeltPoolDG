@@ -459,6 +459,14 @@ namespace MeltPoolDG
     return pcout[level];
   }
 
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  bool
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::is_hex_mesh(
+    const unsigned int dof_idx) const
+  {
+    return get_triangulation(dof_idx).all_reference_cells_are_hyper_cube();
+  }
+
   template class ScratchData<1>;
   template class ScratchData<2>;
   template class ScratchData<3>;

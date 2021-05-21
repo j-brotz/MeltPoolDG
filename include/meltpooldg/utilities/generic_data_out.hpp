@@ -14,7 +14,7 @@ namespace MeltPoolDG
   public:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    GenericDataOut() = default;
+    GenericDataOut(const Mapping<dim> &mapping, const double current_time = 0.0);
 
     void
     add_data_vector(const DoFHandler<dim> &         dof_handler,
@@ -34,5 +34,8 @@ namespace MeltPoolDG
                            const std::vector<std::string>,
                            std::vector<DataComponentInterpretation::DataComponentInterpretation>>>
       entries;
+
+    const Mapping<dim> &mapping;
+    double              current_time;
   };
 } // namespace MeltPoolDG

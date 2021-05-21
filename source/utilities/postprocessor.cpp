@@ -38,7 +38,7 @@ namespace MeltPoolDG
     const double                                      time,
     const std::function<void()> &                     post_operation)
   {
-    GenericDataOut<dim> data_out;
+    GenericDataOut<dim> data_out(mapping);
 
     if ((pv_data.do_output) && !(n_time_step % pv_data.write_frequency))
       {

@@ -3,6 +3,12 @@
 namespace MeltPoolDG
 {
   template <int dim>
+  GenericDataOut<dim>::GenericDataOut(const Mapping<dim> &mapping, const double current_time)
+    : mapping(mapping)
+    , current_time(current_time)
+  {}
+
+  template <int dim>
   void
   GenericDataOut<dim>::add_data_vector(
     const DoFHandler<dim> &         dof_handler,

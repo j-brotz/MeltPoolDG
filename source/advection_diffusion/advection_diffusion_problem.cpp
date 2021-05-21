@@ -290,7 +290,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                vector_component_interpretation);
     };
 
-    GenericDataOut<dim> generic_data_out;
+    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping());
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing

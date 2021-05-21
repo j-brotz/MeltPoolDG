@@ -175,6 +175,9 @@ namespace MeltPoolDG
     const ConditionalOStream
     get_pcout(const unsigned int level = 0) const;
 
+    bool
+    is_hex_mesh(const unsigned int dof_idx = 0) const;
+
   private:
     bool                                                      do_matrix_free;
     std::vector<ConditionalOStream>                           pcout;
