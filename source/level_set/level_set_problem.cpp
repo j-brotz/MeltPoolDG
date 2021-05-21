@@ -57,7 +57,8 @@ namespace MeltPoolDG::LevelSet
 
         // do paraview output if requested
         output_results(time_iterator.get_current_time_step_number(),
-                       time_iterator.get_current_time());
+                       time_iterator.get_current_time(),
+                       base_in);
 
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
@@ -207,7 +208,7 @@ namespace MeltPoolDG::LevelSet
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(ls_dof_idx));
 
-    output_results(0, base_in->parameters.ls.start_time);
+    output_results(0, base_in->parameters.ls.start_time, base_in);
     /*
      *    Do initial refinement steps if requested
      */
@@ -327,7 +328,9 @@ namespace MeltPoolDG::LevelSet
    */
   template <int dim>
   void
-  LevelSetProblem<dim>::output_results(const unsigned int time_step, const double time) const
+  LevelSetProblem<dim>::output_results(const unsigned int                   time_step,
+                                       const double                         time,
+                                       std::shared_ptr<SimulationBase<dim>> base_in)
   {
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       level_set_operation.attach_output_vectors(data_out);
@@ -346,6 +349,14 @@ namespace MeltPoolDG::LevelSet
                                std::vector<std::string>(dim, "velocity"),
                                vector_component_interpretation);
     };
+
+    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(), time);
+    attach_output_vectors(generic_data_out);
+
+    // user-defined postprocessing
+    base_in->do_postprocessing(generic_data_out);
+
+    // paraview postprocessing
     post_processor->process(time_step, attach_output_vectors, time);
   }
 

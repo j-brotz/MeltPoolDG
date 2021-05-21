@@ -91,10 +91,12 @@ namespace MeltPoolDG::Flow
     compute_gravity_force(VectorType &vec, const double gravity, const bool zero_out = true) const;
 
     /*
-     *  This function is to create paraview output
+     *  perform output of results
      */
     void
-    output_results(const unsigned int n_time_step, const double current_time);
+    output_results(const unsigned int                   time_step,
+                   const double                         current_time,
+                   std::shared_ptr<SimulationBase<dim>> base_in);
     /*
      *  perform mesh refinement
      */

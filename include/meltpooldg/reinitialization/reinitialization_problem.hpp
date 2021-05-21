@@ -87,10 +87,12 @@ namespace MeltPoolDG
       refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
 
       /*
-       *  Creating paraview output
+       *  perform output of results
        */
       void
-      output_results(const unsigned int time_step, const double time) const;
+      output_results(const unsigned int                   time_step,
+                     const double                         current_time,
+                     std::shared_ptr<SimulationBase<dim>> base_in);
 
     private:
       DoFHandler<dim>           dof_handler;

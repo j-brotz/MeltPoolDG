@@ -41,7 +41,8 @@ namespace MeltPoolDG::AdvectionDiffusion
          *  do paraview output if requested
          */
         output_results(time_iterator.get_current_time_step_number(),
-                       time_iterator.get_current_time());
+                       time_iterator.get_current_time(),
+                       base_in);
 
         if (base_in->parameters.amr.do_amr)
           {
@@ -272,8 +273,9 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim>
   void
-  AdvectionDiffusionProblem<dim>::output_results(const unsigned int time_step,
-                                                 const double       current_time)
+  AdvectionDiffusionProblem<dim>::output_results(const unsigned int                   time_step,
+                                                 const double                         current_time,
+                                                 std::shared_ptr<SimulationBase<dim>> base_in)
   {
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       advec_diff_operation->attach_output_vectors(data_out);
@@ -287,6 +289,14 @@ namespace MeltPoolDG::AdvectionDiffusion
                                std::vector<std::string>(dim, "velocity"),
                                vector_component_interpretation);
     };
+
+    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping());
+    attach_output_vectors(generic_data_out);
+
+    // user-defined postprocessing
+    base_in->do_postprocessing(generic_data_out);
+
+    // paraview postprocessing
     post_processor->process(time_step, attach_output_vectors, current_time);
   }
 

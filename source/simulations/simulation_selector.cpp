@@ -6,6 +6,7 @@
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 // simulations
 #include <meltpooldg/simulations/advection_diffusion/advection_diffusion.hpp>
+#include <meltpooldg/simulations/advection_diffusion/advection_diffusion_user_output.hpp>
 #include <meltpooldg/simulations/evaporating_droplet/evaporating_droplet.hpp>
 #include <meltpooldg/simulations/evaporating_droplet/evaporating_droplet_with_heat.hpp>
 #include <meltpooldg/simulations/film_boiling/film_boiling.hpp>
@@ -40,6 +41,9 @@ namespace MeltPoolDG::Simulation
     else if (simulation_name == "advection_diffusion")
       return std::make_shared<AdvectionDiffusion::SimulationAdvec<dim>>(parameter_file,
                                                                         mpi_communicator);
+    else if (simulation_name == "advection_diffusion_user_output")
+      return std::make_shared<AdvectionDiffusion::SimulationAdvectionDiffusionUserOutput<dim>>(
+        parameter_file, mpi_communicator);
     else if (simulation_name == "rotating_bubble")
       return std::make_shared<RotatingBubble::SimulationRotatingBubble<dim>>(parameter_file,
                                                                              mpi_communicator);

@@ -75,11 +75,12 @@ namespace MeltPoolDG::Heat
     compute_field_vector(VectorType &vector, unsigned dof_idx, Function<dim> &field_function);
 
     /*
-     *  This function is to create paraview output
+     *  perform output of results
      */
     void
-    output_results(unsigned int n_time_step, double time);
-
+    output_results(unsigned int                         time_step,
+                   double                               current_time,
+                   std::shared_ptr<SimulationBase<dim>> base_in);
     /*
      *  perform adaptive mesh refinement
      */

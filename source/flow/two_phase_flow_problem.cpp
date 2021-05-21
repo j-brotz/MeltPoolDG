@@ -214,7 +214,7 @@ namespace MeltPoolDG::Flow
                                                flow_operation->get_quad_idx_pressure())
           << std::endl;
         // ... and output the results to vtk files.
-        output_results(n, time_iterator.get_current_time());
+        output_results(n, time_iterator.get_current_time(), base_in);
 
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
@@ -420,7 +420,7 @@ namespace MeltPoolDG::Flow
      *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
      *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
      */
-    output_results(0, base_in->parameters.flow.start_time);
+    output_results(0, base_in->parameters.flow.start_time, base_in);
     /*
      *    Do initial refinement steps if requested
      */
@@ -771,8 +771,9 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::output_results(const unsigned int n_time_step,
-                                           const double       current_time)
+  TwoPhaseFlowProblem<dim>::output_results(const unsigned int                   n_time_step,
+                                           const double                         current_time,
+                                           std::shared_ptr<SimulationBase<dim>> base_in)
   {
     /**
      * collect all relevant output data
@@ -790,9 +791,14 @@ namespace MeltPoolDG::Flow
       if (heat_operation)
         heat_operation->attach_output_vectors(data_out);
     };
-    /**
-     * do the output operation
-     */
+
+    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(), current_time);
+    attach_output_vectors(generic_data_out);
+
+    // user-defined postprocessing
+    base_in->do_postprocessing(generic_data_out);
+
+    // paraview postprocessing
     post_processor->process(n_time_step, attach_output_vectors, current_time);
   }
 

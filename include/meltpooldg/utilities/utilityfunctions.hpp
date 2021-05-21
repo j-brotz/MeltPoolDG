@@ -50,6 +50,13 @@ namespace MeltPoolDG
       const std::function<const VectorizedArray<double> &(const unsigned int cell,
                                                           const unsigned int q)> &cell_operation)
     {
+      AssertThrow(matrix_free.get_dof_handler(dof_idx)
+                    .get_triangulation()
+                    .all_reference_cells_are_hyper_cube(),
+                  ExcMessage(
+                    "The filling of a DoF Vector from a cell operation is currently only supported "
+                    "for hex meshes."));
+
       FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
       FE_Q<1>                 fe_fine(fe_degree);
 
@@ -116,6 +123,13 @@ namespace MeltPoolDG
         const unsigned int cell,
         const unsigned int q)> &                              cell_operation)
     {
+      AssertThrow(matrix_free.get_dof_handler(dof_idx)
+                    .get_triangulation()
+                    .all_reference_cells_are_hyper_cube(),
+                  ExcMessage(
+                    "The filling of a DoF Vector from a cell operation is currently only supported "
+                    "for hex meshes."));
+
       FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
       FE_Q<1>                 fe_fine(fe_degree);
 
@@ -360,8 +374,6 @@ namespace MeltPoolDG
         compare_and_apply_mask<SIMDComparison::greater_than>(in, lower_limit, 1.0, 0.0),
         0.0);
     }
-
-
 
     /**
      * Return the exponent to the power of ten of an expression like 5*10^5 --> return 5

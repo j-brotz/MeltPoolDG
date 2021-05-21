@@ -82,19 +82,21 @@ namespace MeltPoolDG::Evaporation
     /**
      * write interface velocity to dof vector
      */
-    UtilityFunctions::fill_dof_vector_from_cell_operation_vec<dim, dim>(
-      evaporation_velocity,
-      scratch_data.get_matrix_free(),
-      evapor_vel_dof_idx,
-      ls_quad_idx,
-      scratch_data.get_degree(evapor_vel_dof_idx),           // fe_degree of the resulting vector
-      scratch_data.get_degree(ls_hanging_nodes_dof_idx) + 1, // n_q_points_1d of cell operation
-      [&](const unsigned int cell,
-          const unsigned int quad) -> const Tensor<1, dim, VectorizedArray<double>> & {
-        return const_cast<const Tensor<1, dim, VectorizedArray<double>> &>(
-          evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(ls_quad_idx) * cell +
-                                 quad]);
-      });
+    if (scratch_data.is_hex_mesh())
+      UtilityFunctions::fill_dof_vector_from_cell_operation_vec<dim, dim>(
+        evaporation_velocity,
+        scratch_data.get_matrix_free(),
+        evapor_vel_dof_idx,
+        ls_quad_idx,
+        scratch_data.get_degree(evapor_vel_dof_idx),           // fe_degree of the resulting vector
+        scratch_data.get_degree(ls_hanging_nodes_dof_idx) + 1, // n_q_points_1d of cell operation
+        [&](const unsigned int cell,
+            const unsigned int quad) -> const Tensor<1, dim, VectorizedArray<double>> & {
+          return const_cast<const Tensor<1, dim, VectorizedArray<double>> &>(
+            evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(ls_quad_idx) *
+                                     cell +
+                                   quad]);
+        });
 
     scratch_data.get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
     scratch_data.get_pcout() << "    | evapor: |u|2 = " << evaporation_velocity.l2_norm()
