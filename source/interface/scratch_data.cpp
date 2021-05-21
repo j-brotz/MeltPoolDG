@@ -1,3 +1,5 @@
+#include <deal.II/matrix_free/util.h>
+
 #include <meltpooldg/interface/scratch_data.hpp>
 
 namespace MeltPoolDG
@@ -81,6 +83,39 @@ namespace MeltPoolDG
   {
     this->constraint.emplace_back(&constraint);
     return this->constraint.size() - 1;
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  unsigned int
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::attach_quadrature(
+    const Quadrature<dim> &quadrature)
+  {
+    this->quad.emplace_back(Quadrature<dim>(quadrature));
+
+    // determine face quadrature like it is done in MatrixFree
+    // https://github.com/dealii/dealii/blob/2946051880b5c674f141397219349fbfa579a6ac/include/deal.II/matrix_free/mapping_info.templates.h#L382-L439
+    bool flag = quadrature.is_tensor_product();
+
+    if (flag)
+      for (unsigned int i = 1; i < dim; ++i)
+        flag &= quadrature.get_tensor_basis()[0] == quadrature.get_tensor_basis()[i];
+
+    if (flag) // hex element
+      {
+        this->face_quad.emplace_back(quadrature.get_tensor_basis()[0]);
+      }
+    else // simplex element
+      {
+        const auto unique_face_quadratures =
+          internal::MatrixFreeFunctions::get_unique_face_quadratures(quadrature);
+
+        // make sure we have not got wedges or pyramids
+        AssertDimension(unique_face_quadratures.second.size(), 0);
+
+        this->face_quad.emplace_back(unique_face_quadratures.first);
+      }
+
+    return this->quad.size() - 1;
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>

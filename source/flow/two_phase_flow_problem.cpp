@@ -272,7 +272,7 @@ namespace MeltPoolDG::Flow
     else
       {
         ls_quad_idx =
-          scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
+          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO

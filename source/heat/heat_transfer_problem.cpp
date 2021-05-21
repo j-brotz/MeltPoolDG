@@ -106,7 +106,7 @@ namespace MeltPoolDG::Heat
     else
       {
         temp_quad_idx =
-          scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
+          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
       }
 
     setup_dof_system(base_in, false);

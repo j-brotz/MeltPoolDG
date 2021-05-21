@@ -117,13 +117,13 @@ namespace MeltPoolDG::LevelSet
         scratch_data->attach_quadrature(QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
     else
       ls_quad_idx =
-        scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
+        scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
 
     // TODO: only do once!
     if (base_in->parameters.base.do_simplex)
       scratch_data->attach_quadrature(QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
     else
-      scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
+      scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
     /*
      *  initialize the time iterator
      */
