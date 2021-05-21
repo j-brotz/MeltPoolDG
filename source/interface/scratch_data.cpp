@@ -389,7 +389,7 @@ namespace MeltPoolDG
   ScratchData<dim, spacedim, number, VectorizedArrayType>::get_mpi_comm(
     const unsigned int dof_idx) const
   {
-    return UtilityFunctions::get_mpi_comm(*this->dof_handler[dof_idx]);
+    return this->dof_handler[dof_idx]->get_communicator();
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
