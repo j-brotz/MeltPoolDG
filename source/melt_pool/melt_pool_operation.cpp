@@ -1,4 +1,7 @@
 #include <meltpooldg/melt_pool/melt_pool_operation.hpp>
+//
+
+#include <meltpooldg/utilities/generic_data_out.hpp>
 
 namespace MeltPoolDG::MeltPool
 {
