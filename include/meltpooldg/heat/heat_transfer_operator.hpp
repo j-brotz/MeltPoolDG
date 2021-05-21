@@ -24,22 +24,18 @@ namespace MeltPoolDG::Heat
    * equation with temperature dependent material properties:
    * ρ^(n) = ρ(T^(n)), c_p^(n) = c_p(T^(n)), k^(n) = k(T^(n))
    *
-   *                  1  /                                                               \
-   *  R(T_b^(n+1)) = --- | N_a, ( ρ^(n+1) c_p^(n+1) N_b T_b^(n+1) - ρ^(n) c_p^(n) T^(n)) |
-   *                 dt  \                                                               /
-   *                                                                                      Ω
+   *                  1  /                                                     \
+   *  R(T_b^(n+1)) = --- | N_a, ρ^(n+1) c_p^(n+1) N_b ( T_b^(n+1) - T_b^(n)) ) |
+   *                 dt  \                                                     /
+   *                                                                            Ω
    *                 /                               \
    *               + | ∇N_a, k^(n+1) ∇N_b T_b^(n+1)) |
    *                 \                               /
    *                                                  Ω
-   *                 /                                         \
-   *               + | N_a, ρ^(n+1) c_p^(n+1) ∇N_b T_b^(n+1) u |
-   *                 \                                         /
-   *                                                            Ω
-   *                 /       d ρ c_p |                                \
-   *               + | N_a, ---------| ∇N_b T_b^(n+1) N_b T_b^(n+1) u |
-   *                 \         d T   |                                /
-   *                                 |(n+1)                            Ω
+   *                 /                                           \
+   *               + | N_a, ρ^(n+1) c_p^(n+1) ∇N_b T_b^(n+1) · u |
+   *                 \                                           /
+   *                                                              Ω
    *                 /                                          \
    *               + | N_a, ρ^(n+1) c_p^(n+1) N_b T_b^(n+1) ∇·u |    (this term is not yet considered @todo)
    *                 \                                          /
@@ -55,30 +51,22 @@ namespace MeltPoolDG::Heat
    *  ----------- = --- | N_a, ρ^(n+1) c_p^(n+1) N_b |
    *  dT_b^(n+1)     dt \                            /
    *                                                  Ω
-   *                1  /       d ρ c_p |                   \
-   *              + -- | N_a, ---------| N_b T_b^(n+1) N_b |
-   *                dt \         d T   |                   /
-   *                                   |(n+1)               Ω
-   *                /                       d k |                    \
-   *              + | ∇N_a, k^(n+1) ∇N_b + -----| N_b T_b^(n+1) ∇N_b |
-   *                \                       d T |                    /
-   *                                            |(n+1)                Ω
+   *                1  /       d ρ c_p |                              \
+   *              + -- | N_a, ---------| N_b ( T_b^(n+1) - T_b^(n)) ) |
+   *                dt \         d T   |                              /
+   *                                   |(n+1)                          Ω
+   *                /                       d k |                \
+   *              + | ∇N_a, k^(n+1) ∇N_b + -----| ∇N_b T_b^(n+1) |
+   *                \                       d T |                /
+   *                                            |(n+1)            Ω
    *                /                                             \
    *              + | N_a, ρ^(n+1) c_p^(n+1) ( ∇N_b u + N_b ∇·u ) |
    *                \                                             /
    *                                                               Ω
-   *                /       d ρ c_p |                                    \
-   *              + | N_a, ---------| N_b T_b^(n+1) ( ∇N_b u + N_b ∇·u ) |
-   *                \         d T   |                                    /
-   *                                |(n+1)                                Ω
-   *                /         d ρ c_p |                      \
-   *              + | N_a, 2 ---------| ∇N_b T_b^(n+1) N_b u |
-   *                \           d T   |                      /
-   *                                  |(n+1)                  Ω
-   *                /       d^2 ρ c_p |                                \
-   *              + | N_a, -----------| ∇N_b T_b^(n+1) N_b T_b^(n+1) u |
-   *                \          d T^2  |                                /
-   *                                  |(n+1)                            Ω
+   *                /       d ρ c_p |                                            \
+   *              + | N_a, ---------| ( ∇N_b T_b^(n+1) · u + N_b T_b^(n+1) ∇·u ) |
+   *                \         d T   |                                            /
+   *                                |(n+1)                                        Ω
    *                            _                      _
    *                /        d q_s     \    /        d q       \
    *              - | N_a, ---------   |  - | N_a, ---------   |
@@ -123,6 +111,7 @@ namespace MeltPoolDG::Heat
     const unsigned int          temp_quad_idx;
 
     const VectorType &temperature;
+    const VectorType &temperature_old;
     std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
                                     neumann_bc; //@todo find a nice way to provide BC
     std::vector<types::boundary_id> bc_radiation_indices;
@@ -152,6 +141,8 @@ namespace MeltPoolDG::Heat
     mutable std::vector<std::vector<VectorizedArray<double>>> q_vapor;
 
 
+    const double inv_mushy_interval;
+
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
                          const ScratchData<dim> &                        scratch_data_in,
@@ -160,6 +151,7 @@ namespace MeltPoolDG::Heat
                          const unsigned int                              temp_dof_idx_in,
                          const unsigned int                              temp_quad_idx_in,
                          const VectorType &                              temperature_in,
+                         const VectorType &                              temperature_old_in,
                          const VectorType &                              heat_source_in,
                          const unsigned int                              vel_dof_idx_in = 0,
                          const VectorType *                              velocity_in    = nullptr,
@@ -172,12 +164,16 @@ namespace MeltPoolDG::Heat
       , temp_dof_idx(temp_dof_idx_in)
       , temp_quad_idx(temp_quad_idx_in)
       , temperature(temperature_in)
+      , temperature_old(temperature_old_in)
       , heat_source(heat_source_in)
       , vel_dof_idx(vel_dof_idx_in)
       , velocity(velocity_in)
       , ls_dof_idx(ls_dof_idx_in)
       , level_set_as_heaviside(level_set_as_heaviside_in)
       , evapor_data(evapor_data_in)
+      , inv_mushy_interval(data.solidification ?
+                             1.0 / (material.liquidus_temperature - material.solidus_temperature) :
+                             0.0)
     {
       AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside),
                   ExcMessage("Two-phase flow must come with a velocity! Abort..."));
@@ -301,13 +297,15 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           temp_vals.reinit(cell);
           temp_vals.read_dof_values(src);
 
-          tangent_local_cell_operation(temp_vals, temp_lin_vals, velocity_vals, ls_vals, true);
+          tangent_local_cell_operation(
+            temp_vals, temp_lin_vals, temp_old_vals, velocity_vals, ls_vals, true);
 
           temp_vals.distribute_local_to_global(dst);
         }
@@ -352,6 +350,7 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
       FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
       unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -362,8 +361,12 @@ namespace MeltPoolDG::Heat
         [&](auto &temp_vals) {
           const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
-          tangent_local_cell_operation(
-            temp_vals, temp_lin_vals, velocity_vals, ls_vals, old_cell_index != current_cell_index);
+          tangent_local_cell_operation(temp_vals,
+                                       temp_lin_vals,
+                                       temp_old_vals,
+                                       velocity_vals,
+                                       ls_vals,
+                                       old_cell_index != current_cell_index);
 
           old_cell_index = current_cell_index;
         },
@@ -393,6 +396,7 @@ namespace MeltPoolDG::Heat
                                                            this->quad_idx);
           FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
           FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
+          FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
           unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -406,6 +410,7 @@ namespace MeltPoolDG::Heat
 
               tangent_local_cell_operation(temp_vals,
                                            temp_lin_vals,
+                                           temp_old_vals,
                                            velocity_vals,
                                            ls_vals,
                                            old_cell_index != current_cell_index);
@@ -429,6 +434,9 @@ namespace MeltPoolDG::Heat
             FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free,
                                                            temp_dof_idx,
                                                            this->quad_idx);
+            FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free,
+                                                           temp_dof_idx,
+                                                           this->quad_idx);
 
             const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
 
@@ -450,8 +458,12 @@ namespace MeltPoolDG::Heat
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
 
-                    tangent_local_cell_operation(
-                      temp_vals, temp_lin_vals, velocity_vals, ls_vals, j == 0 /*do_reinit_cell*/);
+                    tangent_local_cell_operation(temp_vals,
+                                                 temp_lin_vals,
+                                                 temp_old_vals,
+                                                 velocity_vals,
+                                                 ls_vals,
+                                                 j == 0 /*do_reinit_cell*/);
 
                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
                       for (unsigned int v = 0; v < n_filled_lanes; ++v)
@@ -566,13 +578,7 @@ namespace MeltPoolDG::Heat
       VectorizedArrayType conductivity = material.first.conductivity;
       VectorizedArrayType density      = material.first.density;
 
-      VectorizedArrayType capacity_old     = material.first.capacity;
-      VectorizedArrayType conductivity_old = material.first.conductivity;
-      VectorizedArrayType density_old      = material.first.density;
-
-      VectorizedArrayType d_capacity_dT     = 0.0;
-      VectorizedArrayType d_conductivity_dT = 0.0;
-      VectorizedArrayType d_density_dT      = 0.0;
+      VectorizedArrayType rho_cp;
 
       q_vapor.resize(scratch_data.get_matrix_free().n_cell_batches(),
                      std::vector<VectorizedArray<double>>(temp_vals.n_q_points));
@@ -628,39 +634,20 @@ namespace MeltPoolDG::Heat
                                                               conductivity,
                                                               density,
                                                               temp_vals.get_value(q_index));
-                  get_material_parameters_with_solidification(capacity_old,
-                                                              conductivity_old,
-                                                              density_old,
-                                                              temp_vals_old.get_value(q_index));
                 }
+              rho_cp = density * capacity;
 
-              auto val = density * capacity *
-                           (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) *
-                           this->d_tau_inv -
+              auto val = this->d_tau_inv * rho_cp *
+                           (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) -
                          heat_source_vals.get_value(q_index);
-              // todo use old material parameters in case of two phase flow
 
               auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
-              if (data.solidification)
-                {
-                  val -= (density_old * capacity_old - density * capacity) *
-                         temp_vals_old.get_value(q_index) * this->d_tau_inv;
-                }
-
               if (velocity)
                 {
-                  val += density * capacity * temp_vals.get_gradient(q_index) *
-                         velocity_vals.get_value(q_index);
-                }
-
-              if (velocity && data.solidification)
-                {
-                  get_material_parameter_derivatives_with_solidification(
-                    d_capacity_dT, d_conductivity_dT, d_density_dT, temp_vals.get_value(q_index));
-                  val += (d_capacity_dT * density + d_density_dT * capacity) *
-                         temp_vals.get_value(q_index) * temp_vals.get_gradient(q_index) *
-                         velocity_vals.get_value(q_index);
+                  val +=
+                    rho_cp * temp_vals.get_gradient(q_index) * velocity_vals.get_value(q_index);
+                  // todo: add term containing ∇·u  in case of evaporation
                 }
 
               if (level_set_as_heaviside && evapor_data)
@@ -844,6 +831,7 @@ namespace MeltPoolDG::Heat
     void
     tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  temp_vals,
                                  FECellIntegrator<dim, 1, number> &  temp_lin_vals,
+                                 FECellIntegrator<dim, 1, number> &  temp_old_vals,
                                  FECellIntegrator<dim, dim, number> &velocity_vals,
                                  FECellIntegrator<dim, 1, number> &  ls_vals,
                                  const bool                          do_reinit_cells) const
@@ -856,8 +844,8 @@ namespace MeltPoolDG::Heat
       VectorizedArrayType d_conductivity_dT = 0.0;
       VectorizedArrayType d_density_dT      = 0.0;
 
-      VectorizedArrayType d2_capacity_dT2 = 0.0;
-      VectorizedArrayType d2_density_dT2  = 0.0;
+      VectorizedArrayType rho_cp;
+      VectorizedArrayType d_rho_cp_dT;
 
       temp_vals.evaluate(true, true);
 
@@ -873,6 +861,12 @@ namespace MeltPoolDG::Heat
             {
               ls_vals.reinit(temp_vals.get_current_cell_index());
               ls_vals.gather_evaluate(*level_set_as_heaviside, true, evapor_data);
+            }
+
+          if (data.solidification)
+            {
+              temp_old_vals.reinit(temp_vals.get_current_cell_index());
+              temp_old_vals.gather_evaluate(temperature_old, true, false);
             }
 
           if (data.solidification || evapor_data)
@@ -900,39 +894,34 @@ namespace MeltPoolDG::Heat
                                                           temp_lin_vals.get_value(q_index));
               get_material_parameter_derivatives_with_solidification(
                 d_capacity_dT, d_conductivity_dT, d_density_dT, temp_lin_vals.get_value(q_index));
+              d_rho_cp_dT = d_capacity_dT * density + d_density_dT * capacity;
             }
+          rho_cp = density * capacity;
 
-          auto val = density * capacity * this->d_tau_inv * temp_vals.get_value(q_index);
+          auto val = this->d_tau_inv * rho_cp * temp_vals.get_value(q_index);
 
           auto val_grad = conductivity * temp_vals.get_gradient(q_index);
 
           if (velocity)
             {
-              val += density * capacity * temp_vals.get_gradient(q_index) *
-                     velocity_vals.get_value(q_index);
+              val += rho_cp * temp_vals.get_gradient(q_index) * velocity_vals.get_value(q_index);
+              // todo: add term containing ∇·u  in case of evaporation
             }
 
           if (data.solidification)
             {
+              val += this->d_tau_inv * d_rho_cp_dT *
+                     (temp_lin_vals.get_value(q_index) - temp_old_vals.get_value(q_index)) *
+                     temp_vals.get_value(q_index);
               val_grad += d_conductivity_dT * temp_lin_vals.get_gradient(q_index) *
                           temp_vals.get_value(q_index);
-              val += (d_capacity_dT * density + d_density_dT * capacity) *
-                     temp_lin_vals.get_value(q_index) * this->d_tau_inv *
-                     temp_vals.get_value(q_index);
             }
 
           if (velocity && data.solidification)
             {
-              get_material_parameter_second_derivatives_with_solidification(
-                d2_capacity_dT2, d2_density_dT2, temp_lin_vals.get_value(q_index));
-              val += (d_capacity_dT * density + d_density_dT * capacity) *
-                     (2.0 * temp_lin_vals.get_value(q_index) * temp_vals.get_gradient(q_index) +
-                      temp_vals.get_value(q_index) * temp_lin_vals.get_gradient(q_index)) *
-                     velocity_vals.get_value(q_index);
-              val += (d2_capacity_dT2 * density + 2.0 * d_capacity_dT * d_density_dT +
-                      d2_density_dT2 * capacity) *
-                     temp_lin_vals.get_value(q_index) * temp_lin_vals.get_gradient(q_index) *
+              val += d_rho_cp_dT * temp_lin_vals.get_gradient(q_index) *
                      velocity_vals.get_value(q_index) * temp_vals.get_value(q_index);
+              // todo: add term containing ∇·u  in case of evaporation
             }
 
           if (level_set_as_heaviside && evapor_data)
@@ -1021,28 +1010,32 @@ namespace MeltPoolDG::Heat
                                                 VectorizedArrayType &      density,
                                                 const VectorizedArrayType &temperature) const
     {
-      /*
-       * Compute the solid fraction for a temperature between the liquidus and the solidus
-       * temperature. If the temperature is equal to the liquidus temperature, then the solid
-       * fraction is zero. If the temperature is equal to the solidus temperature, then the solid
-       * fraction is one.
-       */
-      const auto solid_fraction =
-        UtilityFunctions::limit_to_bounds((material.liquidus_temperature - temperature) /
-                                            (material.liquidus_temperature -
-                                             material.solidus_temperature),
-                                          0.0,
-                                          1.0);
+      const auto solid_fraction = calculate_solid_fraction(temperature);
 
-      capacity     = UtilityFunctions::interpolate(solid_fraction,
-                                               material.second.capacity,
-                                               material.solid.capacity);
-      conductivity = UtilityFunctions::interpolate(solid_fraction,
-                                                   material.second.conductivity,
-                                                   material.solid.conductivity);
-      density      = UtilityFunctions::interpolate(solid_fraction,
-                                              material.second.density,
-                                              material.solid.density);
+      if (solid_fraction == VectorizedArrayType(0.0))
+        {
+          capacity     = material.second.capacity;
+          conductivity = material.second.conductivity;
+          density      = material.second.density;
+          return;
+        }
+      if (solid_fraction == VectorizedArrayType(1.0))
+        {
+          capacity     = material.solid.capacity;
+          conductivity = material.solid.conductivity;
+          density      = material.solid.density;
+          return;
+        }
+
+      capacity     = UtilityFunctions::interpolate_cubic(solid_fraction,
+                                                     material.second.capacity,
+                                                     material.solid.capacity);
+      conductivity = UtilityFunctions::interpolate_cubic(solid_fraction,
+                                                         material.second.conductivity,
+                                                         material.solid.conductivity);
+      density      = UtilityFunctions::interpolate_cubic(solid_fraction,
+                                                    material.second.density,
+                                                    material.solid.density);
     }
 
     /*
@@ -1059,37 +1052,29 @@ namespace MeltPoolDG::Heat
       VectorizedArrayType &      d_density_dT,
       const VectorizedArrayType &temperature) const
     {
-      const auto is_in_mushy_zone = UtilityFunctions::is_between(temperature,
-                                                                 material.solidus_temperature,
-                                                                 material.liquidus_temperature);
-      const auto mushy_zone_capacity_derivative =
-        (material.second.capacity - material.solid.capacity) /
-        (material.liquidus_temperature - material.solidus_temperature);
-      d_capacity_dT = is_in_mushy_zone * mushy_zone_capacity_derivative;
-      const auto mushy_zone_conductivity_derivative =
-        (material.second.conductivity - material.solid.conductivity) /
-        (material.liquidus_temperature - material.solidus_temperature);
-      d_conductivity_dT = is_in_mushy_zone * mushy_zone_conductivity_derivative;
-      const auto mushy_zone_density_derivative =
-        (material.second.density - material.solid.density) /
-        (material.liquidus_temperature - material.solidus_temperature);
-      d_density_dT = is_in_mushy_zone * mushy_zone_density_derivative;
-    }
+      const auto solid_fraction = calculate_solid_fraction(temperature);
 
-    /*
-     * Determine second derivatives of the material parameters (capacity and density) with
-     * respect to the temperature for solidification/melting.
-     */
-    void
-    get_material_parameter_second_derivatives_with_solidification(
-      VectorizedArrayType &      d2_capacity_dT2,
-      VectorizedArrayType &      d2_density_dT2,
-      const VectorizedArrayType &temperature) const
-    {
-      // TODO no second derivatives yet
-      (void)temperature;
-      d2_capacity_dT2 = 0.0;
-      d2_density_dT2  = 0.0;
+      if (solid_fraction == VectorizedArrayType(0.0) || solid_fraction == VectorizedArrayType(1.0))
+        {
+          d_capacity_dT     = 0.0;
+          d_conductivity_dT = 0.0;
+          d_density_dT      = 0.0;
+          return;
+        }
+
+      d_capacity_dT = -1.0 * inv_mushy_interval *
+                      UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
+                                                                     material.second.capacity,
+                                                                     material.solid.capacity);
+      d_conductivity_dT =
+        -1.0 * inv_mushy_interval *
+        UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
+                                                       material.second.conductivity,
+                                                       material.solid.conductivity);
+      d_density_dT = -1.0 * inv_mushy_interval *
+                     UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
+                                                                    material.second.density,
+                                                                    material.solid.density);
     }
 
     void
@@ -1111,6 +1096,19 @@ namespace MeltPoolDG::Heat
                                                    material.second.conductivity);
       density =
         UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
+    }
+
+    /*
+     * Compute the solid fraction for a temperature between the liquidus and the solidus
+     * temperature. If the temperature is equal to the liquidus temperature, then the solid
+     * fraction is zero. If the temperature is equal to the solidus temperature, then the solid
+     * fraction is one. In between there is a linear interpolation.
+     */
+    VectorizedArrayType
+    calculate_solid_fraction(const VectorizedArrayType &temperature) const
+    {
+      return UtilityFunctions::limit_to_bounds(
+        (material.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
     }
   };
 } // namespace MeltPoolDG::Heat

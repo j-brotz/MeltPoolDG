@@ -25,8 +25,8 @@
     "material solid capacity": "1762.0",
     "material solid conductivity": "2.22",
     "material solid density": "1000.0",
-    "material solidus temperature": "272.5",
-    "material liquidus temperature": "273.5"
+    "material solidus temperature": "270.0",
+    "material liquidus temperature": "276.0"
   },
   "paraview": {
     "paraview do output": "true",
