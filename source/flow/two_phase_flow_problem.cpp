@@ -1,3 +1,7 @@
+#ifndef MELT_POOL_DG_DIM
+#  define MELT_POOL_DG_DIM 1
+#endif
+
 #include <meltpooldg/flow/two_phase_flow_problem.hpp>
 
 namespace MeltPoolDG::Flow
@@ -905,7 +909,5 @@ namespace MeltPoolDG::Flow
                                  time_iterator.get_current_time_step_number());
   }
 
-  template class TwoPhaseFlowProblem<1>;
-  template class TwoPhaseFlowProblem<2>;
-  template class TwoPhaseFlowProblem<3>;
+  template class TwoPhaseFlowProblem<MELT_POOL_DG_DIM>;
 } // namespace MeltPoolDG::Flow

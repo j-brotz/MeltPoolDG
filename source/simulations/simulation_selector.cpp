@@ -1,3 +1,7 @@
+#ifndef MELT_POOL_DG_DIM
+#  define MELT_POOL_DG_DIM 1
+#endif
+
 #include <meltpooldg/simulations/simulation_selector.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 // simulations
@@ -104,7 +108,5 @@ namespace MeltPoolDG::Simulation
                   ExcMessage("The input-file for your requested application does not exist"));
   }
 
-  template class SimulationSelector<1>;
-  template class SimulationSelector<2>;
-  template class SimulationSelector<3>;
+  template class SimulationSelector<MELT_POOL_DG_DIM>;
 } // namespace MeltPoolDG::Simulation
