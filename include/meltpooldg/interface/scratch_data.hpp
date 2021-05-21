@@ -75,12 +75,11 @@ namespace MeltPoolDG
     /**
      * Setup everything in one go.
      */
-    template <int dim_q>
     void
     reinit(const Mapping<dim, spacedim> &                        mapping,
            const std::vector<const DoFHandler<dim, spacedim> *> &dof_handler,
            const std::vector<const AffineConstraints<number> *> &constraint,
-           const std::vector<Quadrature<dim_q>> &                quad)
+           const std::vector<Quadrature<dim>> &                  quad)
     {
       this->clear();
 
