@@ -1,9 +1,9 @@
 #pragma once
 
-#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#include <meltpooldg/utilities/conditional_ostream.hpp>
 
 #include <fstream>
 #include <iostream>

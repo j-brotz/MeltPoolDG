@@ -6,7 +6,6 @@
 
 #pragma once
 // for parallelization
-#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/partitioner.h>
 

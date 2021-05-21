@@ -1,4 +1,3 @@
-#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/data_out_base.h>
 #include <deal.II/base/index_set.h>
 
@@ -23,6 +22,7 @@
 #include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
