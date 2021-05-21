@@ -38,17 +38,6 @@ namespace MeltPoolDG
 
   namespace UtilityFunctions
   {
-    template <typename MeshType>
-    MPI_Comm
-    get_mpi_comm(const MeshType &mesh)
-    {
-      const auto *tria_parallel =
-        dynamic_cast<const parallel::TriangulationBase<MeshType::dimension> *>(
-          &(mesh.get_triangulation()));
-
-      return tria_parallel != nullptr ? tria_parallel->get_communicator() : MPI_COMM_SELF;
-    }
-
     template <int dim, int n_components>
     void
     fill_dof_vector_from_cell_operation(
