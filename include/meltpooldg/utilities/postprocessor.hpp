@@ -1,5 +1,4 @@
 #pragma once
-#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/table_handler.h>
 
 #include <deal.II/distributed/tria.h>
@@ -16,6 +15,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 #include <filesystem>
