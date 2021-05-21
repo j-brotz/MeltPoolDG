@@ -3,31 +3,6 @@
 namespace MeltPoolDG
 {
   template <int dim>
-  void
-  GenericDataOut<dim>::add_data_vector(
-    const DoFHandler<dim> &         dof_handler,
-    const VectorType &              data,
-    const std::vector<std::string> &names,
-    const std::vector<DataComponentInterpretation::DataComponentInterpretation>
-      &data_component_interpretation)
-  {
-    entries.emplace_back(&dof_handler, &data, names, data_component_interpretation);
-  }
-
-  template <int dim>
-  void
-  GenericDataOut<dim>::add_data_vector(const DoFHandler<dim> &dof_handler,
-                                       const VectorType &     data,
-                                       const std::string &    name)
-  {
-    entries.emplace_back(&dof_handler,
-                         &data,
-                         std::vector<std::string>{name},
-                         std::vector<DataComponentInterpretation::DataComponentInterpretation>{
-                           DataComponentInterpretation::component_is_scalar});
-  }
-
-  template <int dim>
   Postprocessor<dim>::Postprocessor(const MPI_Comm              mpi_communicator_in,
                                     const ParaviewData<double> &pv_data_in,
                                     const Mapping<dim> &        mapping_in,
@@ -275,9 +250,6 @@ namespace MeltPoolDG
       }
   }
 
-  template class GenericDataOut<1>;
-  template class GenericDataOut<2>;
-  template class GenericDataOut<3>;
   template class Postprocessor<1>;
   template class Postprocessor<2>;
   template class Postprocessor<3>;

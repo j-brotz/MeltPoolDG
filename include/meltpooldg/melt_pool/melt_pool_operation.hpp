@@ -15,6 +15,7 @@
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
+#include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 namespace MeltPoolDG

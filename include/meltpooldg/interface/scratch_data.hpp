@@ -25,7 +25,6 @@
 
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/postprocessor.hpp> // TODO[PM]: find a better place to include?
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
 

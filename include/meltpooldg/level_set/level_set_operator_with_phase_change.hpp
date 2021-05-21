@@ -8,6 +8,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/interface/operator_base.hpp>
+#include <meltpooldg/interface/parameters.hpp>
 
 #include <map>
 #include <string>

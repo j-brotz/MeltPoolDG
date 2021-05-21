@@ -17,6 +17,7 @@
 #include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
+#include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/linearsolve.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 
