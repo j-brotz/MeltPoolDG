@@ -13,6 +13,7 @@
 #include <meltpooldg/advection_diffusion/advection_diffusion_operator.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/generic_data_out.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion
 {

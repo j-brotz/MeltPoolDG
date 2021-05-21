@@ -15,6 +15,7 @@
 
 #include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
+#include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

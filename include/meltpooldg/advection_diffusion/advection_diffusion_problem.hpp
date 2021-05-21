@@ -16,6 +16,7 @@
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/interface/problembase.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/timeiterator.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion

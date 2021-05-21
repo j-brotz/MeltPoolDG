@@ -6,7 +6,7 @@
 #pragma once
 #include <deal.II/dofs/dof_handler.h>
 
-#include <meltpooldg/utilities/postprocessor.hpp>
+#include <meltpooldg/utilities/generic_data_out.hpp>
 
 namespace MeltPoolDG
 {
