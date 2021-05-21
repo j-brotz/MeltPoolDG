@@ -71,15 +71,8 @@ namespace MeltPoolDG
     unsigned int
     attach_constraint_matrix(const AffineConstraints<number> &constraint);
 
-    template <int dim_q>
     unsigned int
-    attach_quadrature(const Quadrature<dim_q> &quadrature)
-    {
-      this->quad.emplace_back(Quadrature<dim>(quadrature));
-      if constexpr (dim_q == 1) // find a better way to handle face quadrature
-        this->face_quad.emplace_back(Quadrature<dim - 1>(quadrature));
-      return this->quad.size() - 1;
-    }
+    attach_quadrature(const Quadrature<dim> &quadrature);
 
     void
     create_partitioning();

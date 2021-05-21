@@ -59,7 +59,7 @@ namespace MeltPoolDG::Reinitialization
         scratch_data->attach_quadrature(QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
       else
         reinit_quad_idx =
-          scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
+          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
 
       scratch_data->attach_dof_handler(dof_handler);
       reinit_dof_idx = scratch_data->attach_constraint_matrix(constraints);

@@ -176,7 +176,7 @@ namespace MeltPoolDG::AdvectionDiffusion
           QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
       else
         advec_diff_quad_idx =
-          scratch_data->attach_quadrature(QGauss<1>(base_in->parameters.base.n_q_points_1d));
+          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
 
       advec_diff_dof_idx               = scratch_data->attach_dof_handler(dof_handler);
       advec_diff_hanging_nodes_dof_idx = scratch_data->attach_dof_handler(dof_handler);
