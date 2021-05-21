@@ -10,6 +10,7 @@
 #include <meltpooldg/interface/fieldconditions.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
+#include <meltpooldg/utilities/generic_data_out.hpp>
 // c++
 #include <memory>
 
@@ -60,6 +61,17 @@ namespace MeltPoolDG
           " this->triangulation = std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator); "));
       set_boundary_conditions();
       set_field_conditions();
+    }
+
+    /**
+     * This function may be overwritten for output purposes in your simulation case.
+     * It is called after every time step.
+     */
+    virtual void
+    do_postprocessing(const GenericDataOut<dim> &generic_data_out)
+    {
+      (void)generic_data_out;
+      // do nothing default
     }
 
     /**

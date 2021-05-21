@@ -42,7 +42,7 @@ namespace MeltPoolDG::Heat
         heat_operation->solve(dt);
 
         // ... and output the results to vtk files.
-        output_results(n, time_iterator.get_current_time());
+        output_results(n, time_iterator.get_current_time(), base_in);
 
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
@@ -195,7 +195,7 @@ namespace MeltPoolDG::Heat
     /*
      *  output results of initialization
      */
-    output_results(0, base_in->parameters.heat.time_stepping.start_time);
+    output_results(0, base_in->parameters.heat.time_stepping.start_time, base_in);
   }
 
   template <int dim>
@@ -288,7 +288,9 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::output_results(const unsigned int n_time_step, const double time)
+  HeatTransferProblem<dim>::output_results(const unsigned int                   n_time_step,
+                                           const double                         time,
+                                           std::shared_ptr<SimulationBase<dim>> base_in)
   {
     /**
      * collect all relevant output data
@@ -296,9 +298,14 @@ namespace MeltPoolDG::Heat
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       heat_operation->attach_output_vectors(data_out);
     };
-    /**
-     * do the output operation
-     */
+
+    GenericDataOut<dim> generic_data_out;
+    attach_output_vectors(generic_data_out);
+
+    // user-defined postprocessing
+    base_in->do_postprocessing(generic_data_out);
+
+    // paraview postprocessing
     post_processor->process(n_time_step, attach_output_vectors, time);
   }
 

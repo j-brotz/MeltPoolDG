@@ -68,11 +68,12 @@ namespace MeltPoolDG::LevelSet
     void
     compute_advection_velocity(Function<dim> &advec_func);
     /*
-     *  This function is to create paraview output
+     *  perform output of results
      */
     void
-    output_results(const unsigned int time_step, const double time) const;
-
+    output_results(const unsigned int                   time_step,
+                   const double                         current_time,
+                   std::shared_ptr<SimulationBase<dim>> base_in);
     /*
      *  perform mesh refinement
      */

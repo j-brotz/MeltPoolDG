@@ -1,0 +1,55 @@
+t= 0.01      |vel|= 111.095
+	 |ϕ|2 = 1.990445402    
+---------------------------------------------
+    Starting user defined postprocessing
+---------------------------------------------
+Accessible vectors:
+ *       advected_field Max-norm:     1.9929 number of dofs: 1089
+ *             velocity Max-norm:          4 number of dofs: 2178
+---------------------------------------------
+    End of user defined postprocessing
+---------------------------------------------
+t= 0.02      |vel|= 111.09
+	 |ϕ|2 = 1.990446547    
+---------------------------------------------
+    Starting user defined postprocessing
+---------------------------------------------
+Accessible vectors:
+ *       advected_field Max-norm:     2.0799 number of dofs: 1089
+ *             velocity Max-norm:          4 number of dofs: 2178
+---------------------------------------------
+    End of user defined postprocessing
+---------------------------------------------
+t= 0.03      |vel|= 111.09
+	 |ϕ|2 = 1.990446336    
+---------------------------------------------
+    Starting user defined postprocessing
+---------------------------------------------
+Accessible vectors:
+ *       advected_field Max-norm:     1.9841 number of dofs: 1089
+ *             velocity Max-norm:          4 number of dofs: 2178
+---------------------------------------------
+    End of user defined postprocessing
+---------------------------------------------
+t= 0.04      |vel|= 111.09
+	 |ϕ|2 = 1.990442727    
+---------------------------------------------
+    Starting user defined postprocessing
+---------------------------------------------
+Accessible vectors:
+ *       advected_field Max-norm:     1.9361 number of dofs: 1089
+ *             velocity Max-norm:          4 number of dofs: 2178
+---------------------------------------------
+    End of user defined postprocessing
+---------------------------------------------
+t= 0.05      |vel|= 111.09
+	 |ϕ|2 = 1.990430972    
+---------------------------------------------
+    Starting user defined postprocessing
+---------------------------------------------
+Accessible vectors:
+ *       advected_field Max-norm:     2.0363 number of dofs: 1089
+ *             velocity Max-norm:          4 number of dofs: 2178
+---------------------------------------------
+    End of user defined postprocessing
+---------------------------------------------

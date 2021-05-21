@@ -17,7 +17,8 @@ namespace MeltPoolDG::Reinitialization
         reinit_operation->solve(d_tau);
 
         output_results(time_iterator.get_current_time_step_number(),
-                       time_iterator.get_current_time());
+                       time_iterator.get_current_time(),
+                       base_in);
 
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
@@ -231,13 +232,22 @@ namespace MeltPoolDG::Reinitialization
 
   template <int dim>
   void
-  ReinitializationProblem<dim>::output_results(const unsigned int time_step,
-                                               const double       time) const
+  ReinitializationProblem<dim>::output_results(const unsigned int                   time_step,
+                                               const double                         time,
+                                               std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    post_processor->process(
-      time_step,
-      [&](GenericDataOut<dim> &data_out) { reinit_operation->attach_output_vectors(data_out); },
-      time);
+    const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
+      reinit_operation->attach_output_vectors(data_out);
+    };
+
+    GenericDataOut<dim> generic_data_out;
+    attach_output_vectors(generic_data_out);
+
+    // user-defined postprocessing
+    base_in->do_postprocessing(generic_data_out);
+
+    // paraview postprocessing
+    post_processor->process(time_step, attach_output_vectors, time);
   }
 
 

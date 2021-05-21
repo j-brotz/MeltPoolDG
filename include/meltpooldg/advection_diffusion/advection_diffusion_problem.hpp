@@ -57,7 +57,9 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  perform output of results
      */
     void
-    output_results(unsigned int time_step, double current_time);
+    output_results(unsigned int                         time_step,
+                   double                               current_time,
+                   std::shared_ptr<SimulationBase<dim>> base_in);
 
     /*
      *  perform mesh refinement
