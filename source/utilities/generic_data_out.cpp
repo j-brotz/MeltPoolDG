@@ -18,6 +18,7 @@ namespace MeltPoolDG
       &data_component_interpretation)
   {
     entries.emplace_back(&dof_handler, &data, names, data_component_interpretation);
+    entry_id[names[0]] = entries.size() - 1;
   }
 
   template <int dim>
@@ -31,6 +32,47 @@ namespace MeltPoolDG
                          std::vector<std::string>{name},
                          std::vector<DataComponentInterpretation::DataComponentInterpretation>{
                            DataComponentInterpretation::component_is_scalar});
+    entry_id[name] = entries.size() - 1;
+  }
+
+  template <int dim>
+  const GenericDataOut<dim>::VectorType &
+  GenericDataOut<dim>::get_vector(const std::string &name) const
+  {
+    if (entry_id.find(name) == entry_id.end())
+      {
+        std::ostringstream exc_message;
+        exc_message << "Your requested output variable >>> " + name +
+                         " <<< cannot be found in the entries"
+                         " of GenericDataOut. The available values are: "
+                    << std::endl;
+        for (auto &[key, value] : entry_id)
+          exc_message << "* " << key << std::endl;
+
+        AssertThrow(false, ExcMessage(exc_message.str()));
+      }
+
+    return *std::get<1>(entries[entry_id.at(name)]);
+  }
+
+  template <int dim>
+  const DoFHandler<dim> &
+  GenericDataOut<dim>::get_dof_handler(const std::string &name) const
+  {
+    if (entry_id.find(name) == entry_id.end())
+      {
+        std::ostringstream exc_message;
+        exc_message << "Your requested output variable >>> " + name +
+                         " <<< cannot be found in the entries"
+                         " of GenericDataOut. The available values are: "
+                    << std::endl;
+        for (auto &[key, value] : entry_id)
+          exc_message << "* " << key << std::endl;
+
+        AssertThrow(false, ExcMessage(exc_message.str()));
+      }
+
+    return *std::get<0>(entries[entry_id.at(name)]);
   }
 
   template class GenericDataOut<1>;

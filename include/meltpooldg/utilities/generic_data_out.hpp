@@ -4,6 +4,8 @@
 
 #include <deal.II/numerics/data_out.h>
 
+#include <string>
+
 using namespace dealii;
 
 namespace MeltPoolDG
@@ -35,7 +37,16 @@ namespace MeltPoolDG
                            std::vector<DataComponentInterpretation::DataComponentInterpretation>>>
       entries;
 
+    const VectorType &
+    get_vector(const std::string &name) const;
+
+    const DoFHandler<dim> &
+    get_dof_handler(const std::string &name) const;
+
     const Mapping<dim> &mapping;
     double              current_time;
+
+  private:
+    std::map<std::string, unsigned int> entry_id;
   };
 } // namespace MeltPoolDG
