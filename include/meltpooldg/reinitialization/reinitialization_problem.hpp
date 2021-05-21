@@ -6,8 +6,6 @@
 #pragma once
 // for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
-// enabling conditional ostreams
-#include <deal.II/base/conditional_ostream.h>
 // for index set
 #include <deal.II/base/index_set.h>
 // for distributed triangulation
@@ -35,6 +33,7 @@
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/timeiterator.hpp>
 // C++

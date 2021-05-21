@@ -85,7 +85,7 @@ test(const MPI_Comm &mpi_comm)
   MatrixFree<dim, double, VectorizedArray<double>> matrix_free;
   matrix_free.reinit(mapping, dof_handler, constraints, q_gauss, additional_data);
 
-  auto pcout = ConditionalOStream(std::cout, Utilities::MPI::this_mpi_process(mpi_comm) == 0);
+  dealii::ConditionalOStream pcout(std::cout, Utilities::MPI::this_mpi_process(mpi_comm) == 0);
 
   VectorType distance;
   matrix_free.initialize_dof_vector(distance, 0);

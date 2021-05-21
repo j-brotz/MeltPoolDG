@@ -22,6 +22,7 @@
 
 using namespace dealii;
 using namespace MeltPoolDG;
+
 using VectorType = LinearAlgebra::distributed::Vector<double>;
 
 template <int dim>
@@ -216,7 +217,7 @@ main(int argc, char *argv[])
     merged_level_set_intersect.update_ghost_values();
     merged_level_set_subtract.update_ghost_values();
 
-    auto pcout = ConditionalOStream(std::cout, Utilities::MPI::this_mpi_process(mpi_comm) == 0);
+    dealii::ConditionalOStream pcout(std::cout, Utilities::MPI::this_mpi_process(mpi_comm) == 0);
     pcout << "level_set_1: " << level_set_1.l2_norm() << std::endl;
     pcout << "level_set_2: " << level_set_2.l2_norm() << std::endl;
     pcout << "level_set_1 ∪ level_set_2 : " << merged_level_set_union.l2_norm() << std::endl;
