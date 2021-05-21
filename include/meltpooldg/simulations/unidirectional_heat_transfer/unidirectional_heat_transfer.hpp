@@ -125,7 +125,31 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
 
   private:
     const double eps   = 0.01;
-    const double level = 0.05;
+    const double level = x_max / 2;
+  };
+
+  template <int dim>
+  class CovectedVerticalLevelSetHeaviside : public Function<dim>
+  {
+  public:
+    CovectedVerticalLevelSetHeaviside(const double velocity)
+      : Function<dim>(1)
+      , velocity(velocity)
+    {}
+
+    double
+    value(const Point<dim> &p, const unsigned int) const override
+    {
+      const auto x = p[0];
+      return UtilityFunctions::CharacteristicFunctions::heaviside(level - x -
+                                                                    velocity * this->get_time(),
+                                                                  eps);
+    }
+
+  private:
+    const double eps   = 0.01;
+    const double level = x_max * 2. / 3.;
+    const double velocity;
   };
 
   template <int dim>
@@ -221,8 +245,17 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
                                     this->parameters.heat.velocity),
                                   "heat_transfer");
 
-      this->template attach_initial_condition(std::make_shared<HorizontalLevelSetHeaviside<dim>>(),
-                                              "prescribed_level_set");
+      if (this->parameters.heat.two_phase)
+        {
+          if (!this->parameters.heat.solidification)
+            this->template attach_initial_condition(
+              std::make_shared<HorizontalLevelSetHeaviside<dim>>(), "prescribed_level_set");
+          else
+            this->template attach_initial_condition(
+              std::make_shared<CovectedVerticalLevelSetHeaviside<dim>>(
+                this->parameters.heat.velocity),
+              "prescribed_level_set");
+        }
     }
   };
 } // namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer

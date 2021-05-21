@@ -249,34 +249,96 @@ namespace MeltPoolDG::Heat
                                      FEFaceIntegrator<dim, 1, number> &temp_vals,
                                      bool                              do_reinit_face) const;
 
-    /*
-     * Determine material parameters (capacity, conductivity and density) for
-     * solidification/melting. In the mushy zone (between solidus and liquidus temperature) the
-     * material parameters are linearly interpolated between the solid's and fluid's values.
+    /**
+     * Determine the material parameters. This function takes two-phase flow and solidification
+     * effects into account.
      *
-     * @TODO, handle variable fluid parameters. ATM the fluid's parameters are assumed to be
-     * material.second.<..>
+     * The values of \p rho_cp and \p conductivity must be set to the material.first values
+     * initially. This function only modifies their values if necessary. I.e. in case of no
+     * two-phase flow and no solidification this function does nothing.
      */
     void
-    get_material_parameters_with_solidification(VectorizedArray<number> &      capacity,
-                                                VectorizedArray<number> &      conductivity,
-                                                VectorizedArray<number> &      density,
-                                                const VectorizedArray<number> &temperature) const;
+    get_material_parameters(VectorizedArray<number> &               rho_cp,
+                            VectorizedArray<number> &               conductivity,
+                            bool                                    with_solidification,
+                            bool                                    with_two_phase,
+                            const FECellIntegrator<dim, 1, number> &temp_lin_val,
+                            const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
+                            unsigned int                            q_index) const;
+
+    /**
+     * Determine the material parameters and their temperature derivatives. This function takes
+     * two-phase flow and solidification effects into account.
+     *
+     * The values of \p rho_cp, \p conductivity, \p d_rho_cp_dT and \p d_conductivity_dT must be set
+     * to the material.first values initially. This function only modifies their values if
+     * necessary. I.e. in case of no two-phase flow and no solidification this function does
+     * nothing.
+     */
+    void
+    get_material_parameters_and_derivatives(
+      VectorizedArray<number> &               rho_cp,
+      VectorizedArray<number> &               conductivity,
+      VectorizedArray<number> &               d_rho_cp_dT,
+      VectorizedArray<number> &               d_conductivity_dT,
+      bool                                    with_solidification,
+      bool                                    with_two_phase,
+      const FECellIntegrator<dim, 1, number> &temp_lin_val,
+      const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
+      unsigned int                            q_index) const;
 
     /*
-     * Determine derivatives of the material parameters (capacity, conductivity and density) with
-     * respect to the temperature for solidification/melting. In the mushy zone (between solidus and
-     * liquidus temperature) the material parameters are linearly interpolated between the solid's
-     * and fluid's values, so this function return the slope of that linear function. Outside the
-     * mushy zone the parameters are constant and this function returns zeros.
+     * Determine material parameters (\p capacity, \p conductivity and \p density) for
+     * solidification/melting. Input the liquid's material parameters via \p liq_capacity, \p
+     * liq_conductivity and \p liq_density. In the mushy zone (where the solid fraction os between 0
+     * and 1) the material parameters will be interpolated with smooth cubic function, see
+     * UtilityFunctions::interpolate_cubic().
+     *
+     * In case of two-phase flow use get_material_parameters_with_two_phase_flow() to determine the
+     * liquid's parameters first.
+     */
+    void
+    get_material_parameters_with_solidification(
+      VectorizedArray<number> &      capacity,
+      VectorizedArray<number> &      conductivity,
+      VectorizedArray<number> &      density,
+      const VectorizedArray<number> &liq_capacity,
+      const VectorizedArray<number> &liq_conductivity,
+      const VectorizedArray<number> &liq_density,
+      const VectorizedArray<number> &solid_fraction) const;
+
+    /*
+     * Determine derivatives of the material parameters (\p d_capacity_dT, \p d_conductivity_dT and
+     * \p d_density_dT) with respect to the temperature for solidification/melting. Input the
+     * liquid's material parameters via \p liq_capacity, \p liq_conductivity and \p liq_density.
+     * This function will return the temperature derivatives of the values determined by
+     * get_material_parameters_with_solidification().
+     *
+     * In case of two-phase flow use get_material_parameters_with_two_phase_flow() to determine the
+     * liquid's parameters first.
      */
     void
     get_material_parameter_derivatives_with_solidification(
       VectorizedArray<number> &      d_capacity_dT,
       VectorizedArray<number> &      d_conductivity_dT,
       VectorizedArray<number> &      d_density_dT,
-      const VectorizedArray<number> &temperature) const;
+      const VectorizedArray<number> &liq_capacity,
+      const VectorizedArray<number> &liq_conductivity,
+      const VectorizedArray<number> &liq_density,
+      const VectorizedArray<number> &solid_fraction) const;
 
+    /*
+     * Determine the material parameters (\p capacity, \p conductivity and \p density) for two phase
+     * flow. If \p ls_heaviside_val = 0 this function returns the first materials parameters and if
+     * \p ls_heaviside_val = 1 it returns the second materials parameters. At the interface the
+     * parameters are smeared if "heat variable properties over interface" is set to true, else the
+     * parameters will jump.
+     *
+     * This does not account for solidification effect. In case of solidification this function must
+     * be used to determine the liquid's material parameters for
+     * get_material_parameters_with_solidification() and
+     * get_material_parameter_derivatives_with_solidification().
+     */
     void
     get_material_parameters_with_two_phase_flow(
       VectorizedArray<number> &      capacity,
