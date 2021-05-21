@@ -75,6 +75,20 @@ namespace MeltPoolDG
     return *std::get<0>(entries[entry_id.at(name)]);
   }
 
+  template <int dim>
+  const Mapping<dim> &
+  GenericDataOut<dim>::get_mapping() const
+  {
+    return mapping;
+  }
+
+  template <int dim>
+  const double &
+  GenericDataOut<dim>::get_time() const
+  {
+    return current_time;
+  }
+
   template class GenericDataOut<1>;
   template class GenericDataOut<2>;
   template class GenericDataOut<3>;

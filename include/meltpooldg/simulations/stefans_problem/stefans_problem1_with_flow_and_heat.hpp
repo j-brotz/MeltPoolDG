@@ -1,10 +1,13 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/mpi.templates.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/vector.h>
@@ -140,6 +143,10 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 
     {
       this->set_parameters();
+      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
+        file_level_set_contour.open(this->parameters.paraview.directory + "/" +
+                                    this->parameters.paraview.filename +
+                                    "_level_set_contour_over_time");
     }
 
     void
@@ -317,7 +324,83 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                                      "heat_transfer");
     }
 
+    void
+    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) final
+    {
+      if (this->parameters.paraview.do_output)
+        {
+          if constexpr (dim > 1)
+            {
+              FEPointEvaluation<1, dim> temperature_eval(
+                generic_data_out.get_mapping(),
+                generic_data_out.get_dof_handler("temperature").get_fe(),
+                update_values);
+              std::vector<Point<dim>> vertices;
+              std::vector<double>     temperature;
+              // std::vector<double>                  buffer;
+              Vector<double>                       buffer;
+              std::vector<types::global_dof_index> local_dof_indices;
+
+              UtilityFunctions::evaluate_at_interface<dim>(
+                generic_data_out.get_dof_handler("level_set"),
+                generic_data_out.get_mapping(),
+                generic_data_out.get_vector("level_set"),
+                [&](const auto &cell, const auto &points, [[maybe_unused]] const auto &weights) {
+                  // evaluate rhs term
+                  local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
+                  buffer.reinit(cell->get_fe().n_dofs_per_cell());
+                  cell->get_dof_indices(local_dof_indices);
+
+                  const unsigned int n_points = points.size();
+
+                  const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
+                  temperature_eval.reinit(cell, unit_points);
+
+                  cell->get_dof_values(generic_data_out.get_vector("temperature"), buffer);
+
+                  // evaluate temperature and level set points
+                  temperature_eval.evaluate(make_array_view(buffer), EvaluationFlags::values);
+                  for (unsigned int q = 0; q < n_points; ++q)
+                    {
+                      vertices.push_back(
+                        generic_data_out.get_mapping().transform_unit_to_real_cell(cell,
+                                                                                   points[q]));
+                      temperature.push_back(temperature_eval.get_value(q));
+                    }
+                },
+                0.0, /*contour value*/
+                3 /*n_subdivisions*/);
+
+              // send results to rank 0 to write them to file
+              auto vertices_all = Utilities::MPI::all_reduce<std::vector<Point<dim>>>(
+                vertices,
+                this->mpi_communicator,
+                [](const std::vector<Point<dim>> &a, const std::vector<Point<dim>> &b) {
+                  auto result = a;
+                  result.insert(result.end(), b.begin(), b.end());
+                  return result;
+                });
+
+              auto temp_all = Utilities::MPI::all_reduce<std::vector<double>>(
+                temperature,
+                this->mpi_communicator,
+                [](const std::vector<double> &a, const std::vector<double> &b) {
+                  auto result = a;
+                  result.insert(result.end(), b.begin(), b.end());
+                  return result;
+                });
+
+              // write values to file
+              if (file_level_set_contour.is_open())
+                file_level_set_contour << generic_data_out.get_time() << " "
+                                       << vertices_all[0][dim - 1] << " " << temp_all[0]
+                                       << std::endl;
+            }
+        }
+    }
+
   private:
-    const double x_max;
+    const double  x_max;
+    std::ofstream file_level_set_contour;
   };
 } // namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
