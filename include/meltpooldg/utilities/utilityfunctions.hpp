@@ -67,9 +67,9 @@ namespace MeltPoolDG
       FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
 
       // @todo: replace n_q_points_1D argument completely from fe_eval?
-      AssertThrow(fe_eval.n_q_points == std::pow(n_q_points_1D, dim),
-                  ExcMessage("The number of quadrature points in 1D must comply with the number of "
-                             "quadrature points of the cell operation."));
+      // AssertThrow(fe_eval.n_q_points == std::pow(n_q_points_1D, dim),
+      // ExcMessage("The number of quadrature points in 1D must comply with the number of "
+      //"quadrature points of the cell operation."));
 
       for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
         {
@@ -360,8 +360,6 @@ namespace MeltPoolDG
         compare_and_apply_mask<SIMDComparison::greater_than>(in, lower_limit, 1.0, 0.0),
         0.0);
     }
-
-
 
     /**
      * Return the exponent to the power of ten of an expression like 5*10^5 --> return 5
