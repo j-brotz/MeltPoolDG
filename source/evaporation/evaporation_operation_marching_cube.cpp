@@ -1,4 +1,9 @@
+#include <deal.II/grid/grid_tools.h>
+
+#include <deal.II/matrix_free/fe_point_evaluation.h>
+
 #include <meltpooldg/evaporation/evaporation_operation_marching_cube.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -126,7 +131,6 @@ namespace MeltPoolDG::Evaporation
     (void)evapor_dof_idx;
     (void)pressure_dof_idx;
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
     if constexpr (dim > 1) // @todo: otherwise i am getting a compiling error atm
       {
         auto surface_quad =
@@ -161,8 +165,8 @@ namespace MeltPoolDG::Evaporation
                 const auto [points, weights] =
                   [&]() -> std::tuple<std::vector<Point<dim>>, std::vector<double>> {
                   // determine points and cells of aux surface triangulation
-                  std::vector<Point<dim>>          surface_vertices;
-                  std::vector<::CellData<dim - 1>> surface_cells;
+                  std::vector<Point<dim>>        surface_vertices;
+                  std::vector<CellData<dim - 1>> surface_cells;
 
                   // run marching cube algorithm
                   mc.process_cell(cell, level_set_vector, 0.0, surface_vertices, surface_cells);
@@ -248,7 +252,6 @@ namespace MeltPoolDG::Evaporation
       {
         Assert(false, ExcNotImplemented());
       }
-#endif
   }
 
   template class EvaporationOperationMarchingCube<1>;

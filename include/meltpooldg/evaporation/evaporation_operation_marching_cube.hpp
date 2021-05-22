@@ -8,11 +8,7 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/utilities/vector_tools.hpp>
-
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-#  include <adaflo/sharp_interface_util.h> //@todo: will be replace by the utility function of deal.II as soon the PR is merged
-#endif
+#include <meltpooldg/interface/scratch_data.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
