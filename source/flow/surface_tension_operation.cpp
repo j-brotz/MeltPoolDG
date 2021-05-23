@@ -56,7 +56,7 @@ namespace MeltPoolDG::Flow
       level_set_as_heaviside,
       zero_out);
 
-    curvature_vec.zero_out_ghosts();
+    curvature_vec.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -180,9 +180,9 @@ namespace MeltPoolDG::Flow
       level_set_as_heaviside,
       zero_out);
 
-    solution_curvature.zero_out_ghosts();
-    temperature.zero_out_ghosts();
-    solution_normal_vector.zero_out_ghosts();
+    solution_curvature.zero_out_ghost_values();
+    temperature.zero_out_ghost_values();
+    solution_normal_vector.zero_out_ghost_values();
   }
 
   template class SurfaceTensionOperation<1>;

@@ -230,9 +230,9 @@ namespace MeltPoolDG::AdvectionDiffusion
     const LinearAlgebra::distributed::Vector<double> &vec,
     bool                                              initial_step)
   {
-    velocity_vec_old_old.zero_out_ghosts();
-    velocity_vec_old.zero_out_ghosts();
-    velocity_vec.zero_out_ghosts();
+    velocity_vec_old_old.zero_out_ghost_values();
+    velocity_vec_old.zero_out_ghost_values();
+    velocity_vec.zero_out_ghost_values();
 
     if (initial_step)
       {

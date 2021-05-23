@@ -126,7 +126,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                            advec_diff_dof_idx,
                                                            advec_diff_quad_idx)
           << std::endl;
-    advection_velocity.zero_out_ghosts();
+    advection_velocity.zero_out_ghost_values();
   }
 
   template <int dim>

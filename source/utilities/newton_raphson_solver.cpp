@@ -34,7 +34,7 @@ namespace MeltPoolDG
   void
   NewtonRaphsonSolver<dim, VectorType>::solve()
   {
-    solution.zero_out_ghosts();
+    solution.zero_out_ghost_values();
 
     scratch_data.get_pcout(1) << std::endl;
     scratch_data.get_pcout(1) << "+" << std::string(60, '-') << "+" << std::endl;

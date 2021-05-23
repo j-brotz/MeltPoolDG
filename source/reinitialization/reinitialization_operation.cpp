@@ -165,7 +165,7 @@ namespace MeltPoolDG::Reinitialization
                                   << reinit_operator->system_matrix.frobenius_norm() << std::endl;
       }
     scratch_data->get_constraint(reinit_dof_idx).distribute(src);
-    solution_level_set.zero_out_ghosts();
+    solution_level_set.zero_out_ghost_values();
 
     solution_level_set += src;
 

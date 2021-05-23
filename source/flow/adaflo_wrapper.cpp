@@ -86,8 +86,8 @@ namespace MeltPoolDG::Flow
   void
   AdafloWrapper<dim>::set_initial_condition(const Function<dim> &initial_field_function_velocity)
   {
-    navier_stokes.solution.zero_out_ghosts();
-    navier_stokes.solution_old.zero_out_ghosts();
+    navier_stokes.solution.zero_out_ghost_values();
+    navier_stokes.solution_old.zero_out_ghost_values();
     dealii::VectorTools::interpolate(navier_stokes.mapping,
                                      navier_stokes.get_dof_handler_u(),
                                      initial_field_function_velocity,

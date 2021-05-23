@@ -107,7 +107,7 @@ namespace MeltPoolDG
               }
           }
 
-      in.zero_out_ghosts();
+      in.zero_out_ghost_values();
     }
 
     template <int dim, int spacedim, typename Number>
@@ -144,7 +144,7 @@ namespace MeltPoolDG
             cell_fe_system->set_dof_values(local, out);
           }
 
-      in.zero_out_ghosts();
+      in.zero_out_ghost_values();
     }
 
     template <typename... T>
@@ -156,9 +156,9 @@ namespace MeltPoolDG
 
     template <typename... T>
     void
-    zero_out_ghosts(const T &...args)
+    zero_out_ghost_values(const T &...args)
     {
-      ((args.zero_out_ghosts()), ...);
+      ((args.zero_out_ghost_values()), ...);
     }
 
     template <int dim, typename number>
@@ -238,7 +238,7 @@ namespace MeltPoolDG
                                                 dealii::VectorTools::L2_norm);
 
       if (!is_ghosted)
-        solution.zero_out_ghosts();
+        solution.zero_out_ghost_values();
 
       return dealii::VectorTools::compute_global_error(triangulation,
                                                        difference_per_cell,
