@@ -305,8 +305,8 @@ namespace MeltPoolDG::MeltPool
     scratch_data->get_constraint(temp_dof_idx).distribute(solid);
     scratch_data->get_constraint(temp_dof_idx).distribute(liquid);
 
-    heat_operation->get_temperature().zero_out_ghosts();
-    level_set_as_heaviside.zero_out_ghosts();
+    heat_operation->get_temperature().zero_out_ghost_values();
+    level_set_as_heaviside.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -364,7 +364,7 @@ namespace MeltPoolDG::MeltPool
     flow_constraints.merge(solid_constraints,
                            AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
 
-    solid.zero_out_ghosts();
+    solid.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -406,7 +406,7 @@ namespace MeltPoolDG::MeltPool
     level_set_constraints.merge(solid_constraints,
                                 AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
     level_set_constraints.close();
-    solid.zero_out_ghosts();
+    solid.zero_out_ghost_values();
   }
 
   template <int dim>

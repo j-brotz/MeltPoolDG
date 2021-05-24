@@ -105,8 +105,8 @@ namespace MeltPoolDG::LevelSet
       src,
       true);
 
-    advection_velocity.zero_out_ghosts();
-    evapor_velocity.zero_out_ghosts();
+    advection_velocity.zero_out_ghost_values();
+    evapor_velocity.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -168,8 +168,8 @@ namespace MeltPoolDG::LevelSet
       src,
       false); // rhs should not be zeroed out in order to consider inhomogeneous dirichlet BC
 
-    advection_velocity.zero_out_ghosts();
-    evapor_velocity.zero_out_ghosts();
+    advection_velocity.zero_out_ghost_values();
+    evapor_velocity.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -212,7 +212,7 @@ namespace MeltPoolDG::LevelSet
                                                                   this->dof_idx,
                                                                   this->quad_idx)
                              << std::endl;
-    advected_field.zero_out_ghosts();
+    advected_field.zero_out_ghost_values();
   }
 
   template class LevelSetOperatorWithPhaseChange<1>;

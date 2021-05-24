@@ -452,7 +452,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::correct_curvature_values()
   {
-    for (unsigned int i = 0; i < curvature_operation->get_curvature().local_size(); ++i)
+    for (unsigned int i = 0; i < curvature_operation->get_curvature().locally_owned_size(); ++i)
       // if (std::abs(solution_curvature.local_element(i)) > 1e-4)
       if (1. - advec_diff_operation->get_advected_field().local_element(i) *
                  advec_diff_operation->get_advected_field().local_element(i) >

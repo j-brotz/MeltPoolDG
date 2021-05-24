@@ -167,7 +167,7 @@ namespace MeltPoolDG::Evaporation
                                                  evaluation_points,
                                                  cache,
                                                  dealii::VectorTools::EvaluationFlags::max);
-    temperature->zero_out_ghosts();
+    temperature->zero_out_ghost_values();
 
     Assert(temperature_evaluation_values.size() == evaluation_points.size(),
            ExcMessage("The size of vectors must match."));
@@ -175,7 +175,7 @@ namespace MeltPoolDG::Evaporation
     /*
      * compute evaporative mass flux
      */
-    evaporative_mass_flux.zero_out_ghosts();
+    evaporative_mass_flux.zero_out_ghost_values();
     evaporative_mass_flux = 0.0;
 
     for (unsigned int i = 0; i < evaluation_points.size(); i++)
@@ -225,7 +225,7 @@ namespace MeltPoolDG::Evaporation
                     boiling_temperature);
               }
         }
-    temperature.zero_out_ghosts();
+    temperature.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -303,9 +303,9 @@ namespace MeltPoolDG::Evaporation
             // evapor_vel[q_index] *= -1.0;
           }
       }
-    level_set_as_heaviside.zero_out_ghosts();
-    normal_vector.zero_out_ghosts();
-    evaporative_mass_flux.zero_out_ghosts();
+    level_set_as_heaviside.zero_out_ghost_values();
+    normal_vector.zero_out_ghost_values();
+    evaporative_mass_flux.zero_out_ghost_values();
 
     scratch_data->initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
 
@@ -334,7 +334,7 @@ namespace MeltPoolDG::Evaporation
                                                                     ls_quad_idx)
                                << std::endl;
 
-    evaporation_velocity.zero_out_ghosts();
+    evaporation_velocity.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -405,7 +405,7 @@ namespace MeltPoolDG::Evaporation
       mass_balance_rhs,
       level_set_as_heaviside,
       zero_out);
-    evaporative_mass_flux.zero_out_ghosts();
+    evaporative_mass_flux.zero_out_ghost_values();
 
     scratch_data->get_pcout() << "    | evaporation: jump in the velocity field = "
                               << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm())

@@ -377,7 +377,7 @@ namespace MeltPoolDG::LevelSet
       constraints_dirichlet.distribute(locally_relevant_solution);
       locally_relevant_solution.update_ghost_values();
 
-      for (unsigned int i = 0; i < locally_relevant_solution.local_size(); ++i)
+      for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
         locally_relevant_solution.local_element(i) =
           (1.0 -
            locally_relevant_solution.local_element(i) * locally_relevant_solution.local_element(i));

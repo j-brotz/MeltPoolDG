@@ -75,7 +75,7 @@ namespace MeltPoolDG::MeltPool
       force_rhs,
       level_set_as_heaviside,
       zero_out);
-    temperature.zero_out_ghosts();
+    temperature.zero_out_ghost_values();
   }
 
   template <int dim>

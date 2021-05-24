@@ -78,9 +78,9 @@ namespace MeltPoolDG::Evaporation
             evapor_vel[q_index] = is_liquid * n_phi;
           }
       }
-    level_set_as_heaviside.zero_out_ghosts();
-    normal_vector.zero_out_ghosts();
-    evaporative_mass_flux.zero_out_ghosts();
+    level_set_as_heaviside.zero_out_ghost_values();
+    normal_vector.zero_out_ghost_values();
+    evaporative_mass_flux.zero_out_ghost_values();
 
     scratch_data.initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
 
@@ -107,7 +107,7 @@ namespace MeltPoolDG::Evaporation
     scratch_data.get_pcout() << "    | evapor: |u|2 = " << evaporation_velocity.l2_norm()
                              << std::endl;
 
-    evaporation_velocity.zero_out_ghosts();
+    evaporation_velocity.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -246,7 +246,7 @@ namespace MeltPoolDG::Evaporation
 
         mass_balance_rhs.compress(VectorOperation::add);
         mass_balance_rhs.update_ghost_values();
-        evaporative_mass_flux.zero_out_ghosts();
+        evaporative_mass_flux.zero_out_ghost_values();
       }
     else
       {

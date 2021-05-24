@@ -242,8 +242,8 @@ main(int argc, char *argv[])
     data_out.build_patches(mapping);
     data_out.write_vtu_with_pvtu_record("./", pv_name, 0, mpi_comm);
 #endif
-    level_set_1.zero_out_ghosts();
-    level_set_2.zero_out_ghosts();
+    level_set_1.zero_out_ghost_values();
+    level_set_2.zero_out_ghost_values();
   };
 
 

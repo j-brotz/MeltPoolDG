@@ -149,11 +149,11 @@ namespace MeltPoolDG::Heat
       src,
       true /*zero dst vector*/);
 
-    MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
     if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
   }
 
   template <int dim, typename number>
@@ -417,11 +417,11 @@ namespace MeltPoolDG::Heat
       }
 
     system_matrix.compress(VectorOperation::add);
-    MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
     if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
   }
 
   template <int dim, typename number>
@@ -641,13 +641,13 @@ namespace MeltPoolDG::Heat
       src,
       false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
 
-    MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
     if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
 
-    MeltPoolDG::VectorTools::zero_out_ghosts(heat_source);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(heat_source);
   }
 
   template <int dim, typename number>
