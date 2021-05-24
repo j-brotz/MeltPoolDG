@@ -1,0 +1,42 @@
+{
+  "base": {
+    "application name": "unidirectional_heat_transfer",
+    "degree": "1",
+    "dimension": "2",
+    "do simplex": "false",
+    "do print parameters": "false",
+    "global refinements": "5",
+    "problem name": "heat_transfer",
+    "verbosity level": "2"
+  },
+  "heat": {
+    "heat velocity": "0.0001",
+    "heat start time": "0.0",
+    "heat time step size": "1.0",
+    "heat end time": "100.0",
+    "heat max n steps": "100",
+    "heat two phase": "true",
+    "heat solidification": "true",
+    "heat solver rel tolerance": "1e-12",
+    "heat solver preconditioner type": "ILU",
+    "heat nlsolve residual tolerance": "1e-7"
+  },
+  "material": {
+    "material first capacity": "230",
+    "material first conductivity": "27.7815",
+    "material first density": "3925",
+    "material second conductivity": "55.563",
+    "material second capacity": "460.0",
+    "material second density": "7850.0",
+    "material solid conductivity": "17.0",
+    "material solid capacity": "700.0",
+    "material solid density": "7850.0",
+    "material solidus temperature": "1966.0",
+    "material liquidus temperature": "1974.0"
+  },
+  "paraview": {
+    "paraview do output": "true",
+    "paraview directory": "output/",
+    "paraview filename": "solution_heat_transfer_two_phase_and_solidification"
+  }
+}

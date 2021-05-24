@@ -119,7 +119,7 @@ namespace MeltPoolDG::Reinitialization
     matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
 
-    this->normal_vec.zero_out_ghosts();
+    this->normal_vec.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -179,7 +179,7 @@ namespace MeltPoolDG::Reinitialization
       src,
       true);
 
-    this->normal_vec.zero_out_ghosts();
+    this->normal_vec.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -242,7 +242,7 @@ namespace MeltPoolDG::Reinitialization
       src,
       true);
 
-    this->normal_vec.zero_out_ghosts();
+    this->normal_vec.zero_out_ghost_values();
   }
 
   template <int dim, typename number>

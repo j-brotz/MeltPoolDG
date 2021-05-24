@@ -1,5 +1,10 @@
+#include <deal.II/grid/grid_tools.h>
+
+#include <deal.II/matrix_free/fe_point_evaluation.h>
+
 #include <meltpooldg/evaporation/evaporation_operation_marching_cube.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -74,9 +79,9 @@ namespace MeltPoolDG::Evaporation
             evapor_vel[q_index] = is_liquid * n_phi;
           }
       }
-    level_set_as_heaviside.zero_out_ghosts();
-    normal_vector.zero_out_ghosts();
-    evaporative_mass_flux.zero_out_ghosts();
+    level_set_as_heaviside.zero_out_ghost_values();
+    normal_vector.zero_out_ghost_values();
+    evaporative_mass_flux.zero_out_ghost_values();
 
     scratch_data.initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
 
@@ -103,7 +108,7 @@ namespace MeltPoolDG::Evaporation
     scratch_data.get_pcout() << "    | evapor: |u|2 = " << evaporation_velocity.l2_norm()
                              << std::endl;
 
-    evaporation_velocity.zero_out_ghosts();
+    evaporation_velocity.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -127,7 +132,6 @@ namespace MeltPoolDG::Evaporation
     (void)evapor_dof_idx;
     (void)pressure_dof_idx;
 
-#ifdef MELT_POOL_DG_WITH_ADAFLO
     if constexpr (dim > 1) // @todo: otherwise i am getting a compiling error atm
       {
         evaporative_mass_flux.update_ghost_values();
@@ -186,13 +190,12 @@ namespace MeltPoolDG::Evaporation
           3 /*n_subdivisions*/);
         mass_balance_rhs.compress(VectorOperation::add);
         mass_balance_rhs.update_ghost_values();
-        evaporative_mass_flux.zero_out_ghosts();
+        evaporative_mass_flux.zero_out_ghost_values();
       }
     else
       {
         Assert(false, ExcNotImplemented());
       }
-#endif
   }
 
   template class EvaporationOperationMarchingCube<1>;

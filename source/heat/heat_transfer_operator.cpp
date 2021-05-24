@@ -65,9 +65,6 @@ namespace MeltPoolDG::Heat
       !data.solidification || material.liquidus_temperature > material.solidus_temperature,
       ExcMessage(
         "In case of solidification the liquidus temperature must be greater than the solidus temperature! Abort..."));
-    AssertThrow(!(data.solidification && level_set_as_heaviside),
-                ExcMessage(
-                  "Solidification and two-phase flow heat don't work together (yet)! Abort..."));
 
     if (bc)
       {
@@ -149,11 +146,11 @@ namespace MeltPoolDG::Heat
       src,
       true /*zero dst vector*/);
 
-    MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
     if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
   }
 
   template <int dim, typename number>
@@ -417,11 +414,11 @@ namespace MeltPoolDG::Heat
       }
 
     system_matrix.compress(VectorOperation::add);
-    MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
     if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
   }
 
   template <int dim, typename number>
@@ -439,11 +436,8 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free, temp_dof_idx, this->quad_idx);
 
-    VectorizedArray<number> capacity     = material.first.capacity;
+    VectorizedArray<number> rho_cp       = material.first.density * material.first.capacity;
     VectorizedArray<number> conductivity = material.first.conductivity;
-    VectorizedArray<number> density      = material.first.density;
-
-    VectorizedArray<number> rho_cp;
 
     q_vapor.resize(scratch_data.get_matrix_free().n_cell_batches(),
                    std::vector<VectorizedArray<double>>(temp_vals.n_q_points));
@@ -485,22 +479,13 @@ namespace MeltPoolDG::Heat
 
         for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
           {
-            if (level_set_as_heaviside)
-              {
-                get_material_parameters_with_two_phase_flow(capacity,
-                                                            conductivity,
-                                                            density,
-                                                            ls_vals.get_value(q_index));
-              }
-
-            if (data.solidification)
-              {
-                get_material_parameters_with_solidification(capacity,
-                                                            conductivity,
-                                                            density,
-                                                            temp_vals.get_value(q_index));
-              }
-            rho_cp = density * capacity;
+            get_material_parameters(rho_cp,
+                                    conductivity,
+                                    data.solidification,
+                                    level_set_as_heaviside,
+                                    temp_vals,
+                                    ls_vals,
+                                    q_index);
 
             auto val = this->d_tau_inv * rho_cp *
                          (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) -
@@ -641,13 +626,13 @@ namespace MeltPoolDG::Heat
       src,
       false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
 
-    MeltPoolDG::VectorTools::zero_out_ghosts(temperature, heat_source);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
     if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*velocity);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghosts(*level_set_as_heaviside);
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
 
-    MeltPoolDG::VectorTools::zero_out_ghosts(heat_source);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(heat_source);
   }
 
   template <int dim, typename number>
@@ -687,16 +672,10 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number> &  ls_vals,
     const bool                          do_reinit_cells) const
   {
-    VectorizedArray<number> capacity     = material.first.capacity;
-    VectorizedArray<number> conductivity = material.first.conductivity;
-    VectorizedArray<number> density      = material.first.density;
-
-    VectorizedArray<number> d_capacity_dT     = 0.0;
+    VectorizedArray<number> rho_cp            = material.first.density * material.first.capacity;
+    VectorizedArray<number> conductivity      = material.first.conductivity;
+    VectorizedArray<number> d_rho_cp_dT       = 0.0;
     VectorizedArray<number> d_conductivity_dT = 0.0;
-    VectorizedArray<number> d_density_dT      = 0.0;
-
-    VectorizedArray<number> rho_cp;
-    VectorizedArray<number> d_rho_cp_dT;
 
     temp_vals.evaluate(true, true);
 
@@ -729,25 +708,15 @@ namespace MeltPoolDG::Heat
 
     for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
       {
-        if (level_set_as_heaviside)
-          {
-            get_material_parameters_with_two_phase_flow(capacity,
-                                                        conductivity,
-                                                        density,
-                                                        ls_vals.get_value(q_index));
-          }
-
-        if (data.solidification)
-          {
-            get_material_parameters_with_solidification(capacity,
-                                                        conductivity,
-                                                        density,
-                                                        temp_lin_vals.get_value(q_index));
-            get_material_parameter_derivatives_with_solidification(
-              d_capacity_dT, d_conductivity_dT, d_density_dT, temp_lin_vals.get_value(q_index));
-            d_rho_cp_dT = d_capacity_dT * density + d_density_dT * capacity;
-          }
-        rho_cp = density * capacity;
+        get_material_parameters_and_derivatives(rho_cp,
+                                                conductivity,
+                                                d_rho_cp_dT,
+                                                d_conductivity_dT,
+                                                data.solidification,
+                                                level_set_as_heaviside,
+                                                temp_lin_vals,
+                                                ls_vals,
+                                                q_index);
 
         auto val = this->d_tau_inv * rho_cp * temp_vals.get_value(q_index);
 
@@ -843,21 +812,123 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
+  HeatTransferOperator<dim, number>::get_material_parameters(
+    VectorizedArray<number> &               rho_cp,
+    VectorizedArray<number> &               conductivity,
+    const bool                              with_solidification,
+    const bool                              with_two_phase,
+    const FECellIntegrator<dim, 1, number> &temp_lin_val,
+    const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
+    const unsigned int                      q_index) const
+  {
+    if (!with_solidification && !with_two_phase)
+      return;
+
+    VectorizedArray<number> liq_capacity     = material.second.capacity;
+    VectorizedArray<number> liq_conductivity = material.second.conductivity;
+    VectorizedArray<number> liq_density      = material.second.density;
+
+    if (with_two_phase)
+      {
+        get_material_parameters_with_two_phase_flow(liq_capacity,
+                                                    liq_conductivity,
+                                                    liq_density,
+                                                    ls_heaviside_val.get_value(q_index));
+        conductivity = liq_conductivity;
+        rho_cp       = liq_density * liq_capacity;
+      }
+
+    if (with_solidification)
+      {
+        VectorizedArray<number> capacity;
+        VectorizedArray<number> density;
+        const auto solid_fraction = calculate_solid_fraction(temp_lin_val.get_value(q_index));
+        get_material_parameters_with_solidification(capacity,
+                                                    conductivity,
+                                                    density,
+                                                    liq_capacity,
+                                                    liq_conductivity,
+                                                    liq_density,
+                                                    solid_fraction);
+        rho_cp = density * capacity;
+      }
+  }
+
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::get_material_parameters_and_derivatives(
+    VectorizedArray<number> &               rho_cp,
+    VectorizedArray<number> &               conductivity,
+    VectorizedArray<number> &               d_rho_cp_dT,
+    VectorizedArray<number> &               d_conductivity_dT,
+    const bool                              with_solidification,
+    const bool                              with_two_phase,
+    const FECellIntegrator<dim, 1, number> &temp_lin_val,
+    const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
+    const unsigned int                      q_index) const
+  {
+    if (!with_solidification && !with_two_phase)
+      return;
+
+    VectorizedArray<number> liq_capacity     = material.second.capacity;
+    VectorizedArray<number> liq_density      = material.second.density;
+    VectorizedArray<number> liq_conductivity = material.second.conductivity;
+
+    if (with_two_phase)
+      {
+        get_material_parameters_with_two_phase_flow(liq_capacity,
+                                                    liq_conductivity,
+                                                    liq_density,
+                                                    ls_heaviside_val.get_value(q_index));
+        conductivity = liq_conductivity;
+        rho_cp       = liq_density * liq_capacity;
+      }
+
+    if (with_solidification)
+      {
+        VectorizedArray<number> capacity;
+        VectorizedArray<number> density;
+        const auto solid_fraction = calculate_solid_fraction(temp_lin_val.get_value(q_index));
+        get_material_parameters_with_solidification(capacity,
+                                                    conductivity,
+                                                    density,
+                                                    liq_capacity,
+                                                    liq_conductivity,
+                                                    liq_density,
+                                                    solid_fraction);
+        rho_cp = density * capacity;
+        VectorizedArray<number> d_capacity_dT;
+        VectorizedArray<number> d_density_dT;
+        get_material_parameter_derivatives_with_solidification(d_capacity_dT,
+                                                               d_conductivity_dT,
+                                                               d_density_dT,
+                                                               liq_capacity,
+                                                               liq_conductivity,
+                                                               liq_density,
+                                                               solid_fraction);
+        d_rho_cp_dT = d_capacity_dT * density + d_density_dT * capacity;
+      }
+  }
+
+  template <int dim, typename number>
+  void
   HeatTransferOperator<dim, number>::get_material_parameters_with_solidification(
     VectorizedArray<number> &      capacity,
     VectorizedArray<number> &      conductivity,
     VectorizedArray<number> &      density,
-    const VectorizedArray<number> &current_temperature) const
+    const VectorizedArray<number> &liq_capacity,
+    const VectorizedArray<number> &liq_conductivity,
+    const VectorizedArray<number> &liq_density,
+    const VectorizedArray<number> &solid_fraction) const
   {
-    const auto solid_fraction = calculate_solid_fraction(current_temperature);
-
     if (solid_fraction == VectorizedArray<number>(0.0))
       {
-        capacity     = material.second.capacity;
-        conductivity = material.second.conductivity;
-        density      = material.second.density;
+        capacity     = liq_capacity;
+        conductivity = liq_conductivity;
+        density      = liq_density;
         return;
       }
+
     if (solid_fraction == VectorizedArray<number>(1.0))
       {
         capacity     = material.solid.capacity;
@@ -866,15 +937,13 @@ namespace MeltPoolDG::Heat
         return;
       }
 
-    capacity     = UtilityFunctions::interpolate_cubic(solid_fraction,
-                                                   material.second.capacity,
-                                                   material.solid.capacity);
+    capacity =
+      UtilityFunctions::interpolate_cubic(solid_fraction, liq_capacity, material.solid.capacity);
     conductivity = UtilityFunctions::interpolate_cubic(solid_fraction,
-                                                       material.second.conductivity,
+                                                       liq_conductivity,
                                                        material.solid.conductivity);
-    density      = UtilityFunctions::interpolate_cubic(solid_fraction,
-                                                  material.second.density,
-                                                  material.solid.density);
+    density =
+      UtilityFunctions::interpolate_cubic(solid_fraction, liq_density, material.solid.density);
   }
 
   template <int dim, typename number>
@@ -883,10 +952,11 @@ namespace MeltPoolDG::Heat
     VectorizedArray<number> &      d_capacity_dT,
     VectorizedArray<number> &      d_conductivity_dT,
     VectorizedArray<number> &      d_density_dT,
-    const VectorizedArray<number> &current_temperature) const
+    const VectorizedArray<number> &liq_capacity,
+    const VectorizedArray<number> &liq_conductivity,
+    const VectorizedArray<number> &liq_density,
+    const VectorizedArray<number> &solid_fraction) const
   {
-    const auto solid_fraction = calculate_solid_fraction(current_temperature);
-
     if (solid_fraction == VectorizedArray<number>(0.0) ||
         solid_fraction == VectorizedArray<number>(1.0))
       {
@@ -898,15 +968,15 @@ namespace MeltPoolDG::Heat
 
     d_capacity_dT = -1.0 * inv_mushy_interval *
                     UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
-                                                                   material.second.capacity,
+                                                                   liq_capacity,
                                                                    material.solid.capacity);
     d_conductivity_dT = -1.0 * inv_mushy_interval *
                         UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
-                                                                       material.second.conductivity,
+                                                                       liq_conductivity,
                                                                        material.solid.conductivity);
     d_density_dT = -1.0 * inv_mushy_interval *
                    UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
-                                                                  material.second.density,
+                                                                  liq_density,
                                                                   material.solid.density);
   }
 

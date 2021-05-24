@@ -78,7 +78,7 @@ namespace MeltPoolDG::Heat
 
     temperature.compress(VectorOperation::insert);
     scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
-    level_set_as_heaviside.zero_out_ghosts();
+    level_set_as_heaviside.zero_out_ghost_values();
   }
 
   template <int dim>
