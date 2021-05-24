@@ -396,7 +396,7 @@ namespace MeltPoolDG
 
     /**
      * This utility function enables the evaluation of variables at interfaces defined
-     * implicitlyby a @p level_set_vector at a certain @p contour_value. The marching
+     * implicitly by a @p level_set_vector at a certain @p contour_value. The marching
      * cube algorithm is used to determine @p points (unit points at the reference cell)
      * and corresponding integration @p weights at the interface. The lambda function
      * @p evaluate_at_interface_points is called for every active cell and can be used
@@ -405,14 +405,15 @@ namespace MeltPoolDG
     template <int dim>
     void
     evaluate_at_interface(
-      const DoFHandler<dim> &                                        dof_handler,
-      const Mapping<dim> &                                           mapping,
-      const VectorType &                                             level_set_vector,
-      const std::function<void(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                               const std::vector<Point<dim>> &                       points,
-                               const std::vector<double> &weights)> &evaluate_at_interface_points,
-      const double                                                   contour_value  = 0.0,
-      const unsigned int                                             n_subdivisions = 1)
+      const DoFHandler<dim> &                                 dof_handler,
+      const Mapping<dim> &                                    mapping,
+      const VectorType &                                      level_set_vector,
+      const std::function<void(const typename DoFHandler<dim>::active_cell_iterator &,
+                               const std::vector<Point<dim>> &,
+                               const std::vector<Point<dim>> &,
+                               const std::vector<double> &)> &evaluate_at_interface_points,
+      const double                                            contour_value  = 0.0,
+      const unsigned int                                      n_subdivisions = 1)
     {
       AssertThrow(dim > 1, ExcNotImplemented());
 
@@ -420,7 +421,7 @@ namespace MeltPoolDG
                                                            dof_handler.get_fe(), // todo
                                                            n_subdivisions);
 
-      auto surface_quad = QGauss<dim - 1>(dof_handler.get_fe().degree + 1);
+      const QGauss<dim - 1> surface_quad(dof_handler.get_fe().degree + 1);
 
       for (const auto &cell : dof_handler.active_cell_iterators())
         {
@@ -428,8 +429,10 @@ namespace MeltPoolDG
             {
               // determine if cell is cut by the interface and if yes, determine the quadrature
               // point location (at the reference cell) and weight
-              const auto [points, weights] =
-                [&]() -> std::tuple<std::vector<Point<dim>>, std::vector<double>> {
+              const auto [points_real, points, weights] =
+                [&]() -> std::tuple<std::vector<Point<dim>>,
+                                    std::vector<Point<dim>>,
+                                    std::vector<double>> {
                 // determine points and cells of aux surface triangulation
                 std::vector<Point<dim>>        surface_vertices;
                 std::vector<CellData<dim - 1>> surface_cells;
@@ -442,6 +445,7 @@ namespace MeltPoolDG
                   return {}; // cell is not cut by interface -> no quadrature points have the be
                              // determined
 
+                std::vector<Point<dim>> points_real;
                 std::vector<Point<dim>> points;
                 std::vector<double>     weights;
 
@@ -462,19 +466,20 @@ namespace MeltPoolDG
                     // ... and collect quadrature points and weights
                     for (const auto q : fe_eval.quadrature_point_indices())
                       {
+                        points_real.emplace_back(fe_eval.quadrature_point(q));
                         points.emplace_back(
                           mapping.transform_real_to_unit_cell(cell, fe_eval.quadrature_point(q)));
                         weights.emplace_back(fe_eval.JxW(q));
                       }
                   }
-                return {points, weights};
+                return {points_real, points, weights};
               }();
 
 
-              if (points.size() == 0)
+              if (points_real.size() == 0)
                 continue; // cell is not cut but the interface -> nothing to do
 
-              evaluate_at_interface_points(cell, points, weights);
+              evaluate_at_interface_points(cell, points_real, points, weights);
             }
         }
     }

@@ -335,9 +335,9 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                 generic_data_out.get_mapping(),
                 generic_data_out.get_dof_handler("temperature").get_fe(),
                 update_values);
-              std::vector<Point<dim>> vertices;
-              std::vector<double>     temperature;
-              // std::vector<double>                  buffer;
+
+              std::vector<std::pair<Point<dim>, double>> vertices_and_temperatures;
+
               Vector<double>                       buffer;
               std::vector<types::global_dof_index> local_dof_indices;
 
@@ -345,8 +345,10 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                 generic_data_out.get_dof_handler("level_set"),
                 generic_data_out.get_mapping(),
                 generic_data_out.get_vector("level_set"),
-                [&](const auto &cell, const auto &points, [[maybe_unused]] const auto &weights) {
-                  // evaluate rhs term
+                [&](const auto &                 cell,
+                    const auto &                 points_real,
+                    const auto &                 points,
+                    [[maybe_unused]] const auto &weights) {
                   local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
                   buffer.reinit(cell->get_fe().n_dofs_per_cell());
                   cell->get_dof_indices(local_dof_indices);
@@ -362,39 +364,29 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                   temperature_eval.evaluate(make_array_view(buffer), EvaluationFlags::values);
                   for (unsigned int q = 0; q < n_points; ++q)
                     {
-                      vertices.push_back(
-                        generic_data_out.get_mapping().transform_unit_to_real_cell(cell,
-                                                                                   points[q]));
-                      temperature.push_back(temperature_eval.get_value(q));
+                      vertices_and_temperatures.emplace_back(points_real[q],
+                                                             temperature_eval.get_value(q));
                     }
                 },
                 0.0, /*contour value*/
                 3 /*n_subdivisions*/);
 
-              // send results to rank 0 to write them to file
-              auto vertices_all = Utilities::MPI::all_reduce<std::vector<Point<dim>>>(
-                vertices,
-                this->mpi_communicator,
-                [](const std::vector<Point<dim>> &a, const std::vector<Point<dim>> &b) {
-                  auto result = a;
-                  result.insert(result.end(), b.begin(), b.end());
-                  return result;
-                });
-
-              auto temp_all = Utilities::MPI::all_reduce<std::vector<double>>(
-                temperature,
-                this->mpi_communicator,
-                [](const std::vector<double> &a, const std::vector<double> &b) {
-                  auto result = a;
-                  result.insert(result.end(), b.begin(), b.end());
-                  return result;
-                });
+              // collect result on rank 0 to write them to file
+              const auto vertices_and_temperatures_all =
+                Utilities::MPI::all_reduce<std::vector<std::pair<Point<dim>, double>>>(
+                  vertices_and_temperatures,
+                  this->mpi_communicator,
+                  [](const auto &a, const auto &b) {
+                    auto result = a;
+                    result.insert(result.end(), b.begin(), b.end());
+                    return result;
+                  });
 
               // write values to file
               if (file_level_set_contour.is_open())
                 file_level_set_contour << generic_data_out.get_time() << " "
-                                       << vertices_all[0][dim - 1] << " " << temp_all[0]
-                                       << std::endl;
+                                       << vertices_and_temperatures_all[0].first[dim - 1] << " "
+                                       << vertices_and_temperatures_all[0].second << std::endl;
             }
         }
     }

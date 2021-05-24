@@ -151,7 +151,7 @@ namespace MeltPoolDG::Evaporation
           scratch_data.get_dof_handler(pressure_dof_idx),
           scratch_data.get_mapping(),
           level_set_vector,
-          [&](const auto &cell, const auto &points, const auto &weights) {
+          [&](const auto &cell, const auto &, const auto &points, const auto &weights) {
             // evaluate rhs term
             local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
             buffer.resize(cell->get_fe().n_dofs_per_cell());
