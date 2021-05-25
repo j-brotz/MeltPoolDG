@@ -5,7 +5,7 @@
     "dimension": "2",
     "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "7",
+    "global refinements": "5",
     "problem name": "heat_transfer"
   },
   "heat": {
