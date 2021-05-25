@@ -3,6 +3,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 
 #include <meltpooldg/evaporation/evaporation_operation_marching_cube.hpp>
+#include <meltpooldg/utilities/utilityfunctions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Evaporation
@@ -133,16 +134,7 @@ namespace MeltPoolDG::Evaporation
 
     if constexpr (dim > 1) // @todo: otherwise i am getting a compiling error atm
       {
-        auto surface_quad =
-          QGauss<dim - 1>(scratch_data.get_dof_handler(pressure_dof_idx).get_fe().degree + 1);
-
         evaporative_mass_flux.update_ghost_values();
-        const unsigned int n_subdivisions = 3;
-
-        GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(
-          scratch_data.get_mapping(),
-          scratch_data.get_dof_handler(pressure_dof_idx).get_fe(), // todo
-          n_subdivisions);
 
         FEPointEvaluation<1, dim> mass_flux(scratch_data.get_mapping(),
                                             scratch_data.get_dof_handler(evapor_dof_idx).get_fe(),
@@ -155,95 +147,47 @@ namespace MeltPoolDG::Evaporation
         std::vector<double>                  buffer;
         std::vector<types::global_dof_index> local_dof_indices;
 
-        for (const auto &cell :
-             scratch_data.get_dof_handler(pressure_dof_idx).active_cell_iterators())
-          {
-            if (cell->is_locally_owned())
-              {
-                // determine if cell is cut by the interface and if yes, determine the quadrature
-                // point location and weight
-                const auto [points, weights] =
-                  [&]() -> std::tuple<std::vector<Point<dim>>, std::vector<double>> {
-                  // determine points and cells of aux surface triangulation
-                  std::vector<Point<dim>>        surface_vertices;
-                  std::vector<CellData<dim - 1>> surface_cells;
+        UtilityFunctions::evaluate_at_interface<dim>(
+          scratch_data.get_dof_handler(pressure_dof_idx),
+          scratch_data.get_mapping(),
+          level_set_vector,
+          [&](const auto &cell, const auto &, const auto &points, const auto &weights) {
+            // evaluate rhs term
+            local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
+            buffer.resize(cell->get_fe().n_dofs_per_cell());
+            cell->get_dof_indices(local_dof_indices);
 
-                  // run marching cube algorithm
-                  mc.process_cell(cell, level_set_vector, 0.0, surface_vertices, surface_cells);
+            const unsigned int n_points = points.size();
 
-                  if (surface_vertices.size() == 0)
-                    return {}; // cell is not cut by interface -> no quadrature points have the be
-                               // determined
+            const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
+            const ArrayView<const double>     JxW(weights.data(), n_points);
 
-                  std::vector<Point<dim>> points;
-                  std::vector<double>     weights;
+            mass_flux.reinit(cell, unit_points);
+            rhs_continuity.reinit(cell, unit_points);
 
-                  // create aux triangulation of subcells
-                  Triangulation<dim - 1, dim> surface_triangulation;
-                  surface_triangulation.create_triangulation(surface_vertices, surface_cells, {});
+            // gather mass_flux
+            scratch_data.get_constraint(evapor_dof_idx)
+              .get_dof_values(evaporative_mass_flux,
+                              local_dof_indices.begin(),
+                              buffer.begin(),
+                              buffer.end());
 
-                  FE_Nothing<dim - 1, dim> fe;
-                  FEValues<dim - 1, dim>   fe_eval(fe,
-                                                 surface_quad,
-                                                 update_quadrature_points | update_JxW_values);
+            // evaluate mass_flux
+            mass_flux.evaluate(make_array_view(buffer), EvaluationFlags::values);
 
-                  // loop over all cells ...
-                  for (const auto &sub_cell : surface_triangulation.active_cell_iterators())
-                    {
-                      fe_eval.reinit(sub_cell);
+            for (unsigned int q = 0; q < n_points; ++q)
+              rhs_continuity.submit_value(mass_flux.get_value(q) * (1. / rho_l - 1. / rho_g) *
+                                            JxW[q],
+                                          q);
 
-                      // ... and collect quadrature points and weights
-                      for (const auto q : fe_eval.quadrature_point_indices())
-                        {
-                          points.emplace_back(
-                            scratch_data.get_mapping().transform_real_to_unit_cell(
-                              cell, fe_eval.quadrature_point(q)));
-                          weights.emplace_back(fe_eval.JxW(q));
-                        }
-                    }
-                  return {points, weights};
-                }();
+            // integrate rhs term of the continuity equation
+            rhs_continuity.integrate(buffer, EvaluationFlags::values);
 
-
-                if (points.size() == 0)
-                  continue; // cell is not cut but the interface -> nothing to do
-
-                // evaluate rhs term
-                local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
-                buffer.resize(cell->get_fe().n_dofs_per_cell());
-                cell->get_dof_indices(local_dof_indices);
-
-                const unsigned int n_points = points.size();
-
-                const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
-                const ArrayView<const double>     JxW(weights.data(), n_points);
-
-                mass_flux.reinit(cell, unit_points);
-                rhs_continuity.reinit(cell, unit_points);
-
-                // gather mass_flux
-                scratch_data.get_constraint(evapor_dof_idx)
-                  .get_dof_values(evaporative_mass_flux,
-                                  local_dof_indices.begin(),
-                                  buffer.begin(),
-                                  buffer.end());
-
-                // evaluate mass_flux
-                mass_flux.evaluate(make_array_view(buffer), EvaluationFlags::values);
-
-                for (unsigned int q = 0; q < n_points; ++q)
-                  rhs_continuity.submit_value(mass_flux.get_value(q) * (1. / rho_l - 1. / rho_g) *
-                                                JxW[q],
-                                              q);
-
-                // integrate rhs term of the continuity equation
-                rhs_continuity.integrate(buffer, EvaluationFlags::values);
-
-                scratch_data.get_constraint(evapor_dof_idx)
-                  .distribute_local_to_global(buffer, local_dof_indices, mass_balance_rhs);
-              }
-          }
-
+            scratch_data.get_constraint(evapor_dof_idx)
+              .distribute_local_to_global(buffer, local_dof_indices, mass_balance_rhs);
+          },
+          0.0, /*contour value*/
+          3 /*n_subdivisions*/);
         mass_balance_rhs.compress(VectorOperation::add);
         mass_balance_rhs.update_ghost_values();
         evaporative_mass_flux.zero_out_ghost_values();

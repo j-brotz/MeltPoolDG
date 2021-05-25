@@ -43,10 +43,15 @@ namespace MeltPoolDG
     const DoFHandler<dim> &
     get_dof_handler(const std::string &name) const;
 
-    const Mapping<dim> &mapping;
-    double              current_time;
+    const Mapping<dim> &
+    get_mapping() const;
+
+    const double &
+    get_time() const;
 
   private:
     std::map<std::string, unsigned int> entry_id;
+    const Mapping<dim> &                mapping;
+    double                              current_time;
   };
 } // namespace MeltPoolDG
