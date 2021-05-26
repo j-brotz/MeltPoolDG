@@ -207,6 +207,30 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
                     face->set_boundary_id(right_bc);
                 }
         }
+      else if constexpr (dim == 3)
+        {
+          const types::boundary_id front_bc = 5;
+          const types::boundary_id back_bc  = 6;
+          this->attach_symmetry_boundary_condition(front_bc, "navier_stokes_u");
+          this->attach_symmetry_boundary_condition(back_bc, "navier_stokes_u");
+          for (const auto &cell : this->triangulation->cell_iterators())
+            for (const auto &face : cell->face_iterators())
+              if ((face->at_boundary()))
+                {
+                  if (face->center()[1] == x_min)
+                    face->set_boundary_id(lower_bc);
+                  else if (face->center()[1] == x_max)
+                    face->set_boundary_id(upper_bc);
+                  else if (face->center()[0] == x_min)
+                    face->set_boundary_id(left_bc);
+                  else if (face->center()[0] == x_max)
+                    face->set_boundary_id(right_bc);
+                  else if (face->center()[2] == x_min)
+                    face->set_boundary_id(back_bc);
+                  else if (face->center()[2] == x_max)
+                    face->set_boundary_id(front_bc);
+                }
+        }
       else
         {
           AssertThrow(false, ExcNotImplemented());
