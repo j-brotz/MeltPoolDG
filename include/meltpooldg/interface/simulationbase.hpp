@@ -90,6 +90,17 @@ namespace MeltPoolDG
 
     template <typename FunctionType>
     void
+    attach_source_field(std::shared_ptr<FunctionType> source_function,
+                        const std::string             operation_name)
+    {
+      if (!field_conditions_map[operation_name])
+        field_conditions_map[operation_name] = std::make_shared<FieldConditions<dim>>();
+
+      field_conditions_map[operation_name]->source_field = source_function;
+    }
+
+    template <typename FunctionType>
+    void
     attach_advection_field(std::shared_ptr<FunctionType> advection_velocity,
                            const std::string             operation_name)
     {
@@ -290,6 +301,12 @@ namespace MeltPoolDG
     get_initial_condition(const std::string operation_name)
     {
       return field_conditions_map[operation_name]->initial_field;
+    }
+
+    const std::shared_ptr<Function<dim>> &
+    get_source_field(const std::string operation_name)
+    {
+      return field_conditions_map[operation_name]->source_field;
     }
 
     const std::shared_ptr<Function<dim>> &

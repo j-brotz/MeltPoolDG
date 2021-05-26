@@ -4,19 +4,20 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   LaserHeatSourceGusarov<dim>::LaserHeatSourceGusarov(
-    const ScratchData<dim> &             scratch_data_in,
-    const LaserData<double>::GusarovData gusarov_data_in,
-    unsigned int                         temp_dof_idx_in)
-    : scratch_data(scratch_data_in)
-    , gusarov_data(gusarov_data_in)
+    const LaserData<double>::GusarovData &gusarov_data_in)
+    : gusarov_data(gusarov_data_in)
     , lambda(gusarov_data.extinction_coefficient * gusarov_data.layer_thickness)
-    , temp_dof_idx(temp_dof_idx_in)
+    , a(std::sqrt(1. - gusarov_data.reflectivity))
+    , D((1. - a) * (1. - a - gusarov_data.reflectivity * (1. + a)) * std::exp(-2. * a * lambda) -
+        (1. + a) * (1. + a - gusarov_data.reflectivity * (1. - a)) * std::exp(2. * a * lambda))
   {}
 
   template <int dim>
   void
-  LaserHeatSourceGusarov<dim>::compute_volumetric_heat_source(VectorType &      heat_source_vector,
-                                                              const double      laser_power,
+  LaserHeatSourceGusarov<dim>::compute_volumetric_heat_source(VectorType &heat_source_vector,
+                                                              const ScratchData<dim> &scratch_data,
+                                                              const unsigned int      temp_dof_idx,
+                                                              const double            laser_power,
                                                               const Point<dim> &laser_position,
                                                               bool              zero_out)
   {
@@ -44,16 +45,32 @@ namespace MeltPoolDG::Heat
 
             for (const auto q : heat_source_eval.quadrature_point_indices())
               heat_source_vector[local_dof_indices[q]] =
-                local_heat_source(heat_source_eval.quadrature_point(q),
-                                  laser_position,
-                                  laser_power);
+                local_compute_volumetric_heat_source(heat_source_eval.quadrature_point(q),
+                                                     laser_position,
+                                                     laser_power);
           }
       }
   }
 
   template <int dim>
   double
-  LaserHeatSourceGusarov<dim>::power_density(const double radius, const double power)
+  LaserHeatSourceGusarov<dim>::local_compute_volumetric_heat_source(
+    const Point<dim> &position,
+    const Point<dim> &laser_position,
+    double            power) const
+  {
+    const double radius = position.distance(laser_position);
+    const double z      = -(position[dim - 1] - laser_position[dim - 1]);
+    const double xi     = z * gusarov_data.extinction_coefficient;
+
+    return (z >= gusarov_data.layer_thickness) || (z < laser_position[dim - 1]) ?
+             0. :
+             -gusarov_data.extinction_coefficient * power_density(radius, power) * dq_dxi(xi);
+  }
+
+  template <int dim>
+  double
+  LaserHeatSourceGusarov<dim>::power_density(const double radius, const double power) const
   {
     const double &R = gusarov_data.laser_beam_radius;
     return radius <= R ? 3. * power / (numbers::PI * R * R) * std::pow(1. - radius / R, 2) *
@@ -63,13 +80,9 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   double
-  LaserHeatSourceGusarov<dim>::dq_dxi(const double xi)
+  LaserHeatSourceGusarov<dim>::dq_dxi(const double xi) const
   {
     const double &rho = gusarov_data.reflectivity;
-    const double  a   = std::sqrt(1 - rho);
-
-    const double D = (1 - a) * (1 - a - rho * (1 + a)) * std::exp(-2 * a * lambda) -
-                     (1 + a) * (1 + a - rho * (1 - a)) * std::exp(2 * a * lambda);
 
     // clang-format off
     return xi < lambda ?
@@ -91,21 +104,6 @@ namespace MeltPoolDG::Heat
            ) :
            0.0;
     // clang-format on
-  }
-
-  template <int dim>
-  double
-  LaserHeatSourceGusarov<dim>::local_heat_source(const Point<dim> &position,
-                                                 const Point<dim> &laser_position,
-                                                 const double      power)
-  {
-    const double radius = position.distance(laser_position);
-    const double z      = -(position[dim - 1] - laser_position[dim - 1]);
-    const double xi     = z * gusarov_data.extinction_coefficient;
-
-    return (z >= gusarov_data.layer_thickness) || (z < laser_position[dim - 1]) ?
-             0. :
-             -gusarov_data.extinction_coefficient * power_density(radius, power) * dq_dxi(xi);
   }
 
   template class LaserHeatSourceGusarov<1>;

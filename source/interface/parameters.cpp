@@ -585,6 +585,22 @@ namespace MeltPoolDG
         laser.do_move,
         "Set this parameter to true to move the laser in x-direction with the given parameter scan speed "
         "(in case of an analytical temperature field).");
+      prm.add_parameter("laser heat source model",
+                        laser.heat_source_model,
+                        "Laser heat source model.",
+                        Patterns::Selection("Gusarov"));
+      prm.add_parameter("laser gusarov laser beam radius",
+                        laser.gusarov.laser_beam_radius,
+                        "Laser beam radius.");
+      prm.add_parameter("laser gusarov reflectivity",
+                        laser.gusarov.reflectivity,
+                        "Reflectivity of the material.");
+      prm.add_parameter("laser gusarov extinction coefficient",
+                        laser.gusarov.extinction_coefficient,
+                        "Extinction coefficient in [1/m].");
+      prm.add_parameter("laser gusarov layer thickness",
+                        laser.gusarov.layer_thickness,
+                        "Layer thickness");
     }
     prm.leave_subsection();
     /*

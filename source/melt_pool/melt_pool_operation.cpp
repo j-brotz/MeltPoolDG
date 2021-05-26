@@ -75,9 +75,7 @@ namespace MeltPoolDG::MeltPool
         if (data_in.laser.heat_source_model == "Gusarov")
           {
             laser_heat_source_operation =
-              std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(*scratch_data,
-                                                                  data_in.laser.gusarov,
-                                                                  temp_dof_idx);
+              std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(data_in.laser.gusarov);
           }
         else
           AssertThrow(false,
@@ -139,6 +137,8 @@ namespace MeltPoolDG::MeltPool
         // @todo: support other heat source models
         laser_heat_source_operation->compute_volumetric_heat_source(
           heat_operation->get_heat_source(),
+          *scratch_data,
+          temp_dof_idx,
           laser_operation->get_laser_power(),
           laser_operation->get_laser_position(),
           true /* zero_out */);
