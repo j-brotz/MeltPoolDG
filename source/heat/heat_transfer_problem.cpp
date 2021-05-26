@@ -29,10 +29,15 @@ namespace MeltPoolDG::Heat
         scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
                                   << time_iterator.get_current_time();
 
-        if (base_in->parameters.heat.velocity != 0.0)
-          compute_field_vector(velocity,
-                               velocity_dof_idx,
-                               *base_in->get_velocity_field("heat_transfer"));
+        const auto source_field_function = base_in->get_source_field("heat_transfer");
+        if (source_field_function)
+          compute_field_vector(heat_operation->get_heat_source(),
+                               temp_dof_idx,
+                               *source_field_function);
+
+        const auto velocity_field_function = base_in->get_velocity_field("heat_transfer");
+        if (velocity_field_function)
+          compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
 
         if (base_in->parameters.heat.two_phase)
           compute_field_vector(level_set_as_heaviside,
