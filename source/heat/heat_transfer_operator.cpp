@@ -130,6 +130,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
 
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -151,6 +153,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
   }
 
   template <int dim, typename number>
@@ -257,6 +261,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
     if (!include_boundary_terms)
       {
         // note: not thread safe!!!
@@ -419,6 +425,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
   }
 
   template <int dim, typename number>
