@@ -49,6 +49,9 @@ namespace MeltPoolDG::Heat
   public:
     LaserHeatSourceGusarov(const LaserData<double>::GusarovData &gusarov_data_in);
 
+    /**
+     * Compute a DoF vector of the heat source from the Gusarov laser model.
+     */
     void
     compute_volumetric_heat_source(VectorType &            heat_source_vector,
                                    const ScratchData<dim> &scratch_data,
@@ -62,9 +65,9 @@ namespace MeltPoolDG::Heat
      * negative dim-1 coordinate.
      */
     double
-    get_local_heat_source(const Point<dim> &position,
-                          const Point<dim> &laser_position,
-                          double            power) const;
+    local_compute_volumetric_heat_source(const Point<dim> &position,
+                                         const Point<dim> &laser_position,
+                                         double            power) const;
 
   private:
     /**
@@ -74,9 +77,12 @@ namespace MeltPoolDG::Heat
     power_density(double radius, double power) const;
 
     /**
-     * Analytical derivative of equation (20)
+     * Analytical derivative of equation (20) of Gusarov et al. (2009)
      */
     double
     dq_dxi(double xi) const;
+
+    const double a;
+    const double D;
   };
 } // namespace MeltPoolDG::Heat

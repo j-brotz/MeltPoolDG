@@ -16,7 +16,7 @@
  * This simulation represents simple test examples for heat transfer with melt front propagation.
  * The problem is inspired by the Proell et al. [1] single track scan example.
  *
- * The slap has properties of Ti-6Al-4V and starts of below the solidus temperature and is subjected
+ * The slab has properties of Ti-6Al-4V, is initially below the solidus temperature and is subjected
  * to a Gusarov laser heat source [2] at x = 0.
  *
  * [1] Proell, S. D., Wall, W. A., & Meier, C. (2019). On phase change and latent heat models in
@@ -54,7 +54,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      return laser.get_local_heat_source(p, center, power);
+      return laser.local_compute_volumetric_heat_source(p, center, power);
     }
 
   private:
@@ -78,7 +78,11 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {
       if constexpr (dim == 1)
         {
-          this->triangulation = std::make_shared<Triangulation<1>>();
+          this->triangulation = std::make_shared<parallel::shared::Triangulation<1>>(
+            this->mpi_communicator,
+            (Triangulation<dim>::none),
+            false,
+            parallel::shared::Triangulation<dim>::Settings::partition_metis);
           // create mesh
           const Point<1> left(0);
           const Point<1> right(x_max);

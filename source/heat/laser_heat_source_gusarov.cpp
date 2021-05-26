@@ -7,6 +7,9 @@ namespace MeltPoolDG::Heat
     const LaserData<double>::GusarovData &gusarov_data_in)
     : gusarov_data(gusarov_data_in)
     , lambda(gusarov_data.extinction_coefficient * gusarov_data.layer_thickness)
+    , a(std::sqrt(1. - gusarov_data.reflectivity))
+    , D((1. - a) * (1. - a - gusarov_data.reflectivity * (1. + a)) * std::exp(-2. * a * lambda) -
+        (1. + a) * (1. + a - gusarov_data.reflectivity * (1. - a)) * std::exp(2. * a * lambda))
   {}
 
   template <int dim>
@@ -42,18 +45,19 @@ namespace MeltPoolDG::Heat
 
             for (const auto q : heat_source_eval.quadrature_point_indices())
               heat_source_vector[local_dof_indices[q]] =
-                get_local_heat_source(heat_source_eval.quadrature_point(q),
-                                      laser_position,
-                                      laser_power);
+                local_compute_volumetric_heat_source(heat_source_eval.quadrature_point(q),
+                                                     laser_position,
+                                                     laser_power);
           }
       }
   }
 
   template <int dim>
   double
-  LaserHeatSourceGusarov<dim>::get_local_heat_source(const Point<dim> &position,
-                                                     const Point<dim> &laser_position,
-                                                     double            power) const
+  LaserHeatSourceGusarov<dim>::local_compute_volumetric_heat_source(
+    const Point<dim> &position,
+    const Point<dim> &laser_position,
+    double            power) const
   {
     const double radius = position.distance(laser_position);
     const double z      = -(position[dim - 1] - laser_position[dim - 1]);
@@ -79,10 +83,6 @@ namespace MeltPoolDG::Heat
   LaserHeatSourceGusarov<dim>::dq_dxi(const double xi) const
   {
     const double &rho = gusarov_data.reflectivity;
-    const double  a   = std::sqrt(1 - rho);
-
-    const double D = (1 - a) * (1 - a - rho * (1 + a)) * std::exp(-2 * a * lambda) -
-                     (1 + a) * (1 + a - rho * (1 - a)) * std::exp(2 * a * lambda);
 
     // clang-format off
     return xi < lambda ?
