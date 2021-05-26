@@ -11,6 +11,7 @@
 #include <meltpooldg/simulations/evaporating_droplet/evaporating_droplet_with_heat.hpp>
 #include <meltpooldg/simulations/film_boiling/film_boiling.hpp>
 #include <meltpooldg/simulations/flow_past_cylinder/flow_past_cylinder.hpp>
+#include <meltpooldg/simulations/melt_front_propagation/melt_front_propagation.hpp>
 #include <meltpooldg/simulations/recoil_pressure/recoil_pressure.hpp>
 #include <meltpooldg/simulations/reinit_circle/reinit_circle.hpp>
 #include <meltpooldg/simulations/rising_bubble/rising_bubble.hpp>
@@ -105,6 +106,9 @@ namespace MeltPoolDG::Simulation
     else if (simulation_name == "film_boiling")
       return std::make_shared<FilmBoiling::SimulationFilmBoiling<dim>>(parameter_file,
                                                                        mpi_communicator);
+    else if (simulation_name == "melt_front_propagation")
+      return std::make_shared<MeltFrontPropagation::SimulationMeltFrontPropagation<dim>>(
+        parameter_file, mpi_communicator);
 
     /* add your simulation here*/
     else
