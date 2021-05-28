@@ -180,6 +180,11 @@ namespace MeltPoolDG
       number extinction_coefficient = 0.0; // beta
       number layer_thickness        = 0.0; // L
     } gusarov;
+    struct GaussData
+    {
+      number laser_beam_radius = 0.0;
+      number absorptivity      = 0.0;
+    } gauss;
   };
 
   template <typename number = double>

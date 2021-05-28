@@ -1,6 +1,7 @@
 #include <meltpooldg/melt_pool/melt_pool_operation.hpp>
 //
 
+#include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 
@@ -77,6 +78,11 @@ namespace MeltPoolDG::MeltPool
           {
             laser_heat_source_operation =
               std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(data_in.laser.gusarov);
+          }
+        else if (data_in.laser.heat_source_model == "Gauss")
+          {
+            laser_heat_source_operation =
+              std::make_shared<Heat::LaserHeatSourceGauss<dim>>(data_in.laser.gauss);
           }
         else
           AssertThrow(false,
