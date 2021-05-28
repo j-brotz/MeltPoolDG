@@ -173,7 +173,7 @@ namespace MeltPoolDG::Evaporation
                               buffer.end());
 
             // evaluate mass_flux
-            mass_flux.evaluate(make_array_view(buffer), EvaluationFlags::values);
+            mass_flux.evaluate(buffer, EvaluationFlags::values);
 
             for (unsigned int q = 0; q < n_points; ++q)
               rhs_continuity.submit_value(mass_flux.get_value(q) * (1. / rho_l - 1. / rho_g) *

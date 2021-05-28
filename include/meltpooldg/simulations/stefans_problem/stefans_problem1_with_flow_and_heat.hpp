@@ -338,7 +338,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 
               std::vector<std::pair<Point<dim>, double>> vertices_and_temperatures;
 
-              Vector<double>                       buffer;
+              std::vector<double>                  buffer;
               std::vector<types::global_dof_index> local_dof_indices;
 
               UtilityFunctions::evaluate_at_interface<dim>(
@@ -350,7 +350,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                     const auto &                 points,
                     [[maybe_unused]] const auto &weights) {
                   local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
-                  buffer.reinit(cell->get_fe().n_dofs_per_cell());
+                  buffer.resize(cell->get_fe().n_dofs_per_cell());
                   cell->get_dof_indices(local_dof_indices);
 
                   const unsigned int n_points = points.size();
@@ -358,10 +358,12 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                   const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
                   temperature_eval.reinit(cell, unit_points);
 
-                  cell->get_dof_values(generic_data_out.get_vector("temperature"), buffer);
+                  cell->get_dof_values(generic_data_out.get_vector("temperature"),
+                                       buffer.begin(),
+                                       buffer.end());
 
                   // evaluate temperature and level set points
-                  temperature_eval.evaluate(make_array_view(buffer), EvaluationFlags::values);
+                  temperature_eval.evaluate(buffer, EvaluationFlags::values);
                   for (unsigned int q = 0; q < n_points; ++q)
                     {
                       vertices_and_temperatures.emplace_back(points_real[q],
