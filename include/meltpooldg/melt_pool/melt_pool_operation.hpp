@@ -12,7 +12,7 @@
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/heat/laser.hpp>
-#include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
+#include <meltpooldg/heat/laser_heat_source.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
@@ -37,9 +37,9 @@ namespace MeltPoolDG
        */
       MeltPoolData<double> mp_data;
 
-      std::shared_ptr<Heat::LaserOperation<dim>>         laser_operation;
-      std::shared_ptr<RecoilPressureOperation<dim>>      recoil_pressure_operation;
-      std::shared_ptr<Heat::LaserHeatSourceGusarov<dim>> laser_heat_source_operation;
+      std::shared_ptr<Heat::LaserOperation<dim>>    laser_operation;
+      std::shared_ptr<RecoilPressureOperation<dim>> recoil_pressure_operation;
+      std::shared_ptr<Heat::LaserHeatSource<dim>>   laser_heat_source_operation;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
