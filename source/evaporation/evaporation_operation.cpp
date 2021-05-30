@@ -161,12 +161,12 @@ namespace MeltPoolDG::Evaporation
 
     temperature->update_ghost_values();
     const auto temperature_evaluation_values =
-      dealii::VectorTools::evaluate_at_points<1>(scratch_data->get_mapping(),
-                                                 scratch_data->get_dof_handler(temp_dof_idx),
-                                                 *temperature,
-                                                 evaluation_points,
-                                                 cache,
-                                                 dealii::VectorTools::EvaluationFlags::max);
+      dealii::VectorTools::point_values<1>(scratch_data->get_mapping(),
+                                           scratch_data->get_dof_handler(temp_dof_idx),
+                                           *temperature,
+                                           evaluation_points,
+                                           cache,
+                                           dealii::VectorTools::EvaluationFlags::max);
     temperature->zero_out_ghost_values();
 
     Assert(temperature_evaluation_values.size() == evaluation_points.size(),
