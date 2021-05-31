@@ -588,7 +588,7 @@ namespace MeltPoolDG
       prm.add_parameter("laser heat source model",
                         laser.heat_source_model,
                         "Laser heat source model.",
-                        Patterns::Selection("Gusarov"));
+                        Patterns::Selection("Gusarov|Gauss"));
       prm.add_parameter("laser gusarov laser beam radius",
                         laser.gusarov.laser_beam_radius,
                         "Laser beam radius.");
@@ -601,6 +601,12 @@ namespace MeltPoolDG
       prm.add_parameter("laser gusarov layer thickness",
                         laser.gusarov.layer_thickness,
                         "Layer thickness");
+      prm.add_parameter("laser gauss laser beam radius",
+                        laser.gauss.laser_beam_radius,
+                        "Laser beam radius.");
+      prm.add_parameter("laser gauss absorptivity",
+                        laser.gauss.absorptivity,
+                        "Laser energy absorptivity.");
     }
     prm.leave_subsection();
     /*

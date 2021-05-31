@@ -8,6 +8,8 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
+#include <meltpooldg/heat/laser_heat_source_base.hpp>
+#include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
@@ -40,27 +42,32 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   static constexpr double T_0 = 1000.0;
 
   template <int dim>
-  class LaserHeatSource : public Function<dim>
+  class LaserHeatSourceFunction : public Function<dim>
   {
   public:
-    LaserHeatSource(const LaserData<double> &laser_data)
+    LaserHeatSourceFunction(const LaserData<double> &laser_data)
       : Function<dim>()
-      , laser(laser_data.gusarov)
       , center(MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(laser_data.center))
       , power(laser_data.power)
-
-    {}
+    {
+      if (laser_data.heat_source_model == "Gusarov")
+        laser_model = std::make_unique<Heat::LaserHeatSourceGusarov<dim>>(laser_data.gusarov);
+      else if (laser_data.heat_source_model == "Gauss")
+        laser_model = std::make_unique<Heat::LaserHeatSourceGauss<dim>>(laser_data.gauss);
+      else
+        AssertThrow(false, ExcMessage("Unknown laser heat source model! Abort..."));
+    }
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      return laser.local_compute_volumetric_heat_source(p, center, power);
+      return laser_model->local_compute_volumetric_heat_source(p, center, power);
     }
 
   private:
-    Heat::LaserHeatSourceGusarov<dim> laser;
-    Point<dim>                        center;
-    const double                      power;
+    std::unique_ptr<Heat::LaserHeatSourceBase<dim>> laser_model;
+    Point<dim>                                      center;
+    const double                                    power;
   };
 
   template <int dim>
@@ -142,8 +149,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {
       this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                      "heat_transfer");
-      this->attach_source_field(std::make_shared<LaserHeatSource<dim>>(this->parameters.laser),
-                                "heat_transfer");
+      this->attach_source_field(
+        std::make_shared<LaserHeatSourceFunction<dim>>(this->parameters.laser), "heat_transfer");
     }
   };
 } // namespace MeltPoolDG::Simulation::MeltFrontPropagation

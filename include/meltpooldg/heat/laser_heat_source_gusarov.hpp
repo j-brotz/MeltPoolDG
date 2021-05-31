@@ -7,6 +7,7 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 
@@ -34,7 +35,7 @@ namespace MeltPoolDG::Heat
    *
    */
   template <int dim>
-  class LaserHeatSourceGusarov
+  class LaserHeatSourceGusarov : public LaserHeatSourceBase<dim>
   {
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
@@ -50,24 +51,13 @@ namespace MeltPoolDG::Heat
     LaserHeatSourceGusarov(const LaserData<double>::GusarovData &gusarov_data_in);
 
     /**
-     * Compute a DoF vector of the heat source from the Gusarov laser model.
-     */
-    void
-    compute_volumetric_heat_source(VectorType &            heat_source_vector,
-                                   const ScratchData<dim> &scratch_data,
-                                   unsigned int            temp_dof_idx,
-                                   double                  laser_power,
-                                   const Point<dim> &      laser_position,
-                                   bool                    zero_out = true);
-
-    /**
      * volumetric heat source; The z-axis (= axis of the laser beam) is assumed to correspond to
      * negative dim-1 coordinate.
      */
     double
     local_compute_volumetric_heat_source(const Point<dim> &position,
                                          const Point<dim> &laser_position,
-                                         double            power) const;
+                                         double            power) const final;
 
   private:
     /**
