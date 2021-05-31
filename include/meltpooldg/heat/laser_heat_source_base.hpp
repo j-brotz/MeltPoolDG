@@ -13,13 +13,13 @@ namespace MeltPoolDG::Heat
    * Laser heat source model interface.
    */
   template <int dim>
-  class LaserHeatSource
+  class LaserHeatSourceBase
   {
   public:
     /**
      * Compute a DoF vector of the heat source.
      */
-    virtual void
+    void
     compute_volumetric_heat_source(VectorType &            heat_source_vector,
                                    const ScratchData<dim> &scratch_data,
                                    unsigned int            temp_dof_idx,

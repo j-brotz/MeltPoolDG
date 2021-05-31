@@ -1,4 +1,4 @@
-#include <meltpooldg/heat/laser_heat_source.hpp>
+#include <meltpooldg/heat/laser_heat_source_base.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -6,12 +6,12 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  LaserHeatSource<dim>::compute_volumetric_heat_source(VectorType &            heat_source_vector,
-                                                       const ScratchData<dim> &scratch_data,
-                                                       const unsigned int      temp_dof_idx,
-                                                       const double            laser_power,
-                                                       const Point<dim> &      laser_position,
-                                                       bool                    zero_out) const
+  LaserHeatSourceBase<dim>::compute_volumetric_heat_source(VectorType &heat_source_vector,
+                                                           const ScratchData<dim> &scratch_data,
+                                                           const unsigned int      temp_dof_idx,
+                                                           const double            laser_power,
+                                                           const Point<dim> &      laser_position,
+                                                           bool                    zero_out) const
   {
     if (zero_out)
       scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);
@@ -44,7 +44,7 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template class LaserHeatSource<1>;
-  template class LaserHeatSource<2>;
-  template class LaserHeatSource<3>;
+  template class LaserHeatSourceBase<1>;
+  template class LaserHeatSourceBase<2>;
+  template class LaserHeatSourceBase<3>;
 } // namespace MeltPoolDG::Heat

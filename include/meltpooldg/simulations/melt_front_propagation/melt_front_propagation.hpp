@@ -8,7 +8,7 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/heat/laser_heat_source.hpp>
+#include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
@@ -65,9 +65,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     }
 
   private:
-    std::unique_ptr<Heat::LaserHeatSource<dim>> laser_model;
-    Point<dim>                                  center;
-    const double                                power;
+    std::unique_ptr<Heat::LaserHeatSourceBase<dim>> laser_model;
+    Point<dim>                                      center;
+    const double                                    power;
   };
 
   template <int dim>

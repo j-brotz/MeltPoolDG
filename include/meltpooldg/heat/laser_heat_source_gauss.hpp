@@ -3,7 +3,7 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/heat/laser_heat_source.hpp>
+#include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 
 namespace MeltPoolDG::Heat
@@ -13,7 +13,7 @@ namespace MeltPoolDG::Heat
   /**
    * Spherical gauss laser heat source.
    *
-   * local volumetric heat source p:
+   * local volumetric heat source p (W/m^3):
    * p = absorptivity * p_peak * exp( -2 ||x - laser_center||^2 / laser_radius^2 ) [1]
    *
    * with peak laser power density p_peak:
@@ -25,7 +25,7 @@ namespace MeltPoolDG::Heat
    * Engineering, 381, 113812. https://doi.org/10.1016/j.cma.2021.113812
    */
   template <int dim>
-  class LaserHeatSourceGauss : public LaserHeatSource<dim>
+  class LaserHeatSourceGauss : public LaserHeatSourceBase<dim>
   {
   public:
     LaserHeatSourceGauss(const LaserData<double>::GaussData &data_in);
@@ -36,7 +36,7 @@ namespace MeltPoolDG::Heat
     double
     local_compute_volumetric_heat_source(const Point<dim> &position,
                                          const Point<dim> &laser_position,
-                                         double            power) const override;
+                                         double            power) const final;
 
   private:
     /*

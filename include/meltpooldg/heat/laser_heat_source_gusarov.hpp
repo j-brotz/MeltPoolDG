@@ -7,7 +7,7 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/heat/laser_heat_source.hpp>
+#include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 
@@ -35,7 +35,7 @@ namespace MeltPoolDG::Heat
    *
    */
   template <int dim>
-  class LaserHeatSourceGusarov : public LaserHeatSource<dim>
+  class LaserHeatSourceGusarov : public LaserHeatSourceBase<dim>
   {
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
@@ -57,7 +57,7 @@ namespace MeltPoolDG::Heat
     double
     local_compute_volumetric_heat_source(const Point<dim> &position,
                                          const Point<dim> &laser_position,
-                                         double            power) const override;
+                                         double            power) const final;
 
   private:
     /**
