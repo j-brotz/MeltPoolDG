@@ -1,17 +1,24 @@
 #pragma once
 // dealii
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/mpi.templates.h>
+#include <deal.II/base/mpi_remote_point_evaluation.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_tools.h>
 
 #include <deal.II/grid/grid_tools.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
 
+#include <deal.II/matrix_free/fe_evaluation.h>
+#include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
@@ -19,7 +26,8 @@
 namespace MeltPoolDG
 {
   using namespace dealii;
-  using VectorType = LinearAlgebra::distributed::Vector<double>;
+  using VectorType      = LinearAlgebra::distributed::Vector<double>;
+  using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
   enum BooleanType
   {
@@ -482,6 +490,171 @@ namespace MeltPoolDG
               evaluate_at_interface_points(cell, points_real, points, weights);
             }
         }
+    }
+    /**
+     * Starting from a @p starting_point, generate points along the given @p
+     * unit_vec with a given number of steps @p n_inc_per_side and ranging up to a
+     * @p max_distance_per_side. If @p bidirectional is set to true, points on both
+     * sides of the @p starting_point are generated.
+     */
+    template <int dim>
+    void
+    generate_points_along_vector(std::vector<Point<dim>> &     points_normal_to_interface,
+                                 const Point<dim> &            starting_point,
+                                 const Tensor<1, dim, double> &unit_vec,
+                                 const double                  max_distance_per_side,
+                                 const unsigned int            n_inc_per_side,
+                                 const bool                    bidirectional = true)
+    {
+      const double step = max_distance_per_side / n_inc_per_side;
+      for (int n = n_inc_per_side; n >= 0; --n)
+        points_normal_to_interface.emplace_back(starting_point + unit_vec * n * step);
+      if (bidirectional)
+        {
+          for (unsigned int n = 1; n <= n_inc_per_side; ++n)
+            points_normal_to_interface.emplace_back(starting_point - unit_vec * n * step);
+        }
+    }
+
+    /**
+     * This utility function computes a point cloud @p global_points_normal_to_interface
+     * in a narrow band around a level set vector. The parameter
+     * @p global_points_normal_to_interface_pointer holds at indices [n, n+1] the index
+     * range of connected points along the normal corresponding to the point n at the
+     * interface.
+     * First, the marching cube algorithm is exploited to determine points at the interface
+     * given at the contour level @p contour_value. Then, for each point at the interface
+     * points along the normal are generated.
+     */
+    template <int dim>
+    void
+    generate_points_along_normal(
+      std::vector<Point<dim>> &  global_points_normal_to_interface,
+      std::vector<unsigned int> &global_points_normal_to_interface_pointer,
+      const DoFHandler<dim> &    dof_handler_ls,
+      const FESystem<dim> &      fe_normal,
+      const Mapping<dim> &       mapping,
+      const VectorType &         level_set_vector,
+      const BlockVectorType &    normal_vector,
+      const double               max_distance_per_side,
+      const unsigned int         n_inc_per_side,
+      const bool                 bidirectional      = true,
+      const double               contour_value      = 0.0,
+      const unsigned int         n_subdivisions_MCA = 1)
+    {
+      FEPointEvaluation<dim, dim> phi_normal(mapping, fe_normal, update_values);
+
+      std::vector<double>                  buffer;
+      std::vector<double>                  buffer_dim;
+      std::vector<types::global_dof_index> local_dof_indices;
+
+      global_points_normal_to_interface.clear();
+      global_points_normal_to_interface_pointer.clear();
+
+      global_points_normal_to_interface_pointer = {0};
+
+      auto collect_points_along_normal = [&](const auto &                 cell,
+                                             const auto &                 real_points,
+                                             const auto &                 unit_points,
+                                             [[maybe_unused]] const auto &weights) {
+        local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
+        buffer.resize(cell->get_fe().n_dofs_per_cell());
+        cell->get_dof_indices(local_dof_indices);
+
+        phi_normal.reinit(cell, unit_points);
+        /*
+         * gather_evaluate normal for the points at the interface
+         */
+        {
+          buffer_dim.resize(fe_normal.n_dofs_per_cell());
+          for (int i = 0; i < dim; ++i)
+            {
+              cell->get_dof_values(normal_vector.block(i), buffer.begin(), buffer.end());
+
+              for (unsigned int c = 0; c < cell->get_fe().n_dofs_per_cell(); ++c)
+                buffer_dim[fe_normal.component_to_system_index(i, c)] = buffer[c];
+            }
+
+          // normalize
+          for (unsigned int c = 0; c < cell->get_fe().n_dofs_per_cell(); ++c)
+            {
+              double norm = 0.0;
+              for (int i = 0; i < dim; ++i)
+                norm += std::pow(buffer_dim[fe_normal.component_to_system_index(i, c)], 2);
+
+              norm = std::sqrt(norm);
+              for (int i = 0; i < dim; ++i)
+                buffer_dim[fe_normal.component_to_system_index(i, c)] /= norm;
+            }
+
+          phi_normal.evaluate(make_array_view(buffer_dim), EvaluationFlags::values);
+        }
+
+        /*
+         * loop over generated points from MCA
+         */
+        for (unsigned int p_index = 0; p_index < real_points.size(); ++p_index)
+          {
+            /*
+             * generate points (x) along normal
+             *
+             *          x
+             *          |
+             *          x
+             *          |
+             *    ---------------  ls = contour_value
+             *          |
+             *          x
+             *          |
+             *          x
+             */
+            std::vector<Point<dim>> points_normal_to_interface;
+
+            //@todo: atm cast to vector required by FEPointEvaluation
+            // ---> better solution?
+
+            Tensor<1, dim, double> unit_normal;
+            if constexpr (dim == 1)
+              unit_normal[0] = phi_normal.get_value(p_index);
+            else
+              unit_normal = phi_normal.get_value(p_index);
+
+            generate_points_along_vector<dim>(points_normal_to_interface,
+                                              real_points[p_index],
+                                              unit_normal,
+                                              max_distance_per_side,
+                                              n_inc_per_side,
+                                              bidirectional);
+
+
+            global_points_normal_to_interface.insert(global_points_normal_to_interface.end(),
+                                                     points_normal_to_interface.begin(),
+                                                     points_normal_to_interface.end());
+            global_points_normal_to_interface_pointer.emplace_back(
+              global_points_normal_to_interface.size());
+          }
+      };
+
+      evaluate_at_interface<dim>(dof_handler_ls,
+                                 mapping,
+                                 level_set_vector,
+                                 collect_points_along_normal,
+                                 contour_value, /*contour value*/
+                                 n_subdivisions_MCA /*n_subdivisions*/);
+    }
+
+    /*
+     * 1d numerical integration of @p vals given at @p points using a trapezoidal rule.
+     */
+    template <int dim>
+    double
+    integrate_over_line(const std::vector<double> &vals, const std::vector<Point<dim>> &points)
+    {
+      double result = 0;
+      for (unsigned int i = 0; i < vals.size() - 1; ++i)
+        result += (vals[i] + vals[i + 1]) / 2. * (points[i + 1].distance(points[i]));
+
+      return result;
     }
   } // namespace UtilityFunctions
 } // namespace MeltPoolDG
