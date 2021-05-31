@@ -66,7 +66,6 @@ namespace MeltPoolDG::Flow
             if (base_in->parameters.evapor.formulation_source_term_continuity == "diffuse")
               evaporation_operation->compute_evaporation_velocity(
                 base_in->parameters.flow.variable_properties_over_interface);
-#ifdef MELT_POOL_DG_WITH_ADAFLO
             else if (base_in->parameters.evapor.formulation_source_term_continuity == "sharp")
               Evaporation::EvaporationOperationMarchingCube<dim>::compute_evaporation_velocity(
                 *scratch_data,
@@ -80,7 +79,6 @@ namespace MeltPoolDG::Flow
                 ls_hanging_nodes_dof_idx,
                 ls_quad_idx,
                 normal_dof_idx);
-#endif
             else
               AssertThrow(false, ExcNotImplemented());
           }
@@ -159,7 +157,6 @@ namespace MeltPoolDG::Flow
                   flow_operation->get_quad_idx_pressure(),
                   true /* zero out force rhs */);
               }
-#ifdef MELT_POOL_DG_WITH_ADAFLO
             else if (base_in->parameters.evapor.formulation_source_term_continuity == "sharp")
               Evaporation::EvaporationOperationMarchingCube<dim>::
                 compute_mass_balance_source_term_sharp(
@@ -171,7 +168,6 @@ namespace MeltPoolDG::Flow
                   base_in->parameters.material.first.density,
                   ls_hanging_nodes_dof_idx,
                   flow_operation->get_dof_handler_idx_pressure());
-#endif
             else
               AssertThrow(false, ExcNotImplemented());
           }
