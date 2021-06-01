@@ -24,21 +24,9 @@ namespace MeltPoolDG::Evaporation
     VectorType &      evaporative_mass_flux,
     const VectorType &temperature) const
   {
-    temperature.update_ghost_values();
-    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(temp_dof_idx);
-
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-    for (const auto &cell : scratch_data.get_dof_handler(temp_dof_idx).active_cell_iterators())
-      if (cell->is_locally_owned())
-        {
-          cell->get_dof_indices(local_dof_indices);
-          for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            evaporative_mass_flux[local_dof_indices[i]] =
-              evaporation_model.local_compute_evaporative_mass_flux(
-                temperature[local_dof_indices[i]]);
-        }
-    temperature.zero_out_ghost_values();
+    for (unsigned int i = 0; i < evaporative_mass_flux.locally_owned_size(); ++i)
+      evaporative_mass_flux.local_element(i) =
+        evaporation_model.local_compute_evaporative_mass_flux(temperature.local_element(i));
   }
 
   template class EvaporationMassFluxOperatorContinuous<1>;

@@ -58,8 +58,8 @@ namespace MeltPoolDG::Evaporation
     std::vector<Point<dim>>              normalized_normal_temp(n_q_points, Point<dim>());
     std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points);
 
-    auto bounding_box    = GridTools::compute_bounding_box(scratch_data.get_triangulation());
-    auto boundary_points = bounding_box.get_boundary_points();
+    const auto bounding_box    = GridTools::compute_bounding_box(scratch_data.get_triangulation());
+    const auto boundary_points = bounding_box.get_boundary_points();
 
     for (const auto &cell : scratch_data.get_dof_handler(ls_dof_idx).active_cell_iterators())
       {

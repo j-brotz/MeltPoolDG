@@ -18,8 +18,7 @@ namespace MeltPoolDG::Evaporation
 
   /**
    *                               .
-   * For a given evaporation model m(T) fill a DoF-Vector for the
-   * evaporative mass flux.
+   * DOCU: TODO
    */
   template <int dim>
   class EvaporationMassFluxOperatorContinuous : public EvaporationMassFluxOperatorBase<dim>
