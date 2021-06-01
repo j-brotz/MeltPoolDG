@@ -82,7 +82,7 @@
     "curv implementation": "meltpooldg"
   },
   "evaporation": {
-    "evapor formulation evaporative mass flux": "temperature dependent",
+    "evapor evaporation model": "Hardt Wondra",
     "evapor evaporative mass flux": "0.0",
     "evapor boiling temperature": "373.15",
     "evapor molar mass": "0.01801528",

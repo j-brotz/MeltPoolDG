@@ -17,7 +17,7 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   double
-  EvaporationModelRecoilPressure<dim>::local_compute_evaporative_mass_flux(const double T)
+  EvaporationModelRecoilPressure<dim>::local_compute_evaporative_mass_flux(const double T) const
   {
     return (T >= boiling_temperature) ?
              mass_flux_scale_factor * 0.82 * cs *

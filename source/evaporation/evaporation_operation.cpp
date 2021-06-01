@@ -1,5 +1,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
+#include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
 #include <meltpooldg/evaporation/evaporation_model_hardt_wondra.hpp>
 #include <meltpooldg/evaporation/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
@@ -46,188 +48,77 @@ namespace MeltPoolDG::Evaporation
     AssertThrow(material.first.density > 0.0 && material.second.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
     reinit();
-    // @todo: provide static function
-    if (evaporation_data.formulation_evaporative_mass_flux.find("temperature dependent") !=
-        std::string::npos)
-      {
-        AssertThrow(
-          std::abs(evaporation_data.boiling_temperature) > 1e-12,
-          ExcMessage(
-            "The boiling temperature must not be zero to compte the evaporation mass transfer coefficient"));
-
-        evaporation_mass_transfer_coefficient =
-          2. * evaporation_data.coefficient * evaporation_data.latent_heat_of_evaporation *
-          material.first.density /
-          ((2. - evaporation_data.coefficient) *
-           std::sqrt(2. * numbers::PI * PhysicalConstants::universal_gas_constant /
-                     evaporation_data.molar_mass) *
-           std::pow(evaporation_data.boiling_temperature, 1.5));
-      }
   }
 
   template <int dim>
   void
-  EvaporationOperation<dim>::reinit()
+  EvaporationOperation<dim>::register_temperature_vector(const VectorType * temperature,
+                                                         const unsigned int temp_dof_idx_)
   {
-    scratch_data->initialize_dof_vector(
-      evaporative_mass_flux, ls_hanging_nodes_dof_idx); // @todo: evapor_dof_idx/temp_dof_idx
-    scratch_data->initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
+    temperature  = temperature;
+    temp_dof_idx = temp_dof_idx_;
+  }
+
+  //@todo move to constructor
+  template <int dim>
+  void
+  EvaporationOperation<dim>::register_evaporative_mass_flux_model(
+    const RecoilPressureData<double> &recoil_data,
+    const VectorType &                distance)
+  {
+    /*                 .
+     * local operation m(T)
+     */
+    //@todo: add asserts of parameters
+    if (evaporation_data.evaporation_model == "constant")
+      { /* do nothing --> no model has to be set up */
+      }
+    else if (evaporation_data.evaporation_model == "recoil pressure")
+      evapor_model = std::make_shared<EvaporationModelRecoilPressure<dim>>(
+        evaporation_data.boiling_temperature,
+        recoil_data.pressure_constant,
+        recoil_data.temperature_constant,
+        evaporation_data.evaporative_mass_flux_scale_factor);
+    else if (evaporation_data.evaporation_model == "Hardt Wondra")
+      evapor_model =
+        std::make_shared<EvaporationModelHardtWondra>(evaporation_data.coefficient,
+                                                      evaporation_data.latent_heat_of_evaporation,
+                                                      material.first.density,
+                                                      evaporation_data.molar_mass,
+                                                      evaporation_data.boiling_temperature);
+    else
+      AssertThrow(false, ExcNotImplemented());
+    /*
+     * Computation of DoF-Vector
+     */
+    if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "continuous")
+      evapor_mass_flux_operator =
+        std::make_shared<EvaporationMassFluxOperatorContinuous<dim>>(*scratch_data,
+                                                                     *evapor_model,
+                                                                     temp_dof_idx);
+    else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "interface value")
+      {
+        evapor_mass_flux_operator =
+          std::make_shared<EvaporationMassFluxOperatorInterfaceValue<dim>>(*scratch_data,
+                                                                           *evapor_model,
+                                                                           level_set_as_heaviside,
+                                                                           distance,
+                                                                           normal_vector,
+                                                                           ls_hanging_nodes_dof_idx,
+                                                                           temp_dof_idx);
+      }
+    else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "line integral")
+      AssertThrow(false, ExcNotImplemented());
   }
 
   template <int dim>
   void
-  EvaporationOperation<dim>::compute_evaporative_mass_flux_from_temperature_const_over_interface(
-    const VectorType &distance)
+  EvaporationOperation<dim>::compute_evaporative_mass_flux()
   {
-    /*
-     * collect evaluation points
-     */
-    distance.update_ghost_values();
-    normal_vector.update_ghost_values();
-
-    FEValues<dim, dim> ls_values(
-      scratch_data->get_mapping(),
-      scratch_data->get_fe(ls_hanging_nodes_dof_idx),
-      Quadrature<dim>(
-        scratch_data->get_fe(ls_hanging_nodes_dof_idx).base_element(0).get_unit_support_points()),
-      update_quadrature_points);
-
-    std::vector<Point<dim>>              evaluation_points;
-    std::vector<types::global_dof_index> dof_indices;
-
-    const unsigned int n_q_points = ls_values.get_quadrature().size();
-
-    // temporary values at cell nodes nodes
-    Vector<double>                       hs_temp(n_q_points);
-    Vector<double>                       distance_temp(n_q_points);
-    std::vector<Vector<double>>          normal_temp(dim, Vector<double>(n_q_points));
-    std::vector<Point<dim>>              normalized_normal_temp(n_q_points, Point<dim>());
-    std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points);
-
-    auto bounding_box    = GridTools::compute_bounding_box(scratch_data->get_triangulation());
-    auto boundary_points = bounding_box.get_boundary_points();
-
-    for (const auto &cell :
-         scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
-      {
-        if (cell->is_locally_owned())
-          {
-            ls_values.reinit(cell);
-
-            cell->get_dof_indices(temp_local_dof_indices);
-
-            cell->get_dof_values(level_set_as_heaviside, hs_temp);
-            cell->get_dof_values(distance, distance_temp);
-            for (unsigned int d = 0; d < dim; ++d)
-              cell->get_dof_values(normal_vector.block(d), normal_temp[d]);
-
-            // normalize normal vector values
-            for (unsigned int d = 0; d < dim; ++d)
-              for (unsigned int q = 0; q < n_q_points; ++q)
-                normalized_normal_temp[q][d] = normal_temp[d][q];
-
-            for (auto &n : normalized_normal_temp)
-              n = n / n.norm();
-
-            for (const auto q : ls_values.quadrature_point_indices())
-              {
-                if (hs_temp[q] < 1.0 && hs_temp[q] > 0.0)
-                  {
-                    // compute corresponding point at level set == 0.0
-
-                    Point<dim> evaluation_point_temp = Point<dim>();
-                    for (unsigned int d = 0; d < dim; ++d)
-                      {
-                        evaluation_point_temp[d] = ls_values.quadrature_point(q)[d] -
-                                                   distance_temp[q] * normalized_normal_temp[q][d];
-
-                        // check if point is outside domain and if so then project it back to the
-                        // domain
-                        if (evaluation_point_temp[d] < boundary_points.first[d])
-                          evaluation_point_temp[d] = boundary_points.first[d];
-                        else if (evaluation_point_temp[d] > boundary_points.second[d])
-                          evaluation_point_temp[d] = boundary_points.second[d];
-                      }
-
-                    evaluation_points.push_back(evaluation_point_temp);
-                    dof_indices.push_back(temp_local_dof_indices[q]);
-                  }
-              }
-          }
-      }
-
-    /*
-     * get temperature values at evaluation points
-     */
-    Utilities::MPI::RemotePointEvaluation<dim, dim> cache;
-
-    temperature->update_ghost_values();
-    const auto temperature_evaluation_values =
-      dealii::VectorTools::point_values<1>(scratch_data->get_mapping(),
-                                           scratch_data->get_dof_handler(temp_dof_idx),
-                                           *temperature,
-                                           evaluation_points,
-                                           cache,
-                                           dealii::VectorTools::EvaluationFlags::max);
-    temperature->zero_out_ghost_values();
-
-    Assert(temperature_evaluation_values.size() == evaluation_points.size(),
-           ExcMessage("The size of vectors must match."));
-
-    /*
-     * compute evaporative mass flux
-     */
-    evaporative_mass_flux.zero_out_ghost_values();
-    evaporative_mass_flux = 0.0;
-
-    for (unsigned int i = 0; i < evaluation_points.size(); i++)
-      {
-        evaporative_mass_flux[dof_indices[i]] =
-          (temperature_evaluation_values[i] >= evaporation_data.boiling_temperature) ?
-            evaporation_mass_transfer_coefficient *
-              (temperature_evaluation_values[i] - evaporation_data.boiling_temperature) :
-            0.0;
-      }
-
-    evaporative_mass_flux.update_ghost_values();
-  }
-
-  template <int dim>
-  void
-  EvaporationOperation<dim>::compute_evaporative_mass_flux_from_temperature(
-    const VectorType & temperature,
-    const unsigned int temp_dof_idx,
-    const double &     boiling_temperature,
-    const double &     pressure_constant,
-    const double &     temperature_constant)
-  {
-    temperature.update_ghost_values();
-    const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
-
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-    for (const auto &cell : scratch_data->get_dof_handler(temp_dof_idx).active_cell_iterators())
-      if (cell->is_locally_owned())
-        {
-          cell->get_dof_indices(local_dof_indices);
-          for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            if (evaporation_data.formulation_evaporative_mass_flux == "temperature dependent")
-              {
-                evaporative_mass_flux[local_dof_indices[i]] =
-                  compute_temperature_dependent_mass_flux_rate(temperature[local_dof_indices[i]]);
-              }
-            else if (evaporation_data.formulation_evaporative_mass_flux ==
-                     "recoil pressure dependent")
-              {
-                evaporative_mass_flux[local_dof_indices[i]] =
-                  compute_temperature_dependent_mass_flux_rate_from_recoil_pressure(
-                    temperature[local_dof_indices[i]],
-                    pressure_constant,
-                    temperature_constant,
-                    boiling_temperature);
-              }
-        }
-    temperature.zero_out_ghost_values();
+    if (evaporation_data.evaporation_model == "constant")
+      evaporative_mass_flux = evaporation_data.evaporative_mass_flux;
+    else
+      evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux, *temperature);
   }
 
   template <int dim>
@@ -418,6 +309,15 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
+  EvaporationOperation<dim>::reinit()
+  {
+    scratch_data->initialize_dof_vector(
+      evaporative_mass_flux, ls_hanging_nodes_dof_idx); // @todo: evapor_dof_idx/temp_dof_idx
+    scratch_data->initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
+  }
+
+  template <int dim>
+  void
   EvaporationOperation<dim>::attach_dim_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
@@ -512,41 +412,6 @@ namespace MeltPoolDG::Evaporation
   EvaporationOperation<dim>::get_evaporative_mass_flux()
   {
     return evaporative_mass_flux;
-  }
-
-  /**
-   * @todo
-   * !!!!!!!! HARD CODED PARAMETERS !!!!!!!!!!!!! --> this function will be replaced when the heat
-   * equation is implemented anyhow
-   */
-  template <int dim>
-  inline double
-  EvaporationOperation<dim>::compute_temperature_dependent_mass_flux_rate_from_recoil_pressure(
-    const double &T,
-    const double &pressure_constant,
-    const double &temperature_constant,
-    const double &boiling_temperature)
-  {
-    EvaporationModelRecoilPressure<dim> evapor_model(
-      boiling_temperature,
-      pressure_constant,
-      temperature_constant,
-      evaporation_data.evaporative_mass_flux_scale_factor);
-
-    return evapor_model.local_compute_evaporative_mass_flux(T);
-  }
-
-  /**
-   *  According to Hardt and Wondra
-   */
-  template <int dim>
-  inline double
-  EvaporationOperation<dim>::compute_temperature_dependent_mass_flux_rate(const double &T)
-  {
-    EvaporationModelHardtWondra evapor_model(evaporation_mass_transfer_coefficient,
-                                             evaporation_data.boiling_temperature);
-
-    return evapor_model.local_compute_evaporative_mass_flux(T);
   }
 
   template class EvaporationOperation<1>;

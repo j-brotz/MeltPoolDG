@@ -20,6 +20,6 @@ namespace MeltPoolDG::Evaporation
      * a given temperature value @p T.
      */
     virtual double
-    local_compute_evaporative_mass_flux(const double T) = 0;
+    local_compute_evaporative_mass_flux(const double T) const = 0;
   };
 } // namespace MeltPoolDG::Evaporation

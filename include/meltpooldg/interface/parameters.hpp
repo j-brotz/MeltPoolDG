@@ -232,11 +232,14 @@ namespace MeltPoolDG
     number      ls_value_liquid                    = 1.0;
     number      ls_value_gas                       = -1.0;
     std::string formulation_source_term_continuity = "diffuse";
-    std::string formulation_evaporative_mass_flux  = "constant"; // todo: recoil_pressure Schrage
-    number      coefficient                        = 0.0;
-    number      latent_heat_of_evaporation         = 0.0;
-    number      molar_mass                         = 0.0;
-    number      boiling_temperature                = 0.0;
+    std::string formulation_evaporative_mass_flux_over_interface =
+      "continuous"; // not needed if evaporation_model == "constant"
+    std::string evaporation_model =
+      "constant"; // @todo: instead of constant --> temperature-independent ?
+    number coefficient                = 0.0;
+    number latent_heat_of_evaporation = 0.0;
+    number molar_mass                 = 0.0;
+    number boiling_temperature        = 0.0;
   };
 
   template <typename number = double>

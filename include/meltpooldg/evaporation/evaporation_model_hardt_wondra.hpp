@@ -62,6 +62,6 @@ namespace MeltPoolDG::Evaporation
      *  with the evaporative mass transfer coefficient α_v  and the heaviside function <...>.
      */
     double
-    local_compute_evaporative_mass_flux(const double T) final;
+    local_compute_evaporative_mass_flux(const double T) const final;
   };
 } // namespace MeltPoolDG::Evaporation
