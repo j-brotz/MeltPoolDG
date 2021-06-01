@@ -1,5 +1,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/evaporation/evaporation_model_hardt_wondra.hpp>
+#include <meltpooldg/evaporation/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
@@ -525,15 +527,13 @@ namespace MeltPoolDG::Evaporation
     const double &temperature_constant,
     const double &boiling_temperature)
   {
-    // according to Meier 2020
-    const double cs = 1.0;  // sticking coefficent
-    const double Cm = 1e-3; // molar_mass/(2*pi*molar_gas_constant)
-    return (T >= boiling_temperature) ?
-             evaporation_data.evaporative_mass_flux_scale_factor * 0.82 * cs *
-               MeltPool::RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(
-                 T, pressure_constant, temperature_constant, boiling_temperature) *
-               std::sqrt(Cm / T) :
-             0.0;
+    EvaporationModelRecoilPressure<dim> evapor_model(
+      boiling_temperature,
+      pressure_constant,
+      temperature_constant,
+      evaporation_data.evaporative_mass_flux_scale_factor);
+
+    return evapor_model.local_compute_evaporative_mass_flux(T);
   }
 
   /**
@@ -543,9 +543,10 @@ namespace MeltPoolDG::Evaporation
   inline double
   EvaporationOperation<dim>::compute_temperature_dependent_mass_flux_rate(const double &T)
   {
-    return (T >= evaporation_data.boiling_temperature) ?
-             evaporation_mass_transfer_coefficient * (T - evaporation_data.boiling_temperature) :
-             0.0;
+    EvaporationModelHardtWondra evapor_model(evaporation_mass_transfer_coefficient,
+                                             evaporation_data.boiling_temperature);
+
+    return evapor_model.local_compute_evaporative_mass_flux(T);
   }
 
   template class EvaporationOperation<1>;
