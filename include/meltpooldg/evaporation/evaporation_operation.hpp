@@ -8,6 +8,8 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/evaporation/evaporation_mass_flux_operator_base.hpp>
+#include <meltpooldg/evaporation/evaporation_model_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
@@ -63,9 +65,8 @@ namespace MeltPoolDG::Evaporation
     /*
      * optional: temperature-dependent evaporation
      */
-    const VectorType *temperature;
-    const double      temp_dof_idx;
-    double            evaporation_mass_transfer_coefficient = 0.0;
+    mutable const VectorType *temperature;
+    double                    temp_dof_idx;
     /**
      * evaporative mass flux
      */
@@ -79,6 +80,9 @@ namespace MeltPoolDG::Evaporation
      */
     VectorType evaporation_velocity;
 
+    std::shared_ptr<EvaporationModelBase>                 evapor_model;
+    std::shared_ptr<EvaporationMassFluxOperatorBase<dim>> evapor_mass_flux_operator;
+
   public:
     EvaporationOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
                          const VectorType &                             level_set_as_heaviside_in,
@@ -91,20 +95,26 @@ namespace MeltPoolDG::Evaporation
                          const VectorType *                             temperature  = nullptr,
                          const unsigned int                             temp_dof_idx = 0);
 
-    void
-    reinit();
 
-
+    /*
+     * This function enables to set the pointer to the temperature vector separately from the
+     * constructor
+     */
     void
-    compute_evaporative_mass_flux_from_temperature_const_over_interface(const VectorType &distance);
+    register_temperature_vector(const VectorType *temperature, const unsigned int temp_dof_idx);
 
+    /*
+     * Set the evaporative mass flux model
+     */
     void
-    compute_evaporative_mass_flux_from_temperature(
-      const VectorType & temperature,
-      const unsigned int temp_dof_idx,
-      const double &     boiling_temperature  = 0.0, //@todo: remove from meltpool
-      const double &     pressure_constant    = 0.0,
-      const double &     temperature_constant = 0.0);
+    register_evaporative_mass_flux_model(const RecoilPressureData<double> &recoil_data,
+                                         const VectorType &                distance);
+    /*
+     * Compute DoF vector holding evaporative mass flux depending on the given evaporation model
+     * and the evaporation mass flux operator for computing the distribution across the interface.
+     */
+    void
+    compute_evaporative_mass_flux();
 
     void
     compute_evaporation_velocity(
@@ -116,6 +126,8 @@ namespace MeltPoolDG::Evaporation
                                      const unsigned int pressure_quad_idx,
                                      bool               zero_out);
 
+    void
+    reinit();
     /*
      * attach functions
      */
@@ -151,24 +163,5 @@ namespace MeltPoolDG::Evaporation
 
     VectorType &
     get_evaporative_mass_flux();
-
-  private:
-    /**
-     * @todo
-     * !!!!!!!! HARD CODED PARAMETERS !!!!!!!!!!!!! --> this function will be replaced when the heat
-     * equation is implemented anyhow
-     */
-    inline double
-    compute_temperature_dependent_mass_flux_rate_from_recoil_pressure(
-      const double &T,
-      const double &pressure_constant,
-      const double &temperature_constant,
-      const double &boiling_temperature);
-
-    /**
-     *  According to Hardt and Wondra
-     */
-    inline double
-    compute_temperature_dependent_mass_flux_rate(const double &T);
   };
 } // namespace MeltPoolDG::Evaporation

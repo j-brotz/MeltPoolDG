@@ -60,7 +60,7 @@
     "heat nlsolve max nonlinear iterations": "15"
   },
   "evaporation": {
-    "evapor formulation evaporative mass flux": "temperature dependent",
+    "evapor evaporation model": "Hardt Wondra",
     "evapor evaporative mass flux": "0.000000",
     "evapor boiling temperature": "1.",
     "evapor molar mass": "0.01801528",

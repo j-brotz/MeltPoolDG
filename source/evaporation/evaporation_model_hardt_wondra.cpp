@@ -1,3 +1,4 @@
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/numbers.h>
 
 #include <meltpooldg/evaporation/evaporation_model_hardt_wondra.hpp>
@@ -7,6 +8,8 @@
 
 namespace MeltPoolDG::Evaporation
 {
+  using namespace dealii;
+
   EvaporationModelHardtWondra::EvaporationModelHardtWondra(const double evaporation_coefficient,
                                                            const double latent_heat_of_evaporation,
                                                            const double density_vapor,
@@ -19,7 +22,15 @@ namespace MeltPoolDG::Evaporation
                    molar_mass_vapor) *
          std::pow(boiling_temperature, 1.5)))
     , boiling_temperature(boiling_temperature)
-  {}
+  {
+    AssertThrow(std::abs(2. - evaporation_coefficient) > 1e-12,
+                ExcMessage("The evaporation coefficient must not be equal to two."));
+    AssertThrow(molar_mass_vapor > 1e-12, ExcMessage("The molar mass must be larger than zero."));
+    AssertThrow(
+      std::abs(boiling_temperature) > 1e-12,
+      ExcMessage(
+        "The boiling temperature must not be zero to compute the evaporation mass transfer coefficient"));
+  }
 
   EvaporationModelHardtWondra::EvaporationModelHardtWondra(
     const double evaporative_mass_transfer_coefficient,
@@ -29,7 +40,7 @@ namespace MeltPoolDG::Evaporation
   {}
 
   double
-  EvaporationModelHardtWondra::local_compute_evaporative_mass_flux(const double T)
+  EvaporationModelHardtWondra::local_compute_evaporative_mass_flux(const double T) const
   {
     return (T >= boiling_temperature) ?
              evaporative_mass_transfer_coefficient * (T - boiling_temperature) :

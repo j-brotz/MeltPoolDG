@@ -42,27 +42,11 @@ namespace MeltPoolDG::Flow
             level_set_operation.update_normal_vector();
 
             //@todo: shift options to evaporation operation
-            if (melt_pool_operation)
-              evaporation_operation->compute_evaporative_mass_flux_from_temperature(
-                melt_pool_operation->get_temperature(),
-                temp_dof_idx,
-                base_in->parameters.mp.boiling_temperature,
-                base_in->parameters.recoil.pressure_constant,
-                base_in->parameters.recoil.temperature_constant);
-            else if (std::abs(base_in->parameters.evapor.evaporative_mass_flux) >
-                     0.0) // constant value
-              evaporation_operation->get_evaporative_mass_flux() =
-                base_in->parameters.evapor.evaporative_mass_flux;
-            else if (base_in->parameters.evapor.formulation_evaporative_mass_flux ==
-                     "temperature dependent")
-              evaporation_operation->compute_evaporative_mass_flux_from_temperature(
-                heat_operation->get_temperature(), temp_dof_idx);
-            else if (base_in->parameters.evapor.formulation_evaporative_mass_flux ==
-                     "temperature dependent interface const")
-              evaporation_operation
-                ->compute_evaporative_mass_flux_from_temperature_const_over_interface(
-                  level_set_operation.get_distance_to_level_set());
+            evaporation_operation->compute_evaporative_mass_flux();
 
+            /*
+             * compute level set source term
+             */
             if (base_in->parameters.evapor.formulation_source_term_continuity == "diffuse")
               evaporation_operation->compute_evaporation_velocity(
                 base_in->parameters.flow.variable_properties_over_interface);
@@ -91,9 +75,8 @@ namespace MeltPoolDG::Flow
         if (!melt_pool_operation && heat_operation)
           {
             // solve only in case of temperature dependent evaporative mass flux
-            if ((evaporation_operation &&
-                 base_in->parameters.evapor.formulation_evaporative_mass_flux.find(
-                   "temperature dependent") != std::string::npos) ||
+            if ((evaporation_operation && base_in->parameters.evapor.evaporation_model.find(
+                                            "Hardt Wondra") != std::string::npos) ||
                 base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
               heat_operation->solve(dt);
           }
@@ -370,8 +353,14 @@ namespace MeltPoolDG::Flow
           &heat_operation->get_temperature(),
           temp_dof_idx);
 
-        if (base_in->parameters.evapor.formulation_evaporative_mass_flux ==
-            "temperature dependent interface const")
+        /*
+         * register evaporative heat flux if evaporative mass flux is computed from
+         * temperature value at the interface.
+         *
+         * @todo: adopt for all types of evaporative mass flux computations!!
+         */
+        if (base_in->parameters.evapor.formulation_evaporative_mass_flux_over_interface ==
+            "interface value")
           heat_operation->register_evaporative_mass_flux(
             &evaporation_operation->get_evaporative_mass_flux());
 
@@ -399,6 +388,17 @@ namespace MeltPoolDG::Flow
         temp_quad_idx,
         base_in->parameters.flow.start_time,
         evaporation_operation == nullptr);
+
+
+    if (evaporation_operation)
+      {
+        if (base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
+          evaporation_operation->register_temperature_vector(
+            &melt_pool_operation->get_temperature(), temp_dof_idx);
+
+        evaporation_operation->register_evaporative_mass_flux_model(
+          base_in->parameters.recoil, level_set_operation.get_distance_to_level_set());
+      }
     /*
      *  set initial conditions of all operations
      */
@@ -467,8 +467,7 @@ namespace MeltPoolDG::Flow
      */
     if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer" ||
         (base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation" &&
-         base_in->parameters.evapor.formulation_evaporative_mass_flux.find(
-           "temperature dependent") != std::string::npos))
+         base_in->parameters.evapor.evaporation_model == "Hardt Wondra"))
       heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
     /*
      * set initial condition of the melt pool class

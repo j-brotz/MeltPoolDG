@@ -713,13 +713,18 @@ namespace MeltPoolDG
                         "Select how the additional source term due to evaporation in the"
                         " continuity equation is computed.",
                         Patterns::Selection("diffuse|sharp"));
+      // @todo must be modified
       prm.add_parameter(
-        "evapor formulation evaporative mass flux",
-        evapor.formulation_evaporative_mass_flux,
-        "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) "
+        "evapor formulation evaporative mass flux over interface",
+        evapor.formulation_evaporative_mass_flux_over_interface,
+        "Choose the formulation how the (local) evaporative mass flux will be converted to a DoF vector."
         "will be calculated.",
-        Patterns::Selection(
-          "constant|temperature dependent|recoil pressure dependent|temperature dependent interface const"));
+        Patterns::Selection("continuous|interface value|line integral"));
+      prm.add_parameter("evapor evaporation model",
+                        evapor.evaporation_model,
+                        "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) "
+                        "will be calculated.",
+                        Patterns::Selection("constant|recoil pressure|Hardt Wondra"));
       prm.add_parameter("evapor coefficient", evapor.coefficient, "Evaporation coefficient.");
       prm.add_parameter("evapor latent heat of evaporation",
                         evapor.latent_heat_of_evaporation,

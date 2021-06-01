@@ -50,6 +50,6 @@ namespace MeltPoolDG::Evaporation
      * M the molar mass, R the molar gas constant and T the temperature.
      */
     double
-    local_compute_evaporative_mass_flux(const double T) final;
+    local_compute_evaporative_mass_flux(const double T) const final;
   };
 } // namespace MeltPoolDG::Evaporation
