@@ -10,6 +10,7 @@
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_base.hpp>
 #include <meltpooldg/evaporation/evaporation_model_base.hpp>
+#include <meltpooldg/evaporation/evaporation_source_terms_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulationbase.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
@@ -82,6 +83,7 @@ namespace MeltPoolDG::Evaporation
 
     std::shared_ptr<EvaporationModelBase>                 evapor_model;
     std::shared_ptr<EvaporationMassFluxOperatorBase<dim>> evapor_mass_flux_operator;
+    std::shared_ptr<EvaporationSourceTermsBase<dim>>      evapor_source_terms_operator;
 
   public:
     EvaporationOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,

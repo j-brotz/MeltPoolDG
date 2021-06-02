@@ -5,6 +5,8 @@
 #include <meltpooldg/evaporation/evaporation_model_hardt_wondra.hpp>
 #include <meltpooldg/evaporation/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
+#include <meltpooldg/evaporation/evaporation_source_terms_continuous.hpp>
+#include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -47,6 +49,35 @@ namespace MeltPoolDG::Evaporation
   {
     AssertThrow(material.first.density > 0.0 && material.second.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
+
+    if (evaporation_data.formulation_source_term_continuity == "diffuse")
+      evapor_source_terms_operator =
+        std::make_shared<EvaporationSourceTermsContinuous<dim>>(*scratch_data,
+                                                                evaporation_data,
+                                                                level_set_as_heaviside,
+                                                                normal_vector,
+                                                                evaporative_mass_flux,
+                                                                ls_hanging_nodes_dof_idx,
+                                                                ls_quad_idx,
+                                                                normal_dof_idx,
+                                                                evapor_vel_dof_idx,
+                                                                tolerance_normal_vector,
+                                                                material.first.density,
+                                                                material.second.density);
+    else if (evaporation_data.formulation_source_term_continuity == "sharp")
+      evapor_source_terms_operator =
+        std::make_shared<EvaporationSourceTermsSharp<dim>>(*scratch_data,
+                                                           evaporation_data,
+                                                           level_set_as_heaviside,
+                                                           normal_vector,
+                                                           evaporative_mass_flux,
+                                                           ls_hanging_nodes_dof_idx,
+                                                           ls_quad_idx,
+                                                           normal_dof_idx,
+                                                           evapor_vel_dof_idx,
+                                                           tolerance_normal_vector,
+                                                           material.first.density,
+                                                           material.second.density);
     reinit();
   }
 
@@ -126,108 +157,8 @@ namespace MeltPoolDG::Evaporation
   EvaporationOperation<dim>::compute_evaporation_velocity(
     const std::string &interpolation_type_parameters)
   {
-    level_set_as_heaviside.update_ghost_values();
-    normal_vector.update_ghost_values();
-    evaporative_mass_flux.update_ghost_values();
-
-    FECellIntegrator<dim, 1, double> ls(scratch_data->get_matrix_free(),
-                                        ls_hanging_nodes_dof_idx,
-                                        ls_quad_idx);
-
-    FECellIntegrator<dim, dim, double> normal_vec(scratch_data->get_matrix_free(),
-                                                  normal_dof_idx,
-                                                  ls_quad_idx);
-
-    FECellIntegrator<dim, 1, double> evap_flux(
-      scratch_data->get_matrix_free(),
-      ls_hanging_nodes_dof_idx, // @todo: generalize --> temp_dof_idx
-      ls_quad_idx);
-
-    evaporation_velocities.resize(scratch_data->get_matrix_free().n_cell_batches() * ls.n_q_points);
-
-    for (unsigned int cell = 0; cell < scratch_data->get_matrix_free().n_cell_batches(); ++cell)
-      {
-        Tensor<1, dim, VectorizedArray<double>> *evapor_vel = begin_evaporation_velocity(cell);
-
-        ls.reinit(cell);
-        ls.read_dof_values(level_set_as_heaviside);
-        ls.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
-
-        normal_vec.reinit(cell);
-        normal_vec.read_dof_values(normal_vector);
-        normal_vec.evaluate(EvaluationFlags::values);
-
-        evap_flux.reinit(cell);
-        evap_flux.read_dof_values(evaporative_mass_flux);
-        evap_flux.evaluate(EvaluationFlags::values);
-
-        for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
-          {
-            const auto n_phi =
-              MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
-                                                      tolerance_normal_vector);
-
-            //              ρ
-            // evaluate  ------
-            //            dρ/dΦ
-            VectorizedArray<double> rho_d_rho_d_phi = 1.0;
-
-            if (interpolation_type_parameters == "true")
-              {
-                // clang-format off
-                  rho_d_rho_d_phi = (ls.get_value(q_index) * material.second.density + (1.-ls.get_value(q_index) * material.first.density)) 
-                    / //-----------------------------------------------------------------------------------------------------
-                                                    (material.second.density - material.first.density);
-                // clang-format on
-              }
-
-            evapor_vel[q_index] = n_phi * evap_flux.get_value(q_index) * rho_d_rho_d_phi *
-                                  UtilityFunctions::interpolate(ls.get_value(q_index),
-                                                                1. / material.first.density,
-                                                                1. / material.second.density);
-
-            // The normal vector field is oriented such that the normal vector points from
-            // the negative level set value (= default for representing the gas phase) to the
-            // positive value (= default for representing the liquid phase). Thus, in case the
-            // gas phase corresponds to a level set value of 1, the sign of the normal vector
-            // has to be changed.
-            if (evaporation_data.ls_value_gas == 1.0)
-              AssertThrow(false, ExcNotImplemented());
-            // evapor_vel[q_index] *= -1.0;
-          }
-      }
-    level_set_as_heaviside.zero_out_ghost_values();
-    normal_vector.zero_out_ghost_values();
-    evaporative_mass_flux.zero_out_ghost_values();
-
-    scratch_data->initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
-
-    /**
-     * write interface velocity to dof vector
-     */
-    if (scratch_data->is_hex_mesh())
-      UtilityFunctions::fill_dof_vector_from_cell_operation_vec<dim, dim>(
-        evaporation_velocity,
-        scratch_data->get_matrix_free(),
-        evapor_vel_dof_idx,
-        ls_quad_idx,
-        scratch_data->get_degree(evapor_vel_dof_idx),           // fe_degree of the resulting vector
-        scratch_data->get_degree(ls_hanging_nodes_dof_idx) + 1, // n_q_points_1d of cell operation
-        [&](const unsigned int cell,
-            const unsigned int quad) -> const Tensor<1, dim, VectorizedArray<double>> & {
-          return begin_evaporation_velocity(cell)[quad];
-        });
-
-    scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
-
-    scratch_data->get_pcout(1) << "    | evapor: |u|2 = "
-                               << VectorTools::compute_L2_norm<dim>(evaporation_velocity,
-                                                                    *scratch_data,
-                                                                    evapor_vel_dof_idx,
-                                                                    ls_quad_idx)
-                               << std::endl;
-
-    evaporation_velocity.zero_out_ghost_values();
+    evapor_source_terms_operator->compute_evaporation_velocity(evaporation_velocity,
+                                                               interpolation_type_parameters);
   }
 
   template <int dim>
@@ -237,74 +168,13 @@ namespace MeltPoolDG::Evaporation
                                                               const unsigned int pressure_quad_idx,
                                                               bool               zero_out)
   {
-    evaporative_mass_flux.update_ghost_values();
-    if (temperature)
-      temperature->update_ghost_values();
+    if (zero_out)
+      scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
 
-
-    double mass = 0.0;
-
-    scratch_data->get_matrix_free().template cell_loop<VectorType, VectorType>(
-      [&](const auto &matrix_free,
-          auto &      mass_balance_rhs,
-          const auto &level_set_as_heaviside,
-          auto        macro_cells) {
-        FECellIntegrator<dim, 1, double> heaviside(matrix_free,
-                                                   ls_hanging_nodes_dof_idx,
-                                                   pressure_quad_idx);
-
-        FECellIntegrator<dim, 1, double> mass_flux(matrix_free,
-                                                   pressure_dof_idx,
-                                                   pressure_quad_idx);
-
-        FECellIntegrator<dim, 1, double> evap_flux(
-          scratch_data->get_matrix_free(),
-          ls_hanging_nodes_dof_idx, // @todo: generalize --> temp_dof_idx
-          pressure_quad_idx);
-
-        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
-          {
-            heaviside.reinit(cell);
-            heaviside.read_dof_values_plain(level_set_as_heaviside);
-            heaviside.evaluate(EvaluationFlags::gradients);
-
-            mass_flux.reinit(cell);
-
-            evap_flux.reinit(cell);
-            evap_flux.read_dof_values_plain(evaporative_mass_flux);
-            evap_flux.evaluate(EvaluationFlags::values);
-
-            for (unsigned int q_index = 0; q_index < mass_flux.n_q_points; ++q_index)
-              {
-                mass_flux.submit_value((1. / material.second.density -
-                                        1. / material.first.density) *
-                                         heaviside.get_gradient(q_index).norm() *
-                                         evap_flux.get_value(q_index),
-                                       q_index);
-                // compute overall rhs
-                for (unsigned int v = 0;
-                     v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
-                     ++v)
-                  {
-                    mass += (1. / material.second.density - 1. / material.first.density) *
-                            heaviside.get_gradient(q_index).norm()[v] *
-                            evap_flux.get_value(q_index)[v] * mass_flux.JxW(q_index)[v];
-                  }
-              }
-
-            mass_flux.integrate_scatter(EvaluationFlags::values, mass_balance_rhs);
-          }
-      },
-      mass_balance_rhs,
-      level_set_as_heaviside,
-      zero_out);
-    evaporative_mass_flux.zero_out_ghost_values();
-
-    scratch_data->get_pcout() << "    | evaporation: jump in the velocity field = "
-                              << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm())
-                              << std::endl;
-
-    scratch_data->get_pcout() << "    | evapor: |m|2 = " << mass_balance_rhs.l2_norm() << std::endl;
+    evapor_source_terms_operator->compute_mass_balance_source_term(mass_balance_rhs,
+                                                                   pressure_dof_idx,
+                                                                   pressure_quad_idx,
+                                                                   zero_out);
   }
 
   template <int dim>

@@ -2,26 +2,45 @@
 
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 
-#include <meltpooldg/evaporation/evaporation_operation_marching_cube.hpp>
+#include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
 #include <meltpooldg/utilities/utilityfunctions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
   template <int dim>
+  EvaporationSourceTermsSharp<dim>::EvaporationSourceTermsSharp(
+    const ScratchData<dim> &       scratch_data,
+    const EvaporationData<double> &evapor_data,
+    const VectorType &             level_set_as_heaviside,
+    const BlockVectorType &        normal_vector,
+    const VectorType &             evaporative_mass_flux,
+    const unsigned int             ls_hanging_nodes_dof_idx,
+    const unsigned int             ls_quad_idx,
+    const unsigned int             normal_dof_idx,
+    const unsigned int             evapor_vel_dof_idx,
+    const double                   tolerance_normal_vector,
+    const double                   density_vapor,
+    const double                   density_liquid)
+    : scratch_data(scratch_data)
+    , evapor_data(evapor_data)
+    , level_set_as_heaviside(level_set_as_heaviside)
+    , normal_vector(normal_vector)
+    , evaporative_mass_flux(evaporative_mass_flux)
+    , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx)
+    , ls_quad_idx(ls_quad_idx)
+    , normal_dof_idx(normal_dof_idx)
+    , evapor_vel_dof_idx(evapor_vel_dof_idx)
+    , tolerance_normal_vector(tolerance_normal_vector)
+    , density_vapor(density_vapor)
+    , density_liquid(density_liquid)
+  {}
+
+  template <int dim>
   void
-  EvaporationOperationMarchingCube<dim>::compute_evaporation_velocity(
-    const ScratchData<dim> &scratch_data,
-    VectorType &            evaporation_velocity,
-    const VectorType &      evaporative_mass_flux,
-    const VectorType &      level_set_as_heaviside,
-    const BlockVectorType & normal_vector,
-    const double            rho_l,
-    const double            rho_g,
-    const unsigned int      evapor_vel_dof_idx,
-    const unsigned int      ls_hanging_nodes_dof_idx,
-    const unsigned int      ls_quad_idx,
-    const unsigned int      normal_dof_idx)
+  EvaporationSourceTermsSharp<dim>::compute_evaporation_velocity(
+    VectorType &                        evaporation_velocity,
+    [[maybe_unused]] const std::string &interpolation_type_parameters)
   {
     /**
      * evaporation velocity at quadrature points
@@ -73,8 +92,8 @@ namespace MeltPoolDG::Evaporation
             auto is_liquid = compare_and_apply_mask<SIMDComparison::less_than>(
               ls.get_value(q_index),
               VectorizedArray<double>(0.5),
-              evap_flux.get_value(q_index) / rho_g,
-              evap_flux.get_value(q_index) / rho_l);
+              evap_flux.get_value(q_index) / density_vapor,
+              evap_flux.get_value(q_index) / density_liquid);
 
             evapor_vel[q_index] = is_liquid * n_phi;
           }
@@ -113,32 +132,21 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationOperationMarchingCube<dim>::compute_mass_balance_source_term_sharp(
-    const ScratchData<dim> &scratch_data,
-    VectorType &            mass_balance_rhs,
-    const VectorType &      evaporative_mass_flux,
-    const VectorType &      level_set_vector,
-    const double            rho_l,
-    const double            rho_g,
-    const unsigned int      evapor_dof_idx,
-    const unsigned int      pressure_dof_idx)
+  EvaporationSourceTermsSharp<dim>::compute_mass_balance_source_term(
+    VectorType &                        mass_balance_source_term,
+    [[maybe_unused]] const unsigned int pressure_dof_idx,
+    [[maybe_unused]] const unsigned int pressure_quad_idx,
+    [[maybe_unused]] bool               zero_out)
   {
-    (void)scratch_data;
-    (void)mass_balance_rhs;
-    (void)evaporative_mass_flux;
-    (void)level_set_vector;
-    (void)rho_l;
-    (void)rho_g;
-    (void)evapor_dof_idx;
-    (void)pressure_dof_idx;
-
     if constexpr (dim > 1) // @todo: otherwise i am getting a compiling error atm
       {
         evaporative_mass_flux.update_ghost_values();
+        level_set_as_heaviside.update_ghost_values();
 
-        FEPointEvaluation<1, dim> mass_flux(scratch_data.get_mapping(),
-                                            scratch_data.get_dof_handler(evapor_dof_idx).get_fe(),
-                                            update_values);
+        FEPointEvaluation<1, dim> mass_flux(
+          scratch_data.get_mapping(),
+          scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).get_fe(),
+          update_values);
         FEPointEvaluation<1, dim> rhs_continuity(
           scratch_data.get_mapping(),
           scratch_data.get_dof_handler(pressure_dof_idx).get_fe(),
@@ -150,7 +158,7 @@ namespace MeltPoolDG::Evaporation
         UtilityFunctions::evaluate_at_interface<dim>(
           scratch_data.get_dof_handler(pressure_dof_idx),
           scratch_data.get_mapping(),
-          level_set_vector,
+          level_set_as_heaviside,
           [&](const auto &cell, const auto &, const auto &points, const auto &weights) {
             // evaluate rhs term
             local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
@@ -166,7 +174,7 @@ namespace MeltPoolDG::Evaporation
             rhs_continuity.reinit(cell, unit_points);
 
             // gather mass_flux
-            scratch_data.get_constraint(evapor_dof_idx)
+            scratch_data.get_constraint(ls_hanging_nodes_dof_idx)
               .get_dof_values(evaporative_mass_flux,
                               local_dof_indices.begin(),
                               buffer.begin(),
@@ -176,21 +184,24 @@ namespace MeltPoolDG::Evaporation
             mass_flux.evaluate(buffer, EvaluationFlags::values);
 
             for (unsigned int q = 0; q < n_points; ++q)
-              rhs_continuity.submit_value(mass_flux.get_value(q) * (1. / rho_l - 1. / rho_g) *
-                                            JxW[q],
-                                          q);
+              {
+                rhs_continuity.submit_value(mass_flux.get_value(q) *
+                                              (1. / density_liquid - 1. / density_vapor) * JxW[q],
+                                            q);
+              }
 
             // integrate rhs term of the continuity equation
             rhs_continuity.integrate(buffer, EvaluationFlags::values);
 
-            scratch_data.get_constraint(evapor_dof_idx)
-              .distribute_local_to_global(buffer, local_dof_indices, mass_balance_rhs);
+            scratch_data.get_constraint(ls_hanging_nodes_dof_idx)
+              .distribute_local_to_global(buffer, local_dof_indices, mass_balance_source_term);
           },
-          0.0, /*contour value*/
+          0.5, /*contour value*/
           3 /*n_subdivisions*/);
-        mass_balance_rhs.compress(VectorOperation::add);
-        mass_balance_rhs.update_ghost_values();
+        mass_balance_source_term.compress(VectorOperation::add);
+        mass_balance_source_term.update_ghost_values();
         evaporative_mass_flux.zero_out_ghost_values();
+        level_set_as_heaviside.zero_out_ghost_values();
       }
     else
       {
@@ -198,7 +209,15 @@ namespace MeltPoolDG::Evaporation
       }
   }
 
-  template class EvaporationOperationMarchingCube<1>;
-  template class EvaporationOperationMarchingCube<2>;
-  template class EvaporationOperationMarchingCube<3>;
+  template <int dim>
+  void
+  EvaporationSourceTermsSharp<dim>::compute_heat_source_term(
+    [[maybe_unused]] VectorType &heat_source_term)
+  {
+    AssertThrow(false, ExcNotImplemented());
+  }
+
+  template class EvaporationSourceTermsSharp<1>;
+  template class EvaporationSourceTermsSharp<2>;
+  template class EvaporationSourceTermsSharp<3>;
 } // namespace MeltPoolDG::Evaporation
