@@ -9,7 +9,6 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls do print l2norm": "true",
     "ls time integration scheme": "crank_nicolson",
     "ls start time": "0.0",
     "ls end time": "1.",
@@ -21,8 +20,7 @@
     "reinit modeltype": "olsson2007",
     "reinit dtau": "0.005",
     "reinit scale factor epsilon": "0.5",
-    "reinit do matrixfree": "true",
-    "reinit do print l2norm": "true"
+    "reinit do matrixfree": "true"
   },
   "normal vector": {
     "normal vec damping scale factor": "0.5"

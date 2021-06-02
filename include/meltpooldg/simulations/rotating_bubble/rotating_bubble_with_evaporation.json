@@ -9,7 +9,6 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls do print l2norm": "true",
     "ls time integration scheme": "crank_nicolson",
     "ls start time": "0.0",
     "ls end time": "1.5707963267948966",
@@ -30,7 +29,6 @@
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit do print l2norm": "true",
     "reinit implementation": "meltpooldg",
     "reinit constant epsilon": "0.01"
   },

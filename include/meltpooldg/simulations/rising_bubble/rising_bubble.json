@@ -29,7 +29,6 @@
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit do print l2norm": "true",
     "reinit scale factor epsilon": "1.707"
   },
   "normal vector": {
