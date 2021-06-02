@@ -10,7 +10,6 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls do print l2norm": "true",
     "ls time integration scheme": "crank_nicolson",
     "ls start time": "0.0",
     "ls end time": "0.1",
@@ -23,7 +22,6 @@
     "reinit do matrix free": "true",
     "reinit preconditioner type": "Identity",
     "reinit solver type": "CG",
-    "reinit do print l2norm": "true",
     "reinit eps scale factor": "0.5",
     "reinit implementation": "adaflo"
   },

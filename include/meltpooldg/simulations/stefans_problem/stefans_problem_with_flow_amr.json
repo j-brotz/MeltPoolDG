@@ -52,7 +52,6 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls do print l2norm": "true",
     "ls time integration scheme": "crank_nicolson",
     "ls do matrix free": "true",
     "ls implementation": "meltpooldg"

@@ -20,7 +20,6 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls do print l2norm": "true",
     "ls time integration scheme": "crank_nicolson",
     "ls do matrix free": "true"
   },
@@ -28,7 +27,6 @@
     "reinit max n steps": "10",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit do print l2norm": "true",
     "reinit eps scale factor": "0.5"
   },
   "normal vector": {

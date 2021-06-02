@@ -20,8 +20,7 @@
     "advec diff start time": "0.0",
     "advec diff end time": "0.06",
     "advec diff time step size": "0.01",
-    "advec diff do matrix free": "true",
-    "advec diff do print l2norm": "true"
+    "advec diff do matrix free": "true"
   },
   "paraview": {
     "paraview do output": "false"

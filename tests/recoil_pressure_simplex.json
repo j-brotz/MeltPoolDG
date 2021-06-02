@@ -59,7 +59,6 @@
   "levelset": {
     "ls artificial diffusivity": "0.0",
     "ls do matrix free": "true",
-    "ls do print l2norm": "true",
     "ls do reinitialization": "true",
     "ls time integration scheme": "crank_nicolson"
   },
@@ -95,7 +94,6 @@
   },
   "reinitialization": {
     "reinit do matrix free": "true",
-    "reinit do print l2norm": "true",
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit scale factor epsilon": "0.7107"

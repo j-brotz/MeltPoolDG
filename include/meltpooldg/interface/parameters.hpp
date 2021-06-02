@@ -83,7 +83,7 @@ namespace MeltPoolDG
     number      time_step_size          = 0.01;
     bool        enable_CFL_condition    = false;
     bool        do_curvature_correction = false;
-    bool        do_matrix_free          = false;
+    bool        do_matrix_free          = true;
     std::string implementation          = "meltpooldg";
   };
 
@@ -108,7 +108,7 @@ namespace MeltPoolDG
     number       end_time                = 1.0;
     number       time_step_size          = 0.01;
     unsigned int max_n_steps             = 1000000;
-    bool         do_matrix_free          = false;
+    bool         do_matrix_free          = true;
     std::string  implementation          = "meltpooldg";
   };
 
@@ -133,7 +133,7 @@ namespace MeltPoolDG
   struct NormalVectorData
   {
     number      damping_scale_factor = 0.5;
-    bool        do_matrix_free       = false;
+    bool        do_matrix_free       = true;
     std::string implementation       = "meltpooldg";
   };
 
@@ -141,7 +141,7 @@ namespace MeltPoolDG
   struct CurvatureData
   {
     number      damping_scale_factor = 0.0;
-    bool        do_matrix_free       = false;
+    bool        do_matrix_free       = true;
     std::string implementation       = "meltpooldg";
   };
 

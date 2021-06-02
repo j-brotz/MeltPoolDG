@@ -18,7 +18,6 @@
     "reinit modeltype": "olsson2007",
     "reinit dtau": "0.005",
     "reinit do matrix free": "false",
-    "reinit do print l2norm": "true",
     "reinit constant epsilon": "0.05"
   },
   "normal vector": {
