@@ -74,7 +74,7 @@ namespace MeltPoolDG
   template <typename number = double>
   struct LevelSetData
   {
-    bool        do_reinitialization     = false;
+    bool        do_reinitialization     = true;
     int         n_initial_reinit_steps  = -1.0;
     number      artificial_diffusivity  = 0.0;
     std::string time_integration_scheme = "crank_nicolson";
