@@ -12,7 +12,8 @@
     "ls time integration scheme": "crank_nicolson",
     "ls start time": "0.0",
     "ls end time": "1.",
-    "ls time step size": "0.01"
+    "ls time step size": "0.01",
+    "ls do matrix free": "false"
   },
   "reinitialization": {
     "reinit constant epsilon": "-1",
@@ -20,10 +21,11 @@
     "reinit modeltype": "olsson2007",
     "reinit dtau": "0.005",
     "reinit scale factor epsilon": "0.5",
-    "reinit do matrixfree": "true"
+    "reinit do matrix free": "true"
   },
   "normal vector": {
-    "normal vec damping scale factor": "0.5"
+    "normal vec damping scale factor": "0.5",
+    "normal vec do matrix free": "false"
   },
   "paraview": {
     "paraview filename": "output/slotted_disc/solution_reinitialization",
