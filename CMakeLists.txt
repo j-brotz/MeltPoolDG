@@ -84,6 +84,12 @@ add_library(${libName} ${sources})
 
 deal_ii_setup_target(${libName})
 
+
+if(${DEAL_II_VERSION_MAJOR} GREATER_EQUAL 10)
+  message("-- Enabling early deprecation via #define PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]]" )
+  add_compile_definitions(${libName} PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]])
+endif()
+
 # ##############################################################################
 # create executable
 # ##############################################################################
