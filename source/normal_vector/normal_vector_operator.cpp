@@ -117,7 +117,7 @@ namespace MeltPoolDG::NormalVector
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             normal.reinit(cell);
-            normal.gather_evaluate(src, true, true);
+            normal.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
             for (unsigned int q_index = 0; q_index < normal.n_q_points; ++q_index)
               {
@@ -125,7 +125,7 @@ namespace MeltPoolDG::NormalVector
                 normal.submit_gradient(damping * normal.get_gradient(q_index), q_index);
               }
 
-            normal.integrate_scatter(true, true, dst);
+            normal.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
           }
       },
       dst,
@@ -152,12 +152,12 @@ namespace MeltPoolDG::NormalVector
 
             level_set.reinit(cell);
             level_set.read_dof_values_plain(src);
-            level_set.evaluate(false, true);
+            level_set.evaluate(EvaluationFlags::gradients);
 
             for (unsigned int q_index = 0; q_index < normal_vector.n_q_points; ++q_index)
               normal_vector.submit_value(level_set.get_gradient(q_index), q_index);
 
-            normal_vector.integrate_scatter(true, false, dst);
+            normal_vector.integrate_scatter(EvaluationFlags::values, dst);
           }
       },
       dst,

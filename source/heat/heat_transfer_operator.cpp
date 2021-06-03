@@ -454,35 +454,38 @@ namespace MeltPoolDG::Heat
       {
         temp_vals.reinit(cell);
         temp_vals.read_dof_values_plain(temperature);
-        temp_vals.evaluate(true, true);
+        temp_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
         temp_vals_old.reinit(cell);
         temp_vals_old.read_dof_values_plain(src); // = temperature_old
-        temp_vals_old.evaluate(true, false);
+        temp_vals_old.evaluate(EvaluationFlags::values);
 
         heat_source_vals.reinit(cell);
         heat_source_vals.read_dof_values_plain(heat_source);
-        heat_source_vals.evaluate(true, false);
+        heat_source_vals.evaluate(EvaluationFlags::values);
 
         if (velocity)
           {
             velocity_vals.reinit(cell);
             velocity_vals.read_dof_values_plain(*velocity);
-            velocity_vals.evaluate(true, false);
+            velocity_vals.evaluate(EvaluationFlags::values);
           }
 
         if (level_set_as_heaviside)
           {
             ls_vals.reinit(cell);
             ls_vals.read_dof_values_plain(*level_set_as_heaviside);
-            ls_vals.evaluate(true, evapor_data);
+            if (evapor_data)
+              ls_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+            else
+              ls_vals.evaluate(EvaluationFlags::values);
           }
 
         if (evaporative_mass_flux)
           {
             evapor_vals.reinit(cell);
             evapor_vals.read_dof_values_plain(*evaporative_mass_flux);
-            evapor_vals.evaluate(true, false);
+            evapor_vals.evaluate(EvaluationFlags::values);
           }
 
         for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -543,7 +546,7 @@ namespace MeltPoolDG::Heat
             temp_vals.submit_gradient(-1.0 * val_grad,
                                       q_index); // -1 since residual is moved to rhs
           }
-        temp_vals.integrate_scatter(true, true, dst);
+        temp_vals.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
       }
   }
 
@@ -563,7 +566,7 @@ namespace MeltPoolDG::Heat
       {
         dQ_dT.reinit(face);
         dQ_dT.read_dof_values_plain(temperature);
-        dQ_dT.evaluate(true, false);
+        dQ_dT.evaluate(EvaluationFlags::values);
 
         const types::boundary_id bc_index = matrix_free.get_boundary_id(face);
 
@@ -605,7 +608,7 @@ namespace MeltPoolDG::Heat
 
             dQ_dT.submit_value(temp, q_index);
           }
-        dQ_dT.integrate_scatter(true, false, dst);
+        dQ_dT.integrate_scatter(EvaluationFlags::values, dst);
       }
   }
 
@@ -685,32 +688,37 @@ namespace MeltPoolDG::Heat
     VectorizedArray<number> d_rho_cp_dT       = 0.0;
     VectorizedArray<number> d_conductivity_dT = 0.0;
 
-    temp_vals.evaluate(true, true);
+    temp_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
     if (do_reinit_cells)
       {
         if (velocity)
           {
             velocity_vals.reinit(temp_vals.get_current_cell_index());
-            velocity_vals.gather_evaluate(*velocity, true, false);
+            velocity_vals.gather_evaluate(*velocity, EvaluationFlags::values);
           }
 
         if (level_set_as_heaviside)
           {
             ls_vals.reinit(temp_vals.get_current_cell_index());
-            ls_vals.gather_evaluate(*level_set_as_heaviside, true, evapor_data);
+            if (evapor_data)
+              ls_vals.gather_evaluate(*level_set_as_heaviside,
+                                      EvaluationFlags::values | EvaluationFlags::gradients);
+            else
+              ls_vals.gather_evaluate(*level_set_as_heaviside, EvaluationFlags::values);
           }
 
         if (data.solidification)
           {
             temp_old_vals.reinit(temp_vals.get_current_cell_index());
-            temp_old_vals.gather_evaluate(temperature_old, true, false);
+            temp_old_vals.gather_evaluate(temperature_old, EvaluationFlags::values);
           }
 
         if (data.solidification || evapor_data)
           {
             temp_lin_vals.reinit(temp_vals.get_current_cell_index());
-            temp_lin_vals.gather_evaluate(temperature, true, true);
+            temp_lin_vals.gather_evaluate(temperature,
+                                          EvaluationFlags::values | EvaluationFlags::gradients);
           }
       }
 
@@ -772,7 +780,7 @@ namespace MeltPoolDG::Heat
         temp_vals.submit_value(val, q_index);
         temp_vals.submit_gradient(val_grad, q_index);
       }
-    temp_vals.integrate(true, true);
+    temp_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
   }
 
   template <int dim, typename number>
@@ -782,12 +790,12 @@ namespace MeltPoolDG::Heat
     FEFaceIntegrator<dim, 1, number> &temp_vals,
     const bool                        do_reinit_face) const
   {
-    dQ_dT.evaluate(true, false);
+    dQ_dT.evaluate(EvaluationFlags::values);
 
     if (do_reinit_face)
       {
         temp_vals.reinit(dQ_dT.get_current_cell_index());
-        temp_vals.gather_evaluate(temperature, true, false);
+        temp_vals.gather_evaluate(temperature, EvaluationFlags::values);
       }
 
     const types::boundary_id bc_index =
@@ -815,7 +823,7 @@ namespace MeltPoolDG::Heat
 
         dQ_dT.submit_value(temp, q_index);
       }
-    dQ_dT.integrate(true, false);
+    dQ_dT.integrate(EvaluationFlags::values);
   }
 
   template <int dim, typename number>

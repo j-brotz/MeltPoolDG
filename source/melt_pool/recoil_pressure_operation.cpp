@@ -45,14 +45,11 @@ namespace MeltPoolDG::MeltPool
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             level_set.reinit(cell);
-            level_set.gather_evaluate(level_set_as_heaviside, false, true);
-            // level_set.evaluate(false, true);
-            // level_set.read_dof_values_plain(level_set_as_heaviside);
-            // level_set.evaluate(false, true);
+            level_set.gather_evaluate(level_set_as_heaviside, EvaluationFlags::gradients);
 
             temperature_val.reinit(cell);
             temperature_val.read_dof_values_plain(temperature);
-            temperature_val.evaluate(true, false);
+            temperature_val.evaluate(EvaluationFlags::values);
 
             recoil_pressure.reinit(cell);
 
@@ -69,7 +66,7 @@ namespace MeltPoolDG::MeltPool
                                                level_set.get_gradient(q_index),
                                              q_index);
               }
-            recoil_pressure.integrate_scatter(true, false, force_rhs);
+            recoil_pressure.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
       },
       force_rhs,

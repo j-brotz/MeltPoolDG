@@ -35,12 +35,12 @@ namespace MeltPoolDG::Flow
           {
             level_set.reinit(cell);
             level_set.read_dof_values_plain(level_set_as_heaviside);
-            level_set.evaluate(false, true);
+            level_set.evaluate(EvaluationFlags::gradients);
 
             surface_tension.reinit(cell);
 
             curvature.reinit(cell);
-            curvature.gather_evaluate(curvature_vec, true, false);
+            curvature.gather_evaluate(curvature_vec, EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
               {
@@ -49,7 +49,7 @@ namespace MeltPoolDG::Flow
                                                curvature.get_value(q_index),
                                              q_index);
               }
-            surface_tension.integrate_scatter(true, false, force_rhs);
+            surface_tension.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
       },
       force_rhs,
@@ -124,21 +124,21 @@ namespace MeltPoolDG::Flow
           {
             level_set.reinit(cell);
             level_set.read_dof_values_plain(level_set_as_heaviside);
-            level_set.evaluate(false, true);
+            level_set.evaluate(EvaluationFlags::gradients);
 
             surface_tension.reinit(cell);
 
             curvature.reinit(cell);
             curvature.read_dof_values_plain(solution_curvature);
-            curvature.evaluate(true, false);
+            curvature.evaluate(EvaluationFlags::values);
 
             normal_vec.reinit(cell);
             normal_vec.read_dof_values_plain(solution_normal_vector);
-            normal_vec.evaluate(true, false);
+            normal_vec.evaluate(EvaluationFlags::values);
 
             temperature_val.reinit(cell);
             temperature_val.read_dof_values_plain(temperature);
-            temperature_val.evaluate(true, true);
+            temperature_val.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
               {
@@ -173,7 +173,7 @@ namespace MeltPoolDG::Flow
                                                temp_surf_ten * delta,
                                              q_index);
               }
-            surface_tension.integrate_scatter(true, false, force_rhs);
+            surface_tension.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
       },
       force_rhs,

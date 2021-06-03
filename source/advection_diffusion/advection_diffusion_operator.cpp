@@ -161,11 +161,12 @@ namespace MeltPoolDG::AdvectionDiffusion
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             advected_field.reinit(cell);
-            advected_field.gather_evaluate(src, true, true);
+            advected_field.gather_evaluate(src,
+                                           EvaluationFlags::values | EvaluationFlags::gradients);
 
             velocity.reinit(cell);
             velocity.read_dof_values_plain(advection_velocity);
-            velocity.evaluate(true, false);
+            velocity.evaluate(EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < advected_field.n_q_points; ++q_index)
               {
@@ -179,7 +180,8 @@ namespace MeltPoolDG::AdvectionDiffusion
                 advected_field.submit_gradient(this->d_tau * theta * data.diffusivity * grad_phi,
                                                q_index);
               }
-            advected_field.integrate_scatter(true, true, dst);
+            advected_field.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients,
+                                             dst);
           }
       },
       dst,
@@ -208,11 +210,12 @@ namespace MeltPoolDG::AdvectionDiffusion
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             advected_field.reinit(cell);
-            advected_field.gather_evaluate(src, true, true);
+            advected_field.gather_evaluate(src,
+                                           EvaluationFlags::values | EvaluationFlags::gradients);
 
             velocity.reinit(cell);
             velocity.read_dof_values_plain(advection_velocity);
-            velocity.evaluate(true, false);
+            velocity.evaluate(EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < advected_field.n_q_points; ++q_index)
               {
@@ -229,7 +232,8 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                q_index);
               }
 
-            advected_field.integrate_scatter(true, true, dst);
+            advected_field.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients,
+                                             dst);
           }
       },
       dst,

@@ -659,7 +659,7 @@ namespace MeltPoolDG::Flow
           {
             ls_values.reinit(cell);
             ls_values.read_dof_values_plain(src);
-            ls_values.evaluate(true, false);
+            ls_values.evaluate(EvaluationFlags::values);
 
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
               {
@@ -756,7 +756,7 @@ namespace MeltPoolDG::Flow
                 force[dim - 1] -= gravity * flow_operation->get_density(cell, q);
                 force_values.submit_value(force, q);
               }
-            force_values.integrate_scatter(true, false, vec);
+            force_values.integrate_scatter(EvaluationFlags::values, vec);
           }
       },
       vec,

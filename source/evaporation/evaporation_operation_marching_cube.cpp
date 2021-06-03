@@ -59,11 +59,11 @@ namespace MeltPoolDG::Evaporation
 
         normal_vec.reinit(cell);
         normal_vec.read_dof_values(normal_vector);
-        normal_vec.evaluate(true, false);
+        normal_vec.evaluate(EvaluationFlags::values);
 
         evap_flux.reinit(cell);
         evap_flux.read_dof_values(evaporative_mass_flux);
-        evap_flux.evaluate(true, false);
+        evap_flux.evaluate(EvaluationFlags::values);
 
         for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
           {
