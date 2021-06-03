@@ -79,14 +79,15 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             advected_field.reinit(cell);
-            advected_field.gather_evaluate(src, true, true);
+            advected_field.gather_evaluate(src,
+                                           EvaluationFlags::values | EvaluationFlags::gradients);
 
             flow_vel.reinit(cell);
-            flow_vel.gather_evaluate(advection_velocity, true, false);
+            flow_vel.gather_evaluate(advection_velocity, EvaluationFlags::values);
 
             evapor_vel.reinit(cell);
             evapor_vel.read_dof_values_plain(evapor_velocity);
-            evapor_vel.evaluate(true, false);
+            evapor_vel.evaluate(EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < advected_field.n_q_points; ++q_index)
               {
@@ -98,7 +99,7 @@ namespace MeltPoolDG::LevelSet
                                  grad_phi);
                 advected_field.submit_value(phi + this->d_tau * theta * velocity_grad_phi, q_index);
               }
-            advected_field.integrate_scatter(true, false, dst);
+            advected_field.integrate_scatter(EvaluationFlags::values, dst);
           }
       },
       dst,
@@ -138,15 +139,15 @@ namespace MeltPoolDG::LevelSet
           {
             advected_field.reinit(cell);
             advected_field.read_dof_values_plain(src);
-            advected_field.evaluate(true, true);
+            advected_field.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             flow_vel.reinit(cell);
             flow_vel.read_dof_values_plain(advection_velocity);
-            flow_vel.evaluate(true, false);
+            flow_vel.evaluate(EvaluationFlags::values);
 
             evapor_vel.reinit(cell);
             evapor_vel.read_dof_values_plain(evapor_velocity);
-            evapor_vel.evaluate(true, false);
+            evapor_vel.evaluate(EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < advected_field.n_q_points; ++q_index)
               {
@@ -161,7 +162,7 @@ namespace MeltPoolDG::LevelSet
                                             q_index);
               }
 
-            advected_field.integrate_scatter(true, false, dst);
+            advected_field.integrate_scatter(EvaluationFlags::values, dst);
           }
       },
       dst,

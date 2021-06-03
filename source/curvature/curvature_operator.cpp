@@ -119,7 +119,7 @@ namespace MeltPoolDG::Curvature
           {
             curvature.reinit(cell);
             curvature.read_dof_values_plain(src);
-            curvature.evaluate(true, true);
+            curvature.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {
@@ -127,7 +127,7 @@ namespace MeltPoolDG::Curvature
                 curvature.submit_gradient(damping * curvature.get_gradient(q_index), q_index);
               }
 
-            curvature.integrate_scatter(true, true, dst);
+            curvature.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
           }
       },
       dst,
@@ -152,7 +152,7 @@ namespace MeltPoolDG::Curvature
 
             normal_vector.reinit(cell);
             normal_vector.read_dof_values_plain(src);
-            normal_vector.evaluate(true, false);
+            normal_vector.evaluate(EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {
@@ -162,7 +162,7 @@ namespace MeltPoolDG::Curvature
                 curvature.submit_gradient(n_phi, q_index);
               }
 
-            curvature.integrate_scatter(false, true, dst);
+            curvature.integrate_scatter(EvaluationFlags::gradients, dst);
           }
       },
       dst,

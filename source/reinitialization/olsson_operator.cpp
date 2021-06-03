@@ -150,11 +150,11 @@ namespace MeltPoolDG::Reinitialization
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             levelset.reinit(cell);
-            levelset.gather_evaluate(src, true, true);
+            levelset.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
             normal_vector.reinit(cell);
             normal_vector.read_dof_values_plain(this->normal_vec);
-            normal_vector.evaluate(true, false);
+            normal_vector.evaluate(EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < levelset.n_q_points; q_index++)
               {
@@ -172,7 +172,7 @@ namespace MeltPoolDG::Reinitialization
                                          q_index);
               }
 
-            levelset.integrate_scatter(true, true, dst);
+            levelset.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
           }
       },
       dst,
@@ -220,7 +220,7 @@ namespace MeltPoolDG::Reinitialization
 
             normal_vector.reinit(cell);
             normal_vector.read_dof_values_plain(this->normal_vec);
-            normal_vector.evaluate(true, false);
+            normal_vector.evaluate(EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < psi.n_q_points; ++q_index)
               {
@@ -235,7 +235,7 @@ namespace MeltPoolDG::Reinitialization
                                     q_index);
               }
 
-            psi.integrate_scatter(false, true, dst);
+            psi.integrate_scatter(EvaluationFlags::gradients, dst);
           }
       },
       dst,
