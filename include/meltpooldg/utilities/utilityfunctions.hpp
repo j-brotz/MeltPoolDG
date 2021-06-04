@@ -119,11 +119,11 @@ namespace MeltPoolDG
       const MatrixFree<dim, double, VectorizedArray<double>> &matrix_free,
       unsigned int                                            dof_idx,
       unsigned int                                            quad_idx,
-      unsigned int                                            fe_degree,
-      unsigned int                                            n_q_points_1D,
+      unsigned int,
+      unsigned int,
       const std::function<const Tensor<1, n_components, VectorizedArray<double>>(
         const unsigned int cell,
-        const unsigned int q)> &                              cell_operation)
+        const unsigned int q)> &cell_operation)
     {
       AssertThrow(matrix_free.get_dof_handler(dof_idx)
                     .get_triangulation()
@@ -133,6 +133,9 @@ namespace MeltPoolDG
                     "for hex meshes."));
 
       const auto &shape_info = matrix_free.get_shape_info(dof_idx, quad_idx);
+
+      const unsigned int n_q_points_1D = shape_info.data[0].n_q_points_1d;
+      const unsigned int fe_degree     = shape_info.data[0].fe_degree;
 
       FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
       FE_Q<1>                 fe_fine(fe_degree);
