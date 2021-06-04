@@ -13,6 +13,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
+#include <deal.II/matrix_free/operators.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
@@ -125,46 +126,11 @@ namespace MeltPoolDG
         const unsigned int cell,
         const unsigned int q)> &cell_operation)
     {
-      AssertThrow(matrix_free.get_dof_handler(dof_idx)
-                    .get_triangulation()
-                    .all_reference_cells_are_hyper_cube(),
-                  ExcMessage(
-                    "The filling of a DoF Vector from a cell operation is currently only supported "
-                    "for hex meshes."));
-
-      const auto &shape_info = matrix_free.get_shape_info(dof_idx, quad_idx);
-
-      const unsigned int n_q_points_1D = shape_info.data[0].n_q_points_1d;
-      const unsigned int fe_degree     = shape_info.data[0].fe_degree;
-
-      FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
-      FE_Q<1>                 fe_fine(fe_degree);
-
-      /// create 1D projection matrix for sum factorization
-      FullMatrix<double> matrix(fe_fine.dofs_per_cell, fe_coarse.dofs_per_cell);
-      FETools::get_projection_matrix(fe_coarse, fe_fine, matrix);
-
-      const auto lexicographic_numbering =
-        FETools::hierarchic_to_lexicographic_numbering<1>(fe_degree);
-
-      FullMatrix<double> matrix_resorted(fe_fine.dofs_per_cell, fe_coarse.dofs_per_cell);
-      for (unsigned int i = 0; i < fe_fine.dofs_per_cell; ++i)
-        for (unsigned int j = 0; j < fe_coarse.dofs_per_cell; ++j)
-          matrix_resorted[lexicographic_numbering[i]][j] = matrix[i][j];
-
-      AlignedVector<VectorizedArray<double>> projection_matrix_1d(fe_fine.dofs_per_cell *
-                                                                  fe_coarse.dofs_per_cell);
-
-      for (unsigned int i = 0, k = 0; i < fe_coarse.dofs_per_cell; ++i)
-        for (unsigned int j = 0; j < fe_fine.dofs_per_cell; ++j, ++k)
-          projection_matrix_1d[k] = matrix_resorted(j, i);
-
       FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
 
-      // @todo: replace n_q_points_1D argument completely from fe_eval?
-      AssertThrow(fe_eval.n_q_points == std::pow(n_q_points_1D, dim),
-                  ExcMessage("The number of quadrature points in 1D must comply with the number of "
-                             "quadrature points of the cell operation."));
+      MatrixFreeOperators::
+        CellwiseInverseMassMatrix<dim, -1, n_components, double, VectorizedArray<double>>
+          inverse_mass_matrix(fe_eval);
 
       for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
         {
@@ -177,21 +143,9 @@ namespace MeltPoolDG
                 fe_eval.begin_values()[c * fe_eval.n_q_points + q] = temp[c];
             }
 
-          // perform basis change from quadrature points to support points
-          internal::FEEvaluationImplBasisChange<
-            internal::evaluate_general,
-            internal::EvaluatorQuantity::value,
-            dim,
-            0,
-            0,
-            VectorizedArray<double>,
-            VectorizedArray<double>>::do_forward(n_components, // n_components
-                                                 projection_matrix_1d,
-                                                 fe_eval.begin_values(),
-                                                 fe_eval.begin_dof_values(),
-                                                 n_q_points_1D, // number of quadrature points
-                                                 fe_degree + 1  // number of support points
-          );
+          inverse_mass_matrix.transform_from_q_points_to_basis(n_components,
+                                                               fe_eval.begin_values(),
+                                                               fe_eval.begin_dof_values());
 
           // write values back into global vector
           fe_eval.set_dof_values(vec);
