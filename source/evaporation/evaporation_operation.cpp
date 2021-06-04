@@ -78,6 +78,9 @@ namespace MeltPoolDG::Evaporation
                                                            tolerance_normal_vector,
                                                            material.first.density,
                                                            material.second.density);
+    else
+      Assert(false, ExcMessage("Specified evaporation source term is not implemented!"));
+
     reinit();
   }
 

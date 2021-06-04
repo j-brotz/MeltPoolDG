@@ -74,15 +74,15 @@ namespace MeltPoolDG::Evaporation
 
         ls.reinit(cell);
         ls.read_dof_values(level_set_as_heaviside);
-        ls.evaluate(true, true);
+        ls.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
         normal_vec.reinit(cell);
         normal_vec.read_dof_values(normal_vector);
-        normal_vec.evaluate(true, false);
+        normal_vec.evaluate(EvaluationFlags::values);
 
         evap_flux.reinit(cell);
         evap_flux.read_dof_values(evaporative_mass_flux);
-        evap_flux.evaluate(true, false);
+        evap_flux.evaluate(EvaluationFlags::values);
 
         for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
           {
@@ -187,13 +187,13 @@ namespace MeltPoolDG::Evaporation
           {
             heaviside.reinit(cell);
             heaviside.read_dof_values_plain(level_set_as_heaviside);
-            heaviside.evaluate(false, true);
+            heaviside.evaluate(EvaluationFlags::gradients);
 
             mass_flux.reinit(cell);
 
             evap_flux.reinit(cell);
             evap_flux.read_dof_values_plain(evaporative_mass_flux);
-            evap_flux.evaluate(true, false);
+            evap_flux.evaluate(EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < mass_flux.n_q_points; ++q_index)
               {
@@ -212,7 +212,7 @@ namespace MeltPoolDG::Evaporation
                   }
               }
 
-            mass_flux.integrate_scatter(true, false, mass_balance_source_term);
+            mass_flux.integrate_scatter(EvaluationFlags::values, mass_balance_source_term);
           }
       },
       mass_balance_source_term,
