@@ -553,10 +553,10 @@ namespace MeltPoolDG
 
       global_points_normal_to_interface_pointer = {0};
 
-      auto collect_points_along_normal = [&](const auto &                 cell,
-                                             const auto &                 real_points,
-                                             const auto &                 unit_points,
-                                             [[maybe_unused]] const auto &weights) {
+      const auto collect_points_along_normal = [&](const auto &                 cell,
+                                                   const auto &                 real_points,
+                                                   const auto &                 unit_points,
+                                                   [[maybe_unused]] const auto &weights) {
         local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
         buffer.resize(cell->get_fe().n_dofs_per_cell());
         cell->get_dof_indices(local_dof_indices);
