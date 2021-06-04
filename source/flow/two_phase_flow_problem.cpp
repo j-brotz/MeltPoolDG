@@ -47,24 +47,8 @@ namespace MeltPoolDG::Flow
             /*
              * compute level set source term
              */
-            if (base_in->parameters.evapor.formulation_source_term_continuity == "diffuse")
-              evaporation_operation->compute_evaporation_velocity(
-                base_in->parameters.flow.variable_properties_over_interface);
-            else if (base_in->parameters.evapor.formulation_source_term_continuity == "sharp")
-              Evaporation::EvaporationOperationMarchingCube<dim>::compute_evaporation_velocity(
-                *scratch_data,
-                evaporation_operation->get_velocity(),
-                evaporation_operation->get_evaporative_mass_flux(),
-                level_set_operation.get_level_set_as_heaviside(),
-                level_set_operation.get_normal_vector(),
-                base_in->parameters.material.second.density,
-                base_in->parameters.material.first.density,
-                evapor_vel_dof_idx,
-                ls_hanging_nodes_dof_idx,
-                ls_quad_idx,
-                normal_dof_idx);
-            else
-              AssertThrow(false, ExcNotImplemented());
+            evaporation_operation->compute_evaporation_velocity(
+              base_in->parameters.flow.variable_properties_over_interface);
           }
 
         level_set_operation.solve(dt, flow_operation->get_velocity());
@@ -130,29 +114,11 @@ namespace MeltPoolDG::Flow
 
         if (evaporation_operation)
           {
-            scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
-
-            if (base_in->parameters.evapor.formulation_source_term_continuity == "diffuse")
-              {
-                evaporation_operation->compute_mass_balance_source_term(
-                  mass_balance_rhs,
-                  flow_operation->get_dof_handler_idx_pressure(),
-                  flow_operation->get_quad_idx_pressure(),
-                  true /* zero out force rhs */);
-              }
-            else if (base_in->parameters.evapor.formulation_source_term_continuity == "sharp")
-              Evaporation::EvaporationOperationMarchingCube<dim>::
-                compute_mass_balance_source_term_sharp(
-                  *scratch_data,
-                  mass_balance_rhs,
-                  evaporation_operation->get_evaporative_mass_flux(),
-                  level_set_operation.get_level_set(),
-                  base_in->parameters.material.second.density,
-                  base_in->parameters.material.first.density,
-                  ls_hanging_nodes_dof_idx,
-                  flow_operation->get_dof_handler_idx_pressure());
-            else
-              AssertThrow(false, ExcNotImplemented());
+            evaporation_operation->compute_mass_balance_source_term(
+              mass_balance_rhs,
+              flow_operation->get_dof_handler_idx_pressure(),
+              flow_operation->get_quad_idx_pressure(),
+              true /* zero out force rhs */);
           }
 
         // ... solve melt pool operation
