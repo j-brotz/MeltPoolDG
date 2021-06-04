@@ -132,6 +132,8 @@ namespace MeltPoolDG
                     "The filling of a DoF Vector from a cell operation is currently only supported "
                     "for hex meshes."));
 
+      const auto &shape_info = matrix_free.get_shape_info(dof_idx, quad_idx);
+
       FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
       FE_Q<1>                 fe_fine(fe_degree);
 
@@ -139,12 +141,20 @@ namespace MeltPoolDG
       FullMatrix<double> matrix(fe_fine.dofs_per_cell, fe_coarse.dofs_per_cell);
       FETools::get_projection_matrix(fe_coarse, fe_fine, matrix);
 
+      const auto lexicographic_numbering =
+        FETools::hierarchic_to_lexicographic_numbering<1>(fe_degree);
+
+      FullMatrix<double> matrix_resorted(fe_fine.dofs_per_cell, fe_coarse.dofs_per_cell);
+      for (unsigned int i = 0; i < fe_fine.dofs_per_cell; ++i)
+        for (unsigned int j = 0; j < fe_coarse.dofs_per_cell; ++j)
+          matrix_resorted[lexicographic_numbering[i]][j] = matrix[i][j];
+
       AlignedVector<VectorizedArray<double>> projection_matrix_1d(fe_fine.dofs_per_cell *
                                                                   fe_coarse.dofs_per_cell);
 
       for (unsigned int i = 0, k = 0; i < fe_coarse.dofs_per_cell; ++i)
         for (unsigned int j = 0; j < fe_fine.dofs_per_cell; ++j, ++k)
-          projection_matrix_1d[k] = matrix(j, i);
+          projection_matrix_1d[k] = matrix_resorted(j, i);
 
       FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
 
