@@ -67,17 +67,20 @@ test(const unsigned int fe_degree, const unsigned int n_q_points)
       return fe_eval.quadrature_point(q);
     });
 
-  DataOutBase::VtkFlags flags;
-  flags.write_higher_order_cells = true;
+  if (false)
+    {
+      DataOutBase::VtkFlags flags;
+      flags.write_higher_order_cells = true;
 
-  DataOut<dim> data_out;
-  data_out.set_flags(flags);
+      DataOut<dim> data_out;
+      data_out.set_flags(flags);
 
-  data_out.add_data_vector(dof_handler, solution, "solution");
+      data_out.add_data_vector(dof_handler, solution, "solution");
 
-  data_out.build_patches(mapping, n_q_points + 1);
-  std::ofstream output("test" + std::to_string(fe_degree) + ".vtu");
-  data_out.write_vtu(output);
+      data_out.build_patches(mapping, n_q_points + 1);
+      std::ofstream output("test" + std::to_string(fe_degree + n_q_points * 10) + ".vtu");
+      data_out.write_vtu(output);
+    }
 
   std::cout << solution.l2_norm() << std::endl;
 }
@@ -87,9 +90,9 @@ main(int argc, char *argv[])
 {
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
 
-  test<2>(1, 2);
-  test<2>(2, 2);
-  test<2>(2, 3);
+  for (unsigned int i = 1; i <= 5; ++i)                                  // fe_degree
+    for (unsigned int j = std::max<unsigned int>(i, 2); j <= i + 2; ++j) // n_q_points_1D
+      test<2>(i, j);
 
   return 0;
 }
