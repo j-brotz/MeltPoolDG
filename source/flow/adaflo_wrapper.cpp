@@ -383,13 +383,11 @@ namespace MeltPoolDG::Flow
     scratch_data.initialize_dof_vector(density, dof_index_parameters);
 
     if (scratch_data.is_hex_mesh())
-      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+      UtilityFunctions::fill_dof_vector_from_cell_operation<dim>(
         density,
         scratch_data.get_matrix_free(),
         dof_index_parameters,
         quad_index_u,
-        scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
-        scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
         [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
           return get_density(cell, quad);
         });
@@ -401,13 +399,11 @@ namespace MeltPoolDG::Flow
      */
     scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
     if (scratch_data.is_hex_mesh())
-      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+      UtilityFunctions::fill_dof_vector_from_cell_operation<dim>(
         viscosity,
         scratch_data.get_matrix_free(),
         dof_index_parameters,
         quad_index_u,
-        scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
-        scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
         [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
           return get_viscosity(cell, quad);
         });

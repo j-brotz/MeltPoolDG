@@ -20,6 +20,7 @@
 #include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
+#include <deal.II/matrix_free/operators.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
@@ -48,45 +49,25 @@ namespace MeltPoolDG
 
   namespace UtilityFunctions
   {
-    template <int dim, int n_components>
+    /**
+     * For a given @p matrix_free object, execute scalar-valued @p cell_operation
+     * on each quadrature point  defined by @p quad_idx and fill them into a
+     * DoF-vector @p vec defined by @p dof_idx.
+     */
+    template <int dim>
     void
     fill_dof_vector_from_cell_operation(
-      VectorType &                                                                vec,
-      const MatrixFree<dim, double, VectorizedArray<double>> &                    matrix_free,
-      unsigned int                                                                dof_idx,
-      unsigned int                                                                quad_idx,
-      unsigned int                                                                fe_degree,
-      unsigned int                                                                n_q_points_1D,
-      const std::function<const VectorizedArray<double> &(const unsigned int cell,
-                                                          const unsigned int q)> &cell_operation)
+      VectorType &                                                              vec,
+      const MatrixFree<dim, double, VectorizedArray<double>> &                  matrix_free,
+      unsigned int                                                              dof_idx,
+      unsigned int                                                              quad_idx,
+      const std::function<const VectorizedArray<double>(const unsigned int cell,
+                                                        const unsigned int q)> &cell_operation)
     {
-      AssertThrow(matrix_free.get_dof_handler(dof_idx)
-                    .get_triangulation()
-                    .all_reference_cells_are_hyper_cube(),
-                  ExcMessage(
-                    "The filling of a DoF Vector from a cell operation is currently only supported "
-                    "for hex meshes."));
+      FECellIntegrator<dim, 1, double> fe_eval(matrix_free, dof_idx, quad_idx);
 
-      FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
-      FE_Q<1>                 fe_fine(fe_degree);
-
-      /// create 1D projection matrix for sum factorization
-      FullMatrix<double> matrix(fe_fine.dofs_per_cell, fe_coarse.dofs_per_cell);
-      FETools::get_projection_matrix(fe_coarse, fe_fine, matrix);
-
-      AlignedVector<VectorizedArray<double>> projection_matrix_1d(fe_fine.dofs_per_cell *
-                                                                  fe_coarse.dofs_per_cell);
-
-      for (unsigned int i = 0, k = 0; i < fe_coarse.dofs_per_cell; ++i)
-        for (unsigned int j = 0; j < fe_fine.dofs_per_cell; ++j, ++k)
-          projection_matrix_1d[k] = matrix(j, i);
-
-      FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
-
-      // @todo: replace n_q_points_1D argument completely from fe_eval?
-      AssertThrow(fe_eval.n_q_points == std::pow(n_q_points_1D, dim),
-                  ExcMessage("The number of quadrature points in 1D must comply with the number of "
-                             "quadrature points of the cell operation."));
+      MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, double, VectorizedArray<double>>
+        inverse_mass_matrix(fe_eval);
 
       for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
         {
@@ -95,30 +76,19 @@ namespace MeltPoolDG
           for (unsigned int q = 0; q < fe_eval.n_q_points; ++q)
             fe_eval.begin_values()[q] = cell_operation(cell, q);
 
-          // perform basis change from quadrature points to support points
-          internal::FEEvaluationImplBasisChange<
-            internal::evaluate_general,
-            internal::EvaluatorQuantity::value,
-            dim,
-            0,
-            0,
-            VectorizedArray<double>,
-            VectorizedArray<double>>::do_forward(n_components, // n_components
-                                                 projection_matrix_1d,
-                                                 fe_eval.begin_values(),
-                                                 fe_eval.begin_dof_values(),
-                                                 n_q_points_1D, // number of
-                                                                // quadrature points
-                                                 fe_degree + 1  // number of support points
-          );
+          inverse_mass_matrix.transform_from_q_points_to_basis(1,
+                                                               fe_eval.begin_values(),
+                                                               fe_eval.begin_dof_values());
 
           // write values back into global vector
           fe_eval.set_dof_values(vec);
         }
     }
 
-    /*
-     * @todo: replace Tensor<1, n_components, VectorizedArray> as template argument --> C++20
+    /**
+     * For a given @p matrix_free object, execute vector-valued @p cell_operation
+     * on each quadrature point  defined by @p quad_idx and fill them into a
+     * DoF-vector @p vec defined by @p dof_idx.
      */
     template <int dim, int n_components>
     void
@@ -127,39 +97,15 @@ namespace MeltPoolDG
       const MatrixFree<dim, double, VectorizedArray<double>> &matrix_free,
       unsigned int                                            dof_idx,
       unsigned int                                            quad_idx,
-      unsigned int                                            fe_degree,
-      unsigned int                                            n_q_points_1D,
       const std::function<const Tensor<1, n_components, VectorizedArray<double>>(
         const unsigned int cell,
         const unsigned int q)> &                              cell_operation)
     {
-      AssertThrow(matrix_free.get_dof_handler(dof_idx)
-                    .get_triangulation()
-                    .all_reference_cells_are_hyper_cube(),
-                  ExcMessage(
-                    "The filling of a DoF Vector from a cell operation is currently only supported "
-                    "for hex meshes."));
-
-      FE_DGQArbitraryNodes<1> fe_coarse(QGauss<1>(n_q_points_1D).get_points());
-      FE_Q<1>                 fe_fine(fe_degree);
-
-      /// create 1D projection matrix for sum factorization
-      FullMatrix<double> matrix(fe_fine.dofs_per_cell, fe_coarse.dofs_per_cell);
-      FETools::get_projection_matrix(fe_coarse, fe_fine, matrix);
-
-      AlignedVector<VectorizedArray<double>> projection_matrix_1d(fe_fine.dofs_per_cell *
-                                                                  fe_coarse.dofs_per_cell);
-
-      for (unsigned int i = 0, k = 0; i < fe_coarse.dofs_per_cell; ++i)
-        for (unsigned int j = 0; j < fe_fine.dofs_per_cell; ++j, ++k)
-          projection_matrix_1d[k] = matrix(j, i);
-
       FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
 
-      // @todo: replace n_q_points_1D argument completely from fe_eval?
-      AssertThrow(fe_eval.n_q_points == std::pow(n_q_points_1D, dim),
-                  ExcMessage("The number of quadrature points in 1D must comply with the number of "
-                             "quadrature points of the cell operation."));
+      MatrixFreeOperators::
+        CellwiseInverseMassMatrix<dim, -1, n_components, double, VectorizedArray<double>>
+          inverse_mass_matrix(fe_eval);
 
       for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
         {
@@ -172,31 +118,19 @@ namespace MeltPoolDG
                 fe_eval.begin_values()[c * fe_eval.n_q_points + q] = temp[c];
             }
 
-          // perform basis change from quadrature points to support points
-          internal::FEEvaluationImplBasisChange<
-            internal::evaluate_general,
-            internal::EvaluatorQuantity::value,
-            dim,
-            0,
-            0,
-            VectorizedArray<double>,
-            VectorizedArray<double>>::do_forward(n_components, // n_components
-                                                 projection_matrix_1d,
-                                                 fe_eval.begin_values(),
-                                                 fe_eval.begin_dof_values(),
-                                                 n_q_points_1D, // number of quadrature points
-                                                 fe_degree + 1  // number of support points
-          );
+          inverse_mass_matrix.transform_from_q_points_to_basis(n_components,
+                                                               fe_eval.begin_values(),
+                                                               fe_eval.begin_dof_values());
 
           // write values back into global vector
           fe_eval.set_dof_values(vec);
         }
     }
+
     /*
      * This function converts a string of coordinates given as e.g. "5,10,5" to a Point<dim>
      * object.
      */
-
     template <int dim>
     Point<dim>
     convert_string_coords_to_point(const std::string s_in, const std::string delimiter = ",")

@@ -654,13 +654,11 @@ namespace MeltPoolDG::Heat
       {
         scratch_data.initialize_dof_vector(evapor_heat_source, temp_dof_idx);
         if (!q_vapor.empty() && scratch_data.is_hex_mesh())
-          UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+          UtilityFunctions::fill_dof_vector_from_cell_operation<dim>(
             evapor_heat_source,
             scratch_data.get_matrix_free(),
             temp_dof_idx,
             this->quad_idx,
-            scratch_data.get_degree(temp_dof_idx),     // fe_degree of the resulting vector
-            scratch_data.get_degree(temp_dof_idx) + 1, // n_q_points_1d of cell operation
             [&](const unsigned int cell, const unsigned int quad)
               -> const VectorizedArray<double> & { return q_vapor[cell][quad]; });
         evapor_heat_source.update_ghost_values();
