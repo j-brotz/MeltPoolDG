@@ -42,9 +42,11 @@ namespace MeltPoolDG
   namespace UtilityFunctions
   {
     /**
-     * @todo: add docu
+     * For a given @p matrix_free object, execute scalar-valued @p cell_operation
+     * on each quadrature point  defined by @p quad_idx and fill them into a
+     * DoF-vector @p vec defined by @p dof_idx.
      */
-    template <int dim, int n_components>
+    template <int dim>
     void
     fill_dof_vector_from_cell_operation(
       VectorType &                                                              vec,
@@ -54,11 +56,10 @@ namespace MeltPoolDG
       const std::function<const VectorizedArray<double>(const unsigned int cell,
                                                         const unsigned int q)> &cell_operation)
     {
-      FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
+      FECellIntegrator<dim, 1, double> fe_eval(matrix_free, dof_idx, quad_idx);
 
-      MatrixFreeOperators::
-        CellwiseInverseMassMatrix<dim, -1, n_components, double, VectorizedArray<double>>
-          inverse_mass_matrix(fe_eval);
+      MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, 1, double, VectorizedArray<double>>
+        inverse_mass_matrix(fe_eval);
 
       for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
         {
@@ -67,7 +68,7 @@ namespace MeltPoolDG
           for (unsigned int q = 0; q < fe_eval.n_q_points; ++q)
             fe_eval.begin_values()[q] = cell_operation(cell, q);
 
-          inverse_mass_matrix.transform_from_q_points_to_basis(n_components,
+          inverse_mass_matrix.transform_from_q_points_to_basis(1,
                                                                fe_eval.begin_values(),
                                                                fe_eval.begin_dof_values());
 
@@ -77,7 +78,9 @@ namespace MeltPoolDG
     }
 
     /**
-     * @todo: add docu
+     * For a given @p matrix_free object, execute vector-valued @p cell_operation
+     * on each quadrature point  defined by @p quad_idx and fill them into a
+     * DoF-vector @p vec defined by @p dof_idx.
      */
     template <int dim, int n_components>
     void
