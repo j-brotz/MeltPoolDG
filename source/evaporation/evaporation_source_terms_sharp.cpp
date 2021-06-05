@@ -74,7 +74,7 @@ namespace MeltPoolDG::Evaporation
 
         ls.reinit(cell);
         ls.read_dof_values(level_set_as_heaviside);
-        ls.evaluate(true, true);
+        ls.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
         normal_vec.reinit(cell);
         normal_vec.read_dof_values(normal_vector);
