@@ -2,6 +2,7 @@
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
+#include <meltpooldg/evaporation/evaporation_mass_flux_operator_thickness_integration.hpp>
 #include <meltpooldg/evaporation/evaporation_model_hardt_wondra.hpp>
 #include <meltpooldg/evaporation/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
@@ -142,7 +143,15 @@ namespace MeltPoolDG::Evaporation
                                                                            temp_dof_idx);
       }
     else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "line integral")
-      AssertThrow(false, ExcNotImplemented());
+      evapor_mass_flux_operator =
+        std::make_shared<EvaporationMassFluxOperatorThicknessIntegration<dim>>(
+          *scratch_data,
+          *evapor_model,
+          level_set_as_heaviside,
+          normal_vector,
+          ls_hanging_nodes_dof_idx,
+          normal_dof_idx,
+          temp_dof_idx);
   }
 
   template <int dim>
