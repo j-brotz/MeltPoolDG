@@ -41,17 +41,18 @@ namespace MeltPoolDG
 
   namespace UtilityFunctions
   {
+    /**
+     * @todo: add docu
+     */
     template <int dim, int n_components>
     void
     fill_dof_vector_from_cell_operation(
-      VectorType &                                            vec,
-      const MatrixFree<dim, double, VectorizedArray<double>> &matrix_free,
-      unsigned int                                            dof_idx,
-      unsigned int                                            quad_idx,
-      unsigned int,
-      unsigned int,
-      const std::function<const VectorizedArray<double> &(const unsigned int cell,
-                                                          const unsigned int q)> &cell_operation)
+      VectorType &                                                              vec,
+      const MatrixFree<dim, double, VectorizedArray<double>> &                  matrix_free,
+      unsigned int                                                              dof_idx,
+      unsigned int                                                              quad_idx,
+      const std::function<const VectorizedArray<double>(const unsigned int cell,
+                                                        const unsigned int q)> &cell_operation)
     {
       FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
 
@@ -75,8 +76,8 @@ namespace MeltPoolDG
         }
     }
 
-    /*
-     * @todo: replace Tensor<1, n_components, VectorizedArray> as template argument --> C++20
+    /**
+     * @todo: add docu
      */
     template <int dim, int n_components>
     void
@@ -85,11 +86,9 @@ namespace MeltPoolDG
       const MatrixFree<dim, double, VectorizedArray<double>> &matrix_free,
       unsigned int                                            dof_idx,
       unsigned int                                            quad_idx,
-      unsigned int,
-      unsigned int,
       const std::function<const Tensor<1, n_components, VectorizedArray<double>>(
         const unsigned int cell,
-        const unsigned int q)> &cell_operation)
+        const unsigned int q)> &                              cell_operation)
     {
       FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
 

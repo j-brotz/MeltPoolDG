@@ -28,7 +28,7 @@ using VectorType = LinearAlgebra::distributed::Vector<double>;
 
 template <int dim>
 void
-test(const unsigned int fe_degree, const unsigned int n_q_points)
+test(const unsigned int fe_degree, const unsigned int n_q_points, const unsigned int n_components)
 {
   parallel::distributed::Triangulation<dim> triangulation(MPI_COMM_WORLD);
 
@@ -37,7 +37,7 @@ test(const unsigned int fe_degree, const unsigned int n_q_points)
 
   MappingQGeneric<dim> mapping(1);
   QGauss<1>            quadrature(n_q_points);
-  FESystem<dim>        fe(FE_Q<dim>(fe_degree), dim);
+  FESystem<dim>        fe(FE_Q<dim>(fe_degree), n_components);
 
   DoFHandler<dim> dof_handler(triangulation);
   dof_handler.distribute_dofs(fe);
@@ -53,19 +53,25 @@ test(const unsigned int fe_degree, const unsigned int n_q_points)
   VectorType solution;
   matrix_free.initialize_dof_vector(solution);
 
-  FECellIntegrator<dim, dim, double> fe_eval(matrix_free);
 
-  MeltPoolDG::UtilityFunctions::fill_dof_vector_from_cell_operation_vec<dim, dim>(
-    solution,
-    matrix_free,
-    0,
-    0,
-    fe_degree,
-    n_q_points,
-    [&](const auto cell, const auto q) -> Tensor<1, dim, VectorizedArray<double>> {
-      fe_eval.reinit(cell);
-      return fe_eval.quadrature_point(q);
-    });
+  if (n_components == 1)
+    MeltPoolDG::UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+      solution, matrix_free, 0, 0, [&](const auto cell, const auto q) -> VectorizedArray<double> {
+        FECellIntegrator<dim, 1, double> fe_eval(matrix_free);
+        fe_eval.reinit(cell);
+        return fe_eval.quadrature_point(q)[0];
+      });
+  else
+    MeltPoolDG::UtilityFunctions::fill_dof_vector_from_cell_operation_vec<dim, dim>(
+      solution,
+      matrix_free,
+      0,
+      0,
+      [&](const auto cell, const auto q) -> Tensor<1, dim, VectorizedArray<double>> {
+        FECellIntegrator<dim, dim, double> fe_eval(matrix_free);
+        fe_eval.reinit(cell);
+        return fe_eval.quadrature_point(q);
+      });
 
   if (false)
     {
@@ -78,11 +84,12 @@ test(const unsigned int fe_degree, const unsigned int n_q_points)
       data_out.add_data_vector(dof_handler, solution, "solution");
 
       data_out.build_patches(mapping, n_q_points + 1);
-      std::ofstream output("test" + std::to_string(fe_degree + n_q_points * 10) + ".vtu");
+      std::ofstream output(
+        "test" + std::to_string(fe_degree + n_q_points * 10 + n_components * 100) + ".vtu");
       data_out.write_vtu(output);
     }
 
-  std::cout << solution.l2_norm() << std::endl;
+  std::cout << solution.l2_norm() << " ";
 }
 
 int
@@ -92,7 +99,11 @@ main(int argc, char *argv[])
 
   for (unsigned int i = 1; i <= 5; ++i)                                  // fe_degree
     for (unsigned int j = std::max<unsigned int>(i, 2); j <= i + 2; ++j) // n_q_points_1D
-      test<2>(i, j);
+      {
+        test<2>(i, j, 1);
+        test<2>(i, j, 2);
+        std::cout << std::endl;
+      }
 
   return 0;
 }

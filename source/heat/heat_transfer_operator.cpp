@@ -659,8 +659,6 @@ namespace MeltPoolDG::Heat
             scratch_data.get_matrix_free(),
             temp_dof_idx,
             this->quad_idx,
-            scratch_data.get_degree(temp_dof_idx),     // fe_degree of the resulting vector
-            scratch_data.get_degree(temp_dof_idx) + 1, // n_q_points_1d of cell operation
             [&](const unsigned int cell, const unsigned int quad)
               -> const VectorizedArray<double> & { return q_vapor[cell][quad]; });
         evapor_heat_source.update_ghost_values();

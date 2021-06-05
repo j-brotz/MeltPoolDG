@@ -388,8 +388,6 @@ namespace MeltPoolDG::Flow
         scratch_data.get_matrix_free(),
         dof_index_parameters,
         quad_index_u,
-        scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
-        scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
         [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
           return get_density(cell, quad);
         });
@@ -406,8 +404,6 @@ namespace MeltPoolDG::Flow
         scratch_data.get_matrix_free(),
         dof_index_parameters,
         quad_index_u,
-        scratch_data.get_fe(dof_index_parameters).tensor_degree(),     // fe_degree,
-        scratch_data.get_fe(dof_index_parameters).tensor_degree() + 1, // fe_degree,
         [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
           return get_viscosity(cell, quad);
         });
