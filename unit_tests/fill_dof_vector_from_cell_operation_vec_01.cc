@@ -55,14 +55,14 @@ test(const unsigned int fe_degree, const unsigned int n_q_points, const unsigned
 
 
   if (n_components == 1)
-    MeltPoolDG::UtilityFunctions::fill_dof_vector_from_cell_operation<dim>(
+    MeltPoolDG::UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
       solution, matrix_free, 0, 0, [&](const auto cell, const auto q) -> VectorizedArray<double> {
         FECellIntegrator<dim, 1, double> fe_eval(matrix_free);
         fe_eval.reinit(cell);
         return fe_eval.quadrature_point(q)[0];
       });
   else
-    MeltPoolDG::UtilityFunctions::fill_dof_vector_from_cell_operation_vec<dim, dim>(
+    MeltPoolDG::UtilityFunctions::fill_dof_vector_from_cell_operation<dim, dim>(
       solution,
       matrix_free,
       0,
