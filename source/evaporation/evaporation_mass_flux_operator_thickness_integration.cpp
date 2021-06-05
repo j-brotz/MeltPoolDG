@@ -31,6 +31,7 @@ namespace MeltPoolDG::Evaporation
     , normal_dof_idx(normal_dof_idx)
     , temp_dof_idx(temp_dof_idx)
     , epsilon(scratch_data.get_min_cell_size()) //@todo: how to determine epsilon???
+    , fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim)
   {}
 
   template <int dim>
@@ -49,9 +50,6 @@ namespace MeltPoolDG::Evaporation
 
         std::vector<Point<dim>>   global_points_normal_to_interface;
         std::vector<unsigned int> global_points_normal_to_interface_pointer;
-
-        //@todo
-        FESystem<dim> fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim);
 
         UtilityFunctions::generate_points_along_normal<dim>(
           global_points_normal_to_interface,

@@ -38,7 +38,8 @@ namespace MeltPoolDG::Evaporation
     const unsigned int normal_dof_idx;
     const unsigned int temp_dof_idx;
 
-    const double epsilon;
+    const double        epsilon;
+    const FESystem<dim> fe_dim;
 
   public:
     EvaporationMassFluxOperatorThicknessIntegration(const ScratchData<dim> &    scratch_data,

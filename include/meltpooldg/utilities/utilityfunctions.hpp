@@ -497,14 +497,14 @@ namespace MeltPoolDG
      * @p max_distance_per_side. If @p bidirectional is set to true, points on both
      * sides of the @p starting_point are generated.
      */
-    template <int dim>
+    template <int dim, typename vector>
     void
-    generate_points_along_vector(std::vector<Point<dim>> &     points_normal_to_interface,
-                                 const Point<dim> &            starting_point,
-                                 const Tensor<1, dim, double> &unit_vec,
-                                 const double                  max_distance_per_side,
-                                 const unsigned int            n_inc_per_side,
-                                 const bool                    bidirectional = true)
+    generate_points_along_vector(std::vector<Point<dim>> &points_normal_to_interface,
+                                 const Point<dim> &       starting_point,
+                                 const vector &           unit_vec,
+                                 const double             max_distance_per_side,
+                                 const unsigned int       n_inc_per_side,
+                                 const bool               bidirectional = true)
     {
       const double step = max_distance_per_side / n_inc_per_side;
       for (int n = n_inc_per_side; n >= 0; --n)
@@ -610,14 +610,7 @@ namespace MeltPoolDG
              */
             std::vector<Point<dim>> points_normal_to_interface;
 
-            //@todo: atm cast to vector required by FEPointEvaluation
-            // ---> better solution?
-
-            Tensor<1, dim, double> unit_normal;
-            if constexpr (dim == 1)
-              unit_normal[0] = phi_normal.get_value(p_index);
-            else
-              unit_normal = phi_normal.get_value(p_index);
+            const auto unit_normal = phi_normal.get_value(p_index);
 
             generate_points_along_vector<dim>(points_normal_to_interface,
                                               real_points[p_index],
