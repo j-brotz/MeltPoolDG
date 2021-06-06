@@ -1,4 +1,4 @@
-#include <meltpooldg/utilities/linearsolve.hpp>
+#include <meltpooldg/utilities/linear_solve.hpp>
 
 namespace MeltPoolDG
 {

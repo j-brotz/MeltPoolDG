@@ -1,7 +1,7 @@
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 //
 
-#include <meltpooldg/utilities/linearsolve.hpp>
+#include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
 namespace MeltPoolDG::Heat

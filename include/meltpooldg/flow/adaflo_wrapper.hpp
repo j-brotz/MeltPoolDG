@@ -14,9 +14,9 @@
 #  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #  include <meltpooldg/flow/flow_base.hpp>
 #  include <meltpooldg/interface/scratch_data.hpp>
-#  include <meltpooldg/interface/simulationbase.hpp>
+#  include <meltpooldg/interface/simulation_base.hpp>
 #  include <meltpooldg/utilities/generic_data_out.hpp>
-#  include <meltpooldg/utilities/utilityfunctions.hpp>
+#  include <meltpooldg/utilities/utility_functions.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/navier_stokes.h>

@@ -15,7 +15,7 @@
 #  include <meltpooldg/interface/operator_base.hpp>
 #  include <meltpooldg/interface/parameters.hpp>
 #  include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
-#  include <meltpooldg/utilities/utilityfunctions.hpp>
+#  include <meltpooldg/utilities/utility_functions.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/block_matrix_extension.h>

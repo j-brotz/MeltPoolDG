@@ -3,7 +3,7 @@
 #include <deal.II/base/point.h>
 
 #include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Heat
 {

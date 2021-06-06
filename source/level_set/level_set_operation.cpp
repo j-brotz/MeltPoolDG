@@ -7,7 +7,7 @@
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/curvature/curvature_operation.hpp>
 #include <meltpooldg/curvature/curvature_operation_adaflo_wrapper.hpp>
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>

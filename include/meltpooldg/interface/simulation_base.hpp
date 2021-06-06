@@ -6,8 +6,8 @@
 
 #include <deal.II/grid/grid_tools.h>
 // MeltPoolDG
-#include <meltpooldg/interface/boundaryconditions.hpp>
-#include <meltpooldg/interface/fieldconditions.hpp>
+#include <meltpooldg/interface/boundary_conditions.hpp>
+#include <meltpooldg/interface/field_conditions.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>

@@ -1,5 +1,5 @@
 #pragma once
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 
 namespace MeltPoolDG
 {

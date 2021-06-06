@@ -11,8 +11,8 @@
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
-#include <meltpooldg/utilities/linearsolve.hpp>
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/linear_solve.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG

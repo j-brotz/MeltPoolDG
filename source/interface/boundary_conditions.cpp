@@ -1,4 +1,4 @@
-#include <meltpooldg/interface/boundaryconditions.hpp>
+#include <meltpooldg/interface/boundary_conditions.hpp>
 
 namespace MeltPoolDG
 {

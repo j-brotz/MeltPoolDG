@@ -3,7 +3,7 @@
 #endif
 
 #include <meltpooldg/simulations/simulation_selector.hpp>
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 // simulations
 #include <meltpooldg/simulations/advection_diffusion/advection_diffusion.hpp>
 #include <meltpooldg/simulations/advection_diffusion/advection_diffusion_user_output.hpp>

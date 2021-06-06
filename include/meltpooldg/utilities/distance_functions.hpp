@@ -2,7 +2,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/utilities.h>
 
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::DistanceFunctions
 {

@@ -2,7 +2,7 @@
 #include <meltpooldg/flow/two_phase_flow_problem.hpp>
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
 #include <meltpooldg/interface/problem_selector.hpp>
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/reinitialization/reinitialization_problem.hpp>
 /* add your problem here*/

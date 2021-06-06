@@ -12,7 +12,7 @@
 
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG
