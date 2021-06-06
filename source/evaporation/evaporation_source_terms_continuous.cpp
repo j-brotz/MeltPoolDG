@@ -129,7 +129,7 @@ namespace MeltPoolDG::Evaporation
      * write interface velocity to dof vector
      */
     if (scratch_data.is_hex_mesh())
-      UtilityFunctions::fill_dof_vector_from_cell_operation_vec<dim, dim>(
+      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, dim>(
         evaporation_velocity,
         scratch_data.get_matrix_free(),
         evapor_vel_dof_idx,

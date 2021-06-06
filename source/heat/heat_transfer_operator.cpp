@@ -654,7 +654,7 @@ namespace MeltPoolDG::Heat
       {
         scratch_data.initialize_dof_vector(evapor_heat_source, temp_dof_idx);
         if (!q_vapor.empty() && scratch_data.is_hex_mesh())
-          UtilityFunctions::fill_dof_vector_from_cell_operation<dim>(
+          UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
             evapor_heat_source,
             scratch_data.get_matrix_free(),
             temp_dof_idx,
