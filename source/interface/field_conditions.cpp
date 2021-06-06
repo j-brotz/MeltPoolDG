@@ -1,4 +1,4 @@
-#include <meltpooldg/interface/fieldconditions.hpp>
+#include <meltpooldg/interface/field_conditions.hpp>
 
 namespace MeltPoolDG
 {

@@ -5,9 +5,9 @@
 #include <deal.II/grid/grid_generator.h>
 
 // MeltPoolDG
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
 #include <cmath>

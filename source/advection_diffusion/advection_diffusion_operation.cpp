@@ -5,7 +5,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/utilities/linearsolve.hpp>
+#include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion

@@ -9,10 +9,10 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/simulations/advection_diffusion/advection_diffusion.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <iostream>

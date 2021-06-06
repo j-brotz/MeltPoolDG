@@ -1,6 +1,6 @@
 #pragma once
 // MeltPoolDG
-#include <meltpooldg/interface/problembase.hpp>
+#include <meltpooldg/interface/problem_base.hpp>
 
 namespace MeltPoolDG
 {

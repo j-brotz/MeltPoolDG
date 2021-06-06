@@ -8,10 +8,10 @@
 
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
-#include <meltpooldg/utilities/timeiterator.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

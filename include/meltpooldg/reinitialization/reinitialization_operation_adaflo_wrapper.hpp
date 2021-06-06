@@ -10,7 +10,7 @@
 #  include <deal.II/lac/generic_linear_algebra.h>
 
 #  include <meltpooldg/interface/scratch_data.hpp>
-#  include <meltpooldg/interface/simulationbase.hpp>
+#  include <meltpooldg/interface/simulation_base.hpp>
 #  include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #  include <meltpooldg/utilities/conditional_ostream.hpp>

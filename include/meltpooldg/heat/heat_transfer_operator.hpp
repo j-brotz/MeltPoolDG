@@ -6,7 +6,7 @@
 #pragma once
 
 // MeltPoolDG
-#include <meltpooldg/interface/boundaryconditions.hpp>
+#include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>

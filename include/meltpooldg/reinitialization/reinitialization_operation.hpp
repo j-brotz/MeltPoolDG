@@ -18,8 +18,8 @@
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
-#include <meltpooldg/utilities/linearsolve.hpp>
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/linear_solve.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
 {

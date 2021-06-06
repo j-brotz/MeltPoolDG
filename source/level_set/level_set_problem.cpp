@@ -18,8 +18,8 @@
 
 #include <deal.II/numerics/data_out.h>
 
-#include <meltpooldg/interface/problembase.hpp>
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/problem_base.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>

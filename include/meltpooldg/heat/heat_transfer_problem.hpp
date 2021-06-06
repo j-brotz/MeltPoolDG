@@ -12,10 +12,10 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
-#include <meltpooldg/interface/problembase.hpp>
+#include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
-#include <meltpooldg/utilities/timeiterator.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::Heat
 {

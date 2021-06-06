@@ -3,7 +3,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 
 #include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Evaporation

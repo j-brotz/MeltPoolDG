@@ -5,7 +5,7 @@
 // MeltPoolDG
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/linearsolve.hpp>
+#include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::LevelSet

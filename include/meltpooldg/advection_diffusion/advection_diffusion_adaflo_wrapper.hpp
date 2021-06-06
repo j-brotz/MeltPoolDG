@@ -11,7 +11,7 @@
 
 #  include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #  include <meltpooldg/interface/scratch_data.hpp>
-#  include <meltpooldg/interface/simulationbase.hpp>
+#  include <meltpooldg/interface/simulation_base.hpp>
 #  include <meltpooldg/utilities/generic_data_out.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>

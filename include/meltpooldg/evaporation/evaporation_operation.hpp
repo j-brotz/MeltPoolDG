@@ -12,7 +12,7 @@
 #include <meltpooldg/evaporation/evaporation_model_base.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 
 namespace MeltPoolDG::Evaporation

@@ -12,7 +12,7 @@
 #include <meltpooldg/level_set/level_set_operator_with_phase_change.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
-#include <meltpooldg/utilities/timeiterator.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::LevelSet
 {

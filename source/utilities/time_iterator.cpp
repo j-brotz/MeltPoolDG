@@ -1,4 +1,4 @@
-#include <meltpooldg/utilities/timeiterator.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG
 {

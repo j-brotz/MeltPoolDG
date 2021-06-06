@@ -19,7 +19,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/utilities/utilityfunctions.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <iostream>
 

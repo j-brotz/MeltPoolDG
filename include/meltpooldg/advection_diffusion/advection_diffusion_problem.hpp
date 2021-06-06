@@ -14,10 +14,10 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
-#include <meltpooldg/interface/problembase.hpp>
-#include <meltpooldg/interface/simulationbase.hpp>
+#include <meltpooldg/interface/problem_base.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
-#include <meltpooldg/utilities/timeiterator.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion
 {
