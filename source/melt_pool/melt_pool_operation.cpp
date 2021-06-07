@@ -72,50 +72,52 @@ namespace MeltPoolDG::MeltPool
     scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
     heat_operation->reinit();
 
-    if (mp_data.temperature_formulation == "solve_heat_equation")
+    if (data_in.laser.heat_source_model == "Gusarov")
       {
-        if (data_in.laser.heat_source_model == "Gusarov")
-          {
-            laser_heat_source_operation =
-              std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(data_in.laser.gusarov);
-          }
-        else if (data_in.laser.heat_source_model == "Gauss")
-          {
-            laser_heat_source_operation =
-              std::make_shared<Heat::LaserHeatSourceGauss<dim>>(data_in.laser.gauss);
-          }
-        else
-          AssertThrow(false,
-                      ExcMessage("No requested laser model found. Please speficy the "
-                                 "heat source model in the laser section of the input parameters."))
+        laser_heat_source_operation =
+          std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(data_in.laser.gusarov);
       }
+    else if (data_in.laser.heat_source_model == "Gauss")
+      {
+        laser_heat_source_operation =
+          std::make_shared<Heat::LaserHeatSourceGauss<dim>>(data_in.laser.gauss);
+      }
+    else if (data_in.laser.heat_source_model == "Analytical")
+      {
+        laser_analytical_temperature_field =
+          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(data_in.laser.analytical,
+                                                                       data_in.material,
+                                                                       data_in.laser.scan_speed);
+      }
+    else
+      AssertThrow(false,
+                  ExcMessage("No requested laser model found. Please speficy the "
+                             "heat source model in the laser section of the input parameters."))
   }
 
   template <int dim>
   void
   MeltPoolOperation<dim>::set_initial_condition(const VectorType &level_set_as_heaviside,
-                                                VectorType &      level_set,
-                                                const double &    density_gas,
-                                                const double &    density_liquid)
+                                                VectorType &      level_set)
   {
     /*
      *  Compute analytical temperature field
      */
-    if (mp_data.temperature_formulation == "analytical")
-      laser_operation->compute_analytical_temperature_field(
+    if (laser_analytical_temperature_field)
+      laser_analytical_temperature_field->compute_temperature_field(
+        *scratch_data,
         level_set_as_heaviside,
         heat_operation->get_temperature(),
         temp_dof_idx,
-        density_gas,
-        density_liquid,
-        mp_data,
-        -1.0 /* level set value for gas @todo */);
-    else if (mp_data.temperature_formulation == "solve_heat_equation")
-      {
-        heat_operation->get_temperature() = mp_data.ambient_temperature;
-      }
+        laser_operation->get_laser_power(),
+        laser_operation->get_laser_position());
     else
-      AssertThrow(false, ExcNotImplemented());
+      {
+        // @todo:
+        // incorporate initial temperature field
+        AssertThrow(false, ExcNotImplemented());
+        heat_operation->get_temperature() = 0;
+      }
     /*
      *  Compute the initial solid and liquid phases
      */
@@ -131,17 +133,22 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolOperation<dim>::solve(VectorType &      vel_force_rhs,
                                 const VectorType &level_set_as_heaviside,
-                                const double &    density_gas,
-                                const double &    density_liquid,
                                 const double &    dt)
   {
     // 0) move laser
     laser_operation->move_laser(dt);
 
     // 1) compute temperature field
-    if (mp_data.temperature_formulation == "solve_heat_equation")
+    if (laser_analytical_temperature_field)
+      laser_analytical_temperature_field->compute_temperature_field(
+        *scratch_data,
+        level_set_as_heaviside,
+        heat_operation->get_temperature(),
+        temp_dof_idx,
+        laser_operation->get_laser_power(),
+        laser_operation->get_laser_position());
+    else
       {
-        // @todo: support other heat source models
         laser_heat_source_operation->compute_volumetric_heat_source(
           heat_operation->get_heat_source(),
           *scratch_data,
@@ -151,20 +158,9 @@ namespace MeltPoolDG::MeltPool
           true /* zero_out */);
         heat_operation->solve(dt);
       }
-    else if (mp_data.temperature_formulation == "analytical")
-      laser_operation->compute_analytical_temperature_field(
-        level_set_as_heaviside,
-        heat_operation->get_temperature(),
-        temp_dof_idx,
-        density_gas,
-        density_liquid,
-        mp_data,
-        -1.0 /* level set value for gas @todo */);
-    else
-      AssertThrow(false, ExcNotImplemented());
 
     // 2) update phases
-    if (mp_data.temperature_formulation != "analytical")
+    if (!laser_analytical_temperature_field)
       {
         compute_solid_and_liquid_phases(level_set_as_heaviside);
 

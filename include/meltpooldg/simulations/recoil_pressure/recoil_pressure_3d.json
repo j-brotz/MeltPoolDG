@@ -32,17 +32,18 @@
     "laser power": "10.",
     "laser center": "0.0,0.00004",
     "laser scan speed": "0.003",
-    "laser do move": "false"
+    "laser do move": "false",
+    "laser heat source model": "Analytical",
+    "laser analytical absorptivity liquid": "0.5",
+    "laser analytical absorptivity gas": "0",
+    "laser analytical ambient temperature": "500."
   },
   "melt pool": {
-    "mp ambient temperature": "500.",
     "mp domain x min": "-0.0002",
     "mp domain x max": "0.0002",
     "mp domain y min": "-0.0001",
     "mp domain y max": "0.0002",
-    "mp boiling temperature": "3000.",
-    "mp liquid absorptivity": "0.5",
-    "mp gas absorptivity": "0"
+    "mp boiling temperature": "3000."
   },
   "levelset": {
     "ls do reinitialization": "true",

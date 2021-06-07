@@ -164,15 +164,14 @@ namespace MeltPoolDG
   template <typename number = double>
   struct LaserData
   {
-    number      power                              = 0.0;
-    std::string power_over_time                    = "constant";
-    number      power_start_time                   = 0.0;
-    number      power_end_time                     = 1.e12;
-    std::string center                             = "0,0,0";
-    bool        do_move                            = false;
-    number      scan_speed                         = 0.0;
-    bool        variable_properties_over_interface = false;
-    std::string heat_source_model                  = "Gusarov";
+    number      power             = 0.0;
+    std::string power_over_time   = "constant";
+    number      power_start_time  = 0.0;
+    number      power_end_time    = 1.e12;
+    std::string center            = "0,0,0";
+    bool        do_move           = false;
+    number      scan_speed        = 0.0;
+    std::string heat_source_model = "Gusarov";
     struct GusarovData
     {
       number laser_beam_radius      = 0.0; // R
@@ -185,6 +184,15 @@ namespace MeltPoolDG
       number laser_beam_radius = 0.0;
       number absorptivity      = 0.0;
     } gauss;
+    struct AnalyticalData
+    {
+      number temperature_x_to_y_ratio           = 1.0;
+      number absorptivity_liquid                = 0.0;
+      number absorptivity_gas                   = 0.0;
+      number max_temperature                    = 0.0;
+      number ambient_temperature                = 0.0;
+      bool   variable_properties_over_interface = false; // @todo: move
+    } analytical;
   };
 
   template <typename number = double>
@@ -197,31 +205,21 @@ namespace MeltPoolDG
   template <typename number = double>
   struct MeltPoolData
   {
-    std::string temperature_formulation        = "analytical";
-    number      temperature_x_to_y_ratio       = 1.0;
     std::string melt_pool_center               = "not_initialized";
     bool        set_velocity_to_zero_in_solid  = false;
     bool        set_level_set_to_zero_in_solid = false;
-    number      ambient_temperature            = 0.0;
     number      domain_x_min                   = 0.0;
     number      domain_y_min                   = 0.0;
     number      domain_x_max                   = 0.0;
     number      domain_y_max                   = 0.0;
     number      boiling_temperature            = 0.0;
-    number      max_temperature                = 0.0;
 
     struct Liquid
     {
-      number absorptivity     = 0.0;
       number melt_pool_radius = 0.0;
       number melt_pool_depth  = 0.0;
       number melting_point    = 0.0;
     } liquid;
-
-    struct Gas
-    {
-      number absorptivity = 0.0;
-    } gas;
   };
 
   template <typename number = double>

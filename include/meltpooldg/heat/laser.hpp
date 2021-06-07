@@ -51,15 +51,6 @@ namespace MeltPoolDG::Heat
     void
     move_laser(double dt);
 
-    void
-    compute_analytical_temperature_field(const VectorType &          level_set_as_heaviside,
-                                         VectorType &                temperature,
-                                         unsigned int                temp_dof_idx,
-                                         double                      density_gas,
-                                         double                      density_liquid,
-                                         const MeltPoolData<double> &mp_data,
-                                         double                      level_set_value_is_gas = -1.0);
-
     Point<dim>
     get_laser_position();
 
@@ -69,16 +60,5 @@ namespace MeltPoolDG::Heat
   private:
     void
     compute_laser_intensity();
-    // The temperature function below is derived from the publication on
-    // "Heat Source Modeling in Selective Laser Melting" by E. Mirkoohi, D. E. Seivers,
-    //  H. Garmestani and S. Y. Liang
-    //
-    double
-    analytical_temperature_field(Point<dim>                  point,
-                                 double                      heaviside,
-                                 const MeltPoolData<double> &mp_data,
-                                 double                      density_gas,
-                                 double                      density_liquid,
-                                 double                      level_set_value_is_gas);
   };
 } // namespace MeltPoolDG::Heat

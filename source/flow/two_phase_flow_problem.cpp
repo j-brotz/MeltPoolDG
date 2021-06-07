@@ -125,13 +125,8 @@ namespace MeltPoolDG::Flow
         // It is assumed that material.first.density represents the density of the gas phase
         if (melt_pool_operation)
           {
-            const double density_gas    = base_in->parameters.material.first.density;
-            const double density_liquid = base_in->parameters.material.second.density;
-
             melt_pool_operation->solve(vel_force_rhs,
                                        level_set_operation.get_level_set_as_heaviside(),
-                                       density_gas,
-                                       density_liquid,
                                        dt);
           }
 
@@ -439,15 +434,8 @@ namespace MeltPoolDG::Flow
      * set initial condition of the melt pool class
      */
     if (melt_pool_operation)
-      {
-        const double density_gas    = base_in->parameters.material.first.density;
-        const double density_liquid = base_in->parameters.material.second.density;
-
-        melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
-                                                   level_set_operation.get_level_set(),
-                                                   density_gas,
-                                                   density_liquid);
-      }
+      melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
+                                                 level_set_operation.get_level_set());
   }
 
   template <int dim>
