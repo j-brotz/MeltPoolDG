@@ -64,7 +64,12 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     advection_velocity.update_ghost_values();
 
-    scratch_data->get_pcout() << "|vel|= " << advection_velocity.l2_norm() << std::endl;
+    scratch_data->get_pcout() << "|vel|= "
+                              << VectorTools::compute_L2_norm<dim>(advection_velocity,
+                                                                   *scratch_data,
+                                                                   velocity_dof_idx,
+                                                                   advec_diff_quad_idx)
+                              << std::endl;
 
     create_operator(advection_velocity);
 
