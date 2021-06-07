@@ -216,7 +216,7 @@ namespace MeltPoolDG::Reinitialization
           {
             psi.reinit(cell);
             psi.read_dof_values_plain(src);
-            psi.evaluate(true, true);
+            psi.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             normal_vector.reinit(cell);
             normal_vector.read_dof_values_plain(this->normal_vec);
