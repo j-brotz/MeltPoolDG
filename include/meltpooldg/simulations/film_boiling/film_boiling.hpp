@@ -56,9 +56,15 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
+      double radius;
+      if (dim == 2)
+        radius = p[0];
+      else
+        radius = std::sqrt(p[0] * p[0] + p[1] * p[1]);
+
       double y_interface_disturbed =
         y_interface +
-        lambda0 / 160. * std::cos(2 * numbers::PI * p[0] / lambda0); // according to Hardt
+        lambda0 / 160. * std::cos(2 * numbers::PI * radius / lambda0); // according to Hardt
 
       Point<dim> lower_left  = dim == 1 ? Point<dim>(y_min) :
                                dim == 2 ? Point<dim>(x_min, y_min) :
@@ -184,6 +190,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       const types::boundary_id upper_bc = 2;
       const types::boundary_id left_bc  = 3;
       const types::boundary_id right_bc = 4;
+      const types::boundary_id front_bc = 5;
+      const types::boundary_id back_bc  = 6;
 
 
       if constexpr (dim == 1)
@@ -214,6 +222,26 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                     face->set_boundary_id(right_bc);
                 }
         }
+      else if constexpr (dim == 3)
+        {
+          for (const auto &cell : this->triangulation->cell_iterators())
+            for (const auto &face : cell->face_iterators())
+              if ((face->at_boundary()))
+                {
+                  if (face->center()[2] == y_min)
+                    face->set_boundary_id(lower_bc);
+                  else if (face->center()[2] == y_max)
+                    face->set_boundary_id(upper_bc);
+                  else if (face->center()[0] == x_min)
+                    face->set_boundary_id(left_bc);
+                  else if (face->center()[0] == x_max)
+                    face->set_boundary_id(right_bc);
+                  else if (face->center()[1] == x_min)
+                    face->set_boundary_id(front_bc);
+                  else if (face->center()[1] == x_max)
+                    face->set_boundary_id(back_bc);
+                }
+        }
       else
         {
           AssertThrow(false, ExcNotImplemented());
@@ -224,6 +252,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
 
       this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+      if (dim == 3)
+        this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
 
       this->attach_dirichlet_boundary_condition(lower_bc,
                                                 std::make_shared<Functions::ConstantFunction<dim>>(
