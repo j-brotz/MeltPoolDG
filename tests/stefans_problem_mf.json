@@ -26,6 +26,7 @@
   },
   "normal vector": {
     "normal vec do matrix free": "true",
+    "normal vec damping scale factor": "8",
     "normal vec implementation": "meltpooldg"
   },
   "curvature": {
