@@ -260,6 +260,17 @@ namespace MeltPoolDG::Heat
     return heat_source;
   }
 
+  template <int dim>
+  const VectorType &
+  HeatTransferOperation<dim>::get_level_set_as_heaviside() const
+  {
+    Assert(
+      level_set_as_heaviside,
+      ExcMessage(
+        "You requested the level set vector from the heat operation, which is a nullptr. You must provide a valid level_set_as_heaviside pointer to the heat operation."));
+    return *level_set_as_heaviside;
+  }
+
   template class HeatTransferOperation<1>;
   template class HeatTransferOperation<2>;
   template class HeatTransferOperation<3>;
