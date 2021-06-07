@@ -9,11 +9,12 @@
   },
   "levelset": {
     "ls do reinitialization": "true",
+    "ls n initial reinit steps": "10",
     "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
     "ls start time": "0.0",
-    "ls end time": "0.05",
-    "ls time step size": "0.01",
+    "ls end time": "0.01",
+    "ls time step size": "0.002",
     "ls do matrix free": "true",
     "ls implementation": "meltpooldg"
   },
@@ -22,7 +23,7 @@
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
     "reinit implementation": "meltpooldg",
-    "reinit constant epsilon": "0.01"
+    "reinit constant epsilon": "0.03"
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
@@ -45,6 +46,6 @@
     "material second density": "1"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   }
 }
