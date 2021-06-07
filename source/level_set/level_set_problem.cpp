@@ -51,6 +51,10 @@ namespace MeltPoolDG::LevelSet
              */
             level_set_operation.update_normal_vector();
             evaporation_operation->compute_evaporation_velocity();
+            /**
+             * compute advection velocity of the interface
+             */
+            advection_velocity += evaporation_operation->get_velocity();
           }
         level_set_operation.solve(dt, advection_velocity);
 
@@ -170,8 +174,6 @@ namespace MeltPoolDG::LevelSet
                            "this->attach_advection_field(std::make_shared<AdvecFunc<dim>>(), "
                            "'level_set') "));
     compute_advection_velocity(*base_in->get_advection_field("level_set"));
-    level_set_operation.set_initial_condition(*base_in->get_initial_condition("level_set"),
-                                              advection_velocity);
 
     /*
      * configure level set with evaporation if requested
@@ -194,11 +196,17 @@ namespace MeltPoolDG::LevelSet
         evaporation_operation->get_evaporative_mass_flux() =
           base_in->parameters.evapor.evaporative_mass_flux;
 
-        level_set_operation.setup_with_evaporation(vel_dof_idx,
-                                                   vel_dof_idx,
-                                                   advection_velocity,
-                                                   evaporation_operation->get_velocity());
+        /**
+         * register evaporative mass flux model
+         */
+        evaporation_operation->register_evaporative_mass_flux_model(
+          base_in->parameters.recoil, level_set_operation.get_distance_to_level_set());
       }
+    /**
+     * set the initial velocity field
+     */
+    level_set_operation.set_initial_condition(*base_in->get_initial_condition("level_set"),
+                                              advection_velocity);
     /*
      *  initialize postprocessor
      */
