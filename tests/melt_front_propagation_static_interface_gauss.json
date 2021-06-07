@@ -1,0 +1,48 @@
+{
+  "base": {
+    "application name": "melt_front_propagation",
+    "degree": "1",
+    "dimension": "2",
+    "do print parameters": "false",
+    "global refinements": "5",
+    "problem name": "heat_transfer",
+    "verbosity level": "0"
+  },
+  "heat": {
+    "heat start time": "0.0",
+    "heat time step size": "1e-4",
+    "heat end time": "0.015",
+    "heat max n steps": "5",
+    "heat velocity": "-1",
+    "heat solidification": "true",
+    "heat two phase": "true",
+    "heat solver rel tolerance": "1e-12",
+    "heat solver preconditioner type": "ILU",
+    "heat nlsolve residual tolerance": "1e-8"
+  },
+  "laser": {
+    "laser power": "10.",
+    "laser center": "0.0,0.0",
+    "laser do move": "false",
+    "laser heat source model": "Gauss",
+    "laser impact": "interface",
+    "laser gauss laser beam radius": "0.06e-3",
+    "laser gauss absorptivity": "0.5"
+  },
+  "material": {
+    "material first capacity": "0",
+    "material first conductivity": "10",
+    "material first density": "74.30",
+    "material second conductivity": "55.563",
+    "material second capacity": "460.0",
+    "material second density": "7850.0",
+    "material solid conductivity": "17.0",
+    "material solid capacity": "700.0",
+    "material solid density": "7850.0",
+    "material solidus temperature": "1966.0",
+    "material liquidus temperature": "1974.0"
+  },
+  "paraview": {
+    "paraview do output": "false"
+  }
+}

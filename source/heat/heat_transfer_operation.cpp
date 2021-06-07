@@ -260,6 +260,13 @@ namespace MeltPoolDG::Heat
     return heat_source;
   }
 
+  template <int dim>
+  const VectorType &
+  HeatTransferOperation<dim>::get_level_set_as_heaviside() const
+  {
+    return *level_set_as_heaviside;
+  }
+
   template class HeatTransferOperation<1>;
   template class HeatTransferOperation<2>;
   template class HeatTransferOperation<3>;

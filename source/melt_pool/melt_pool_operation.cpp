@@ -86,8 +86,9 @@ namespace MeltPoolDG::MeltPool
           }
         else
           AssertThrow(false,
-                      ExcMessage("No requested laser model found. Please speficy the "
-                                 "heat source model in the laser section of the input parameters."))
+                      ExcMessage(
+                        "No requested laser model found. Please speficy the "
+                        "heat source model in the laser section of the input parameters."));
       }
   }
 
