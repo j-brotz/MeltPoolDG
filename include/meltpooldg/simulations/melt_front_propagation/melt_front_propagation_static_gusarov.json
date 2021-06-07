@@ -19,7 +19,7 @@
     "heat nlsolve residual tolerance": "1e-8"
   },
   "laser": {
-    "laser power": "30.",
+    "laser power": "5.",
     "laser center": "0.0,0.0",
     "laser do move": "false",
     "laser heat source model": "Gusarov",

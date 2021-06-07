@@ -1,5 +1,5 @@
-t= 5e-06     Newton Raphson solver converged: ||solution|| = 3.46522e-01
-t= 1e-05     Newton Raphson solver converged: ||solution|| = 3.46580e-01
-t= 1.5e-05   Newton Raphson solver converged: ||solution|| = 3.46608e-01
-t= 2e-05     Newton Raphson solver converged: ||solution|| = 3.46637e-01
-t= 2.5e-05   Newton Raphson solver converged: ||solution|| = 3.46666e-01
+t= 5e-06     Newton Raphson solver converged: ||solution|| = 3.46780e-01
+t= 1e-05     Newton Raphson solver converged: ||solution|| = 3.47179e-01
+t= 1.5e-05   Newton Raphson solver converged: ||solution|| = 3.47606e-01
+t= 2e-05     Newton Raphson solver converged: ||solution|| = 3.48057e-01
+t= 2.5e-05   Newton Raphson solver converged: ||solution|| = 3.48530e-01
