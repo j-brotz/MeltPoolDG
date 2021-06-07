@@ -10,6 +10,8 @@
 
 #include <deal.II/numerics/error_estimator.h>
 
+#include <meltpooldg/heat/laser_heat_source_gauss.hpp>
+#include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 
@@ -29,11 +31,6 @@ namespace MeltPoolDG::Heat
         scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
                                   << time_iterator.get_current_time();
 
-        if (const auto source_field_function = base_in->get_source_field("heat_transfer"))
-          compute_field_vector(heat_operation->get_heat_source(),
-                               temp_dof_idx,
-                               *source_field_function);
-
         if (const auto velocity_field_function = base_in->get_velocity_field("heat_transfer"))
           compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
 
@@ -41,6 +38,38 @@ namespace MeltPoolDG::Heat
           compute_field_vector(level_set_as_heaviside,
                                level_set_dof_idx,
                                *base_in->get_initial_condition("prescribed_level_set"));
+
+        if (const auto source_field_function = base_in->get_source_field("heat_transfer"))
+          compute_field_vector(heat_operation->get_heat_source(),
+                               temp_dof_idx,
+                               *source_field_function);
+        // TODO: Atm the laser heat source will overwrite the heat source field function if both are
+        // given. Instead they should be added.
+        if (laser_operation)
+          {
+            laser_operation->move_laser(dt);
+
+            if (base_in->parameters.laser.impact_type == "volumetric")
+              laser_heat_source_operation->compute_volumetric_heat_source(
+                heat_operation->get_heat_source(),
+                *scratch_data,
+                temp_dof_idx,
+                laser_operation->get_laser_power(),
+                laser_operation->get_laser_position(),
+                true /* zero_out */);
+            else if (base_in->parameters.laser.impact_type == "interface")
+              laser_heat_source_operation->compute_interfacial_heat_source(
+                heat_operation->get_heat_source(),
+                *scratch_data,
+                temp_dof_idx,
+                laser_operation->get_laser_power(),
+                laser_operation->get_laser_position(),
+                heat_operation->get_level_set_as_heaviside(),
+                level_set_dof_idx,
+                true /* zero_out */);
+            else
+              AssertThrow(false, ExcMessage("Unknown laser impact type! Abort..."));
+          }
 
         heat_operation->solve(dt);
 
@@ -154,6 +183,33 @@ namespace MeltPoolDG::Heat
                              level_set_dof_idx,
                              *base_in->get_initial_condition("prescribed_level_set"));
         level_set_as_heaviside_ptr = &level_set_as_heaviside;
+      }
+
+    if (base_in->parameters.laser.power > 0.0)
+      {
+        /*
+         *  initialize the laser operation class
+         */
+        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data,
+                                                                      base_in->parameters.laser,
+                                                                      base_in->parameters.material);
+        laser_operation->set_initial_condition(base_in->parameters.heat.time_stepping.start_time);
+
+        if (base_in->parameters.laser.heat_source_model == "Gusarov")
+          {
+            laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(
+              base_in->parameters.laser.gusarov);
+          }
+        else if (base_in->parameters.laser.heat_source_model == "Gauss")
+          {
+            laser_heat_source_operation =
+              std::make_shared<Heat::LaserHeatSourceGauss<dim>>(base_in->parameters.laser.gauss);
+          }
+        else
+          AssertThrow(false,
+                      ExcMessage(
+                        "No requested laser model found. Please speficy the "
+                        "heat source model in the laser section of the input parameters."));
       }
 
     /*

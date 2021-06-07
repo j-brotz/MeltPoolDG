@@ -601,6 +601,11 @@ namespace MeltPoolDG
       prm.add_parameter("laser gusarov layer thickness",
                         laser.gusarov.layer_thickness,
                         "Layer thickness");
+      prm.add_parameter(
+        "laser impact type",
+        laser.impact_type,
+        "Laser impact model. volumetric: volumetric heat source | surface: surface heat source at two-phase interface.",
+        Patterns::Selection("volumetric|interface"));
       prm.add_parameter("laser gauss laser beam radius",
                         laser.gauss.laser_beam_radius,
                         "Laser beam radius.");
