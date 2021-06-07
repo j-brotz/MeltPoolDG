@@ -19,8 +19,8 @@ namespace MeltPoolDG::Heat
   {
     current_time = start_time;
     compute_laser_intensity();
-    scratch_data.get_pcout(1) << "current laser position: " << laser_position << std::endl;
-    scratch_data.get_pcout(1) << "current laser intensity: " << laser_intensity << std::endl;
+    scratch_data.get_pcout() << "current laser position: " << laser_position << std::endl;
+    scratch_data.get_pcout() << "current laser intensity: " << laser_intensity << std::endl;
   }
 
   template <int dim>
@@ -35,8 +35,8 @@ namespace MeltPoolDG::Heat
     // 2) update intensity of the laser
     compute_laser_intensity();
 
-    scratch_data.get_pcout(1) << "current laser position: " << laser_position << std::endl;
-    scratch_data.get_pcout(1) << "current laser intensity: " << laser_intensity << std::endl;
+    scratch_data.get_pcout() << "current laser position: " << laser_position << std::endl;
+    scratch_data.get_pcout() << "current laser intensity: " << laser_intensity << std::endl;
   }
 
   template <int dim>

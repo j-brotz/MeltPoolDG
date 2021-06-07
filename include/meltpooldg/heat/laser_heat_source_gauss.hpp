@@ -53,24 +53,24 @@ namespace MeltPoolDG::Heat
      * interface heat source
      */
     double
-    local_compute_interface_heat_source(const Point<dim> &            position,
-                                        const Point<dim> &            laser_position,
-                                        double                        power,
-                                        const Tensor<1, dim, double> &normal_vector,
-                                        double                        delta_value) const final;
+    local_compute_interfacial_heat_source(const Point<dim> &            position,
+                                          const Point<dim> &            laser_position,
+                                          double                        power,
+                                          const Tensor<1, dim, double> &normal_vector,
+                                          double                        delta_value) const final;
 
     /**
      * Compute a DoF vector of the heat source for interface laser.
      */
     void
-    compute_interface_heat_source(VectorType &            heat_source_vector,
-                                  const ScratchData<dim> &scratch_data,
-                                  unsigned int            temp_dof_idx,
-                                  double                  laser_power,
-                                  const Point<dim> &      laser_position,
-                                  const VectorType &      level_set_heaviside,
-                                  unsigned int            ls_dof_idx,
-                                  bool                    zero_out = true) const;
+    compute_interfacial_heat_source(VectorType &            heat_source_vector,
+                                    const ScratchData<dim> &scratch_data,
+                                    unsigned int            temp_dof_idx,
+                                    double                  laser_power,
+                                    const Point<dim> &      laser_position,
+                                    const VectorType &      level_set_heaviside,
+                                    unsigned int            ls_dof_idx,
+                                    bool                    zero_out = true) const;
 
   private:
     /*
@@ -85,7 +85,7 @@ namespace MeltPoolDG::Heat
      * returns: power * exp( -2 radius^2 / laser_radius^2 ) / ( laser_radius^2 * pi/2 )
      */
     double
-    power_density_interface(double radius, double power) const;
+    power_density_interfacial(double radius, double power) const;
 
     const LaserData<double>::GaussData data;
 

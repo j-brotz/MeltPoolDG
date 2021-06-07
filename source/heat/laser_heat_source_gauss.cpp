@@ -27,7 +27,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   double
-  LaserHeatSourceGauss<dim>::local_compute_interface_heat_source(
+  LaserHeatSourceGauss<dim>::local_compute_interfacial_heat_source(
     const Point<dim> &            position,
     const Point<dim> &            laser_position,
     double                        power,
@@ -48,19 +48,19 @@ namespace MeltPoolDG::Heat
       projection_factor = 0.0;
 
     return data.absorptivity * projection_factor * delta_value *
-           power_density_interface(distance, power);
+           power_density_interfacial(distance, power);
   }
 
   template <int dim>
   void
-  LaserHeatSourceGauss<dim>::compute_interface_heat_source(VectorType &heat_source_vector,
-                                                           const ScratchData<dim> &scratch_data,
-                                                           const unsigned int      temp_dof_idx,
-                                                           const double            laser_power,
-                                                           const Point<dim> &      laser_position,
-                                                           const VectorType & level_set_heaviside,
-                                                           const unsigned int ls_dof_idx,
-                                                           const bool         zero_out) const
+  LaserHeatSourceGauss<dim>::compute_interfacial_heat_source(VectorType &heat_source_vector,
+                                                             const ScratchData<dim> &scratch_data,
+                                                             const unsigned int      temp_dof_idx,
+                                                             const double            laser_power,
+                                                             const Point<dim> &      laser_position,
+                                                             const VectorType & level_set_heaviside,
+                                                             const unsigned int ls_dof_idx,
+                                                             const bool         zero_out) const
   {
     if (zero_out)
       scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);
@@ -76,7 +76,8 @@ namespace MeltPoolDG::Heat
     FEValues<dim> ls_heaviside_eval(
       scratch_data.get_mapping(),
       scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
-      Quadrature<dim>(scratch_data.get_dof_handler(ls_dof_idx).get_fe().get_unit_support_points()),
+      Quadrature<dim>(
+        scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
       update_gradients);
 
     const unsigned int dofs_per_cell =
@@ -105,14 +106,15 @@ namespace MeltPoolDG::Heat
                     heat_source_vector[local_dof_indices[q]] = 0.0;
                     continue;
                   }
+                // TODO: use computed normal vector
                 const Tensor<1, dim, double> normal_vector = grad_ls_heaviside[q] / delta_value;
 
                 const double temp =
-                  local_compute_interface_heat_source(heat_source_eval.quadrature_point(q),
-                                                      laser_position,
-                                                      laser_power,
-                                                      normal_vector,
-                                                      delta_value);
+                  local_compute_interfacial_heat_source(heat_source_eval.quadrature_point(q),
+                                                        laser_position,
+                                                        laser_power,
+                                                        normal_vector,
+                                                        delta_value);
                 heat_source_vector[local_dof_indices[q]] = temp;
               }
           }
@@ -130,7 +132,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   double
-  LaserHeatSourceGauss<dim>::power_density_interface(double radius, double power) const
+  LaserHeatSourceGauss<dim>::power_density_interfacial(double radius, double power) const
   {
     const double s          = radius / data.laser_beam_radius;
     const double peak_power = power * surf_peak_power_density_factor;

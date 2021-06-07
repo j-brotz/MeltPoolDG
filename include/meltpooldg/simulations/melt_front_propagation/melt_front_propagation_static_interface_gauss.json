@@ -25,7 +25,7 @@
     "laser center": "0.0,0.0",
     "laser do move": "false",
     "laser heat source model": "Gauss",
-    "laser impact": "interface",
+    "laser impact type": "interface",
     "laser gauss laser beam radius": "0.06e-3",
     "laser gauss absorptivity": "0.5"
   },

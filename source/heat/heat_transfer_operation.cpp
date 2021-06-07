@@ -264,6 +264,10 @@ namespace MeltPoolDG::Heat
   const VectorType &
   HeatTransferOperation<dim>::get_level_set_as_heaviside() const
   {
+    Assert(
+      level_set_as_heaviside,
+      ExcMessage(
+        "You requested the level set vector from the heat operation, which is a nullptr. You must provide a valid level_set_as_heaviside pointer to the heat operation."));
     return *level_set_as_heaviside;
   }
 

@@ -49,7 +49,7 @@ namespace MeltPoolDG::Heat
           {
             laser_operation->move_laser(dt);
 
-            if (base_in->parameters.laser.impact == "volumetric")
+            if (base_in->parameters.laser.impact_type == "volumetric")
               laser_heat_source_operation->compute_volumetric_heat_source(
                 heat_operation->get_heat_source(),
                 *scratch_data,
@@ -57,8 +57,8 @@ namespace MeltPoolDG::Heat
                 laser_operation->get_laser_power(),
                 laser_operation->get_laser_position(),
                 true /* zero_out */);
-            else if (base_in->parameters.laser.impact == "interface")
-              laser_heat_source_operation->compute_interface_heat_source(
+            else if (base_in->parameters.laser.impact_type == "interface")
+              laser_heat_source_operation->compute_interfacial_heat_source(
                 heat_operation->get_heat_source(),
                 *scratch_data,
                 temp_dof_idx,

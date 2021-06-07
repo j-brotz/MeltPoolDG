@@ -68,14 +68,15 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  LaserHeatSourceGusarov<dim>::compute_interface_heat_source(VectorType &heat_source_vector,
-                                                             const ScratchData<dim> &scratch_data,
-                                                             unsigned int            temp_dof_idx,
-                                                             double                  laser_power,
-                                                             const Point<dim> &      laser_position,
-                                                             const VectorType &level_set_heaviside,
-                                                             unsigned int      ls_dof_idx,
-                                                             bool              zero_out) const
+  LaserHeatSourceGusarov<dim>::compute_interfacial_heat_source(
+    VectorType &            heat_source_vector,
+    const ScratchData<dim> &scratch_data,
+    unsigned int            temp_dof_idx,
+    double                  laser_power,
+    const Point<dim> &      laser_position,
+    const VectorType &      level_set_heaviside,
+    unsigned int            ls_dof_idx,
+    bool                    zero_out) const
   {
     (void)heat_source_vector;
     (void)scratch_data;
@@ -91,7 +92,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   double
-  LaserHeatSourceGusarov<dim>::local_compute_interface_heat_source(
+  LaserHeatSourceGusarov<dim>::local_compute_interfacial_heat_source(
     const Point<dim> &            position,
     const Point<dim> &            laser_position,
     double                        power,

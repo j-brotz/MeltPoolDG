@@ -172,7 +172,7 @@ namespace MeltPoolDG
     bool        do_move                            = false;
     number      scan_speed                         = 0.0;
     bool        variable_properties_over_interface = false;
-    std::string impact                             = "volumetric";
+    std::string impact_type                        = "volumetric";
     std::string heat_source_model                  = "Gusarov";
     struct GusarovData
     {

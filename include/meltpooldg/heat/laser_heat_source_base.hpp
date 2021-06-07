@@ -17,7 +17,7 @@ namespace MeltPoolDG::Heat
   {
   public:
     /**
-     * Compute a DoF vector of the heat source for volumetric laser.
+     * Compute a DoF vector of the volumetric heat source.
      */
     void
     compute_volumetric_heat_source(VectorType &            heat_source_vector,
@@ -28,17 +28,17 @@ namespace MeltPoolDG::Heat
                                    bool                    zero_out = true) const;
 
     /**
-     * Compute a DoF vector of the heat source for interface laser.
+     * Compute a DoF vector of the interfacial heat source.
      */
     virtual void
-    compute_interface_heat_source(VectorType &            heat_source_vector,
-                                  const ScratchData<dim> &scratch_data,
-                                  unsigned int            temp_dof_idx,
-                                  double                  laser_power,
-                                  const Point<dim> &      laser_position,
-                                  const VectorType &      level_set_heaviside,
-                                  unsigned int            ls_dof_idx,
-                                  bool                    zero_out = true) const = 0;
+    compute_interfacial_heat_source(VectorType &            heat_source_vector,
+                                    const ScratchData<dim> &scratch_data,
+                                    unsigned int            temp_dof_idx,
+                                    double                  laser_power,
+                                    const Point<dim> &      laser_position,
+                                    const VectorType &      level_set_heaviside,
+                                    unsigned int            ls_dof_idx,
+                                    bool                    zero_out = true) const = 0;
 
     /**
      * Local volumetric heat source
@@ -52,10 +52,10 @@ namespace MeltPoolDG::Heat
      * Local interface heat source at two-phase interface
      */
     virtual double
-    local_compute_interface_heat_source(const Point<dim> &            position,
-                                        const Point<dim> &            laser_position,
-                                        double                        power,
-                                        const Tensor<1, dim, double> &normal_vector,
-                                        double                        delta_value) const = 0;
+    local_compute_interfacial_heat_source(const Point<dim> &            position,
+                                          const Point<dim> &            laser_position,
+                                          double                        power,
+                                          const Tensor<1, dim, double> &normal_vector,
+                                          double                        delta_value) const = 0;
   };
 } // namespace MeltPoolDG::Heat
