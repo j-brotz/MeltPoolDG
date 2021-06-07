@@ -190,27 +190,6 @@ namespace MeltPoolDG::LevelSet
     if (level_set_data.do_curvature_correction)
       correct_curvature_values();
   }
-  /**
-   *  with evaporation
-   */
-  template <int dim>
-  void
-  LevelSetOperation<dim>::setup_with_evaporation(const unsigned int flow_vel_dof_idx_in,
-                                                 const unsigned int evapor_vel_dof_idx_in,
-                                                 const VectorType & advection_velocity,
-                                                 const VectorType & evaporation_velocity)
-  {
-    level_set_with_phase_change =
-      std::make_shared<LevelSetOperatorWithPhaseChange<dim>>(*scratch_data,
-                                                             advection_velocity,
-                                                             evaporation_velocity,
-                                                             level_set_data,
-                                                             ls_dof_idx,
-                                                             ls_hanging_nodes_dof_idx,
-                                                             ls_quad_idx,
-                                                             flow_vel_dof_idx_in,
-                                                             evapor_vel_dof_idx_in);
-  }
 
   template <int dim>
   void
@@ -402,11 +381,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::advect_level_set(const double dt, const VectorType &advection_velocity)
   {
-    // with phase change (evaporation)
-    if (level_set_with_phase_change)
-      level_set_with_phase_change->solve(dt, get_level_set());
-    else
-      advec_diff_operation->solve(dt, advection_velocity);
+    advec_diff_operation->solve(dt, advection_velocity);
   }
 
   template <int dim>

@@ -32,6 +32,8 @@ namespace MeltPoolDG::Flow
         scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
                                   << time_iterator.get_current_time();
 
+        interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
+
         // ... solve level-set problem with the given advection field
         if (evaporation_operation)
           {
@@ -41,17 +43,20 @@ namespace MeltPoolDG::Flow
              */
             level_set_operation.update_normal_vector();
 
-            //@todo: shift options to evaporation operation
-            evaporation_operation->compute_evaporative_mass_flux();
-
             /*
-             * compute level set source term
+             * compute the evaporative mass flux
+             */
+            evaporation_operation->compute_evaporative_mass_flux();
+            /*
+             * compute level set source term from evaporation
              */
             evaporation_operation->compute_evaporation_velocity(
               base_in->parameters.flow.variable_properties_over_interface);
+
+            interface_velocity += evaporation_operation->get_velocity();
           }
 
-        level_set_operation.solve(dt, flow_operation->get_velocity());
+        level_set_operation.solve(dt, interface_velocity);
         // update the two phases
         update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
 
@@ -176,7 +181,6 @@ namespace MeltPoolDG::Flow
      *  setup DoFHandler
      */
     dof_handler.reinit(*base_in->triangulation);
-    dof_handler_evapor.reinit(*base_in->triangulation);
 
     /*
      *  setup scratch data
@@ -196,14 +200,12 @@ namespace MeltPoolDG::Flow
     scratch_data->attach_dof_handler(dof_handler);
     scratch_data->attach_dof_handler(dof_handler);
     scratch_data->attach_dof_handler(dof_handler);
-    scratch_data->attach_dof_handler(dof_handler_evapor);
     scratch_data->attach_dof_handler(dof_handler);
 
     ls_hanging_nodes_dof_idx = scratch_data->attach_constraint_matrix(ls_hanging_node_constraints);
     ls_dof_idx               = scratch_data->attach_constraint_matrix(ls_constraints_dirichlet);
     reinit_dof_idx           = scratch_data->attach_constraint_matrix(reinit_constraints_dirichlet);
-    evapor_vel_dof_idx = scratch_data->attach_constraint_matrix(evapor_hanging_node_constraints);
-    temp_dof_idx       = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
+    temp_dof_idx             = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
 
     /*
      *  create quadrature rule
@@ -308,7 +310,7 @@ namespace MeltPoolDG::Flow
           level_set_operation.get_normal_vector(),
           base_in,
           normal_dof_idx,
-          evapor_vel_dof_idx,
+          vel_dof_idx,
           ls_hanging_nodes_dof_idx,
           ls_quad_idx,
           &heat_operation->get_temperature(),
@@ -321,15 +323,11 @@ namespace MeltPoolDG::Flow
          * @todo: adopt for all types of evaporative mass flux computations!!
          */
         if (base_in->parameters.evapor.formulation_evaporative_mass_flux_over_interface ==
-            "interface value")
+              "interface value" ||
+            base_in->parameters.evapor.formulation_evaporative_mass_flux_over_interface ==
+              "line integral")
           heat_operation->register_evaporative_mass_flux(
             &evaporation_operation->get_evaporative_mass_flux());
-
-        // configure also the level set problem with evaporation
-        level_set_operation.setup_with_evaporation(flow_operation->get_dof_handler_idx_velocity(),
-                                                   evapor_vel_dof_idx,
-                                                   flow_operation->get_velocity(),
-                                                   evaporation_operation->get_velocity());
       }
 
     /*
@@ -446,14 +444,10 @@ namespace MeltPoolDG::Flow
     if (base_in->parameters.base.do_simplex)
       {
         dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
-        dof_handler_evapor.distribute_dofs(
-          FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim));
       }
     else
       {
         dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
-        dof_handler_evapor.distribute_dofs(
-          FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree), dim));
       }
       /*
        *    initialize the flow operation class
@@ -522,19 +516,12 @@ namespace MeltPoolDG::Flow
           }
       }
 
-    evapor_hanging_node_constraints.clear();
-    evapor_hanging_node_constraints.reinit(
-      scratch_data->get_locally_relevant_dofs(evapor_vel_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler_evapor, evapor_hanging_node_constraints);
-
     // periodic constraints
     for (const auto &bc : base_in->get_periodic_bc())
       {
         const auto [id_in, id_out, direction] = bc;
         DoFTools::make_periodicity_constraints(
           dof_handler, id_in, id_out, direction, ls_hanging_node_constraints);
-        DoFTools::make_periodicity_constraints(
-          dof_handler_evapor, id_in, id_out, direction, evapor_hanging_node_constraints);
       }
 
     // ize constraints
@@ -549,8 +536,6 @@ namespace MeltPoolDG::Flow
     reinit_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
-
-    evapor_hanging_node_constraints.close();
 
     temp_constraints_dirichlet.close();
     temp_constraints_dirichlet.merge(
@@ -581,13 +566,17 @@ namespace MeltPoolDG::Flow
      */
     scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
     /*
-     *    initialize the force vector for calculating surface tension
+     *    initialize the rhs vector of the continuity equation
      */
     if (evaporation_operation)
       {
         evaporation_operation->reinit(); // @todo -- needed?
         scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
       }
+    /*
+     *    initialize the velocity for advecting the level set interface
+     */
+    scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
   }
 
   template <int dim>
@@ -812,9 +801,10 @@ namespace MeltPoolDG::Flow
 
     if (evaporation_operation)
       {
-        data.emplace_back(&dof_handler_evapor, [&](std::vector<VectorType *> &vectors) {
-          evaporation_operation->attach_dim_vectors(vectors);
-        });
+        data.emplace_back(&flow_operation->get_dof_handler_velocity(),
+                          [&](std::vector<VectorType *> &vectors) {
+                            evaporation_operation->attach_dim_vectors(vectors);
+                          });
         data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
           evaporation_operation->attach_vectors(vectors);
         });
