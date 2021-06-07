@@ -19,9 +19,9 @@ namespace MeltPoolDG::Heat
    * This class implements the laser heat source model of Gusarov et al. (2009).
    * DOI: 10.1115/1.3109245
    *
-   *                       2*R
-   *                      <--->
-   *                      | | |
+   *   ^ dim-1             2*R
+   *   |                  <--->
+   *   ----> x            | | |
    *                      | | |  laser beam
    *                      | | |     power
    *                      | | |
@@ -33,6 +33,7 @@ namespace MeltPoolDG::Heat
    *                 +++        +++            |
    *                     ++++++                v
    *
+   * The laser beam is direction is assumed to be in the negative dim-1 direction.
    */
   template <int dim>
   class LaserHeatSourceGusarov : public LaserHeatSourceBase<dim>

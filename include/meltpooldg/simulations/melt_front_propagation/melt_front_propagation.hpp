@@ -103,8 +103,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           std::vector<unsigned> refinements(2, 1);
           refinements[0] = 3;
           // create mesh
-          const Point<2> left(0, 0);
-          const Point<2> right(x_max, y_max);
+          const Point<2> left(0, -z_max);
+          const Point<2> right(x_max, 0);
           GridGenerator::subdivided_hyper_rectangle(*this->triangulation, refinements, left, right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
@@ -117,7 +117,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           refinements[1] = 3;
           // create mesh
           const Point<3> left(0, 0, 0);
-          const Point<3> right(x_max, y_max, z_max);
+          const Point<3> right(x_max, y_max, -z_max);
           GridGenerator::subdivided_hyper_rectangle(*this->triangulation, refinements, left, right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
