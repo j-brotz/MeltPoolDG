@@ -42,6 +42,29 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   static constexpr double T_0 = 1000.0;
 
   template <int dim>
+  class InitialLevelSet : public Function<dim>
+  {
+  public:
+    InitialLevelSet(const double z_level, const double eps)
+      : Function<dim>()
+      , z_level(z_level)
+      , eps(eps)
+    {}
+
+    double
+    value(const Point<dim> &p, const unsigned int /*component*/) const
+    {
+      const auto z = p[dim - 1];
+      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(z_level - z,
+                                                                                     eps);
+    }
+
+  private:
+    const double z_level;
+    const double eps;
+  };
+
+  template <int dim>
   class InitialLevelSetHeaviside : public Function<dim>
   {
   public:
@@ -62,7 +85,6 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     const double z_level;
     const double eps;
   };
-
 
   template <int dim>
   class SimulationMeltFrontPropagation : public SimulationBase<dim>
@@ -95,7 +117,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<2>>(this->mpi_communicator);
 
-          if (!this->parameters.heat.two_phase)
+          if (this->parameters.base.problem_name == "heat_transfer" &&
+              !this->parameters.heat.two_phase)
             {
               std::vector<unsigned> refinements(2, 1);
               refinements[0] = 3;
@@ -128,14 +151,15 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<3>>(this->mpi_communicator);
 
-          if (!this->parameters.heat.two_phase)
+          if (this->parameters.base.problem_name == "heat_transfer" &&
+              !this->parameters.heat.two_phase)
             {
               std::vector<unsigned int> refinements(3, 1);
               refinements[0] = 3;
               refinements[1] = 3;
               // create mesh
-              const Point<3> left(0, 0, 0);
-              const Point<3> right(x_max, y_max, -z_max);
+              const Point<3> left(0, -y_max, -z_max);
+              const Point<3> right(x_max, y_max, z_max);
               GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
                                                         refinements,
                                                         left,
@@ -165,20 +189,71 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     void
     set_boundary_conditions() final
     {
-      const types::boundary_id left_bc = 10;
-
-      for (const auto &cell : this->triangulation->cell_iterators())
+      if (this->parameters.base.problem_name == "heat_transfer")
         {
-          for (auto &face : cell->face_iterators())
-            if (face->at_boundary())
-              {
-                if (face->center()[0] == x_max)
-                  face->set_boundary_id(left_bc);
-              }
+          const types::boundary_id left_bc = 10;
+          for (const auto &cell : this->triangulation->cell_iterators())
+            {
+              for (auto &face : cell->face_iterators())
+                if (face->at_boundary())
+                  {
+                    if (face->center()[0] == x_max)
+                      face->set_boundary_id(left_bc);
+                  }
+            }
+          this->attach_dirichlet_boundary_condition(
+            left_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_0), "heat_transfer");
         }
-
-      this->attach_dirichlet_boundary_condition(
-        left_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_0), "heat_transfer");
+      else if (this->parameters.base.problem_name == "melt_pool")
+        {
+          if (!(this->parameters.base.dimension == 2 || this->parameters.base.dimension == 3))
+            throw ExcNotImplemented();
+          const types::boundary_id                  lower_bc = 1;
+          const types::boundary_id                  upper_bc = 2;
+          const types::boundary_id                  left_bc  = 3;
+          const types::boundary_id                  right_bc = 4;
+          [[maybe_unused]] const types::boundary_id front_bc = 5;
+          [[maybe_unused]] const types::boundary_id back_bc  = 6;
+          for (const auto &cell : this->triangulation->cell_iterators())
+            for (auto &face : cell->face_iterators())
+              if (face->at_boundary())
+                {
+                  if (face->center()[0] == x_max)
+                    face->set_boundary_id(right_bc);
+                  if (face->center()[0] == 0.0)
+                    face->set_boundary_id(left_bc);
+                  if constexpr (dim == 2)
+                    {
+                      if (face->center()[1] == -z_max)
+                        face->set_boundary_id(lower_bc);
+                      if (face->center()[1] == z_max)
+                        face->set_boundary_id(upper_bc);
+                    }
+                  if constexpr (dim == 3)
+                    {
+                      if (face->center()[1] == -y_max)
+                        face->set_boundary_id(lower_bc);
+                      if (face->center()[1] == y_max)
+                        face->set_boundary_id(upper_bc);
+                      if (face->center()[2] == -z_max)
+                        face->set_boundary_id(front_bc);
+                      if (face->center()[2] == z_max)
+                        face->set_boundary_id(back_bc);
+                    }
+                }
+          this->attach_no_slip_boundary_condition(left_bc, "navier_stokes_u");
+          this->attach_no_slip_boundary_condition(right_bc, "navier_stokes_u");
+          this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
+          this->attach_symmetry_boundary_condition(upper_bc, "navier_stokes_u");
+          if constexpr (dim == 3)
+            {
+              this->attach_no_slip_boundary_condition(front_bc, "navier_stokes_u");
+              this->attach_no_slip_boundary_condition(back_bc, "navier_stokes_u");
+            }
+          this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
+          this->attach_dirichlet_boundary_condition(
+            lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_0), "heat_transfer");
+        }
     }
 
     void
@@ -186,12 +261,22 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {
       this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                      "heat_transfer");
-      if (this->parameters.heat.two_phase)
-        this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
-                                                                                       z_max / 5),
-                                       "prescribed_level_set");
-      this->attach_velocity_field(std::make_shared<Functions::ZeroFunction<dim>>(dim),
-                                  "heat_transfer");
+      if (this->parameters.base.problem_name == "heat_transfer" && this->parameters.heat.two_phase)
+        {
+          this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
+                                                                                         z_max / 5),
+                                         "prescribed_level_set");
+          this->attach_velocity_field(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+                                      "heat_transfer");
+        }
+      if (this->parameters.base.problem_name == "melt_pool")
+        {
+          this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(0.0, z_max / 10),
+                                         "level_set");
+          this->attach_initial_condition(std::shared_ptr<Function<dim>>(
+                                           std::make_shared<Functions::ZeroFunction<dim>>(dim)),
+                                         "navier_stokes_u");
+        }
     }
   };
 } // namespace MeltPoolDG::Simulation::MeltFrontPropagation

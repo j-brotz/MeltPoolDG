@@ -245,6 +245,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
           AssertThrow(false, ExcNotImplemented());
         }
 
+      this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
       this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
       this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
       this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
@@ -256,7 +257,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
                                                 std::make_shared<InitialValuesTemperature<dim>>(),
                                                 "heat_transfer");
 
-      this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
 
       if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);

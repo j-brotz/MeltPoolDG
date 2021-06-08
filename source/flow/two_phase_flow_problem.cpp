@@ -86,7 +86,7 @@ namespace MeltPoolDG::Flow
             curv_dof_idx,
             flow_operation->get_dof_handler_idx_velocity(),
             flow_operation->get_quad_idx_velocity(),
-            false /* false means not to zero out the vorce vector */);
+            false /* false means not to zero out the force vector */);
 
         // ... c) temperature-dependent surface tension
         if ((melt_pool_operation || heat_operation) &&
@@ -340,13 +340,14 @@ namespace MeltPoolDG::Flow
         base_in->get_bc("heat_transfer"),
         base_in->parameters,
         ls_dof_idx,
+        &level_set_operation.get_level_set_as_heaviside(),
         reinit_dof_idx,
         flow_operation->get_dof_handler_idx_velocity(),
         flow_operation->get_quad_idx_velocity(),
+        &flow_operation->get_velocity(),
         temp_dof_idx,
         temp_quad_idx,
-        base_in->parameters.flow.start_time,
-        evaporation_operation == nullptr);
+        base_in->parameters.flow.start_time);
 
 
     if (evaporation_operation)
@@ -432,8 +433,14 @@ namespace MeltPoolDG::Flow
      * set initial condition of the melt pool class
      */
     if (melt_pool_operation)
-      melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
-                                                 level_set_operation.get_level_set());
+      {
+        auto get_initial_temperature = [&]() -> Function<dim> & {
+          return *base_in->get_initial_condition("heat_transfer");
+        };
+        melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
+                                                   level_set_operation.get_level_set(),
+                                                   get_initial_temperature);
+      }
   }
 
   template <int dim>

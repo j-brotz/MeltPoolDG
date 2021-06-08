@@ -14,6 +14,12 @@ namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
+  enum LaserImpactType
+  {
+    volumetric,
+    interface
+  };
+
   template <int dim>
   class LaserOperation
   {
@@ -40,6 +46,8 @@ namespace MeltPoolDG::Heat
      */
     double laser_intensity;
 
+    LaserImpactType impact_type;
+
   public:
     LaserOperation(const ScratchData<dim> &    scratch_data_in,
                    const LaserData<double> &   laser_data_in,
@@ -56,6 +64,9 @@ namespace MeltPoolDG::Heat
 
     double
     get_laser_power();
+
+    LaserImpactType
+    get_laser_impact_type() const;
 
   private:
     void

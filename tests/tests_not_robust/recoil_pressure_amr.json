@@ -86,6 +86,7 @@
     "laser analytical ambient temperature": "500."
   },
   "melt pool": {
+    "mp do recoil pressure": "true",
     "mp boiling temperature": "3000.",
     "mp liquid melting point": "1700",
     "mp domain x min": "-0.0002",

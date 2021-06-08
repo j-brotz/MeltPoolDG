@@ -69,17 +69,20 @@ namespace MeltPoolDG
       MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &       scratch_data_in,
                         const std::shared_ptr<BoundaryConditions<dim>> &heat_bc,
                         const Parameters<double> &                      data_in,
-                        const unsigned int                              ls_dof_idx_in,
-                        const unsigned int                              reinit_dof_idx_in,
-                        const unsigned int                              flow_vel_dof_idx_in,
-                        const unsigned int                              flow_vel_quad_idx_in,
-                        const unsigned int                              temp_dof_idx_in,
-                        const unsigned int                              temp_quad_idx_in,
-                        const double                                    start_time_in,
-                        bool                                            do_recoil_pressure = true);
+                        unsigned int                                    ls_dof_idx_in,
+                        VectorType *                                    level_set_as_heaviside_in,
+                        unsigned int                                    reinit_dof_idx_in,
+                        unsigned int                                    flow_vel_dof_idx_in,
+                        unsigned int                                    flow_vel_quad_idx_in,
+                        VectorType *                                    velocity_in,
+                        unsigned int                                    temp_dof_idx_in,
+                        unsigned int                                    temp_quad_idx_in,
+                        double                                          start_time_in);
 
       void
-      set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
+      set_initial_condition(const VectorType &                   level_set_as_heaviside,
+                            VectorType &                         level_set,
+                            std::function<Function<dim> &(void)> get_initial_temperature);
 
       void
       solve(VectorType &vel_force_rhs, const VectorType &level_set_as_heaviside, const double &dt);

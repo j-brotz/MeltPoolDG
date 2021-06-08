@@ -689,6 +689,9 @@ namespace MeltPoolDG
         "mp set level set to zero in solid",
         mp.set_level_set_to_zero_in_solid,
         "Set this parameter to true to constrain the level set in the solid domain.");
+      prm.add_parameter("mp do recoil pressure",
+                        mp.do_recoil_pressure,
+                        "Set this parameter to true to enable recoil pressure.");
       prm.add_parameter("mp boiling temperature",
                         mp.boiling_temperature,
                         "Boiling temperature of the melt.");
