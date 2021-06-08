@@ -749,6 +749,9 @@ namespace MeltPoolDG
       prm.add_parameter("evapor boiling temperature",
                         evapor.boiling_temperature,
                         "Boiling temperature (K).");
+      prm.add_parameter("evapor interface value n iterations",
+                        evapor.interface_value_n_iterations,
+                        "Number of corrections of the point projection towards the interface.");
     }
     prm.leave_subsection();
     /*
