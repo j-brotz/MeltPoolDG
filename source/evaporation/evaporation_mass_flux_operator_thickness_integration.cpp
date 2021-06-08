@@ -22,7 +22,9 @@ namespace MeltPoolDG::Evaporation
                                                     const BlockVectorType &normal_vector,
                                                     const unsigned int     ls_dof_idx,
                                                     const unsigned int     normal_dof_idx,
-                                                    const unsigned int     temp_dof_idx)
+                                                    const unsigned int     temp_dof_idx,
+                                                    const unsigned int     n_subdivisions_per_side,
+                                                    const unsigned int     n_subdivisions_MCA)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
     , level_set_as_heaviside(level_set_as_heaviside)
@@ -32,6 +34,8 @@ namespace MeltPoolDG::Evaporation
     , temp_dof_idx(temp_dof_idx)
     , epsilon(scratch_data.get_min_cell_size()) //@todo: how to determine epsilon???
     , fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim)
+    , n_subdivisions_per_side(n_subdivisions_per_side)
+    , n_subdivisions_MCA(n_subdivisions_MCA)
   {}
 
   template <int dim>
@@ -47,7 +51,6 @@ namespace MeltPoolDG::Evaporation
         /*
          * generate point cloud normal to interface
          */
-
         std::vector<Point<dim>>   global_points_normal_to_interface;
         std::vector<unsigned int> global_points_normal_to_interface_pointer;
 
@@ -59,20 +62,17 @@ namespace MeltPoolDG::Evaporation
           scratch_data.get_mapping(),
           level_set_as_heaviside,
           normal_vector,
-          5 * epsilon, // todo how to determine epsilon?
-          10,
-          true,
-          /* bidirectional */ // todo: make parameter
-          0.0,
-          /* contour_value */ // todo: make parameter
-          1);
-        /* n_subdivisions_MCA */ // todo: make parameter
+          5 * epsilon, //@todo
+          n_subdivisions_per_side,
+          /* bidirectional */ true,
+          /* contour_value */ 0.5,
+          n_subdivisions_MCA);
 
         /*
          * evaluate result at points normal to interface
          */
         Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-          1e-10 /*tolerance*/, true /*unique mapping*/);
+          1e-6 /*tolerance*/, true /*unique mapping*/);
 
         remote_point_evaluation.reinit(global_points_normal_to_interface,
                                        scratch_data.get_triangulation(),

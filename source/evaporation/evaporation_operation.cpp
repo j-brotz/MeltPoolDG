@@ -147,7 +147,9 @@ namespace MeltPoolDG::Evaporation
           normal_vector,
           ls_hanging_nodes_dof_idx,
           normal_dof_idx,
-          temp_dof_idx);
+          temp_dof_idx,
+          evaporation_data.line_integral_n_subdivisions_per_side,
+          evaporation_data.line_integral_n_subdivisions_MCA);
   }
 
   template <int dim>

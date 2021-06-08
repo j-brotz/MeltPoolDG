@@ -752,6 +752,15 @@ namespace MeltPoolDG
       prm.add_parameter("evapor interface value n iterations",
                         evapor.interface_value_n_iterations,
                         "Number of corrections of the point projection towards the interface.");
+      prm.add_parameter("evapor line integral n subdivisions per side",
+                        evapor.line_integral_n_subdivisions_per_side,
+                        "Number of subdivisions per side to compute the points perpendicular to "
+                        "the interface for the evaporative mass flux evaluation by "
+                        "means of the line integral.");
+      prm.add_parameter("evapor line integral n subdivisions MCA",
+                        evapor.line_integral_n_subdivisions_MCA,
+                        "Number of subdivisions for the marching cube algorithm within the "
+                        "evaporative mass flux evaluation by means of the line integral.");
     }
     prm.leave_subsection();
     /*
