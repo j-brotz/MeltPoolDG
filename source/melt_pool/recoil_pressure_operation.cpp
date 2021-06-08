@@ -16,7 +16,10 @@ namespace MeltPoolDG::MeltPool
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , temp_dof_idx(temp_dof_idx_in)
-  {}
+  {
+    AssertThrow(boiling_temperature > 0.0,
+                ExcMessage("The boiling temperature must be greater than zero! Abort..."));
+  }
 
   template <int dim>
   void
