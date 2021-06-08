@@ -583,14 +583,11 @@ namespace MeltPoolDG
       prm.add_parameter("laser center",
                         laser.center,
                         "Center coordinates of the laser beam on the interface melt/gas.");
-      prm.add_parameter("laser scan speed",
-                        laser.scan_speed,
-                        "Scan speed of the laser (in case of an analytical temperature field).");
+      prm.add_parameter("laser scan speed", laser.scan_speed, "Scan speed of the laser.");
       prm.add_parameter(
         "laser do move",
         laser.do_move,
-        "Set this parameter to true to move the laser in x-direction with the given parameter scan speed "
-        "(in case of an analytical temperature field).");
+        "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.");
       prm.add_parameter("laser heat source model",
                         laser.heat_source_model,
                         "Laser heat source model.",
