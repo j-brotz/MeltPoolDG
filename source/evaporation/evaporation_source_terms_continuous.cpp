@@ -74,7 +74,7 @@ namespace MeltPoolDG::Evaporation
 
         ls.reinit(cell);
         ls.read_dof_values(level_set_as_heaviside);
-        ls.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+        ls.evaluate(EvaluationFlags::values);
 
         normal_vec.reinit(cell);
         normal_vec.read_dof_values(normal_vector);
@@ -114,9 +114,7 @@ namespace MeltPoolDG::Evaporation
             // positive value (= default for representing the liquid phase). Thus, in case the
             // gas phase corresponds to a level set value of 1, the sign of the normal vector
             // has to be changed.
-            if (evapor_data.ls_value_gas == 1.0)
-              AssertThrow(false, ExcNotImplemented());
-            // evapor_vel[q_index] *= -1.0;
+            AssertThrow(evapor_data.ls_value_gas == -1.0, ExcNotImplemented());
           }
       }
     level_set_as_heaviside.zero_out_ghost_values();

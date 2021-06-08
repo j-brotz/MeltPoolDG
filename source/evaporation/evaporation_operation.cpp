@@ -161,7 +161,14 @@ namespace MeltPoolDG::Evaporation
     if (evaporation_data.evaporation_model == "constant")
       evaporative_mass_flux = evaporation_data.evaporative_mass_flux;
     else
-      evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux, *temperature);
+      {
+        Assert(evapor_mass_flux_operator,
+               ExcMessage(
+                 "Before computing the evaporative mass flux, register_evaporative_mass_flux_model "
+                 "needs to be called."));
+        evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux,
+                                                                 *temperature);
+      }
   }
 
   template <int dim>
