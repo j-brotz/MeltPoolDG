@@ -26,7 +26,7 @@
     "reinit constant epsilon": "0.03"
   },
   "normal vector": {
-    "normal vec damping scale factor": "0.5",
+    "normal vec damping scale factor": "4.0",
     "normal vec do matrix free": "true",
     "normal vec implementation": "meltpooldg",
     "normal vec verbosity level": "1"
