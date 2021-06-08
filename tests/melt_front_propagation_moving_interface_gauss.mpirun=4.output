@@ -1,0 +1,17 @@
+current laser position: 0 0
+current laser intensity: 1
+t= 1e-05     current laser position: 1.2e-06 0
+current laser intensity: 1
+Newton Raphson solver converged: ||solution|| = 4.90092e-01
+t= 2e-05     current laser position: 2.4e-06 0
+current laser intensity: 1
+Newton Raphson solver converged: ||solution|| = 4.90296e-01
+t= 3e-05     current laser position: 3.6e-06 0
+current laser intensity: 1
+Newton Raphson solver converged: ||solution|| = 4.90511e-01
+t= 4e-05     current laser position: 4.8e-06 0
+current laser intensity: 1
+Newton Raphson solver converged: ||solution|| = 4.90735e-01
+t= 5e-05     current laser position: 6e-06 0
+current laser intensity: 1
+Newton Raphson solver converged: ||solution|| = 4.90969e-01
