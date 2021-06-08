@@ -66,8 +66,9 @@ namespace MeltPoolDG::NormalVector
       scratch_data->get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
 
     scratch_data->get_pcout(1) << "| normal vector:         i=" << iter;
-    const int                 verbosity_l2_norm = dim > 1 ? 0 : 1;
-    const ConditionalOStream &pcout             = scratch_data->get_pcout(verbosity_l2_norm);
+    const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
+    const ConditionalOStream &pcout =
+      scratch_data->get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
     pcout << " \t";
     for (unsigned int d = 0; d < dim; ++d)
       pcout << " |n_" << d << "| = " << std::setprecision(11) << std::setw(15) << std::left

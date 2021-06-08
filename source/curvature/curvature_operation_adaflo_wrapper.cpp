@@ -143,7 +143,6 @@ namespace MeltPoolDG::Curvature
                                                        const int                 curv_dof_idx,
                                                        const int                 curv_quad_idx)
   {
-    (void)parameters;
     curv_adaflo_params.dof_index_ls            = advec_diff_dof_idx;
     curv_adaflo_params.dof_index_curvature     = curv_dof_idx; //@ todo
     curv_adaflo_params.dof_index_normal        = curv_dof_idx;
@@ -151,6 +150,7 @@ namespace MeltPoolDG::Curvature
     curv_adaflo_params.epsilon                 = 1.0;   //@ todo
     curv_adaflo_params.approximate_projections = false; //@ todo
     curv_adaflo_params.curvature_correction    = false; //@ todo
+    verbosity_level                            = parameters.curv.verbosity_level;
     // curv_adaflo_params.damping_scale_factor = parameters.normal_vec.damping_scale_factor; //@
     // todo
   }

@@ -402,6 +402,11 @@ namespace MeltPoolDG
                         normal_vec.implementation,
                         "Choose the corresponding implementation of the normal vector operation.",
                         Patterns::Selection("meltpooldg|adaflo"));
+      prm.add_parameter(
+        "normal vec verbosity level",
+        normal_vec.verbosity_level,
+        "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
+        " base value is decisive.");
     }
     prm.leave_subsection();
     /*
@@ -420,6 +425,11 @@ namespace MeltPoolDG
                         curv.implementation,
                         "Choose the corresponding implementation of the curvature operation.",
                         Patterns::Selection("meltpooldg|adaflo"));
+      prm.add_parameter(
+        "curv verbosity level",
+        curv.verbosity_level,
+        "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
+        " base value is decisive.");
     }
     prm.leave_subsection();
     /*
