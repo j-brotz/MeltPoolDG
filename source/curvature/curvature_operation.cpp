@@ -69,8 +69,9 @@ namespace MeltPoolDG::Curvature
 
     scratch_data->get_constraint(curv_dof_idx).distribute(solution_curvature);
 
-    const int                 verbosity_l2_norm = dim > 1 ? 0 : 1;
-    const ConditionalOStream &pcout             = scratch_data->get_pcout(verbosity_l2_norm);
+    const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
+    const ConditionalOStream &pcout =
+      scratch_data->get_pcout(std::max(curvature_data.verbosity_level, verbosity_l2_norm));
     scratch_data->get_pcout(1) << "| curvature:         i=" << iter << " \t";
     pcout << "|k| = " << std::setprecision(11) << std::setw(15) << std::left
           << VectorTools::compute_L2_norm<dim>(solution_curvature,

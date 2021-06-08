@@ -132,17 +132,19 @@ namespace MeltPoolDG
   template <typename number = double>
   struct NormalVectorData
   {
-    number      damping_scale_factor = 0.5;
-    bool        do_matrix_free       = true;
-    std::string implementation       = "meltpooldg";
+    number       damping_scale_factor = 0.5;
+    bool         do_matrix_free       = true;
+    std::string  implementation       = "meltpooldg";
+    unsigned int verbosity_level      = 0;
   };
 
   template <typename number = double>
   struct CurvatureData
   {
-    number      damping_scale_factor = 0.0;
-    bool        do_matrix_free       = true;
-    std::string implementation       = "meltpooldg";
+    number       damping_scale_factor = 0.0;
+    bool         do_matrix_free       = true;
+    std::string  implementation       = "meltpooldg";
+    unsigned int verbosity_level      = 0;
   };
 
   template <typename number = double>
