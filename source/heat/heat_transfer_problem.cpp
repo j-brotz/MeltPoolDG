@@ -48,27 +48,35 @@ namespace MeltPoolDG::Heat
         if (laser_operation)
           {
             laser_operation->move_laser(dt);
-            const auto impact_type = laser_operation->get_laser_impact_type();
-            if (impact_type == volumetric)
-              laser_heat_source_operation->compute_volumetric_heat_source(
-                heat_operation->get_heat_source(),
-                *scratch_data,
-                temp_dof_idx,
-                laser_operation->get_laser_power(),
-                laser_operation->get_laser_position(),
-                true /* zero_out */);
-            else if (impact_type == interface)
-              laser_heat_source_operation->compute_interfacial_heat_source(
-                heat_operation->get_heat_source(),
-                *scratch_data,
-                temp_dof_idx,
-                laser_operation->get_laser_power(),
-                laser_operation->get_laser_position(),
-                heat_operation->get_level_set_as_heaviside(),
-                level_set_dof_idx,
-                true /* zero_out */);
-            else
-              AssertThrow(false, ExcMessage("Unknown laser impact type! Abort..."));
+            switch (laser_operation->get_laser_impact_type())
+              {
+                  case LaserImpactType::volumetric: {
+                    laser_heat_source_operation->compute_volumetric_heat_source(
+                      heat_operation->get_heat_source(),
+                      *scratch_data,
+                      temp_dof_idx,
+                      laser_operation->get_laser_power(),
+                      laser_operation->get_laser_position(),
+                      true /* zero_out */);
+                    break;
+                  }
+                  case LaserImpactType::interface: {
+                    laser_heat_source_operation->compute_interfacial_heat_source(
+                      heat_operation->get_heat_source(),
+                      *scratch_data,
+                      temp_dof_idx,
+                      laser_operation->get_laser_power(),
+                      laser_operation->get_laser_position(),
+                      heat_operation->get_level_set_as_heaviside(),
+                      level_set_dof_idx,
+                      true /* zero_out */);
+                    break;
+                  }
+                  default: {
+                    AssertThrow(false, ExcMessage("Unknown laser impact type! Abort..."));
+                    break;
+                  }
+              }
           }
 
         heat_operation->solve(dt);

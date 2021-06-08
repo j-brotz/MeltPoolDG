@@ -14,7 +14,7 @@ namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
-  enum LaserImpactType
+  enum class LaserImpactType
   {
     volumetric,
     interface
@@ -46,7 +46,7 @@ namespace MeltPoolDG::Heat
      */
     double laser_intensity;
 
-    LaserImpactType impact_type;
+    const LaserImpactType impact_type;
 
   public:
     LaserOperation(const ScratchData<dim> &    scratch_data_in,

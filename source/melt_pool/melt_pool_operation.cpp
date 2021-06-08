@@ -150,27 +150,35 @@ namespace MeltPoolDG::MeltPool
         laser_operation->get_laser_position());
     else
       {
-        const auto impact_type = laser_operation->get_laser_impact_type();
-        if (impact_type == Heat::volumetric)
-          laser_heat_source_operation->compute_volumetric_heat_source(
-            heat_operation->get_heat_source(),
-            *scratch_data,
-            temp_dof_idx,
-            laser_operation->get_laser_power(),
-            laser_operation->get_laser_position(),
-            true /* zero_out */);
-        if (impact_type == Heat::interface)
-          laser_heat_source_operation->compute_interfacial_heat_source(
-            heat_operation->get_heat_source(),
-            *scratch_data,
-            temp_dof_idx,
-            laser_operation->get_laser_power(),
-            laser_operation->get_laser_position(),
-            heat_operation->get_level_set_as_heaviside(),
-            ls_dof_idx,
-            true /* zero_out */);
-        else
-          AssertThrow(false, ExcMessage("Laser impact type not implemented here! Abort..."));
+        switch (laser_operation->get_laser_impact_type())
+          {
+              case Heat::LaserImpactType::volumetric: {
+                laser_heat_source_operation->compute_volumetric_heat_source(
+                  heat_operation->get_heat_source(),
+                  *scratch_data,
+                  temp_dof_idx,
+                  laser_operation->get_laser_power(),
+                  laser_operation->get_laser_position(),
+                  true /* zero_out */);
+                break;
+              }
+              case Heat::LaserImpactType::interface: {
+                laser_heat_source_operation->compute_interfacial_heat_source(
+                  heat_operation->get_heat_source(),
+                  *scratch_data,
+                  temp_dof_idx,
+                  laser_operation->get_laser_power(),
+                  laser_operation->get_laser_position(),
+                  heat_operation->get_level_set_as_heaviside(),
+                  ls_dof_idx,
+                  true /* zero_out */);
+                break;
+              }
+              default: {
+                AssertThrow(false, ExcMessage("Laser impact type not implemented here! Abort..."));
+                break;
+              }
+          }
 
         heat_operation->solve(dt);
       }

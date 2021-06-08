@@ -87,7 +87,7 @@ namespace MeltPoolDG::Heat
     (void)ls_dof_idx;
     (void)zero_out;
     throw ExcMessage(
-      "The Gurasov laser heat source model is not suited for surface impact! Abort..");
+      "The Gurasov laser heat source model is not suited for surface impact! Abort...");
   }
 
   template <int dim>
@@ -105,7 +105,7 @@ namespace MeltPoolDG::Heat
     (void)normal_vector;
     (void)delta_value;
     throw ExcMessage(
-      "The Gurasov laser heat source model is not suited for surface impact! Abort..");
+      "The Gurasov laser heat source model is not suited for surface impact! Abort...");
   }
 
   template class LaserHeatSourceGusarov<1>;
