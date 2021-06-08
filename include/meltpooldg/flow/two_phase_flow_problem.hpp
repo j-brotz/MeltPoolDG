@@ -104,22 +104,20 @@ namespace MeltPoolDG::Flow
 
     TimeIterator<double> time_iterator;
     DoFHandler<dim>      dof_handler;
-    DoFHandler<dim>      dof_handler_evapor;
 
     AffineConstraints<double> ls_constraints_dirichlet;
     AffineConstraints<double> ls_hanging_node_constraints;
     AffineConstraints<double> reinit_constraints_dirichlet;
-    AffineConstraints<double> evapor_hanging_node_constraints;
     AffineConstraints<double> temp_constraints_dirichlet;
 
     VectorType vel_force_rhs;
     VectorType mass_balance_rhs;
+    VectorType interface_velocity;
 
     unsigned int ls_dof_idx;
     unsigned int ls_hanging_nodes_dof_idx;
     unsigned int ls_quad_idx;
     unsigned int reinit_dof_idx;
-    unsigned int evapor_vel_dof_idx;
     unsigned int temp_dof_idx;
 
     const unsigned int &reinit_hanging_nodes_dof_idx = ls_hanging_nodes_dof_idx;

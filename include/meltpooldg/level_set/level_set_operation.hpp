@@ -9,7 +9,6 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/curvature/curvature_operation_base.hpp>
-#include <meltpooldg/level_set/level_set_operator_with_phase_change.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
@@ -68,8 +67,6 @@ namespace MeltPoolDG::LevelSet
     VectorType level_set_as_heaviside;
     VectorType distance_to_level_set;
 
-    std::shared_ptr<LevelSetOperatorWithPhaseChange<dim>> level_set_with_phase_change;
-
   public:
     LevelSetOperation() = default;
 
@@ -91,14 +88,6 @@ namespace MeltPoolDG::LevelSet
     void
     set_initial_condition(const Function<dim> &initial_field_function_level_set,
                           const VectorType &   initial_velocity_in);
-    /**
-     *  with evaporation
-     */
-    void
-    setup_with_evaporation(const unsigned int flow_vel_dof_idx_in,
-                           const unsigned int evapor_vel_dof_idx_in,
-                           const VectorType & advection_velocity,
-                           const VectorType & evaporation_velocity);
 
     void
     reinit();
