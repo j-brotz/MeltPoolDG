@@ -4,23 +4,25 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   LaserAnalyticalTemperatureField<dim>::LaserAnalyticalTemperatureField(
+    const ScratchData<dim> &                 scratch_data,
     const LaserData<double>::AnalyticalData &data_in,
     const MaterialData<double> &             material_in,
-    const double                             scan_speed_in)
-    : laser_data(data_in)
+    const double                             scan_speed_in,
+    const unsigned int                       temp_dof_idx)
+    : scratch_data(scratch_data)
+    , laser_data(data_in)
     , material(material_in)
     , scan_speed(scan_speed_in)
+    , temp_dof_idx(temp_dof_idx)
   {}
 
   template <int dim>
   void
   LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
-    const ScratchData<dim> &scratch_data,
-    const VectorType &      level_set_as_heaviside,
-    VectorType &            temperature,
-    const unsigned int      temp_dof_idx,
-    const double            laser_power,
-    const Point<dim> &      laser_position) const
+    const VectorType &level_set_as_heaviside,
+    VectorType &      temperature,
+    const double &    laser_power,
+    const Point<dim> &laser_position) const
   {
     level_set_as_heaviside.update_ghost_values();
     scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
@@ -54,21 +56,17 @@ namespace MeltPoolDG::Heat
   template <int dim>
   double
   LaserAnalyticalTemperatureField<dim>::local_compute_temperature_field(
-    Point<dim>        point,
+    const Point<dim> &point,
     const double      heaviside,
     const double      laser_power,
     const Point<dim> &laser_position) const
   {
-    const double &P  = laser_power;
-    const double &v  = scan_speed;
-    const double &T0 = laser_data.ambient_temperature;
+    const double P  = laser_power;
+    const double v  = scan_speed;
+    const double T0 = laser_data.ambient_temperature;
 
-    double weight;
-
-    if (laser_data.variable_properties_over_interface)
-      weight = heaviside;
-    else
-      weight = (heaviside > 0.5) ? 1.0 : 0.0;
+    const double weight =
+      (laser_data.variable_properties_over_interface) ? heaviside : ((heaviside > 0.5) ? 1.0 : 0.0);
 
     const double absorptivity = UtilityFunctions::interpolate(weight,
                                                               laser_data.absorptivity_gas,
@@ -85,10 +83,13 @@ namespace MeltPoolDG::Heat
     const double thermal_diffusivity = conductivity / (density * capacity);
 
     // modify temperature profile to be anisotropic
-    for (int d = 0; d < dim - 1; d++)
-      point[d] *= laser_data.temperature_x_to_y_ratio;
+    Point<dim> point_scaled = point;
 
-    double R = point.distance(laser_position);
+    if (std::abs(laser_data.temperature_x_to_y_ratio - 1.0) > 1e-10)
+      for (int d = 0; d < dim - 1; d++)
+        point_scaled[d] *= laser_data.temperature_x_to_y_ratio;
+
+    double R = point_scaled.distance(laser_position);
 
     if (R == 0.0)
       R = 1e-16;

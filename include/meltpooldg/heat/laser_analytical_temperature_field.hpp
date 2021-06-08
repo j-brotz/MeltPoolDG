@@ -18,17 +18,17 @@ namespace MeltPoolDG::Heat
   class LaserAnalyticalTemperatureField
   {
   public:
-    LaserAnalyticalTemperatureField(const LaserData<double>::AnalyticalData &data_in,
+    LaserAnalyticalTemperatureField(const ScratchData<dim> &                 scratch_data,
+                                    const LaserData<double>::AnalyticalData &data_in,
                                     const MaterialData<double> &             material_in,
-                                    const double                             scan_speed);
+                                    const double                             scan_speed,
+                                    const unsigned int                       temp_dof_idx);
 
     void
-    compute_temperature_field(const ScratchData<dim> &scratch_data,
-                              const VectorType &      level_set_as_heaviside,
-                              VectorType &            temperature,
-                              const unsigned int      temp_dof_idx,
-                              const double            laser_power,
-                              const Point<dim> &      laser_position) const;
+    compute_temperature_field(const VectorType &level_set_as_heaviside,
+                              VectorType &      temperature,
+                              const double &    laser_power,
+                              const Point<dim> &laser_position) const;
 
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
@@ -38,13 +38,15 @@ namespace MeltPoolDG::Heat
      *  H. Garmestani and S. Y. Liang
      */
     double
-    local_compute_temperature_field(Point<dim>        point,
+    local_compute_temperature_field(const Point<dim> &point,
                                     const double      heaviside,
                                     const double      laser_power,
                                     const Point<dim> &laser_position) const;
 
+    const ScratchData<dim> &                 scratch_data;
     const LaserData<double>::AnalyticalData &laser_data;
     const MaterialData<double> &             material;
     const double                             scan_speed;
+    const unsigned int                       temp_dof_idx;
   };
 } // namespace MeltPoolDG::Heat

@@ -85,9 +85,11 @@ namespace MeltPoolDG::MeltPool
     else if (data_in.laser.heat_source_model == "Analytical")
       {
         laser_analytical_temperature_field =
-          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(data_in.laser.analytical,
+          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(*scratch_data_in,
+                                                                       data_in.laser.analytical,
                                                                        data_in.material,
-                                                                       data_in.laser.scan_speed);
+                                                                       data_in.laser.scan_speed,
+                                                                       temp_dof_idx_in);
       }
     else
       AssertThrow(false,
@@ -105,10 +107,8 @@ namespace MeltPoolDG::MeltPool
      */
     if (laser_analytical_temperature_field)
       laser_analytical_temperature_field->compute_temperature_field(
-        *scratch_data,
         level_set_as_heaviside,
         heat_operation->get_temperature(),
-        temp_dof_idx,
         laser_operation->get_laser_power(),
         laser_operation->get_laser_position());
     else
@@ -141,10 +141,8 @@ namespace MeltPoolDG::MeltPool
     // 1) compute temperature field
     if (laser_analytical_temperature_field)
       laser_analytical_temperature_field->compute_temperature_field(
-        *scratch_data,
         level_set_as_heaviside,
         heat_operation->get_temperature(),
-        temp_dof_idx,
         laser_operation->get_laser_power(),
         laser_operation->get_laser_position());
     else
