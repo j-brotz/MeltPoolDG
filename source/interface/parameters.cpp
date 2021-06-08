@@ -43,8 +43,8 @@ namespace MeltPoolDG
     /*
      *  set the maximum temperature of the melt pool if not specified
      */
-    if (mp.max_temperature < mp.boiling_temperature)
-      mp.max_temperature = mp.boiling_temperature + 500;
+    if (laser.analytical.max_temperature < mp.boiling_temperature)
+      laser.analytical.max_temperature = mp.boiling_temperature + 500;
     /*
      *  check if level set assignment of gaseous/liquid phase is done correctly
      */
@@ -577,10 +577,6 @@ namespace MeltPoolDG
                         laser.scan_speed,
                         "Scan speed of the laser (in case of an analytical temperature field).");
       prm.add_parameter(
-        "laser variable properties over interface",
-        laser.variable_properties_over_interface,
-        "Set this parameter to true to interpolate the thermal properties over the interface smoothly.");
-      prm.add_parameter(
         "laser do move",
         laser.do_move,
         "Set this parameter to true to move the laser in x-direction with the given parameter scan speed "
@@ -588,7 +584,10 @@ namespace MeltPoolDG
       prm.add_parameter("laser heat source model",
                         laser.heat_source_model,
                         "Laser heat source model.",
-                        Patterns::Selection("Gusarov|Gauss"));
+                        Patterns::Selection("Gusarov|Gauss|Analytical"));
+      /*
+       *   Gusarov
+       */
       prm.add_parameter("laser gusarov laser beam radius",
                         laser.gusarov.laser_beam_radius,
                         "Laser beam radius.");
@@ -601,6 +600,9 @@ namespace MeltPoolDG
       prm.add_parameter("laser gusarov layer thickness",
                         laser.gusarov.layer_thickness,
                         "Layer thickness");
+      /*
+       *   Gauss
+       */
       prm.add_parameter(
         "laser impact type",
         laser.impact_type,
@@ -612,6 +614,30 @@ namespace MeltPoolDG
       prm.add_parameter("laser gauss absorptivity",
                         laser.gauss.absorptivity,
                         "Laser energy absorptivity.");
+      /*
+       *   Analytical temperature field
+       */
+      prm.add_parameter("laser analytical absorptivity liquid",
+                        laser.analytical.absorptivity_liquid,
+                        "Absorptivity of the liquid part of domain");
+      prm.add_parameter("laser analytical absorptivity gas",
+                        laser.analytical.absorptivity_gas,
+                        "Absorptivity of the gaseous part of domain");
+      prm.add_parameter("laser analytical ambient temperature",
+                        laser.analytical.ambient_temperature,
+                        "Ambient temperature in the inert gas.");
+      prm.add_parameter(
+        "laser analytical max temperature",
+        laser.analytical.max_temperature,
+        "Maximum temperature arising in the melt pool. If this temperature is lower than the boiling"
+        " temperature, this value is corrected to correspond to the boiling temperature + 500 K.");
+      prm.add_parameter("laser analytical temperature x to y ratio",
+                        laser.analytical.temperature_x_to_y_ratio,
+                        "This factor scales the analytical temperature field to be anisotropic.");
+      prm.add_parameter(
+        "laser analytical variable properties over interface",
+        laser.analytical.variable_properties_over_interface,
+        "Set this parameter to true to interpolate the thermal properties over the interface smoothly.");
     }
     prm.leave_subsection();
     /*
@@ -632,14 +658,6 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("melt pool");
     {
-      prm.add_parameter("mp temperature formulation",
-                        mp.temperature_formulation,
-                        "Definition type of the temperature field: "
-                        "(1) analytical expression (2) solve heat equation (not implemented yet)",
-                        Patterns::Selection("analytical"));
-      prm.add_parameter("mp temperature x to y ratio",
-                        mp.temperature_x_to_y_ratio,
-                        "This factor scales the analytical temperature field to be anisotropic.");
       prm.add_parameter("mp melt pool center",
                         mp.melt_pool_center,
                         "Center coordinates of the melt pool ellipse/parabola. If no value is "
@@ -664,20 +682,9 @@ namespace MeltPoolDG
         "mp set level set to zero in solid",
         mp.set_level_set_to_zero_in_solid,
         "Set this parameter to true to constrain the level set in the solid domain.");
-      prm.add_parameter("mp ambient temperature",
-                        mp.ambient_temperature,
-                        "Ambient temperature in the inert gas.");
       prm.add_parameter("mp boiling temperature",
                         mp.boiling_temperature,
                         "Boiling temperature of the melt.");
-      prm.add_parameter(
-        "mp max temperature",
-        mp.max_temperature,
-        "Maximum temperature arising in the melt pool. If this temperature is lower than the boiling"
-        " temperature, this value is corrected to correspond to the boiling temperature + 500 K.");
-      prm.add_parameter("mp liquid absorptivity",
-                        mp.liquid.absorptivity,
-                        "Absorptivity of the liquid part of domain");
       prm.add_parameter("mp liquid melt pool radius",
                         mp.liquid.melt_pool_radius,
                         "Set the radius of the liquid parts of the melt pool ellipse "
@@ -688,9 +695,6 @@ namespace MeltPoolDG
       prm.add_parameter("mp liquid melting point",
                         mp.liquid.melting_point,
                         "Melting point of the liquid part of domain");
-      prm.add_parameter("mp gas absorptivity",
-                        mp.gas.absorptivity,
-                        "Absorptivity of the gaseous part of domain");
     }
 
     prm.leave_subsection();

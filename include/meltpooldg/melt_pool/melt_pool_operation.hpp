@@ -12,6 +12,7 @@
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
@@ -40,6 +41,8 @@ namespace MeltPoolDG
       std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
       std::shared_ptr<RecoilPressureOperation<dim>>   recoil_pressure_operation;
       std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
+      std::shared_ptr<Heat::LaserAnalyticalTemperatureField<dim>>
+        laser_analytical_temperature_field;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
@@ -76,17 +79,10 @@ namespace MeltPoolDG
                         bool                                            do_recoil_pressure = true);
 
       void
-      set_initial_condition(const VectorType &level_set_as_heaviside,
-                            VectorType &      level_set,
-                            const double &    density_gas,
-                            const double &    density_liquid);
+      set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
 
       void
-      solve(VectorType &      vel_force_rhs,
-            const VectorType &level_set_as_heaviside,
-            const double &    density_gas,
-            const double &    density_liquid,
-            const double &    dt);
+      solve(VectorType &vel_force_rhs, const VectorType &level_set_as_heaviside, const double &dt);
 
       void
       reinit();
