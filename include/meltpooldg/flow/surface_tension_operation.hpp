@@ -72,22 +72,22 @@ namespace MeltPoolDG::Flow
      */
     static void
     compute_temperature_dependent_surface_tension(
-      ScratchData<dim>       scratch_data,
-      VectorType &           force_rhs,
-      const VectorType &     level_set_as_heaviside,
-      const VectorType &     solution_curvature,
-      const VectorType &     temperature,
-      const BlockVectorType &solution_normal_vector,
-      const double           surface_tension_coefficient,
-      const double           temperature_dependent_surface_tension_coefficient,
-      const double           surface_tension_reference_temperature,
-      const double           surface_tension_coefficient_residual_fraction,
-      const unsigned int     ls_dof_idx,
-      const unsigned int     curv_dof_idx,
-      const unsigned int     normal_dof_idx,
-      const unsigned int     flow_vel_dof_idx,
-      const unsigned int     flow_vel_quad_idx,
-      const unsigned int     temp_dof_idx,
-      const bool             zero_out = true);
+      const ScratchData<dim> &scratch_data,
+      VectorType &            force_rhs,
+      const VectorType &      level_set_as_heaviside,
+      const VectorType &      solution_curvature,
+      const VectorType &      temperature,
+      const BlockVectorType & solution_normal_vector,
+      const double            surface_tension_coefficient,
+      const double            temperature_dependent_surface_tension_coefficient,
+      const double            surface_tension_reference_temperature,
+      const double            surface_tension_coefficient_residual_fraction,
+      const unsigned int      ls_dof_idx,
+      const unsigned int      curv_dof_idx,
+      const unsigned int      normal_dof_idx,
+      const unsigned int      flow_vel_dof_idx,
+      const unsigned int      flow_vel_quad_idx,
+      const unsigned int      temp_dof_idx,
+      const bool              zero_out = true);
   };
 } // namespace MeltPoolDG::Flow

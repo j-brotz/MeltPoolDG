@@ -62,37 +62,31 @@ namespace MeltPoolDG::Flow
   template <int dim>
   void
   SurfaceTensionOperation<dim>::compute_temperature_dependent_surface_tension(
-    ScratchData<dim>       scratch_data,
-    VectorType &           force_rhs,
-    const VectorType &     level_set_as_heaviside,
-    const VectorType &     solution_curvature,
-    const VectorType &     temperature,
-    const BlockVectorType &solution_normal_vector,
-    const double           surface_tension_coefficient,
-    const double           temperature_dependent_surface_tension_coefficient,
-    const double           surface_tension_reference_temperature,
-    const double           surface_tension_coefficient_residual_fraction,
-    const unsigned int     ls_dof_idx,
-    const unsigned int     curv_dof_idx,
-    const unsigned int     normal_dof_idx,
-    const unsigned int     flow_vel_dof_idx,
-    const unsigned int     flow_vel_quad_idx,
-    const unsigned int     temp_dof_idx,
-    const bool             zero_out)
+    const ScratchData<dim> &scratch_data,
+    VectorType &            force_rhs,
+    const VectorType &      level_set_as_heaviside,
+    const VectorType &      solution_curvature,
+    const VectorType &      temperature,
+    const BlockVectorType & solution_normal_vector,
+    const double            surface_tension_coefficient,
+    const double            temperature_dependent_surface_tension_coefficient,
+    const double            surface_tension_reference_temperature,
+    const double            surface_tension_coefficient_residual_fraction,
+    const unsigned int      ls_dof_idx,
+    const unsigned int      curv_dof_idx,
+    const unsigned int      normal_dof_idx,
+    const unsigned int      flow_vel_dof_idx,
+    const unsigned int      flow_vel_quad_idx,
+    const unsigned int      temp_dof_idx,
+    const bool              zero_out)
   {
     solution_curvature.update_ghost_values();
     temperature.update_ghost_values();
     solution_normal_vector.update_ghost_values();
 
-    double tolerance_normal_vector(
-      std::min(1e-2,
-               std::max(std::pow(10,
-                                 UtilityFunctions::get_exponent_power_ten(
-                                   std::pow(GridTools::volume<dim>(scratch_data.get_triangulation(),
-                                                                   scratch_data.get_mapping()),
-                                            1. / dim))) *
-                          1e-3,
-                        1e-12)));
+    const double tolerance_normal_vector =
+      UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
+                                                            scratch_data.get_mapping());
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,

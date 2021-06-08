@@ -18,14 +18,8 @@ namespace MeltPoolDG::Curvature
     , curv_quad_idx(curv_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
     , tolerance_normal_vector(
-        std::min(1e-2,
-                 std::max(std::pow(10,
-                                   UtilityFunctions::get_exponent_power_ten(std::pow(
-                                     GridTools::volume<dim>(scratch_data.get_triangulation(),
-                                                            scratch_data.get_mapping()),
-                                     1. / dim))) *
-                            1e-3,
-                          1e-12)))
+        UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
+                                                              scratch_data.get_mapping()))
   {
     this->reset_indices(curv_dof_idx_in, curv_quad_idx_in);
   }
