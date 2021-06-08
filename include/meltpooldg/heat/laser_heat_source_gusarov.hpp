@@ -60,6 +60,23 @@ namespace MeltPoolDG::Heat
                                          const Point<dim> &laser_position,
                                          double            power) const final;
 
+    void
+    compute_interfacial_heat_source(VectorType &            heat_source_vector,
+                                    const ScratchData<dim> &scratch_data,
+                                    unsigned int            temp_dof_idx,
+                                    double                  laser_power,
+                                    const Point<dim> &      laser_position,
+                                    const VectorType &      level_set_heaviside,
+                                    unsigned int            ls_dof_idx,
+                                    bool                    zero_out = true) const final;
+
+    double
+    local_compute_interfacial_heat_source(const Point<dim> &            position,
+                                          const Point<dim> &            laser_position,
+                                          double                        power,
+                                          const Tensor<1, dim, double> &normal_vector,
+                                          double                        delta_value) const final;
+
   private:
     /**
      * Equation (26) corrected to match Figure 5 of Gusarov et al. (2009)

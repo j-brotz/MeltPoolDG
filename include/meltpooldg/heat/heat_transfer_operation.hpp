@@ -106,5 +106,8 @@ namespace MeltPoolDG::Heat
 
     VectorType &
     get_heat_source();
+
+    const VectorType &
+    get_level_set_as_heaviside() const;
   };
 } // namespace MeltPoolDG::Heat

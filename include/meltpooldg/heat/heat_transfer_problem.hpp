@@ -12,6 +12,8 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
+#include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
@@ -50,6 +52,9 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<ScratchData<dim>>           scratch_data;
     std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
     std::shared_ptr<Postprocessor<dim>>         post_processor;
+
+    std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
+    std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
 
   public:
     HeatTransferProblem() = default;

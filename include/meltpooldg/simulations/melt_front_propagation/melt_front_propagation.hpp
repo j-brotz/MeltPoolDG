@@ -42,33 +42,27 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   static constexpr double T_0 = 1000.0;
 
   template <int dim>
-  class LaserHeatSourceFunction : public Function<dim>
+  class InitialLevelSetHeaviside : public Function<dim>
   {
   public:
-    LaserHeatSourceFunction(const LaserData<double> &laser_data)
+    InitialLevelSetHeaviside(const double z_level, const double eps)
       : Function<dim>()
-      , center(MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(laser_data.center))
-      , power(laser_data.power)
-    {
-      if (laser_data.heat_source_model == "Gusarov")
-        laser_model = std::make_unique<Heat::LaserHeatSourceGusarov<dim>>(laser_data.gusarov);
-      else if (laser_data.heat_source_model == "Gauss")
-        laser_model = std::make_unique<Heat::LaserHeatSourceGauss<dim>>(laser_data.gauss);
-      else
-        AssertThrow(false, ExcMessage("Unknown laser heat source model! Abort..."));
-    }
+      , z_level(z_level)
+      , eps(eps)
+    {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      return laser_model->local_compute_volumetric_heat_source(p, center, power);
+      const auto z = p[dim - 1];
+      return UtilityFunctions::CharacteristicFunctions::heaviside(z_level - z, eps);
     }
 
   private:
-    std::unique_ptr<Heat::LaserHeatSourceBase<dim>> laser_model;
-    Point<dim>                                      center;
-    const double                                    power;
+    const double z_level;
+    const double eps;
   };
+
 
   template <int dim>
   class SimulationMeltFrontPropagation : public SimulationBase<dim>
@@ -100,26 +94,69 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
         {
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<2>>(this->mpi_communicator);
-          std::vector<unsigned> refinements(2, 1);
-          refinements[0] = 3;
-          // create mesh
-          const Point<2> left(0, -z_max);
-          const Point<2> right(x_max, 0);
-          GridGenerator::subdivided_hyper_rectangle(*this->triangulation, refinements, left, right);
-          this->triangulation->refine_global(this->parameters.base.global_refinements);
+
+          if (!this->parameters.heat.two_phase)
+            {
+              std::vector<unsigned> refinements(2, 1);
+              refinements[0] = 3;
+              // create mesh
+              const Point<2> left(0, -z_max);
+              const Point<2> right(x_max, 0);
+              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        refinements,
+                                                        left,
+                                                        right);
+              this->triangulation->refine_global(this->parameters.base.global_refinements);
+            }
+          else
+            {
+              std::vector<unsigned> refinements(2, 1);
+              refinements[0] = 3;
+              refinements[1] = 2;
+              // create mesh
+              const Point<2> left(0, -z_max);
+              const Point<2> right(x_max, z_max);
+              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        refinements,
+                                                        left,
+                                                        right);
+              this->triangulation->refine_global(this->parameters.base.global_refinements);
+            }
         }
       else if constexpr (dim == 3)
         {
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<3>>(this->mpi_communicator);
-          std::vector<unsigned int> refinements(3, 1);
-          refinements[0] = 3;
-          refinements[1] = 3;
-          // create mesh
-          const Point<3> left(0, 0, 0);
-          const Point<3> right(x_max, y_max, -z_max);
-          GridGenerator::subdivided_hyper_rectangle(*this->triangulation, refinements, left, right);
-          this->triangulation->refine_global(this->parameters.base.global_refinements);
+
+          if (!this->parameters.heat.two_phase)
+            {
+              std::vector<unsigned int> refinements(3, 1);
+              refinements[0] = 3;
+              refinements[1] = 3;
+              // create mesh
+              const Point<3> left(0, 0, 0);
+              const Point<3> right(x_max, y_max, -z_max);
+              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        refinements,
+                                                        left,
+                                                        right);
+              this->triangulation->refine_global(this->parameters.base.global_refinements);
+            }
+          else
+            {
+              std::vector<unsigned int> refinements(3, 1);
+              refinements[0] = 3;
+              refinements[1] = 3;
+              refinements[2] = 2;
+              // create mesh
+              const Point<3> left(0, 0, z_max);
+              const Point<3> right(x_max, y_max, -z_max);
+              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        refinements,
+                                                        left,
+                                                        right);
+              this->triangulation->refine_global(this->parameters.base.global_refinements);
+            }
         }
       else
         AssertThrow(false, ExcMessage("Impossible dimension! Abort ..."));
@@ -149,8 +186,12 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {
       this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                      "heat_transfer");
-      this->attach_source_field(
-        std::make_shared<LaserHeatSourceFunction<dim>>(this->parameters.laser), "heat_transfer");
+      if (this->parameters.heat.two_phase)
+        this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
+                                                                                       z_max / 5),
+                                       "prescribed_level_set");
+      this->attach_velocity_field(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+                                  "heat_transfer");
     }
   };
 } // namespace MeltPoolDG::Simulation::MeltFrontPropagation
