@@ -135,7 +135,7 @@ namespace MeltPoolDG::Reinitialization
           scratch_data.get_min_cell_size(
             this->dof_idx); // @ todo: check how cell size can be extracted from matrix free class
 
-    AssertThrow(eps_ > 0.0, ExcMessage("reinitialization operator: epsilon must be set"));
+    Assert(eps_ > 0.0, ExcMessage("reinitialization operator: epsilon must be set"));
 
     this->normal_vec.update_ghost_values();
 

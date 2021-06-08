@@ -134,13 +134,15 @@ namespace MeltPoolDG::Evaporation
     else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "interface value")
       {
         evapor_mass_flux_operator =
-          std::make_shared<EvaporationMassFluxOperatorInterfaceValue<dim>>(*scratch_data,
-                                                                           *evapor_model,
-                                                                           level_set_as_heaviside,
-                                                                           distance,
-                                                                           normal_vector,
-                                                                           ls_hanging_nodes_dof_idx,
-                                                                           temp_dof_idx);
+          std::make_shared<EvaporationMassFluxOperatorInterfaceValue<dim>>(
+            *scratch_data,
+            *evapor_model,
+            level_set_as_heaviside,
+            distance,
+            normal_vector,
+            ls_hanging_nodes_dof_idx,
+            temp_dof_idx,
+            evaporation_data.interface_value_n_iterations);
       }
     else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "line integral")
       evapor_mass_flux_operator =
@@ -169,6 +171,12 @@ namespace MeltPoolDG::Evaporation
         evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux,
                                                                  *temperature);
       }
+    scratch_data->get_pcout(1) << "evaporative mass flux: " << std::left << std::setprecision(10)
+                               << MeltPoolDG::VectorTools::compute_L2_norm(evaporative_mass_flux,
+                                                                           *scratch_data,
+                                                                           ls_hanging_nodes_dof_idx,
+                                                                           ls_quad_idx)
+                               << std::endl;
   }
 
   template <int dim>

@@ -34,6 +34,8 @@ namespace MeltPoolDG::Evaporation
     const BlockVectorType &     normal_vector;
     const unsigned int          ls_dof_idx;
     const unsigned int          temp_dof_idx;
+    const unsigned int          n_iterations;
+    const double                tolerance_normal_vector;
 
   public:
     EvaporationMassFluxOperatorInterfaceValue(const ScratchData<dim> &    scratch_data,
@@ -42,7 +44,8 @@ namespace MeltPoolDG::Evaporation
                                               const VectorType &          distance,
                                               const BlockVectorType &     normal_vector,
                                               const unsigned int          ls_dof_idx,
-                                              const unsigned int          temp_dof_idx);
+                                              const unsigned int          temp_dof_idx,
+                                              const unsigned int          n_iterations);
 
     /**
      * DOCU: TODO

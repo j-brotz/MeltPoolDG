@@ -561,5 +561,19 @@ namespace MeltPoolDG
 
       return result;
     }
+
+    template <int dim>
+    double
+    compute_numerical_zero_of_norm(const Triangulation<dim> &triangulation,
+                                   const Mapping<dim> &      mapping)
+    {
+      return std::min(1e-2,
+                      std::max(std::pow(10,
+                                        UtilityFunctions::get_exponent_power_ten(
+                                          std::pow(GridTools::volume<dim>(triangulation, mapping),
+                                                   1. / dim))) *
+                                 1e-3,
+                               1e-12));
+    }
   } // namespace UtilityFunctions
 } // namespace MeltPoolDG
