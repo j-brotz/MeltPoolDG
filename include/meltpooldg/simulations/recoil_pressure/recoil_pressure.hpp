@@ -190,6 +190,7 @@ namespace MeltPoolDG
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
+          this->attach_initial_condition(std::shared_ptr<Function<dim>>(), "heat_transfer");
         }
       };
 

@@ -434,12 +434,9 @@ namespace MeltPoolDG::Flow
      */
     if (melt_pool_operation)
       {
-        auto get_initial_temperature = [&]() -> Function<dim> & {
-          return *base_in->get_initial_condition("heat_transfer");
-        };
         melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
                                                    level_set_operation.get_level_set(),
-                                                   get_initial_temperature);
+                                                   base_in->get_initial_condition("heat_transfer"));
       }
   }
 

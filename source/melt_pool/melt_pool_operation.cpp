@@ -104,9 +104,9 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   MeltPoolOperation<dim>::set_initial_condition(
-    const VectorType &                                    level_set_as_heaviside,
-    VectorType &                                          level_set,
-    [[maybe_unused]] std::function<Function<dim> &(void)> get_initial_temperature)
+    const VectorType &                              level_set_as_heaviside,
+    VectorType &                                    level_set,
+    [[maybe_unused]] std::shared_ptr<Function<dim>> initial_temperature)
   {
     /*
      *  Compute analytical temperature field
@@ -119,7 +119,8 @@ namespace MeltPoolDG::MeltPool
         laser_operation->get_laser_position());
     else
       {
-        heat_operation->set_initial_condition(get_initial_temperature());
+        if (initial_temperature)
+          heat_operation->set_initial_condition(*initial_temperature);
       }
     /*
      *  Compute the initial solid and liquid phases

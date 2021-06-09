@@ -80,9 +80,9 @@ namespace MeltPoolDG
                         double                                          start_time_in);
 
       void
-      set_initial_condition(const VectorType &                   level_set_as_heaviside,
-                            VectorType &                         level_set,
-                            std::function<Function<dim> &(void)> get_initial_temperature);
+      set_initial_condition(const VectorType &             level_set_as_heaviside,
+                            VectorType &                   level_set,
+                            std::shared_ptr<Function<dim>> initial_temperature);
 
       void
       solve(VectorType &vel_force_rhs, const VectorType &level_set_as_heaviside, const double &dt);
