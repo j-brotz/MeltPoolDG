@@ -211,6 +211,7 @@ namespace MeltPoolDG
     std::string melt_pool_center               = "not_initialized";
     bool        set_velocity_to_zero_in_solid  = false;
     bool        set_level_set_to_zero_in_solid = false;
+    bool        do_recoil_pressure             = false;
     number      domain_x_min                   = 0.0;
     number      domain_y_min                   = 0.0;
     number      domain_x_max                   = 0.0;

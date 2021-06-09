@@ -13,13 +13,14 @@ namespace MeltPoolDG::MeltPool
     const std::shared_ptr<BoundaryConditions<dim>> &heat_bc,
     const Parameters<double> &                      data_in,
     const unsigned int                              ls_dof_idx_in,
+    VectorType *                                    level_set_as_heaviside_in,
     const unsigned int                              reinit_dof_idx_in,
     const unsigned int                              flow_vel_dof_idx_in,
     const unsigned int                              flow_vel_quad_idx_in,
+    VectorType *                                    velocity_in,
     const unsigned int                              temp_dof_idx_in,
     const unsigned int                              temp_quad_idx_in,
-    const double                                    start_time_in,
-    bool                                            do_recoil_pressure)
+    const double                                    start_time_in)
     : scratch_data(scratch_data_in)
     , ls_dof_idx(ls_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
@@ -52,12 +53,15 @@ namespace MeltPoolDG::MeltPool
                                                          temp_dof_idx,
                                                          temp_dof_idx, //@todo: hanging nodes
                                                          temp_quad_idx,
-                                                         flow_vel_dof_idx);
+                                                         flow_vel_dof_idx,
+                                                         velocity_in,
+                                                         ls_dof_idx,
+                                                         level_set_as_heaviside_in);
 
     /*
      * initialize the recoil pressure operation class
      */
-    if (do_recoil_pressure)
+    if (data_in.mp.do_recoil_pressure)
       recoil_pressure_operation =
         std::make_shared<RecoilPressureOperation<dim>>(*scratch_data_in,
                                                        data_in,
@@ -93,14 +97,16 @@ namespace MeltPoolDG::MeltPool
       }
     else
       AssertThrow(false,
-                  ExcMessage("No requested laser model found. Please speficy the "
+                  ExcMessage("No requested laser model found. Please specify the "
                              "heat source model in the laser section of the input parameters."))
   }
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::set_initial_condition(const VectorType &level_set_as_heaviside,
-                                                VectorType &      level_set)
+  MeltPoolOperation<dim>::set_initial_condition(
+    const VectorType &                              level_set_as_heaviside,
+    VectorType &                                    level_set,
+    [[maybe_unused]] std::shared_ptr<Function<dim>> initial_temperature)
   {
     /*
      *  Compute analytical temperature field
@@ -113,10 +119,7 @@ namespace MeltPoolDG::MeltPool
         laser_operation->get_laser_position());
     else
       {
-        // @todo:
-        // incorporate initial temperature field
-        AssertThrow(false, ExcNotImplemented());
-        heat_operation->get_temperature() = 0;
+        heat_operation->set_initial_condition(*initial_temperature);
       }
     /*
      *  Compute the initial solid and liquid phases
@@ -147,13 +150,36 @@ namespace MeltPoolDG::MeltPool
         laser_operation->get_laser_position());
     else
       {
-        laser_heat_source_operation->compute_volumetric_heat_source(
-          heat_operation->get_heat_source(),
-          *scratch_data,
-          temp_dof_idx,
-          laser_operation->get_laser_power(),
-          laser_operation->get_laser_position(),
-          true /* zero_out */);
+        switch (laser_operation->get_laser_impact_type())
+          {
+              case Heat::LaserImpactType::volumetric: {
+                laser_heat_source_operation->compute_volumetric_heat_source(
+                  heat_operation->get_heat_source(),
+                  *scratch_data,
+                  temp_dof_idx,
+                  laser_operation->get_laser_power(),
+                  laser_operation->get_laser_position(),
+                  true /* zero_out */);
+                break;
+              }
+              case Heat::LaserImpactType::interface: {
+                laser_heat_source_operation->compute_interfacial_heat_source(
+                  heat_operation->get_heat_source(),
+                  *scratch_data,
+                  temp_dof_idx,
+                  laser_operation->get_laser_power(),
+                  laser_operation->get_laser_position(),
+                  heat_operation->get_level_set_as_heaviside(),
+                  ls_dof_idx,
+                  true /* zero_out */);
+                break;
+              }
+              default: {
+                AssertThrow(false, ExcMessage("Laser impact type not implemented here! Abort..."));
+                break;
+              }
+          }
+
         heat_operation->solve(dt);
       }
 

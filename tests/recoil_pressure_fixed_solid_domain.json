@@ -81,6 +81,7 @@
     "laser analytical temperature x to y ratio": "3."
   },
   "melt pool": {
+    "mp do recoil pressure": "true",
     "mp boiling temperature": "3000.",
     "mp domain x max": "0.000100",
     "mp domain x min": "-0.000100",
