@@ -434,9 +434,12 @@ namespace MeltPoolDG::Flow
      */
     if (melt_pool_operation)
       {
-        melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
-                                                   level_set_operation.get_level_set(),
-                                                   base_in->get_initial_condition("heat_transfer"));
+        melt_pool_operation->set_initial_condition(
+          level_set_operation.get_level_set_as_heaviside(),
+          level_set_operation.get_level_set(),
+          base_in->parameters.laser.heat_source_model == "Analytical" ?
+            nullptr :
+            base_in->get_initial_condition("heat_transfer"));
       }
   }
 

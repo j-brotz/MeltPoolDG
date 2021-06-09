@@ -119,8 +119,7 @@ namespace MeltPoolDG::MeltPool
         laser_operation->get_laser_position());
     else
       {
-        if (initial_temperature)
-          heat_operation->set_initial_condition(*initial_temperature);
+        heat_operation->set_initial_condition(*initial_temperature);
       }
     /*
      *  Compute the initial solid and liquid phases
