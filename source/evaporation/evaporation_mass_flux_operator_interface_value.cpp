@@ -153,7 +153,7 @@ namespace MeltPoolDG::Evaporation
          * debug
          */
         const auto global_points_normal_to_interface_all =
-          Utilities::MPI::all_reduce<std::vector<Point<dim>>>(
+          Utilities::MPI::reduce<std::vector<Point<dim>>>(
             evaluation_points, scratch_data.get_mpi_comm(), [](const auto &a, const auto &b) {
               auto result = a;
               result.insert(result.end(), b.begin(), b.end());
