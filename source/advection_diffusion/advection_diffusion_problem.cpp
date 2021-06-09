@@ -18,13 +18,6 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    AssertThrow(base_in->get_advection_field("advection_diffusion"),
-                ExcMessage(" It seems that your SimulationBase object does not contain "
-                           "a valid advection velocity. A shared_ptr to your advection velocity "
-                           "function, e.g., AdvectionFunc<dim> must be specified as follows: "
-                           "this->attach_advection_field(std::make_shared<AdvecFunc<dim>>(), "
-                           "'advection_diffusion') "));
-
     initialize(base_in);
 
     while (!time_iterator.is_finished())
@@ -232,14 +225,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     /*
      *  set initial conditions for the advected field
      */
-    AssertThrow(
-      base_in->get_initial_condition("advection_diffusion"),
-      ExcMessage(
-        "It seems that your SimulationBase object does not contain "
-        "a valid initial field function for the level set field. A shared_ptr to your initial field "
-        "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
-        "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), "
-        "'advection_diffusion') "));
     compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
     advec_diff_operation->set_initial_condition(
       *base_in->get_initial_condition("advection_diffusion"), advection_velocity);

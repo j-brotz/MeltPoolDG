@@ -31,7 +31,8 @@ namespace MeltPoolDG::Heat
         scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
                                   << time_iterator.get_current_time();
 
-        if (const auto velocity_field_function = base_in->get_velocity_field("heat_transfer"))
+        if (const auto velocity_field_function =
+              base_in->get_velocity_field("heat_transfer", true /*is_optional*/))
           compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
 
         if (base_in->parameters.heat.two_phase)
@@ -39,7 +40,8 @@ namespace MeltPoolDG::Heat
                                level_set_dof_idx,
                                *base_in->get_initial_condition("prescribed_level_set"));
 
-        if (const auto source_field_function = base_in->get_source_field("heat_transfer"))
+        if (const auto source_field_function =
+              base_in->get_source_field("heat_transfer", true /*is_optional*/))
           compute_field_vector(heat_operation->get_heat_source(),
                                temp_dof_idx,
                                *source_field_function);
@@ -151,16 +153,6 @@ namespace MeltPoolDG::Heat
                                base_in->parameters.heat.time_stepping.time_step_size,
                                base_in->parameters.heat.time_stepping.max_n_steps,
                                false /*cfl_condition-->not supported yet*/});
-    /*
-     *  set initial conditions of the levelset function
-     */
-    AssertThrow(
-      base_in->get_initial_condition("heat_transfer"),
-      ExcMessage(
-        "It seems that your SimulationBase object does not contain "
-        "a valid initial field function for the temperature field. A shared_ptr to your initial field "
-        "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
-        "  this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), 'temperature') "));
     /*
      *    set velocity field
      */

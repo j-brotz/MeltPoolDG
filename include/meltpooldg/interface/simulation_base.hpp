@@ -298,82 +298,89 @@ namespace MeltPoolDG
      * Getter functions for field conditions
      */
     const std::shared_ptr<Function<dim>> &
-    get_initial_condition(const std::string operation_name)
+    get_initial_condition(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
-      AssertThrow(
-        field_conditions,
-        ExcMessage(
-          "It seems that your SimulationBase object does not contain a valid initial field function for the \"" +
-          operation_name +
-          "\" field. A shared_ptr to your initial field function, e.g., MyInitializeFunc<dim>; can "
-          "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-          "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(...), \"" +
-          operation_name + "\");"));
+
+      if (!is_optional)
+        AssertThrow(
+          field_conditions && field_conditions->initial_field,
+          ExcMessage(
+            "It seems that your SimulationBase object does not contain a valid initial field function for the \"" +
+            operation_name +
+            "\" field. A shared_ptr to your initial field function, e.g., MyInitializeFunc<dim>; can "
+            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
+            "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(...), \"" +
+            operation_name + "\");"));
       return field_conditions->initial_field;
     }
 
     const std::shared_ptr<Function<dim>> &
-    get_source_field(const std::string operation_name)
+    get_source_field(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
-      AssertThrow(
-        field_conditions,
-        ExcMessage(
-          "It seems that your SimulationBase object does not contain a valid source field function for the \"" +
-          operation_name +
-          "\" field. A shared_ptr to your source field function, e.g., MySourceFunc<dim>; can "
-          "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-          "this->attach_source_field(std::make_shared<MySourceFunc<dim>>(...), \"" +
-          operation_name + "\");"));
+
+      if (!is_optional)
+        AssertThrow(
+          field_conditions && field_conditions->source_field,
+          ExcMessage(
+            "It seems that your SimulationBase object does not contain a valid source field function for the \"" +
+            operation_name +
+            "\" field. A shared_ptr to your source field function, e.g., MySourceFunc<dim>; can "
+            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
+            "this->attach_source_field(std::make_shared<MySourceFunc<dim>>(...), \"" +
+            operation_name + "\");"));
       return field_conditions->source_field;
     }
 
     const std::shared_ptr<Function<dim>> &
-    get_advection_field(const std::string operation_name)
+    get_advection_field(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
-      AssertThrow(
-        field_conditions,
-        ExcMessage(
-          "It seems that your SimulationBase object does not contain a valid advection field function for the \"" +
-          operation_name +
-          "\" field. A shared_ptr to your advection field function, e.g., MyAdvectionFunc<dim>; can "
-          "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-          "this->attach_advection_field(std::make_shared<MyAdvectionFunc<dim>>(...), \"" +
-          operation_name + "\");"));
+      if (!is_optional)
+        AssertThrow(
+          field_conditions && field_conditions->advection_field,
+          ExcMessage(
+            "It seems that your SimulationBase object does not contain a valid advection field function for the \"" +
+            operation_name +
+            "\" field. A shared_ptr to your advection field function, e.g., MyAdvectionFunc<dim>; can "
+            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
+            "this->attach_advection_field(std::make_shared<MyAdvectionFunc<dim>>(...), \"" +
+            operation_name + "\");"));
       return field_conditions->advection_field;
     }
 
     const std::shared_ptr<Function<dim>> &
-    get_velocity_field(const std::string operation_name)
+    get_velocity_field(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
-      AssertThrow(
-        field_conditions,
-        ExcMessage(
-          "It seems that your SimulationBase object does not contain a valid velocity field function for the \"" +
-          operation_name +
-          "\" field. A shared_ptr to your velocity field function, e.g., MyVelocityFunc<dim>; can "
-          "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-          "this->attach_velocity_field(std::make_shared<MyVelocityFunc<dim>>(...), \"" +
-          operation_name + "\");"));
+      if (!is_optional)
+        AssertThrow(
+          field_conditions && field_conditions->velocity_field,
+          ExcMessage(
+            "It seems that your SimulationBase object does not contain a valid velocity field function for the \"" +
+            operation_name +
+            "\" field. A shared_ptr to your velocity field function, e.g., MyVelocityFunc<dim>; can "
+            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
+            "this->attach_velocity_field(std::make_shared<MyVelocityFunc<dim>>(...), \"" +
+            operation_name + "\");"));
       return field_conditions->velocity_field;
     }
 
     const std::shared_ptr<Function<dim>> &
-    get_exact_solution(const std::string operation_name)
+    get_exact_solution(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
-      AssertThrow(
-        field_conditions,
-        ExcMessage(
-          "It seems that your SimulationBase object does not contain a valid exact solution field function for the \"" +
-          operation_name +
-          "\" field. A shared_ptr to your exact solution field function, e.g., MyExactSolutionFunc<dim>; can "
-          "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-          "this->attach_exact_solution(std::make_shared<MyExactSolutionFunc<dim>>(...), \"" +
-          operation_name + "\");"));
+      if (!is_optional)
+        AssertThrow(
+          field_conditions && field_conditions->exact_solution_field,
+          ExcMessage(
+            "It seems that your SimulationBase object does not contain a valid exact solution field function for the \"" +
+            operation_name +
+            "\" field. A shared_ptr to your exact solution field function, e.g., MyExactSolutionFunc<dim>; can "
+            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
+            "this->attach_exact_solution(std::make_shared<MyExactSolutionFunc<dim>>(...), \"" +
+            operation_name + "\");"));
       return field_conditions->exact_solution_field;
     }
 
