@@ -578,6 +578,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
 
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -599,6 +601,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
 
     MeltPoolDG::VectorTools::zero_out_ghost_values(heat_source);
   }
