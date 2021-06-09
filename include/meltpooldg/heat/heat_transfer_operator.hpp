@@ -126,9 +126,8 @@ namespace MeltPoolDG::Heat
     const VectorType * level_set_as_heaviside;
 
     // optional: two phase flow with evaporation
-    const EvaporationData<double> *evapor_data;
-    double                         evaporation_heat_transfer_coefficient = 0;
-    VectorType *                   evaporative_mass_flux                 = nullptr;
+    VectorType *evaporative_mass_flux      = nullptr;
+    double      latent_heat_of_evaporation = 0;
 
     /*
      * contribution to heat source due to evaporation;
@@ -153,11 +152,11 @@ namespace MeltPoolDG::Heat
                          unsigned int                                    vel_dof_idx_in = 0,
                          const VectorType *                              velocity_in    = nullptr,
                          unsigned int                                    ls_dof_idx_in  = 0,
-                         const VectorType *             level_set_as_heaviside_in       = nullptr,
-                         const EvaporationData<double> *evapor_data_in                  = nullptr);
+                         const VectorType *level_set_as_heaviside_in                    = nullptr);
 
     void
-    register_evaporative_mass_flux(VectorType *evaporative_mass_flux_in);
+    register_evaporative_mass_flux(VectorType * evaporative_mass_flux_in,
+                                   const double latent_heat_of_evaporation);
 
     void
     assemble_matrixbased(const VectorType &advected_field_old,
