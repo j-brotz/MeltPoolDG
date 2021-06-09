@@ -243,17 +243,6 @@ namespace MeltPoolDG::Flow
                                                       base_in->parameters.flow.max_n_steps,
                                                       false /*cfl_condition-->not supported yet*/});
     /*
-     *  set initial conditions of the levelset function
-     */
-    AssertThrow(
-      base_in->get_initial_condition("level_set"),
-      ExcMessage(
-        "It seems that your SimulationBase object does not contain "
-        "a valid initial field function for the level set field. A shared_ptr to your initial field "
-        "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
-        "  this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), 'level_set') "));
-
-    /*
      *    initialize the levelset operation class
      *    and setup initial conditions
      */

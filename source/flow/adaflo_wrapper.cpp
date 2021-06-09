@@ -48,16 +48,8 @@ namespace MeltPoolDG::Flow
         navier_stokes.set_periodic_direction(direction, id_in, id_out);
       }
     /*
-     * Initial conditions of the navier stokes problem
+     * Attach DoFHandler and constraints
      */
-    AssertThrow(
-      base_in->get_initial_condition("navier_stokes_u"),
-      ExcMessage(
-        "It seems that your SimulationBase object does not contain "
-        "a valid initial field function for the level set field. A shared_ptr to your initial field "
-        "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
-        "  this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), 'navier_stokes_u') "));
-
     this->dof_index_u = scratch_data.attach_dof_handler(navier_stokes.get_dof_handler_u());
     this->dof_index_p = scratch_data.attach_dof_handler(navier_stokes.get_dof_handler_p());
     scratch_data.attach_dof_handler(navier_stokes.get_dof_handler_u());

@@ -159,20 +159,6 @@ namespace MeltPoolDG::LevelSet
     /*
      * set initial conditions
      */
-    AssertThrow(
-      base_in->get_initial_condition("level_set"),
-      ExcMessage(
-        "It seems that your SimulationBase object does not contain "
-        "a valid initial field function for the level set field. A shared_ptr to your initial field "
-        "function, e.g., MyInitializeFunc<dim> must be specified as follows: "
-        "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(), "
-        "'level_set') "));
-    AssertThrow(base_in->get_advection_field("level_set"),
-                ExcMessage("It seems that your SimulationBase object does not contain "
-                           "a valid advection velocity. A shared_ptr to your advection velocity "
-                           "function, e.g., AdvectionFunc<dim> must be specified as follows: "
-                           "this->attach_advection_field(std::make_shared<AdvecFunc<dim>>(), "
-                           "'level_set') "));
     compute_advection_velocity(*base_in->get_advection_field("level_set"));
 
     /*
