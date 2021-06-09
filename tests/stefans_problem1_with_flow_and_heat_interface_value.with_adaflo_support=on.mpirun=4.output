@@ -15,9 +15,9 @@ t= 0.0005     	 |n_0| = 3.8168716904e-13  |n_1| = 0.37056767941
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 9.22778538336506e-22 |
  |ΔΨ|² = 1.06983588654685e-09 |
  |phi_update|² = 3.10008701826795e-05 |
- 	 |n_0| = 4.9780907351e-12  |n_1| = 0.37058714032   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 4.9780907351e-12  |n_1| = 0.37058714032
 Newton Raphson solver converged: ||solution|| = 6.10767e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -33,9 +33,9 @@ t= 0.001      	 |n_0| = 4.9780907351e-12  |n_1| = 0.37058714032
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.85795729357786e-22 |
  |ΔΨ|² = 1.09327913389023e-09 |
  |phi_update|² = 3.10009602345757e-05 |
- 	 |n_0| = 2.9096325174e-12  |n_1| = 0.37061041594   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 2.9096325174e-12  |n_1| = 0.37061041594
 Newton Raphson solver converged: ||solution|| = 6.08964e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -51,9 +51,9 @@ t= 0.0015     	 |n_0| = 2.9096325174e-12  |n_1| = 0.37061041594
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.61106225803443e-22 |
  |ΔΨ|² = 1.10004783060447e-09 |
  |phi_update|² = 3.10010471820293e-05 |
- 	 |n_0| = 7.0588770648e-12  |n_1| = 0.37063771486   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 7.0588770648e-12  |n_1| = 0.37063771486
 Newton Raphson solver converged: ||solution|| = 6.07941e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -69,9 +69,9 @@ t= 0.002      	 |n_0| = 7.0588770648e-12  |n_1| = 0.37063771486
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.44099091506249e-22 |
  |ΔΨ|² = 1.10247999618451e-09 |
  |phi_update|² = 3.10011314685718e-05 |
- 	 |n_0| = 6.5603230123e-12  |n_1| = 0.37066802382   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 6.5603230123e-12  |n_1| = 0.37066802382
 Newton Raphson solver converged: ||solution|| = 6.07558e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -87,9 +87,9 @@ t= 0.0025     	 |n_0| = 6.5603230123e-12  |n_1| = 0.37066802382
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.3201651922865e-22 |
  |ΔΨ|² = 1.10380760087736e-09 |
  |phi_update|² = 3.10012117632766e-05 |
- 	 |n_0| = 9.9407438292e-12  |n_1| = 0.37070018053   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 9.9407438292e-12  |n_1| = 0.37070018053
 Newton Raphson solver converged: ||solution|| = 6.07732e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -105,9 +105,9 @@ t= 0.003      	 |n_0| = 9.9407438292e-12  |n_1| = 0.37070018053
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.23174309870659e-22 |
  |ΔΨ|² = 1.1048059134211e-09 |
  |phi_update|² = 3.10012876224219e-05 |
- 	 |n_0| = 1.0231766001e-11  |n_1| = 0.37073302269   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 1.0231766001e-11  |n_1| = 0.37073302269
 Newton Raphson solver converged: ||solution|| = 6.08400e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -123,9 +123,9 @@ t= 0.0035     	 |n_0| = 1.0231766001e-11  |n_1| = 0.37073302269
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.16502843775446e-22 |
  |ΔΨ|² = 1.10558029398078e-09 |
  |phi_update|² = 3.10013590459032e-05 |
- 	 |n_0| = 1.2859116672e-11  |n_1| = 0.37076577544   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 1.2859116672e-11  |n_1| = 0.37076577544
 Newton Raphson solver converged: ||solution|| = 6.09513e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -141,9 +141,9 @@ t= 0.004      	 |n_0| = 1.2859116672e-11  |n_1| = 0.37076577544
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.11311810852955e-22 |
  |ΔΨ|² = 1.10608244785482e-09 |
  |phi_update|² = 3.10014255899937e-05 |
- 	 |n_0| = 1.3672370654e-11  |n_1| = 0.37079778314   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 1.3672370654e-11  |n_1| = 0.37079778314
 Newton Raphson solver converged: ||solution|| = 6.11032e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -159,9 +159,9 @@ t= 0.0045     	 |n_0| = 1.3672370654e-11  |n_1| = 0.37079778314
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.07148341834718e-22 |
  |ΔΨ|² = 1.10624598370634e-09 |
  |phi_update|² = 3.10014876982242e-05 |
- 	 |n_0| = 1.5781729571e-11  |n_1| = 0.37082853913   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 1.5781729571e-11  |n_1| = 0.37082853913
 Newton Raphson solver converged: ||solution|| = 6.12919e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -177,9 +177,9 @@ t= 0.005      	 |n_0| = 1.5781729571e-11  |n_1| = 0.37082853913
     | reini: τ= 9.76562499999946e-07 |Ψ RHS|² = 8.03710574362186e-22 |
  |ΔΨ|² = 1.10601439118341e-09 |
  |phi_update|² = 3.10015458141438e-05 |
- 	 |n_0| = 1.687916909e-11  |n_1| = 0.37085780501   
-    | two phase flow: total mass = 9.765625e-10
+ 	 |n_0| = 1.687916909e-11  |n_1| = 0.37085780501
 Newton Raphson solver converged: ||solution|| = 6.15142e-03
+    | two phase flow: total mass = 9.765625e-10
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 

@@ -61,9 +61,6 @@ namespace MeltPoolDG::Flow
         // ... solve level-set problem with the given advection field
         level_set_operation.solve(dt, interface_velocity);
 
-        // update the phases for the flow solver considering the updated level set and temperature // @todo move
-        update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
-
         /******************************************************************************************
          * HEAT TRANSFER
          ******************************************************************************************/
@@ -89,6 +86,10 @@ namespace MeltPoolDG::Flow
         /******************************************************************************************
          * NAVIER - STOKES
          ******************************************************************************************/
+
+        // update the phases for the flow solver considering the updated level set and temperature
+        update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
+
         // ... a) gravity force
         compute_gravity_force(vel_force_rhs,
                               base_in->parameters.base.gravity,
@@ -562,7 +563,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::update_phases(const VectorType &        src,
+  TwoPhaseFlowProblem<dim>::update_phases(const VectorType &        ls_as_heaviside,
                                           const Parameters<double> &parameters) const
   {
     double dummy;
@@ -574,7 +575,7 @@ namespace MeltPoolDG::Flow
       parameters.flow.variable_properties_over_interface == "consistent_with_evaporation";
 
     scratch_data->get_matrix_free().template cell_loop<double, VectorType>(
-      [&](const auto &matrix_free, auto &, const auto &src, auto macro_cells) {
+      [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto macro_cells) {
         FECellIntegrator<dim, 1, double> ls_values(matrix_free,
                                                    ls_hanging_nodes_dof_idx,
                                                    flow_operation->get_quad_idx_velocity());
@@ -582,7 +583,7 @@ namespace MeltPoolDG::Flow
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             ls_values.reinit(cell);
-            ls_values.read_dof_values_plain(src);
+            ls_values.read_dof_values_plain(ls_as_heaviside);
             ls_values.evaluate(EvaluationFlags::values);
 
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
@@ -647,11 +648,11 @@ namespace MeltPoolDG::Flow
           }
       },
       dummy,
-      src);
+      ls_as_heaviside);
 
     if (evaporation_operation || melt_pool_operation)
       {
-        scratch_data->get_pcout() << "    | two phase flow: total mass = "
+        scratch_data->get_pcout() << "    | two phase flow: total mass = " << std::setprecision(11)
                                   << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm())
                                   << std::endl;
       }

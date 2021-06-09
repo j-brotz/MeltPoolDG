@@ -71,9 +71,9 @@ t= 1e-06     	 |ϕ|2 = 0.0003364100874
  |ΔΨ|² = 5.06695946833773e-07 |
  |phi_update|² = 0.000335270667389074 |
  |n|_0=7.897770114e-12  |n|_1=2.309086472      |k| = 9.248141972e-12
-    | two phase flow: total mass = 0.0004208954281
 current laser position: 0 4e-05
 current laser intensity: 1
+    | two phase flow: total mass = 0.0004208954281
 
 Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06). 
  |velocity| = 1.2921398922368e-06
@@ -96,9 +96,9 @@ t= 2e-06     	 |ϕ|2 = 0.0003352706691
  |ΔΨ|² = 1.73601853047094e-07 |
  |phi_update|² = 0.000334895096126375 |
  |n|_0=8.636372781e-12  |n|_1=2.309109208      |k| = 1.012109631e-11
-    | two phase flow: total mass = 0.0004209047715
 current laser position: 0 4e-05
 current laser intensity: 1
+    | two phase flow: total mass = 0.0004209047715
 
 Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06). 
  |velocity| = 2.58304984119241e-06
@@ -121,9 +121,9 @@ t= 3e-06     	 |ϕ|2 = 0.0003348950976
  |ΔΨ|² = 6.50867352460822e-08 |
  |phi_update|² = 0.000334754857594655 |
  |n|_0=9.166701982e-12  |n|_1=2.309471817      |k| = 1.056743253e-11
-    | two phase flow: total mass = 0.0004208942424
 current laser position: 0 4e-05
 current laser intensity: 1
+    | two phase flow: total mass = 0.0004208942424
 
 Time step #3, advancing from t_n-1 = 2e-06 to t = 3e-06 (dt = 1e-06). 
  |velocity| = 3.8760425581296e-06

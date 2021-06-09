@@ -29,8 +29,8 @@ t= 0.0005    	 |ϕ|2 = 0.03137220643
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 8.56740351405649e-13 |
  |ΔΨ|² = 7.45942486446438e-07 |
  |phi_update|² = 0.0313718681524998 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.18053e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -53,8 +53,8 @@ t= 0.001     	 |ϕ|2 = 0.0313734927
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 1.30391400801622e-12 |
  |ΔΨ|² = 1.17501213026117e-06 |
  |phi_update|² = 0.0313729085084199 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.16229e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -77,8 +77,8 @@ t= 0.0015    	 |ϕ|2 = 0.03137451593
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 1.64878700970039e-12 |
  |ΔΨ|² = 1.50294829381892e-06 |
  |phi_update|² = 0.031373730854321 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.15193e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -101,8 +101,8 @@ t= 0.002     	 |ϕ|2 = 0.03137532429
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 1.90983275201451e-12 |
  |ΔΨ|² = 1.75006687186396e-06 |
  |phi_update|² = 0.0313743779421589 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.14806e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -125,8 +125,8 @@ t= 0.0025    	 |ϕ|2 = 0.03137595918
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 2.10534389401273e-12 |
  |ΔΨ|² = 1.93502205547702e-06 |
  |phi_update|² = 0.0313748843487556 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.14981e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -149,8 +149,8 @@ t= 0.003     	 |ϕ|2 = 0.03137645519
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 2.25104418612176e-12 |
  |ΔΨ|² = 2.07302718990832e-06 |
  |phi_update|² = 0.0313752796554336 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.15657e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -173,8 +173,8 @@ t= 0.0035    	 |ϕ|2 = 0.031376841
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 2.35936227152567e-12 |
  |ΔΨ|² = 2.17584943129623e-06 |
  |phi_update|² = 0.0313755875319801 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.16784e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -197,8 +197,8 @@ t= 0.004     	 |ϕ|2 = 0.03137714164
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 2.43980616959627e-12 |
  |ΔΨ|² = 2.25241683438071e-06 |
  |phi_update|² = 0.0313758261884605 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.18321e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -221,8 +221,8 @@ t= 0.0045    	 |ϕ|2 = 0.03137737441
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 2.49957650064192e-12 |
  |ΔΨ|² = 2.30947102863865e-06 |
  |phi_update|² = 0.0313760120165891 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.20231e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
@@ -245,8 +245,8 @@ t= 0.005     	 |ϕ|2 = 0.0313775548
     | reini: τ= 2.49999999999979e-06 |Ψ RHS|² = 2.54411877849414e-12 |
  |ΔΨ|² = 2.35210904975247e-06 |
  |phi_update|² = 0.0313761545782865 |
-    | two phase flow: total mass = 0.001
 Newton Raphson solver converged: ||solution|| = 6.22480e+00
+    | two phase flow: total mass = 0.001
     | evaporation: jump in the velocity field = 0
     | evapor: |m|2 = 0
 
