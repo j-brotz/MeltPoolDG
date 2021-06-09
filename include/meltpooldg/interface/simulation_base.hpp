@@ -144,11 +144,8 @@ namespace MeltPoolDG
       if (!boundary_conditions_map[operation_name])
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
-      if (boundary_conditions_map[operation_name]->dirichlet_bc.count(id) > 0)
-        AssertThrow(false,
-                    ExcMessage("You try to attach a dirichlet boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+      AssertThrow(boundary_conditions_map[operation_name]->dirichlet_bc.count(id) == 0,
+                  ExcBCAlreadyAssigned("Dirichlet"));
 
       boundary_conditions_map[operation_name]->dirichlet_bc[id] = boundary_function;
     }
@@ -162,11 +159,9 @@ namespace MeltPoolDG
       if (!boundary_conditions_map[operation_name])
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
-      if (boundary_conditions_map[operation_name]->neumann_bc.count(id) > 0)
-        AssertThrow(false,
-                    ExcMessage("You try to attach a neumann boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+      AssertThrow(boundary_conditions_map[operation_name]->neumann_bc.count(id) == 0,
+                  ExcBCAlreadyAssigned("Neumann"));
+
       boundary_conditions_map[operation_name]->neumann_bc[id] = boundary_function;
     }
 
@@ -177,11 +172,9 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->no_slip_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a no slip boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(), ExcBCAlreadyAssigned("no-slip"));
+
       bc.push_back(id);
     }
 
@@ -192,11 +185,9 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->open_boundary_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach an open boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(), ExcBCAlreadyAssigned("open"));
+
       bc.push_back(id);
     }
 
@@ -207,11 +198,10 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->fix_pressure_constant;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a no slip boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(),
+                  ExcBCAlreadyAssigned("fix pressure constant constant"));
+
       bc.push_back(id);
     }
 
@@ -222,11 +212,10 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->symmetry_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a symmetry boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(),
+                  ExcBCAlreadyAssigned("symmetry"));
+
       bc.push_back(id);
     }
 
@@ -262,11 +251,10 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->radiation_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a radiation boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(),
+                  ExcBCAlreadyAssigned("radiation"));
+
       bc.push_back(id);
     }
 
@@ -277,11 +265,10 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->convection_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a convection boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(),
+                  ExcBCAlreadyAssigned("convection"));
+
       bc.push_back(id);
     }
 
@@ -467,5 +454,11 @@ namespace MeltPoolDG
     std::map<std::string, std::shared_ptr<FieldConditions<dim>>>    field_conditions_map;
     std::map<std::string, std::shared_ptr<BoundaryConditions<dim>>> boundary_conditions_map;
     PeriodicBoundaryConditions<dim>                                 periodic_boundary_conditions;
+
+    DeclException1(ExcBCAlreadyAssigned,
+                   std::string,
+                   << "You try to attach a " << arg1 << " boundary conditions \n"
+                   << "for a boundary_id for which a boundary condition is already \n"
+                   << "specified. Check your input related to bc!");
   };
 } // namespace MeltPoolDG
