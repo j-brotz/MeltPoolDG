@@ -56,11 +56,18 @@ namespace MeltPoolDG
        */
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 
-    if (base.problem_name == "two_phase_flow" || base.problem_name == "melt_pool" ||
-        base.problem_name == "two_phase_flow_with_evaporation" ||
-        base.problem_name == "melt_pool_with_evaporation" ||
-        base.problem_name == "two_phase_flow_with_heat_transfer")
+    if (base.problem_name == "two_phase_flow" || base.problem_name == "melt_pool")
       {
+        if (flow.do_evaporation && !flow.do_heat_transfer)
+          AssertThrow(false,
+                      ExcMessage("In case of evaporation both flag >>> do evaporation <<< "
+                                 "and >>> do heat transfer <<< have to be set to true."));
+
+        if (flow.do_melt_pool && !flow.do_heat_transfer)
+          AssertThrow(false,
+                      ExcMessage("In case of do melt pool both flag >>> do melt pool <<< "
+                                 "and >>> do heat transfer <<< have to be set to true."));
+
         adaflo_params.parse_parameters(parameter_filename);
 
         AssertThrow(adaflo_params.params.density == 1.0, // 1.0 is the default value from adaflo
@@ -75,8 +82,7 @@ namespace MeltPoolDG
                       "within the adaflo section, which is ignored by MeltPoolDG. "
                       "Please use the >material: material first density:< section instead. "));
 
-        if (base.problem_name == "melt_pool_with_evaporation" ||
-            base.problem_name == "two_phase_flow_with_evaporation")
+        if (flow.do_evaporation)
           {
             if (evapor.formulation_source_term_continuity != "sharp")
               {
@@ -181,14 +187,12 @@ namespace MeltPoolDG
         "application name",
         base.application_name,
         "Sets the base name for the application that will be fed to the problem type.");
-      prm.add_parameter(
-        "problem name",
-        base.problem_name,
-        "Sets the base name for the problem that should be solved.",
-        Patterns::Selection(
-          "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool"
-          "|level_set_with_evaporation|two_phase_flow_with_evaporation|"
-          "melt_pool_with_evaporation|heat_transfer|two_phase_flow_with_heat_transfer"));
+      prm.add_parameter("problem name",
+                        base.problem_name,
+                        "Sets the base name for the problem that should be solved.",
+                        Patterns::Selection(
+                          "advection_diffusion|reinitialization|level_set|two_phase_flow|melt_pool"
+                          "|level_set_with_evaporation|heat_transfer"));
       prm.add_parameter("dimension", base.dimension, "Defines the dimension of the problem");
       prm.add_parameter("global refinements",
                         base.global_refinements,
@@ -199,7 +203,7 @@ namespace MeltPoolDG
                         "Defines the number of quadrature points");
       prm.add_parameter("do print parameters",
                         base.do_print_parameters,
-                        "Sets this parameter to true to list parameters in output");
+                        "Set this parameter to true to list parameters in output");
       prm.add_parameter("do simplex", base.do_simplex, "Use simplices");
       prm.add_parameter("gravity", base.gravity, "Set the value for the gravity");
       prm.add_parameter(
@@ -215,10 +219,10 @@ namespace MeltPoolDG
     {
       prm.add_parameter("do amr",
                         amr.do_amr,
-                        "Sets this parameter to true to activate adaptive meshing");
+                        "Set this parameter to true to activate adaptive meshing");
       prm.add_parameter("do not modify boundary cells",
                         amr.do_not_modify_boundary_cells,
-                        "Sets this parameter to true to not refine/coarsen along boundaries.");
+                        "Set this parameter to true to not refine/coarsen along boundaries.");
       prm.add_parameter("upper perc to refine",
                         amr.upper_perc_to_refine,
                         "Defines the (upper) percentage of elements that should be refined");
@@ -478,6 +482,18 @@ namespace MeltPoolDG
         flow.variable_properties_over_interface,
         "Set this parameter to interpolate the flow properties over the interface smoothly.",
         Patterns::Selection("false|true|consistent_with_evaporation"));
+      prm.add_parameter(
+        "flow do heat transfer",
+        flow.do_heat_transfer,
+        "Set this parameter to true if you want to consider a coupling with heat transfer.");
+      prm.add_parameter(
+        "flow do evaporation",
+        flow.do_evaporation,
+        "Set this parameter to true if you want to consider a coupling with evaporation.");
+      prm.add_parameter(
+        "flow do melt pool",
+        flow.do_melt_pool,
+        "Set this parameter to true if you want to consider a melt pool simulation including a solid phase.");
     }
     prm.leave_subsection();
     /*

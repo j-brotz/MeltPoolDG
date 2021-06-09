@@ -1,6 +1,6 @@
 {
   "base": {
-    "problem name": "two_phase_flow_with_evaporation",
+    "problem name": "two_phase_flow",
     "application name": "stefans_problem_with_flow",
     "dimension": "2",
     "global refinements": "5",
@@ -13,7 +13,9 @@
     "flow start time": "0.0",
     "flow end time": "0.002",
     "flow time step size": "0.005",
-    "flow variable properties over interface": "consistent_with_evaporation"
+    "flow variable properties over interface": "consistent_with_evaporation",
+    "flow do heat transfer": "true",
+    "flow do evaporation": "true"
   },
   "material": {
     "material first density": "0.01",

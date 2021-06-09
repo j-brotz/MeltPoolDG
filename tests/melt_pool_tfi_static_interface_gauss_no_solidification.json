@@ -12,7 +12,9 @@
     "flow start time": "0.0",
     "flow time step size": "1e-4",
     "flow end time": "0.015",
-    "flow max n steps": "5"
+    "flow max n steps": "5",
+    "flow do heat transfer": "true",
+    "flow do melt pool": "true"
   },
   "Navier-Stokes": {
     "adaflo": {

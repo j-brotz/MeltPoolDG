@@ -9,7 +9,6 @@
 // DoFTools
 #include <deal.II/dofs/dof_tools.h>
 // MeltPoolDG
-#include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/heat/laser.hpp>
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
@@ -29,8 +28,7 @@ namespace MeltPoolDG
     class MeltPoolOperation
     {
     private:
-      using VectorType      = LinearAlgebra::distributed::Vector<double>;
-      using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
+      using VectorType = LinearAlgebra::distributed::Vector<double>;
 
       std::shared_ptr<ScratchData<dim>> scratch_data;
       /**
@@ -53,43 +51,48 @@ namespace MeltPoolDG
       const unsigned int flow_vel_dof_idx;
       const unsigned int flow_vel_quad_idx;
       const unsigned int temp_dof_idx;
-      const unsigned int temp_quad_idx;
+      VectorType *       temperature;
 
       /*
        * DoF vectors
        */
       VectorType solid;
       VectorType liquid;
-      /*
-       *  heat operation
-       */
-      std::shared_ptr<Heat::HeatTransferOperation<dim>> heat_operation;
 
     public:
-      MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &       scratch_data_in,
-                        const std::shared_ptr<BoundaryConditions<dim>> &heat_bc,
-                        const Parameters<double> &                      data_in,
-                        unsigned int                                    ls_dof_idx_in,
-                        VectorType *                                    level_set_as_heaviside_in,
-                        unsigned int                                    reinit_dof_idx_in,
-                        unsigned int                                    flow_vel_dof_idx_in,
-                        unsigned int                                    flow_vel_quad_idx_in,
-                        VectorType *                                    velocity_in,
-                        unsigned int                                    temp_dof_idx_in,
-                        unsigned int                                    temp_quad_idx_in,
-                        double                                          start_time_in);
+      MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
+                        const Parameters<double> &               data_in,
+                        const unsigned int                       ls_dof_idx_in,
+                        VectorType *                             temperature,
+                        const unsigned int                       reinit_dof_idx_in,
+                        const unsigned int                       flow_vel_dof_idx_in,
+                        const unsigned int                       flow_vel_quad_idx_in,
+                        const unsigned int                       temp_dof_idx_in,
+                        const double                             start_time_in);
 
       void
-      set_initial_condition(const VectorType &             level_set_as_heaviside,
-                            VectorType &                   level_set,
-                            std::shared_ptr<Function<dim>> initial_temperature);
+      set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
 
       void
-      solve(VectorType &vel_force_rhs, const VectorType &level_set_as_heaviside, const double &dt);
+      compute_heat_source(VectorType &      heat_source,
+                          const VectorType &level_set_as_heaviside,
+                          const double &    dt,
+                          const bool        zero_out = true);
+
+      void
+      compute_melt_front_propagation(const VectorType &level_set_as_heaviside);
+
+      void
+      compute_force_flow_rhs(VectorType &      vel_force_rhs,
+                             const VectorType &level_set_as_heaviside,
+                             const bool        zero_out = false) const;
 
       void
       reinit();
 
+      /*
+       * attach functions
+       */
       void
       attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
 
@@ -99,9 +102,9 @@ namespace MeltPoolDG
       void
       distribute_constraints();
 
-      const VectorType &
-      get_temperature() const;
-
+      /*
+       * getter functions
+       */
       const VectorType &
       get_solid() const;
 
@@ -142,7 +145,7 @@ namespace MeltPoolDG
        * is SMALLER than the fusion point, a solid phase is met.
        */
       bool
-      is_solid_region(const double phi_liquid, const double temperature);
+      is_solid_region(const double phi_liquid, const double temperature) const;
 
       /**
        *  This function determines for a given pair of level set and temperature values, whether
@@ -151,7 +154,7 @@ namespace MeltPoolDG
        * is LARGER than the fusion point, a liquid phase is met.
        */
       bool
-      is_liquid_region(const double phi_liquid, const double temperature);
+      is_liquid_region(const double phi_liquid, const double temperature) const;
     };
   } // namespace MeltPool
 } // namespace MeltPoolDG

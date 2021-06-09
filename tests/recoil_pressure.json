@@ -43,7 +43,9 @@
     "flow start time": "0.0",
     "flow surface tension coefficient": "1.8",
     "flow surface tension reference temperature": "1700",
-    "flow time step size": "0.000001"
+    "flow time step size": "0.000001",
+    "flow do melt pool": "true",
+    "flow do heat transfer": "true"
   },
   "material": {
     "material first capacity": "0",

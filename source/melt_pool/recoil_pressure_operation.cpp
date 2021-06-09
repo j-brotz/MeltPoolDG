@@ -27,7 +27,7 @@ namespace MeltPoolDG::MeltPool
     VectorType &      force_rhs,
     const VectorType &level_set_as_heaviside,
     const VectorType &temperature,
-    bool              zero_out)
+    bool              zero_out) const
   {
     temperature.update_ghost_values();
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
@@ -80,7 +80,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   inline double
-  RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(const double T)
+  RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(const double T) const
   {
     return compute_recoil_pressure_coefficient(T,
                                                recoil_pressure_data.pressure_constant,

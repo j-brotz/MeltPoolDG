@@ -6,7 +6,7 @@
     "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "3",
-    "problem name": "two_phase_flow_with_heat_transfer",
+    "problem name": "two_phase_flow",
     "gravity": "0.0"
   },
   "heat": {
@@ -28,7 +28,8 @@
     "flow temperature dependent surface tension coefficient": "0.002",
     "flow start time": "0.0",
     "flow end time": "0.25",
-    "flow time step size": "0.05"
+    "flow time step size": "0.05",
+    "flow do heat transfer": "true"
   },
   "Navier-Stokes": {
     "adaflo": {

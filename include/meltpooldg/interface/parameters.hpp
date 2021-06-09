@@ -127,6 +127,9 @@ namespace MeltPoolDG
     number       time_step_size                                    = 0.05;
     unsigned int max_n_steps                                       = 1000000;
     std::string  variable_properties_over_interface                = "false";
+    bool         do_heat_transfer                                  = false;
+    bool         do_evaporation                                    = false;
+    bool         do_melt_pool                                      = false;
   };
 
   template <typename number = double>
