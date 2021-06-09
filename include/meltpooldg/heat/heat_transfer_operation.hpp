@@ -66,16 +66,16 @@ namespace MeltPoolDG::Heat
                           const HeatData<double> &                        heat_data_in,
                           const MaterialData<double> &                    material_data,
                           unsigned int                                    temp_dof_idx_in,
-                          unsigned int                   temp_hanging_nodes_dof_idx_in,
-                          unsigned int                   temp_quad_idx_in,
-                          unsigned int                   vel_dof_idx_in            = 0,
-                          VectorType *                   velocity_in               = nullptr,
-                          unsigned int                   ls_dof_idx_in             = 0,
-                          VectorType *                   level_set_as_heaviside_in = nullptr,
-                          const EvaporationData<double> *evapor_data_in            = nullptr);
+                          unsigned int temp_hanging_nodes_dof_idx_in,
+                          unsigned int temp_quad_idx_in,
+                          unsigned int vel_dof_idx_in            = 0,
+                          VectorType * velocity_in               = nullptr,
+                          unsigned int ls_dof_idx_in             = 0,
+                          VectorType * level_set_as_heaviside_in = nullptr);
 
     void
-    register_evaporative_mass_flux(VectorType *evaporative_mass_flux_in);
+    register_evaporative_mass_flux(VectorType * evaporative_mass_flux_in,
+                                   const double latent_heat_of_evaporation);
 
     void
     set_initial_condition(const Function<dim> &initial_field_function_temperature);

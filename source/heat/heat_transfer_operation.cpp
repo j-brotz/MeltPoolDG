@@ -18,8 +18,7 @@ namespace MeltPoolDG::Heat
     const unsigned int                              vel_dof_idx_in,
     VectorType *                                    velocity_in,
     const unsigned int                              ls_dof_idx_in,
-    VectorType *                                    level_set_as_heaviside_in,
-    const EvaporationData<double> *                 evapor_data_in)
+    VectorType *                                    level_set_as_heaviside_in)
     : scratch_data(scratch_data_in)
     , heat_data(heat_data_in)
     , temp_dof_idx(temp_dof_idx_in)
@@ -44,17 +43,19 @@ namespace MeltPoolDG::Heat
                                                                 vel_dof_idx,
                                                                 velocity,
                                                                 ls_dof_idx,
-                                                                level_set_as_heaviside,
-                                                                evapor_data_in);
+                                                                level_set_as_heaviside);
 
     reinit();
   }
 
   template <int dim>
   void
-  HeatTransferOperation<dim>::register_evaporative_mass_flux(VectorType *evaporative_mass_flux_in)
+  HeatTransferOperation<dim>::register_evaporative_mass_flux(
+    VectorType * evaporative_mass_flux_in,
+    const double latent_heat_of_evaporation)
   {
-    heat_operator->register_evaporative_mass_flux(evaporative_mass_flux_in);
+    heat_operator->register_evaporative_mass_flux(evaporative_mass_flux_in,
+                                                  latent_heat_of_evaporation);
   }
 
   template <int dim>

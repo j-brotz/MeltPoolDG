@@ -260,7 +260,8 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the heat operation class
      */
-    if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
+    if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer" ||
+        base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation")
       heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
         base_in->get_bc("heat_transfer"),
         *scratch_data,
@@ -273,20 +274,6 @@ namespace MeltPoolDG::Flow
         &flow_operation->get_velocity(),
         ls_hanging_nodes_dof_idx,
         &level_set_operation.get_level_set_as_heaviside());
-    else if (base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation")
-      heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
-        base_in->get_bc("heat_transfer"),
-        *scratch_data,
-        base_in->parameters.heat,
-        base_in->parameters.material,
-        temp_dof_idx,
-        temp_hanging_nodes_dof_idx,
-        temp_quad_idx,
-        vel_dof_idx,
-        &flow_operation->get_velocity(),
-        ls_hanging_nodes_dof_idx,
-        &level_set_operation.get_level_set_as_heaviside(),
-        &base_in->parameters.evapor);
     /*
      *    initialize the evaporation class
      */
@@ -306,17 +293,11 @@ namespace MeltPoolDG::Flow
           temp_dof_idx);
 
         /*
-         * register evaporative heat flux if evaporative mass flux is computed from
-         * temperature value at the interface.
-         *
-         * @todo: adopt for all types of evaporative mass flux computations!!
+         * register evaporative mass flux to compute the heat sink
          */
-        if (base_in->parameters.evapor.formulation_evaporative_mass_flux_over_interface ==
-              "interface value" ||
-            base_in->parameters.evapor.formulation_evaporative_mass_flux_over_interface ==
-              "line integral")
-          heat_operation->register_evaporative_mass_flux(
-            &evaporation_operation->get_evaporative_mass_flux());
+        heat_operation->register_evaporative_mass_flux(
+          &evaporation_operation->get_evaporative_mass_flux(),
+          base_in->parameters.evapor.latent_heat_of_evaporation);
       }
 
     /*
