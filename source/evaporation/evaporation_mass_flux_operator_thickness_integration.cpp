@@ -7,6 +7,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_thickness_integration.hpp>
+#include <meltpooldg/utilities/legacy.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -87,15 +88,18 @@ namespace MeltPoolDG::Evaporation
              * debug
              */
             const auto global_points_normal_to_interface_all =
-              Utilities::MPI::reduce<std::vector<Point<dim>>>(global_points_normal_to_interface,
-                                                              scratch_data.get_mpi_comm(),
-                                                              [](const auto &a, const auto &b) {
-                                                                auto result = a;
-                                                                result.insert(result.end(),
-                                                                              b.begin(),
-                                                                              b.end());
-                                                                return result;
-                                                              });
+#if DEAL_II_VERSION_MAJOR == 10
+              Utilities::MPI::reduce<std::vector<Point<dim>>>(
+#else
+              Utilities::MPI::all_reduce<std::vector<Point<dim>>>(
+#endif
+                global_points_normal_to_interface,
+                scratch_data.get_mpi_comm(),
+                [](const auto &a, const auto &b) {
+                  auto result = a;
+                  result.insert(result.end(), b.begin(), b.end());
+                  return result;
+                });
 
             std::ofstream myfile;
             myfile.open(std::to_string(count) + "_generated_points.dat");
