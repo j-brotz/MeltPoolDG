@@ -270,6 +270,7 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside)
   {
     level_set_as_heaviside.update_ghost_values();
+    temperature->update_ghost_values();
 
     const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
 
