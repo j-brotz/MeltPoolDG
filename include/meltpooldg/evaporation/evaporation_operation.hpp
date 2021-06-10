@@ -110,7 +110,9 @@ namespace MeltPoolDG::Evaporation
      */
     void
     register_evaporative_mass_flux_model(const RecoilPressureData<double> &recoil_data,
-                                         const VectorType &                distance);
+                                         const VectorType &                distance,
+                                         const double                      constant_epsilon,
+                                         const double                      scale_factor_epsilon);
     /*
      * Compute DoF vector holding evaporative mass flux depending on the given evaporation model
      * and the evaporation mass flux operator for computing the distribution across the interface.

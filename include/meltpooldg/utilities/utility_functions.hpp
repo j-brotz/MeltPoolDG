@@ -454,6 +454,9 @@ namespace MeltPoolDG
       const double               contour_value      = 0.0,
       const unsigned int         n_subdivisions_MCA = 1)
     {
+      level_set_vector.update_ghost_values();
+      normal_vector.update_ghost_values();
+
       FEPointEvaluation<dim, dim> phi_normal(mapping, fe_normal, update_values);
 
       std::vector<double>                  buffer;
@@ -546,6 +549,9 @@ namespace MeltPoolDG
                                  collect_points_along_normal,
                                  contour_value, /*contour value*/
                                  n_subdivisions_MCA /*n_subdivisions*/);
+
+      level_set_vector.zero_out_ghost_values();
+      normal_vector.zero_out_ghost_values();
     }
 
     /*

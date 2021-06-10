@@ -34,11 +34,13 @@ namespace MeltPoolDG::Evaporation
     const VectorType &     level_set_as_heaviside;
     const BlockVectorType &normal_vector;
 
+    const double constant_epsilon;
+    const double eps_scale_factor;
+
     const unsigned int ls_dof_idx;
     const unsigned int normal_dof_idx;
     const unsigned int temp_dof_idx;
 
-    const double        epsilon;
     const FESystem<dim> fe_dim;
 
     const unsigned int n_subdivisions_per_side;
@@ -49,6 +51,8 @@ namespace MeltPoolDG::Evaporation
                                                     const EvaporationModelBase &evaporation_model,
                                                     const VectorType &     level_set_as_heaviside,
                                                     const BlockVectorType &normal_vector,
+                                                    const double           constant_epsilon,
+                                                    const double           eps_scale_factor,
                                                     const unsigned int     ls_dof_idx,
                                                     const unsigned int     normal_dof_idx,
                                                     const unsigned int     temp_dof_idx,
