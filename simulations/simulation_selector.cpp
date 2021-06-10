@@ -2,31 +2,31 @@
 #  define MELT_POOL_DG_DIM 1
 #endif
 
-#include <meltpooldg/simulations/simulation_selector.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 // simulations
-#include <meltpooldg/simulations/advection_diffusion/advection_diffusion.hpp>
-#include <meltpooldg/simulations/advection_diffusion/advection_diffusion_user_output.hpp>
-#include <meltpooldg/simulations/evaporating_droplet/evaporating_droplet.hpp>
-#include <meltpooldg/simulations/evaporating_droplet/evaporating_droplet_with_heat.hpp>
-#include <meltpooldg/simulations/film_boiling/film_boiling.hpp>
-#include <meltpooldg/simulations/flow_past_cylinder/flow_past_cylinder.hpp>
-#include <meltpooldg/simulations/melt_front_propagation/melt_front_propagation.hpp>
-#include <meltpooldg/simulations/recoil_pressure/recoil_pressure.hpp>
-#include <meltpooldg/simulations/reinit_circle/reinit_circle.hpp>
-#include <meltpooldg/simulations/rising_bubble/rising_bubble.hpp>
-#include <meltpooldg/simulations/rotating_bubble/rotating_bubble.hpp>
-#include <meltpooldg/simulations/slotted_disc/slotted_disc.hpp>
-#include <meltpooldg/simulations/solidification_slab/solidification_slab.hpp>
-#include <meltpooldg/simulations/spurious_currents/spurious_currents.hpp>
-#include <meltpooldg/simulations/stefans_problem/stefans_problem.hpp>
-#include <meltpooldg/simulations/stefans_problem/stefans_problem1_with_flow_and_heat.hpp>
-#include <meltpooldg/simulations/stefans_problem/stefans_problem2_with_flow_and_heat.hpp>
-#include <meltpooldg/simulations/stefans_problem/stefans_problem_with_flow.hpp>
-#include <meltpooldg/simulations/thermo_capillary_droplet/thermo_capillary_droplet.hpp>
-#include <meltpooldg/simulations/thermo_capillary_two_droplets/thermo_capillary_two_droplets.hpp>
-#include <meltpooldg/simulations/unidirectional_heat_transfer/unidirectional_heat_transfer.hpp>
-#include <meltpooldg/simulations/vortex_bubble/vortex_bubble.hpp>
+#include "advection_diffusion/advection_diffusion.hpp"
+#include "advection_diffusion/advection_diffusion_user_output.hpp"
+#include "evaporating_droplet/evaporating_droplet.hpp"
+#include "evaporating_droplet/evaporating_droplet_with_heat.hpp"
+#include "film_boiling/film_boiling.hpp"
+#include "flow_past_cylinder/flow_past_cylinder.hpp"
+#include "melt_front_propagation/melt_front_propagation.hpp"
+#include "recoil_pressure/recoil_pressure.hpp"
+#include "reinit_circle/reinit_circle.hpp"
+#include "rising_bubble/rising_bubble.hpp"
+#include "rotating_bubble/rotating_bubble.hpp"
+#include "simulation_selector.hpp"
+#include "slotted_disc/slotted_disc.hpp"
+#include "solidification_slab/solidification_slab.hpp"
+#include "spurious_currents/spurious_currents.hpp"
+#include "stefans_problem/stefans_problem.hpp"
+#include "stefans_problem/stefans_problem1_with_flow_and_heat.hpp"
+#include "stefans_problem/stefans_problem2_with_flow_and_heat.hpp"
+#include "stefans_problem/stefans_problem_with_flow.hpp"
+#include "thermo_capillary_droplet/thermo_capillary_droplet.hpp"
+#include "thermo_capillary_two_droplets/thermo_capillary_two_droplets.hpp"
+#include "unidirectional_heat_transfer/unidirectional_heat_transfer.hpp"
+#include "vortex_bubble/vortex_bubble.hpp"
 
 namespace MeltPoolDG::Simulation
 {

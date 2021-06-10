@@ -10,12 +10,13 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/simulations/advection_diffusion/advection_diffusion.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <iostream>
+
+#include "advection_diffusion.hpp"
 
 /*
  * This is a simple simulation where the access to the output vectors in the Simulation
