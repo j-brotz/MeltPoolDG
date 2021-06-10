@@ -4,7 +4,8 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/problem_selector.hpp>
-#include <meltpooldg/simulations/simulation_selector.hpp>
+
+#include "simulations/simulation_selector.hpp"
 // simulations
 
 namespace MeltPoolDG

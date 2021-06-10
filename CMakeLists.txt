@@ -77,8 +77,7 @@ set(libName "meltpooldg")
 # Set the include directory and the name of the project
 include_directories(include ${CMAKE_CURRENT_BINARY_DIR}/include)
 
-file(GLOB_RECURSE sources "${CMAKE_SOURCE_DIR}/include/*.hpp"
-     "${CMAKE_SOURCE_DIR}/source/*.cpp" "${CMAKE_SOURCE_DIR}/source/**/*.cpp")
+file(GLOB_RECURSE sources "${CMAKE_SOURCE_DIR}/source/**/*.cpp" "${CMAKE_SOURCE_DIR}/simulations/*.cpp")
 
 add_library(${libName} ${sources})
 
