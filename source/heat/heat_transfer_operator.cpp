@@ -417,7 +417,7 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   heat_source_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
-    FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free, temp_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free, ls_dof_idx, this->quad_idx);
 
     VectorizedArray<number> rho_cp       = material.first.density * material.first.capacity;
     VectorizedArray<number> conductivity = material.first.conductivity;

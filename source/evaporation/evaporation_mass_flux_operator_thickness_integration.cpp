@@ -14,12 +14,16 @@ namespace MeltPoolDG::Evaporation
 {
   using namespace dealii;
 
+  static int count = 0;
+
   template <int dim>
   EvaporationMassFluxOperatorThicknessIntegration<dim>::
     EvaporationMassFluxOperatorThicknessIntegration(const ScratchData<dim> &    scratch_data,
                                                     const EvaporationModelBase &evaporation_model,
                                                     const VectorType &     level_set_as_heaviside,
                                                     const BlockVectorType &normal_vector,
+                                                    const double           constant_epsilon,
+                                                    const double           eps_scale_factor,
                                                     const unsigned int     ls_dof_idx,
                                                     const unsigned int     normal_dof_idx,
                                                     const unsigned int     temp_dof_idx,
@@ -29,10 +33,11 @@ namespace MeltPoolDG::Evaporation
     , evaporation_model(evaporation_model)
     , level_set_as_heaviside(level_set_as_heaviside)
     , normal_vector(normal_vector)
+    , constant_epsilon(constant_epsilon)
+    , eps_scale_factor(eps_scale_factor)
     , ls_dof_idx(ls_dof_idx)
     , normal_dof_idx(normal_dof_idx)
     , temp_dof_idx(temp_dof_idx)
-    , epsilon(scratch_data.get_min_cell_size()) //@todo: how to determine epsilon???
     , fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim)
     , n_subdivisions_per_side(n_subdivisions_per_side)
     , n_subdivisions_MCA(n_subdivisions_MCA)
@@ -48,11 +53,19 @@ namespace MeltPoolDG::Evaporation
 
     if constexpr (dim > 1)
       {
+        scratch_data.initialize_dof_vector(evaporative_mass_flux, ls_dof_idx);
         /*
          * generate point cloud normal to interface
          */
         std::vector<Point<dim>>   global_points_normal_to_interface;
         std::vector<unsigned int> global_points_normal_to_interface_pointer;
+
+        const auto thickness_integration_band =
+          constant_epsilon > 0.0 ? 5 * constant_epsilon :
+                                   5 * scratch_data.get_min_cell_size() * eps_scale_factor;
+
+        Assert(thickness_integration_band > 0.0,
+               ExcMessage("Thickness for interface integration not set."));
 
         UtilityFunctions::generate_points_along_normal<dim>(
           global_points_normal_to_interface,
@@ -62,12 +75,41 @@ namespace MeltPoolDG::Evaporation
           scratch_data.get_mapping(),
           level_set_as_heaviside,
           normal_vector,
-          5 * epsilon, //@todo
+          thickness_integration_band,
           n_subdivisions_per_side,
           /* bidirectional */ true,
           /* contour_value */ 0.5,
           n_subdivisions_MCA);
 
+        if (true)
+          {
+            /*
+             * debug
+             */
+            const auto global_points_normal_to_interface_all =
+              Utilities::MPI::reduce<std::vector<Point<dim>>>(global_points_normal_to_interface,
+                                                              scratch_data.get_mpi_comm(),
+                                                              [](const auto &a, const auto &b) {
+                                                                auto result = a;
+                                                                result.insert(result.end(),
+                                                                              b.begin(),
+                                                                              b.end());
+                                                                return result;
+                                                              });
+
+            std::ofstream myfile;
+            myfile.open(std::to_string(count) + "_generated_points.dat");
+
+            for (const auto &p : global_points_normal_to_interface_all)
+              {
+                for (unsigned int d = 0; d < dim; ++d)
+                  myfile << p[d] << " ";
+                myfile << std::endl;
+              }
+
+            myfile.close();
+            count++;
+          }
         /*
          * evaluate result at points normal to interface
          */

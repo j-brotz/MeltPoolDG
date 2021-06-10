@@ -186,7 +186,10 @@ namespace MeltPoolDG::LevelSet
          * register evaporative mass flux model
          */
         evaporation_operation->register_evaporative_mass_flux_model(
-          base_in->parameters.recoil, level_set_operation.get_distance_to_level_set());
+          base_in->parameters.recoil,
+          level_set_operation.get_distance_to_level_set(),
+          base_in->parameters.reinit.constant_epsilon,
+          base_in->parameters.reinit.scale_factor_epsilon);
       }
     /**
      * set the initial velocity field

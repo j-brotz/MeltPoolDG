@@ -93,7 +93,9 @@ namespace MeltPoolDG::Evaporation
   void
   EvaporationOperation<dim>::register_evaporative_mass_flux_model(
     const RecoilPressureData<double> &recoil_data,
-    const VectorType &                distance)
+    const VectorType &                distance,
+    const double                      constant_epsilon,
+    const double                      scale_factor_epsilon)
   {
     /*                 .
      * local operation m(T)
@@ -145,6 +147,8 @@ namespace MeltPoolDG::Evaporation
           *evapor_model,
           level_set_as_heaviside,
           normal_vector,
+          constant_epsilon,
+          scale_factor_epsilon,
           ls_hanging_nodes_dof_idx,
           normal_dof_idx,
           temp_dof_idx,
