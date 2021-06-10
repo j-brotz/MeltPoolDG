@@ -79,7 +79,7 @@ namespace MeltPoolDG::Flow
      * @todo: generalize for level set value gas is 1.0
      */
     void
-    update_phases(const VectorType &src, const Parameters<double> &parameters) const;
+    update_phases(const VectorType &ls_as_heaviside, const Parameters<double> &parameters) const;
 
     /**
      * Compute gravity force.
