@@ -54,13 +54,7 @@ namespace MeltPoolDG::MeltPool
     compute_recoil_pressure_force(VectorType &      force_rhs,
                                   const VectorType &level_set_as_heaviside,
                                   const VectorType &temperature,
-                                  bool              zero_out = true);
-
-    /**
-     * compute the recoil pressure coefficient depending on the temperature
-     */
-    inline double
-    compute_recoil_pressure_coefficient(const double T);
+                                  bool              zero_out = true) const;
 
     /**
      * compute the recoil pressure coefficient depending on the temperature
@@ -70,5 +64,12 @@ namespace MeltPoolDG::MeltPool
                                         const double &pressure_constant,
                                         const double &temperature_constant,
                                         const double &boiling_temperature);
+
+  private:
+    /**
+     * compute the recoil pressure coefficient depending on the temperature
+     */
+    inline double
+    compute_recoil_pressure_coefficient(const double T) const;
   };
 } // namespace MeltPoolDG::MeltPool

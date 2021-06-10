@@ -32,14 +32,16 @@ namespace MeltPoolDG::Flow
         scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
                                   << time_iterator.get_current_time();
 
+        /******************************************************************************************
+         * LEVEL SET
+         ******************************************************************************************/
         interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
 
-        // ... solve level-set problem with the given advection field
         if (evaporation_operation)
           {
             /*
-             If evaporative mass flux is considered the interface velocity will be modified.
-             Note that the normal vector is used from the old step.
+             * If evaporative mass flux is considered the interface velocity will be modified.
+             * Note that the normal vector is used from the old step.
              */
             level_set_operation.update_normal_vector();
 
@@ -56,25 +58,43 @@ namespace MeltPoolDG::Flow
             interface_velocity += evaporation_operation->get_velocity();
           }
 
+        // ... solve level-set problem with the given advection field
         level_set_operation.solve(dt, interface_velocity);
-        // update the two phases
+
+        // update the phases for the flow solver considering the updated level set and temperature // @todo move
         update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
 
-        // solve heat problem
-        if (!melt_pool_operation && heat_operation)
-          {
-            // solve only in case of temperature dependent evaporative mass flux
-            if ((evaporation_operation && base_in->parameters.evapor.evaporation_model.find(
-                                            "Hardt Wondra") != std::string::npos) ||
-                base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer")
-              heat_operation->solve(dt);
-          }
+        /******************************************************************************************
+         * HEAT TRANSFER
+         ******************************************************************************************/
+        if (melt_pool_operation)
+          melt_pool_operation->compute_heat_source(heat_operation->get_heat_source(),
+                                                   level_set_operation.get_level_set_as_heaviside(),
+                                                   dt,
+                                                   true /* zero_out */);
 
+        // the heat equation will NOT be solved if
+        //    * the evaporative mass flux is given as a constant (temperature-independent) value
+        //    * the temperature field is prescribed analytically
+        if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
+            (evaporation_operation &&
+             !(base_in->parameters.evapor.evaporation_model == "constant")) ||
+            (melt_pool_operation && !(base_in->parameters.laser.heat_source_model == "Analytical")))
+          heat_operation->solve(dt);
 
-        // accumulate forces: a) gravity force
-        compute_gravity_force(vel_force_rhs, base_in->parameters.base.gravity, true);
+        if (melt_pool_operation)
+          melt_pool_operation->compute_melt_front_propagation(
+            level_set_operation.get_level_set_as_heaviside());
 
-        // ... b) surface tension
+        /******************************************************************************************
+         * NAVIER - STOKES
+         ******************************************************************************************/
+        // ... a) gravity force
+        compute_gravity_force(vel_force_rhs,
+                              base_in->parameters.base.gravity,
+                              true /* true means force vector is zeroed out before */);
+
+        // ... b) (temperature-independent) surface tension
         if (base_in->parameters.flow.temperature_dependent_surface_tension_coefficient == 0.0)
           SurfaceTensionOperation<dim>::compute_surface_tension(
             vel_force_rhs,
@@ -89,20 +109,16 @@ namespace MeltPoolDG::Flow
             false /* false means not to zero out the force vector */);
 
         // ... c) temperature-dependent surface tension
-        if ((melt_pool_operation || heat_operation) &&
+        if (base_in->parameters.flow.do_heat_transfer &&
             std::abs(base_in->parameters.flow.temperature_dependent_surface_tension_coefficient) >
               0.0)
           {
-            // @todo: REFACTOR!!!
-            const auto &temperature = (melt_pool_operation) ?
-                                        melt_pool_operation->get_temperature() :
-                                        heat_operation->get_temperature();
             Flow::SurfaceTensionOperation<dim>::compute_temperature_dependent_surface_tension(
               *scratch_data,
               vel_force_rhs,
               level_set_operation.get_level_set_as_heaviside(),
               level_set_operation.get_curvature(),
-              temperature,
+              heat_operation->get_temperature(),
               level_set_operation.get_normal_vector(),
               base_in->parameters.flow.surface_tension_coefficient,
               base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
@@ -117,27 +133,26 @@ namespace MeltPoolDG::Flow
               false /*false means add to force vector*/);
           }
 
+        // .... d) evaporative mass fluxes
         if (evaporation_operation)
           {
             evaporation_operation->compute_mass_balance_source_term(
               mass_balance_rhs,
               flow_operation->get_dof_handler_idx_pressure(),
               flow_operation->get_quad_idx_pressure(),
-              true /* zero out force rhs */);
+              true /* zero out rhs */);
           }
 
-        // ... solve melt pool operation
-        // It is assumed that material.first.density represents the density of the gas phase
+        // ... e) recoil pressure forces
         if (melt_pool_operation)
-          {
-            melt_pool_operation->solve(vel_force_rhs,
-                                       level_set_operation.get_level_set_as_heaviside(),
-                                       dt);
-          }
+          melt_pool_operation->compute_force_flow_rhs(
+            vel_force_rhs, level_set_operation.get_level_set_as_heaviside(), false);
 
         //  ... and set the resulting forces within the Navier-Stokes solver
         flow_operation->set_force_rhs(vel_force_rhs);
 
+        // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
+        // the mass balance equation
         if (evaporation_operation)
           flow_operation->set_mass_balance_rhs(mass_balance_rhs);
 
@@ -170,7 +185,7 @@ namespace MeltPoolDG::Flow
   std::string
   TwoPhaseFlowProblem<dim>::get_name()
   {
-    return "two_phase_flow";
+    return "melt_pool";
   }
 
   template <int dim>
@@ -260,8 +275,7 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the heat operation class
      */
-    if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer" ||
-        base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation")
+    if (base_in->parameters.flow.do_heat_transfer)
       heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
         base_in->get_bc("heat_transfer"),
         *scratch_data,
@@ -277,8 +291,7 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the evaporation class
      */
-    if (base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation" ||
-        base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
+    if (base_in->parameters.flow.do_evaporation)
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
           scratch_data,
@@ -299,33 +312,24 @@ namespace MeltPoolDG::Flow
           &evaporation_operation->get_evaporative_mass_flux(),
           base_in->parameters.evapor.latent_heat_of_evaporation);
       }
-
     /*
      *    initialize the melt pool operation class
      */
-    if (base_in->parameters.base.problem_name == "melt_pool" ||
-        base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
+    if (base_in->parameters.flow.do_melt_pool)
       melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
         scratch_data,
-        base_in->get_bc("heat_transfer"),
         base_in->parameters,
         ls_dof_idx,
-        &level_set_operation.get_level_set_as_heaviside(),
+        &heat_operation->get_temperature(),
         reinit_dof_idx,
         flow_operation->get_dof_handler_idx_velocity(),
         flow_operation->get_quad_idx_velocity(),
-        &flow_operation->get_velocity(),
         temp_dof_idx,
-        temp_quad_idx,
         base_in->parameters.flow.start_time);
 
 
     if (evaporation_operation)
       {
-        if (base_in->parameters.base.problem_name == "melt_pool_with_evaporation")
-          evaporation_operation->register_temperature_vector(
-            &melt_pool_operation->get_temperature(), temp_dof_idx);
-
         evaporation_operation->register_evaporative_mass_flux_model(
           base_in->parameters.recoil, level_set_operation.get_distance_to_level_set());
       }
@@ -358,11 +362,10 @@ namespace MeltPoolDG::Flow
             << flow_operation->get_dof_handler_velocity().n_dofs() << "(vel) + "
             << flow_operation->get_dof_handler_pressure().n_dofs() << "(p)";
 
-          if (melt_pool_operation)
-            scratch_data->get_pcout() << " T.size " << melt_pool_operation->get_temperature().size()
-                                      << " solid.size " << melt_pool_operation->get_solid().size();
           if (heat_operation)
             scratch_data->get_pcout() << " T.size " << heat_operation->get_temperature().size();
+          if (melt_pool_operation)
+            scratch_data->get_pcout() << " solid.size " << melt_pool_operation->get_solid().size();
 
           scratch_data->get_pcout() << std::endl;
 
@@ -394,22 +397,20 @@ namespace MeltPoolDG::Flow
                                               flow_operation->get_velocity());
     /*
      *  set initial conditions of the temperature field
+     *
+     *  @todo: improve cases where it must not be specified
      */
-    if (base_in->parameters.base.problem_name == "two_phase_flow_with_heat_transfer" ||
-        (base_in->parameters.base.problem_name == "two_phase_flow_with_evaporation" &&
-         base_in->parameters.evapor.evaporation_model == "Hardt Wondra"))
+    if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
+        (evaporation_operation && !(base_in->parameters.evapor.evaporation_model == "constant")) ||
+        (melt_pool_operation && !(base_in->parameters.laser.heat_source_model == "Analytical")))
       heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
     /*
      * set initial condition of the melt pool class
      */
     if (melt_pool_operation)
       {
-        melt_pool_operation->set_initial_condition(
-          level_set_operation.get_level_set_as_heaviside(),
-          level_set_operation.get_level_set(),
-          base_in->parameters.laser.heat_source_model == "Analytical" ?
-            nullptr :
-            base_in->get_initial_condition("heat_transfer"));
+        melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
+                                                   level_set_operation.get_level_set());
       }
   }
 
@@ -589,7 +590,7 @@ namespace MeltPoolDG::Flow
 
                 // set density
                 if (parameters.flow.variable_properties_over_interface ==
-                    "consistent_with_evaporation")
+                    "consistent_with_evaporation") //@todo: replace by enum
                   {
                     const double rho_g = parameters.material.first.density;
                     const double rho_l = parameters.material.second.density;

@@ -9,25 +9,22 @@ namespace MeltPoolDG::MeltPool
 {
   template <int dim>
   MeltPoolOperation<dim>::MeltPoolOperation(
-    const std::shared_ptr<ScratchData<dim>> &       scratch_data_in,
-    const std::shared_ptr<BoundaryConditions<dim>> &heat_bc,
-    const Parameters<double> &                      data_in,
-    const unsigned int                              ls_dof_idx_in,
-    VectorType *                                    level_set_as_heaviside_in,
-    const unsigned int                              reinit_dof_idx_in,
-    const unsigned int                              flow_vel_dof_idx_in,
-    const unsigned int                              flow_vel_quad_idx_in,
-    VectorType *                                    velocity_in,
-    const unsigned int                              temp_dof_idx_in,
-    const unsigned int                              temp_quad_idx_in,
-    const double                                    start_time_in)
+    const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
+    const Parameters<double> &               data_in,
+    const unsigned int                       ls_dof_idx_in,
+    VectorType *                             temperature,
+    const unsigned int                       reinit_dof_idx_in,
+    const unsigned int                       flow_vel_dof_idx_in,
+    const unsigned int                       flow_vel_quad_idx_in,
+    const unsigned int                       temp_dof_idx_in,
+    const double                             start_time_in)
     : scratch_data(scratch_data_in)
     , ls_dof_idx(ls_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , temp_dof_idx(temp_dof_idx_in)
-    , temp_quad_idx(temp_quad_idx_in)
+    , temperature(temperature)
   {
     /*
      *  set the parameters for the melt pool operation
@@ -42,21 +39,6 @@ namespace MeltPoolDG::MeltPool
      *  Initialize the laser operation
      */
     laser_operation->set_initial_condition(start_time_in);
-    /*
-     *  initialize the heat operation class
-     */
-    heat_operation =
-      std::make_shared<Heat::HeatTransferOperation<dim>>(heat_bc,
-                                                         *scratch_data,
-                                                         data_in.heat,
-                                                         data_in.material,
-                                                         temp_dof_idx,
-                                                         temp_dof_idx, //@todo: hanging nodes
-                                                         temp_quad_idx,
-                                                         flow_vel_dof_idx,
-                                                         velocity_in,
-                                                         ls_dof_idx,
-                                                         level_set_as_heaviside_in);
 
     /*
      * initialize the recoil pressure operation class
@@ -74,7 +56,6 @@ namespace MeltPoolDG::MeltPool
      */
     scratch_data->initialize_dof_vector(solid, temp_dof_idx);
     scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
-    heat_operation->reinit();
 
     if (data_in.laser.heat_source_model == "Gusarov")
       {
@@ -103,10 +84,8 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::set_initial_condition(
-    const VectorType &                              level_set_as_heaviside,
-    VectorType &                                    level_set,
-    [[maybe_unused]] std::shared_ptr<Function<dim>> initial_temperature)
+  MeltPoolOperation<dim>::set_initial_condition(const VectorType &level_set_as_heaviside,
+                                                VectorType &      level_set)
   {
     /*
      *  Compute analytical temperature field
@@ -114,13 +93,9 @@ namespace MeltPoolDG::MeltPool
     if (laser_analytical_temperature_field)
       laser_analytical_temperature_field->compute_temperature_field(
         level_set_as_heaviside,
-        heat_operation->get_temperature(),
+        *temperature,
         laser_operation->get_laser_power(),
         laser_operation->get_laser_position());
-    else
-      {
-        heat_operation->set_initial_condition(*initial_temperature);
-      }
     /*
      *  Compute the initial solid and liquid phases
      */
@@ -134,44 +109,47 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::solve(VectorType &      vel_force_rhs,
-                                const VectorType &level_set_as_heaviside,
-                                const double &    dt)
+  MeltPoolOperation<dim>::compute_heat_source(VectorType &      heat_source,
+                                              const VectorType &level_set_as_heaviside,
+                                              const double &    dt,
+                                              const bool        zero_out)
   {
     // 0) move laser
     laser_operation->move_laser(dt);
 
-    // 1) compute temperature field
+    // 1) compute heat source or define analytical temperature field
     if (laser_analytical_temperature_field)
-      laser_analytical_temperature_field->compute_temperature_field(
-        level_set_as_heaviside,
-        heat_operation->get_temperature(),
-        laser_operation->get_laser_power(),
-        laser_operation->get_laser_position());
+      {
+        laser_analytical_temperature_field->compute_temperature_field(
+          level_set_as_heaviside,
+          *temperature,
+          laser_operation->get_laser_power(),
+          laser_operation->get_laser_position());
+      }
     else
       {
         switch (laser_operation->get_laser_impact_type())
           {
               case Heat::LaserImpactType::volumetric: {
                 laser_heat_source_operation->compute_volumetric_heat_source(
-                  heat_operation->get_heat_source(),
+                  heat_source,
                   *scratch_data,
                   temp_dof_idx,
                   laser_operation->get_laser_power(),
                   laser_operation->get_laser_position(),
-                  true /* zero_out */);
+                  zero_out);
                 break;
               }
               case Heat::LaserImpactType::interface: {
                 laser_heat_source_operation->compute_interfacial_heat_source(
-                  heat_operation->get_heat_source(),
+                  heat_source,
                   *scratch_data,
                   temp_dof_idx,
                   laser_operation->get_laser_power(),
                   laser_operation->get_laser_position(),
-                  heat_operation->get_level_set_as_heaviside(),
+                  level_set_as_heaviside,
                   ls_dof_idx,
-                  true /* zero_out */);
+                  zero_out);
                 break;
               }
               default: {
@@ -179,37 +157,42 @@ namespace MeltPoolDG::MeltPool
                 break;
               }
           }
-
-        heat_operation->solve(dt);
       }
+  }
 
-    // 2) update phases
+  template <int dim>
+  void
+  MeltPoolOperation<dim>::compute_melt_front_propagation(const VectorType &level_set_as_heaviside)
+  {
     if (!laser_analytical_temperature_field)
       {
+        // 1) update phases
         compute_solid_and_liquid_phases(level_set_as_heaviside);
 
-        // 3) update the constraints such that the solid domain is spatially fixed
+        // 2) update the constraints such that the solid domain is spatially fixed
         make_constraints_in_spatially_fixed_solid_domain();
       }
+  }
 
-    // 4) compute forces
-    //   i)  ... recoil pressure
+  template <int dim>
+  void
+  MeltPoolOperation<dim>::compute_force_flow_rhs(VectorType &      vel_force_rhs,
+                                                 const VectorType &level_set_as_heaviside,
+                                                 const bool        zero_out) const
+  {
+    // compute recoil pressure force
     if (recoil_pressure_operation)
       recoil_pressure_operation->compute_recoil_pressure_force(
         vel_force_rhs,
         level_set_as_heaviside,
-        heat_operation->get_temperature(),
-        false /*false means add to force vector*/);
-
-    //   ii) ... or evaporative flux
-    //@todo
+        *temperature,
+        zero_out /*false means add to force vector*/);
   }
 
   template <int dim>
   void
   MeltPoolOperation<dim>::reinit()
   {
-    heat_operation->reinit();
     scratch_data->initialize_dof_vector(solid, temp_dof_idx);
     scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
   }
@@ -219,7 +202,6 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    heat_operation->attach_vectors(vectors);
     solid.update_ghost_values();
     liquid.update_ghost_values();
     vectors.push_back(&solid);
@@ -230,7 +212,6 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
-    heat_operation->attach_output_vectors(data_out);
     MeltPoolDG::VectorTools::update_ghost_values(solid, liquid);
     /**
      *  solid
@@ -246,16 +227,8 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolOperation<dim>::distribute_constraints()
   {
-    heat_operation->distribute_constraints();
     scratch_data->get_constraint(temp_dof_idx).distribute(solid);
     scratch_data->get_constraint(temp_dof_idx).distribute(liquid);
-  }
-
-  template <int dim>
-  const VectorType &
-  MeltPoolOperation<dim>::get_temperature() const
-  {
-    return heat_operation->get_temperature();
   }
 
   template <int dim>
@@ -297,7 +270,7 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside)
   {
     level_set_as_heaviside.update_ghost_values();
-    heat_operation->get_temperature().update_ghost_values();
+    temperature->update_ghost_values();
 
     const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
 
@@ -319,10 +292,10 @@ namespace MeltPoolDG::MeltPool
             {
               solid[local_dof_indices[i]] =
                 is_solid_region(level_set_as_heaviside[local_dof_indices[i]],
-                                heat_operation->get_temperature()[local_dof_indices[i]]);
+                                (*temperature)[local_dof_indices[i]]);
               liquid[local_dof_indices[i]] =
                 is_liquid_region(level_set_as_heaviside[local_dof_indices[i]],
-                                 heat_operation->get_temperature()[local_dof_indices[i]]);
+                                 (*temperature)[local_dof_indices[i]]);
             }
         }
 
@@ -332,7 +305,7 @@ namespace MeltPoolDG::MeltPool
     scratch_data->get_constraint(temp_dof_idx).distribute(solid);
     scratch_data->get_constraint(temp_dof_idx).distribute(liquid);
 
-    heat_operation->get_temperature().zero_out_ghost_values();
+    temperature->zero_out_ghost_values();
     level_set_as_heaviside.zero_out_ghost_values();
   }
 
@@ -445,11 +418,11 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   bool
-  MeltPoolOperation<dim>::is_solid_region(const double phi_liquid, const double temperature)
+  MeltPoolOperation<dim>::is_solid_region(const double phi_liquid, const double T) const
   {
     if (phi_liquid <= 0.5)
       return false; // point is gas phase
-    else if (phi_liquid > 0.5 && temperature >= mp_data.liquid.melting_point)
+    else if (phi_liquid > 0.5 && T >= mp_data.liquid.melting_point)
       return false; // point is melted
     else
       return true;
@@ -457,11 +430,11 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   bool
-  MeltPoolOperation<dim>::is_liquid_region(const double phi_liquid, const double temperature)
+  MeltPoolOperation<dim>::is_liquid_region(const double phi_liquid, const double T) const
   {
     if (phi_liquid <= 0.5)
       return false; // point is gas phase
-    else if (phi_liquid > 0.5 && temperature >= mp_data.liquid.melting_point)
+    else if (phi_liquid > 0.5 && T >= mp_data.liquid.melting_point)
       return true; // point is melted
     else
       return false; // point is solid

@@ -1,6 +1,6 @@
 {
   "base": {
-    "problem name": "two_phase_flow_with_evaporation",
+    "problem name": "two_phase_flow",
     "application name": "evaporating_droplet",
     "global refinements": "4",
     "dimension": "2",
@@ -12,7 +12,9 @@
     "flow start time": "0.0",
     "flow end time": "1.0",
     "flow time step size": "0.005",
-    "flow variable properties over interface": "consistent_with_evaporation"
+    "flow variable properties over interface": "consistent_with_evaporation",
+    "flow do heat transfer": "true",
+    "flow do evaporation": "true"
   },
   "material": {
     "material first viscosity": "0.001",
