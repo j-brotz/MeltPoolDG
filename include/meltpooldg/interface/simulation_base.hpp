@@ -144,11 +144,8 @@ namespace MeltPoolDG
       if (!boundary_conditions_map[operation_name])
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
-      if (boundary_conditions_map[operation_name]->dirichlet_bc.count(id) > 0)
-        AssertThrow(false,
-                    ExcMessage("You try to attach a dirichlet boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+      AssertThrow(boundary_conditions_map[operation_name]->dirichlet_bc.count(id) == 0,
+                  ExcBCAlreadyAssigned("Dirichlet"));
 
       boundary_conditions_map[operation_name]->dirichlet_bc[id] = boundary_function;
     }
@@ -162,11 +159,9 @@ namespace MeltPoolDG
       if (!boundary_conditions_map[operation_name])
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
-      if (boundary_conditions_map[operation_name]->neumann_bc.count(id) > 0)
-        AssertThrow(false,
-                    ExcMessage("You try to attach a neumann boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+      AssertThrow(boundary_conditions_map[operation_name]->neumann_bc.count(id) == 0,
+                  ExcBCAlreadyAssigned("Neumann"));
+
       boundary_conditions_map[operation_name]->neumann_bc[id] = boundary_function;
     }
 
@@ -177,11 +172,9 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->no_slip_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a no slip boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(), ExcBCAlreadyAssigned("no-slip"));
+
       bc.push_back(id);
     }
 
@@ -192,11 +185,9 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->open_boundary_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach an open boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(), ExcBCAlreadyAssigned("open"));
+
       bc.push_back(id);
     }
 
@@ -207,11 +198,10 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->fix_pressure_constant;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a no slip boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(),
+                  ExcBCAlreadyAssigned("fix pressure constant constant"));
+
       bc.push_back(id);
     }
 
@@ -222,11 +212,10 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->symmetry_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a symmetry boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(),
+                  ExcBCAlreadyAssigned("symmetry"));
+
       bc.push_back(id);
     }
 
@@ -262,11 +251,10 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->radiation_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a radiation boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(),
+                  ExcBCAlreadyAssigned("radiation"));
+
       bc.push_back(id);
     }
 
@@ -277,11 +265,10 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
       auto &bc = boundary_conditions_map[operation_name]->convection_bc;
-      if (std::find(bc.begin(), bc.end(), id) != bc.end())
-        AssertThrow(false,
-                    ExcMessage("You try to attach a convection boundary conditions "
-                               "for a boundary_id for which a boundary condition is already "
-                               "specified. Check your input related to bc!"));
+
+      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(),
+                  ExcBCAlreadyAssigned("convection"));
+
       bc.push_back(id);
     }
 
@@ -302,16 +289,9 @@ namespace MeltPoolDG
     {
       auto field_conditions = field_conditions_map[operation_name];
 
-      if (!is_optional)
-        AssertThrow(
-          field_conditions && field_conditions->initial_field,
-          ExcMessage(
-            "It seems that your SimulationBase object does not contain a valid initial field function for the \"" +
-            operation_name +
-            "\" field. A shared_ptr to your initial field function, e.g., MyInitializeFunc<dim>; can "
-            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-            "this->attach_initial_condition(std::make_shared<MyInitializeFunc<dim>>(...), \"" +
-            operation_name + "\");"));
+      AssertThrow(is_optional || (field_conditions && field_conditions->initial_field),
+                  ExcFieldNotAttached("set_initial_condition", operation_name));
+
       return field_conditions->initial_field;
     }
 
@@ -320,16 +300,9 @@ namespace MeltPoolDG
     {
       auto field_conditions = field_conditions_map[operation_name];
 
-      if (!is_optional)
-        AssertThrow(
-          field_conditions && field_conditions->source_field,
-          ExcMessage(
-            "It seems that your SimulationBase object does not contain a valid source field function for the \"" +
-            operation_name +
-            "\" field. A shared_ptr to your source field function, e.g., MySourceFunc<dim>; can "
-            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-            "this->attach_source_field(std::make_shared<MySourceFunc<dim>>(...), \"" +
-            operation_name + "\");"));
+      AssertThrow(is_optional || (field_conditions && field_conditions->source_field),
+                  ExcFieldNotAttached("set_source_field", operation_name));
+
       return field_conditions->source_field;
     }
 
@@ -337,16 +310,10 @@ namespace MeltPoolDG
     get_advection_field(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
-      if (!is_optional)
-        AssertThrow(
-          field_conditions && field_conditions->advection_field,
-          ExcMessage(
-            "It seems that your SimulationBase object does not contain a valid advection field function for the \"" +
-            operation_name +
-            "\" field. A shared_ptr to your advection field function, e.g., MyAdvectionFunc<dim>; can "
-            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-            "this->attach_advection_field(std::make_shared<MyAdvectionFunc<dim>>(...), \"" +
-            operation_name + "\");"));
+
+      AssertThrow(is_optional || (field_conditions && field_conditions->advection_field),
+                  ExcFieldNotAttached("set_advection_field", operation_name));
+
       return field_conditions->advection_field;
     }
 
@@ -354,16 +321,10 @@ namespace MeltPoolDG
     get_velocity_field(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
-      if (!is_optional)
-        AssertThrow(
-          field_conditions && field_conditions->velocity_field,
-          ExcMessage(
-            "It seems that your SimulationBase object does not contain a valid velocity field function for the \"" +
-            operation_name +
-            "\" field. A shared_ptr to your velocity field function, e.g., MyVelocityFunc<dim>; can "
-            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-            "this->attach_velocity_field(std::make_shared<MyVelocityFunc<dim>>(...), \"" +
-            operation_name + "\");"));
+
+      AssertThrow(is_optional || (field_conditions && field_conditions->velocity_field),
+                  ExcFieldNotAttached("set_velocity_field", operation_name));
+
       return field_conditions->velocity_field;
     }
 
@@ -371,16 +332,10 @@ namespace MeltPoolDG
     get_exact_solution(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
-      if (!is_optional)
-        AssertThrow(
-          field_conditions && field_conditions->exact_solution_field,
-          ExcMessage(
-            "It seems that your SimulationBase object does not contain a valid exact solution field function for the \"" +
-            operation_name +
-            "\" field. A shared_ptr to your exact solution field function, e.g., MyExactSolutionFunc<dim>; can "
-            "be specified in the SimulationBase::set_field_conditions() function as follows: \n"
-            "this->attach_exact_solution(std::make_shared<MyExactSolutionFunc<dim>>(...), \"" +
-            operation_name + "\");"));
+
+      AssertThrow(is_optional || (field_conditions && field_conditions->exact_solution_field),
+                  ExcFieldNotAttached("set_exact_solution", operation_name));
+
       return field_conditions->exact_solution_field;
     }
 
@@ -467,5 +422,18 @@ namespace MeltPoolDG
     std::map<std::string, std::shared_ptr<FieldConditions<dim>>>    field_conditions_map;
     std::map<std::string, std::shared_ptr<BoundaryConditions<dim>>> boundary_conditions_map;
     PeriodicBoundaryConditions<dim>                                 periodic_boundary_conditions;
+
+    DeclException1(ExcBCAlreadyAssigned,
+                   std::string,
+                   << "You try to attach a " << arg1 << " boundary condition "
+                   << "for a boundary_id for which a boundary condition is already "
+                   << "specified. Check your input related to boundary conditions!");
+
+    DeclException2(ExcFieldNotAttached,
+                   std::string,
+                   std::string,
+                   << "It seems that you have not called SimulationBase::" << arg1
+                   << "() for the operator \"" << arg2 << "\". You can do that, e.g., "
+                   << "in your simulation by overriding SimulationBase::set_field_conditions().");
   };
 } // namespace MeltPoolDG
