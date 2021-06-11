@@ -202,12 +202,14 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
+#if DEAL_II_VERSION_MAJOR < 10
     MeltPoolDG::VectorTools::update_ghost_values(temperature, temperature_old, heat_source);
     if (velocity)
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
 
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
+#endif
 
     /**
      *  temperature

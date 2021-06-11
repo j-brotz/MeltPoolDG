@@ -268,7 +268,9 @@ namespace MeltPoolDG::AdvectionDiffusion
       std::vector<DataComponentInterpretation::DataComponentInterpretation>
         vector_component_interpretation(dim,
                                         DataComponentInterpretation::component_is_part_of_vector);
+#if DEAL_II_VERSION_MAJOR < 10
       advection_velocity.update_ghost_values();
+#endif
       data_out.add_data_vector(scratch_data->get_dof_handler(velocity_dof_idx),
                                advection_velocity,
                                std::vector<std::string>(dim, "velocity"),

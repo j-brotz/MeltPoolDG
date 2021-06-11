@@ -314,11 +314,13 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
+#if DEAL_II_VERSION_MAJOR < 10
     MeltPoolDG::VectorTools::update_ghost_values(get_level_set(),
                                                  get_curvature(),
                                                  get_normal_vector(),
                                                  level_set_as_heaviside,
                                                  distance_to_level_set);
+#endif
     /*
      *  output advected field
      */
