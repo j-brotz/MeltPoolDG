@@ -110,7 +110,7 @@ namespace MeltPoolDG::Flow
             false /* false means not to zero out the force vector */);
 
         // ... c) temperature-dependent surface tension
-        if (base_in->parameters.flow.do_heat_transfer &&
+        if (base_in->parameters.mp.do_heat_transfer &&
             std::abs(base_in->parameters.flow.temperature_dependent_surface_tension_coefficient) >
               0.0)
           {
@@ -253,11 +253,12 @@ namespace MeltPoolDG::Flow
     /*
      *  initialize the time stepping scheme
      */
-    time_iterator.initialize(TimeIteratorData<double>{base_in->parameters.flow.start_time,
-                                                      base_in->parameters.flow.end_time,
-                                                      base_in->parameters.flow.time_step_size,
-                                                      base_in->parameters.flow.max_n_steps,
-                                                      false /*cfl_condition-->not supported yet*/});
+    time_iterator.initialize(
+      TimeIteratorData<double>{base_in->parameters.time_stepping.start_time,
+                               base_in->parameters.time_stepping.end_time,
+                               base_in->parameters.time_stepping.time_step_size,
+                               base_in->parameters.time_stepping.max_n_steps,
+                               false /*cfl_condition-->not supported yet*/});
     /*
      *    initialize the levelset operation class
      *    and setup initial conditions
@@ -276,7 +277,7 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the heat operation class
      */
-    if (base_in->parameters.flow.do_heat_transfer)
+    if (base_in->parameters.mp.do_heat_transfer)
       heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
         base_in->get_bc("heat_transfer"),
         *scratch_data,
@@ -292,7 +293,7 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the evaporation class
      */
-    if (base_in->parameters.flow.do_evaporation)
+    if (base_in->parameters.mp.do_evaporation)
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
           scratch_data,
@@ -316,7 +317,7 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the melt pool operation class
      */
-    if (base_in->parameters.flow.do_melt_pool)
+    if (base_in->parameters.mp.do_melt_pool)
       melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
         scratch_data,
         base_in->parameters,
@@ -326,7 +327,7 @@ namespace MeltPoolDG::Flow
         flow_operation->get_dof_handler_idx_velocity(),
         flow_operation->get_quad_idx_velocity(),
         temp_dof_idx,
-        base_in->parameters.flow.start_time);
+        base_in->parameters.time_stepping.start_time);
 
     if (base_in->parameters.heat.solidification)
       AssertThrow(
@@ -359,7 +360,7 @@ namespace MeltPoolDG::Flow
      *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
      *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
      */
-    output_results(0, base_in->parameters.flow.start_time, base_in);
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
     /*
      *    Do initial refinement steps if requested
      */

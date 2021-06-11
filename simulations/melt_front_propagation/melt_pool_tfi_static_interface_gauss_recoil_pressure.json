@@ -10,14 +10,14 @@
     "gravity": "0.0"
   },
   "flow": {
-    "flow start time": "0.0",
-    "flow time step size": "1e-5",
-    "flow end time": "0.05",
-    "flow max n steps": "5000",
-    "flow do melt pool": "true",
-    "flow do heat transfer": "true",
     "flow variable properties over interface": "true",
     "flow surface tension coefficient": "1.8"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "1e-5",
+    "end time": "0.05",
+    "max n steps": "5000"
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -57,6 +57,8 @@
     "laser gauss absorptivity": "0.5"
   },
   "melt pool": {
+    "mp do melt pool": "true",
+    "mp do heat transfer": "true",
     "mp set velocity to zero in solid": "false",
     "mp do recoil pressure": "true",
     "mp boiling temperature": "3000."

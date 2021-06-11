@@ -58,12 +58,12 @@ namespace MeltPoolDG
 
     if (base.problem_name == "melt_pool")
       {
-        if (flow.do_evaporation && !flow.do_heat_transfer)
+        if (mp.do_evaporation && !mp.do_heat_transfer)
           AssertThrow(false,
                       ExcMessage("In case of evaporation both flag >>> do evaporation <<< "
                                  "and >>> do heat transfer <<< have to be set to true."));
 
-        if (flow.do_melt_pool && !flow.do_heat_transfer)
+        if (mp.do_melt_pool && !mp.do_heat_transfer)
           AssertThrow(false,
                       ExcMessage("In case of do melt pool both flag >>> do melt pool <<< "
                                  "and >>> do heat transfer <<< have to be set to true."));
@@ -82,7 +82,7 @@ namespace MeltPoolDG
                       "within the adaflo section, which is ignored by MeltPoolDG. "
                       "Please use the >material: material first density:< section instead. "));
 
-        if (flow.do_evaporation)
+        if (mp.do_evaporation)
           {
             if (evapor.formulation_source_term_continuity != "sharp")
               {
@@ -138,11 +138,11 @@ namespace MeltPoolDG
                                         flow.velocity_n_q_points_1d;
 
         /// synchronize time stepping schemes
-        adaflo_params.params.start_time           = flow.start_time;
-        adaflo_params.params.end_time             = flow.end_time;
-        adaflo_params.params.time_step_size_start = flow.time_step_size;
-        adaflo_params.params.time_step_size_min   = flow.time_step_size;
-        adaflo_params.params.time_step_size_max   = flow.time_step_size;
+        adaflo_params.params.start_time           = time_stepping.start_time;
+        adaflo_params.params.end_time             = time_stepping.end_time;
+        adaflo_params.params.time_step_size_start = time_stepping.time_step_size;
+        adaflo_params.params.time_step_size_min   = time_stepping.time_step_size;
+        adaflo_params.params.time_step_size_max   = time_stepping.time_step_size;
         adaflo_params.params.use_simplex_mesh     = base.do_simplex;
       }
 #endif
@@ -210,6 +210,27 @@ namespace MeltPoolDG
         "verbosity level",
         base.verbosity_level,
         "Sets the maximum verbosity level of the console output. Set this parameter to 0 in case of test files.");
+    }
+    prm.leave_subsection();
+    /*
+     *   time stepping
+     */
+    prm.enter_subsection("time stepping");
+    {
+      prm.add_parameter("start time",
+                        time_stepping.start_time,
+                        "Defines the start time for the solution of the levelset problem");
+      prm.add_parameter("end time",
+                        time_stepping.end_time,
+                        "Sets the end time for the solution of the levelset problem");
+      prm.add_parameter("time step size",
+                        time_stepping.time_step_size,
+                        "Sets the step size for time stepping. For non-uniform "
+                        "time stepping, this parameter determines the size of the first "
+                        "time step.");
+      prm.add_parameter("max n steps",
+                        time_stepping.max_n_steps,
+                        "Sets the maximum number of melt_pool steps");
     }
     prm.leave_subsection();
     /*
@@ -462,38 +483,11 @@ namespace MeltPoolDG
         flow.surface_tension_coefficient_residual_fraction,
         "Define the minimum fraction of the constant surface tension reference value "
         "that can be reached.");
-      prm.add_parameter("flow solver type", flow.solver_type, "solver type of the flow problem");
-      prm.add_parameter("flow start time",
-                        flow.start_time,
-                        "Defines the start time for the solution of the levelset problem");
-      prm.add_parameter("flow end time",
-                        flow.end_time,
-                        "Sets the end time for the solution of the levelset problem");
-      prm.add_parameter("flow time step size",
-                        flow.time_step_size,
-                        "Sets the step size for time stepping. For non-uniform "
-                        "time stepping, this parameter determines the size of the first "
-                        "time step.");
-      prm.add_parameter("flow max n steps",
-                        flow.max_n_steps,
-                        "Sets the maximum number of flow steps");
       prm.add_parameter(
         "flow variable properties over interface",
         flow.variable_properties_over_interface,
         "Set this parameter to interpolate the flow properties over the interface smoothly.",
         Patterns::Selection("false|true|consistent_with_evaporation"));
-      prm.add_parameter(
-        "flow do heat transfer",
-        flow.do_heat_transfer,
-        "Set this parameter to true if you want to consider a coupling with heat transfer.");
-      prm.add_parameter(
-        "flow do evaporation",
-        flow.do_evaporation,
-        "Set this parameter to true if you want to consider a coupling with evaporation.");
-      prm.add_parameter(
-        "flow do melt pool",
-        flow.do_melt_pool,
-        "Set this parameter to true if you want to consider a melt pool simulation including a solid phase.");
     }
     prm.leave_subsection();
     /*
@@ -681,6 +675,18 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("melt pool");
     {
+      prm.add_parameter(
+        "mp do heat transfer",
+        mp.do_heat_transfer,
+        "Set this parameter to true if you want to consider a coupling with heat transfer.");
+      prm.add_parameter(
+        "mp do evaporation",
+        mp.do_evaporation,
+        "Set this parameter to true if you want to consider a coupling with evaporation.");
+      prm.add_parameter(
+        "mp do melt pool",
+        mp.do_melt_pool,
+        "Set this parameter to true if you want to consider a melt pool simulation including a solid phase.");
       prm.add_parameter("mp melt pool center",
                         mp.melt_pool_center,
                         "Center coordinates of the melt pool ellipse/parabola. If no value is "

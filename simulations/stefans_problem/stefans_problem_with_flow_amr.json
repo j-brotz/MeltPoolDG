@@ -9,12 +9,16 @@
   },
   "flow": {
     "flow surface tension coefficient": "1.8",
-    "flow start time": "0.0",
-    "flow end time": "0.0006",
-    "flow time step size": "0.000001",
-    "flow variable properties over interface": "consistent_with_evaporation",
-    "flow do heat transfer": "true",
-    "flow do evaporation": "true"
+    "flow variable properties over interface": "consistent_with_evaporation"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.0006",
+    "time step size": "0.000001"
+  },
+  "melt pool": {
+    "mp do heat transfer": "true",
+    "mp do evaporation": "true"
   },
   "material": {
     "material first density": "0.01",

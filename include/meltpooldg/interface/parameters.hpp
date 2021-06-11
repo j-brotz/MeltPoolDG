@@ -41,7 +41,7 @@ namespace MeltPoolDG
     number       end_time                = 1.0;
     number       time_step_size          = 0.01;
     unsigned int max_n_steps             = 1000000;
-    std::string  time_integration_scheme = "none";
+    std::string  time_integration_scheme = "none"; // @todo: remove this is operation-dependent
   };
 
   template <typename number = double>
@@ -115,21 +115,13 @@ namespace MeltPoolDG
   template <typename number = double>
   struct FlowData
   {
-    int          velocity_degree                                   = -1;
-    int          velocity_n_q_points_1d                            = -1;
-    number       surface_tension_coefficient                       = 0.0;
-    number       temperature_dependent_surface_tension_coefficient = 0.0;
-    number       surface_tension_reference_temperature             = 0.0;
-    number       surface_tension_coefficient_residual_fraction     = 0.0;
-    std::string  solver_type                                       = "incompressible";
-    number       start_time                                        = 0.0;
-    number       end_time                                          = 1.0;
-    number       time_step_size                                    = 0.05;
-    unsigned int max_n_steps                                       = 1000000;
-    std::string  variable_properties_over_interface                = "false";
-    bool         do_heat_transfer                                  = false;
-    bool         do_evaporation                                    = false;
-    bool         do_melt_pool                                      = false;
+    int         velocity_degree                                   = -1;
+    int         velocity_n_q_points_1d                            = -1;
+    number      surface_tension_coefficient                       = 0.0;
+    number      temperature_dependent_surface_tension_coefficient = 0.0;
+    number      surface_tension_reference_temperature             = 0.0;
+    number      surface_tension_coefficient_residual_fraction     = 0.0;
+    std::string variable_properties_over_interface                = "false";
   };
 
   template <typename number = double>
@@ -211,6 +203,9 @@ namespace MeltPoolDG
   template <typename number = double>
   struct MeltPoolData
   {
+    bool        do_heat_transfer               = false;
+    bool        do_evaporation                 = false;
+    bool        do_melt_pool                   = false;
     std::string melt_pool_center               = "not_initialized";
     bool        set_velocity_to_zero_in_solid  = false;
     bool        set_level_set_to_zero_in_solid = false;
@@ -346,6 +341,7 @@ namespace MeltPoolDG
     ParameterHandler prm;
 
     BaseData<number>               base;
+    TimeSteppingData<number>       time_stepping;
     AdaptiveMeshingData            amr;
     LevelSetData<number>           ls;
     ReinitializationData<number>   reinit;

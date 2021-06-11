@@ -8,13 +8,11 @@
     "problem name": "melt_pool",
     "verbosity level": "0"
   },
-  "flow": {
-    "flow start time": "0.0",
-    "flow time step size": "1e-4",
-    "flow end time": "0.015",
-    "flow max n steps": "5",
-    "flow do heat transfer": "true",
-    "flow do melt pool": "true"
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "1e-4",
+    "end time": "0.015",
+    "max n steps": "5"
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -54,6 +52,8 @@
     "laser gauss absorptivity": "0.5"
   },
   "melt pool": {
+    "mp do heat transfer": "true",
+    "mp do melt pool": "true",
     "mp set velocity to zero in solid": "false"
   },
   "material": {

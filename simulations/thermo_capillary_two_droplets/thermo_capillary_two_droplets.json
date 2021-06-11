@@ -25,13 +25,17 @@
     "material second density": "250",
     "material second viscosity": "0.012"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "115.2",
+    "time step size": "0.05"
+  },
   "flow": {
     "flow surface tension coefficient": "0.023040369",
-    "flow temperature dependent surface tension coefficient": "0.002",
-    "flow start time": "0.0",
-    "flow end time": "115.2",
-    "flow time step size": "0.05",
-    "flow do heat transfer": "true"
+    "flow temperature dependent surface tension coefficient": "0.002"
+  },
+  "melt pool": {
+    "mp do heat transfer": "true"
   },
   "Navier-Stokes": {
     "adaflo": {

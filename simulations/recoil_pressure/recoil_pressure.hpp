@@ -132,7 +132,7 @@ namespace MeltPoolDG
         void
         set_boundary_conditions() override
         {
-          if (this->parameters.flow.do_evaporation)
+          if (this->parameters.mp.do_evaporation)
             {
               const types::boundary_id lower_bc = 1;
               const types::boundary_id upper_bc = 2;

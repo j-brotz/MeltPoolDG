@@ -8,11 +8,13 @@
     "degree": "1",
     "gravity": "0.98"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.14",
+    "time step size": "0.02"
+  },
   "flow": {
-    "flow surface tension coefficient": "0.0245",
-    "flow start time": "0.0",
-    "flow end time": "0.14",
-    "flow time step size": "0.02"
+    "flow surface tension coefficient": "0.0245"
   },
   "material": {
     "material first density": "1",
