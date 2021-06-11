@@ -278,20 +278,6 @@ namespace MeltPoolDG
                         advec_diff.time_integration_scheme,
                         "Determines the time integration scheme.",
                         Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson|bdf_2"));
-      prm.add_parameter("advec diff start time",
-                        advec_diff.start_time,
-                        "Defines the start time for the solution of the levelset problem");
-      prm.add_parameter("advec diff end time",
-                        advec_diff.end_time,
-                        "Sets the end time for the solution of the advection diffusion problem");
-      prm.add_parameter(
-        "advec diff time step size",
-        advec_diff.time_step_size,
-        "Sets the step size for time stepping. For non-uniform "
-        "time stepping, this parameter determines the size of the first time step.");
-      prm.add_parameter("advec diff max n steps",
-                        advec_diff.max_n_steps,
-                        "Sets the maximum number of advection diffusion steps");
       prm.add_parameter(
         "advec diff do matrix free",
         advec_diff.do_matrix_free,

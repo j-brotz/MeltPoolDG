@@ -13,13 +13,15 @@
     "lower perc to coarsen": "    0.0",
     "max grid refinement level": "7"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "1.5707963267948966",
+    "time step size": "0.01"
+  },
   "advection diffusion": {
     "advec diff implementation": "adaflo",
     "advec diff diffusivity": "0.000000",
     "advec diff time integration scheme": "crank_nicolson",
-    "advec diff start time": "0.0",
-    "advec diff end time": "1.5707963267948966",
-    "advec diff time step size": "0.01",
     "advec diff do matrix free": "true"
   },
   "paraview": {

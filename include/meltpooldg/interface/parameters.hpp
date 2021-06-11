@@ -99,14 +99,10 @@ namespace MeltPoolDG
   template <typename number = double>
   struct AdvectionDiffusionData
   {
-    number       diffusivity             = 0.0;
-    std::string  time_integration_scheme = "crank_nicolson";
-    number       start_time              = 0.0;
-    number       end_time                = 1.0;
-    number       time_step_size          = 0.01;
-    unsigned int max_n_steps             = 1000000;
-    bool         do_matrix_free          = true;
-    std::string  implementation          = "meltpooldg";
+    number      diffusivity             = 0.0;
+    std::string time_integration_scheme = "crank_nicolson";
+    bool        do_matrix_free          = true;
+    std::string implementation          = "meltpooldg";
   };
 
   template <typename number = double>
