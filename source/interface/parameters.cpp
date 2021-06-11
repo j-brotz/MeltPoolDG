@@ -524,20 +524,6 @@ namespace MeltPoolDG
         "heat nlsolve residual tolerance alt",
         heat.nlsolve.residual_tolerance_alt,
         "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
-      prm.add_parameter("heat start time",
-                        heat.time_stepping.start_time,
-                        "Defines the start time for the solution of the heat problem");
-      prm.add_parameter("heat end time",
-                        heat.time_stepping.end_time,
-                        "Sets the end time for the solution of the heat problem");
-      prm.add_parameter("heat time step size",
-                        heat.time_stepping.time_step_size,
-                        "Sets the step size for time stepping. For non-uniform "
-                        "time stepping, this parameter determines the size of the first "
-                        "time step.");
-      prm.add_parameter("heat max n steps",
-                        heat.time_stepping.max_n_steps,
-                        "Sets the maximum number of time steps");
       prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
       prm.add_parameter("heat two phase", heat.two_phase, "Set this parameter for two phase flow.");
       prm.add_parameter(

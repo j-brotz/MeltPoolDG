@@ -37,11 +37,10 @@ namespace MeltPoolDG
   template <typename number = double>
   struct TimeSteppingData
   {
-    number       start_time              = 0.0;
-    number       end_time                = 1.0;
-    number       time_step_size          = 0.01;
-    unsigned int max_n_steps             = 1000000;
-    std::string  time_integration_scheme = "none"; // @todo: remove this is operation-dependent
+    number       start_time     = 0.0;
+    number       end_time       = 1.0;
+    number       time_step_size = 0.01;
+    unsigned int max_n_steps    = 1000000;
   };
 
   template <typename number = double>
@@ -146,7 +145,6 @@ namespace MeltPoolDG
     bool                        two_phase                          = false;
     bool                        variable_properties_over_interface = false;
     bool                        solidification                     = false;
-    TimeSteppingData<number>    time_stepping;
     NonlinearSolverData<number> nlsolve;
     SolverData<number>          solver;
   };

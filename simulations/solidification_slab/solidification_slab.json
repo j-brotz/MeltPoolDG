@@ -1,4 +1,10 @@
 {
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "200.0",
+    "end time": "72000.0",
+    "max n steps": "400"
+  },
   "base": {
     "application name": "solidification_slab",
     "degree": "1",
@@ -9,10 +15,6 @@
     "verbosity level": "2"
   },
   "heat": {
-    "heat start time": "0.0",
-    "heat time step size": "200.0",
-    "heat end time": "72000.0",
-    "heat max n steps": "400",
     "heat solidification": "true",
     "heat solver rel tolerance": "1e-12",
     "heat solver preconditioner type": "AMG",
