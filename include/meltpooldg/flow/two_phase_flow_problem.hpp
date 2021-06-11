@@ -41,6 +41,13 @@ namespace MeltPoolDG::Flow
 {
   using namespace dealii;
 
+  enum class TwoPhasePropsConsistencyType
+  {
+    sharp,
+    smooth,
+    evaporation
+  };
+
   template <int dim>
   class TwoPhaseFlowProblem : public ProblemBase<dim>
   {
@@ -136,5 +143,7 @@ namespace MeltPoolDG::Flow
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation = nullptr;
     std::shared_ptr<Heat::HeatTransferOperation<dim>>       heat_operation;
     std::shared_ptr<Postprocessor<dim>>                     post_processor;
+
+    TwoPhasePropsConsistencyType two_phase_props_consistency_type;
   };
 } // namespace MeltPoolDG::Flow

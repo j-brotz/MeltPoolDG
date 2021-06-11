@@ -19,6 +19,10 @@ namespace MeltPoolDG::MeltPool
     const unsigned int                       temp_dof_idx_in,
     const double                             start_time_in)
     : scratch_data(scratch_data_in)
+    , material(data_in.material)
+    , do_mushy_zone(data_in.heat.solidification)
+    , inv_mushy_interval(
+        do_mushy_zone ? 1.0 / (material.liquidus_temperature - material.solidus_temperature) : 0.0)
     , ls_dof_idx(ls_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
@@ -291,19 +295,16 @@ namespace MeltPoolDG::MeltPool
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
               solid[local_dof_indices[i]] =
-                is_solid_region(level_set_as_heaviside[local_dof_indices[i]],
-                                (*temperature)[local_dof_indices[i]]);
+                compute_solid_fraction(level_set_as_heaviside[local_dof_indices[i]],
+                                       (*temperature)[local_dof_indices[i]]);
               liquid[local_dof_indices[i]] =
-                is_liquid_region(level_set_as_heaviside[local_dof_indices[i]],
-                                 (*temperature)[local_dof_indices[i]]);
+                compute_liquid_fraction(level_set_as_heaviside[local_dof_indices[i]],
+                                        (*temperature)[local_dof_indices[i]]);
             }
         }
 
     liquid.compress(VectorOperation::insert);
     solid.compress(VectorOperation::insert);
-
-    scratch_data->get_constraint(temp_dof_idx).distribute(solid);
-    scratch_data->get_constraint(temp_dof_idx).distribute(liquid);
 
     temperature->zero_out_ghost_values();
     level_set_as_heaviside.zero_out_ghost_values();
@@ -417,27 +418,44 @@ namespace MeltPoolDG::MeltPool
   }
 
   template <int dim>
-  bool
-  MeltPoolOperation<dim>::is_solid_region(const double phi_liquid, const double T) const
+  double
+  MeltPoolOperation<dim>::compute_solid_fraction(const double ls_heaviside, const double T) const
   {
-    if (phi_liquid <= 0.5)
-      return false; // point is gas phase
-    else if (phi_liquid > 0.5 && T >= mp_data.liquid.melting_point)
-      return false; // point is melted
+    if (do_mushy_zone)
+      {
+        return ls_heaviside * UtilityFunctions::limit_to_bounds(
+                                (material.liquidus_temperature - T) * inv_mushy_interval, 0.0, 1.0);
+      }
     else
-      return true;
+      {
+        if (ls_heaviside <= 0.5)
+          return 0.0; // point is gas phase
+        else if (ls_heaviside > 0.5 && T >= mp_data.liquid.melting_point)
+          return 0.0; // point is melted
+        else
+          return 1.0;
+      }
   }
 
   template <int dim>
-  bool
-  MeltPoolOperation<dim>::is_liquid_region(const double phi_liquid, const double T) const
+  double
+  MeltPoolOperation<dim>::compute_liquid_fraction(const double ls_heaviside, const double T) const
   {
-    if (phi_liquid <= 0.5)
-      return false; // point is gas phase
-    else if (phi_liquid > 0.5 && T >= mp_data.liquid.melting_point)
-      return true; // point is melted
+    if (do_mushy_zone)
+      {
+        return ls_heaviside *
+               (1. - UtilityFunctions::limit_to_bounds(
+                       (material.liquidus_temperature - T) * inv_mushy_interval, 0.0, 1.0));
+      }
     else
-      return false; // point is solid
+      {
+        if (ls_heaviside <= 0.5)
+          return 0.0; // point is gas phase
+        else if (ls_heaviside > 0.5 && T >= mp_data.liquid.melting_point)
+          return 1.0; // point is melted
+        else
+          return 0.0;
+      }
   }
 
   template class MeltPoolOperation<1>;

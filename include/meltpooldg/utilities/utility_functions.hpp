@@ -272,7 +272,7 @@ namespace MeltPoolDG
     }
 
     template <typename number>
-    VectorizedArray<number>
+    inline VectorizedArray<number>
     limit_to_bounds(const VectorizedArray<number> &in,
                     const number                   lower_limit,
                     const number                   upper_limit)
@@ -280,6 +280,14 @@ namespace MeltPoolDG
       const auto ub =
         compare_and_apply_mask<SIMDComparison::greater_than>(in, upper_limit, upper_limit, in);
       return compare_and_apply_mask<SIMDComparison::less_than>(ub, lower_limit, lower_limit, ub);
+    }
+
+    template <typename number>
+    inline number
+    limit_to_bounds(const number in, const number lower_limit, const number upper_limit)
+    {
+      const auto ub = in > upper_limit ? upper_limit : in;
+      return ub < lower_limit ? lower_limit : ub;
     }
 
     /**

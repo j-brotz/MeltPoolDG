@@ -35,6 +35,9 @@ namespace MeltPoolDG
        *  Parameters
        */
       MeltPoolData<double> mp_data;
+      MaterialData<double> material;
+      const bool           do_mushy_zone;
+      const double         inv_mushy_interval;
 
       std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
       std::shared_ptr<RecoilPressureOperation<dim>>   recoil_pressure_operation;
@@ -62,13 +65,13 @@ namespace MeltPoolDG
     public:
       MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
                         const Parameters<double> &               data_in,
-                        const unsigned int                       ls_dof_idx_in,
+                        unsigned int                             ls_dof_idx_in,
                         VectorType *                             temperature,
-                        const unsigned int                       reinit_dof_idx_in,
-                        const unsigned int                       flow_vel_dof_idx_in,
-                        const unsigned int                       flow_vel_quad_idx_in,
-                        const unsigned int                       temp_dof_idx_in,
-                        const double                             start_time_in);
+                        unsigned int                             reinit_dof_idx_in,
+                        unsigned int                             flow_vel_dof_idx_in,
+                        unsigned int                             flow_vel_quad_idx_in,
+                        unsigned int                             temp_dof_idx_in,
+                        double                                   start_time_in);
 
       void
       set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
@@ -139,22 +142,28 @@ namespace MeltPoolDG
       set_melt_pool_parameters(const Parameters<double> &data_in);
 
       /**
-       *  This function determines for a given pair of level set and temperature values, whether
-       * it characterizes a solid state. For this purpose, it is assumed that phi=1 in the liquid
-       * AND the solid domain and phi=0 in the gaseous domain. Thus, if phi=1 and the temperature
-       * is SMALLER than the fusion point, a solid phase is met.
+       * This function determines for a given pair of level set and temperature values the solid
+       * fraction. For this purpose, it is assumed that phi=1 in the liquid AND the solid domain and
+       * phi=1 in the liquid AND the solid domain and phi=0 in the gaseous domain. Thus, if phi=1
+       * and the temperature is SMALLER than the fusion point, a solid phase is met.
+       *
+       * If a mushy zone is considered, this function will return the solid fraction, that is
+       * linearly interpolated between the solidus and liquidus temperature.
        */
-      bool
-      is_solid_region(const double phi_liquid, const double temperature) const;
+      double
+      compute_solid_fraction(double ls_heaviside, double temperature) const;
 
       /**
-       *  This function determines for a given pair of level set and temperature values, whether
-       * it characterizes a liquid state. For this purpose, it is assumed that phi=1 in the liquid
-       * AND the solid domain and phi=0 in the gaseous domain. Thus, if phi=1 and the temperature
-       * is LARGER than the fusion point, a liquid phase is met.
+       *  This function determines for a given pair of level set and temperature values the liquid
+       * fraction. For this purpose, it is assumed that phi=1 in the liquid AND the solid domain and
+       * phi=0 in the gaseous domain. Thus, if phi=1 and the temperature is LARGER than the fusion
+       * point, a liquid phase is met.
+       *
+       * If a mushy zone is considered, this function will return the liquid fraction, that is
+       * linearly interpolated between the solidus and liquidus temperature.
        */
-      bool
-      is_liquid_region(const double phi_liquid, const double temperature) const;
+      double
+      compute_liquid_fraction(double ls_heaviside, double temperature) const;
     };
   } // namespace MeltPool
 } // namespace MeltPoolDG

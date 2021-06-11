@@ -824,6 +824,9 @@ namespace MeltPoolDG
       prm.add_parameter("material solid density",
                         material.solid.density,
                         "density of the solid phase");
+      prm.add_parameter("material solid viscosity",
+                        material.solid.viscosity,
+                        "viscosity of the solid phase");
       prm.add_parameter("material solidus temperature",
                         material.solidus_temperature,
                         "Solidus temperature");

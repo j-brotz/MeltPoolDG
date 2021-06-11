@@ -283,6 +283,7 @@ namespace MeltPoolDG
       number capacity     = 0.0;
       number conductivity = 0.0;
       number density      = 0.0;
+      number viscosity    = 0.0;
     } solid;
 
     number solidus_temperature  = 0.0;
