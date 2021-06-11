@@ -1,6 +1,6 @@
 {
   "base": {
-    "problem name": "two_phase_flow",
+    "problem name": "melt_pool",
     "application name": "spurious_currents",
     "dimension": "2",
     "degree": "1",

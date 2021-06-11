@@ -2,13 +2,13 @@
 #  define MELT_POOL_DG_DIM 1
 #endif
 
-#include <meltpooldg/flow/two_phase_flow_problem.hpp>
+#include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 
 namespace MeltPoolDG::Flow
 {
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     initialize(base_in);
 
@@ -184,14 +184,14 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   std::string
-  TwoPhaseFlowProblem<dim>::get_name()
+  MeltPoolProblem<dim>::get_name()
   {
     return "melt_pool";
   }
 
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     /*
      *  setup DoFHandler
@@ -388,7 +388,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::set_initial_condition(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::set_initial_condition(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     /**
      *  set initial condition of the velocity field
@@ -425,8 +425,8 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
-                                             const bool                           do_reinit)
+  MeltPoolProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
+                                         const bool                           do_reinit)
   {
     if (base_in->parameters.base.do_simplex)
       {
@@ -569,8 +569,8 @@ namespace MeltPoolDG::Flow
   // todo: clean-up
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::update_phases(const VectorType &        ls_as_heaviside,
-                                          const Parameters<double> &parameters) const
+  MeltPoolProblem<dim>::update_phases(const VectorType &        ls_as_heaviside,
+                                      const Parameters<double> &parameters) const
   {
     if (parameters.heat.solidification)
       melt_pool_operation->get_solid().update_ghost_values();
@@ -720,9 +720,9 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::compute_gravity_force(VectorType & vec,
-                                                  const double gravity,
-                                                  const bool   zero_out) const
+  MeltPoolProblem<dim>::compute_gravity_force(VectorType & vec,
+                                              const double gravity,
+                                              const bool   zero_out) const
   {
     scratch_data->get_matrix_free().template cell_loop<VectorType, std::nullptr_t>(
       [&](const auto &matrix_free, auto &vec, const auto &, auto macro_cells) {
@@ -751,9 +751,9 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::output_results(const unsigned int                   n_time_step,
-                                           const double                         current_time,
-                                           std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::output_results(const unsigned int                   n_time_step,
+                                       const double                         current_time,
+                                       std::shared_ptr<SimulationBase<dim>> base_in)
   {
     /**
      * collect all relevant output data
@@ -784,7 +784,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  TwoPhaseFlowProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
+  MeltPoolProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     const auto mark_cells_for_refinement =
       [&](parallel::distributed::Triangulation<dim> &tria) -> bool {
@@ -896,5 +896,5 @@ namespace MeltPoolDG::Flow
                                  time_iterator.get_current_time_step_number());
   }
 
-  template class TwoPhaseFlowProblem<MELT_POOL_DG_DIM>;
+  template class MeltPoolProblem<MELT_POOL_DG_DIM>;
 } // namespace MeltPoolDG::Flow

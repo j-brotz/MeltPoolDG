@@ -1,6 +1,6 @@
 {
   "base": {
-    "problem name": "two_phase_flow",
+    "problem name": "melt_pool",
     "application name": "stefans_problem1_with_flow_and_heat",
     "dimension": "2",
     "global refinements": "10",
