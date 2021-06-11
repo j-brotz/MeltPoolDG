@@ -37,9 +37,6 @@ namespace MeltPoolDG::Heat
     , velocity(velocity_in)
     , ls_dof_idx(ls_dof_idx_in)
     , level_set_as_heaviside(level_set_as_heaviside_in)
-    , inv_mushy_interval(data.solidification ?
-                           1.0 / (material.liquidus_temperature - material.solidus_temperature) :
-                           0.0)
   {
     AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside),
                 ExcMessage("Two-phase flow must come with a velocity! Abort..."));
@@ -924,15 +921,15 @@ namespace MeltPoolDG::Heat
         return;
       }
 
-    d_capacity_dT = -1.0 * inv_mushy_interval *
+    d_capacity_dT = -1.0 * material.inv_mushy_interval *
                     UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
                                                                    liq_capacity,
                                                                    material.solid.capacity);
-    d_conductivity_dT = -1.0 * inv_mushy_interval *
+    d_conductivity_dT = -1.0 * material.inv_mushy_interval *
                         UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
                                                                        liq_conductivity,
                                                                        material.solid.conductivity);
-    d_density_dT = -1.0 * inv_mushy_interval *
+    d_density_dT = -1.0 * material.inv_mushy_interval *
                    UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
                                                                   liq_density,
                                                                   material.solid.density);
@@ -966,8 +963,10 @@ namespace MeltPoolDG::Heat
   HeatTransferOperator<dim, number>::calculate_solid_fraction(
     const VectorizedArray<number> &current_temperature) const
   {
-    return UtilityFunctions::limit_to_bounds(
-      (material.liquidus_temperature - current_temperature) * inv_mushy_interval, 0.0, 1.0);
+    return UtilityFunctions::limit_to_bounds((material.liquidus_temperature - current_temperature) *
+                                               material.inv_mushy_interval,
+                                             0.0,
+                                             1.0);
   }
 
   template class HeatTransferOperator<1, double>;

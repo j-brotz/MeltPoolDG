@@ -833,6 +833,28 @@ namespace MeltPoolDG
       prm.add_parameter("material liquidus temperature",
                         material.liquidus_temperature,
                         "Liquidus temperature");
+      if (heat.solidification)
+        {
+          AssertThrow(
+            material.solidus_temperature < material.liquidus_temperature,
+            ExcMessage(
+              "The liquidus temperature must be greater than the solidus temperature! Abort..."));
+          material.inv_mushy_interval =
+            1.0 / (material.liquidus_temperature - material.solidus_temperature);
+        }
+      if (flow.variable_properties_over_interface == "false")
+        material.two_phase_properties_transition_type =
+          MaterialData<number>::TwoPhasePropertiesTransitionType::sharp;
+      else if (flow.variable_properties_over_interface == "true")
+        material.two_phase_properties_transition_type =
+          MaterialData<number>::TwoPhasePropertiesTransitionType::smooth;
+      else if (flow.variable_properties_over_interface == "consistent_with_evaporation")
+        material.two_phase_properties_transition_type =
+          MaterialData<number>::TwoPhasePropertiesTransitionType::evaporation;
+      else
+        AssertThrow(false,
+                    ExcMessage("Unknown variable properties over interface type \"" +
+                               flow.variable_properties_over_interface + "\"! Abort..."));
     }
     prm.leave_subsection();
     /*

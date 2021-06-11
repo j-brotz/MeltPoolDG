@@ -288,6 +288,17 @@ namespace MeltPoolDG
 
     number solidus_temperature  = 0.0;
     number liquidus_temperature = 0.0;
+    number inv_mushy_interval   = 0.0;
+
+    enum class TwoPhasePropertiesTransitionType
+    {
+      // properties jump at level-set = 0
+      sharp,
+      // properties are smeared between the phases with the factor level-set-as-heaviside
+      smooth,
+      // the density is smeared between the phases consistent with the evaporation formulation
+      evaporation
+    } two_phase_properties_transition_type;
   };
 
   template <typename number = double>

@@ -379,19 +379,6 @@ namespace MeltPoolDG::Flow
            */
           set_initial_condition(base_in);
         }
-
-    if (base_in->parameters.flow.variable_properties_over_interface == "false")
-      two_phase_props_consistency_type = TwoPhasePropsConsistencyType::sharp;
-    else if (base_in->parameters.flow.variable_properties_over_interface == "true")
-      two_phase_props_consistency_type = TwoPhasePropsConsistencyType::smooth;
-    else if (base_in->parameters.flow.variable_properties_over_interface ==
-             "consistent_with_evaporation")
-      two_phase_props_consistency_type = TwoPhasePropsConsistencyType::evaporation;
-    else
-      AssertThrow(false,
-                  ExcMessage("Unknown variable properties over interface type \"" +
-                             base_in->parameters.flow.variable_properties_over_interface +
-                             "\"! Abort..."));
   }
 
   template <int dim>
@@ -592,13 +579,39 @@ namespace MeltPoolDG::Flow
 
     double mass = 0.0;
 
+    const double max_density =
+      parameters.heat.solidification ?
+        std::max({parameters.material.solid.density,
+                  parameters.material.first.density,
+                  parameters.material.second.density}) :
+        std::max(parameters.material.first.density, parameters.material.second.density);
+    const double min_density =
+      parameters.heat.solidification ?
+        std::min({parameters.material.solid.density,
+                  parameters.material.first.density,
+                  parameters.material.second.density}) :
+        std::min(parameters.material.first.density, parameters.material.second.density);
+    const double max_viscosity =
+      parameters.heat.solidification ?
+        std::max({parameters.material.solid.viscosity,
+                  parameters.material.first.viscosity,
+                  parameters.material.second.viscosity}) :
+        std::max(parameters.material.first.viscosity, parameters.material.second.viscosity);
+    const double min_viscosity =
+      parameters.heat.solidification ?
+        std::min({parameters.material.solid.viscosity,
+                  parameters.material.first.viscosity,
+                  parameters.material.second.viscosity}) :
+        std::min(parameters.material.first.viscosity, parameters.material.second.viscosity);
+
     scratch_data->get_matrix_free().template cell_loop<double, VectorType>(
       [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto macro_cells) {
-        FECellIntegrator<dim, 1, double>                  ls_values(matrix_free,
+        FECellIntegrator<dim, 1, double> ls_values(matrix_free,
                                                    ls_hanging_nodes_dof_idx,
                                                    flow_operation->get_quad_idx_velocity());
-        [[maybe_unused]] FECellIntegrator<dim, 1, double> solid_values(
-          matrix_free, temp_hanging_nodes_dof_idx, flow_operation->get_quad_idx_velocity());
+        FECellIntegrator<dim, 1, double> solid_values(matrix_free,
+                                                      temp_hanging_nodes_dof_idx,
+                                                      flow_operation->get_quad_idx_velocity());
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
@@ -616,12 +629,14 @@ namespace MeltPoolDG::Flow
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
               {
                 const auto indicator =
-                  two_phase_props_consistency_type == TwoPhasePropsConsistencyType::sharp ?
+                  parameters.material.two_phase_properties_transition_type ==
+                      MaterialData<double>::TwoPhasePropertiesTransitionType::sharp ?
                     UtilityFunctions::heaviside(ls_values.get_value(q), 0.5) :
                     ls_values.get_value(q);
 
                 // set properties
-                if (two_phase_props_consistency_type == TwoPhasePropsConsistencyType::evaporation)
+                if (parameters.material.two_phase_properties_transition_type ==
+                    MaterialData<double>::TwoPhasePropertiesTransitionType::evaporation)
                   {
                     const double rho_g = parameters.material.first.density;
                     const double rho_l = parameters.material.second.density;
@@ -669,31 +684,10 @@ namespace MeltPoolDG::Flow
                   }
 
                 // check if no spurious densities or viscosities are computed
-                double min_density =
-                  std::min(parameters.material.first.density, parameters.material.second.density);
-                double max_density =
-                  std::max(parameters.material.first.density, parameters.material.second.density);
-                if (parameters.heat.solidification)
-                  {
-                    min_density = std::min(min_density, parameters.material.solid.density);
-                    max_density = std::max(max_density, parameters.material.solid.density);
-                  }
-
                 for (auto dens : flow_operation->get_density(cell, q))
                   if (min_density > dens || dens > max_density)
                     std::cout << "WARNING: density does not comply with input:" << dens
                               << std::endl;
-
-                double min_viscosity = std::min(parameters.material.first.viscosity,
-                                                parameters.material.second.viscosity);
-                double max_viscosity = std::max(parameters.material.first.viscosity,
-                                                parameters.material.second.viscosity);
-                if (parameters.heat.solidification)
-                  {
-                    min_viscosity = std::min(min_viscosity, parameters.material.solid.viscosity);
-                    max_viscosity = std::max(max_viscosity, parameters.material.solid.viscosity);
-                  }
-
                 for (auto visc : flow_operation->get_viscosity(cell, q))
                   if (min_viscosity > visc || visc > max_viscosity)
                     std::cout << "WARNING: viscosity does not comply with input:" << visc
