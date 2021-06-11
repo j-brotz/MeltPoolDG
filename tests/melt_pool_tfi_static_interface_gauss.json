@@ -6,13 +6,13 @@
     "do print parameters": "false",
     "global refinements": "5",
     "problem name": "melt_pool",
-    "verbosity level": "2"
+    "verbosity level": "0"
   },
   "flow": {
     "flow start time": "0.0",
     "flow time step size": "1e-5",
     "flow end time": "0.015",
-    "flow max n steps": "1500",
+    "flow max n steps": "5",
     "flow do melt pool": "true",
     "flow do heat transfer": "true",
     "flow variable properties over interface": "true"
@@ -100,8 +100,6 @@
     "heat nlsolve residual tolerance": "1e-8"
   },
   "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output",
-    "paraview filename": "melt_pool_tfi_static_interface_gauss"
+    "paraview do output": "false"
   }
 }
