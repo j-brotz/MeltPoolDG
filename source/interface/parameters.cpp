@@ -278,20 +278,6 @@ namespace MeltPoolDG
                         advec_diff.time_integration_scheme,
                         "Determines the time integration scheme.",
                         Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson|bdf_2"));
-      prm.add_parameter("advec diff start time",
-                        advec_diff.start_time,
-                        "Defines the start time for the solution of the levelset problem");
-      prm.add_parameter("advec diff end time",
-                        advec_diff.end_time,
-                        "Sets the end time for the solution of the advection diffusion problem");
-      prm.add_parameter(
-        "advec diff time step size",
-        advec_diff.time_step_size,
-        "Sets the step size for time stepping. For non-uniform "
-        "time stepping, this parameter determines the size of the first time step.");
-      prm.add_parameter("advec diff max n steps",
-                        advec_diff.max_n_steps,
-                        "Sets the maximum number of advection diffusion steps");
       prm.add_parameter(
         "advec diff do matrix free",
         advec_diff.do_matrix_free,
@@ -324,17 +310,6 @@ namespace MeltPoolDG
                         ls.time_integration_scheme,
                         "Determines the time integration scheme.",
                         Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson"));
-      prm.add_parameter("ls start time",
-                        ls.start_time,
-                        "Defines the start time for the solution of the levelset problem");
-      prm.add_parameter("ls end time",
-                        ls.end_time,
-                        "Sets the end time for the solution of the levelset problem");
-      prm.add_parameter(
-        "ls time step size",
-        ls.time_step_size,
-        "Sets the step size for time stepping. For non-uniform "
-        "time stepping, this parameter determines the size of the first time step.");
       prm.add_parameter("ls enable CFL condition",
                         ls.enable_CFL_condition,
                         "Enables to dynamically adapt the time step to meet the CFL condition"
@@ -549,20 +524,6 @@ namespace MeltPoolDG
         "heat nlsolve residual tolerance alt",
         heat.nlsolve.residual_tolerance_alt,
         "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
-      prm.add_parameter("heat start time",
-                        heat.time_stepping.start_time,
-                        "Defines the start time for the solution of the heat problem");
-      prm.add_parameter("heat end time",
-                        heat.time_stepping.end_time,
-                        "Sets the end time for the solution of the heat problem");
-      prm.add_parameter("heat time step size",
-                        heat.time_stepping.time_step_size,
-                        "Sets the step size for time stepping. For non-uniform "
-                        "time stepping, this parameter determines the size of the first "
-                        "time step.");
-      prm.add_parameter("heat max n steps",
-                        heat.time_stepping.max_n_steps,
-                        "Sets the maximum number of time steps");
       prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
       prm.add_parameter("heat two phase", heat.two_phase, "Set this parameter for two phase flow.");
       prm.add_parameter(

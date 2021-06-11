@@ -37,11 +37,10 @@ namespace MeltPoolDG
   template <typename number = double>
   struct TimeSteppingData
   {
-    number       start_time              = 0.0;
-    number       end_time                = 1.0;
-    number       time_step_size          = 0.01;
-    unsigned int max_n_steps             = 1000000;
-    std::string  time_integration_scheme = "none"; // @todo: remove this is operation-dependent
+    number       start_time     = 0.0;
+    number       end_time       = 1.0;
+    number       time_step_size = 0.01;
+    unsigned int max_n_steps    = 1000000;
   };
 
   template <typename number = double>
@@ -78,9 +77,6 @@ namespace MeltPoolDG
     int         n_initial_reinit_steps  = -1.0;
     number      artificial_diffusivity  = 0.0;
     std::string time_integration_scheme = "crank_nicolson";
-    number      start_time              = 0.0;
-    number      end_time                = 1.0;
-    number      time_step_size          = 0.01;
     bool        enable_CFL_condition    = false;
     bool        do_curvature_correction = false;
     bool        do_matrix_free          = true;
@@ -102,14 +98,10 @@ namespace MeltPoolDG
   template <typename number = double>
   struct AdvectionDiffusionData
   {
-    number       diffusivity             = 0.0;
-    std::string  time_integration_scheme = "crank_nicolson";
-    number       start_time              = 0.0;
-    number       end_time                = 1.0;
-    number       time_step_size          = 0.01;
-    unsigned int max_n_steps             = 1000000;
-    bool         do_matrix_free          = true;
-    std::string  implementation          = "meltpooldg";
+    number      diffusivity             = 0.0;
+    std::string time_integration_scheme = "crank_nicolson";
+    bool        do_matrix_free          = true;
+    std::string implementation          = "meltpooldg";
   };
 
   template <typename number = double>
@@ -153,7 +145,6 @@ namespace MeltPoolDG
     bool                        two_phase                          = false;
     bool                        variable_properties_over_interface = false;
     bool                        solidification                     = false;
-    TimeSteppingData<number>    time_stepping;
     NonlinearSolverData<number> nlsolve;
     SolverData<number>          solver;
   };

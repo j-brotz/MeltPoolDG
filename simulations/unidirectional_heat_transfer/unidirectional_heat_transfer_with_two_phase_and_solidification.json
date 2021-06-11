@@ -1,4 +1,10 @@
 {
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "1.0",
+    "end time": "100.0",
+    "max n steps": "100"
+  },
   "base": {
     "application name": "unidirectional_heat_transfer",
     "degree": "1",
@@ -11,10 +17,6 @@
   },
   "heat": {
     "heat velocity": "0.0001",
-    "heat start time": "0.0",
-    "heat time step size": "1.0",
-    "heat end time": "100.0",
-    "heat max n steps": "100",
     "heat two phase": "true",
     "heat solidification": "true",
     "heat solver rel tolerance": "1e-12",

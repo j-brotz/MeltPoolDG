@@ -156,10 +156,10 @@ namespace MeltPoolDG::Heat
      *  initialize the time stepping scheme
      */
     time_iterator.initialize(
-      TimeIteratorData<double>{base_in->parameters.heat.time_stepping.start_time,
-                               base_in->parameters.heat.time_stepping.end_time,
-                               base_in->parameters.heat.time_stepping.time_step_size,
-                               base_in->parameters.heat.time_stepping.max_n_steps,
+      TimeIteratorData<double>{base_in->parameters.time_stepping.start_time,
+                               base_in->parameters.time_stepping.end_time,
+                               base_in->parameters.time_stepping.time_step_size,
+                               base_in->parameters.time_stepping.max_n_steps,
                                false /*cfl_condition-->not supported yet*/});
     /*
      *    set velocity field
@@ -193,7 +193,7 @@ namespace MeltPoolDG::Heat
         laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data,
                                                                       base_in->parameters.laser,
                                                                       base_in->parameters.material);
-        laser_operation->set_initial_condition(base_in->parameters.heat.time_stepping.start_time);
+        laser_operation->set_initial_condition(base_in->parameters.time_stepping.start_time);
 
         if (base_in->parameters.laser.heat_source_model == "Gusarov")
           {
@@ -254,7 +254,7 @@ namespace MeltPoolDG::Heat
     /*
      *  output results of initialization
      */
-    output_results(0, base_in->parameters.heat.time_stepping.start_time, base_in);
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
   }
 
   template <int dim>

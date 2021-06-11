@@ -7,6 +7,11 @@
     "degree": "1",
     "do print parameters": "false"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.05",
+    "time step size": "0.01"
+  },
   "adaptive meshing": {
     "do amr": "true",
     "upper perc to refine": "     0.1",
@@ -17,9 +22,6 @@
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
-    "ls start time": "0.0",
-    "ls end time": "0.05",
-    "ls time step size": "0.01",
     "ls do matrix free": "false"
   },
   "reinitialization": {

@@ -1,4 +1,10 @@
 {
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "0.01",
+    "end time": "1.0",
+    "max n steps": "5"
+  },
   "base": {
     "application name": "unidirectional_heat_transfer",
     "degree": "1",
@@ -13,10 +19,6 @@
     "heat emissivity": "0.98",
     "heat convection coefficient": "25",
     "heat temperature infinity": "300.0",
-    "heat start time": "0.0",
-    "heat time step size": "0.01",
-    "heat end time": "1.0",
-    "heat max n steps": "5",
     "heat solver rel tolerance": "1e-12",
     "heat solver preconditioner type": "DiagonalReduced",
     "heat nlsolve residual tolerance": "1e-8"

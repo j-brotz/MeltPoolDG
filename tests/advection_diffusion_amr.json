@@ -7,6 +7,11 @@
     "degree": "1",
     "do print parameters": "false"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.06",
+    "time step size": "0.01"
+  },
   "adaptive meshing": {
     "do amr": "true",
     "upper perc to refine": "     0.1",
@@ -17,9 +22,6 @@
     "advec diff diffusivity": "0.000000",
     "advec diff implementation": "meltpooldg",
     "advec diff integration scheme": "crank_nicolson",
-    "advec diff start time": "0.0",
-    "advec diff end time": "0.06",
-    "advec diff time step size": "0.01",
     "advec diff do matrix free": "false"
   },
   "paraview": {

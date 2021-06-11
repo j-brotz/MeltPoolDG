@@ -6,13 +6,15 @@
     "global refinements": "7",
     "degree": "1"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "1.5707963267948966",
+    "time step size": "0.01"
+  },
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
-    "ls start time": "0.0",
-    "ls end time": "1.5707963267948966",
-    "ls time step size": "0.01",
     "ls do matrix free": "true",
     "ls implementation": "meltpooldg"
   },

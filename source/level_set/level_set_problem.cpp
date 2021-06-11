@@ -132,11 +132,12 @@ namespace MeltPoolDG::LevelSet
     /*
      *  initialize the time iterator
      */
-    time_iterator.initialize(TimeIteratorData<double>{base_in->parameters.ls.start_time,
-                                                      base_in->parameters.ls.end_time,
-                                                      base_in->parameters.ls.time_step_size,
-                                                      100000,
-                                                      false});
+    time_iterator.initialize(
+      TimeIteratorData<double>{base_in->parameters.time_stepping.start_time,
+                               base_in->parameters.time_stepping.end_time,
+                               base_in->parameters.time_stepping.time_step_size,
+                               100000,
+                               false});
 
     setup_dof_system(base_in, false);
 
@@ -205,7 +206,7 @@ namespace MeltPoolDG::LevelSet
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(ls_dof_idx));
 
-    output_results(0, base_in->parameters.ls.start_time, base_in);
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
     /*
      *    Do initial refinement steps if requested
      */
