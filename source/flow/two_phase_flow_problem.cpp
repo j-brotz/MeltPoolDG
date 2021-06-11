@@ -328,6 +328,11 @@ namespace MeltPoolDG::Flow
         temp_dof_idx,
         base_in->parameters.flow.start_time);
 
+    if (base_in->parameters.heat.solidification)
+      AssertThrow(
+        melt_pool_operation,
+        ExcMessage("If solidifcation is enabled the melt pool operation must be initialized! Check "
+                   "if the parameter >>>do melt pool<<< is set to true. Abort..."));
 
     if (evaporation_operation)
       {
@@ -561,24 +566,20 @@ namespace MeltPoolDG::Flow
     scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
   }
 
+  // todo: clean-up
   template <int dim>
   void
   TwoPhaseFlowProblem<dim>::update_phases(const VectorType &        ls_as_heaviside,
                                           const Parameters<double> &parameters) const
   {
     if (parameters.heat.solidification)
-      {
-        AssertThrow(
-          melt_pool_operation,
-          ExcMessage(
-            "If solidifcation is enabled the melt pool operation must be initialized! Abort..."));
-        melt_pool_operation->get_solid().update_ghost_values();
-      }
+      melt_pool_operation->get_solid().update_ghost_values();
 
     double dummy;
 
     double mass = 0.0;
 
+    // compute the limit values of the material parameters
     const double max_density =
       parameters.heat.solidification ?
         std::max({parameters.material.solid.density,

@@ -141,19 +141,28 @@ namespace MeltPoolDG
       set_melt_pool_parameters(const Parameters<double> &data_in);
 
       /**
-       * This function determines the solid fraction for a given pair of temperature and
-       * level-set-heaviside values.
+       * This function determines the solid fraction for a given pair of temperature (T) and
+       * level-set-heaviside values (phi) as follows:
        *
-       * A level-set-heaviside = 0 defines the gaseous phase, which is neither solid nor liquid.
-       * Here, this function will return 0.
+       *  ______________________________________________________________________
+       * |         |                                                           |
+       * | phase   |  solid fraction     phi        T                          |
+       * |_________|___________________________________________________________|
+       * |         |                                                           |
+       * | solid   |      1.0             1         T <= T_solidus             |
+       * |         |                                                           |
+       * |         |     T_l  - T                                              |
+       * | mushy   |    ----------        1         T_solidus < T < T_liquidus |
+       * |         |     T_l  - T_s                                            |
+       * |         |                                                           |
+       * | liquid  |       0.0            1         T >= T_liquidus            |
+       * |         |                                                           |
+       * | gas     |       0.0            0         independent                |
+       * |_________|___________________________________________________________|
        *
-       * The level-set-heaviside = 1 phase include both the solid and the liquid phase. Here, the
-       * distinguishing parameter is the temperature: below the melting point the phase is solid and
-       * this function will return 1 ; above the melting point the phase is liquid and this function
-       * will return 0.
        *
-       * In case of a mushy zone, the solid and liquid fractions are linearly interpolated between
-       * the solidus and liquidus temperature.
+       * If no mushy zone is prescribed, then T_solidus = T_liquidus = T_melting.
+       *
        */
       double
       compute_solid_fraction(double ls_heaviside, double temperature) const;

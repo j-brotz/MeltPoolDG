@@ -59,6 +59,9 @@ namespace MeltPoolDG::MeltPool
     scratch_data->initialize_dof_vector(solid, temp_dof_idx);
     scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
 
+    /*
+     * Choose the laser heat source model
+     */
     if (data_in.laser.heat_source_model == "Gusarov")
       {
         laser_heat_source_operation =
