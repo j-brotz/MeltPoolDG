@@ -1,0 +1,19 @@
+#pragma once
+// dealii
+#include <deal.II/base/exceptions.h>
+
+namespace MeltPoolDG
+{
+  DeclException1(ExcBCAlreadyAssigned,
+                 std::string,
+                 << "You try to attach a " << arg1 << " boundary condition "
+                 << "for a boundary_id for which a boundary condition is already "
+                 << "specified. Check your input related to boundary conditions!");
+
+  DeclException2(ExcFieldNotAttached,
+                 std::string,
+                 std::string,
+                 << "It seems that you have not called SimulationBase::" << arg1
+                 << "() for the operator \"" << arg2 << "\". You can do that, e.g., "
+                 << "in your simulation by overriding SimulationBase::set_field_conditions().");
+} // namespace MeltPoolDG
