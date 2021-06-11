@@ -9,8 +9,8 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.1",
-    "time step size": "0.02"
+    "end time": "0.05",
+    "time step size": "0.01"
   },
   "levelset": {
     "ls do reinitialization": "true",
