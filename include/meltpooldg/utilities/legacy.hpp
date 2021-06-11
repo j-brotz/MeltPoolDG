@@ -10,6 +10,8 @@
 // see also: https://github.com/dealii/dealii/releases/tag/v9.3.0
 #if DEAL_II_VERSION_MAJOR < 10
 
+#  include <deal.II/base/mpi.h>
+
 #  include <deal.II/numerics/vector_tools.h>
 
 namespace dealii ::VectorTools
@@ -48,7 +50,7 @@ namespace dealii ::VectorTools
           [&](const unsigned int active_fe_index) -> FEPointEvaluation<n_components, dim> & {
           if (evaluators[active_fe_index] == nullptr)
             evaluators[active_fe_index] = std::make_unique<FEPointEvaluation<n_components, dim>>(
-              cache.get_mapping(), dof_handler.get_fe(active_fe_index), update_values);
+              cache.get_mapping(), dof_handler.get_fe(active_fe_index), update_gradients);
 
           return *evaluators[active_fe_index];
         };
@@ -116,5 +118,80 @@ namespace dealii ::VectorTools
       }
   }
 } // namespace dealii::VectorTools
+
+namespace dealii::internal
+{
+  template <int fe_degree, int n_q_points_1d, int dim, typename Number>
+  bool
+  transform_from_q_points_to_basis(
+    const unsigned int n_desired_components,
+    const FEEvaluationBaseData<dim, typename Number::value_type, false, Number> &fe_eval,
+    const Number *                                                               in_array,
+    Number *                                                                     out_array)
+  {
+    static const bool do_inplace = fe_degree > -1 && (fe_degree + 1 == n_q_points_1d);
+
+    Assert(fe_eval.get_shape_info().element_type != MatrixFreeFunctions::ElementType::tensor_none,
+           ExcNotImplemented());
+
+    const auto &inverse_shape = do_inplace ?
+                                  fe_eval.get_shape_info().data.front().inverse_shape_values_eo :
+                                  fe_eval.get_shape_info().data.front().inverse_shape_values;
+
+    const unsigned int dofs_per_component = do_inplace ?
+                                              Utilities::pow(fe_degree + 1, dim) :
+                                              fe_eval.get_shape_info().dofs_per_component_on_cell;
+    const unsigned int n_q_points =
+      do_inplace ? Utilities::pow(fe_degree + 1, dim) : fe_eval.get_shape_info().n_q_points;
+
+    internal::EvaluatorTensorProduct<do_inplace ? internal::evaluate_evenodd :
+                                                  internal::evaluate_general,
+                                     dim,
+                                     fe_degree + 1,
+                                     n_q_points_1d,
+                                     Number>
+      evaluator(AlignedVector<Number>(),
+                AlignedVector<Number>(),
+                inverse_shape,
+                fe_eval.get_shape_info().data.front().fe_degree + 1,
+                fe_eval.get_shape_info().data.front().n_q_points_1d);
+
+    for (unsigned int d = 0; d < n_desired_components; ++d)
+      {
+        const Number *in  = in_array + d * n_q_points;
+        Number *      out = out_array + d * dofs_per_component;
+
+        auto temp_1 = do_inplace ? out : fe_eval.get_scratch_data().begin();
+        auto temp_2 = do_inplace ? out : (temp_1 + std::max(n_q_points, dofs_per_component));
+
+        if (dim == 3)
+          {
+            evaluator.template hessians<2, false, false>(in, temp_1);
+            evaluator.template hessians<1, false, false>(temp_1, temp_2);
+            evaluator.template hessians<0, false, false>(temp_2, out);
+          }
+        if (dim == 2)
+          {
+            evaluator.template hessians<1, false, false>(in, temp_1);
+            evaluator.template hessians<0, false, false>(temp_1, out);
+          }
+        if (dim == 1)
+          evaluator.template hessians<0, false, false>(in, out);
+      }
+    return false;
+  }
+} // namespace dealii::internal
+
+namespace dealii::Utilities::MPI
+{
+  template <typename T>
+  T
+  reduce(const T &                                     local_value,
+         const MPI_Comm &                              comm,
+         const std::function<T(const T &, const T &)> &combiner)
+  {
+    return all_reduce(local_value, comm, combiner);
+  }
+} // namespace dealii::Utilities::MPI
 
 #endif

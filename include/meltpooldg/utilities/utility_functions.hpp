@@ -23,6 +23,7 @@
 #include <deal.II/matrix_free/operators.h>
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/legacy.hpp>
 
 namespace MeltPoolDG
 {
@@ -95,10 +96,16 @@ namespace MeltPoolDG
                     Assert(false, ExcNotImplemented());
                   }
             }
-
+#if DEAL_II_VERSION_MAJOR < 10
+          internal::transform_from_q_points_to_basis<-1, 0>(n_components,
+                                                            fe_eval,
+                                                            fe_eval.begin_values(),
+                                                            fe_eval.begin_dof_values());
+#else
           inverse_mass_matrix.transform_from_q_points_to_basis(n_components,
                                                                fe_eval.begin_values(),
                                                                fe_eval.begin_dof_values());
+#endif
 
           // write values back into global vector
           fe_eval.set_dof_values(vec);
