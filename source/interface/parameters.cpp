@@ -324,17 +324,6 @@ namespace MeltPoolDG
                         ls.time_integration_scheme,
                         "Determines the time integration scheme.",
                         Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson"));
-      prm.add_parameter("ls start time",
-                        ls.start_time,
-                        "Defines the start time for the solution of the levelset problem");
-      prm.add_parameter("ls end time",
-                        ls.end_time,
-                        "Sets the end time for the solution of the levelset problem");
-      prm.add_parameter(
-        "ls time step size",
-        ls.time_step_size,
-        "Sets the step size for time stepping. For non-uniform "
-        "time stepping, this parameter determines the size of the first time step.");
       prm.add_parameter("ls enable CFL condition",
                         ls.enable_CFL_condition,
                         "Enables to dynamically adapt the time step to meet the CFL condition"

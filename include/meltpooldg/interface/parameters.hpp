@@ -78,9 +78,6 @@ namespace MeltPoolDG
     int         n_initial_reinit_steps  = -1.0;
     number      artificial_diffusivity  = 0.0;
     std::string time_integration_scheme = "crank_nicolson";
-    number      start_time              = 0.0;
-    number      end_time                = 1.0;
-    number      time_step_size          = 0.01;
     bool        enable_CFL_condition    = false;
     bool        do_curvature_correction = false;
     bool        do_matrix_free          = true;
