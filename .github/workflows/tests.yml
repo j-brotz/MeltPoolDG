@@ -54,3 +54,30 @@ jobs:
 
          echo $command
          docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
+
+  build-adaflo-release:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup
+      run: |
+         command="git clone https://github.com/kronbichler/adaflo.git    && \
+          mkdir adaflo-build                                    && \
+          cd adaflo-build                                       && \
+          cmake -D BUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ../adaflo               && \
+          make -j2 adaflo                                       && \
+          git clone https://github.com/${{ github.repository }} && \
+          cd MeltPoolDG                                         && \
+          git fetch origin ${{ github.ref }}                    && \
+          git checkout FETCH_HEAD                               && \
+          cd ..                                                 && \
+          mkdir MeltPoolDG-build                                && \ 
+          cd MeltPoolDG-build                                   && \
+          cmake -DCMAKE_CXX_FLAGS="-Werror" -DCMAKE_BUILD_TYPE=Release ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && \
+          make -j2                                              && \
+          ctest -V -R 'unit_tests/|tests/' ";
+
+         echo $command
+         docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
