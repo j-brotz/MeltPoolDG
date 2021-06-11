@@ -1,6 +1,6 @@
 {
   "base": {
-    "problem name": "two_phase_flow",
+    "problem name": "melt_pool",
     "application name": "film_boiling",
     "dimension": "2",
     "global refinements": "5",

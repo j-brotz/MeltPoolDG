@@ -42,14 +42,14 @@ namespace MeltPoolDG::Flow
   using namespace dealii;
 
   template <int dim>
-  class TwoPhaseFlowProblem : public ProblemBase<dim>
+  class MeltPoolProblem : public ProblemBase<dim>
   {
   private:
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
   public:
-    TwoPhaseFlowProblem() = default;
+    MeltPoolProblem() = default;
 
     void
     run(std::shared_ptr<SimulationBase<dim>> base_in) final;
@@ -75,8 +75,6 @@ namespace MeltPoolDG::Flow
      * Update material parameter of the phases.
      *
      * @todo Find a better place.
-     *
-     * @todo: generalize for level set value gas is 1.0
      */
     void
     update_phases(const VectorType &ls_as_heaviside, const Parameters<double> &parameters) const;

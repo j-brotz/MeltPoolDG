@@ -1,6 +1,6 @@
 {
   "base": {
-    "problem name": "two_phase_flow",
+    "problem name": "melt_pool",
     "application name": "evaporating_droplet_with_heat",
     "global refinements": "3",
     "dimension": "2",

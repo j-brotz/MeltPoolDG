@@ -1,6 +1,6 @@
 {
   "base": {
-    "problem name": "two_phase_flow",
+    "problem name": "melt_pool",
     "application name": "rising_bubble",
     "do print parameters": "false",
     "global refinements": "3",
