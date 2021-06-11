@@ -375,7 +375,11 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 
               // collect result on rank 0 to write them to file
               const auto vertices_and_temperatures_all =
+#if DEAL_II_VERSION_MAJOR == 10
                 Utilities::MPI::reduce<std::vector<std::pair<Point<dim>, double>>>(
+#else
+                Utilities::MPI::all_reduce<std::vector<std::pair<Point<dim>, double>>>(
+#endif
                   vertices_and_temperatures,
                   this->mpi_communicator,
                   [](const auto &a, const auto &b) {
