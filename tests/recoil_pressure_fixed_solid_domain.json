@@ -39,14 +39,14 @@
     "curv damping scale factor": "0.1",
     "curv do matrix free": "true"
   },
+  "time stepping": {
+    "end time": "0.000005",
+    "start time": "0.0",
+    "time step size": "5.e-7"
+  },
   "flow": {
-    "flow end time": "0.000005",
-    "flow start time": "0.0",
     "flow surface tension coefficient": "1.8",
-    "flow surface tension reference temperature": "1700",
-    "flow time step size": "5.e-7",
-    "flow do heat transfer": "true",
-    "flow do melt pool": "true"
+    "flow surface tension reference temperature": "1700"
   },
   "material": {
     "material first capacity": "0",
@@ -83,6 +83,8 @@
     "laser analytical temperature x to y ratio": "3."
   },
   "melt pool": {
+    "mp do heat transfer": "true",
+    "mp do melt pool": "true",
     "mp do recoil pressure": "true",
     "mp boiling temperature": "3000.",
     "mp domain x max": "0.000100",

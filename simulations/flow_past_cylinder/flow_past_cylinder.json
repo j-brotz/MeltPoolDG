@@ -6,10 +6,12 @@
     "degree": "2"
   },
   "flow": {
-    "flow surface tension coefficient": "0.01",
-    "flow start time": "0.0",
-    "flow end time": "2.0",
-    "flow time step size": "0.02"
+    "flow surface tension coefficient": "0.01"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "2.0",
+    "time step size": "0.02"
   },
   "material": {
     "material first viscosity": "0.001",

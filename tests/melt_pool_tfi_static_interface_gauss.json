@@ -9,13 +9,16 @@
     "verbosity level": "0"
   },
   "flow": {
-    "flow start time": "0.0",
-    "flow time step size": "1e-5",
-    "flow end time": "0.015",
-    "flow max n steps": "5",
-    "flow do melt pool": "true",
-    "flow do heat transfer": "true",
     "flow variable properties over interface": "true"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "1e-5",
+    "end time": "0.015",
+    "max n steps": "5"
+  },
+  "melt pool": {
+    "mp set velocity to zero in solid": "false"
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -53,9 +56,6 @@
     "laser impact type": "interface",
     "laser gauss laser beam radius": "0.06e-3",
     "laser gauss absorptivity": "0.5"
-  },
-  "melt pool": {
-    "mp set velocity to zero in solid": "false"
   },
   "material": {
     "material first capacity": "0",

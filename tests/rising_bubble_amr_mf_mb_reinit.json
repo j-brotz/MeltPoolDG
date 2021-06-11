@@ -8,6 +8,11 @@
     "degree": "1",
     "gravity": "0.98"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.10",
+    "time step size": "0.02"
+  },
   "adaptive meshing": {
     "do amr": "true",
     "upper perc to refine": "     0.1",
@@ -16,10 +21,7 @@
     "n initial refinement cycles": "0"
   },
   "flow": {
-    "flow surface tension coefficient": "0.0245",
-    "flow start time": "0.0",
-    "flow end time": "0.10",
-    "flow time step size": "0.02"
+    "flow surface tension coefficient": "0.0245"
   },
   "material": {
     "material first density": "1",

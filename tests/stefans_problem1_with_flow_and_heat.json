@@ -9,15 +9,19 @@
     "do print parameters": "false",
     "verbosity level": "0"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.1",
+    "time step size": "5.e-4",
+    "max n steps": "10"
+  },
+  "melt pool": {
+    "mp do heat transfer": "true",
+    "mp do evaporation": "true"
+  },
   "flow": {
     "flow surface tension coefficient": "0.0",
-    "flow start time": "0.0",
-    "flow end time": "0.1",
-    "flow time step size": "5.e-4",
-    "flow max n steps": "10",
-    "flow variable properties over interface": "consistent_with_evaporation",
-    "flow do heat transfer": "true",
-    "flow do evaporation": "true"
+    "flow variable properties over interface": "consistent_with_evaporation"
   },
   "material": {
     "material first density": "1.",

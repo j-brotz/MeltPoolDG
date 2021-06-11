@@ -9,14 +9,18 @@
     "do print parameters": "false",
     "verbosity level": "1"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "2.0",
+    "time step size": "0.002"
+  },
   "flow": {
     "flow surface tension coefficient": "0.1",
-    "flow start time": "0.0",
-    "flow end time": "2.0",
-    "flow time step size": "0.002",
-    "flow variable properties over interface": "consistent_with_evaporation",
-    "flow do heat transfer": "true",
-    "flow do evaporation": "true"
+    "flow variable properties over interface": "consistent_with_evaporation"
+  },
+  "melt pool": {
+    "mp do heat transfer": "true",
+    "mp do evaporation": "true"
   },
   "Navier-Stokes": {
     "adaflo": {
