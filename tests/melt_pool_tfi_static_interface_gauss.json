@@ -18,7 +18,9 @@
     "max n steps": "5"
   },
   "melt pool": {
-    "mp set velocity to zero in solid": "false"
+    "mp set velocity to zero in solid": "false",
+    "mp do melt pool": "true",
+    "mp do heat transfer": "true"
   },
   "Navier-Stokes": {
     "adaflo": {
