@@ -82,7 +82,7 @@ namespace MeltPoolDG
        *  parameters for adaflo
        */
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    if (base.problem_name == "melt_pool")
+    if (base.problem_name == ProblemType::melt_pool)
       {
         if (flow.variable_properties_over_interface == "false")
           material.two_phase_properties_transition_type =
@@ -230,10 +230,7 @@ namespace MeltPoolDG
         "Sets the base name for the application that will be fed to the problem type.");
       prm.add_parameter("problem name",
                         base.problem_name,
-                        "Sets the base name for the problem that should be solved.",
-                        Patterns::Selection(
-                          "advection_diffusion|reinitialization|level_set|melt_pool"
-                          "|level_set_with_evaporation|heat_transfer"));
+                        "Sets the base name for the problem that should be solved.");
       prm.add_parameter("dimension", base.dimension, "Defines the dimension of the problem");
       prm.add_parameter("global refinements",
                         base.global_refinements,
@@ -402,11 +399,9 @@ namespace MeltPoolDG
         "reinit do matrix free",
         reinit.solver.do_matrix_free,
         "Set this parameter if a matrix free solution procedure should be performed.");
-      prm.add_parameter(
-        "reinit solver type",
-        reinit.solver.solver_type,
-        "Set this parameter for choosing a solver type. At the moment GMRES or CG solvers "
-        " are supported");
+      prm.add_parameter("reinit solver type",
+                        reinit.solver.solver_type,
+                        "Set this parameter for choosing a solver type.");
       prm.add_parameter("reinit preconditioner type",
                         reinit.solver.preconditioner_type,
                         "Set this parameter for choosing a preconditioner type",

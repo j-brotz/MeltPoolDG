@@ -167,7 +167,7 @@ namespace MeltPoolDG::LevelSet
     /*
      * configure level set with evaporation if requested
      */
-    if (base_in->parameters.base.problem_name == "level_set_with_evaporation")
+    if (base_in->parameters.base.problem_name == ProblemType::level_set_with_evaporation)
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
           scratch_data,

@@ -4,6 +4,7 @@
 
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
+#include <meltpooldg/utilities/enum.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -13,12 +14,22 @@ namespace MeltPoolDG
 {
   using namespace dealii;
 
+  BETTER_ENUM(SolverType, char, CG, GMRES)
+  BETTER_ENUM(ProblemType,
+              char,
+              advection_diffusion,
+              reinitialization,
+              level_set,
+              melt_pool,
+              level_set_with_evaporation,
+              heat_transfer)
+
   template <typename number = double>
   struct SolverData
   {
     bool         do_matrix_free      = true;
     std::string  preconditioner_type = "Identity";
-    std::string  solver_type         = "GMRES";
+    SolverType   solver_type         = SolverType::GMRES;
     unsigned int max_iterations      = 10000;
     number       rel_tolerance       = 1e-12;
   };
@@ -47,7 +58,7 @@ namespace MeltPoolDG
   struct BaseData
   {
     std::string  application_name    = "none";
-    std::string  problem_name        = "advection_diffusion";
+    ProblemType  problem_name        = ProblemType::advection_diffusion;
     unsigned int dimension           = 2;
     unsigned int global_refinements  = 1;
     unsigned int degree              = 1;

@@ -149,7 +149,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<2>>(this->mpi_communicator);
 
-          if (this->parameters.base.problem_name == "heat_transfer" &&
+          if (this->parameters.base.problem_name == ProblemType::heat_transfer &&
               !this->parameters.heat.two_phase)
             {
               std::vector<unsigned> refinements(2, 1);
@@ -183,7 +183,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<3>>(this->mpi_communicator);
 
-          if (this->parameters.base.problem_name == "heat_transfer" &&
+          if (this->parameters.base.problem_name == ProblemType::heat_transfer &&
               !this->parameters.heat.two_phase)
             {
               std::vector<unsigned int> refinements(3, 1);
@@ -221,7 +221,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     void
     set_boundary_conditions() final
     {
-      if (this->parameters.base.problem_name == "heat_transfer")
+      if (this->parameters.base.problem_name == ProblemType::heat_transfer)
         {
           const types::boundary_id left_bc = 10;
           for (const auto &cell : this->triangulation->cell_iterators())
@@ -236,7 +236,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->attach_dirichlet_boundary_condition(
             left_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_0), "heat_transfer");
         }
-      else if (this->parameters.base.problem_name == "melt_pool")
+      else if (this->parameters.base.problem_name == ProblemType::melt_pool)
         {
           if (!(this->parameters.base.dimension == 2 || this->parameters.base.dimension == 3))
             throw ExcNotImplemented();
@@ -293,7 +293,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {
       this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                      "heat_transfer");
-      if (this->parameters.base.problem_name == "heat_transfer" && this->parameters.heat.two_phase)
+      if (this->parameters.base.problem_name == ProblemType::heat_transfer &&
+          this->parameters.heat.two_phase)
         {
           this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
                                                                                          z_max / 5),
@@ -301,7 +302,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->attach_velocity_field(std::make_shared<Functions::ZeroFunction<dim>>(dim),
                                       "heat_transfer");
         }
-      if (this->parameters.base.problem_name == "melt_pool")
+      if (this->parameters.base.problem_name == ProblemType::melt_pool)
         {
           this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(0.0, z_max / 10),
                                          "level_set");

@@ -215,7 +215,7 @@ namespace MeltPoolDG
                     "heat_transfer");
                 }
             }
-          else if (this->parameters.base.problem_name == "melt_pool")
+          else if (this->parameters.base.problem_name == ProblemType::melt_pool)
             {
               this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
               this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
