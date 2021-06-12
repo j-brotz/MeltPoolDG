@@ -334,10 +334,14 @@ namespace MeltPoolDG::LevelSet
       level_set_operation.attach_output_vectors(data_out);
       if (evaporation_operation)
         evaporation_operation->attach_output_vectors(data_out);
+
+#if DEAL_II_VERSION_MAJOR < 10
+      MeltPoolDG::VectorTools::update_ghost_values(advection_velocity);
+#endif
+
       /*
        *  output advection velocity
        */
-      MeltPoolDG::VectorTools::update_ghost_values(advection_velocity);
       std::vector<DataComponentInterpretation::DataComponentInterpretation>
         vector_component_interpretation(dim,
                                         DataComponentInterpretation::component_is_part_of_vector);

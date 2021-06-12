@@ -217,7 +217,9 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
+#if DEAL_II_VERSION_MAJOR < 10
     MeltPoolDG::VectorTools::update_ghost_values(solid, liquid);
+#endif
     /**
      *  solid
      */
