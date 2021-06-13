@@ -515,20 +515,28 @@ namespace MeltPoolDG::Flow
     // ize constraints
     ls_hanging_node_constraints.close();
 
+    UtilityFunctions::check_constraints(dof_handler, ls_hanging_node_constraints);
+
     ls_constraints_dirichlet.close();
     ls_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+
+    UtilityFunctions::check_constraints(dof_handler, ls_constraints_dirichlet);
 
     reinit_constraints_dirichlet.close();
     reinit_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
+    UtilityFunctions::check_constraints(dof_handler, reinit_constraints_dirichlet);
+
     temp_constraints_dirichlet.close();
     temp_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+
+    UtilityFunctions::check_constraints(dof_handler, temp_constraints_dirichlet);
 
     scratch_data->build();
 

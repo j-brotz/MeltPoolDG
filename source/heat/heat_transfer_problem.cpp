@@ -310,6 +310,8 @@ namespace MeltPoolDG::Heat
     DoFTools::make_hanging_node_constraints(dof_handler, temp_hanging_nodes_constraints);
     temp_hanging_nodes_constraints.close();
 
+    UtilityFunctions::check_constraints(dof_handler, temp_hanging_nodes_constraints);
+
     temp_constraints.clear();
     temp_constraints.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
     if (base_in->get_bc("heat_transfer") && !base_in->get_dirichlet_bc("heat_transfer").empty())
@@ -325,6 +327,8 @@ namespace MeltPoolDG::Heat
     temp_constraints.merge(temp_constraints,
                            AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
+    UtilityFunctions::check_constraints(dof_handler, temp_constraints);
+
     velocity_hanging_nodes_constraints.clear();
     velocity_hanging_nodes_constraints.reinit(
       scratch_data->get_locally_relevant_dofs(velocity_dof_idx));
@@ -332,12 +336,16 @@ namespace MeltPoolDG::Heat
                                             velocity_hanging_nodes_constraints);
     velocity_hanging_nodes_constraints.close();
 
+    UtilityFunctions::check_constraints(dof_handler_velocity, velocity_hanging_nodes_constraints);
+
     level_set_hanging_nodes_constraints.clear();
     level_set_hanging_nodes_constraints.reinit(
       scratch_data->get_locally_relevant_dofs(level_set_dof_idx));
     DoFTools::make_hanging_node_constraints(dof_handler_level_set,
                                             level_set_hanging_nodes_constraints);
     level_set_hanging_nodes_constraints.close();
+
+    UtilityFunctions::check_constraints(dof_handler_level_set, level_set_hanging_nodes_constraints);
 
     scratch_data->build();
 
