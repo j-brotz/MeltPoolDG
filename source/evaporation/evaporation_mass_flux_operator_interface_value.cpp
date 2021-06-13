@@ -4,6 +4,7 @@
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/utilities/legacy.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -157,11 +158,7 @@ namespace MeltPoolDG::Evaporation
          * debug
          */
         const auto global_points_normal_to_interface_all =
-#if DEAL_II_VERSION_MAJOR == 10
           Utilities::MPI::reduce<std::vector<Point<dim>>>(
-#else
-          Utilities::MPI::all_reduce<std::vector<Point<dim>>>(
-#endif
             evaluation_points, scratch_data.get_mpi_comm(), [](const auto &a, const auto &b) {
               auto result = a;
               result.insert(result.end(), b.begin(), b.end());
