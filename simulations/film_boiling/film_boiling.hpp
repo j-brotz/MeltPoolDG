@@ -9,6 +9,7 @@
 
 #include <deal.II/lac/vector.h>
 
+#include <deal.II/numerics/data_out_resample.h>
 #include <deal.II/numerics/vector_tools.h>
 
 // c++
@@ -286,6 +287,54 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                                        9. * lambda0 / 128.,
                                        lambda0),
                                      "heat_transfer");
+    }
+
+    void
+    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) final
+    {
+      if (this->parameters.paraview.do_output)
+        {
+          if constexpr (dim == 3)
+            {
+              // create slice
+              {
+                parallel::distributed::Triangulation<2, 3> tria_slice(this->mpi_communicator);
+
+                const Point<2> bottom_left(x_min, y_min);
+                const Point<2> top_right(x_max, y_max);
+
+                std::vector<unsigned int> subdivisions{1, 3};
+
+                GridGenerator::subdivided_hyper_rectangle(tria_slice,
+                                                          subdivisions,
+                                                          bottom_left,
+                                                          top_right);
+
+                GridTools::rotate(0.5 * numbers::PI, 0, tria_slice);
+
+                tria_slice.refine_global(this->parameters.base.global_refinements);
+
+                MappingQ1<2, 3> mapping_slice;
+
+                DataOutResample<3, 2, 3> data_out(tria_slice, mapping_slice);
+                data_out.add_data_vector(generic_data_out.get_dof_handler("level_set"),
+                                         generic_data_out.get_vector("level_set"),
+                                         "level_set");
+                data_out.add_data_vector(generic_data_out.get_dof_handler("temperature"),
+                                         generic_data_out.get_vector("temperature"),
+                                         "temperature");
+                data_out.update_mapping(generic_data_out.get_mapping());
+                data_out.build_patches();
+                data_out.write_vtu_with_pvtu_record(
+                  "./", "data_out_01" /*TODO*/, 0, this->mpi_communicator, 1 /*TODO*/, 1);
+              }
+
+              // create iso-surface
+              {
+                // TODO
+              }
+            }
+        }
     }
 
   private:
