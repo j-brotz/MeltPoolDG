@@ -260,11 +260,15 @@ namespace MeltPoolDG::LevelSet
     DoFTools::make_hanging_node_constraints(dof_handler, hanging_node_constraints);
     hanging_node_constraints.close();
 
+    UtilityFunctions::check_constraints(dof_handler, hanging_node_constraints);
+
     hanging_node_constraints_velocity.clear();
     hanging_node_constraints_velocity.reinit(scratch_data->get_locally_relevant_dofs(vel_dof_idx));
     DoFTools::make_hanging_node_constraints(dof_handler_velocity,
                                             hanging_node_constraints_velocity);
     hanging_node_constraints_velocity.close();
+
+    UtilityFunctions::check_constraints(dof_handler_velocity, hanging_node_constraints_velocity);
 
     constraints_dirichlet.clear();
     constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(ls_dof_idx));
@@ -279,6 +283,8 @@ namespace MeltPoolDG::LevelSet
       hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
+    UtilityFunctions::check_constraints(dof_handler, constraints_dirichlet);
+
     hanging_node_constraints_with_zero_dirichlet.clear();
     hanging_node_constraints_with_zero_dirichlet.reinit(
       scratch_data->get_locally_relevant_dofs(ls_zero_bc_idx));
@@ -291,6 +297,9 @@ namespace MeltPoolDG::LevelSet
           dof_handler, bc.first, hanging_node_constraints_with_zero_dirichlet);
       }
     hanging_node_constraints_with_zero_dirichlet.close();
+
+    UtilityFunctions::check_constraints(dof_handler, hanging_node_constraints_with_zero_dirichlet);
+
     /*
      *  create the matrix-free object
      */

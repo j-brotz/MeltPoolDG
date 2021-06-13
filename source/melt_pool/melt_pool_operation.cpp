@@ -365,8 +365,13 @@ namespace MeltPoolDG::MeltPool
       }
 
     solid_constraints.close();
+
+    UtilityFunctions::check_constraints(flow_dof_handler, solid_constraints);
+
     flow_constraints.merge(solid_constraints,
                            AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
+
+    UtilityFunctions::check_constraints(flow_dof_handler, flow_constraints);
 
     solid.zero_out_ghost_values();
   }
@@ -407,9 +412,15 @@ namespace MeltPoolDG::MeltPool
             if (solid[local_dof_indices[i]])
               solid_constraints.add_line(local_dof_indices[i]);
         }
+
+    UtilityFunctions::check_constraints(level_set_dof_handler, solid_constraints);
+
     level_set_constraints.merge(solid_constraints,
                                 AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
     level_set_constraints.close();
+
+    UtilityFunctions::check_constraints(level_set_dof_handler, level_set_constraints);
+
     solid.zero_out_ghost_values();
   }
 

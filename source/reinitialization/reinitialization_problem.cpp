@@ -152,6 +152,8 @@ namespace MeltPoolDG::Reinitialization
     DoFTools::make_hanging_node_constraints(dof_handler, constraints);
     constraints.close();
 
+    UtilityFunctions::check_constraints(dof_handler, constraints);
+
     /*
      *  create the matrix-free object
      */
