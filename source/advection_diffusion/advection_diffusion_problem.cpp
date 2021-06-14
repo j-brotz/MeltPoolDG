@@ -46,7 +46,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                  "advection_diffusion");
           }
       }
-    Journal::print_decoration_line(scratch_data->get_pcout());
+    Journal::print_end(scratch_data->get_pcout());
   }
 
   template <int dim>

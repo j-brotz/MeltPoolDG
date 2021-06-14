@@ -1,10 +1,8 @@
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
-//
-
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

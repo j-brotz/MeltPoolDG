@@ -3,6 +3,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 
 #include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -122,8 +123,15 @@ namespace MeltPoolDG::Evaporation
         });
 
     scratch_data.get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
-    scratch_data.get_pcout() << "    | evapor: |u|2 = " << evaporation_velocity.l2_norm()
-                             << std::endl;
+
+    Journal::print_formatted_norm(scratch_data.get_pcout(0),
+                                  VectorTools::compute_L2_norm<dim>(evaporation_velocity,
+                                                                    scratch_data,
+                                                                    evapor_vel_dof_idx,
+                                                                    ls_quad_idx),
+                                  "evaporative_velocity",
+                                  "evaporation_operation",
+                                  10);
 
     evaporation_velocity.zero_out_ghost_values();
   }

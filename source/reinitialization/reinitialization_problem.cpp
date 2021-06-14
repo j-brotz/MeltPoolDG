@@ -1,4 +1,5 @@
 #include <meltpooldg/reinitialization/reinitialization_problem.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Reinitialization
 {
@@ -22,6 +23,7 @@ namespace MeltPoolDG::Reinitialization
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
       }
+    Journal::print_end(scratch_data->get_pcout());
   }
 
   template <int dim>

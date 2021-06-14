@@ -23,6 +23,7 @@
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -66,6 +67,8 @@ namespace MeltPoolDG::LevelSet
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
       }
+
+    Journal::print_end(scratch_data->get_pcout());
   }
 
   template <int dim>

@@ -1,5 +1,6 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
+#  include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::NormalVector
 {
@@ -96,15 +97,16 @@ namespace MeltPoolDG::NormalVector
     const int verbosity_l2_norm = dim > 1 ? 0 : 1;
 
     for (unsigned int d = 0; d < dim; ++d)
-      scratch_data.get_pcout(verbosity_l2_norm)
-        << " |n|_" << d << "=" << std::setw(15) << std::setprecision(10) << std::left
-        << MeltPoolDG::VectorTools::compute_L2_norm<dim>(get_solution_normal_vector().block(d),
-                                                         scratch_data,
-                                                         normal_vec_adaflo_params.dof_index_normal,
-                                                         normal_vec_adaflo_params.quad_index)
-        << " ";
-
-    scratch_data.get_pcout(1) << std::endl;
+      Journal::print_formatted_norm(
+        scratch_data.get_pcout(verbosity_l2_norm),
+        MeltPoolDG::VectorTools::compute_L2_norm<dim>(get_solution_normal_vector().block(d),
+                                                      scratch_data,
+                                                      normal_vec_adaflo_params.dof_index_normal,
+                                                      normal_vec_adaflo_params.quad_index),
+        "normal_" + std::to_string(d),
+        "normal_vector_adaflo",
+        10 /*precision*/
+      );
   }
 
   template <int dim>

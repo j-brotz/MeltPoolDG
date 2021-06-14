@@ -1,4 +1,5 @@
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::NormalVector
 {
@@ -65,19 +66,23 @@ namespace MeltPoolDG::NormalVector
     for (unsigned int d = 0; d < dim; ++d)
       scratch_data->get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
 
-    scratch_data->get_pcout(1) << "| normal vector:         i=" << iter;
     const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
     const ConditionalOStream &pcout =
       scratch_data->get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
-    pcout << " \t";
+
     for (unsigned int d = 0; d < dim; ++d)
-      pcout << " |n_" << d << "| = " << std::setprecision(11) << std::setw(15) << std::left
-            << MeltPoolDG::VectorTools::compute_L2_norm<dim>(solution_normal_vector.block(d),
-                                                             *scratch_data,
-                                                             normal_dof_idx,
-                                                             normal_quad_idx)
-            << " ";
-    pcout << std::endl;
+      Journal::print_formatted_norm(
+        pcout,
+        MeltPoolDG::VectorTools::compute_L2_norm<dim>(
+          solution_normal_vector.block(d), *scratch_data, normal_dof_idx, normal_quad_idx),
+        "normal_" + std::to_string(d),
+        "normal_vector",
+        11 /*precision*/
+      );
+
+    Journal::print_line(scratch_data->get_pcout(1),
+                        "     * CG: i = " + std::to_string(iter),
+                        "normal_vector");
   }
 
   template <int dim>

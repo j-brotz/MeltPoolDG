@@ -1,4 +1,5 @@
 #include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -31,8 +32,12 @@ namespace MeltPoolDG::Heat
   {
     current_time = start_time;
     compute_laser_intensity();
-    scratch_data.get_pcout() << "current laser position: " << laser_position << std::endl;
-    scratch_data.get_pcout() << "current laser intensity: " << laser_intensity << std::endl;
+    std::ostringstream str;
+    str << "current laser position: " << laser_position;
+    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
+    str.str("");
+    str << "current laser intensity: " << laser_intensity;
+    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
   }
 
   template <int dim>
@@ -47,8 +52,12 @@ namespace MeltPoolDG::Heat
     // 2) update intensity of the laser
     compute_laser_intensity();
 
-    scratch_data.get_pcout() << "current laser position: " << laser_position << std::endl;
-    scratch_data.get_pcout() << "current laser intensity: " << laser_intensity << std::endl;
+    std::ostringstream str;
+    str << "current laser position: " << laser_position;
+    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
+    str.str("");
+    str << "current laser intensity: " << laser_intensity;
+    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
   }
 
   template <int dim>

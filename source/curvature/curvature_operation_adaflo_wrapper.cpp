@@ -1,5 +1,6 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <meltpooldg/curvature/curvature_operation_adaflo_wrapper.hpp>
+#  include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Curvature
 {
@@ -105,14 +106,16 @@ namespace MeltPoolDG::Curvature
       true); // @todo: adaflo does not use the boolean function argument
 
     const int verbosity_l2_norm = dim > 1 ? 0 : 1;
-    scratch_data.get_pcout(verbosity_l2_norm)
-      << " |k| = " << std::setw(15) << std::setprecision(10) << std::left
-      << VectorTools::compute_L2_norm<dim>(get_curvature(),
-                                           scratch_data,
-                                           curv_adaflo_params.dof_index_curvature,
-                                           curv_adaflo_params.quad_index);
-
-    scratch_data.get_pcout() << std::endl;
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(verbosity_l2_norm),
+      VectorTools::compute_L2_norm<dim>(get_curvature(),
+                                        scratch_data,
+                                        curv_adaflo_params.dof_index_curvature,
+                                        curv_adaflo_params.quad_index),
+      "curvature",
+      "curvature_adaflo",
+      10 /*precision*/
+    );
   }
 
   template <int dim>

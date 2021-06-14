@@ -12,11 +12,27 @@ namespace MeltPoolDG::Journal
     pcout << "+" << std::string(max_text_width - 2, '-') << "+" << std::endl;
   }
 
+
   void
   print_line(const ConditionalOStream &pcout,
              const std::string &       text           = "",
              const std::string &       operation_name = "",
              const int                 extra_size     = 0);
+  inline void
+  print_end(const ConditionalOStream &pcout)
+  {
+    print_decoration_line(pcout);
+    print_line(pcout, " end of simulation");
+    print_decoration_line(pcout);
+  }
+
+  inline void
+  print_start(const ConditionalOStream &pcout)
+  {
+    print_decoration_line(pcout);
+    print_line(pcout, std::string(48, ' ') + "MeltPoolDG");
+    print_decoration_line(pcout);
+  }
 
   void
   print_formatted_norm(const ConditionalOStream &pcout,

@@ -42,7 +42,7 @@ namespace MeltPoolDG
     std::ostringstream str;
     str << std::string(10, ' ') << std::setw(15) << "#lin solve" << std::internal << std::setw(15)
         << "||residual||" << std::internal << std::setw(15) << "||ddx||";
-    Journal::print_line(scratch_data.get_pcout(1), str.str(), "Newton Raphson");
+    Journal::print_line(scratch_data.get_pcout(1), str.str(), "newton_raphson_solver");
     Journal::print_line(scratch_data.get_pcout(1), std::string(10, ' ') + std::string(60, '_'));
 
     int i = 0;
@@ -60,7 +60,7 @@ namespace MeltPoolDG
                                                                      dof_idx,
                                                                      quad_idx);
 
-            Journal::print_line(scratch_data.get_pcout(1), str_sol.str(), "Newton Raphson");
+            Journal::print_line(scratch_data.get_pcout(0), str_sol.str(), "newton_raphson_solver");
             return;
           }
 
@@ -107,7 +107,7 @@ namespace MeltPoolDG
     str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5) << update_norm
          << print_checkmark(correction_converged);
 
-    Journal::print_line(scratch_data.get_pcout(0), str_.str(), "", 4);
+    Journal::print_line(scratch_data.get_pcout(1), str_.str(), "", 4);
 
     str_.str("");
 

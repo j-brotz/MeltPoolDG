@@ -3,6 +3,7 @@
 #endif
 
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -159,26 +160,33 @@ namespace MeltPoolDG::Flow
         // solver Navier-Stokes problem
         flow_operation->solve();
 
-        scratch_data->get_pcout()
-          << " |velocity| = " << std::setprecision(15)
-          << VectorTools::compute_L2_norm<dim>(flow_operation->get_velocity(),
-                                               *scratch_data,
-                                               flow_operation->get_dof_handler_idx_velocity(),
-                                               flow_operation->get_quad_idx_velocity())
-          << std::endl;
-        scratch_data->get_pcout()
-          << " |p| = " << std::setprecision(15)
-          << VectorTools::compute_L2_norm<dim>(flow_operation->get_pressure(),
-                                               *scratch_data,
-                                               flow_operation->get_dof_handler_idx_pressure(),
-                                               flow_operation->get_quad_idx_pressure())
-          << std::endl;
+        Journal::print_formatted_norm(
+          scratch_data->get_pcout(0),
+          VectorTools::compute_L2_norm<dim>(flow_operation->get_velocity(),
+                                            *scratch_data,
+                                            flow_operation->get_dof_handler_idx_velocity(),
+                                            flow_operation->get_quad_idx_velocity()),
+          "velocity",
+          "navier_stokes_adaflo",
+          15 /*precision*/
+        );
+        Journal::print_formatted_norm(
+          scratch_data->get_pcout(0),
+          VectorTools::compute_L2_norm<dim>(flow_operation->get_pressure(),
+                                            *scratch_data,
+                                            flow_operation->get_dof_handler_idx_pressure(),
+                                            flow_operation->get_quad_idx_pressure()),
+          "pressure",
+          "navier_stokes_adaflo",
+          15 /*precision*/
+        );
         // ... and output the results to vtk files.
         output_results(n, time_iterator.get_current_time(), base_in);
 
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
       }
+    Journal::print_end(scratch_data->get_pcout());
   }
 
   template <int dim>
@@ -366,18 +374,17 @@ namespace MeltPoolDG::Flow
     if (base_in->parameters.amr.do_amr && base_in->parameters.amr.n_initial_refinement_cycles > 0)
       for (int i = 0; i < base_in->parameters.amr.n_initial_refinement_cycles; ++i)
         {
-          scratch_data->get_pcout()
-            << "cycle: " << i << " n_dofs: " << dof_handler.n_dofs() << "(ls) + "
-            << flow_operation->get_dof_handler_velocity().n_dofs() << "(vel) + "
-            << flow_operation->get_dof_handler_pressure().n_dofs() << "(p)";
+          std::ostringstream str;
+          str << "cycle: " << i << " n_dofs: " << dof_handler.n_dofs() << "(ls) + "
+              << flow_operation->get_dof_handler_velocity().n_dofs() << "(vel) + "
+              << flow_operation->get_dof_handler_pressure().n_dofs() << "(p)";
 
           if (heat_operation)
-            scratch_data->get_pcout() << " T.size " << heat_operation->get_temperature().size();
+            str << " T.size " << heat_operation->get_temperature().size();
           if (melt_pool_operation)
-            scratch_data->get_pcout() << " solid.size " << melt_pool_operation->get_solid().size();
+            str << " solid.size " << melt_pool_operation->get_solid().size();
 
-          scratch_data->get_pcout() << std::endl;
-
+          Journal::print_line(scratch_data->get_pcout(), str.str(), "melt_pool_problem");
           refine_mesh(base_in);
           /*
            *  set initial conditions after initial AMR
@@ -712,9 +719,10 @@ namespace MeltPoolDG::Flow
 
     if (evaporation_operation || melt_pool_operation)
       {
-        scratch_data->get_pcout() << "    | two phase flow: total mass = " << std::setprecision(11)
-                                  << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm())
-                                  << std::endl;
+        std::ostringstream str;
+        str << " total mass = " << std::setprecision(11)
+            << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm());
+        Journal::print_line(scratch_data->get_pcout(), str.str(), "melt_pool_problem");
       }
   }
 
