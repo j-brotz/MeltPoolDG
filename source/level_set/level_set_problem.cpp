@@ -39,8 +39,7 @@ namespace MeltPoolDG::LevelSet
     while (!time_iterator.is_finished())
       {
         const double dt = time_iterator.get_next_time_increment();
-        scratch_data->get_pcout() << "| ls: t= " << std::setw(10) << std::left
-                                  << time_iterator.get_current_time();
+        time_iterator.print_me(scratch_data->get_pcout());
         compute_advection_velocity(*base_in->get_advection_field("level_set"));
 
         if (evaporation_operation)

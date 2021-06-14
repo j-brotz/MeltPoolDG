@@ -1,3 +1,4 @@
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG
@@ -10,6 +11,7 @@ namespace MeltPoolDG
     current_time           = data_in.start_time;
     current_time_increment = data_in.time_increment;
     n_time_steps           = 0;
+    old_time               = current_time;
   }
 
   template <typename number>
@@ -34,6 +36,7 @@ namespace MeltPoolDG
   number
   TimeIterator<number>::get_next_time_increment()
   {
+    old_time = current_time;
     if (current_time + current_time_increment > time_data.end_time)
       current_time_increment = time_data.end_time - current_time;
     current_time += current_time_increment;
@@ -87,10 +90,17 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  TimeIterator<number>::print_me(std::ostream &pcout) const
+  TimeIterator<number>::print_me(const ConditionalOStream &pcout) const
   {
-    pcout << "      | Time step " << n_time_steps << " at t=" << std::fixed << std::setprecision(5)
-          << current_time << std::endl;
+    Journal::print_decoration_line(pcout);
+    std::ostringstream str;
+    str << " Time increment # " << std::setw(6) << std::left << n_time_steps
+        << " t = " << std::setw(10) << std::left << std::scientific << std::setprecision(4)
+        << old_time << " to " << std::setw(10) << std::left << std::scientific
+        << std::setprecision(4) << current_time << " ( dt = " << std::left << std::scientific
+        << std::setprecision(4) << current_time_increment << " )";
+    Journal::print_line(pcout, str.str(), "time_iterator");
+    Journal::print_decoration_line(pcout);
   }
 
   template class TimeIterator<>;

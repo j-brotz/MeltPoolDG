@@ -35,9 +35,10 @@ namespace MeltPoolDG
       &solve_linear_system;
 
 
-    VectorType rhs;
-    VectorType solution_update;
-    int        iteration_counter = 0;
+    VectorType         rhs;
+    VectorType         solution_update;
+    int                iteration_counter = 0;
+    std::ostringstream str_;
 
   public:
     NewtonRaphsonSolver(const ScratchData<dim> &                    scratch_data,

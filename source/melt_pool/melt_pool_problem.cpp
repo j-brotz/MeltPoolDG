@@ -29,8 +29,7 @@ namespace MeltPoolDG::Flow
         const auto dt = time_iterator.get_next_time_increment();
         const auto n  = time_iterator.get_current_time_step_number();
 
-        scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
-                                  << time_iterator.get_current_time();
+        time_iterator.print_me(scratch_data->get_pcout());
 
         /******************************************************************************************
          * LEVEL SET

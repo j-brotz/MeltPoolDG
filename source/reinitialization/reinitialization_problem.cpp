@@ -11,8 +11,7 @@ namespace MeltPoolDG::Reinitialization
     while (!time_iterator.is_finished())
       {
         const double d_tau = time_iterator.get_next_time_increment();
-        scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
-                                  << time_iterator.get_current_time();
+        time_iterator.print_me(scratch_data->get_pcout());
 
         reinit_operation->solve(d_tau);
 
