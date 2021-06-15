@@ -1,0 +1,147 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%setup
+    # directory of the external libraries
+    singularity_folder_libs=$SINGULARITY_ROOTFS/external_libs
+    mkdir $singularity_folder_libs
+
+    # recommended directories for HPC
+    mkdir $SINGULARITY_ROOTFS/scratch
+    mkdir $SINGULARITY_ROOTFS/data
+
+    # copy config files 
+    cp -r configure/*.sh $singularity_folder_libs
+
+%environment
+    export LC_ALL=C
+    export OMP_NUM_THREADS=1
+    export OPENBLAS_NUM_THREADS=1
+
+%post
+    #--------------------------------------
+    #    number of parallel jobs
+    #--------------------------------------
+    if [ -z "${MAKE_JOBS}" ]; then
+        MAKE_JOBS=1
+        echo "Using ${MAKE_JOBS} make jobs"
+        echo "Set \$SINGULARITYENV_MAKE_JOBS to determine the number of make jobs"
+    else
+        echo "Using ${MAKE_JOBS} make jobs"
+    fi
+    #--------------------------------------
+    #    delete cache files
+    #--------------------------------------   
+    if [ "${DELETE_CACHE}" = "true" ];
+    then
+        echo "Cache files will be deleted to reduce container size"
+    else
+        echo "Cache files will NOT be deleted. Set \$SINGULARITYENV_DELETE_CACHE to true to delete them." 
+    fi
+    #--------------------------------------
+    # setup system
+    #--------------------------------------
+    set -ex
+    apt update
+    
+    # to avoid user interaction in selecting time:
+    DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
+    apt-get -y upgrade
+    apt --yes install cmake git vim libopenmpi-dev g++ gfortran libopenblas-base libopenblas-dev python2.7
+    
+    apt-get -y install apt-utils apt-file less make wget openssh-client
+    apt-get -y install openmpi-bin  infiniband-diags ibverbs-utils libibverbs-dev
+    apt-get -y install libipathverbs1 libmlx4-1 libmlx5-1 libmthca1
+    
+    # added for MeltPoolDG
+    apt-get -y install libhdf5-dev libhdf5-openmpi-dev
+    apt-get -y install libscalapack-openmpi-dev 
+    apt-get -y install libparmetis-dev libparmetis4.0
+    apt-get -y install libmetis-dev libmetis5
+    apt-get -y install libboost-all-dev
+    apt-get -y install numdiff
+
+    #--------------------------------------
+    # install openMPI 4.0.3
+    #--------------------------------------
+    apt-get -y install libopenmpi-dev
+    mpiexec --version
+
+    #--------------------------------------
+    # p4est
+    #--------------------------------------
+    echo "install p4est"
+    cd /external_libs/
+    wget https://github.com/p4est/p4est.github.io/raw/master/release/p4est-2.2.tar.gz
+    ls -l
+    mkdir -p p4est-build
+    bash p4est-setup.sh p4est-2.2.tar.gz /external_libs/p4est-build
+
+    #--------------------------------------
+    # trilinos
+    #--------------------------------------
+    echo "install trilinos"
+    cd /external_libs/
+    wget https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz
+    mv trilinos-release-12-12-1.tar.gz trilinos-release-12-12-1.tar
+    tar -xvf trilinos-release-12-12-1.tar
+    mkdir -p trilinos-build
+    cd trilinos-build
+    rm -rf CMakeFiles/ CMakeCache.txt || true
+    bash ../trilinos-setup.sh
+    make -j$MAKE_JOBS install
+
+    #--------------------------------------
+    # dealii
+    #-------------------------------------- 
+    echo "install dealii"
+    cd /external_libs/
+    git clone https://github.com/dealii/dealii
+    mkdir -p dealii-build
+    cd dealii-build
+    rm -rf CMakeFiles/ CMakeCache.txt || true
+    bash ../dealii-setup.sh
+    make -j$MAKE_JOBS
+    
+    #--------------------------------------
+    # adaflo
+    #-------------------------------------- 
+    cd /external_libs/
+    mkdir -p adaflo-build
+    git clone https://github.com/kronbichler/adaflo
+    cd adaflo-build
+    rm -rf CMakeFiles/ CMakeCache.txt || true
+    cmake ../adaflo -DDEAL_II_DIR=/external_libs/dealii-build
+    make release
+    make -j$MAKE_JOBS
+     
+    #--------------------------------------
+    # meltpooldg
+    #-------------------------------------- 
+    cd /
+    git clone https://github.com/MeltPoolDG/MeltPoolDG
+    cd MeltPoolDG
+    mkdir -p build
+    cd build
+    rm -rf CMakeFiles/ CMakeCache.txt || true
+    cmake .. -DDEAL_II_DIR=/external_libs/dealii-build -DADAFLO_INCLUDE=/external_libs/adaflo/include -DADAFLO_LIB=/external_libs/adaflo-build
+    make release
+    make -j$MAKE_JOBS
+    # make a symbolic link --> @todo: this should be replaced by make install
+    ln -s /MeltPoolDG/build/meltpooldg /usr/bin/meltpooldg
+
+    #--------------------------------------
+    # delete files to reduce container size
+    #-------------------------------------- 
+    if [ "${DELETE_CACHE}" = "true" ];
+    then
+    	cd /external_libs/
+        echo "Deleting dealii source files"
+        rm -r dealii/* || true
+        echo "Deleting trilinos source files"
+        rm -r Trilinos-trilinos-release-*/* || true
+        echo "Deleting p4est source files"
+        rm -r p4est-2.2* || true
+    fi
+
+

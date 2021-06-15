@@ -1,0 +1,67 @@
+Bootstrap: docker
+From: dealii/dealii:master-focal
+
+%setup
+    # recommended directories for HPC
+    mkdir $SINGULARITY_ROOTFS/scratch
+    mkdir $SINGULARITY_ROOTFS/data
+
+%environment
+    export LC_ALL=C
+    export OMP_NUM_THREADS=1
+    export OPENBLAS_NUM_THREADS=1
+
+%post
+  #--------------------------------------
+  #    number of parallel jobs
+  #--------------------------------------
+  if [ -z "${MAKE_JOBS}" ]; then
+      MAKE_JOBS=1
+      echo "Using ${MAKE_JOBS} make jobs"
+      echo "Set \$SINGULARITYENV_MAKE_JOBS to determine the number of make jobs"
+  else
+      echo "Using ${MAKE_JOBS} make jobs"
+  fi
+  #--------------------------------------
+  #    delete cache files
+  #--------------------------------------   
+  if [ "${DELETE_CACHE}" = "true" ];
+  then
+      echo "Cache files will be deleted to reduce container size"
+  else
+      echo "Cache files will NOT be deleted. Set \$SINGULARITYENV_DELETE_CACHE to true to delete them." 
+  fi
+  #--------------------------------------
+  # setup system
+  #--------------------------------------
+  set -ex
+  apt update
+
+  #--------------------------------------
+  # adaflo
+  #-------------------------------------- 
+  mkdir -p /external_libs
+  cd /external_libs/
+  mkdir -p adaflo-build
+  git clone https://github.com/kronbichler/adaflo
+  cd adaflo-build
+  rm -rf CMakeFiles/ CMakeCache.txt || true
+  cmake ../adaflo -DDEAL_II_DIR=/usr/local/share/deal.II/
+  make release
+  make -j$MAKE_JOBS
+   
+  #--------------------------------------
+  # meltpooldg
+  #-------------------------------------- 
+  cd /
+  git clone https://github.com/MeltPoolDG/MeltPoolDG
+  cd MeltPoolDG
+  mkdir -p build
+  cd build
+  rm -rf CMakeFiles/ CMakeCache.txt || true
+  cmake .. -DDEAL_II_DIR=/usr/local/share/deal.II -DADAFLO_INCLUDE=/external_libs/adaflo/include -DADAFLO_LIB=/external_libs/adaflo-build
+  make release
+  make -j$MAKE_JOBS
+  # make a symbolic link --> @todo: this should be replaced by make install
+  ln -s /MeltPoolDG/build/meltpooldg /usr/bin/meltpooldg
+
