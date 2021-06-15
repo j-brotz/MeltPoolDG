@@ -242,16 +242,12 @@ namespace MeltPoolDG::Evaporation
         evaporative_mass_flux.compress(VectorOperation::add);
         vector_multiplicity.compress(VectorOperation::add);
 
-        vector_multiplicity.update_ghost_values();
-        evaporative_mass_flux.update_ghost_values();
-
         for (unsigned int i = 0; i < vector_multiplicity.locally_owned_size(); ++i)
           if (vector_multiplicity.local_element(i) > 1.0)
             evaporative_mass_flux.local_element(i) /= vector_multiplicity.local_element(i);
 
-        scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(evaporative_mass_flux);
         evaporative_mass_flux.update_ghost_values();
-
+        scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(evaporative_mass_flux);
         temperature.zero_out_ghost_values();
         level_set_as_heaviside.zero_out_ghost_values();
       }

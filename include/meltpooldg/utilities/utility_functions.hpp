@@ -563,9 +563,14 @@ namespace MeltPoolDG
                      counter++)
                   {
                     if (points_normal_to_interface[counter][d] < boundary_points.first[d])
-                      points_normal_to_interface[counter][d] = boundary_points.first[d];
+                      {
+                        points_normal_to_interface.erase(points_normal_to_interface.begin() +
+                                                         counter);
+                        continue;
+                      }
                     else if (points_normal_to_interface[counter][d] > boundary_points.second[d])
-                      points_normal_to_interface[counter][d] = boundary_points.second[d];
+                      points_normal_to_interface.erase(points_normal_to_interface.begin() +
+                                                       counter);
                   }
               }
 
