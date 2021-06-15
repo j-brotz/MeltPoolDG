@@ -58,9 +58,7 @@ namespace MeltPoolDG
                  std::sqrt(3. * this->parameters.flow.surface_tension_coefficient /
                            (9.81 * (this->parameters.material.second.density -
                                     this->parameters.material.first.density))))
-      {
-        this->set_parameters();
-      }
+      {}
 
       void
       create_spatial_discretization() override

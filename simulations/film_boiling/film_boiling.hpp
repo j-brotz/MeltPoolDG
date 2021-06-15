@@ -127,9 +127,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       , x_max(lambda0 / 2.)
       , y_max(lambda0)
       , x_min(-x_max)
-    {
-      this->set_parameters();
-    }
+    {}
 
     void
     create_spatial_discretization() override

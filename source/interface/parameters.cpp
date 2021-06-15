@@ -6,7 +6,8 @@ namespace MeltPoolDG
   void
   Parameters<number>::process_parameters_file(const std::string &parameter_filename)
   {
-    add_parameters();
+    AssertThrow(!parameters_read, ExcMessage("The parameters are already read once."))
+      add_parameters();
 
     check_for_file(parameter_filename);
 
@@ -51,13 +52,37 @@ namespace MeltPoolDG
     if (evapor.ls_value_liquid == evapor.ls_value_gas)
       AssertThrow(
         false, ExcMessage("Parameterhandler: ls value liquid must not be equal to ls value gas."));
+
+
+    if (heat.solidification)
+      {
+        AssertThrow(
+          material.solidus_temperature < material.liquidus_temperature,
+          ExcMessage(
+            "The liquidus temperature must be greater than the solidus temperature! Abort..."));
+        material.inv_mushy_interval =
+          1.0 / (material.liquidus_temperature - material.solidus_temperature);
+      }
       /*
        *  parameters for adaflo
        */
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-
     if (base.problem_name == "melt_pool")
       {
+        if (flow.variable_properties_over_interface == "false")
+          material.two_phase_properties_transition_type =
+            MaterialData<number>::TwoPhasePropertiesTransitionType::sharp;
+        else if (flow.variable_properties_over_interface == "true")
+          material.two_phase_properties_transition_type =
+            MaterialData<number>::TwoPhasePropertiesTransitionType::smooth;
+        else if (flow.variable_properties_over_interface == "consistent_with_evaporation")
+          material.two_phase_properties_transition_type =
+            MaterialData<number>::TwoPhasePropertiesTransitionType::evaporation;
+        else
+          AssertThrow(false,
+                      ExcMessage("Unknown variable properties over interface type \"" +
+                                 flow.variable_properties_over_interface + "\"! Abort..."));
+
         if (mp.do_evaporation && !mp.do_heat_transfer)
           AssertThrow(false,
                       ExcMessage("In case of evaporation both flag >>> do evaporation <<< "
@@ -146,6 +171,7 @@ namespace MeltPoolDG
         adaflo_params.params.use_simplex_mesh     = base.do_simplex;
       }
 #endif
+    parameters_read = true;
   }
 
   template <typename number>
@@ -652,18 +678,6 @@ namespace MeltPoolDG
                         mp.melt_pool_center,
                         "Center coordinates of the melt pool ellipse/parabola. If no value is "
                         "provided it will be set equally to the laser center");
-      prm.add_parameter("mp domain x min",
-                        mp.domain_x_min,
-                        "minimum x coordinate of simulation domain");
-      prm.add_parameter("mp domain y min",
-                        mp.domain_y_min,
-                        "minimum y coordinate of simulation domain");
-      prm.add_parameter("mp domain x max",
-                        mp.domain_x_max,
-                        "maximum x coordinate of simulation domain");
-      prm.add_parameter("mp domain y max",
-                        mp.domain_y_max,
-                        "maximum y coordinate of simulation domain");
       prm.add_parameter(
         "mp set velocity to zero in solid",
         mp.set_velocity_to_zero_in_solid,
@@ -800,28 +814,6 @@ namespace MeltPoolDG
       prm.add_parameter("material liquidus temperature",
                         material.liquidus_temperature,
                         "Liquidus temperature");
-      if (heat.solidification)
-        {
-          AssertThrow(
-            material.solidus_temperature < material.liquidus_temperature,
-            ExcMessage(
-              "The liquidus temperature must be greater than the solidus temperature! Abort..."));
-          material.inv_mushy_interval =
-            1.0 / (material.liquidus_temperature - material.solidus_temperature);
-        }
-      if (flow.variable_properties_over_interface == "false")
-        material.two_phase_properties_transition_type =
-          MaterialData<number>::TwoPhasePropertiesTransitionType::sharp;
-      else if (flow.variable_properties_over_interface == "true")
-        material.two_phase_properties_transition_type =
-          MaterialData<number>::TwoPhasePropertiesTransitionType::smooth;
-      else if (flow.variable_properties_over_interface == "consistent_with_evaporation")
-        material.two_phase_properties_transition_type =
-          MaterialData<number>::TwoPhasePropertiesTransitionType::evaporation;
-      else
-        AssertThrow(false,
-                    ExcMessage("Unknown variable properties over interface type \"" +
-                               flow.variable_properties_over_interface + "\"! Abort..."));
     }
     prm.leave_subsection();
     /*
