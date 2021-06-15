@@ -35,12 +35,6 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-  static constexpr double x_max = 0.6e-3;
-  static constexpr double y_max = 0.2e-3;
-  static constexpr double z_max = 0.2e-3;
-
-  static constexpr double T_0 = 1000.0;
-
   template <int dim>
   class InitialLevelSet : public Function<dim>
   {
@@ -89,14 +83,54 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   template <int dim>
   class SimulationMeltFrontPropagation : public SimulationBase<dim>
   {
+  private:
+    double x_min = 0.0;
+    double x_max = 0.0;
+    double y_min = 0.0;
+    double y_max = 0.0;
+    double z_min = 0.0;
+    double z_max = 0.0;
+    double T_0   = 0.0;
+
   public:
     SimulationMeltFrontPropagation(std::string parameter_file, const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
     {}
 
     void
+    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    {
+      prm.enter_subsection("simulation specific parameters");
+      {
+        prm.add_parameter("domain x min", x_min, "minimum x coordinate of simulation domain");
+        prm.add_parameter("domain x max", x_max, "maximum x coordinate of simulation domain");
+        prm.add_parameter("domain z min", z_min, "minimum z coordinate of simulation domain");
+        prm.add_parameter("domain z max", z_max, "maximum z coordinate of simulation domain");
+        if constexpr (dim == 3)
+          {
+            prm.add_parameter("domain y min", y_min, "minimum y coordinate of simulation domain");
+            prm.add_parameter("domain y max", y_max, "maximum y coordinate of simulation domain");
+          }
+        prm.add_parameter("initial temperature", T_0);
+      }
+      prm.leave_subsection();
+    }
+
+    void
     create_spatial_discretization() override
     {
+      AssertThrow(
+        x_min < x_max,
+        ExcMessage("The upper bound of the domain must be greater than the lower bound! Abort..."));
+      AssertThrow(
+        z_min < z_max,
+        ExcMessage("The upper bound of the domain must be greater than the lower bound! Abort..."));
+      if constexpr (dim == 3)
+        AssertThrow(
+          y_min < y_max,
+          ExcMessage(
+            "The upper bound of the domain must be greater than the lower bound! Abort..."));
+
       if constexpr (dim == 1)
         {
           this->triangulation = std::make_shared<parallel::shared::Triangulation<1>>(

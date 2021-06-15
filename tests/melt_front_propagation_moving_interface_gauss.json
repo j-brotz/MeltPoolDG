@@ -8,6 +8,13 @@
     "problem name": "heat_transfer",
     "verbosity level": "0"
   },
+  "simulation specific parameters": {
+    "domain x min": "0.0",
+    "domain x max": "0.6e-3",
+    "domain z min": "-0.2e-3",
+    "domain z max": "0.2e-3",
+    "initial temperature": "1000.0"
+  },
   "time stepping": {
     "start time": "0.0",
     "time step size": "1e-5",
