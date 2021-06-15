@@ -483,6 +483,10 @@ namespace MeltPoolDG
 
       global_points_normal_to_interface_pointer = {0};
 
+      const auto bounding_box = GridTools::compute_bounding_box(dof_handler_ls.get_triangulation());
+      const auto boundary_points = bounding_box.get_boundary_points();
+
+
       const auto collect_points_along_normal = [&](const auto &                 cell,
                                                    const auto &                 real_points,
                                                    const auto &                 unit_points,
@@ -548,7 +552,22 @@ namespace MeltPoolDG
                                               max_distance_per_side,
                                               n_inc_per_side,
                                               bidirectional);
-
+            // check if point is outside domain and if so then project it back to
+            // the domain
+            //
+            // @todo: compute intersection between normal and bounding box and use
+            // this point
+            for (unsigned int d = 0; d < dim; ++d)
+              {
+                for (unsigned int counter = 0; counter < points_normal_to_interface.size();
+                     counter++)
+                  {
+                    if (points_normal_to_interface[counter][d] < boundary_points.first[d])
+                      points_normal_to_interface[counter][d] = boundary_points.first[d];
+                    else if (points_normal_to_interface[counter][d] > boundary_points.second[d])
+                      points_normal_to_interface[counter][d] = boundary_points.second[d];
+                  }
+              }
 
             global_points_normal_to_interface.insert(global_points_normal_to_interface.end(),
                                                      points_normal_to_interface.begin(),
