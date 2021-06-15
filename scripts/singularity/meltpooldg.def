@@ -124,12 +124,7 @@ From: ubuntu:20.04
     mkdir -p build
     cd build
     rm -rf CMakeFiles/ CMakeCache.txt || true
-    if  [ "${WITH_ADAFLO}" = "true" ];
-    then
-      cmake .. -DDEAL_II_DIR=/external_libs/dealii-build -DADAFLO_INCLUDE=/external_libs/adaflo/include -DADAFLO_LIB=/external_libs/adaflo-build
-    else
-      cmake .. -DDEAL_II_DIR=/external_libs/dealii-build
-    fi
+    cmake .. -DDEAL_II_DIR=/external_libs/dealii-build -DADAFLO_INCLUDE=/external_libs/adaflo/include -DADAFLO_LIB=/external_libs/adaflo-build
     make release
     make -j$MAKE_JOBS
     # make a symbolic link --> @todo: this should be replaced by make install
