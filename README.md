@@ -22,4 +22,4 @@ The principal developers are (in chronological order of entering the project):
 
 ## Documentation
 
-The documentation can be found under https://meltpooldg.github.io/MeltPoolDG/.
+The installation procedure is described in the [WIKI](https://github.com/MeltPoolDG/MeltPoolDG/wiki). The documentation can be found under https://meltpooldg.github.io/MeltPoolDG/.
