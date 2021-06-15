@@ -249,6 +249,7 @@ namespace MeltPoolDG::Evaporation
           if (vector_multiplicity.local_element(i) > 1.0)
             evaporative_mass_flux.local_element(i) /= vector_multiplicity.local_element(i);
 
+        scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(evaporative_mass_flux);
         evaporative_mass_flux.update_ghost_values();
 
         temperature.zero_out_ghost_values();
