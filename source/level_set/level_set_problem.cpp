@@ -346,10 +346,6 @@ namespace MeltPoolDG::LevelSet
       if (evaporation_operation)
         evaporation_operation->attach_output_vectors(data_out);
 
-#if DEAL_II_VERSION_MAJOR < 10
-      MeltPoolDG::VectorTools::update_ghost_values(advection_velocity);
-#endif
-
       /*
        *  output advection velocity
        */

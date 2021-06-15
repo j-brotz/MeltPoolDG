@@ -337,13 +337,6 @@ namespace MeltPoolDG::Flow
   void
   AdafloWrapper<dim>::attach_output_vectors(GenericDataOut<dim> &data_out)
   {
-#  if DEAL_II_VERSION_MAJOR < 10
-    MeltPoolDG::VectorTools::update_ghost_values(get_velocity(),
-                                                 get_pressure(),
-                                                 navier_stokes.user_rhs.block(0),
-                                                 navier_stokes.user_rhs.block(1));
-#  endif
-
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
                                       DataComponentInterpretation::component_is_part_of_vector);

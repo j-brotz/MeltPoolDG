@@ -172,11 +172,6 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperationAdaflo<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
-#  if DEAL_II_VERSION_MAJOR < 10
-    get_level_set().update_ghost_values();
-    get_normal_vector().update_ghost_values();
-#  endif
-
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_params_adaflo.dof_index_ls),
                              get_level_set(),
                              "psi");

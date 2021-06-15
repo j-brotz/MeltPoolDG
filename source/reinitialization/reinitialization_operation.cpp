@@ -250,9 +250,6 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
-#if DEAL_II_VERSION_MAJOR < 10
-    solution_level_set.update_ghost_values();
-#endif
     data_out.add_data_vector(scratch_data->get_dof_handler(reinit_dof_idx), get_level_set(), "psi");
 
     //@todo: attach_output_vectors from normal_vector_operation

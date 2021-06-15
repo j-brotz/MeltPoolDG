@@ -162,9 +162,6 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperationAdaflo<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
-#  if DEAL_II_VERSION_MAJOR < 10
-    advected_field.update_ghost_values();
-#  endif
     data_out.add_data_vector(scratch_data.get_dof_handler(adaflo_params.dof_index_ls),
                              advected_field,
                              "advected_field");
