@@ -1,6 +1,7 @@
 #pragma once
 // dealii
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/parameter_handler.h>
 
 #include <deal.II/distributed/tria.h>
 
@@ -32,9 +33,23 @@ namespace MeltPoolDG
 
     virtual ~SimulationBase() = default;
 
+    /**
+     * add simulation-specific parameters to the parameter handler
+     * @note: they will be available after create() has been
+     * called.
+     */
+    virtual void
+    add_simulation_specific_parameters(dealii::ParameterHandler &)
+    {
+      // default: do nothing
+    }
+
     virtual void
     set_parameters()
     {
+      /*
+       * read parameters defined in parameters.hpp
+       */
       this->parameters.process_parameters_file(this->parameter_file);
     }
 
@@ -50,6 +65,7 @@ namespace MeltPoolDG
     virtual void
     create()
     {
+      set_simulation_specific_parameters();
       create_spatial_discretization();
       AssertThrow(
         this->triangulation,
@@ -73,6 +89,28 @@ namespace MeltPoolDG
     {
       (void)generic_data_out;
       // do nothing default
+    }
+
+    /**
+     * Read the simulation specific parameters
+     */
+    void
+    set_simulation_specific_parameters()
+    {
+      /*
+       * read user-defined parameters
+       */
+      add_simulation_specific_parameters(prm_simulation_specific);
+
+      std::ifstream file;
+      file.open(parameter_file);
+
+      if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "json")
+        prm_simulation_specific.parse_input_from_json(file, true);
+      else if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "prm")
+        prm_simulation_specific.parse_input(parameter_file);
+      else
+        AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
     }
 
     /**
@@ -418,6 +456,7 @@ namespace MeltPoolDG
     const MPI_Comm                                mpi_communicator;
     Parameters<double>                            parameters;
     std::shared_ptr<Triangulation<dim, spacedim>> triangulation;
+    ParameterHandler                              prm_simulation_specific;
 
   private:
     std::map<std::string, std::shared_ptr<FieldConditions<dim>>>    field_conditions_map;

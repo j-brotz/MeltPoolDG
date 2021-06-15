@@ -143,7 +143,6 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       , x_max(y_max / std::pow(dim, this->parameters.base.global_refinements))
 
     {
-      this->set_parameters();
       if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
         file_level_set_contour.open(this->parameters.paraview.directory + "/" +
                                     this->parameters.paraview.filename +

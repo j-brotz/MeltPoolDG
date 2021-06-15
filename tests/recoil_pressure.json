@@ -84,11 +84,13 @@
     "mp do heat transfer": "true",
     "mp do recoil pressure": "true",
     "mp boiling temperature": "3000.",
-    "mp liquid melting point": "1700",
-    "mp domain x min": "-0.0002",
-    "mp domain x max": "0.0002",
-    "mp domain y min": "-0.0001",
-    "mp domain y max": "0.0002"
+    "mp liquid melting point": "1700"
+  },
+  "simulation specific domain": {
+    "domain x min": "-0.0002",
+    "domain x max": "0.0002",
+    "domain y min": "-0.0001",
+    "domain y max": "0.0002"
   },
   "normal vector": {
     "normal vec damping scale factor": "2.",

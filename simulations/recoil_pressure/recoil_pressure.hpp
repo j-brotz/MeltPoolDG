@@ -60,11 +60,36 @@ namespace MeltPoolDG
       template <int dim>
       class SimulationRecoilPressure : public SimulationBase<dim>
       {
+      private:
+        double domain_x_min = 0;
+        double domain_x_max = 0;
+        double domain_y_min = 0;
+        double domain_y_max = 0;
+
       public:
         SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
           : SimulationBase<dim>(parameter_file, mpi_communicator)
+        {}
+
+        void
+        add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
         {
-          this->set_parameters();
+          prm.enter_subsection("simulation specific domain");
+          {
+            prm.add_parameter("domain x min",
+                              domain_x_min,
+                              "minimum x coordinate of simulation domain");
+            prm.add_parameter("domain y min",
+                              domain_y_min,
+                              "minimum y coordinate of simulation domain");
+            prm.add_parameter("domain x max",
+                              domain_x_max,
+                              "maximum x coordinate of simulation domain");
+            prm.add_parameter("domain y max",
+                              domain_y_max,
+                              "maximum y coordinate of simulation domain");
+          }
+          prm.leave_subsection();
         }
 
         void
@@ -92,10 +117,10 @@ namespace MeltPoolDG
                 std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
             }
 
-          const double &x_min = this->parameters.mp.domain_x_min;
-          const double &x_max = this->parameters.mp.domain_x_max;
-          const double &y_min = this->parameters.mp.domain_y_min;
-          const double &y_max = this->parameters.mp.domain_y_max;
+          const double &x_min = domain_x_min;
+          const double &x_max = domain_x_max;
+          const double &y_min = domain_y_min;
+          const double &y_max = domain_y_max;
 
           if constexpr ((dim == 2) || (dim == 3))
             {
@@ -145,13 +170,13 @@ namespace MeltPoolDG
                     for (const auto &face : cell->face_iterators())
                       if ((face->at_boundary()))
                         {
-                          if (face->center()[1] == this->parameters.mp.domain_y_min)
+                          if (face->center()[1] == domain_y_min)
                             face->set_boundary_id(lower_bc);
-                          else if (face->center()[1] == this->parameters.mp.domain_y_max)
+                          else if (face->center()[1] == domain_y_max)
                             face->set_boundary_id(upper_bc);
-                          else if (face->center()[0] == this->parameters.mp.domain_x_min)
+                          else if (face->center()[0] == domain_x_min)
                             face->set_boundary_id(left_bc);
-                          else if (face->center()[0] == this->parameters.mp.domain_x_max)
+                          else if (face->center()[0] == domain_x_max)
                             face->set_boundary_id(right_bc);
                         }
                 }
@@ -182,10 +207,8 @@ namespace MeltPoolDG
           auto laser_center = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
             this->parameters.laser.center);
           this->attach_initial_condition(
-            std::make_shared<InitialValuesLS<dim>>(this->parameters.mp.domain_x_min,
-                                                   this->parameters.mp.domain_x_max,
-                                                   this->parameters.mp.domain_y_min,
-                                                   laser_center[dim - 1]),
+            std::make_shared<InitialValuesLS<dim>>(
+              domain_x_min, domain_x_max, domain_y_min, laser_center[dim - 1]),
             "level_set");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),

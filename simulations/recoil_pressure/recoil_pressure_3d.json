@@ -41,13 +41,15 @@
     "laser analytical ambient temperature": "500."
   },
   "melt pool": {
-    "mp domain x min": "-0.0002",
-    "mp domain x max": "0.0002",
-    "mp domain y min": "-0.0001",
-    "mp domain y max": "0.0002",
     "mp boiling temperature": "3000.",
     "mp do melt pool": "true",
     "mp do heat transfer": "true"
+  },
+  "simulation specific domain": {
+    "domain x min": "-0.0002",
+    "domain x max": "0.0002",
+    "domain y min": "-0.0001",
+    "domain y max": "0.0002"
   },
   "levelset": {
     "ls do reinitialization": "true",

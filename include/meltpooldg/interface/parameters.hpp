@@ -201,10 +201,6 @@ namespace MeltPoolDG
     bool        set_velocity_to_zero_in_solid  = false;
     bool        set_level_set_to_zero_in_solid = false;
     bool        do_recoil_pressure             = false;
-    number      domain_x_min                   = 0.0;
-    number      domain_y_min                   = 0.0;
-    number      domain_x_max                   = 0.0;
-    number      domain_y_max                   = 0.0;
     number      boiling_temperature            = 0.0;
 
     struct Liquid
@@ -330,6 +326,8 @@ namespace MeltPoolDG
     add_parameters();
 
     ParameterHandler prm;
+
+    bool parameters_read = false;
 
     BaseData<number>               base;
     TimeSteppingData<number>       time_stepping;

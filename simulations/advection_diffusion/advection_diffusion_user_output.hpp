@@ -34,9 +34,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     SimulationAdvectionDiffusionUserOutput(std::string    parameter_file,
                                            const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
-    {
-      this->set_parameters();
-    }
+    {}
 
     void
     create_spatial_discretization()
