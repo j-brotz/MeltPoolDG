@@ -20,6 +20,8 @@ The principal developers are (in chronological order of entering the project):
 * [Peter Munch](https://www.mw.tum.de/lnm/staff/peter-munch) [@peterrum](https://github.com/peterrum), Technical University of Munich/Helmholtz Zentrum hereon (DE)
 * [Nils Much](https://www.mw.tum.de/lnm/staff/nils-much/) [@nmuch](https://github.com/nmuch), Technical University of Munich (DE)
 
+We gratefully acknowledge the contributions and discussions with Christoph Meier (Technical University of Munich) and Martin Kronbichler (Technical University of Munich/Uppsala University).
+
 ## Documentation
 
 The installation procedure is described in the [WIKI](https://github.com/MeltPoolDG/MeltPoolDG/wiki). The documentation can be found under https://meltpooldg.github.io/MeltPoolDG/.
