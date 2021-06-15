@@ -1,10 +1,9 @@
-#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
-//
-
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -64,12 +63,13 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     advection_velocity.update_ghost_values();
 
-    scratch_data->get_pcout(1) << "|vel|= "
-                               << VectorTools::compute_L2_norm<dim>(advection_velocity,
+    Journal::print_formatted_norm(scratch_data->get_pcout(1),
+                                  VectorTools::compute_L2_norm<dim>(advection_velocity,
                                                                     *scratch_data,
                                                                     velocity_dof_idx,
-                                                                    advec_diff_quad_idx)
-                               << std::endl;
+                                                                    advec_diff_quad_idx),
+                                  "velocity",
+                                  "advection_diffusion");
 
     create_operator(advection_velocity);
 
@@ -117,20 +117,38 @@ namespace MeltPoolDG::AdvectionDiffusion
     solution_advected_field.copy_locally_owned_data_from(src);
     solution_advected_field.update_ghost_values();
 
-    scratch_data->get_pcout(2) << "|matrix|= "
-                               << advec_diff_operator->system_matrix.frobenius_norm() << std::endl;
-    scratch_data->get_pcout(2) << "|rhs|= " << rhs.l2_norm() << std::endl;
-    scratch_data->get_pcout(2) << "|src|= " << src.l2_norm() << std::endl;
+    Journal::print_formatted_norm(scratch_data->get_pcout(2),
+                                  advec_diff_operator->system_matrix.frobenius_norm(),
+                                  "matrix",
+                                  "advection_diffusion",
+                                  6 /*precision*/,
+                                  "F");
 
-    scratch_data->get_pcout(1) << "| GMRES: i=" << std::setw(5) << std::left << iter;
+    Journal::print_formatted_norm(scratch_data->get_pcout(2),
+                                  rhs.l2_norm(),
+                                  "rhs",
+                                  "advection_diffusion",
+                                  6 /*precision*/,
+                                  "l2");
+    Journal::print_formatted_norm(scratch_data->get_pcout(2),
+                                  src.l2_norm(),
+                                  "src",
+                                  "advection_diffusion",
+                                  6 /*precision*/,
+                                  "l2");
 
-    const auto &pcout = scratch_data->get_pcout();
-    pcout << "\t |ϕ|2 = " << std::setw(15) << std::left << std::setprecision(10)
-          << MeltPoolDG::VectorTools::compute_L2_norm<dim>(solution_advected_field,
-                                                           *scratch_data,
-                                                           advec_diff_dof_idx,
-                                                           advec_diff_quad_idx)
-          << std::endl;
+    Journal::print_formatted_norm(
+      scratch_data->get_pcout(0),
+      MeltPoolDG::VectorTools::compute_L2_norm<dim>(
+        solution_advected_field, *scratch_data, advec_diff_dof_idx, advec_diff_quad_idx),
+      "advected field",
+      "advection_diffusion",
+      10 /*precision*/
+    );
+
+    Journal::print_line(scratch_data->get_pcout(2),
+                        "     * GMRES: i = " + std::to_string(iter),
+                        "advection_diffusion");
     advection_velocity.zero_out_ghost_values();
   }
 

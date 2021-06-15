@@ -1,4 +1,5 @@
 #include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::NormalVector
 {

@@ -11,6 +11,7 @@
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -363,12 +364,13 @@ namespace MeltPoolDG::LevelSet
       {
         reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
 
+        Journal::print_decoration_line(scratch_data->get_pcout());
         while (!reinit_time_iterator.is_finished())
           {
-            const double d_tau = reinit_time_iterator.get_next_time_increment();
-            scratch_data->get_pcout() << std::setw(4) << ""
-                                      << "| reini: τ= " << std::setw(10) << std::left
-                                      << reinit_time_iterator.get_current_time();
+            const double       d_tau = reinit_time_iterator.get_next_time_increment();
+            std::ostringstream str;
+            str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
+            Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
             reinit_operation->solve(d_tau);
             /*
              *  reset the solution of the level set field to the reinitialized solution
@@ -377,6 +379,7 @@ namespace MeltPoolDG::LevelSet
           }
         reinit_time_iterator.reset();
       }
+    Journal::print_decoration_line(scratch_data->get_pcout());
   }
 
   template <int dim>

@@ -1,3 +1,4 @@
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
 namespace MeltPoolDG
@@ -36,12 +37,13 @@ namespace MeltPoolDG
   {
     solution.zero_out_ghost_values();
 
-    scratch_data.get_pcout(1) << std::endl;
-    scratch_data.get_pcout(1) << "+" << std::string(60, '-') << "+" << std::endl;
-    scratch_data.get_pcout(1) << std::setw(15) << "iter lin solve" << std::setw(15)
-                              << "||residual||" << std::setw(15) << "||solution_update||"
-                              << std::endl;
-    scratch_data.get_pcout(1) << "+" << std::string(60, '-') << "+" << std::endl;
+    Journal::print_line(scratch_data.get_pcout(1));
+    Journal::print_line(scratch_data.get_pcout(1), std::string(10, ' ') + std::string(60, '_'));
+    std::ostringstream str;
+    str << std::string(10, ' ') << std::setw(15) << "#lin solve" << std::internal << std::setw(15)
+        << "||residual||" << std::internal << std::setw(15) << "||ddx||";
+    Journal::print_line(scratch_data.get_pcout(1), str.str(), "newton_raphson_solver");
+    Journal::print_line(scratch_data.get_pcout(1), std::string(10, ' ') + std::string(60, '_'));
 
     int i = 0;
     while (i < max_number_of_iterations)
@@ -50,14 +52,15 @@ namespace MeltPoolDG
 
         if (is_converged())
           {
-            scratch_data.get_pcout()
-              << "Newton Raphson solver converged: ||solution|| = " << std::scientific
-              << std::setprecision(5)
-              << MeltPoolDG::VectorTools::compute_L2_norm<dim>(solution,
-                                                               scratch_data,
-                                                               dof_idx,
-                                                               quad_idx)
-              << std::endl;
+            std::ostringstream str_sol;
+            str_sol << "Newton Raphson solver converged: ||solution|| = " << std::scientific
+                    << std::setprecision(5)
+                    << MeltPoolDG::VectorTools::compute_L2_norm<dim>(solution,
+                                                                     scratch_data,
+                                                                     dof_idx,
+                                                                     quad_idx);
+
+            Journal::print_line(scratch_data.get_pcout(0), str_sol.str(), "newton_raphson_solver");
             return;
           }
 
@@ -99,12 +102,14 @@ namespace MeltPoolDG
     bool residual_converged   = res_norm < residual_tolerance;
     bool correction_converged = update_norm < field_correction_tolerance;
 
-    scratch_data.get_pcout(1) << std::right << std::setw(15) << std::scientific
-                              << std::setprecision(5) << res_norm
-                              << print_checkmark(residual_converged);
-    scratch_data.get_pcout(1) << std::right << std::setw(15) << std::scientific
-                              << std::setprecision(5) << update_norm
-                              << print_checkmark(correction_converged) << std::endl;
+    str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5) << res_norm
+         << print_checkmark(residual_converged);
+    str_ << std::right << std::setw(15) << std::scientific << std::setprecision(5) << update_norm
+         << print_checkmark(correction_converged);
+
+    Journal::print_line(scratch_data.get_pcout(1), str_.str(), "", 4);
+
+    str_.str("");
 
     return residual_converged && correction_converged;
   }
@@ -128,7 +133,7 @@ namespace MeltPoolDG
 
     create_rhs(rhs);
     int iter = solve_linear_system(solution_update, rhs);
-    scratch_data.get_pcout(1) << std::right << std::setw(15) << std::setprecision(0) << iter;
+    str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0) << iter;
   }
 
   template class NewtonRaphsonSolver<1>;

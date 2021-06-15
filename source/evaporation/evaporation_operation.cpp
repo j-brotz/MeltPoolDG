@@ -9,6 +9,7 @@
 #include <meltpooldg/evaporation/evaporation_source_terms_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -171,12 +172,14 @@ namespace MeltPoolDG::Evaporation
         evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux,
                                                                  *temperature);
       }
-    scratch_data->get_pcout(1) << "evaporative mass flux: " << std::left << std::setprecision(10)
-                               << MeltPoolDG::VectorTools::compute_L2_norm(evaporative_mass_flux,
+    Journal::print_formatted_norm(scratch_data->get_pcout(1),
+                                  MeltPoolDG::VectorTools::compute_L2_norm(evaporative_mass_flux,
                                                                            *scratch_data,
                                                                            ls_hanging_nodes_dof_idx,
-                                                                           ls_quad_idx)
-                               << std::endl;
+                                                                           ls_quad_idx),
+                                  "evaporative_mass_flux",
+                                  "evaporation_operation",
+                                  10);
   }
 
   template <int dim>

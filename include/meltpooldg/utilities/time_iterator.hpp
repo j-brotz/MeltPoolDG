@@ -1,4 +1,6 @@
 #pragma once
+#include <meltpooldg/utilities/conditional_ostream.hpp>
+
 #include <iomanip>
 #include <iostream>
 
@@ -50,10 +52,11 @@ namespace MeltPoolDG
     reset();
 
     void
-    print_me(std::ostream &pcout) const;
+    print_me(const ConditionalOStream &pcout) const;
 
   private:
     TimeIteratorData<number> time_data;
+    number                   old_time;
     number                   current_time;
     number                   current_time_increment;
     number                   n_time_steps;

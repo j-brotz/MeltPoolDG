@@ -1,5 +1,5 @@
 #include <meltpooldg/curvature/curvature_operation.hpp>
-//
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Curvature
 {
@@ -72,14 +72,19 @@ namespace MeltPoolDG::Curvature
     const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
     const ConditionalOStream &pcout =
       scratch_data->get_pcout(std::max(curvature_data.verbosity_level, verbosity_l2_norm));
-    scratch_data->get_pcout(1) << "| curvature:         i=" << iter << " \t";
-    pcout << "|k| = " << std::setprecision(11) << std::setw(15) << std::left
-          << VectorTools::compute_L2_norm<dim>(solution_curvature,
-                                               *scratch_data,
-                                               curv_dof_idx,
-                                               curv_quad_idx)
-          << " ";
-    pcout << std::endl;
+
+
+    Journal::print_formatted_norm(pcout,
+                                  VectorTools::compute_L2_norm<dim>(
+                                    solution_curvature, *scratch_data, curv_dof_idx, curv_quad_idx),
+                                  "curvature",
+                                  "curvature",
+                                  11 /*precision*/
+    );
+
+    Journal::print_line(scratch_data->get_pcout(1),
+                        "     * CG: i = " + std::to_string(iter),
+                        "curvature");
   }
 
   template <int dim>

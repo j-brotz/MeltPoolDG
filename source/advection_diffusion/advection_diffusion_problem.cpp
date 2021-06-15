@@ -11,6 +11,7 @@
 #include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion
 {
@@ -23,8 +24,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     while (!time_iterator.is_finished())
       {
         const double dt = time_iterator.get_next_time_increment();
-        scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
-                                  << time_iterator.get_current_time();
+        time_iterator.print_me(scratch_data->get_pcout());
         /*
          * compute the advection velocity for the current time
          */
@@ -40,16 +40,13 @@ namespace MeltPoolDG::AdvectionDiffusion
         if (base_in->parameters.amr.do_amr)
           {
             refine_mesh(base_in);
-            scratch_data->get_pcout(1)
-              << "number of dofs: " << dof_handler_velocity.n_dofs() << std::endl;
-            auto vec =
-              Utilities::MPI::gather(MPI_COMM_WORLD,
-                                     dof_handler_velocity.get_triangulation().n_active_cells());
-
-            for (auto &i : vec)
-              scratch_data->get_pcout(1) << "|cells| = " << i << std::endl;
+            Journal::print_mesh_information<dim>(scratch_data->get_pcout(1),
+                                                 *scratch_data,
+                                                 velocity_dof_idx,
+                                                 "advection_diffusion");
           }
       }
+    Journal::print_end(scratch_data->get_pcout());
   }
 
   template <int dim>

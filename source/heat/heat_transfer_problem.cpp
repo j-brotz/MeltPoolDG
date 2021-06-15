@@ -1,6 +1,3 @@
-#include <meltpooldg/heat/heat_transfer_problem.hpp>
-//
-
 #include <deal.II/distributed/grid_refinement.h>
 
 #include <deal.II/fe/fe_simplex_p.h>
@@ -10,10 +7,12 @@
 
 #include <deal.II/numerics/error_estimator.h>
 
+#include <meltpooldg/heat/heat_transfer_problem.hpp>
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -28,8 +27,7 @@ namespace MeltPoolDG::Heat
         const auto dt = time_iterator.get_next_time_increment();
         const auto n  = time_iterator.get_current_time_step_number();
 
-        scratch_data->get_pcout() << "t= " << std::setw(10) << std::left
-                                  << time_iterator.get_current_time();
+        time_iterator.print_me(scratch_data->get_pcout());
 
         if (const auto velocity_field_function =
               base_in->get_velocity_field("heat_transfer", true /*is_optional*/))
@@ -89,6 +87,7 @@ namespace MeltPoolDG::Heat
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
       }
+    Journal::print_end(scratch_data->get_pcout());
   }
 
   template <int dim>
@@ -243,8 +242,9 @@ namespace MeltPoolDG::Heat
     if (base_in->parameters.amr.do_amr && base_in->parameters.amr.n_initial_refinement_cycles > 0)
       for (int i = 0; i < base_in->parameters.amr.n_initial_refinement_cycles; ++i)
         {
-          scratch_data->get_pcout()
-            << " T.size " << heat_operation->get_temperature().size() << std::endl;
+          std::ostringstream str;
+          str << " #dofs T: " << heat_operation->get_temperature().size();
+          Journal::print_line(scratch_data->get_pcout(), str.str(), "heat_transfer");
           refine_mesh(base_in);
           /*
            *  set initial conditions after initial AMR

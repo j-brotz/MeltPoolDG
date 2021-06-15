@@ -6,6 +6,7 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/evaporation/evaporation_source_terms_continuous.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Evaporation
@@ -139,12 +140,14 @@ namespace MeltPoolDG::Evaporation
 
     scratch_data.get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
 
-    scratch_data.get_pcout(1) << "    | evapor: |u|2 = "
-                              << VectorTools::compute_L2_norm<dim>(evaporation_velocity,
-                                                                   scratch_data,
-                                                                   evapor_vel_dof_idx,
-                                                                   ls_quad_idx)
-                              << std::endl;
+    Journal::print_formatted_norm(scratch_data.get_pcout(1),
+                                  VectorTools::compute_L2_norm<dim>(evaporation_velocity,
+                                                                    scratch_data,
+                                                                    evapor_vel_dof_idx,
+                                                                    ls_quad_idx),
+                                  "evaporative_velocity",
+                                  "evaporation_operation",
+                                  10);
 
     evaporation_velocity.zero_out_ghost_values();
   }
@@ -216,11 +219,19 @@ namespace MeltPoolDG::Evaporation
       zero_out);
     evaporative_mass_flux.zero_out_ghost_values();
 
-    scratch_data.get_pcout() << "    | evaporation: jump in the velocity field = "
-                             << Utilities::MPI::sum(mass, scratch_data.get_mpi_comm()) << std::endl;
+    std::ostringstream str;
+    str << "evaporation: jump in the velocity field = "
+        << Utilities::MPI::sum(mass, scratch_data.get_mpi_comm());
 
-    scratch_data.get_pcout() << "    | evapor: |m|2 = " << mass_balance_source_term.l2_norm()
-                             << std::endl;
+    Journal::print_line(scratch_data.get_pcout(0),
+                        str.str(),
+                        "evaporation_source_terms_continuous");
+
+    Journal::print_formatted_norm(scratch_data.get_pcout(0),
+                                  mass_balance_source_term.l2_norm(),
+                                  "evapartive_mass_source",
+                                  "evaporation_source_terms_continuous",
+                                  10);
   }
 
   template <int dim>

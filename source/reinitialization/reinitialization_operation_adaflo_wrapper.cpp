@@ -1,5 +1,6 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
+#  include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Reinitialization
 {
@@ -112,15 +113,22 @@ namespace MeltPoolDG::Reinitialization
                                           1 /*stab_steps @todo*/,
                                           0 /*diff_steps @todo*/,
                                           compute_normal);
-    scratch_data.get_pcout(1) << "\t |ΔΨ|∞ = " << std::setw(15) << std::left
-                              << std::setprecision(10) << increment.linfty_norm();
-    scratch_data.get_pcout(0)
-      << " |ΔΨ|² = " << std::setw(15) << std::left << std::setprecision(10)
-      << VectorTools::compute_L2_norm<dim>(increment,
-                                           scratch_data,
-                                           reinit_params_adaflo.dof_index_ls,
-                                           reinit_params_adaflo.quad_index)
-      << " |" << std::endl;
+    Journal::print_formatted_norm(scratch_data.get_pcout(1),
+                                  increment.linfty_norm(),
+                                  "delta phi",
+                                  "reinitialization",
+                                  10 /*precision*/,
+                                  "∞ ");
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(0),
+      VectorTools::compute_L2_norm<dim>(increment,
+                                        scratch_data,
+                                        reinit_params_adaflo.dof_index_ls,
+                                        reinit_params_adaflo.quad_index),
+      "delta phi",
+      "reinitialization_adaflo",
+      10 /*precision*/
+    );
     force_compute_normal = false;
   }
 
