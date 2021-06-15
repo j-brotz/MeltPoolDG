@@ -2,16 +2,9 @@ Bootstrap: docker
 From: dealii/dealii:master-focal
 
 %setup
-    # directory of the external libraries
-    singularity_folder_libs=$SINGULARITY_ROOTFS/external_libs
-    mkdir $singularity_folder_libs
-
     # recommended directories for HPC
     mkdir $SINGULARITY_ROOTFS/scratch
     mkdir $SINGULARITY_ROOTFS/data
-
-    # copy config files 
-    cp -r configure/*.sh $singularity_folder_libs
 
 %environment
     export LC_ALL=C
@@ -44,13 +37,10 @@ From: dealii/dealii:master-focal
   set -ex
   apt update
 
-  apt-get -y install apt-utils apt-file less make wget openssh-client
-  apt-get -y install openmpi-bin  infiniband-diags ibverbs-utils libibverbs-dev
-  apt-get -y install libipathverbs1 libmlx4-1 libmlx5-1 libmthca1
-
   #--------------------------------------
   # adaflo
   #-------------------------------------- 
+  mkdir -p /external_libs
   cd /external_libs/
   mkdir -p adaflo-build
   git clone https://github.com/kronbichler/adaflo
@@ -74,5 +64,4 @@ From: dealii/dealii:master-focal
   make -j$MAKE_JOBS
   # make a symbolic link --> @todo: this should be replaced by make install
   ln -s /MeltPoolDG/build/meltpooldg /usr/bin/meltpooldg
-
 
