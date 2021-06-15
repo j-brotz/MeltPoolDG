@@ -249,11 +249,6 @@ namespace MeltPoolDG::Evaporation
     /*
      *  evaporation velocity
      */
-#if DEAL_II_VERSION_MAJOR < 10
-    evaporation_velocity.update_ghost_values();
-    evaporative_mass_flux.update_ghost_values();
-#endif
-
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
                                       DataComponentInterpretation::component_is_part_of_vector);

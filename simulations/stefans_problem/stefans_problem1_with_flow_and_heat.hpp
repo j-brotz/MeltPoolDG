@@ -20,7 +20,6 @@
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
-#include <meltpooldg/utilities/legacy.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 /**
