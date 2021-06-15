@@ -25,7 +25,7 @@ namespace MeltPoolDG::Evaporation
                                                     const BlockVectorType &normal_vector,
                                                     const double           constant_epsilon,
                                                     const double           eps_scale_factor,
-                                                    const unsigned int     ls_dof_idx,
+                                                    const unsigned int     ls_hanging_nodes_dof_idx,
                                                     const unsigned int     normal_dof_idx,
                                                     const unsigned int     temp_dof_idx,
                                                     const unsigned int     n_subdivisions_per_side,
@@ -36,7 +36,7 @@ namespace MeltPoolDG::Evaporation
     , normal_vector(normal_vector)
     , constant_epsilon(constant_epsilon)
     , eps_scale_factor(eps_scale_factor)
-    , ls_dof_idx(ls_dof_idx)
+    , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx)
     , normal_dof_idx(normal_dof_idx)
     , temp_dof_idx(temp_dof_idx)
     , fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim)
@@ -54,7 +54,7 @@ namespace MeltPoolDG::Evaporation
 
     if constexpr (dim > 1)
       {
-        scratch_data.initialize_dof_vector(evaporative_mass_flux, ls_dof_idx);
+        scratch_data.initialize_dof_vector(evaporative_mass_flux, ls_hanging_nodes_dof_idx);
         /*
          * generate point cloud normal to interface
          */
@@ -71,7 +71,7 @@ namespace MeltPoolDG::Evaporation
         UtilityFunctions::generate_points_along_normal<dim>(
           global_points_normal_to_interface,
           global_points_normal_to_interface_pointer,
-          scratch_data.get_dof_handler(ls_dof_idx),
+          scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
           fe_dim,
           scratch_data.get_mapping(),
           level_set_as_heaviside,
@@ -82,7 +82,11 @@ namespace MeltPoolDG::Evaporation
           /* contour_value */ 0.5,
           n_subdivisions_MCA);
 
-        if (true)
+        temperature.update_ghost_values();
+        level_set_as_heaviside.update_ghost_values();
+
+
+        if (false)
           {
             /*
              * debug
@@ -121,6 +125,7 @@ namespace MeltPoolDG::Evaporation
                                        scratch_data.get_triangulation(),
                                        scratch_data.get_mapping());
 
+
         const auto temperature_evaluation_values =
           dealii::VectorTools::point_values<1>(remote_point_evaluation,
                                                scratch_data.get_dof_handler(temp_dof_idx),
@@ -128,7 +133,8 @@ namespace MeltPoolDG::Evaporation
 
         const std::vector<Tensor<1, dim, double>> level_set_gradient_values =
           dealii::VectorTools::point_gradients<1>(remote_point_evaluation,
-                                                  scratch_data.get_dof_handler(ls_dof_idx),
+                                                  scratch_data.get_dof_handler(
+                                                    ls_hanging_nodes_dof_idx),
                                                   level_set_as_heaviside);
         /*
          * evaluate line integral
@@ -178,7 +184,7 @@ namespace MeltPoolDG::Evaporation
          * too sensitive with respect to the inherent distance parameter.
          */
         VectorType vector_multiplicity;
-        vector_multiplicity.reinit(temperature);
+        vector_multiplicity.reinit(evaporative_mass_flux);
 
         const auto broadcast_function = [&](const auto &values, const auto &cell_data) {
           // loop over all cells where points along normal are interior
@@ -188,7 +194,7 @@ namespace MeltPoolDG::Evaporation
                 &remote_point_evaluation.get_triangulation(),
                 cell_data.cells[i].first,
                 cell_data.cells[i].second,
-                &scratch_data.get_dof_handler(ls_dof_idx)};
+                &scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx)};
 
               // values at the points along normal in reference coordinates
               const ArrayView<const double> temp_vals(values.data() +
@@ -213,13 +219,15 @@ namespace MeltPoolDG::Evaporation
               for (auto &n : nodal_values)
                 n = average;
 
-              cell->set_dof_values(nodal_values, evaporative_mass_flux);
+              scratch_data.get_constraint(ls_hanging_nodes_dof_idx)
+                .distribute_local_to_global(nodal_values, local_dof_indices, evaporative_mass_flux);
 
               // count the number of written values (multiplicity)
               for (auto &val : nodal_values)
                 val = 1.0;
 
-              cell->set_dof_values(nodal_values, vector_multiplicity);
+              scratch_data.get_constraint(ls_hanging_nodes_dof_idx)
+                .distribute_local_to_global(nodal_values, local_dof_indices, vector_multiplicity);
             }
         };
 
@@ -229,6 +237,19 @@ namespace MeltPoolDG::Evaporation
         remote_point_evaluation.template process_and_evaluate<double>(mass_flux_val,
                                                                       buffer,
                                                                       broadcast_function);
+
+        // take care dofs shared by multiple geometric entities
+        evaporative_mass_flux.compress(VectorOperation::add);
+        vector_multiplicity.compress(VectorOperation::add);
+
+        for (unsigned int i = 0; i < vector_multiplicity.locally_owned_size(); ++i)
+          if (vector_multiplicity.local_element(i) > 1.0)
+            evaporative_mass_flux.local_element(i) /= vector_multiplicity.local_element(i);
+
+        evaporative_mass_flux.update_ghost_values();
+        scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(evaporative_mass_flux);
+        temperature.zero_out_ghost_values();
+        level_set_as_heaviside.zero_out_ghost_values();
       }
   }
 
