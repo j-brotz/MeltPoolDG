@@ -56,6 +56,13 @@
     "laser gauss laser beam radius": "0.06e-3",
     "laser gauss absorptivity": "0.5"
   },
+  "simulation specific parameters": {
+    "domain x min": "0.0",
+    "domain x max": "0.6e-3",
+    "domain z min": "-0.2e-3",
+    "domain z max": "0.2e-3",
+    "initial temperature": "1000.0"
+  },
   "melt pool": {
     "mp do melt pool": "true",
     "mp do heat transfer": "true",
