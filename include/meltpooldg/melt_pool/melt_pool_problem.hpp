@@ -107,6 +107,7 @@ namespace MeltPoolDG::Flow
     AffineConstraints<double> ls_hanging_node_constraints;
     AffineConstraints<double> reinit_constraints_dirichlet;
     AffineConstraints<double> temp_constraints_dirichlet;
+    AffineConstraints<double> flow_velocity_constraints_no_solid;
 
     VectorType vel_force_rhs;
     VectorType mass_balance_rhs;
@@ -126,6 +127,7 @@ namespace MeltPoolDG::Flow
 
     unsigned int vel_dof_idx;
     unsigned int pressure_dof_idx;
+    unsigned int flow_vel_no_solid_dof_idx;
 
     std::shared_ptr<ScratchData<dim>>                       scratch_data;
     std::shared_ptr<FlowBase<dim>>                          flow_operation;

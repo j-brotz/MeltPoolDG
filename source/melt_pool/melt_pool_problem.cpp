@@ -25,7 +25,9 @@ namespace MeltPoolDG::Flow
         //
         // @todo: alternative (better performing) solution?
         if (base_in->parameters.mp.set_velocity_to_zero_in_solid)
-          scratch_data->build();
+          {
+            scratch_data->build();
+          }
 
         const auto dt = time_iterator.get_next_time_increment();
         const auto n  = time_iterator.get_current_time_step_number();
@@ -246,6 +248,9 @@ namespace MeltPoolDG::Flow
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     flow_operation = std::make_shared<AdafloWrapper<dim>>(*scratch_data, base_in);
+    flow_vel_no_solid_dof_idx =
+      scratch_data->attach_constraint_matrix(flow_velocity_constraints_no_solid);
+    scratch_data->attach_dof_handler(flow_operation->get_dof_handler_velocity());
 #else
     AssertThrow(false, ExcNotImplemented());
 #endif
@@ -332,6 +337,7 @@ namespace MeltPoolDG::Flow
         &heat_operation->get_temperature(),
         reinit_dof_idx,
         flow_operation->get_dof_handler_idx_velocity(),
+        flow_vel_no_solid_dof_idx,
         flow_operation->get_quad_idx_velocity(),
         temp_dof_idx,
         base_in->parameters.time_stepping.start_time);
@@ -448,6 +454,7 @@ namespace MeltPoolDG::Flow
        */
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_1();
+    flow_velocity_constraints_no_solid.copy_from(flow_operation->get_constraints_velocity());
 #else
     AssertThrow(false, ExcNotImplemented());
 #endif

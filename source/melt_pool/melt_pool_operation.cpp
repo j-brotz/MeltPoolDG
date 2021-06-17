@@ -15,6 +15,7 @@ namespace MeltPoolDG::MeltPool
     VectorType *                             temperature,
     const unsigned int                       reinit_dof_idx_in,
     const unsigned int                       flow_vel_dof_idx_in,
+    const unsigned int                       flow_vel_no_solid_dof_idx_in,
     const unsigned int                       flow_vel_quad_idx_in,
     const unsigned int                       temp_dof_idx_in,
     const double                             start_time_in)
@@ -24,6 +25,7 @@ namespace MeltPoolDG::MeltPool
     , ls_dof_idx(ls_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
+    , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , temp_dof_idx(temp_dof_idx_in)
     , temperature(temperature)
@@ -109,6 +111,9 @@ namespace MeltPoolDG::MeltPool
      *  Constraint the solid domain if requested
      */
     make_constraints_in_spatially_fixed_solid_domain();
+    /*
+     * distribute the constraints for the level set in the solid region
+     */
     scratch_data->get_constraint(ls_dof_idx).distribute(level_set);
   }
 
@@ -174,8 +179,14 @@ namespace MeltPoolDG::MeltPool
         // 1) update phases
         compute_solid_and_liquid_phases(level_set_as_heaviside);
 
+
         // 2) update the constraints such that the solid domain is spatially fixed
         make_constraints_in_spatially_fixed_solid_domain();
+        /*
+         * distribute the constraints for the level set in the solid region
+         */
+        //@todo:
+        // scratch_data->get_constraint(ls_dof_idx).distribute(level_set);
       }
   }
 
@@ -269,6 +280,8 @@ namespace MeltPoolDG::MeltPool
 
     if (mp_data.set_velocity_to_zero_in_solid)
       set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
+                                              scratch_data->get_constraint(
+                                                flow_vel_no_solid_dof_idx),
                                               scratch_data->get_constraint(flow_vel_dof_idx));
   }
 
@@ -316,10 +329,13 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   MeltPoolOperation<dim>::set_flow_field_in_solid_regions_to_zero(
-    const DoFHandler<dim> &    flow_dof_handler,
-    AffineConstraints<double> &flow_constraints)
+    const DoFHandler<dim> &          flow_dof_handler,
+    const AffineConstraints<double> &flow_constraints_no_solid,
+    AffineConstraints<double> &      flow_constraints)
   {
     solid.update_ghost_values();
+
+    flow_constraints.copy_from(flow_constraints_no_solid);
 
     IndexSet flow_locally_relevant_dofs;
     DoFTools::extract_locally_relevant_dofs(flow_dof_handler, flow_locally_relevant_dofs);
@@ -420,6 +436,8 @@ namespace MeltPoolDG::MeltPool
     level_set_constraints.close();
 
     UtilityFunctions::check_constraints(level_set_dof_handler, level_set_constraints);
+
+
 
     solid.zero_out_ghost_values();
   }
