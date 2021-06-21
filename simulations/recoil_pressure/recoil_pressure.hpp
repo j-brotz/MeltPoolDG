@@ -22,6 +22,8 @@ namespace MeltPoolDG
   {
     namespace RecoilPressure
     {
+      const double T_initial = 500.;
+
       using namespace dealii;
 
       template <int dim>
@@ -190,15 +192,46 @@ namespace MeltPoolDG
 
               this->attach_dirichlet_boundary_condition(
                 upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
+              /*
+               * BC for heat transfer
+               */
+              if (this->parameters.laser.heat_source_model != "Analytical")
+                {
+                  this->attach_dirichlet_boundary_condition(
+                    lower_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                  this->attach_dirichlet_boundary_condition(
+                    upper_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                  this->attach_dirichlet_boundary_condition(
+                    left_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                  this->attach_dirichlet_boundary_condition(
+                    right_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                }
             }
           else if (this->parameters.base.problem_name == "melt_pool")
             {
               this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
               this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
+              /*
+               * BC for heat transfer
+               */
+              if (this->parameters.laser.heat_source_model != "Analytical")
+                {
+                  this->attach_dirichlet_boundary_condition(
+                    0,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                }
             }
           else
             AssertThrow(false, ExcNotImplemented());
-          // old bc
         }
 
         void
@@ -213,6 +246,9 @@ namespace MeltPoolDG
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
+          if (this->parameters.laser.heat_source_model != "Analytical")
+            this->attach_initial_condition(
+              std::make_shared<Functions::ConstantFunction<dim>>(T_initial), "heat_transfer");
         }
       };
 

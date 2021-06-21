@@ -51,6 +51,7 @@ namespace MeltPoolDG
       const unsigned int ls_dof_idx;
       const unsigned int reinit_dof_idx;
       const unsigned int flow_vel_dof_idx;
+      const unsigned int flow_vel_no_solid_dof_idx;
       const unsigned int flow_vel_quad_idx;
       const unsigned int temp_dof_idx;
       VectorType *       temperature;
@@ -68,6 +69,7 @@ namespace MeltPoolDG
                         VectorType *                             temperature,
                         const unsigned int                       reinit_dof_idx_in,
                         const unsigned int                       flow_vel_dof_idx_in,
+                        const unsigned int                       flow_vel_no_solid_dof_idx_in,
                         const unsigned int                       flow_vel_quad_idx_in,
                         const unsigned int                       temp_dof_idx_in,
                         const double                             start_time_in);
@@ -126,8 +128,10 @@ namespace MeltPoolDG
        *  regions.
        */
       void
-      set_flow_field_in_solid_regions_to_zero(const DoFHandler<dim> &    flow_dof_handler,
-                                              AffineConstraints<double> &flow_constraints);
+      set_flow_field_in_solid_regions_to_zero(
+        const DoFHandler<dim> &          flow_dof_handler,
+        const AffineConstraints<double> &flow_constraints_no_solid,
+        AffineConstraints<double> &      flow_constraints);
 
       /**
        *  The level set constraints are modified such that they are zero in solid
