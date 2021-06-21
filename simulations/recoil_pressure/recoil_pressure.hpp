@@ -159,17 +159,12 @@ namespace MeltPoolDG
         void
         set_boundary_conditions() override
         {
-          types::boundary_id lower_bc = 0;
-          types::boundary_id upper_bc = 0;
-          types::boundary_id left_bc  = 0;
-          types::boundary_id right_bc = 0;
-
           if (this->parameters.mp.do_evaporation)
             {
-              lower_bc = 1;
-              upper_bc = 2;
-              left_bc  = 3;
-              right_bc = 4;
+              const types::boundary_id lower_bc = 1;
+              const types::boundary_id upper_bc = 2;
+              const types::boundary_id left_bc  = 3;
+              const types::boundary_id right_bc = 4;
 
               if constexpr (dim == 2)
                 {
@@ -197,37 +192,46 @@ namespace MeltPoolDG
 
               this->attach_dirichlet_boundary_condition(
                 upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
+              /*
+               * BC for heat transfer
+               */
+              if (this->parameters.laser.heat_source_model != "Analytical")
+                {
+                  this->attach_dirichlet_boundary_condition(
+                    lower_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                  this->attach_dirichlet_boundary_condition(
+                    upper_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                  this->attach_dirichlet_boundary_condition(
+                    left_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                  this->attach_dirichlet_boundary_condition(
+                    right_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                }
             }
           else if (this->parameters.base.problem_name == "melt_pool")
             {
               this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
               this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
+              /*
+               * BC for heat transfer
+               */
+              if (this->parameters.laser.heat_source_model != "Analytical")
+                {
+                  this->attach_dirichlet_boundary_condition(
+                    0,
+                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                    "heat_transfer");
+                }
             }
           else
             AssertThrow(false, ExcNotImplemented());
-
-          /*
-           * BC for heat transfer
-           */
-          if (this->parameters.laser.heat_source_model != "Analytical")
-            {
-              this->attach_dirichlet_boundary_condition(
-                lower_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                "heat_transfer");
-              this->attach_dirichlet_boundary_condition(
-                upper_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                "heat_transfer");
-              this->attach_dirichlet_boundary_condition(
-                left_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                "heat_transfer");
-              this->attach_dirichlet_boundary_condition(
-                right_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                "heat_transfer");
-            }
         }
 
         void
