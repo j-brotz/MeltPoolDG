@@ -5,79 +5,62 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  schedule:
+  - cron:  '0 0 * * *'
+    
+env:
+  COMPILE_JOBS: 2
 
 jobs:
   build:
-
+    name: Build ${{ matrix.build_type }}-dealii:${{ matrix.dealii_version }}-${{ matrix.adaflo }}
     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: setup
-      run: |
-         command="git clone https://github.com/${{ github.repository }} && \ 
-                  cd MeltPoolDG                                         && \
-                  git fetch origin ${{ github.ref }}                    && \ 
-                  git checkout FETCH_HEAD                               && \
-                  mkdir build                                           && \ 
-                  cd build                                              && \ 
-                  cmake -DCMAKE_CXX_FLAGS="-Werror" ..                  && \ 
-                  make -j2                                              && \
-                  ctest -V -j2";
-
-         echo $command
-         docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
-
-  build-adaflo:
-
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: ["Release", "Debug"]
+        dealii_version: ["master"]
+        adaflo: ["adaflo=on", "adaflo=off"]
+        exclude:
+          - build_type: "Release"
+            adaflo: "adaflo=off"
+    
+    container:
+      image: dealii/dealii:${{ matrix.dealii_version }}-focal
 
     steps:
-    - uses: actions/checkout@v2
-    - name: setup
-      run: |
-         command="git clone https://github.com/kronbichler/adaflo.git    && \
-          mkdir adaflo-build                                    && \
-          cd adaflo-build                                       && \
-          cmake -D BUILD_SHARED_LIBS=ON ../adaflo               && \
-          make -j2 adaflo                                       && \
-          git clone https://github.com/${{ github.repository }} && \
-          cd MeltPoolDG                                         && \
-          git fetch origin ${{ github.ref }}                    && \
-          git checkout FETCH_HEAD                               && \
-          cd ..                                                 && \
-          mkdir MeltPoolDG-build                                && \ 
-          cd MeltPoolDG-build                                   && \
-          cmake -DCMAKE_CXX_FLAGS="-Werror" ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && \
-          make -j2                                              && \
-          ctest -V -R 'unit_tests/|tests/' ";
+      - name: Setup
+        run: |
+          sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+          
+      - uses: actions/checkout@v2
 
-         echo $command
-         docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
+      - name: Compile adaflo
+        if: matrix.adaflo == 'adaflo=on'
+        run: |
+          git clone https://github.com/kronbichler/adaflo.git
+          mkdir adaflo-build
+          cd adaflo-build
+          cmake \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            ../adaflo
+          make -j${{ env.COMPILE_JOBS }} adaflo
 
-  build-adaflo-release:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: setup
-      run: |
-         command="git clone https://github.com/kronbichler/adaflo.git    && \
-          mkdir adaflo-build                                    && \
-          cd adaflo-build                                       && \
-          cmake -D BUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ../adaflo               && \
-          make -j2 adaflo                                       && \
-          git clone https://github.com/${{ github.repository }} && \
-          cd MeltPoolDG                                         && \
-          git fetch origin ${{ github.ref }}                    && \
-          git checkout FETCH_HEAD                               && \
-          cd ..                                                 && \
-          mkdir MeltPoolDG-build                                && \ 
-          cd MeltPoolDG-build                                   && \
-          cmake -DCMAKE_CXX_FLAGS="-Werror" -DCMAKE_BUILD_TYPE=Release ../MeltPoolDG -D ADAFLO_LIB=/home/dealii/adaflo-build/ -D ADAFLO_INCLUDE=/home/dealii/adaflo/include/ && \
-          make -j2                                              && \
-          ctest -V -R 'unit_tests/|tests/' ";
-
-         echo $command
-         docker run -t dealii/dealii:master-focal /bin/sh -c "$command";
+      - name: Compile MeltPoolDG
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -D CMAKE_CXX_FLAGS="-Werror" \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D ADAFLO_LIB=/__w/MeltPoolDG/MeltPoolDG/adaflo-build/ \
+            -D ADAFLO_INCLUDE=/__w/MeltPoolDG/MeltPoolDG/adaflo/include/ \
+            .. 
+          make -j${{ env.COMPILE_JOBS }}
+          
+      - name: Test
+        run: |
+          cd build
+          ctest -V -R 'unit_tests/|tests/'
