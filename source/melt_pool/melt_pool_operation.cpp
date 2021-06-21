@@ -437,8 +437,6 @@ namespace MeltPoolDG::MeltPool
 
     UtilityFunctions::check_constraints(level_set_dof_handler, level_set_constraints);
 
-
-
     solid.zero_out_ghost_values();
   }
 
