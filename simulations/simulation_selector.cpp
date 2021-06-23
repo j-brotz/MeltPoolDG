@@ -11,6 +11,7 @@
 #include "film_boiling/film_boiling.hpp"
 #include "flow_past_cylinder/flow_past_cylinder.hpp"
 #include "melt_front_propagation/melt_front_propagation.hpp"
+#include "oscillating_droplet/oscillating_droplet.hpp"
 #include "recoil_pressure/recoil_pressure.hpp"
 #include "reinit_circle/reinit_circle.hpp"
 #include "rising_bubble/rising_bubble.hpp"
@@ -108,6 +109,9 @@ namespace MeltPoolDG::Simulation
                                                                        mpi_communicator);
     else if (simulation_name == "melt_front_propagation")
       return std::make_shared<MeltFrontPropagation::SimulationMeltFrontPropagation<dim>>(
+        parameter_file, mpi_communicator);
+    else if (simulation_name == "oscillating_droplet")
+      return std::make_shared<OscillatingDroplet::SimulationOscillatingDroplet<dim>>(
         parameter_file, mpi_communicator);
 
     /* add your simulation here*/
