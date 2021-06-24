@@ -8,7 +8,7 @@
     "gravity": "0.00"
   },
   "simulation specific parameters": {
-    "droplet shape": "circle"
+    "droplet shape": "ellipse"
   },
   "flow": {
     "flow surface tension coefficient": "1.0"
@@ -28,22 +28,28 @@
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls do matrix free": "true",
+    "ls implementation": "adaflo"
+  },
+  "advection diffusion": {
+    "advec diff implementation": "adaflo"
   },
   "reinitialization": {
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit eps scale factor": "0.5"
+    "reinit eps scale factor": "0.5",
+    "reinit implementation": "adaflo"
   },
   "normal vector": {
     "normal vec damping scale factor": "0.05",
-    "normal vec do matrix free": "true"
+    "normal vec do matrix free": "true",
+    "normal vec implementation": "adaflo"
   },
   "curvature": {
     "curv damping scale factor": "0.5",
     "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "adaflo"
   },
   "Navier-Stokes": {
     "adaflo": {
