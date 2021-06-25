@@ -90,8 +90,8 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
       {
         prm.add_parameter("droplet shape",
                           droplet_shape,
-                          "Shape of the droplet: circle or ellipse");
-        //, Patterns::Selection("circle|ellipse")
+                          "Shape of the droplet: circle or ellipse",
+                          Patterns::Selection("circle|ellipse"));
       }
       prm.leave_subsection();
     }
@@ -154,6 +154,6 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
     }
 
   private:
-    std::string droplet_shape;
+    std::string droplet_shape = "circle";
   };
 } // namespace MeltPoolDG::Simulation::SpuriousCurrents
