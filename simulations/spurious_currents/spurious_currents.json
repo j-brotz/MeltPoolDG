@@ -28,20 +28,26 @@
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls do matrix free": "true",
+    "ls implementation": "meltpooldg"
+  },
+  "advection diffusion": {
+    "advec diff implementation": "meltpooldg"
   },
   "reinitialization": {
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit eps scale factor": "0.5"
+    "reinit eps scale factor": "0.5",
+    "reinit implementation": "meltpooldg"
   },
   "normal vector": {
-    "normal vec damping scale factor": "0.05",
-    "normal vec do matrix free": "true"
+    "normal vec damping scale factor": "4",
+    "normal vec do matrix free": "true",
+    "normal vec implementation": "meltpooldg"
   },
   "curvature": {
-    "curv damping scale factor": "0.5",
+    "curv damping scale factor": "1.22",
     "curv do matrix free": "true",
     "curv implementation": "meltpooldg"
   },
@@ -75,7 +81,7 @@
   },
   "paraview": {
     "paraview do output": "true",
-    "paraview directory": "output",
+    "paraview directory": "output_circle",
     "paraview filename": "sol_spurious_currents"
   }
 }
