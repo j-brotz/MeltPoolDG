@@ -8,7 +8,7 @@
     "gravity": "0.00"
   },
   "simulation specific parameters": {
-    "droplet shape": "circle"
+    "droplet shape": "ellipse"
   },
   "flow": {
     "flow surface tension coefficient": "1.0"
@@ -47,7 +47,7 @@
     "normal vec implementation": "meltpooldg"
   },
   "curvature": {
-    "curv damping scale factor": "1.22",
+    "curv damping scale factor": "1.5",
     "curv do matrix free": "true",
     "curv implementation": "meltpooldg"
   },
@@ -81,7 +81,7 @@
   },
   "paraview": {
     "paraview do output": "true",
-    "paraview directory": "output_circle",
+    "paraview directory": "output_ellipse",
     "paraview filename": "sol_spurious_currents"
   }
 }
