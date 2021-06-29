@@ -3,7 +3,7 @@ name: GitHub CI
 on:
   pull_request:
     branches: [ master ]
-    types: [ labeled ]
+    types: [ opened, synchronize, reopened, labeled ]
   schedule:
   - cron:  '0 0 * * *'
     
@@ -12,7 +12,7 @@ env:
 
 jobs:
   build:
-    if: ${{ github.event.label.name == 'ready to test' }}
+    if: ${{ github.event_name == 'schedule' || contains(github.event.pull_request.labels.*.name, 'ready to test') }}
     name: Build ${{ matrix.build_type }}-dealii:${{ matrix.dealii_version }}-${{ matrix.adaflo }}
     runs-on: ubuntu-latest
 
@@ -33,6 +33,7 @@ jobs:
       - name: Setup
         run: |
           sudo chown -R $USER:$USER $GITHUB_WORKSPACE
+          echo "${{ toJson(github.event.pull_request.labels.*.name) }}"
           
       - uses: actions/checkout@v2
 
