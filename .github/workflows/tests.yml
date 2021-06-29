@@ -8,7 +8,8 @@ on:
   - cron:  '0 0 * * *'
     
 env:
-  COMPILE_JOBS: 2
+  COMPILE_JOBS: 4
+  PROJECT_NAME: MeltPoolDG-dev
 
 jobs:
   build:
@@ -56,8 +57,8 @@ jobs:
           cmake \
             -D CMAKE_CXX_FLAGS="-Werror" \
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -D ADAFLO_LIB=/__w/MeltPoolDG/MeltPoolDG/adaflo-build/ \
-            -D ADAFLO_INCLUDE=/__w/MeltPoolDG/MeltPoolDG/adaflo/include/ \
+            -D ADAFLO_LIB=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo-build/ \
+            -D ADAFLO_INCLUDE=/__w/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/adaflo/include/ \
             .. 
           make -j${{ env.COMPILE_JOBS }}
           
