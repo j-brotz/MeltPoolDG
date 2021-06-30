@@ -40,7 +40,7 @@ namespace MeltPoolDG
     const ParaviewData<double> &pv_data;
     const Mapping<dim> &        mapping;
     const Triangulation<dim> &  triangulation;
-    ConditionalOStream          pcout;
+    const ConditionalOStream    pcout;
     bool                        do_simplex;
 
     std::vector<std::pair<double, std::string>> times_and_names;
@@ -49,7 +49,8 @@ namespace MeltPoolDG
     Postprocessor(const MPI_Comm              mpi_communicator_in,
                   const ParaviewData<double> &pv_data_in,
                   const Mapping<dim> &        mapping_in,
-                  const Triangulation<dim> &  triangulation_in);
+                  const Triangulation<dim> &  triangulation_in,
+                  const ConditionalOStream &  pcout_in);
 
     /*
      *  This function collects and performs all relevant postprocessing steps.

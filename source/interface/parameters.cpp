@@ -31,6 +31,13 @@ namespace MeltPoolDG
       amr.min_grid_refinement_level = base.global_refinements;
 
     /*
+     * calculate the paraview write frequency if a time step for producing the output
+     * is specified
+     */
+    if (paraview.write_time_step_size > 0.0)
+      paraview.write_frequency = paraview.write_time_step_size / time_stepping.time_step_size;
+
+    /*
      *  set the number of initial reinitialization steps equal to the number of reinit steps
      *  if no value is provided
      */
@@ -833,6 +840,10 @@ namespace MeltPoolDG
       prm.add_parameter("paraview write frequency",
                         paraview.write_frequency,
                         "every n timestep that should be written");
+      prm.add_parameter("paraview write time step size",
+                        paraview.write_time_step_size,
+                        "Write paraview output every given time step. If this parameter is "
+                        "set, the paraview write frequency is overwritten.");
       prm.add_parameter("paraview do initial state",
                         paraview.do_initial_state,
                         "boolean for writing the initial state into the paraview output file");

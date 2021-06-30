@@ -365,7 +365,8 @@ namespace MeltPoolDG::Flow
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(vel_dof_idx),
                                            base_in->parameters.paraview,
                                            scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(vel_dof_idx));
+                                           scratch_data->get_triangulation(vel_dof_idx),
+                                           scratch_data->get_pcout(1));
     /*
      *  output results of initialization --> initial refinement is done afterwards (!)
      *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output

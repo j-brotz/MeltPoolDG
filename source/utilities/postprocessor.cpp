@@ -1,3 +1,4 @@
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
 
 namespace MeltPoolDG
@@ -6,12 +7,13 @@ namespace MeltPoolDG
   Postprocessor<dim>::Postprocessor(const MPI_Comm              mpi_communicator_in,
                                     const ParaviewData<double> &pv_data_in,
                                     const Mapping<dim> &        mapping_in,
-                                    const Triangulation<dim> &  triangulation_in)
+                                    const Triangulation<dim> &  triangulation_in,
+                                    const ConditionalOStream &  pcout_in)
     : mpi_communicator(mpi_communicator_in)
     , pv_data(pv_data_in)
     , mapping(mapping_in)
     , triangulation(triangulation_in)
-    , pcout(std::cout, (Utilities::MPI::this_mpi_process(mpi_communicator) == 0))
+    , pcout(pcout_in)
     , do_simplex(!triangulation.all_reference_cells_are_hyper_cube())
   {
     // check if the requested paraview directory exists and if not create the directory
@@ -43,6 +45,8 @@ namespace MeltPoolDG
     if ((pv_data.do_output) && !(n_time_step % pv_data.write_frequency))
       {
         attach_output_vectors(data_out);
+
+        Journal::print_line(pcout, "write paraview files", "postprocessor");
 
         write_paraview_files(n_time_step, time, data_out);
 
