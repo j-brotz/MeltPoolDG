@@ -241,7 +241,8 @@ namespace MeltPoolDG::AdvectionDiffusion
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(advec_diff_dof_idx),
                                            base_in->parameters.paraview,
                                            scratch_data->get_mapping(),
-                                           scratch_data->get_triangulation(advec_diff_dof_idx));
+                                           scratch_data->get_triangulation(advec_diff_dof_idx),
+                                           scratch_data->get_pcout(1));
   }
 
   template <int dim>
