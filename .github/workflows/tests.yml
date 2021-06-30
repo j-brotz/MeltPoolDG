@@ -34,7 +34,6 @@ jobs:
       - name: Setup
         run: |
           sudo chown -R $USER:$USER $GITHUB_WORKSPACE
-          echo "${{ toJson(github.event.pull_request.labels.*.name) }}"
           
       - uses: actions/checkout@v2
 
