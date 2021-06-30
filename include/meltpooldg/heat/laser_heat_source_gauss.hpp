@@ -90,7 +90,7 @@ namespace MeltPoolDG::Heat
 
     const LaserData<double>::GaussData data;
 
-    bool variable_properties_over_interface = true;
+    const bool variable_properties_over_interface;
 
     /*
      * Factor between peak power density and total laser power in volumetric case:
