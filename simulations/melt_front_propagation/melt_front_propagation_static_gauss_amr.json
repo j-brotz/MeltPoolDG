@@ -33,7 +33,8 @@
     "laser do move": "false",
     "laser heat source model": "Gauss",
     "laser gauss laser beam radius": "0.06e-3",
-    "laser gauss absorptivity": "0.5"
+    "laser gauss absorptivity gas": "0.5",
+    "laser gauss absorptivity liquid": "0.5"
   },
   "material": {
     "material second conductivity": "55.563",

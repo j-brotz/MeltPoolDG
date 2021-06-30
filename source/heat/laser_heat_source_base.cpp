@@ -11,7 +11,7 @@ namespace MeltPoolDG::Heat
                                                            const unsigned int      temp_dof_idx,
                                                            const double            laser_power,
                                                            const Point<dim> &      laser_position,
-                                                           bool                    zero_out) const
+                                                           const bool              zero_out) const
   {
     if (zero_out)
       scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);

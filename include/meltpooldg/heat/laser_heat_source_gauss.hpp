@@ -39,25 +39,8 @@ namespace MeltPoolDG::Heat
   class LaserHeatSourceGauss : public LaserHeatSourceBase<dim>
   {
   public:
-    LaserHeatSourceGauss(const LaserData<double>::GaussData &data_in);
-
-    /**
-     * volumetric heat source
-     */
-    double
-    local_compute_volumetric_heat_source(const Point<dim> &position,
-                                         const Point<dim> &laser_position,
-                                         double            power) const final;
-
-    /**
-     * interface heat source
-     */
-    double
-    local_compute_interfacial_heat_source(const Point<dim> &            position,
-                                          const Point<dim> &            laser_position,
-                                          double                        power,
-                                          const Tensor<1, dim, double> &normal_vector,
-                                          double                        delta_value) const final;
+    LaserHeatSourceGauss(const LaserData<double>::GaussData &data_in,
+                         const bool variable_properties_over_interface = true);
 
     /**
      * Compute a DoF vector of the heat source for interface laser.
@@ -65,29 +48,49 @@ namespace MeltPoolDG::Heat
     void
     compute_interfacial_heat_source(VectorType &            heat_source_vector,
                                     const ScratchData<dim> &scratch_data,
-                                    unsigned int            temp_dof_idx,
-                                    double                  laser_power,
+                                    const unsigned int      temp_dof_idx,
+                                    const double            laser_power,
                                     const Point<dim> &      laser_position,
                                     const VectorType &      level_set_heaviside,
-                                    unsigned int            ls_dof_idx,
-                                    bool                    zero_out = true) const;
+                                    const unsigned int      ls_dof_idx,
+                                    const bool              zero_out = true) const final;
+
+    /**
+     * volumetric heat source
+     */
+    double
+    local_compute_volumetric_heat_source(const Point<dim> &position,
+                                         const Point<dim> &laser_position,
+                                         const double      power) const final;
 
   private:
+    /**
+     * interface heat source
+     */
+    double
+    local_compute_interfacial_heat_source(const Point<dim> &            position,
+                                          const Point<dim> &            laser_position,
+                                          const double                  power,
+                                          const Tensor<1, dim, double> &normal_vector,
+                                          const double                  delta_value,
+                                          const double                  heaviside) const;
     /*
      * Laser power density in volumetric case.
      * returns: power * exp( -2 radius^2 / laser_radius^2 ) / ( laser_radius * sqrt(pi/2) )^3
      */
     double
-    power_density_volumetric(double radius, double power) const;
+    power_density_volumetric(const double radius, const double power) const;
 
     /*
      * Laser power density in interface case.
      * returns: power * exp( -2 radius^2 / laser_radius^2 ) / ( laser_radius^2 * pi/2 )
      */
     double
-    power_density_interfacial(double radius, double power) const;
+    power_density_interfacial(const double radius, const double power) const;
 
     const LaserData<double>::GaussData data;
+
+    bool variable_properties_over_interface = true;
 
     /*
      * Factor between peak power density and total laser power in volumetric case:

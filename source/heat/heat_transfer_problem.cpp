@@ -201,8 +201,9 @@ namespace MeltPoolDG::Heat
           }
         else if (base_in->parameters.laser.heat_source_model == "Gauss")
           {
-            laser_heat_source_operation =
-              std::make_shared<Heat::LaserHeatSourceGauss<dim>>(base_in->parameters.laser.gauss);
+            laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
+              base_in->parameters.laser.gauss,
+              base_in->parameters.heat.variable_properties_over_interface);
           }
         else
           AssertThrow(false,
