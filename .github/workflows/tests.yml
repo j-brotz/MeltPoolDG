@@ -8,7 +8,7 @@ on:
   - cron:  '0 0 * * *'
     
 env:
-  COMPILE_JOBS: 4
+  COMPILE_JOBS: 2
   PROJECT_NAME: MeltPoolDG-dev
 
 jobs:
@@ -20,9 +20,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: ["Release"]
+        build_type: ["Release", "Debug"]
         dealii_version: ["master"]
-        adaflo: ["adaflo=on"]
+        adaflo: ["adaflo=on", "adaflo=off"]
         exclude:
           - build_type: "Release"
             adaflo: "adaflo=off"
