@@ -46,7 +46,8 @@
     "laser heat source model": "Gauss",
     "laser impact type": "interface",
     "laser gauss laser beam radius": "30.e-6",
-    "laser gauss absorptivity": "0.5"
+    "laser gauss absorptivity gas": "0.5",
+    "laser gauss absorptivity liquid": "0.5"
   },
   "melt pool": {
     "mp do melt pool": "true",

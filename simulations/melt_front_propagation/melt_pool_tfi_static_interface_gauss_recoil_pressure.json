@@ -54,7 +54,8 @@
     "laser heat source model": "Gauss",
     "laser impact type": "interface",
     "laser gauss laser beam radius": "0.06e-3",
-    "laser gauss absorptivity": "0.5"
+    "laser gauss absorptivity gas": "0.5",
+    "laser gauss absorptivity liquid": "0.5"
   },
   "simulation specific parameters": {
     "domain x min": "0.0",

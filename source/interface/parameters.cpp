@@ -35,7 +35,15 @@ namespace MeltPoolDG
      * is specified
      */
     if (paraview.write_time_step_size > 0.0)
-      paraview.write_frequency = paraview.write_time_step_size / time_stepping.time_step_size;
+      {
+        AssertThrow(
+          paraview.write_time_step_size >= time_stepping.time_step_size,
+          ExcMessage(
+            "The "
+            "time step size for writing paraview files must be equal or larger than the simulation "
+            "time step size."));
+        paraview.write_frequency = paraview.write_time_step_size / time_stepping.time_step_size;
+      }
 
     /*
      *  set the number of initial reinitialization steps equal to the number of reinit steps
@@ -622,9 +630,12 @@ namespace MeltPoolDG
       prm.add_parameter("laser gauss laser beam radius",
                         laser.gauss.laser_beam_radius,
                         "Laser beam radius.");
-      prm.add_parameter("laser gauss absorptivity",
-                        laser.gauss.absorptivity,
-                        "Laser energy absorptivity.");
+      prm.add_parameter("laser gauss absorptivity gas",
+                        laser.gauss.absorptivity_gas,
+                        "Laser energy absorptivity of the gaseous part of the domain.");
+      prm.add_parameter("laser gauss absorptivity liquid",
+                        laser.gauss.absorptivity_liquid,
+                        "Laser energy absorptivity of the liquid part of the domain.");
       /*
        *   Analytical temperature field
        */
@@ -847,22 +858,6 @@ namespace MeltPoolDG
       prm.add_parameter("paraview do initial state",
                         paraview.do_initial_state,
                         "boolean for writing the initial state into the paraview output file");
-      prm.add_parameter("paraview print levelset",
-                        paraview.print_levelset,
-                        "boolean for writing the levelset variable into the paraview output file");
-      prm.add_parameter(
-        "paraview print normal vector",
-        paraview.print_normal_vector,
-        "boolean for writing the computed normalvector into the paraview output file");
-      prm.add_parameter("paraview print curvature",
-                        paraview.print_curvature,
-                        "boolean for writing the computed curvature into the paraview output file");
-      prm.add_parameter("paraview print advection",
-                        paraview.print_advection,
-                        "boolean for writing the computed advection into the paraview output file");
-      prm.add_parameter("paraview print exactsolution",
-                        paraview.print_exactsolution,
-                        "boolean for writing the exact solution into the paraview output file");
       prm.add_parameter("paraview print boundary id",
                         paraview.print_boundary_id,
                         "boolean for printing a vtk-file with the boundary id");

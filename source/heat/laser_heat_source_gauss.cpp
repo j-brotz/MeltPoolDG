@@ -4,8 +4,10 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim>
-  LaserHeatSourceGauss<dim>::LaserHeatSourceGauss(const LaserData<double>::GaussData &data_in)
+  LaserHeatSourceGauss<dim>::LaserHeatSourceGauss(const LaserData<double>::GaussData &data_in,
+                                                  const bool variable_properties_over_interface)
     : data(data_in)
+    , variable_properties_over_interface(variable_properties_over_interface)
     , vol_peak_power_density_factor(
         1. / std::pow(data.laser_beam_radius * std::sqrt(numbers::PI / 2), 3))
     , surf_peak_power_density_factor(
@@ -22,7 +24,7 @@ namespace MeltPoolDG::Heat
                                                                   const double      power) const
   {
     const double distance = position.distance(laser_position);
-    return data.absorptivity * power_density_volumetric(distance, power);
+    return data.absorptivity_liquid * power_density_volumetric(distance, power);
   }
 
   template <int dim>
@@ -30,9 +32,10 @@ namespace MeltPoolDG::Heat
   LaserHeatSourceGauss<dim>::local_compute_interfacial_heat_source(
     const Point<dim> &            position,
     const Point<dim> &            laser_position,
-    double                        power,
+    const double                  power,
     const Tensor<1, dim, double> &normal_vector,
-    double                        delta_value) const
+    const double                  delta_value,
+    const double                  heaviside) const
   {
     // only consider distance in x (2D) or x and y (3D) direction. Disregard distance in dim-1
     // direction.
@@ -47,7 +50,13 @@ namespace MeltPoolDG::Heat
     if (projection_factor < 0.0)
       projection_factor = 0.0;
 
-    return data.absorptivity * projection_factor * delta_value *
+    const double weight =
+      (variable_properties_over_interface) ? heaviside : ((heaviside > 0.5) ? 1.0 : 0.0);
+
+    const double absorptivity =
+      UtilityFunctions::interpolate(weight, data.absorptivity_gas, data.absorptivity_liquid);
+
+    return absorptivity * projection_factor * delta_value *
            power_density_interfacial(distance, power);
   }
 
@@ -78,11 +87,16 @@ namespace MeltPoolDG::Heat
       scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
       Quadrature<dim>(
         scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
-      update_gradients);
+      update_values | update_gradients);
 
     const unsigned int dofs_per_cell =
       scratch_data.get_dof_handler(temp_dof_idx).get_fe().n_dofs_per_cell();
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+    std::vector<double> ls_heaviside_at_q(ls_heaviside_eval.n_quadrature_points);
+    std::vector<dealii::Tensor<1, dim, double>> grad_ls_heaviside_at_q(
+      ls_heaviside_eval.n_quadrature_points);
+
     // TODO: find a better way to interpolate the (level-set dependent) laser heat source onto the
     // heat source dof vector. Problem: if ls-degree=1, its gradient may be discontinuous!
     for (const auto &cell : scratch_data.get_dof_handler(temp_dof_idx).active_cell_iterators())
@@ -94,27 +108,28 @@ namespace MeltPoolDG::Heat
             heat_source_eval.reinit(cell);
             ls_heaviside_eval.reinit(cell);
 
-            std::vector<dealii::Tensor<1, dim, double>> grad_ls_heaviside(
-              ls_heaviside_eval.n_quadrature_points);
-            ls_heaviside_eval.get_function_gradients(level_set_heaviside, grad_ls_heaviside);
+            ls_heaviside_eval.get_function_gradients(level_set_heaviside, grad_ls_heaviside_at_q);
+            ls_heaviside_eval.get_function_values(level_set_heaviside, ls_heaviside_at_q);
 
             for (const auto q : heat_source_eval.quadrature_point_indices())
               {
-                const double delta_value = grad_ls_heaviside[q].norm();
+                const double delta_value = grad_ls_heaviside_at_q[q].norm();
                 if (delta_value == 0.0)
                   {
                     heat_source_vector[local_dof_indices[q]] = 0.0;
                     continue;
                   }
                 // TODO: use computed normal vector
-                const Tensor<1, dim, double> normal_vector = grad_ls_heaviside[q] / delta_value;
+                const Tensor<1, dim, double> normal_vector =
+                  grad_ls_heaviside_at_q[q] / delta_value;
 
                 const double temp =
                   local_compute_interfacial_heat_source(heat_source_eval.quadrature_point(q),
                                                         laser_position,
                                                         laser_power,
                                                         normal_vector,
-                                                        delta_value);
+                                                        delta_value,
+                                                        ls_heaviside_at_q[q]);
                 heat_source_vector[local_dof_indices[q]] = temp;
               }
           }
@@ -132,7 +147,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   double
-  LaserHeatSourceGauss<dim>::power_density_interfacial(double radius, double power) const
+  LaserHeatSourceGauss<dim>::power_density_interfacial(const double radius,
+                                                       const double power) const
   {
     const double s          = radius / data.laser_beam_radius;
     const double peak_power = power * surf_peak_power_density_factor;

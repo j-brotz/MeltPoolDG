@@ -170,8 +170,9 @@ namespace MeltPoolDG
     } gusarov;
     struct GaussData
     {
-      number laser_beam_radius = 0.0;
-      number absorptivity      = 0.0;
+      number laser_beam_radius   = 0.0;
+      number absorptivity_liquid = 0.0;
+      number absorptivity_gas    = 0.0;
     } gauss;
     struct AnalyticalData
     {
@@ -292,11 +293,6 @@ namespace MeltPoolDG
     int         write_frequency      = 1;
     double      write_time_step_size = 0.0;
     bool        do_initial_state     = true;
-    bool        print_levelset       = true;
-    bool        print_normal_vector  = false;
-    bool        print_curvature      = false;
-    bool        print_advection      = false;
-    bool        print_exactsolution  = false;
     bool        print_boundary_id    = false;
     int         n_digits_timestep    = 4;
     int         n_groups             = 1;
