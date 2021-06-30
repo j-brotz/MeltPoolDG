@@ -284,6 +284,16 @@ namespace MeltPoolDG::MeltPool
                                               scratch_data->get_constraint(
                                                 flow_vel_no_solid_dof_idx),
                                               scratch_data->get_constraint(flow_vel_dof_idx));
+
+    // In the melt pool simulations, the solid domain
+    // can be considered as rigid by setting the constraints
+    // for the velocity field to zero. If the solid domain
+    // changes, the AffineConstraints for the velocity field
+    // will be updated accordingly. In this case, also the
+    // constrained indices in matrix-free have to be updated
+    // which is done in the following by rebuilding matrix-free.
+    if (mp_data.set_velocity_to_zero_in_solid || mp_data.set_level_set_to_zero_in_solid)
+      scratch_data->build();
   }
 
   template <int dim>

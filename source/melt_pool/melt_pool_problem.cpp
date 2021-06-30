@@ -15,18 +15,6 @@ namespace MeltPoolDG::Flow
 
     while (!time_iterator.is_finished())
       {
-        // In the melt pool simulations, the solid domain
-        // can be considered as rigid by setting the constraints
-        // for the velocity field to zero. If the solid domain
-        // changes, the AffineConstraints for the velocity field
-        // will be updated accordingly. In this case, also the
-        // constrained indices in matrix-free have to be updated
-        // which is done in the following by rebuilding matrix-free.
-        //
-        // @todo: alternative (better performing) solution?
-        if (base_in->parameters.mp.set_velocity_to_zero_in_solid)
-          scratch_data->build();
-
         const auto dt = time_iterator.get_next_time_increment();
         const auto n  = time_iterator.get_current_time_step_number();
 
@@ -368,12 +356,6 @@ namespace MeltPoolDG::Flow
                                            scratch_data->get_triangulation(vel_dof_idx),
                                            scratch_data->get_pcout(1));
     /*
-     *  output results of initialization --> initial refinement is done afterwards (!)
-     *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
-     *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
-     */
-    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
-    /*
      *    Do initial refinement steps if requested
      */
     if (base_in->parameters.amr.do_amr && base_in->parameters.amr.n_initial_refinement_cycles > 0)
@@ -396,6 +378,12 @@ namespace MeltPoolDG::Flow
            */
           set_initial_condition(base_in);
         }
+    /*
+     *  output results of initialization
+     *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
+     *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
+     */
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
   }
 
   template <int dim>
@@ -902,7 +890,7 @@ namespace MeltPoolDG::Flow
       if (evaporation_operation)
         evaporation_operation->distribute_constraints();
       /**
-       * melt pool
+       * heat
        */
       if (heat_operation)
         heat_operation->distribute_constraints();
