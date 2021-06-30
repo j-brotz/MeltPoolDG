@@ -11,6 +11,6 @@ namespace MeltPoolDG
   {
   public:
     static std::shared_ptr<ProblemBase<dim>>
-    get_problem(std::string problem_name);
+    get_problem(const ProblemType &problem_name);
   };
 } // namespace MeltPoolDG

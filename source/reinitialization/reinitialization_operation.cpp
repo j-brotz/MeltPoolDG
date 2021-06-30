@@ -128,7 +128,7 @@ namespace MeltPoolDG::Reinitialization
                                               reinit_operator->system_matrix,
                                               rhs);
 
-        if (reinit_data.solver.solver_type == "CG")
+        if (reinit_data.solver.solver_type == SolverType::CG)
           {
             auto preconditioner =
               LinearSolve::setup_preconditioner(reinit_operator->system_matrix,
@@ -144,7 +144,7 @@ namespace MeltPoolDG::Reinitialization
               reinit_data.solver.max_iterations,
               *preconditioner);
           }
-        else if (reinit_data.solver.solver_type == "GMRES")
+        else if (reinit_data.solver.solver_type == SolverType::GMRES)
           {
             auto preconditioner =
               LinearSolve::setup_preconditioner(reinit_operator->system_matrix,

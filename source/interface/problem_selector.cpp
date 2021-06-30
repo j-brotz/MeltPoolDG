@@ -11,21 +11,22 @@ namespace MeltPoolDG
 {
   template <int dim>
   std::shared_ptr<ProblemBase<dim>>
-  ProblemSelector<dim>::get_problem(std::string problem_name)
+  ProblemSelector<dim>::get_problem(const ProblemType &problem_name)
   {
-    if (problem_name == "level_set" || problem_name == "level_set_with_evaporation")
+    if (problem_name == ProblemType::level_set ||
+        problem_name == ProblemType::level_set_with_evaporation)
       return std::make_shared<LevelSet::LevelSetProblem<dim>>();
 
-    else if (problem_name == "reinitialization")
+    else if (problem_name == ProblemType::reinitialization)
       return std::make_shared<Reinitialization::ReinitializationProblem<dim>>();
 
-    else if (problem_name == "advection_diffusion")
+    else if (problem_name == ProblemType::advection_diffusion)
       return std::make_shared<AdvectionDiffusion::AdvectionDiffusionProblem<dim>>();
 
-    else if (problem_name == "melt_pool")
+    else if (problem_name == ProblemType::melt_pool)
       return std::make_shared<Flow::MeltPoolProblem<dim>>();
 
-    else if (problem_name == "heat_transfer")
+    else if (problem_name == ProblemType::heat_transfer)
       return std::make_shared<Heat::HeatTransferProblem<dim>>();
     /* add your problem here*/
 
