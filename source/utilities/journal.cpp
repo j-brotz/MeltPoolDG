@@ -11,7 +11,7 @@ namespace MeltPoolDG::Journal
   print_line(const ConditionalOStream &pcout,
              const std::string &       text,
              const std::string &       operation_name,
-             const int                 extra_size)
+             const unsigned int        extra_size)
   {
     std::ostringstream str;
     str << operation_name << end_line_symbol;
@@ -26,12 +26,13 @@ namespace MeltPoolDG::Journal
                        const std::string &       norm_id,
                        const std::string &       operation_name,
                        const unsigned int        precision,
-                       const std::string &       norm_suffix)
+                       const std::string &       norm_suffix,
+                       const unsigned int        extra_size)
   {
     std::ostringstream str;
     str << "|| " << norm_id << " ||" << norm_suffix << " = " << std::setprecision(precision)
         << std::left << std::scientific << norm_value;
 
-    print_line(pcout, str.str(), operation_name);
+    print_line(pcout, str.str(), operation_name, extra_size);
   }
 } // namespace MeltPoolDG::Journal

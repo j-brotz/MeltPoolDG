@@ -194,7 +194,8 @@ namespace MeltPoolDG::Reinitialization
                                   "delta phi",
                                   "reinitialization",
                                   15 /*precision*/,
-                                  "∞ ");
+                                  "∞ ",
+                                  2);
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   VectorTools::compute_L2_norm<dim>(solution_level_set,
                                                                     *scratch_data,
