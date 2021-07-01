@@ -443,6 +443,10 @@ namespace MeltPoolDG
         normal_vec.verbosity_level,
         "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
         " base value is decisive.");
+      prm.add_parameter(
+        "normal vec do narrow band",
+        normal_vec.do_narrow_band,
+        "Set this parameter to true to compute the normal vector only in the interfacial region.");
     }
     prm.leave_subsection();
     /*
@@ -466,6 +470,10 @@ namespace MeltPoolDG
         curv.verbosity_level,
         "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
         " base value is decisive.");
+      prm.add_parameter(
+        "curv do narrow band",
+        curv.do_narrow_band,
+        "Set this parameter to true to compute the curvature only in the interfacial region.");
     }
     prm.leave_subsection();
     /*

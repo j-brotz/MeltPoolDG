@@ -46,12 +46,21 @@ namespace MeltPoolDG::Curvature
     const unsigned int normal_dof_idx;
     const double       tolerance_normal_vector;
 
+    // optional parameters for narrow band
+    const bool         do_narrow_band;
+    const unsigned int ls_dof_idx;
+    const VectorType * solution_level_set;
+    const double       narrow_band_threshold = 0.9999999;
+
   public:
     CurvatureOperator(const ScratchData<dim> &scratch_data_in,
                       double                  damping_in,
                       unsigned int            curv_dof_idx_in,
                       unsigned int            curv_quad_idx_in,
-                      unsigned int            normal_dof_idx_in);
+                      unsigned int            normal_dof_idx_in,
+                      const unsigned int      ls_dof_idx_in,
+                      const bool              do_narrow_band        = false,
+                      const VectorType *      solution_level_set_in = nullptr);
 
     void
     assemble_matrixbased(const BlockVectorType &solution_normal_vector_in,

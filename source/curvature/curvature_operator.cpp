@@ -11,7 +11,10 @@ namespace MeltPoolDG::Curvature
                                                     const double            damping_in,
                                                     const unsigned int      curv_dof_idx_in,
                                                     const unsigned int      curv_quad_idx_in,
-                                                    const unsigned int      normal_dof_idx_in)
+                                                    const unsigned int      normal_dof_idx_in,
+                                                    const unsigned int      ls_dof_idx_in,
+                                                    const bool              do_narrow_band_in,
+                                                    const VectorType *      solution_level_set_in)
     : scratch_data(scratch_data_in)
     , damping(damping_in)
     , curv_dof_idx(curv_dof_idx_in)
@@ -20,6 +23,9 @@ namespace MeltPoolDG::Curvature
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
+    , do_narrow_band(do_narrow_band_in)
+    , ls_dof_idx(ls_dof_idx_in)
+    , solution_level_set(solution_level_set_in)
   {
     this->reset_indices(curv_dof_idx_in, curv_quad_idx_in);
   }
@@ -109,16 +115,34 @@ namespace MeltPoolDG::Curvature
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number> curvature(matrix_free, curv_dof_idx, curv_quad_idx);
+        FECellIntegrator<dim, 1, number> level_set(scratch_data.get_matrix_free(),
+                                                   ls_dof_idx,
+                                                   curv_quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             curvature.reinit(cell);
             curvature.read_dof_values_plain(src);
             curvature.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
+            if (do_narrow_band)
+              {
+                level_set.reinit(cell);
+                level_set.read_dof_values_plain(*solution_level_set);
+                level_set.evaluate(EvaluationFlags::values);
+              }
+
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {
-                curvature.submit_value(curvature.get_value(q_index), q_index);
-                curvature.submit_gradient(damping * curvature.get_gradient(q_index), q_index);
+                const VectorizedArray<number> narrow_band_mask =
+                  (do_narrow_band) ?
+                    VectorTools::compute_mask_narrow_band<dim>(level_set.get_value(q_index),
+                                                               narrow_band_threshold) :
+                    1.0;
+
+                curvature.submit_value(narrow_band_mask * curvature.get_value(q_index), q_index);
+                curvature.submit_gradient(narrow_band_mask * damping *
+                                            curvature.get_gradient(q_index),
+                                          q_index);
               }
 
             curvature.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
@@ -134,12 +158,20 @@ namespace MeltPoolDG::Curvature
   CurvatureOperator<dim, number>::create_rhs(VectorType &                              dst,
                                              const CurvatureOperator::BlockVectorType &src) const
   {
+    AssertThrow(!do_narrow_band || solution_level_set,
+                ExcMessage(
+                  "Level set solution vector must not be nullptr for a narrow band computation."));
+
     scratch_data.get_matrix_free().template cell_loop<VectorType, BlockVectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
         FECellIntegrator<dim, 1, number>   curvature(matrix_free, curv_dof_idx, curv_quad_idx);
         FECellIntegrator<dim, dim, number> normal_vector(matrix_free,
                                                          normal_dof_idx,
                                                          curv_quad_idx);
+        FECellIntegrator<dim, 1, number>   level_set(scratch_data.get_matrix_free(),
+                                                   ls_dof_idx,
+                                                   curv_quad_idx);
+
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             curvature.reinit(cell);
@@ -148,12 +180,24 @@ namespace MeltPoolDG::Curvature
             normal_vector.read_dof_values_plain(src);
             normal_vector.evaluate(EvaluationFlags::values);
 
+            if (do_narrow_band)
+              {
+                level_set.reinit(cell);
+                level_set.read_dof_values_plain(*solution_level_set);
+                level_set.evaluate(EvaluationFlags::values);
+              }
+
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {
+                const VectorizedArray<number> narrow_band_mask =
+                  (do_narrow_band) ?
+                    VectorTools::compute_mask_narrow_band<dim>(level_set.get_value(q_index),
+                                                               narrow_band_threshold) :
+                    1.0;
                 const auto n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
-                curvature.submit_gradient(n_phi, q_index);
+                curvature.submit_gradient(narrow_band_mask * n_phi, q_index);
               }
 
             curvature.integrate_scatter(EvaluationFlags::gradients, dst);

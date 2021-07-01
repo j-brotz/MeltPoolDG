@@ -38,7 +38,9 @@ namespace MeltPoolDG
                            const double            damping_in,
                            const unsigned int      normal_dof_idx_in,
                            const unsigned int      normal_quad_idx_in,
-                           const unsigned int      ls_dof_idx_in);
+                           const unsigned int      ls_dof_idx_in,
+                           const bool              do_narrow_band        = false,
+                           const VectorType *      solution_level_set_in = nullptr);
 
       void
       assemble_matrixbased(const VectorType &level_set_in,
@@ -68,6 +70,12 @@ namespace MeltPoolDG
       const unsigned int normal_dof_idx;
       const unsigned int normal_quad_idx;
       const unsigned int ls_dof_idx;
+
+      // optional parameters for narrow band
+      const bool        do_narrow_band;
+      const VectorType *solution_level_set;
+
+      const double narrow_band_threshold = 0.9999999;
     };
   } // namespace NormalVector
 } // namespace MeltPoolDG

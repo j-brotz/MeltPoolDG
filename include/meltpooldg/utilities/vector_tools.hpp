@@ -73,6 +73,55 @@ namespace MeltPoolDG
 
   namespace VectorTools
   {
+    template <int dim, typename number = double>
+    void
+    filter_narrow_band(const VectorizedArray<number> &                  val,
+                       Tensor<1, dim, dealii::VectorizedArray<number>> &grad,
+                       const double                                     narrow_band_threshold)
+    {
+      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
+        {
+          if (std::abs(val[v]) >= narrow_band_threshold)
+            {
+              for (unsigned int d = 0; d < dim; ++d)
+                grad[d][v] = 0.0;
+            }
+        }
+    }
+
+    template <int dim, typename number = double>
+    void
+    filter_narrow_band(const VectorizedArray<number> &                  val,
+                       Tensor<2, dim, dealii::VectorizedArray<number>> &grad,
+                       const double                                     narrow_band_threshold)
+    {
+      for (unsigned int d = 0; d < dim; ++d)
+        filter_narrow_band<dim, number>(val, grad[d], narrow_band_threshold);
+    }
+
+    template <int dim, typename number = double>
+    VectorizedArray<number>
+    compute_mask_narrow_band(const VectorizedArray<number> &val, const double narrow_band_threshold)
+    {
+      VectorizedArray<number> indicator = 1.0;
+      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
+        if (std::abs(val[v]) >= narrow_band_threshold)
+          indicator[v] = 0.0;
+
+      return indicator;
+    }
+
+    template <int dim, typename number = double>
+    void
+    filter_narrow_band(const VectorizedArray<number> &val1,
+                       VectorizedArray<number> &      val,
+                       const double                   narrow_band_threshold)
+    {
+      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
+        if (std::abs(val1[v]) >= narrow_band_threshold)
+          val[v] = 0.0;
+    }
+
     template <int dim, int spacedim, typename Number>
     void
     convert_fe_system_vector_to_block_vector(const LinearAlgebra::distributed::Vector<Number> &in,
