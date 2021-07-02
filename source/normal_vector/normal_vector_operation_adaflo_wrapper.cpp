@@ -27,6 +27,8 @@ namespace MeltPoolDG::NormalVector
     projection_matrix     = std::make_shared<BlockMatrixExtension>();
     ilu_projection_matrix = std::make_shared<BlockILUExtension>();
 
+    reinit();
+
     /*
      * initialize adaflo operation
      */
@@ -35,7 +37,7 @@ namespace MeltPoolDG::NormalVector
                                                             rhs,
                                                             advected_field,
                                                             scratch_data.get_cell_diameters(),
-                                                            cell_diameter_max, // @todo
+                                                            epsilon_used,
                                                             cell_diameter_min,
                                                             scratch_data.get_constraint(
                                                               normal_vec_dof_idx),
@@ -44,8 +46,6 @@ namespace MeltPoolDG::NormalVector
                                                             preconditioner,
                                                             projection_matrix,
                                                             ilu_projection_matrix);
-
-    reinit();
   }
 
   template <int dim>
@@ -63,6 +63,11 @@ namespace MeltPoolDG::NormalVector
                                 cell_diameter_min,
                                 cell_diameter_max);
 
+    epsilon_used =
+      cell_diameter_max *
+      normal_vec_adaflo_params
+        .epsilon; /* epsilon used [MS]: adaflo divides in addition by the number of subdivisions*/
+
     /**
      * initialize the preconditioner -->  @todo: currently not used in adaflo
      */
@@ -79,8 +84,8 @@ namespace MeltPoolDG::NormalVector
       scratch_data.get_constraint(normal_vec_adaflo_params.dof_index_normal),
       normal_vec_adaflo_params.dof_index_normal,
       normal_vec_adaflo_params.quad_index,
-      cell_diameter_max, // @todo
-      cell_diameter_min, // @todo
+      epsilon_used,
+      normal_vec_adaflo_params.epsilon,
       scratch_data.get_cell_diameters(),
       *projection_matrix,
       *ilu_projection_matrix);
@@ -92,7 +97,7 @@ namespace MeltPoolDG::NormalVector
   {
     (void)advected_field;
     initialize_vectors();
-    normal_vec_operation->compute_normal(true);
+    normal_vec_operation->compute_normal(false /* fast computation*/);
 
     const int verbosity_l2_norm = dim > 1 ? 0 : 1;
 
@@ -141,8 +146,8 @@ namespace MeltPoolDG::NormalVector
     normal_vec_adaflo_params.dof_index_normal        = normal_vec_dof_idx;
     normal_vec_adaflo_params.quad_index              = normal_vec_quad_idx;
     normal_vec_adaflo_params.damping_scale_factor    = parameters.normal_vec.damping_scale_factor;
-    normal_vec_adaflo_params.epsilon                 = 1.0;   //@ todo
-    normal_vec_adaflo_params.approximate_projections = false; //@ todo
+    normal_vec_adaflo_params.epsilon                 = parameters.reinit.scale_factor_epsilon;
+    normal_vec_adaflo_params.approximate_projections = false; // not used in adaflo
   }
 
   template <int dim>

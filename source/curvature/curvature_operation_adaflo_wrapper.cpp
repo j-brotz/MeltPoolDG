@@ -33,6 +33,8 @@ namespace MeltPoolDG::Curvature
     normal_vector_operation_adaflo =
       std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
         scratch_data, advec_diff_dof_idx, curv_dof_idx, curv_quad_idx, advected_field, data_in);
+
+    this->reinit();
     /*
      * initialize adaflo operation for computing curvature
      */
@@ -41,8 +43,8 @@ namespace MeltPoolDG::Curvature
       normal_vector_operation_adaflo->get_solution_normal_vector(),
       scratch_data.get_constraint(curv_dof_idx),
       scratch_data.get_constraint(
-        curv_dof_idx),   // @todo -- check adaflo --> hanging node constraints??
-      cell_diameter_max, // @todo
+        curv_dof_idx), // @todo -- check adaflo --> hanging node constraints??
+      epsilon_used,
       rhs,
       curv_adaflo_params,
       curvature_field,
@@ -51,8 +53,6 @@ namespace MeltPoolDG::Curvature
       preconditioner,
       projection_matrix,
       ilu_projection_matrix);
-
-    this->reinit(); // TODO?
   }
 
   template <int dim>
@@ -70,6 +70,11 @@ namespace MeltPoolDG::Curvature
                                 cell_diameter_min,
                                 cell_diameter_max);
 
+    epsilon_used =
+      cell_diameter_max *
+      curv_adaflo_params
+        .epsilon; /* epsilon used [MS]: adaflo divides in addition by the number of subdivisions*/
+
     /**
      * initialize the preconditioner -->  @todo: currently not used in adaflo
      */
@@ -85,8 +90,8 @@ namespace MeltPoolDG::Curvature
       scratch_data.get_constraint(curv_adaflo_params.dof_index_curvature),
       curv_adaflo_params.dof_index_curvature,
       curv_adaflo_params.quad_index,
-      cell_diameter_max, // @todo
-      cell_diameter_min, // @todo
+      epsilon_used,
+      curv_adaflo_params.epsilon,
       cell_diameters,
       *projection_matrix,
       *ilu_projection_matrix);
@@ -98,12 +103,12 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperationAdaflo<dim>::solve(const VectorType &advected_field)
   {
-    (void)advected_field;
+    advected_field.update_ghost_values();
     initialize_vectors();
     normal_vector_operation_adaflo->solve(
       advected_field); //@todo check how advected_field is processed
     curvature_operation->compute_curvature(
-      true); // @todo: adaflo does not use the boolean function argument
+      false); // @todo: adaflo does not use the boolean function argument
 
     const int verbosity_l2_norm = dim > 1 ? 0 : 1;
     Journal::print_formatted_norm(
@@ -116,6 +121,7 @@ namespace MeltPoolDG::Curvature
       "curvature_adaflo",
       10 /*precision*/
     );
+    advected_field.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -150,9 +156,9 @@ namespace MeltPoolDG::Curvature
     curv_adaflo_params.dof_index_curvature     = curv_dof_idx; //@ todo
     curv_adaflo_params.dof_index_normal        = curv_dof_idx;
     curv_adaflo_params.quad_index              = curv_quad_idx;
-    curv_adaflo_params.epsilon                 = 1.0;   //@ todo
+    curv_adaflo_params.epsilon                 = parameters.reinit.scale_factor_epsilon;
     curv_adaflo_params.approximate_projections = false; //@ todo
-    curv_adaflo_params.curvature_correction    = false; //@ todo
+    curv_adaflo_params.curvature_correction    = parameters.ls.do_curvature_correction;
     verbosity_level                            = parameters.curv.verbosity_level;
     // curv_adaflo_params.damping_scale_factor = parameters.normal_vec.damping_scale_factor; //@
     // todo

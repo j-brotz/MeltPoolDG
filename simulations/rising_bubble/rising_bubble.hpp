@@ -28,8 +28,9 @@ namespace MeltPoolDG
       class InitialValuesLS : public Function<dim>
       {
       public:
-        InitialValuesLS()
-          : Function<dim>(1, 0)
+        InitialValuesLS(const double eps)
+          : Function<dim>()
+          , eps(eps)
         {}
 
         double
@@ -37,9 +38,10 @@ namespace MeltPoolDG
         {
           Point<dim>   center = dim == 2 ? Point<dim>(0.5, 0.5) : Point<dim>(0.5, 0.5, 0.5);
           const double radius = 0.25;
-          return UtilityFunctions::CharacteristicFunctions::sgn(
-            DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+          return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+            DistanceFunctions::spherical_manifold<dim>(p, center, radius), eps);
         }
+        double eps;
       };
 
       /*
@@ -132,7 +134,10 @@ namespace MeltPoolDG
         void
         set_field_conditions() override
         {
-          this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(), "level_set");
+          double eps =
+            UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+
+          this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");

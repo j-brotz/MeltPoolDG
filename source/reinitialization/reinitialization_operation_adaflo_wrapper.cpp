@@ -33,13 +33,22 @@ namespace MeltPoolDG::Reinitialization
         normal_vector_operation_adaflo->solve(level_set);
     };
 
+    /**
+     *  initialize the dof vectors and compute the preconditioner
+     */
+    reinit();
+
+    epsilon_used =
+      cell_diameter_max *
+      parameters.reinit.scale_factor_epsilon; /* epsilon used [MS]: adaflo divides in addition by
+                                                 the number of subdivisions*/
     /*
      * initialize reinitialization operation from adaflo
      */
     reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
       normal_vector_operation_adaflo->get_solution_normal_vector(),
       scratch_data.get_cell_diameters(),
-      cell_diameter_max,
+      epsilon_used,
       cell_diameter_min,
       scratch_data.get_constraint(reinit_dof_idx),
       increment,
@@ -51,10 +60,6 @@ namespace MeltPoolDG::Reinitialization
       reinit_params_adaflo,
       first_reinit_step,
       scratch_data.get_matrix_free());
-    /**
-     *  initialize the dof vectors and compute the preconditioner
-     */
-    reinit();
   }
 
   template <int dim>
@@ -66,7 +71,7 @@ namespace MeltPoolDG::Reinitialization
     reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
       normal_vector_operation_adaflo->get_solution_normal_vector(),
       scratch_data.get_cell_diameters(),
-      cell_diameter_max,
+      epsilon_used,
       cell_diameter_min,
       scratch_data.get_constraint(reinit_dof_idx),
       increment,
@@ -91,7 +96,6 @@ namespace MeltPoolDG::Reinitialization
                                 cell_diameters,
                                 cell_diameter_min,
                                 cell_diameter_max);
-
     /**
      * initialize the preconditioner
      */
@@ -109,10 +113,13 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperationAdaflo<dim>::solve(const double dt)
   {
-    reinit_operation_adaflo->reinitialize(dt,
-                                          1 /*stab_steps @todo*/,
-                                          0 /*diff_steps @todo*/,
-                                          compute_normal);
+    reinit_operation_adaflo->reinitialize(
+      dt,
+      1 /*stab_steps --> we only solve one increment of reinitialization*/,
+      0 /*additional diffusion steps --> no input parameter provided; would be useful for highly
+           distorted solutions*/
+      ,
+      compute_normal);
     Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   increment.linfty_norm(),
                                   "delta phi",

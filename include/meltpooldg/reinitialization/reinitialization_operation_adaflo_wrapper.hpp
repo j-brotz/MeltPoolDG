@@ -116,11 +116,12 @@ namespace MeltPoolDG
        */
       DiagonalPreconditioner<double> preconditioner;
 
-      std::pair<double, double>              last_concentration_range;
+      std::pair<double, double>              last_concentration_range = {-1.0, 1.0};
       AlignedVector<VectorizedArray<double>> cell_diameters;
       double                                 cell_diameter_min;
       double                                 cell_diameter_max;
-      bool                                   first_reinit_step;
+      double                                 epsilon_used;
+      bool                                   first_reinit_step    = true;
       bool                                   force_compute_normal = true;
       std::function<void(bool)>              compute_normal;
       const ConditionalOStream               pcout;

@@ -22,6 +22,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/operators.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 namespace MeltPoolDG
@@ -246,6 +247,36 @@ namespace MeltPoolDG
       }
 
     } // namespace CharacteristicFunctions
+
+    template <int dim, typename cell_type>
+    inline double
+    compute_cell_size_dependent_interface_thickness(const cell_type cell,
+                                                    const double    thickness_scale_factor)
+    {
+      return cell->diameter() / std::sqrt(dim) * thickness_scale_factor;
+    }
+
+    template <int dim>
+    inline double
+    compute_cell_size_dependent_interface_thickness(const double cell_diameter,
+                                                    const double thickness_scale_factor)
+    {
+      return cell_diameter / std::sqrt(dim) * thickness_scale_factor;
+    }
+
+    template <int dim>
+    inline double
+    compute_initial_epsilon(const Parameters<double> &param, const Triangulation<dim> &tria)
+    {
+      double eps = param.reinit.constant_epsilon > 0.0 ?
+                     param.reinit.constant_epsilon :
+                     compute_cell_size_dependent_interface_thickness<dim>(
+                       GridTools::minimal_cell_diameter(tria), param.reinit.scale_factor_epsilon);
+      if ((param.reinit.implementation == "adaflo" || param.ls.implementation == "adaflo") &&
+          (param.reinit.constant_epsilon <= 0.0))
+        eps /= param.base.degree;
+      return eps;
+    }
 
     template <typename value_type>
     inline value_type

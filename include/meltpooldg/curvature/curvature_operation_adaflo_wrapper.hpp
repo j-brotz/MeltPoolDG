@@ -102,6 +102,7 @@ namespace MeltPoolDG::Curvature
     AlignedVector<VectorizedArray<double>> cell_diameters;
     double                                 cell_diameter_min;
     double                                 cell_diameter_max;
+    double                                 epsilon_used;
     unsigned int                           verbosity_level;
   };
 } // namespace MeltPoolDG::Curvature
