@@ -17,7 +17,7 @@ namespace MeltPoolDG::Journal
   print_line(const ConditionalOStream &pcout,
              const std::string &       text           = "",
              const std::string &       operation_name = "",
-             const int                 extra_size     = 0);
+             const unsigned int        extra_size     = 0);
   inline void
   print_end(const ConditionalOStream &pcout)
   {
@@ -40,7 +40,8 @@ namespace MeltPoolDG::Journal
                        const std::string &       norm_id,
                        const std::string &       operation_name,
                        const unsigned int        precision   = 6,
-                       const std::string &       norm_suffix = "L2");
+                       const std::string &       norm_suffix = "L2",
+                       const unsigned int        extra_size  = 0);
 
   template <int dim>
   void
