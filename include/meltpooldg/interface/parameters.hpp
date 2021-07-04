@@ -307,6 +307,7 @@ namespace MeltPoolDG
     bool        print_boundary_id    = false;
     int         n_digits_timestep    = 4;
     int         n_groups             = 1;
+    int         n_patches            = 1;
   };
 
   template <typename number = double>

@@ -860,8 +860,11 @@ namespace MeltPoolDG
                         paraview.n_digits_timestep,
                         "number of digits for the frame number of the vtk-file.");
       prm.add_parameter("paraview n groups",
-                        paraview.n_digits_timestep,
+                        paraview.n_groups,
                         "number of parallel written vtk-files.");
+      prm.add_parameter("paraview n patches",
+                        paraview.n_patches,
+                        "Control number of patches to enable high-order output.");
     }
     prm.leave_subsection();
 

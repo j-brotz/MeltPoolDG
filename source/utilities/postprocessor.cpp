@@ -77,7 +77,7 @@ namespace MeltPoolDG
       flags.write_higher_order_cells = true;
     data_out.set_flags(flags);
 
-    data_out.build_patches(mapping);
+    data_out.build_patches(mapping, pv_data.n_patches);
     const std::string pvtu_filename = data_out.write_vtu_with_pvtu_record(pv_data.directory + "/",
                                                                           pv_data.filename,
                                                                           n_time_step,
