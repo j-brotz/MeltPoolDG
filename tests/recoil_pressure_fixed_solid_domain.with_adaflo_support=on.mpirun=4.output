@@ -1,14 +1,18 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| || normal_0 ||L2 = 3.53364219226e-15                                               normal_vector |
+| || normal_0 ||L2 = 4.06822546787e-15                                               normal_vector |
 | || normal_1 ||L2 = 4.09650821352e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
 | || delta phi ||L2 = 2.236925522073803e-05                                       reinitialization |
+| || normal_0 ||L2 = 4.04373613354e-12                                               normal_vector |
+| || normal_1 ||L2 = 3.86784833614e+00                                               normal_vector |
 |  τ = 8.347e-06                                                                  reinitialization |
 | || delta phi ||L2 = 6.803388690265915e-06                                       reinitialization |
+| || normal_0 ||L2 = 5.06783161277e-12                                               normal_vector |
+| || normal_1 ||L2 = 3.80739196183e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.06740705177e-12                                               normal_vector |
+| || normal_0 ||L2 = 5.06783161277e-12                                               normal_vector |
 | || normal_1 ||L2 = 3.80739196183e+00                                               normal_vector |
 | || curvature ||L2 = 1.60106969997e-02                                                  curvature |
 +--------------------------------------------------------------------------------------------------+

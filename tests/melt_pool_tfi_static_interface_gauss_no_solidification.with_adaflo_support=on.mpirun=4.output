@@ -1,27 +1,37 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| || normal_0 ||L2 = 4.63345176974e-14                                               normal_vector |
+| || normal_0 ||L2 = 4.24680285816e-14                                               normal_vector |
 | || normal_1 ||L2 = 4.43012440950e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
 | || delta phi ||L2 = 6.672934508017189e-06                                       reinitialization |
+| || normal_0 ||L2 = 6.20522602931e-13                                               normal_vector |
+| || normal_1 ||L2 = 4.57635041720e+00                                               normal_vector |
 |  τ = 8.88375e-06                                                                reinitialization |
 | || delta phi ||L2 = 6.657442764968965e-06                                       reinitialization |
+| || normal_0 ||L2 = 3.95348671852e-12                                               normal_vector |
+| || normal_1 ||L2 = 4.73271749466e+00                                               normal_vector |
 |  τ = 1.33256e-05                                                                reinitialization |
 | || delta phi ||L2 = 6.622151792784515e-06                                       reinitialization |
+| || normal_0 ||L2 = 2.51802114292e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.89948627435e+00                                               normal_vector |
 |  τ = 1.77675e-05                                                                reinitialization |
 | || delta phi ||L2 = 6.563227313573028e-06                                       reinitialization |
+| || normal_0 ||L2 = 1.61109764038e-10                                               normal_vector |
+| || normal_1 ||L2 = 5.07667511880e+00                                               normal_vector |
 |  τ = 2.22094e-05                                                                reinitialization |
 | || delta phi ||L2 = 6.476574329064105e-06                                       reinitialization |
+| || normal_0 ||L2 = 1.03716053199e-09                                               normal_vector |
+| || normal_1 ||L2 = 5.26397415947e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.33314490299e-12                                               normal_vector |
+| || normal_0 ||L2 = 1.03716053199e-09                                               normal_vector |
 | || normal_1 ||L2 = 5.26397415947e+00                                               normal_vector |
 | || curvature ||L2 = 1.80097511570e-02                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 4.5303522667e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 3.94225179457e-11                                               normal_vector |
+| || normal_0 ||L2 = 1.03599847584e-09                                               normal_vector |
 | || normal_1 ||L2 = 5.26397415947e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
@@ -35,9 +45,9 @@
 |  τ = 2.22094e-05                                                                reinitialization |
 | || delta phi ||L2 = 5.497112273741550e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.63603689924e-10                                               normal_vector |
+| || normal_0 ||L2 = 1.95268196846e-08                                               normal_vector |
 | || normal_1 ||L2 = 6.30896506843e+00                                               normal_vector |
-| || curvature ||L2 = 1.79838603002e-02                                                  curvature |
+| || curvature ||L2 = 1.79838605018e-02                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.04439e-01                newton_raphson_solver |
@@ -50,7 +60,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0001 (dt = 0.0001).
 |  Time increment # 2      t = 1.0000e-04 to 2.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 4.6488613812e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.82267111073e-10                                               normal_vector |
+| || normal_0 ||L2 = 1.95224481455e-08                                               normal_vector |
 | || normal_1 ||L2 = 6.30896506843e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
@@ -62,11 +72,11 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0001 (dt = 0.0001).
 |  τ = 1.77675e-05                                                                reinitialization |
 | || delta phi ||L2 = 4.022320903442380e-06                                       reinitialization |
 |  τ = 2.22094e-05                                                                reinitialization |
-| || delta phi ||L2 = 3.598174002759592e-06                                       reinitialization |
+| || delta phi ||L2 = 3.598174134033140e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.35696043675e-09                                               normal_vector |
+| || normal_0 ||L2 = 3.60461988819e-07                                               normal_vector |
 | || normal_1 ||L2 = 7.29727793985e+00                                               normal_vector |
-| || curvature ||L2 = 1.76905517209e-02                                                  curvature |
+| || curvature ||L2 = 1.76905521250e-02                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.10136e-01                newton_raphson_solver |
@@ -78,8 +88,8 @@ Time step #2, advancing from t_n-1 = 0.0001 to t = 0.0002 (dt = 0.0001).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-04 to 3.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.7273641663e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.36475921081e-09                                               normal_vector |
+| || advected field ||L2 = 4.7273640945e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 3.60456119938e-07                                               normal_vector |
 | || normal_1 ||L2 = 7.29727793985e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
@@ -87,15 +97,15 @@ Time step #2, advancing from t_n-1 = 0.0001 to t = 0.0002 (dt = 0.0001).
 |  τ = 8.88375e-06                                                                reinitialization |
 | || delta phi ||L2 = 2.756881571056214e-06                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
-| || delta phi ||L2 = 2.361666470340932e-06                                       reinitialization |
+| || delta phi ||L2 = 2.361666358291245e-06                                       reinitialization |
 |  τ = 1.77675e-05                                                                reinitialization |
 | || delta phi ||L2 = 1.995522675247307e-06                                       reinitialization |
 |  τ = 2.22094e-05                                                                reinitialization |
 | || delta phi ||L2 = 1.664619532142845e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.58121849931e-08                                               normal_vector |
+| || normal_0 ||L2 = 6.39103434527e-06                                               normal_vector |
 | || normal_1 ||L2 = 7.91103638470e+00                                               normal_vector |
-| || curvature ||L2 = 1.71377405881e-02                                                  curvature |
+| || curvature ||L2 = 1.71377283332e-02                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.15309e-01                newton_raphson_solver |
@@ -108,23 +118,23 @@ Time step #3, advancing from t_n-1 = 0.0002 to t = 0.0003 (dt = 0.0001).
 |  Time increment # 4      t = 3.0000e-04 to 4.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 4.7666111265e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.58139977152e-08                                               normal_vector |
+| || normal_0 ||L2 = 6.39102890595e-06                                               normal_vector |
 | || normal_1 ||L2 = 7.91103638470e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
 | || delta phi ||L2 = 1.372445486201228e-06                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
-| || delta phi ||L2 = 1.119939286613931e-06                                       reinitialization |
+| || delta phi ||L2 = 1.119939298217125e-06                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
 | || delta phi ||L2 = 9.058966483215896e-07                                       reinitialization |
 |  τ = 1.77675e-05                                                                reinitialization |
-| || delta phi ||L2 = 7.275285080823348e-07                                       reinitialization |
+| || delta phi ||L2 = 7.275285244915638e-07                                       reinitialization |
 |  τ = 2.22094e-05                                                                reinitialization |
 | || delta phi ||L2 = 5.810542448410906e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.67769472485e-07                                               normal_vector |
+| || normal_0 ||L2 = 1.06632382518e-04                                               normal_vector |
 | || normal_1 ||L2 = 8.16583352098e+00                                               normal_vector |
-| || curvature ||L2 = 1.66096091385e-02                                                  curvature |
+| || curvature ||L2 = 1.65958079507e-02                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.20090e-01                newton_raphson_solver |
@@ -136,28 +146,28 @@ Time step #4, advancing from t_n-1 = 0.0003 to t = 0.0004 (dt = 0.0001).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-04 to 5.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.7815436560e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 2.67768523585e-07                                               normal_vector |
+| || advected field ||L2 = 4.7815435839e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.06632380515e-04                                               normal_vector |
 | || normal_1 ||L2 = 8.16583352098e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
-| || delta phi ||L2 = 4.622351330009715e-07                                       reinitialization |
+| || delta phi ||L2 = 4.622393275241490e-07                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
-| || delta phi ||L2 = 3.667953540639047e-07                                       reinitialization |
+| || delta phi ||L2 = 3.667983952011995e-07                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
-| || delta phi ||L2 = 2.907134808178348e-07                                       reinitialization |
+| || delta phi ||L2 = 2.907165166527710e-07                                       reinitialization |
 |  τ = 1.77675e-05                                                                reinitialization |
-| || delta phi ||L2 = 2.303934748201609e-07                                       reinitialization |
+| || delta phi ||L2 = 2.303970861506596e-07                                       reinitialization |
 |  τ = 2.22094e-05                                                                reinitialization |
-| || delta phi ||L2 = 1.827397315049060e-07                                       reinitialization |
+| || delta phi ||L2 = 1.827443277443298e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.92592457498e-06                                               normal_vector |
-| || normal_1 ||L2 = 8.25023615023e+00                                               normal_vector |
-| || curvature ||L2 = 1.56843079457e-02                                                  curvature |
+| || normal_0 ||L2 = 1.07907062964e-03                                               normal_vector |
+| || normal_1 ||L2 = 8.25023624757e+00                                               normal_vector |
+| || curvature ||L2 = 1.55887921517e-02                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.24442e-01                newton_raphson_solver |
-|  total mass = 0.00095091636                                                    melt_pool_problem |
+|  total mass = 0.00095091636003                                                 melt_pool_problem |
 
 Time step #5, advancing from t_n-1 = 0.0004 to t = 0.0005 (dt = 0.0001). 
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |

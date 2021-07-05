@@ -60,6 +60,8 @@ namespace MeltPoolDG::LevelSet
     double reinit_constant_epsilon     = 0; //@todo: better solution
     double reinit_scale_factor_epsilon = 0; //@todo: better solution
     int    max_reinit_steps            = 0;
+
+    bool very_first_step = true;
     /*
      *    This is the surface_tension vector calculated after level set and reinitialization
      * update
