@@ -102,7 +102,8 @@
   },
   "curvature": {
     "curv do matrix free": "true",
-    "curv damping scale factor": "0.5"
+    "curv damping scale factor": "0.5",
+    "curv verbosity level": "1"
   },
   "heat": {
     "heat solidification": "true",

@@ -93,7 +93,8 @@
   },
   "curvature": {
     "curv do matrix free": "true",
-    "curv damping scale factor": "0.5"
+    "curv damping scale factor": "0.5",
+    "normal vec verbosity level": "1"
   },
   "heat": {
     "heat solidification": "false",
