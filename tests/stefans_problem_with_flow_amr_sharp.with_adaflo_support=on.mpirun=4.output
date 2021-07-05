@@ -1,226 +1,236 @@
-| || normal_0 ||L2 = 4.75246788584e-16                                               normal_vector |
+| || normal_0 ||L2 = 8.21755979835e-16                                               normal_vector |
 | || normal_1 ||L2 = 6.22459709644e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
 | || delta phi ||L2 = 5.234613642096519e-02                                       reinitialization |
+| || normal_0 ||L2 = 2.13477874107e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.63600564003e+00                                               normal_vector |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 2.823219448328018e-02                                       reinitialization |
+| || delta phi ||L2 = 2.823219634592533e-02                                       reinitialization |
+| || normal_0 ||L2 = 2.76757902682e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.35473346710e+00                                               normal_vector |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.563368691131475e-02                                       reinitialization |
+| || delta phi ||L2 = 1.563369669020176e-02                                       reinitialization |
+| || normal_0 ||L2 = 3.13351336469e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.20628976822e+00                                               normal_vector |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 9.087454527616501e-03                                       reinitialization |
+| || delta phi ||L2 = 9.087511105462917e-03                                       reinitialization |
+| || normal_0 ||L2 = 3.30280990741e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.11994504929e+00                                               normal_vector |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 5.588788073509932e-03                                       reinitialization |
+| || delta phi ||L2 = 5.588961765170097e-03                                       reinitialization |
+| || normal_0 ||L2 = 3.37635632645e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.06574296951e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.09314238961e-12                                               normal_vector |
-| || normal_1 ||L2 = 5.06575942039e+00                                               normal_vector |
-| || curvature ||L2 = 6.36980199814e+00                                                  curvature |
+| || normal_0 ||L2 = 3.37635632645e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.06574296951e+00                                               normal_vector |
+| || curvature ||L2 = 1.05285921097e+01                                                  curvature |
 | cycle: 0 n_dofs: 1089(ls) + 8450(vel) + 1089(p) T.size 1089                    melt_pool_problem |
-| || normal_0 ||L2 = 3.74584049377e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.56279528141e+00                                               normal_vector |
+| || normal_0 ||L2 = 1.28237105889e-15                                               normal_vector |
+| || normal_1 ||L2 = 6.54756593704e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 8.672971278429031e-02                                       reinitialization |
+| || delta phi ||L2 = 8.629826456308365e-02                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 2.934293122962118e-02                                       reinitialization |
+| || delta phi ||L2 = 3.000580379739405e-02                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.328737405128778e-02                                       reinitialization |
+| || delta phi ||L2 = 1.360977627336979e-02                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 7.663145312108102e-03                                       reinitialization |
+| || delta phi ||L2 = 7.812117692083120e-03                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.943843930959702e-03                                       reinitialization |
+| || delta phi ||L2 = 4.996920935809612e-03                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.13939776270e-12                                               normal_vector |
-| || normal_1 ||L2 = 5.10471117496e+00                                               normal_vector |
-| || curvature ||L2 = 1.05285930634e+01                                                  curvature |
-| cycle: 1 n_dofs: 1509(ls) + 11794(vel) + 1509(p) T.size 1509                   melt_pool_problem |
-| || normal_0 ||L2 = 2.79083450673e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.67095637321e+00                                               normal_vector |
+| || normal_0 ||L2 = 5.29328371645e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.08721113205e+00                                               normal_vector |
+| || curvature ||L2 = 1.05285921097e+01                                                  curvature |
+| cycle: 1 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
+| || normal_0 ||L2 = 1.28237105889e-15                                               normal_vector |
+| || normal_1 ||L2 = 6.54756593704e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 1.091097518801689e-01                                       reinitialization |
+| || delta phi ||L2 = 8.629826456308365e-02                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 2.599308639764786e-02                                       reinitialization |
+| || delta phi ||L2 = 3.000580379739405e-02                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.217136741615833e-02                                       reinitialization |
+| || delta phi ||L2 = 1.360977627336979e-02                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 7.287526386789980e-03                                       reinitialization |
+| || delta phi ||L2 = 7.812117692083120e-03                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.759424249641602e-03                                       reinitialization |
+| || delta phi ||L2 = 4.996920935809612e-03                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.96931089260e-12                                               normal_vector |
-| || normal_1 ||L2 = 5.10548353195e+00                                               normal_vector |
-| || curvature ||L2 = 1.05285928249e+01                                                  curvature |
-| cycle: 2 n_dofs: 1959(ls) + 15386(vel) + 1959(p) T.size 1959                   melt_pool_problem |
-| || normal_0 ||L2 = 3.91401032952e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.67233705521e+00                                               normal_vector |
+| || normal_0 ||L2 = 5.29328371645e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.08721113205e+00                                               normal_vector |
+| || curvature ||L2 = 1.05285921097e+01                                                  curvature |
+| cycle: 2 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
+| || normal_0 ||L2 = 1.28237105889e-15                                               normal_vector |
+| || normal_1 ||L2 = 6.54756593704e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 1.087179258465767e-01                                       reinitialization |
+| || delta phi ||L2 = 8.629826456308365e-02                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 2.581231342628603e-02                                       reinitialization |
+| || delta phi ||L2 = 3.000580379739405e-02                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.227673655375839e-02                                       reinitialization |
+| || delta phi ||L2 = 1.360977627336979e-02                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 7.385407574474812e-03                                       reinitialization |
+| || delta phi ||L2 = 7.812117692083120e-03                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.822751157917087e-03                                       reinitialization |
+| || delta phi ||L2 = 4.996920935809612e-03                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.79949096487e-13                                               normal_vector |
-| || normal_1 ||L2 = 5.10830688477e+00                                               normal_vector |
-| || curvature ||L2 = 1.05285930634e+01                                                  curvature |
-| cycle: 3 n_dofs: 2345(ls) + 18466(vel) + 2345(p) T.size 2345                   melt_pool_problem |
-| || normal_0 ||L2 = 3.91401032952e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.67233705521e+00                                               normal_vector |
+| || normal_0 ||L2 = 5.29328371645e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.08721113205e+00                                               normal_vector |
+| || curvature ||L2 = 1.05285921097e+01                                                  curvature |
+| cycle: 3 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
+| || normal_0 ||L2 = 1.28237105889e-15                                               normal_vector |
+| || normal_1 ||L2 = 6.54756593704e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 1.087179258465767e-01                                       reinitialization |
+| || delta phi ||L2 = 8.629826456308365e-02                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 2.581231342628603e-02                                       reinitialization |
+| || delta phi ||L2 = 3.000580379739405e-02                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.227673655375839e-02                                       reinitialization |
+| || delta phi ||L2 = 1.360977627336979e-02                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 7.385407574474812e-03                                       reinitialization |
+| || delta phi ||L2 = 7.812117692083120e-03                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.822751157917087e-03                                       reinitialization |
+| || delta phi ||L2 = 4.996920935809612e-03                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.79949096487e-13                                               normal_vector |
-| || normal_1 ||L2 = 5.10830688477e+00                                               normal_vector |
-| || curvature ||L2 = 1.05285930634e+01                                                  curvature |
-| cycle: 4 n_dofs: 2345(ls) + 18466(vel) + 2345(p) T.size 2345                   melt_pool_problem |
-| || normal_0 ||L2 = 3.91401032952e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.67233705521e+00                                               normal_vector |
+| || normal_0 ||L2 = 5.29328371645e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.08721113205e+00                                               normal_vector |
+| || curvature ||L2 = 1.05285921097e+01                                                  curvature |
+| cycle: 4 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
+| || normal_0 ||L2 = 1.28237105889e-15                                               normal_vector |
+| || normal_1 ||L2 = 6.54756593704e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 1.087179258465767e-01                                       reinitialization |
+| || delta phi ||L2 = 8.629826456308365e-02                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 2.581231342628603e-02                                       reinitialization |
+| || delta phi ||L2 = 3.000580379739405e-02                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.227673655375839e-02                                       reinitialization |
+| || delta phi ||L2 = 1.360977627336979e-02                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 7.385407574474812e-03                                       reinitialization |
+| || delta phi ||L2 = 7.812117692083120e-03                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.822751157917087e-03                                       reinitialization |
+| || delta phi ||L2 = 4.996920935809612e-03                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.79949096487e-13                                               normal_vector |
-| || normal_1 ||L2 = 5.10830688477e+00                                               normal_vector |
-| || curvature ||L2 = 1.05285930634e+01                                                  curvature |
+| || normal_0 ||L2 = 5.29328371645e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.08721113205e+00                                               normal_vector |
+| || curvature ||L2 = 1.05285921097e+01                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.79949096487e-13                                               normal_vector |
-| || normal_1 ||L2 = 5.10830688477e+00                                               normal_vector |
-| || evaporative_velocity ||L2 = 7.0591924619e-02                            evaporation_operation |
-| || advected field ||L2 = 9.6238847113e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 7.58271590565e-11                                               normal_vector |
-| || normal_1 ||L2 = 5.10944466172e+00                                               normal_vector |
+| || normal_0 ||L2 = 5.29328371645e-12                                               normal_vector |
+| || normal_1 ||L2 = 5.08721113205e+00                                               normal_vector |
+| || evaporative_velocity ||L2 = 7.0469444044e-02                            evaporation_operation |
+| || advected field ||L2 = 9.6237659490e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 6.96338042547e-11                                               normal_vector |
+| || normal_1 ||L2 = 5.08831022308e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 3.341008659812692e-03                                       reinitialization |
+| || delta phi ||L2 = 3.409064389504520e-03                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 2.324737265701570e-03                                       reinitialization |
+| || delta phi ||L2 = 2.345943839165086e-03                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.651083964284836e-03                                       reinitialization |
+| || delta phi ||L2 = 1.651734404737623e-03                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 1.187510906855870e-03                                       reinitialization |
+| || delta phi ||L2 = 1.180897292726666e-03                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 8.615136770763032e-04                                       reinitialization |
+| || delta phi ||L2 = 8.536935208918628e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 9.19938583509e-12                                               normal_vector |
-| || normal_1 ||L2 = 5.00710826191e+00                                               normal_vector |
-| || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.50497563867                                                    melt_pool_problem |
+| || normal_0 ||L2 = 1.13548496032e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.98848118205e+00                                               normal_vector |
+| || curvature ||L2 = 1.05285921097e+01                                                  curvature |
+|  total mass = 0.50497535182                                                    melt_pool_problem |
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005). 
-| || velocity ||L2 = 7.008362193709111e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 8.118837064582802e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.016772700933813e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 8.120103330449383e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-04 to 1.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 9.19938239851e-12                                               normal_vector |
-| || normal_1 ||L2 = 5.00710826191e+00                                               normal_vector |
-| || evaporative_velocity ||L2 = 7.0591924619e-02                            evaporation_operation |
-| || advected field ||L2 = 9.5984171366e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 9.20851124574e-11                                               normal_vector |
-| || normal_1 ||L2 = 5.00709963052e+00                                               normal_vector |
+| || normal_0 ||L2 = 1.13162653259e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.99038971052e+00                                               normal_vector |
+| || evaporative_velocity ||L2 = 7.0638931950e-02                            evaporation_operation |
+| || advected field ||L2 = 9.5984340484e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 6.34912327047e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.99036553823e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 6.281137606767734e-04                                       reinitialization |
+| || delta phi ||L2 = 7.100599956218634e-04                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 4.609935403242923e-04                                       reinitialization |
+| || delta phi ||L2 = 4.548866340847031e-04                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 3.392940202617811e-04                                       reinitialization |
+| || delta phi ||L2 = 3.368168477422711e-04                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 2.503467118955702e-04                                       reinitialization |
+| || delta phi ||L2 = 2.496145905556895e-04                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 1.850844856178323e-04                                       reinitialization |
+| || delta phi ||L2 = 1.852530228043658e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.32008484999e-11                                               normal_vector |
-| || normal_1 ||L2 = 4.98668245181e+00                                               normal_vector |
-| || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.50497593563                                                    melt_pool_problem |
+| || normal_0 ||L2 = 1.29243919702e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.97058169112e+00                                               normal_vector |
+| || curvature ||L2 = 1.05285915115e+01                                                  curvature |
+|  total mass = 0.50498747587                                                    melt_pool_problem |
 
 Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005). 
-| || velocity ||L2 = 7.008249201098561e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.052552326037777e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.017955038101459e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 4.022142117854843e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-03 to 1.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.32008203036e-11                                               normal_vector |
-| || normal_1 ||L2 = 4.98668245181e+00                                               normal_vector |
-| || evaporative_velocity ||L2 = 7.0591924617e-02                            evaporation_operation |
-| || advected field ||L2 = 9.5931747589e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 9.88130508254e-11                                               normal_vector |
-| || normal_1 ||L2 = 4.98667394136e+00                                               normal_vector |
+| || normal_0 ||L2 = 1.34862682170e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.97235657281e+00                                               normal_vector |
+| || evaporative_velocity ||L2 = 7.0591924619e-02                            evaporation_operation |
+| || advected field ||L2 = 9.5932135083e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 9.62788853231e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.97231938842e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 1.371417020226833e-04                                       reinitialization |
+| || delta phi ||L2 = 4.059985086124590e-03                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 1.014158434385339e-04                                       reinitialization |
+| || delta phi ||L2 = 1.271708023563307e-03                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 7.531589896652338e-05                                       reinitialization |
+| || delta phi ||L2 = 6.102946090279298e-04                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 5.594974294966524e-05                                       reinitialization |
+| || delta phi ||L2 = 2.967256430891100e-04                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.158237024613335e-05                                       reinitialization |
+| || delta phi ||L2 = 1.512747275160653e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.73500870632e-11                                               normal_vector |
-| || normal_1 ||L2 = 4.98216631868e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.79359114930e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.98419404000e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.50497624753                                                    melt_pool_problem |
+|  total mass = 0.50497695115                                                    melt_pool_problem |
 
 Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005). 
-| || velocity ||L2 = 7.008184822250164e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 5.331963889722543e-03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.008328684406215e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 7.875206502502344e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-03 to 2.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.73501313246e-11                                               normal_vector |
-| || normal_1 ||L2 = 4.98216631868e+00                                               normal_vector |
-| || evaporative_velocity ||L2 = 7.0591924615e-02                            evaporation_operation |
-| || advected field ||L2 = 9.5920057628e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 9.78737092948e-11                                               normal_vector |
-| || normal_1 ||L2 = 4.98215780896e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.82288624005e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.98529291332e+00                                               normal_vector |
+| || evaporative_velocity ||L2 = 7.0591924618e-02                            evaporation_operation |
+| || advected field ||L2 = 9.5932707225e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 9.28845062378e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.98528404927e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 3.432875032720952e-05                                       reinitialization |
+| || delta phi ||L2 = 1.182407900171762e-03                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 2.285568294855585e-05                                       reinitialization |
+| || delta phi ||L2 = 2.400289919839371e-04                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.703205680453877e-05                                       reinitialization |
+| || delta phi ||L2 = 9.323339316550655e-05                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 1.268787501273809e-05                                       reinitialization |
+| || delta phi ||L2 = 6.660549973684222e-05                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 9.448877718843278e-06                                       reinitialization |
+| || delta phi ||L2 = 5.421022226800058e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.89159196272e-11                                               normal_vector |
-| || normal_1 ||L2 = 4.98114182674e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.51402148765e-11                                               normal_vector |
+| || normal_1 ||L2 = 4.98282816011e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.50497655899                                                    melt_pool_problem |
+|  total mass = 0.50497657862                                                    melt_pool_problem |
 
 Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005). 
-| || velocity ||L2 = 7.008195160597311e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 5.338766414212471e-03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.008241000890898e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 5.585777563556555e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

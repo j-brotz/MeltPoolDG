@@ -369,8 +369,17 @@ namespace MeltPoolDG::LevelSet
              *  reset the solution of the level set field to the reinitialized solution
              */
             advec_diff_operation->get_advected_field() = reinit_operation->get_level_set();
+
+            // If it is the first reinitialization cycle, the normal vector
+            // field might not be computed very accurately from the initial level set
+            // field. Thus, in this case we update the normal vector in every renitialization
+            // step.
+            if (very_first_step)
+              update_normal_vector();
           }
         reinit_time_iterator.reset();
+
+        very_first_step = false;
       }
     Journal::print_decoration_line(scratch_data->get_pcout());
   }
