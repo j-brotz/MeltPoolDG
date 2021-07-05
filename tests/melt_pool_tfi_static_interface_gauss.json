@@ -97,7 +97,8 @@
   },
   "normal vector": {
     "normal vec damping scale factor": "0.5",
-    "normal vec do matrix free": "true"
+    "normal vec do matrix free": "true",
+    "normal vec verbosity level": "1"
   },
   "curvature": {
     "curv do matrix free": "true",
