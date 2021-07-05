@@ -1,33 +1,33 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-03 ( dt = 5.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.9164052454e-02                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.0920211684e-02                                         normal_vector_adaflo |
-| || delta phi ||L2 = 8.5372722200e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.3741627987e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.3750769746e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 4.7511984277e-02                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-03 to 1.0000e-02 ( dt = 5.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.9076732951e-02                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.0809216871e-02                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.3267743318e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 4.6853847702e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 4.6853802835e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 2.1110307789e-02                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-02 to 1.5000e-02 ( dt = 5.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.9072959754e-02                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.0804075732e-02                                         normal_vector_adaflo |
-| || delta phi ||L2 = 4.1630359338e-03                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 5.9352364922e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 5.9352354306e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 8.8869207932e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-02 to 2.0000e-02 ( dt = 5.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.9076919551e-02                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.0809015298e-02                                         normal_vector_adaflo |
-| || delta phi ||L2 = 3.0750139479e-03                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 5.8600369242e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 5.8600360075e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 6.4455267130e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.0000e-02 to 2.5000e-02 ( dt = 5.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.9080688786e-02                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.0813716815e-02                                         normal_vector_adaflo |
-| || delta phi ||L2 = 2.6593420395e-03                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 5.7948780374e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 5.7948769489e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 5.3927231096e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

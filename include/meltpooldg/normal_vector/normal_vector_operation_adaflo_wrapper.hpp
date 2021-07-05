@@ -104,6 +104,7 @@ namespace MeltPoolDG
       AlignedVector<VectorizedArray<double>> cell_diameters;
       double                                 cell_diameter_min;
       double                                 cell_diameter_max;
+      double                                 epsilon_used;
     };
   } // namespace NormalVector
 } // namespace MeltPoolDG

@@ -238,20 +238,8 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     void
     set_field_conditions() final
     {
-      double eps = 0.0;
-      if (this->parameters.reinit.implementation == "adaflo" ||
-          this->parameters.ls.implementation == "adaflo")
-        eps = this->parameters.reinit.constant_epsilon > 0.0 ?
-                this->parameters.reinit.constant_epsilon :
-                GridTools::minimal_cell_diameter(*this->triangulation) /
-                  this->parameters.base.degree / std::sqrt(dim);
-      else
-        eps = this->parameters.reinit.constant_epsilon > 0.0 ?
-                this->parameters.reinit.constant_epsilon :
-                GridTools::minimal_cell_diameter(*this->triangulation) / std::sqrt(dim) *
-                  this->parameters.reinit.scale_factor_epsilon;
-
-      AssertThrow(eps > 0, ExcNotImplemented());
+      double eps =
+        UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
 
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
       this->attach_initial_condition(

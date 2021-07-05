@@ -59,7 +59,9 @@ namespace MeltPoolDG::Reinitialization
           fe_values.reinit(cell);
 
           const double epsilon_cell =
-            eps > 0.0 ? eps : cell->diameter() / (std::sqrt(dim)) * eps_scale_factor;
+            eps > 0.0 ? eps :
+                        UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
+                          cell, eps_scale_factor);
           AssertThrow(
             epsilon_cell > 0.0,
             ExcMessage(

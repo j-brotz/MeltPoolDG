@@ -404,7 +404,8 @@ namespace MeltPoolDG::LevelSet
           const double epsilon_cell =
             reinit_constant_epsilon > 0.0 ?
               reinit_constant_epsilon :
-              cell->diameter() / (std::sqrt(dim)) * reinit_scale_factor_epsilon;
+              UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
+                cell, reinit_scale_factor_epsilon);
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
