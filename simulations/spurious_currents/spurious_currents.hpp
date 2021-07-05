@@ -65,7 +65,7 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
         center[d] = 0.02 + 0.01 * d;
 
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        DistanceFunctions::ellipsoidal_manifold<dim>(p, center, 0.75, 0.5), eps);
+        DistanceFunctions::ellipsoidal_manifold<dim>(p, center, Point<dim>(0.75, 0.5)), eps);
     }
 
     double eps = 0.0;

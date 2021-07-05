@@ -34,39 +34,123 @@ namespace MeltPoolDG::DistanceFunctions
    *  WARNING: This is not a real distance function.
    *
    *
-   *     sign=+         ------------
+   *     sign=-         ------------
    *              -------          -------
    *         ------                      ------
    *       ---                                ---
    *      --                                    --
-   *      --            sign = -                --
+   *      --            sign = +                --
    *      --                                    --
    *       ---                                ---
    *         ------                      ------
    *              -------          -------
    *                    ------------
    *
+   * @param p Point, to which the distance to the ellipse is calculated to
+   * @param center Center of the ellipse
+   * @param radii Radii of the ellipse at the respective semi-axes
+   * @param approximate Set this parameter to true for an approximate distance calculation
    *
    */
   template <int dim>
   inline double
   ellipsoidal_manifold(const Point<dim> &p,
                        const Point<dim> &center,
-                       const double      radius_x,
-                       const double      radius_y,
-                       const double      radius_z = 0)
+                       const Point<dim> &radii,
+                       const bool        approximate = true)
   {
-    if (dim == 3)
-      return -std::pow(p[0] - center[0], 2) / std::pow(radius_x, 2) -
-             std::pow(p[1] - center[1], 2) / std::pow(radius_y, 2) -
-             std::pow(p[2] - center[2], 2) / std::pow(radius_z, 2) + 1;
-    else if (dim == 2)
-      return -std::pow(p[0] - center[0], 2) / std::pow(radius_x, 2) -
-             std::pow(p[1] - center[1], 2) / std::pow(radius_y, 2) + 1;
-    else if (dim == 1)
-      return -std::pow(p[0] - center[0], 2) / std::pow(radius_x, 2) + 1;
-    else
-      AssertThrow(false, ExcMessage("Ellipsoidal manifold: dim must be 1, 2 or 3."));
+    /*
+     * ellipsoid equation
+     */
+    const auto ellipsoid = [&](const Point<dim> &point) -> double {
+      double val = 0.0;
+      for (int d = 0; d < dim; ++d)
+        val += std::pow(point[d] - center[d], 2) / std::pow(radii[d], 2);
+      return val - 1.0;
+    };
+
+    if (approximate)
+      return -ellipsoid(p);
+
+    if constexpr (dim != 2)
+      AssertThrow(false, ExcNotImplemented());
+
+    /*
+     * Precise distance calculation of 2D ellipse
+     *                                             x <- p
+     *                                            /
+     *     sign=-         ------------           /
+     *              -------    |     -------    /
+     *         ------          |           ----x <- q  closest point on ellipse
+     *       ---            radii_2            ---
+     *      --                 |                  --
+     *      -- --- radii_1 --- x <- center        --
+     *      --                                    --
+     *       ---                                ---
+     *         ------  sign = +            ------
+     *              -------          -------
+     *                    ------------
+     */
+    const double       tolerance = 1e-14;
+    const unsigned int max_iter  = 10;
+
+    /*
+     * compute sign (outside = -1.0; inside = +1.0)
+     */
+    const double sign = (ellipsoid(p) > 0) ? -1.0 /* point is outside */ : 1.0 /*point is inside*/;
+
+    /*
+     * point is already on ellipsoid
+     */
+    if (std::abs(ellipsoid(p)) < tolerance)
+      return 0.0;
+    /*
+     * point corresponds to center (ambiguous distance values)
+     */
+    if (p.distance(center) < tolerance)
+      {
+        double min_radius = radii[0];
+        for (int d = 1; d < dim; ++d)
+          min_radius = std::min(min_radius, radii[d]);
+        return min_radius;
+      }
+
+    /*
+     * Simple Method for Distance to Ellipse by Carl Chatfield
+     */
+    const double  px   = std::abs(p[0] - center[0]);
+    const double  py   = std::abs(p[1] - center[1]);
+    const double &a    = radii[0];
+    const double &b    = radii[1];
+    double        t    = numbers::PI_4;
+    double        x    = a * std::cos(t);
+    double        y    = b * std::sin(t);
+    unsigned int  iter = 0;
+    while (iter < max_iter)
+      {
+        const double ex      = (a * a - b * b) * std::pow(std::cos(t), 3) / a;
+        const double ey      = (b * b - a * a) * std::pow(std::sin(t), 3) / b;
+        const double rx      = x - ex;
+        const double ry      = y - ey;
+        const double qx      = px - ex;
+        const double qy      = py - ey;
+        const double r       = std::hypot(rx, ry);
+        const double q       = std::hypot(qx, qy);
+        const double delta_c = r * std::asin((rx * qy - ry * qx) / (r * q));
+        const double delta_t = delta_c / std::sqrt(a * a + b * b - x * x - y * y);
+        t += delta_t;
+        t = std::min(numbers::PI_2, std::max(0.0, t));
+        x = a * std::cos(t);
+        y = b * std::sin(t);
+        if (std::abs(delta_t) < tolerance)
+          break;
+        iter++;
+      }
+    AssertThrow(iter < max_iter,
+                ExcMessage("Distance to ellipse algorithm did not converge! Abort..."));
+    const double distance = std::hypot(x - px, y - py);
+
+    return sign * distance;
   }
 
 
