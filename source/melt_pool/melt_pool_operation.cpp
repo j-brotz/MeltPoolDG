@@ -17,7 +17,7 @@ namespace MeltPoolDG::MeltPool
     const unsigned int                       flow_vel_dof_idx_in,
     const unsigned int                       flow_vel_no_solid_dof_idx_in,
     const unsigned int                       flow_vel_quad_idx_in,
-    const unsigned int                       temp_dof_idx_in,
+    const unsigned int                       temp_hanging_nodes_dof_idx_in,
     const double                             start_time_in)
     : scratch_data(scratch_data_in)
     , material(data_in.material)
@@ -27,7 +27,7 @@ namespace MeltPoolDG::MeltPool
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
-    , temp_dof_idx(temp_dof_idx_in)
+    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , temperature(temperature)
   {
     /*
@@ -54,12 +54,12 @@ namespace MeltPoolDG::MeltPool
                                                        flow_vel_dof_idx_in,
                                                        flow_vel_quad_idx_in,
                                                        ls_dof_idx_in,
-                                                       temp_dof_idx_in);
+                                                       temp_hanging_nodes_dof_idx_in);
     /*
      * initialize the dof_vectors
      */
-    scratch_data->initialize_dof_vector(solid, temp_dof_idx);
-    scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
+    scratch_data->initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
+    scratch_data->initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
 
     /*
      * Choose the laser heat source model
@@ -81,11 +81,12 @@ namespace MeltPoolDG::MeltPool
     else if (data_in.laser.heat_source_model == "Analytical")
       {
         laser_analytical_temperature_field =
-          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(*scratch_data_in,
-                                                                       data_in.laser.analytical,
-                                                                       data_in.material,
-                                                                       data_in.laser.scan_speed,
-                                                                       temp_dof_idx_in);
+          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(
+            *scratch_data_in,
+            data_in.laser.analytical,
+            data_in.material,
+            data_in.laser.scan_speed,
+            temp_hanging_nodes_dof_idx_in);
       }
     else
       AssertThrow(false,
@@ -148,7 +149,7 @@ namespace MeltPoolDG::MeltPool
                 laser_heat_source_operation->compute_volumetric_heat_source(
                   heat_source,
                   *scratch_data,
-                  temp_dof_idx,
+                  temp_hanging_nodes_dof_idx,
                   laser_operation->get_laser_power(),
                   laser_operation->get_laser_position(),
                   zero_out);
@@ -158,7 +159,7 @@ namespace MeltPoolDG::MeltPool
                 laser_heat_source_operation->compute_interfacial_heat_source(
                   heat_source,
                   *scratch_data,
-                  temp_dof_idx,
+                  temp_hanging_nodes_dof_idx,
                   laser_operation->get_laser_power(),
                   laser_operation->get_laser_position(),
                   level_set_as_heaviside,
@@ -213,8 +214,8 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolOperation<dim>::reinit()
   {
-    scratch_data->initialize_dof_vector(solid, temp_dof_idx);
-    scratch_data->initialize_dof_vector(liquid, temp_dof_idx);
+    scratch_data->initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
+    scratch_data->initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
   }
 
   template <int dim>
@@ -235,19 +236,23 @@ namespace MeltPoolDG::MeltPool
     /**
      *  solid
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(temp_dof_idx), solid, "solid");
+    data_out.add_data_vector(scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
+                             solid,
+                             "solid");
     /**
      *  liquid
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(temp_dof_idx), liquid, "liquid");
+    data_out.add_data_vector(scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
+                             liquid,
+                             "liquid");
   }
 
   template <int dim>
   void
   MeltPoolOperation<dim>::distribute_constraints()
   {
-    scratch_data->get_constraint(temp_dof_idx).distribute(solid);
-    scratch_data->get_constraint(temp_dof_idx).distribute(liquid);
+    scratch_data->get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
+    scratch_data->get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
   }
 
   template <int dim>
@@ -303,19 +308,21 @@ namespace MeltPoolDG::MeltPool
     level_set_as_heaviside.update_ghost_values();
     temperature->update_ghost_values();
 
-    const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(temp_dof_idx);
+    const unsigned int dofs_per_cell =
+      scratch_data->get_n_dofs_per_cell(temp_hanging_nodes_dof_idx);
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     std::map<types::global_dof_index, Point<dim>> support_points;
     DoFTools::map_dofs_to_support_points(scratch_data->get_mapping(),
-                                         scratch_data->get_dof_handler(temp_dof_idx),
+                                         scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
                                          support_points);
 
     liquid = 0;
     solid  = 0;
 
-    for (const auto &cell : scratch_data->get_dof_handler(temp_dof_idx).active_cell_iterators())
+    for (const auto &cell :
+         scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
         {
           cell->get_dof_indices(local_dof_indices);
@@ -360,7 +367,7 @@ namespace MeltPoolDG::MeltPool
                             update_quadrature_points);
 
     FEValues<dim> solid_eval(scratch_data->get_mapping(),
-                             scratch_data->get_dof_handler(temp_dof_idx).get_fe(),
+                             scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).get_fe(),
                              Quadrature<dim>(flow_dof_handler.get_fe().get_unit_support_points()),
                              update_values);
 
@@ -369,7 +376,7 @@ namespace MeltPoolDG::MeltPool
     std::vector<double>                  solid_at_q(dofs_per_cell);
 
     typename DoFHandler<dim>::active_cell_iterator solid_cell =
-      scratch_data->get_dof_handler(temp_dof_idx).begin_active();
+      scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
 
     for (const auto &cell : flow_dof_handler.active_cell_iterators())
       {
@@ -410,7 +417,8 @@ namespace MeltPoolDG::MeltPool
     AffineConstraints<double> &level_set_constraints)
   {
     solid.update_ghost_values();
-    AssertThrow(scratch_data->get_degree(temp_dof_idx) == scratch_data->get_degree(ls_dof_idx),
+    AssertThrow(scratch_data->get_degree(temp_hanging_nodes_dof_idx) ==
+                  scratch_data->get_degree(ls_dof_idx),
                 ExcMessage(
                   "The usage of this function assumes that the temperature field "
                   "is interpolated with the polynomial with the same degree as the level set"));
@@ -463,7 +471,9 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::compute_solid_fraction(const double ls_heaviside, const double T) const
   {
     const auto sf = compute_solid_fraction_no_ls(T);
-    if (do_mushy_zone)
+    if (do_mushy_zone &&
+        ls_heaviside > 0.5) // only original liquid material (ls_heaviside > 0.5) can become solid
+
       return ls_heaviside * sf;
     else
       return ls_heaviside > 0.5 ? sf : 0.0;
