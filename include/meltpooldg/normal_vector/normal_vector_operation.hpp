@@ -81,7 +81,7 @@ namespace MeltPoolDG
        * matrix based or matrix free) and the right handside.
        */
       void
-      create_operator();
+      create_operator(const VectorType &solution_levelset_in);
 
     private:
       std::shared_ptr<const ScratchData<dim>> scratch_data;

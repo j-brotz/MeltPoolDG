@@ -73,6 +73,18 @@ namespace MeltPoolDG
 
   namespace VectorTools
   {
+    template <int dim, typename number = double>
+    VectorizedArray<number>
+    compute_mask_narrow_band(const VectorizedArray<number> &val, const double narrow_band_threshold)
+    {
+      VectorizedArray<number> indicator = 1.0;
+      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
+        if (std::abs(val[v]) >= narrow_band_threshold)
+          indicator[v] = 0.0;
+
+      return indicator;
+    }
+
     template <int dim, int spacedim, typename Number>
     void
     convert_fe_system_vector_to_block_vector(const LinearAlgebra::distributed::Vector<Number> &in,

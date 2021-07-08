@@ -68,7 +68,7 @@ namespace MeltPoolDG::Curvature
 
   private:
     void
-    create_operator();
+    create_operator(const VectorType &solution_levelset);
 
     std::shared_ptr<const ScratchData<dim>> scratch_data;
 
@@ -86,6 +86,7 @@ namespace MeltPoolDG::Curvature
     unsigned int curv_dof_idx;
     unsigned int curv_quad_idx;
     unsigned int normal_dof_idx;
+    unsigned int ls_dof_idx;
     /*
      *    This is the primary solution variable of this module, which will be also publically
      *    accessible for output_results.

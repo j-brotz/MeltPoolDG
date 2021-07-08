@@ -20,10 +20,6 @@ namespace MeltPoolDG::NormalVector
      *  initialize normal vector data
      */
     normal_vector_data = data_in.normal_vec;
-    /*
-     *  initialize normal vector operator
-     */
-    create_operator();
   }
 
   template <int dim>
@@ -38,6 +34,12 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::solve(const VectorType &solution_levelset_in)
   {
+    /*
+     *  initialize normal vector operator
+     */
+    if (!normal_vector_operator)
+      create_operator(solution_levelset_in);
+
     BlockVectorType rhs;
 
     scratch_data->initialize_dof_vector(rhs, normal_dof_idx);
@@ -55,6 +57,11 @@ namespace MeltPoolDG::NormalVector
       }
     else
       {
+        AssertThrow(
+          !normal_vector_data.do_narrow_band,
+          ExcMessage(
+            "The computation of the normal vector in a narrow band is only implemented matrix-free."));
+
         normal_vector_operator->assemble_matrixbased(solution_levelset_in,
                                                      normal_vector_operator->system_matrix,
                                                      rhs);
@@ -101,12 +108,18 @@ namespace MeltPoolDG::NormalVector
 
   template <int dim>
   void
-  NormalVectorOperation<dim>::create_operator()
+  NormalVectorOperation<dim>::create_operator(const VectorType &solution_levelset_in)
   {
     const double damping_parameter = std::pow(scratch_data->get_min_cell_size(normal_dof_idx), 2) *
                                      normal_vector_data.damping_scale_factor;
-    normal_vector_operator = std::make_unique<NormalVectorOperator<dim>>(
-      *scratch_data, damping_parameter, normal_dof_idx, normal_quad_idx, ls_dof_idx);
+    normal_vector_operator =
+      std::make_unique<NormalVectorOperator<dim>>(*scratch_data,
+                                                  damping_parameter,
+                                                  normal_dof_idx,
+                                                  normal_quad_idx,
+                                                  ls_dof_idx,
+                                                  normal_vector_data.do_narrow_band,
+                                                  &solution_levelset_in);
     /*
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.

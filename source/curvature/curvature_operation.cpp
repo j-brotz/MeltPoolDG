@@ -17,6 +17,7 @@ namespace MeltPoolDG::Curvature
     curv_dof_idx   = curv_dof_idx_in;
     curv_quad_idx  = curv_quad_idx_in;
     normal_dof_idx = normal_dof_idx_in;
+    ls_dof_idx     = ls_dof_idx_in;
     /*
      *  initialize curvature data
      */
@@ -27,16 +28,14 @@ namespace MeltPoolDG::Curvature
      */
     normal_vector_operation.initialize(
       scratch_data, data_in, normal_dof_idx_in, curv_quad_idx, ls_dof_idx_in);
-    /*
-     *  initialize the operator (input-dependent: matrix-based or matrix-free)
-     */
-    create_operator();
   }
 
   template <int dim>
   void
   CurvatureOperation<dim>::solve(const VectorType &solution_levelset)
   {
+    if (!curvature_operator)
+      create_operator(solution_levelset);
     /*
      *    compute and solve the normal vector field for the given level set
      */
@@ -58,6 +57,10 @@ namespace MeltPoolDG::Curvature
       }
     else
       {
+        AssertThrow(
+          !curvature_data.do_narrow_band,
+          ExcMessage(
+            "The computation of the curvature in a narrow band is only implemented matrix-free."));
         curvature_operator->assemble_matrixbased(
           normal_vector_operation.get_solution_normal_vector(),
           curvature_operator->system_matrix,
@@ -119,12 +122,19 @@ namespace MeltPoolDG::Curvature
 
   template <int dim>
   void
-  CurvatureOperation<dim>::create_operator()
+  CurvatureOperation<dim>::create_operator(const VectorType &solution_levelset)
   {
     const double damping_parameter =
       scratch_data->get_min_cell_size(curv_dof_idx) * curvature_data.damping_scale_factor;
-    curvature_operator = std::make_unique<CurvatureOperator<dim>>(
-      *scratch_data, damping_parameter, curv_dof_idx, curv_quad_idx, normal_dof_idx);
+
+    curvature_operator = std::make_unique<CurvatureOperator<dim>>(*scratch_data,
+                                                                  damping_parameter,
+                                                                  curv_dof_idx,
+                                                                  curv_quad_idx,
+                                                                  normal_dof_idx,
+                                                                  ls_dof_idx,
+                                                                  curvature_data.do_narrow_band,
+                                                                  &solution_levelset);
     /*
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.

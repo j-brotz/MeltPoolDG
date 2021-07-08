@@ -1,4 +1,5 @@
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::NormalVector
 {
@@ -7,12 +8,16 @@ namespace MeltPoolDG::NormalVector
                                                           const double            damping_in,
                                                           const unsigned int      normal_dof_idx_in,
                                                           const unsigned int normal_quad_idx_in,
-                                                          const unsigned int ls_dof_idx_in)
+                                                          const unsigned int ls_dof_idx_in,
+                                                          const bool         do_narrow_band_in,
+                                                          const VectorType * solution_level_set_in)
     : scratch_data(scratch_data_in)
     , damping(damping_in)
     , normal_dof_idx(normal_dof_idx_in)
     , normal_quad_idx(normal_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
+    , do_narrow_band(do_narrow_band_in)
+    , solution_level_set(solution_level_set_in)
   {
     this->reset_indices(normal_dof_idx_in, normal_quad_idx_in);
   }
@@ -109,20 +114,42 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperator<dim, number>::vmult(BlockVectorType &dst, const BlockVectorType &src) const
   {
+    AssertThrow(!do_narrow_band || solution_level_set,
+                ExcMessage(
+                  "Level set solution vector must not be nullptr for a narrow band computation."));
+
     scratch_data.get_matrix_free().template cell_loop<BlockVectorType, BlockVectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, dim, number> normal(scratch_data.get_matrix_free(),
                                                   normal_dof_idx,
                                                   normal_quad_idx);
+        FECellIntegrator<dim, 1, number>   level_set(scratch_data.get_matrix_free(),
+                                                   ls_dof_idx,
+                                                   normal_quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             normal.reinit(cell);
             normal.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
+            if (do_narrow_band)
+              {
+                level_set.reinit(cell);
+                level_set.read_dof_values_plain(*solution_level_set);
+                level_set.evaluate(EvaluationFlags::values);
+              }
+
             for (unsigned int q_index = 0; q_index < normal.n_q_points; ++q_index)
               {
-                normal.submit_value(normal.get_value(q_index), q_index);
-                normal.submit_gradient(damping * normal.get_gradient(q_index), q_index);
+                const auto grad_val = damping * normal.get_gradient(q_index);
+
+                const VectorizedArray<number> narrow_band_mask =
+                  (do_narrow_band) ?
+                    VectorTools::compute_mask_narrow_band<dim>(level_set.get_value(q_index),
+                                                               narrow_band_threshold) :
+                    1.0;
+
+                normal.submit_value(narrow_band_mask * normal.get_value(q_index), q_index);
+                normal.submit_gradient(narrow_band_mask * grad_val, q_index);
               }
 
             normal.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
@@ -152,10 +179,19 @@ namespace MeltPoolDG::NormalVector
 
             level_set.reinit(cell);
             level_set.read_dof_values_plain(src);
-            level_set.evaluate(EvaluationFlags::gradients);
+            level_set.evaluate(EvaluationFlags::gradients | EvaluationFlags::values);
 
             for (unsigned int q_index = 0; q_index < normal_vector.n_q_points; ++q_index)
-              normal_vector.submit_value(level_set.get_gradient(q_index), q_index);
+              {
+                const VectorizedArray<number> narrow_band_mask =
+                  (do_narrow_band) ?
+                    VectorTools::compute_mask_narrow_band<dim>(level_set.get_value(q_index),
+                                                               narrow_band_threshold) :
+                    1.0;
+
+                normal_vector.submit_value(narrow_band_mask * level_set.get_gradient(q_index),
+                                           q_index);
+              }
 
             normal_vector.integrate_scatter(EvaluationFlags::values, dst);
           }

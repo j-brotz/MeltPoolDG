@@ -134,6 +134,7 @@ namespace MeltPoolDG
     bool         do_matrix_free       = true;
     std::string  implementation       = "meltpooldg";
     unsigned int verbosity_level      = 0;
+    bool         do_narrow_band       = false;
   };
 
   template <typename number = double>
@@ -143,6 +144,7 @@ namespace MeltPoolDG
     bool         do_matrix_free       = true;
     std::string  implementation       = "meltpooldg";
     unsigned int verbosity_level      = 0;
+    bool         do_narrow_band       = false;
   };
 
   template <typename number = double>
