@@ -463,7 +463,9 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::compute_solid_fraction(const double ls_heaviside, const double T) const
   {
     const auto sf = compute_solid_fraction_no_ls(T);
-    if (do_mushy_zone)
+    if (do_mushy_zone &&
+        ls_heaviside > 0.5) // only original liquid material (ls_heaviside > 0.5) can become solid
+
       return ls_heaviside * sf;
     else
       return ls_heaviside > 0.5 ? sf : 0.0;
