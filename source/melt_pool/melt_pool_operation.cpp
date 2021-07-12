@@ -124,10 +124,12 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::compute_heat_source(VectorType &      heat_source,
-                                              const VectorType &level_set_as_heaviside,
-                                              const double &    dt,
-                                              const bool        zero_out)
+  MeltPoolOperation<dim>::compute_heat_source(VectorType &           heat_source,
+                                              const VectorType &     level_set_as_heaviside,
+                                              const BlockVectorType &normal_vector,
+                                              const unsigned int     normal_dof_idx,
+                                              const double &         dt,
+                                              const bool             zero_out)
   {
     // 0) move laser
     laser_operation->move_laser(dt);
@@ -164,7 +166,9 @@ namespace MeltPoolDG::MeltPool
                   laser_operation->get_laser_position(),
                   level_set_as_heaviside,
                   ls_dof_idx,
-                  zero_out);
+                  zero_out,
+                  &normal_vector,
+                  normal_dof_idx);
                 break;
               }
               default: {

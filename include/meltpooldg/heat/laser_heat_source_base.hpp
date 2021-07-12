@@ -45,6 +45,8 @@ namespace MeltPoolDG::Heat
                                     const Point<dim> &      laser_position,
                                     const VectorType &      level_set_heaviside,
                                     const unsigned int      ls_dof_idx,
-                                    const bool              zero_out = true) const = 0;
+                                    const bool              zero_out       = true,
+                                    const BlockVectorType * normal_vector  = nullptr,
+                                    const unsigned int      normal_dof_idx = 0) const = 0;
   };
 } // namespace MeltPoolDG::Heat
