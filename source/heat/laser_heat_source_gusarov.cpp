@@ -76,7 +76,9 @@ namespace MeltPoolDG::Heat
     const Point<dim> &      laser_position,
     const VectorType &      level_set_heaviside,
     const unsigned int      ls_dof_idx,
-    const bool              zero_out) const
+    const bool              zero_out,
+    const BlockVectorType * normal_vector,
+    const unsigned int      normal_dof_idx) const
   {
     (void)heat_source_vector;
     (void)scratch_data;
@@ -84,7 +86,9 @@ namespace MeltPoolDG::Heat
     (void)laser_power;
     (void)laser_position;
     (void)level_set_heaviside;
+    (void)normal_vector;
     (void)ls_dof_idx;
+    (void)normal_dof_idx;
     (void)zero_out;
     throw ExcMessage(
       "The Gurasov laser heat source model is not suited for surface impact! Abort...");

@@ -1,5 +1,5 @@
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
-//
+#include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -62,17 +62,28 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  LaserHeatSourceGauss<dim>::compute_interfacial_heat_source(VectorType &heat_source_vector,
-                                                             const ScratchData<dim> &scratch_data,
-                                                             const unsigned int      temp_dof_idx,
-                                                             const double            laser_power,
-                                                             const Point<dim> &      laser_position,
-                                                             const VectorType & level_set_heaviside,
-                                                             const unsigned int ls_dof_idx,
-                                                             const bool         zero_out) const
+  LaserHeatSourceGauss<dim>::compute_interfacial_heat_source(
+    VectorType &            heat_source_vector,
+    const ScratchData<dim> &scratch_data,
+    const unsigned int      temp_dof_idx,
+    const double            laser_power,
+    const Point<dim> &      laser_position,
+    const VectorType &      level_set_heaviside,
+    const unsigned int      ls_dof_idx,
+    const bool              zero_out,
+    const BlockVectorType * normal_vector,
+    const unsigned int      normal_dof_idx) const
   {
     if (zero_out)
       scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);
+
+    level_set_heaviside.update_ghost_values();
+    if (normal_vector)
+      normal_vector->update_ghost_values();
+
+    const double tolerance_normal_vector =
+      UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
+                                                            scratch_data.get_mapping());
 
     FEValues<dim> heat_source_eval(
       scratch_data.get_mapping(),
@@ -82,12 +93,20 @@ namespace MeltPoolDG::Heat
       update_quadrature_points);
 
     level_set_heaviside.update_ghost_values();
+
     FEValues<dim> ls_heaviside_eval(
       scratch_data.get_mapping(),
       scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
       Quadrature<dim>(
         scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
       update_values | update_gradients);
+
+    FEValues<dim> normal_eval(
+      scratch_data.get_mapping(),
+      scratch_data.get_dof_handler(normal_dof_idx).get_fe(),
+      Quadrature<dim>(
+        scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
+      update_values);
 
     const unsigned int dofs_per_cell =
       scratch_data.get_dof_handler(temp_dof_idx).get_fe().n_dofs_per_cell();
@@ -96,6 +115,9 @@ namespace MeltPoolDG::Heat
     std::vector<double> ls_heaviside_at_q(ls_heaviside_eval.n_quadrature_points);
     std::vector<dealii::Tensor<1, dim, double>> grad_ls_heaviside_at_q(
       ls_heaviside_eval.n_quadrature_points);
+    std::vector<double> delta_value_at_q(ls_heaviside_eval.n_quadrature_points);
+
+    std::vector<Tensor<1, dim>> normal_at_q(dofs_per_cell, Tensor<1, dim>());
 
     // TODO: find a better way to interpolate the (level-set dependent) laser heat source onto the
     // heat source dof vector. Problem: if ls-degree=1, its gradient may be discontinuous!
@@ -107,33 +129,47 @@ namespace MeltPoolDG::Heat
 
             heat_source_eval.reinit(cell);
             ls_heaviside_eval.reinit(cell);
+            normal_eval.reinit(cell);
 
             ls_heaviside_eval.get_function_gradients(level_set_heaviside, grad_ls_heaviside_at_q);
             ls_heaviside_eval.get_function_values(level_set_heaviside, ls_heaviside_at_q);
 
+            // use filtered normal vector computation ..
+            if (normal_vector)
+              NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
+                normal_eval, *normal_vector, normal_at_q, tolerance_normal_vector);
+
             for (const auto q : heat_source_eval.quadrature_point_indices())
               {
                 const double delta_value = grad_ls_heaviside_at_q[q].norm();
+
                 if (delta_value == 0.0)
                   {
                     heat_source_vector[local_dof_indices[q]] = 0.0;
                     continue;
                   }
-                // TODO: use computed normal vector
-                const Tensor<1, dim, double> normal_vector =
-                  grad_ls_heaviside_at_q[q] / delta_value;
+
+
+                // ... or use (unfiltered) gradient of the level set function
+                if (normal_vector == nullptr)
+                  normal_at_q[q] = grad_ls_heaviside_at_q[q] / delta_value;
 
                 const double temp =
                   local_compute_interfacial_heat_source(heat_source_eval.quadrature_point(q),
                                                         laser_position,
                                                         laser_power,
-                                                        normal_vector,
+                                                        normal_at_q[q],
                                                         delta_value,
                                                         ls_heaviside_at_q[q]);
+
                 heat_source_vector[local_dof_indices[q]] = temp;
               }
           }
       }
+
+    level_set_heaviside.zero_out_ghost_values();
+    if (normal_vector)
+      normal_vector->zero_out_ghost_values();
   }
 
   template <int dim>

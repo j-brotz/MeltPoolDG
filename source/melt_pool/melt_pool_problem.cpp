@@ -55,6 +55,8 @@ namespace MeltPoolDG::Flow
         if (melt_pool_operation)
           melt_pool_operation->compute_heat_source(heat_operation->get_heat_source(),
                                                    level_set_operation.get_level_set_as_heaviside(),
+                                                   level_set_operation.get_normal_vector(),
+                                                   normal_dof_idx,
                                                    dt,
                                                    true /* zero_out */);
 

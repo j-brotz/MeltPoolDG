@@ -78,10 +78,12 @@ namespace MeltPoolDG
       set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
 
       void
-      compute_heat_source(VectorType &      heat_source,
-                          const VectorType &level_set_as_heaviside,
-                          const double &    dt,
-                          const bool        zero_out = true);
+      compute_heat_source(VectorType &           heat_source,
+                          const VectorType &     level_set_as_heaviside,
+                          const BlockVectorType &normal_vector,
+                          const unsigned int     normal_dof_idx,
+                          const double &         dt,
+                          const bool             zero_out = true);
 
       void
       compute_melt_front_propagation(const VectorType &level_set_as_heaviside);
