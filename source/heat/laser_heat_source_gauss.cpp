@@ -149,8 +149,10 @@ namespace MeltPoolDG::Heat
                     continue;
                   }
 
+
                 // ... or use (unfiltered) gradient of the level set function
-                normal_at_q[q] = grad_ls_heaviside_at_q[q] / delta_value;
+                if (normal_vector == nullptr)
+                  normal_at_q[q] = grad_ls_heaviside_at_q[q] / delta_value;
 
                 const double temp =
                   local_compute_interfacial_heat_source(heat_source_eval.quadrature_point(q),
@@ -164,7 +166,6 @@ namespace MeltPoolDG::Heat
               }
           }
       }
-    heat_source_vector.compress(VectorOperation::insert);
 
     level_set_heaviside.zero_out_ghost_values();
     if (normal_vector)
