@@ -33,26 +33,32 @@ namespace MeltPoolDG
         InitialValuesLS(const double x_min,
                         const double x_max,
                         const double y_min,
-                        const double y_interface)
+                        const double y_interface,
+                        const double eps)
           : Function<dim>()
           , x_min(x_min)
           , x_max(x_max)
           , y_min(y_min)
           , y_interface(y_interface)
+          , eps(eps)
         {}
 
         double
         value(const Point<dim> &p, const unsigned int /*component*/) const
         {
-          Point<dim> lower_left =
-            dim == 2 ? Point<dim>(x_min, y_min) : Point<dim>(x_min, x_min, y_min);
+          Point<dim> upper_left =
+            dim == 2 ? Point<dim>(x_min, y_interface) : Point<dim>(x_min, x_min, y_interface);
           Point<dim> upper_right =
             dim == 2 ? Point<dim>(x_max, y_interface) : Point<dim>(x_max, x_max, y_interface);
 
-          return UtilityFunctions::CharacteristicFunctions::sgn(
-            DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
+          if (p[dim - 1] >= y_interface)
+            return -UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+              DistanceFunctions::infinite_line<dim>(p, upper_left, upper_right), eps);
+          else
+            return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+              DistanceFunctions::infinite_line<dim>(p, upper_left, upper_right), eps);
         }
-        double x_min, x_max, y_min, y_interface;
+        double x_min, x_max, y_min, y_interface, eps;
       };
 
       /*
@@ -239,9 +245,12 @@ namespace MeltPoolDG
         {
           auto laser_center = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
             this->parameters.laser.center);
+
+          double eps =
+            UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
           this->attach_initial_condition(
             std::make_shared<InitialValuesLS<dim>>(
-              domain_x_min, domain_x_max, domain_y_min, laser_center[dim - 1]),
+              domain_x_min, domain_x_max, domain_y_min, laser_center[dim - 1], eps),
             "level_set");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
