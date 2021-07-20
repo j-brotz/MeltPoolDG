@@ -36,12 +36,12 @@
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
-    "normal vec narrow band": "true",
+    "normal vec do narrow band": "true",
     "normal vec do matrix free": "true"
   },
   "curvature": {
     "curv damping scale factor": "0.05",
-    "curv narrow band": "true",
+    "curv do narrow band": "true",
     "curv do matrix free": "true"
   },
   "paraview": {
