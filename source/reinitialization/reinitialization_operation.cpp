@@ -266,6 +266,7 @@ namespace MeltPoolDG::Reinitialization
   ReinitializationOperation<dim>::set_reinitialization_parameters(const Parameters<double> &data_in)
   {
     reinit_data = data_in.reinit;
+    reinit_data.scale_factor_epsilon /= data_in.ls.n_subdivisions;
   }
 
   template <int dim>

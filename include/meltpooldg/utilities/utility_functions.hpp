@@ -282,9 +282,10 @@ namespace MeltPoolDG
                      param.reinit.constant_epsilon :
                      compute_cell_size_dependent_interface_thickness<dim>(
                        GridTools::minimal_cell_diameter(tria), param.reinit.scale_factor_epsilon);
-      if ((param.reinit.implementation == "adaflo" || param.ls.implementation == "adaflo") &&
-          (param.reinit.constant_epsilon <= 0.0))
-        eps /= param.base.degree;
+
+      // divide by the number of subdivisions if a mesh-dependent interface thickness is computed
+      if (param.reinit.constant_epsilon <= 0.0)
+        eps /= param.ls.n_subdivisions;
       return eps;
     }
 

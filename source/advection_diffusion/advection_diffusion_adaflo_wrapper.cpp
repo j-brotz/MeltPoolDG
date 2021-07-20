@@ -87,7 +87,6 @@ namespace MeltPoolDG::AdvectionDiffusion
                                      advected_field);
 
     scratch_data.get_constraint(dirichlet_dof_idx).distribute(advected_field);
-
     advected_field_old     = advected_field;
     advected_field_old_old = advected_field;
 

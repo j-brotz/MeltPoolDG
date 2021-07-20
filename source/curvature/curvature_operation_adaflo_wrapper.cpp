@@ -70,10 +70,7 @@ namespace MeltPoolDG::Curvature
                                 cell_diameter_min,
                                 cell_diameter_max);
 
-    epsilon_used =
-      cell_diameter_max *
-      curv_adaflo_params
-        .epsilon; /* epsilon used [MS]: adaflo divides in addition by the number of subdivisions*/
+    epsilon_used = cell_diameter_max * curv_adaflo_params.epsilon;
 
     /**
      * initialize the preconditioner -->  @todo: currently not used in adaflo
@@ -152,11 +149,12 @@ namespace MeltPoolDG::Curvature
                                                        const int                 curv_dof_idx,
                                                        const int                 curv_quad_idx)
   {
-    curv_adaflo_params.dof_index_ls            = advec_diff_dof_idx;
-    curv_adaflo_params.dof_index_curvature     = curv_dof_idx; //@ todo
-    curv_adaflo_params.dof_index_normal        = curv_dof_idx;
-    curv_adaflo_params.quad_index              = curv_quad_idx;
-    curv_adaflo_params.epsilon                 = parameters.reinit.scale_factor_epsilon;
+    curv_adaflo_params.dof_index_ls        = advec_diff_dof_idx;
+    curv_adaflo_params.dof_index_curvature = curv_dof_idx; //@ todo
+    curv_adaflo_params.dof_index_normal    = curv_dof_idx;
+    curv_adaflo_params.quad_index          = curv_quad_idx;
+    curv_adaflo_params.epsilon =
+      parameters.reinit.scale_factor_epsilon / parameters.ls.n_subdivisions;
     curv_adaflo_params.approximate_projections = false; //@ todo
     curv_adaflo_params.curvature_correction    = parameters.ls.do_curvature_correction;
     verbosity_level                            = parameters.curv.verbosity_level;
