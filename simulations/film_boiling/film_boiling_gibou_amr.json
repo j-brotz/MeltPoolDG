@@ -86,7 +86,6 @@
   },
   "heat": {
     "heat two phase": "true",
-    "heat variable properties over interface": "false",
     "heat solver rel tolerance": "1e-10",
     "heat solver preconditioner type": "AMG",
     "heat nlsolve residual tolerance": "1e-6",

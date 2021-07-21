@@ -72,11 +72,7 @@ namespace MeltPoolDG::MeltPool
     else if (data_in.laser.heat_source_model == "Gauss")
       {
         laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
-          data_in.laser.gauss,
-          data_in.material.two_phase_properties_transition_type ==
-              TwoPhasePropertiesTransitionType::smooth ||
-            data_in.material.two_phase_properties_transition_type ==
-              TwoPhasePropertiesTransitionType::consistent_with_evaporation);
+          data_in.laser.gauss, data_in.material.two_phase_properties_transition_type);
       }
     else if (data_in.laser.heat_source_model == "Analytical")
       {

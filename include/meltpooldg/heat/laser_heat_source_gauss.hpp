@@ -39,8 +39,9 @@ namespace MeltPoolDG::Heat
   class LaserHeatSourceGauss : public LaserHeatSourceBase<dim>
   {
   public:
-    LaserHeatSourceGauss(const LaserData<double>::GaussData &data_in,
-                         const bool variable_properties_over_interface = true);
+    LaserHeatSourceGauss(
+      const LaserData<double>::GaussData &    data_in,
+      const TwoPhasePropertiesTransitionType &variable_properties_over_interface);
 
     /**
      * Compute a DoF vector of the heat source for interface laser.
@@ -92,7 +93,7 @@ namespace MeltPoolDG::Heat
 
     const LaserData<double>::GaussData data;
 
-    const bool variable_properties_over_interface;
+    const TwoPhasePropertiesTransitionType variable_properties_over_interface;
 
     /*
      * Factor between peak power density and total laser power in volumetric case:

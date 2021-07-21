@@ -66,7 +66,7 @@ namespace MeltPoolDG::Heat
     const double T0 = laser_data.ambient_temperature;
 
     const double weight =
-      (material.two_phase_properties_transition_type == TwoPhasePropertiesTransitionType::smooth) ?
+      (material.two_phase_properties_transition_type != TwoPhasePropertiesTransitionType::sharp) ?
         heaviside :
         ((heaviside > 0.5) ? 1.0 : 0.0);
 

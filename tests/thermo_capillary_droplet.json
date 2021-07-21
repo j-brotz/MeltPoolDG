@@ -10,8 +10,7 @@
     "gravity": "0.0"
   },
   "heat": {
-    "heat two phase": "true",
-    "heat variable properties over interface": "false"
+    "heat two phase": "true"
   },
   "material": {
     "material first capacity": "1e-4",

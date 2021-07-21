@@ -158,14 +158,13 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
-    number                      emissivity                         = 0.0;
-    number                      convection_coefficient             = 0.0;
-    number                      temperature_infinity               = 0.0;
-    bool                        do_matrix_free                     = true;
-    number                      velocity                           = 0.0;
-    bool                        two_phase                          = false;
-    bool                        variable_properties_over_interface = false;
-    bool                        solidification                     = false;
+    number                      emissivity             = 0.0;
+    number                      convection_coefficient = 0.0;
+    number                      temperature_infinity   = 0.0;
+    bool                        do_matrix_free         = true;
+    number                      velocity               = 0.0;
+    bool                        two_phase              = false;
+    bool                        solidification         = false;
     NonlinearSolverData<number> nlsolve;
     SolverData<number>          solver;
   };

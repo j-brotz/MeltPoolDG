@@ -12,8 +12,7 @@
   },
   "heat": {
     "heat two phase": "true",
-    "heat solver preconditioner type": "AMG",
-    "heat variable properties over interface": "false"
+    "heat solver preconditioner type": "AMG"
   },
   "material": {
     "material first capacity": "1e-4",

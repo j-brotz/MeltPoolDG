@@ -551,10 +551,6 @@ namespace MeltPoolDG
         "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
       prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
       prm.add_parameter("heat two phase", heat.two_phase, "Set this parameter for two phase flow.");
-      prm.add_parameter(
-        "heat variable properties over interface",
-        heat.variable_properties_over_interface,
-        "Set this parameter to true to smear the material properites over the two-phase interface.");
       prm.add_parameter("heat solidification",
                         heat.solidification,
                         "Set this parameter to true to consider solidification.");

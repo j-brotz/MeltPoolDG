@@ -203,7 +203,7 @@ namespace MeltPoolDG::Heat
           {
             laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
               base_in->parameters.laser.gauss,
-              base_in->parameters.heat.variable_properties_over_interface);
+              base_in->parameters.material.two_phase_properties_transition_type);
           }
         else
           AssertThrow(false,
