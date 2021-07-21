@@ -57,8 +57,7 @@ namespace MeltPoolDG::Evaporation
                                 const double                   density_liquid);
 
     void
-    compute_evaporation_velocity(VectorType &       evaporation_velocity,
-                                 const std::string &interpolation_type_parameters) final;
+    compute_evaporation_velocity(VectorType &evaporation_velocity) final;
 
     void
     compute_mass_balance_source_term(VectorType &       mass_balance_source_term,

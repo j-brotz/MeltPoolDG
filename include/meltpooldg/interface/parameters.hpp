@@ -23,6 +23,14 @@ namespace MeltPoolDG
               melt_pool,
               level_set_with_evaporation,
               heat_transfer)
+  BETTER_ENUM(
+    TwoPhasePropertiesTransitionType,
+    char,
+    sharp,  // properties jump at level-set = 0
+    smooth, // properties are smeared between the phases with the factor level-set-as-heaviside
+    consistent_with_evaporation // the density is smeared between the phases consistent with the
+                                // evaporation formulation
+  )
 
   template <typename number = double>
   struct SolverData
@@ -118,13 +126,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct FlowData
   {
-    int         velocity_degree                                   = -1;
-    int         velocity_n_q_points_1d                            = -1;
-    number      surface_tension_coefficient                       = 0.0;
-    number      temperature_dependent_surface_tension_coefficient = 0.0;
-    number      surface_tension_reference_temperature             = 0.0;
-    number      surface_tension_coefficient_residual_fraction     = 0.0;
-    std::string variable_properties_over_interface                = "false";
+    int    velocity_degree                                   = -1;
+    int    velocity_n_q_points_1d                            = -1;
+    number surface_tension_coefficient                       = 0.0;
+    number temperature_dependent_surface_tension_coefficient = 0.0;
+    number surface_tension_reference_temperature             = 0.0;
+    number surface_tension_coefficient_residual_fraction     = 0.0;
   };
 
   template <typename number = double>
@@ -150,14 +157,13 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
-    number                      emissivity                         = 0.0;
-    number                      convection_coefficient             = 0.0;
-    number                      temperature_infinity               = 0.0;
-    bool                        do_matrix_free                     = true;
-    number                      velocity                           = 0.0;
-    bool                        two_phase                          = false;
-    bool                        variable_properties_over_interface = false;
-    bool                        solidification                     = false;
+    number                      emissivity             = 0.0;
+    number                      convection_coefficient = 0.0;
+    number                      temperature_infinity   = 0.0;
+    bool                        do_matrix_free         = true;
+    number                      velocity               = 0.0;
+    bool                        two_phase              = false;
+    bool                        solidification         = false;
     NonlinearSolverData<number> nlsolve;
     SolverData<number>          solver;
   };
@@ -189,12 +195,11 @@ namespace MeltPoolDG
     } gauss;
     struct AnalyticalData
     {
-      number temperature_x_to_y_ratio           = 1.0;
-      number absorptivity_liquid                = 0.0;
-      number absorptivity_gas                   = 0.0;
-      number max_temperature                    = 0.0;
-      number ambient_temperature                = 0.0;
-      bool   variable_properties_over_interface = false; // @todo: move
+      number temperature_x_to_y_ratio = 1.0;
+      number absorptivity_liquid      = 0.0;
+      number absorptivity_gas         = 0.0;
+      number max_temperature          = 0.0;
+      number ambient_temperature      = 0.0;
     } analytical;
   };
 
@@ -286,15 +291,8 @@ namespace MeltPoolDG
     number liquidus_temperature = 0.0;
     number inv_mushy_interval   = 0.0;
 
-    enum class TwoPhasePropertiesTransitionType
-    {
-      // properties jump at level-set = 0
-      sharp,
-      // properties are smeared between the phases with the factor level-set-as-heaviside
-      smooth,
-      // the density is smeared between the phases consistent with the evaporation formulation
-      evaporation
-    } two_phase_properties_transition_type;
+    TwoPhasePropertiesTransitionType two_phase_properties_transition_type =
+      TwoPhasePropertiesTransitionType::sharp;
   };
 
   template <typename number = double>

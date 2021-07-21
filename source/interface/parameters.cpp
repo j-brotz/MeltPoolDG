@@ -84,20 +84,6 @@ namespace MeltPoolDG
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     if (base.problem_name == ProblemType::melt_pool)
       {
-        if (flow.variable_properties_over_interface == "false")
-          material.two_phase_properties_transition_type =
-            MaterialData<number>::TwoPhasePropertiesTransitionType::sharp;
-        else if (flow.variable_properties_over_interface == "true")
-          material.two_phase_properties_transition_type =
-            MaterialData<number>::TwoPhasePropertiesTransitionType::smooth;
-        else if (flow.variable_properties_over_interface == "consistent_with_evaporation")
-          material.two_phase_properties_transition_type =
-            MaterialData<number>::TwoPhasePropertiesTransitionType::evaporation;
-        else
-          AssertThrow(false,
-                      ExcMessage("Unknown variable properties over interface type \"" +
-                                 flow.variable_properties_over_interface + "\"! Abort..."));
-
         if (mp.do_evaporation && !mp.do_heat_transfer)
           AssertThrow(false,
                       ExcMessage("In case of evaporation both flag >>> do evaporation <<< "
@@ -134,8 +120,8 @@ namespace MeltPoolDG
                     "must be chosen: Navier-Stokes: adaflo: Navier-Stokes: {formulation convective "
                     "term momentum balance: convective }"));
 
-                // AssertThrow(flow.variable_properties_over_interface ==
-                //"consistent_with_evaporation",
+                // AssertThrow(material.two_phase_properties_transition_type ==
+                // TwoPhasePropertiesTransitionType::consistent_with_evaporation,
                 // ExcMessage(
                 //"For the consideration of phase change, the density "
                 //"has to be interpolated consistently with the continuity equation "
@@ -502,11 +488,6 @@ namespace MeltPoolDG
         flow.surface_tension_coefficient_residual_fraction,
         "Define the minimum fraction of the constant surface tension reference value "
         "that can be reached.");
-      prm.add_parameter(
-        "flow variable properties over interface",
-        flow.variable_properties_over_interface,
-        "Set this parameter to interpolate the flow properties over the interface smoothly.",
-        Patterns::Selection("false|true|consistent_with_evaporation"));
     }
     prm.leave_subsection();
     /*
@@ -570,10 +551,6 @@ namespace MeltPoolDG
         "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
       prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
       prm.add_parameter("heat two phase", heat.two_phase, "Set this parameter for two phase flow.");
-      prm.add_parameter(
-        "heat variable properties over interface",
-        heat.variable_properties_over_interface,
-        "Set this parameter to true to smear the material properites over the two-phase interface.");
       prm.add_parameter("heat solidification",
                         heat.solidification,
                         "Set this parameter to true to consider solidification.");
@@ -659,10 +636,6 @@ namespace MeltPoolDG
       prm.add_parameter("laser analytical temperature x to y ratio",
                         laser.analytical.temperature_x_to_y_ratio,
                         "This factor scales the analytical temperature field to be anisotropic.");
-      prm.add_parameter(
-        "laser analytical variable properties over interface",
-        laser.analytical.variable_properties_over_interface,
-        "Set this parameter to true to interpolate the thermal properties over the interface smoothly.");
     }
     prm.leave_subsection();
     /*
@@ -835,6 +808,9 @@ namespace MeltPoolDG
       prm.add_parameter("material liquidus temperature",
                         material.liquidus_temperature,
                         "Liquidus temperature");
+      prm.add_parameter("material two phase properties transition type",
+                        material.two_phase_properties_transition_type,
+                        "Choose how to interpolate the properties over the interface.");
     }
     prm.leave_subsection();
     /*

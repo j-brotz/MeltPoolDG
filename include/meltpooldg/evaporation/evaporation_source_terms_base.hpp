@@ -24,8 +24,7 @@ namespace MeltPoolDG::Evaporation
 
   public:
     virtual void
-    compute_evaporation_velocity(VectorType &       evaporation_velocity,
-                                 const std::string &interpolation_type_parameters) = 0;
+    compute_evaporation_velocity(VectorType &evaporation_velocity) = 0;
 
     virtual void
     compute_mass_balance_source_term(VectorType &       mass_balance_source_term,

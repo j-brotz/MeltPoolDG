@@ -15,14 +15,14 @@
     "time step size": "0.0001"
   },
   "flow": {
-    "flow surface tension coefficient": "0.",
-    "flow variable properties over interface": "consistent_with_evaporation"
+    "flow surface tension coefficient": "0."
   },
   "melt pool": {
     "mp do heat transfer": "true",
     "mp do evaporation": "true"
   },
   "material": {
+    "material two phase properties transition type": "consistent_with_evaporation",
     "material first density": "0.01",
     "material first viscosity": "0.001",
     "material first conductivity": "0.01",
@@ -99,7 +99,6 @@
   },
   "heat": {
     "heat two phase": "true",
-    "heat variable properties over interface": "true",
     "heat solver preconditioner type": "AMG",
     "heat solver rel tolerance": "1e-20"
   },

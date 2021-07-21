@@ -10,8 +10,7 @@
     "do print parameters": "false"
   },
   "flow": {
-    "flow surface tension coefficient": "0.1",
-    "flow variable properties over interface": "consistent_with_evaporation"
+    "flow surface tension coefficient": "0.1"
   },
   "time stepping": {
     "start time": "0.0",
@@ -23,6 +22,7 @@
     "mp do evaporation": "true"
   },
   "material": {
+    "material two phase properties transition type": "consistent_with_evaporation",
     "material first capacity": "200",
     "material first conductivity": "1",
     "material first density": "5",
@@ -58,7 +58,6 @@
   },
   "heat": {
     "heat two phase": "true",
-    "heat variable properties over interface": "true",
     "heat solver preconditioner type": "AMG",
     "heat solver rel tolerance": "1e-12",
     "heat nlsolve residual tolerance": "1e-6",

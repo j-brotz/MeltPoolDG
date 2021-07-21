@@ -8,9 +8,6 @@
     "problem name": "melt_pool",
     "verbosity level": "2"
   },
-  "flow": {
-    "flow variable properties over interface": "true"
-  },
   "time stepping": {
     "start time": "0.0",
     "time step size": "1e-5",
@@ -68,6 +65,7 @@
     "mp do heat transfer": "true"
   },
   "material": {
+    "material two phase properties transition type": "smooth",
     "material first capacity": "0",
     "material first conductivity": "10",
     "material first density": "74.30",

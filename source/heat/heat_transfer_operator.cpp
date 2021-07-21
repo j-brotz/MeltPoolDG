@@ -944,10 +944,10 @@ namespace MeltPoolDG::Heat
     const VectorizedArray<number> &ls_heaviside_val) const
   {
     VectorizedArray<number> weight;
-    if (data.variable_properties_over_interface)
-      weight = ls_heaviside_val;
-    else
-      weight = UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
+    weight =
+      (material.two_phase_properties_transition_type != TwoPhasePropertiesTransitionType::sharp) ?
+        ls_heaviside_val :
+        UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
 
     capacity =
       UtilityFunctions::interpolate(weight, material.first.capacity, material.second.capacity);
@@ -956,6 +956,7 @@ namespace MeltPoolDG::Heat
                                                  material.second.conductivity);
     density =
       UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
+    // @todo: support density depending on evaporation
   }
 
   template <int dim, typename number>

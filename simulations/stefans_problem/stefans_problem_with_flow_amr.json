@@ -8,8 +8,7 @@
     "degree": "1"
   },
   "flow": {
-    "flow surface tension coefficient": "1.8",
-    "flow variable properties over interface": "consistent_with_evaporation"
+    "flow surface tension coefficient": "1.8"
   },
   "time stepping": {
     "start time": "0.0",
@@ -21,6 +20,7 @@
     "mp do evaporation": "true"
   },
   "material": {
+    "material two phase properties transition type": "consistent_with_evaporation",
     "material first density": "0.01",
     "material first viscosity": "0.0006",
     "material second density": "1.0",

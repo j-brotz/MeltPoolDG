@@ -18,18 +18,19 @@ namespace MeltPoolDG::Evaporation
    */
   template <int dim>
   EvaporationSourceTermsContinuous<dim>::EvaporationSourceTermsContinuous(
-    const ScratchData<dim> &       scratch_data,
-    const EvaporationData<double> &evapor_data,
-    const VectorType &             level_set_as_heaviside,
-    const BlockVectorType &        normal_vector,
-    const VectorType &             evaporative_mass_flux,
-    const unsigned int             ls_hanging_nodes_dof_idx,
-    const unsigned int             ls_quad_idx,
-    const unsigned int             normal_dof_idx,
-    const unsigned int             evapor_vel_dof_idx,
-    const double                   tolerance_normal_vector,
-    const double                   density_vapor,
-    const double                   density_liquid)
+    const ScratchData<dim> &                scratch_data,
+    const EvaporationData<double> &         evapor_data,
+    const VectorType &                      level_set_as_heaviside,
+    const BlockVectorType &                 normal_vector,
+    const VectorType &                      evaporative_mass_flux,
+    const unsigned int                      ls_hanging_nodes_dof_idx,
+    const unsigned int                      ls_quad_idx,
+    const unsigned int                      normal_dof_idx,
+    const unsigned int                      evapor_vel_dof_idx,
+    const double                            tolerance_normal_vector,
+    const double                            density_vapor,
+    const double                            density_liquid,
+    const TwoPhasePropertiesTransitionType &two_phase_properties_transition_type)
     : scratch_data(scratch_data)
     , evapor_data(evapor_data)
     , level_set_as_heaviside(level_set_as_heaviside)
@@ -42,13 +43,13 @@ namespace MeltPoolDG::Evaporation
     , tolerance_normal_vector(tolerance_normal_vector)
     , density_vapor(density_vapor)
     , density_liquid(density_liquid)
+    , two_phase_properties_transition_type(two_phase_properties_transition_type)
   {}
 
   template <int dim>
   void
   EvaporationSourceTermsContinuous<dim>::compute_evaporation_velocity(
-    VectorType &       evaporation_velocity,
-    const std::string &interpolation_type_parameters)
+    VectorType &evaporation_velocity)
   {
     level_set_as_heaviside.update_ghost_values();
     normal_vector.update_ghost_values();
@@ -96,7 +97,7 @@ namespace MeltPoolDG::Evaporation
             //            dρ/dΦ
             VectorizedArray<double> rho_d_rho_d_phi = 1.0;
 
-            if (interpolation_type_parameters == "true")
+            if (two_phase_properties_transition_type == TwoPhasePropertiesTransitionType::smooth)
               {
                 // clang-format off
                   rho_d_rho_d_phi = (ls.get_value(q_index) * density_liquid + (1.-ls.get_value(q_index) * density_vapor)) 

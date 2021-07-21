@@ -39,9 +39,7 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationSourceTermsSharp<dim>::compute_evaporation_velocity(
-    VectorType &                        evaporation_velocity,
-    [[maybe_unused]] const std::string &interpolation_type_parameters)
+  EvaporationSourceTermsSharp<dim>::compute_evaporation_velocity(VectorType &evaporation_velocity)
   {
     /**
      * evaporation velocity at quadrature points
