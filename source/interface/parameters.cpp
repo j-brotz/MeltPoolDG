@@ -640,10 +640,6 @@ namespace MeltPoolDG
       prm.add_parameter("laser analytical temperature x to y ratio",
                         laser.analytical.temperature_x_to_y_ratio,
                         "This factor scales the analytical temperature field to be anisotropic.");
-      prm.add_parameter(
-        "laser analytical variable properties over interface",
-        laser.analytical.variable_properties_over_interface,
-        "Set this parameter to true to interpolate the thermal properties over the interface smoothly.");
     }
     prm.leave_subsection();
     /*

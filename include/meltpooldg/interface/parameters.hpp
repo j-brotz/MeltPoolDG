@@ -127,13 +127,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct FlowData
   {
-    int         velocity_degree                                   = -1;
-    int         velocity_n_q_points_1d                            = -1;
-    number      surface_tension_coefficient                       = 0.0;
-    number      temperature_dependent_surface_tension_coefficient = 0.0;
-    number      surface_tension_reference_temperature             = 0.0;
-    number      surface_tension_coefficient_residual_fraction     = 0.0;
-    std::string variable_properties_over_interface                = "false";
+    int    velocity_degree                                   = -1;
+    int    velocity_n_q_points_1d                            = -1;
+    number surface_tension_coefficient                       = 0.0;
+    number temperature_dependent_surface_tension_coefficient = 0.0;
+    number surface_tension_reference_temperature             = 0.0;
+    number surface_tension_coefficient_residual_fraction     = 0.0;
   };
 
   template <typename number = double>
@@ -198,12 +197,11 @@ namespace MeltPoolDG
     } gauss;
     struct AnalyticalData
     {
-      number temperature_x_to_y_ratio           = 1.0;
-      number absorptivity_liquid                = 0.0;
-      number absorptivity_gas                   = 0.0;
-      number max_temperature                    = 0.0;
-      number ambient_temperature                = 0.0;
-      bool   variable_properties_over_interface = false; // @todo: move
+      number temperature_x_to_y_ratio = 1.0;
+      number absorptivity_liquid      = 0.0;
+      number absorptivity_gas         = 0.0;
+      number max_temperature          = 0.0;
+      number ambient_temperature      = 0.0;
     } analytical;
   };
 

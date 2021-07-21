@@ -10,8 +10,7 @@
     "verbosity level": "0"
   },
   "flow": {
-    "flow surface tension coefficient": "0.1",
-    "flow variable properties over interface": "consistent_with_evaporation"
+    "flow surface tension coefficient": "0.1"
   },
   "time stepping": {
     "start time": "0.0",
@@ -98,6 +97,7 @@
     "paraview do output": "true"
   },
   "material": {
+    "material two phase properties transition type": "consistent_with_evaporation",
     "material first capacity": "200",
     "material first conductivity": "1",
     "material first density": "5",
