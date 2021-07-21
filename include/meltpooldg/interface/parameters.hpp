@@ -26,12 +26,11 @@ namespace MeltPoolDG
   BETTER_ENUM(
     TwoPhasePropertiesTransitionType,
     char,
-    // properties jump at level-set = 0
-    sharp,
-    // properties are smeared between the phases with the factor level-set-as-heaviside
-    smooth,
-    // the density is smeared between the phases consistent with the evaporation formulation
-    consistent_with_evaporation);
+    sharp,  // properties jump at level-set = 0
+    smooth, // properties are smeared between the phases with the factor level-set-as-heaviside
+    consistent_with_evaporation // the density is smeared between the phases consistent with the
+                                // evaporation formulation
+  )
 
   template <typename number = double>
   struct SolverData
