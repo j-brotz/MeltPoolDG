@@ -121,8 +121,7 @@ namespace MeltPoolDG::Evaporation
     compute_evaporative_mass_flux();
 
     void
-    compute_evaporation_velocity(
-      const std::string &interpolation_type_parameters = "consistent_with_evaporation");
+    compute_evaporation_velocity();
 
     void
     compute_mass_balance_source_term(VectorType &       mass_balance_rhs,

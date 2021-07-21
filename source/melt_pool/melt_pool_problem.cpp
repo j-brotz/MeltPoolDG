@@ -40,8 +40,7 @@ namespace MeltPoolDG::Flow
             /*
              * compute level set source term from evaporation
              */
-            evaporation_operation->compute_evaporation_velocity(
-              base_in->parameters.flow.variable_properties_over_interface);
+            evaporation_operation->compute_evaporation_velocity();
 
             interface_velocity += evaporation_operation->get_velocity();
           }
@@ -640,15 +639,14 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
               {
-                const auto indicator =
-                  parameters.material.two_phase_properties_transition_type ==
-                      MaterialData<double>::TwoPhasePropertiesTransitionType::sharp ?
-                    UtilityFunctions::heaviside(ls_values.get_value(q), 0.5) :
-                    ls_values.get_value(q);
+                const auto indicator = parameters.material.two_phase_properties_transition_type ==
+                                           TwoPhasePropertiesTransitionType::sharp ?
+                                         UtilityFunctions::heaviside(ls_values.get_value(q), 0.5) :
+                                         ls_values.get_value(q);
 
                 // set properties
                 if (parameters.material.two_phase_properties_transition_type ==
-                    MaterialData<double>::TwoPhasePropertiesTransitionType::evaporation)
+                    TwoPhasePropertiesTransitionType::consistent_with_evaporation)
                   {
                     const double rho_g = parameters.material.first.density;
                     const double rho_l = parameters.material.second.density;

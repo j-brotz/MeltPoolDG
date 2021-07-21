@@ -10,7 +10,6 @@
     "gravity": "0.0"
   },
   "flow": {
-    "flow variable properties over interface": "true",
     "flow surface tension coefficient": "1.8"
   },
   "time stepping": {
@@ -76,6 +75,7 @@
     "recoil temperature constant": "10000."
   },
   "material": {
+    "material two phase properties transition type": "smooth",
     "material first capacity": "0",
     "material first conductivity": "10",
     "material first density": "74.30",

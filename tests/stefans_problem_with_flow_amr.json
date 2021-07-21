@@ -18,10 +18,10 @@
     "mp do evaporation": "true"
   },
   "flow": {
-    "flow surface tension coefficient": "0.",
-    "flow variable properties over interface": "consistent_with_evaporation"
+    "flow surface tension coefficient": "0."
   },
   "material": {
+    "material two phase properties transition type": "consistent_with_evaporation",
     "material first density": "0.01",
     "material first viscosity": "0.001",
     "material first conductivity": "1e-16",

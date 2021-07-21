@@ -47,19 +47,20 @@ namespace MeltPoolDG::Evaporation
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
 
     if (evaporation_data.formulation_source_term_continuity == "diffuse")
-      evapor_source_terms_operator =
-        std::make_shared<EvaporationSourceTermsContinuous<dim>>(*scratch_data,
-                                                                evaporation_data,
-                                                                level_set_as_heaviside,
-                                                                normal_vector,
-                                                                evaporative_mass_flux,
-                                                                ls_hanging_nodes_dof_idx,
-                                                                ls_quad_idx,
-                                                                normal_dof_idx,
-                                                                evapor_vel_dof_idx,
-                                                                tolerance_normal_vector,
-                                                                material.first.density,
-                                                                material.second.density);
+      evapor_source_terms_operator = std::make_shared<EvaporationSourceTermsContinuous<dim>>(
+        *scratch_data,
+        evaporation_data,
+        level_set_as_heaviside,
+        normal_vector,
+        evaporative_mass_flux,
+        ls_hanging_nodes_dof_idx,
+        ls_quad_idx,
+        normal_dof_idx,
+        evapor_vel_dof_idx,
+        tolerance_normal_vector,
+        material.first.density,
+        material.second.density,
+        material.two_phase_properties_transition_type);
     else if (evaporation_data.formulation_source_term_continuity == "sharp")
       evapor_source_terms_operator =
         std::make_shared<EvaporationSourceTermsSharp<dim>>(*scratch_data,
@@ -184,11 +185,9 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationOperation<dim>::compute_evaporation_velocity(
-    const std::string &interpolation_type_parameters)
+  EvaporationOperation<dim>::compute_evaporation_velocity()
   {
-    evapor_source_terms_operator->compute_evaporation_velocity(evaporation_velocity,
-                                                               interpolation_type_parameters);
+    evapor_source_terms_operator->compute_evaporation_velocity(evaporation_velocity);
   }
 
   template <int dim>
