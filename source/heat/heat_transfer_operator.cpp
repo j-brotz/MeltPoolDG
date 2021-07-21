@@ -954,9 +954,14 @@ namespace MeltPoolDG::Heat
     conductivity = UtilityFunctions::interpolate(weight,
                                                  material.first.conductivity,
                                                  material.second.conductivity);
+
+
     density =
-      UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
-    // @todo: support density depending on evaporation
+      (material.two_phase_properties_transition_type ==
+       TwoPhasePropertiesTransitionType::consistent_with_evaporation) ?
+        material.first.density /
+          (1. + (material.first.density / material.second.density - 1.) * weight) :
+        UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
   }
 
   template <int dim, typename number>
