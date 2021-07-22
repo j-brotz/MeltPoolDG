@@ -617,8 +617,15 @@ namespace MeltPoolDG
       normal_vector.zero_out_ghost_values();
     }
 
-    /*
-     * @todo: DOCU
+    /**
+     * This utility function computes the projection of nodal points within the interfacial region
+     * (0 < level_set_as_heaviside < 1) on the interface, the latter represented by
+     * @p level_set_as_heaviside = 0. To this end, by means of the @p distance vector, holding
+     * the distance values with respect to the interface, for a given point an iterative procedure
+     * computes the projected point (adjustable by @p n_iterations), ideally characterized by zero
+     * distance. The result consists of a vector of projected points @return
+     * projected_points_at_interface and of the corresponding @return dof_indices of the level set
+     * vector.
      */
     template <int dim>
     std::pair<std::vector<Point<dim>>, std::vector<types::global_dof_index>>
@@ -739,8 +746,6 @@ namespace MeltPoolDG
             }
         }
 
-      return {projected_points_at_interface, dof_indices};
-
       /*
        * debug
        */
@@ -766,6 +771,12 @@ namespace MeltPoolDG
 
           myfile.close();
         }
+
+      distance.zero_out_ghost_values();
+      normal_vector.zero_out_ghost_values();
+      level_set_as_heaviside.zero_out_ghost_values();
+
+      return {projected_points_at_interface, dof_indices};
     }
 
     /*
