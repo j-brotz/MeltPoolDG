@@ -435,14 +435,50 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::correct_curvature_values()
   {
-    for (unsigned int i = 0; i < curvature_operation->get_curvature().locally_owned_size(); ++i)
-      // if (std::abs(solution_curvature.local_element(i)) > 1e-4)
-      if (1. - advec_diff_operation->get_advected_field().local_element(i) *
-                 advec_diff_operation->get_advected_field().local_element(i) >
-          1e-2)
-        curvature_operation->get_curvature().local_element(i) =
-          1. / (1. / curvature_operation->get_curvature().local_element(i) +
-                distance_to_level_set.local_element(i) / (dim - 1));
+    // new approach: use curvature values at the interface
+    Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
+      1e-6 /*tolerance*/, true /*unique mapping*/);
+
+    const auto [evaluation_points, dof_indices] =
+      UtilityFunctions::compute_projected_points_at_interface<dim>(scratch_data->get_mapping(),
+                                                                   scratch_data->get_dof_handler(
+                                                                     ls_dof_idx),
+                                                                   level_set_as_heaviside,
+                                                                   distance_to_level_set,
+                                                                   get_normal_vector(),
+                                                                   5 /*n_iterations*/,
+                                                                   remote_point_evaluation);
+    remote_point_evaluation.reinit(evaluation_points,
+                                   scratch_data->get_triangulation(),
+                                   scratch_data->get_mapping());
+
+    curvature_operation->get_curvature().update_ghost_values();
+
+    const auto curvature_evaluation_values =
+      dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                           scratch_data->get_dof_handler(curv_dof_idx),
+                                           curvature_operation->get_curvature());
+    curvature_operation->get_curvature().zero_out_ghost_values();
+
+    Assert(curvature_evaluation_values.size() == evaluation_points.size(),
+           ExcMessage("The size of vectors must match."));
+
+    curvature_operation->get_curvature() = 0;
+
+    for (unsigned int i = 0; i < evaluation_points.size(); ++i)
+      curvature_operation->get_curvature()[dof_indices[i]] = curvature_evaluation_values[i];
+
+    /*
+     * old approach --> only kept as back-up
+     */
+    // for (unsigned int i = 0; i < curvature_operation->get_curvature().locally_owned_size(); ++i)
+    //// if (std::abs(solution_curvature.local_element(i)) > 1e-4)
+    // if (1. - advec_diff_operation->get_advected_field().local_element(i) *
+    // advec_diff_operation->get_advected_field().local_element(i) >
+    // 1e-2)
+    // curvature_operation->get_curvature().local_element(i) =
+    // 1. / (1. / curvature_operation->get_curvature().local_element(i) +
+    // distance_to_level_set.local_element(i) / (dim - 1));
   }
 
   template <int dim>
