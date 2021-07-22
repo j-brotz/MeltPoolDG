@@ -248,6 +248,10 @@ namespace MeltPoolDG
 
     } // namespace CharacteristicFunctions
 
+    /**
+     * For a given CellAccessor @param cell, compute the interface thickness parameter
+     * epsilon from the characteristic cell length and a given @param thickness_scale_factor.
+     */
     template <int dim, typename cell_type>
     inline double
     compute_cell_size_dependent_interface_thickness(const cell_type cell,
@@ -256,6 +260,10 @@ namespace MeltPoolDG
       return cell->diameter() / std::sqrt(dim) * thickness_scale_factor;
     }
 
+    /**
+     * For a given @param cell_diameter, compute the interface thickness parameter
+     * epsilon using a given @param thickness_scale_factor.
+     */
     template <int dim>
     inline double
     compute_cell_size_dependent_interface_thickness(const double cell_diameter,
