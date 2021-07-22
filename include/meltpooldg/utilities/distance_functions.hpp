@@ -30,8 +30,7 @@ namespace MeltPoolDG::DistanceFunctions
   }
 
   /**
-   *  The following function describes the geometry of an ellipsoidal manifold implicitly
-   *  WARNING: This is not a real distance function.
+   *  The following function describes the geometry of an ellipsoidal manifold implicitly.
    *
    *
    *     sign=-         ------------
@@ -46,7 +45,7 @@ namespace MeltPoolDG::DistanceFunctions
    *              -------          -------
    *                    ------------
    *
-   * @param p Point, to which the distance to the ellipse is calculated to
+   * @param p Point for which the shortest signed distance to the ellipse is to be calculated
    * @param center Center of the ellipse
    * @param radii Radii of the ellipse at the respective semi-axes
    * @param approximate Set this parameter to true for an approximate distance calculation
@@ -59,8 +58,9 @@ namespace MeltPoolDG::DistanceFunctions
                        const Point<dim> &radii,
                        const bool        approximate = true)
   {
+    AssertThrow(approximate || dim == 2, ExcNotImplemented());
     /*
-     * ellipsoid equation
+     * ellipsoid equation to provide the information if point lies inside (@return < 0), on (@return == 0) or outside (@return > 0) the ellipse
      */
     const auto ellipsoid = [&](const Point<dim> &point) -> double {
       double val = 0.0;
@@ -71,9 +71,6 @@ namespace MeltPoolDG::DistanceFunctions
 
     if (approximate)
       return -ellipsoid(p);
-
-    if constexpr (dim != 2)
-      AssertThrow(false, ExcNotImplemented());
 
     /*
      * Precise distance calculation of 2D ellipse
@@ -90,14 +87,11 @@ namespace MeltPoolDG::DistanceFunctions
      *         ------  sign = +            ------
      *              -------          -------
      *                    ------------
+     * Check some special cases and then find the closest point on the ellipse and compute the
+     * distance.
      */
     const double       tolerance = 1e-14;
     const unsigned int max_iter  = 10;
-
-    /*
-     * compute sign (outside = -1.0; inside = +1.0)
-     */
-    const double sign = (ellipsoid(p) > 0) ? -1.0 /* point is outside */ : 1.0 /*point is inside*/;
 
     /*
      * point is already on ellipsoid
@@ -114,43 +108,61 @@ namespace MeltPoolDG::DistanceFunctions
           min_radius = std::min(min_radius, radii[d]);
         return min_radius;
       }
-
     /*
-     * Simple Method for Distance to Ellipse by Carl Chatfield
+     * function to compute the closest point on an ellipse (adopted from
+     * https://wet-robots.ghost.io/simple-method-for-distance-to-ellipse/ and
+     * https://github.com/0xfaded/ellipse_demo)
+     *
+     * Since the ellipse is symmetric to the two major axes through its centre, the point is move so
+     * the centre coincides with the origin and into the first quadrant.
+     * 1. Choose a point on the ellipse (x), here x = a*cos(pi/4) and y = b*sin(pi/4)
+     * 2. Find second point on the ellipse, that is the same distance
+     * 3. Find midpoint on the ellipse (must be closer)
+     * 4. Repeat 2.-4. until the step size vanishes
      */
-    const double  px   = std::abs(p[0] - center[0]);
-    const double  py   = std::abs(p[1] - center[1]);
-    const double &a    = radii[0];
-    const double &b    = radii[1];
-    double        t    = numbers::PI_4;
-    double        x    = a * std::cos(t);
-    double        y    = b * std::sin(t);
-    unsigned int  iter = 0;
-    while (iter < max_iter)
+    // get equivalent point in first quadrant of centered ellipse
+    const double px = std::abs(p[0] - center[0]);
+    const double py = std::abs(p[1] - center[1]);
+    // get semi axes radii
+    const double &a = radii[0];
+    const double &b = radii[1];
+    // initial guess (t = angle from x-axis)
+    double t = numbers::PI_4;
+    double x = a * std::cos(t);
+    double y = b * std::sin(t);
+
+    unsigned int iter    = 0;
+    double       delta_t = 1e16;
+    while (std::abs(delta_t) > tolerance && iter < max_iter)
       {
-        const double ex      = (a * a - b * b) * std::pow(std::cos(t), 3) / a;
-        const double ey      = (b * b - a * a) * std::pow(std::sin(t), 3) / b;
-        const double rx      = x - ex;
-        const double ry      = y - ey;
-        const double qx      = px - ex;
-        const double qy      = py - ey;
-        const double r       = std::hypot(rx, ry);
-        const double q       = std::hypot(qx, qy);
+        // compute the ellipse evolute (center of curvature) at the parameter t
+        const double ex = (a * a - b * b) * std::pow(std::cos(t), 3) / a;
+        const double ey = (b * b - a * a) * std::pow(std::sin(t), 3) / b;
+        // compute distances from current point on ellipse to its evolute
+        const double rx = x - ex;
+        const double ry = y - ey;
+        // compute distances from point to the current evolute
+        const double qx = px - ex;
+        const double qy = py - ey;
+        // compute the curvature radius at the current point on the ellipse
+        const double r = std::hypot(rx, ry);
+        // compute the distance from evolute to the point
+        const double q = std::hypot(qx, qy);
+        // compute step size on ellipse
         const double delta_c = r * std::asin((rx * qy - ry * qx) / (r * q));
-        const double delta_t = delta_c / std::sqrt(a * a + b * b - x * x - y * y);
+        // compute approximate angle step
+        delta_t = delta_c / std::sqrt(a * a + b * b - x * x - y * y);
         t += delta_t;
+        // make sure the angle stays in first quadrant
         t = std::min(numbers::PI_2, std::max(0.0, t));
         x = a * std::cos(t);
         y = b * std::sin(t);
-        if (std::abs(delta_t) < tolerance)
-          break;
         iter++;
       }
-    AssertThrow(iter < max_iter,
-                ExcMessage("Distance to ellipse algorithm did not converge! Abort..."));
-    const double distance = std::hypot(x - px, y - py);
+    AssertIndexRange(iter, max_iter);
 
-    return sign * distance;
+    return UtilityFunctions::CharacteristicFunctions::sgn(-ellipsoid(p)) *
+           std::hypot(x - px, y - py);
   }
 
 

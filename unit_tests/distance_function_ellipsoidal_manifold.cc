@@ -36,8 +36,9 @@ public:
   {}
 
   double
-  value(const Point<dim> &p, unsigned int) const override
+  value(const Point<dim> &p, unsigned int component = 0) const override
   {
+    (void)component;
     return DistanceFunctions::ellipsoidal_manifold<dim>(p, center, radii, false);
   }
 
@@ -84,12 +85,16 @@ test(const MPI_Comm &mpi_comm)
   const auto distance_function = Distance<dim>(center, radii);
   VectorTools::interpolate(mapping, dof_handler, distance_function, distance);
 
-  // compute distance function of a rectangular manifold
+  // compute distance function of a ellipsoidal manifold at selected points
   pcout << "dim= " << dim << " distance norm: " << distance.l2_norm() << std::endl;
-  pcout << "distance at origin: " << distance_function.value(Point<dim>(), 0) << std::endl;
-  pcout << "distance at center: " << distance_function.value(center, 0) << std::endl;
-  pcout << "distance at [5, 3]: " << distance_function.value(Point<dim>(5., 3.), 0) << std::endl;
-  pcout << "distance at [1, 8]: " << distance_function.value(Point<dim>(1., 8.), 0) << std::endl;
+  pcout << "distance at origin: " << distance_function.value(Point<dim>()) << std::endl;
+  pcout << "distance at center: " << distance_function.value(center) << std::endl;
+  pcout << "distance on x-semiaxis: "
+        << distance_function.value(center + Point<dim>(radii[0] + 1.5, 0.)) << std::endl;
+  pcout << "distance on y-semiaxis: "
+        << distance_function.value(center + Point<dim>(0., radii[1] + 1.5)) << std::endl;
+  pcout << "distance at [5, 3]: " << distance_function.value(Point<dim>(5., 3.)) << std::endl;
+  pcout << "distance at [1, 8]: " << distance_function.value(Point<dim>(1., 8.)) << std::endl;
   distance.update_ghost_values();
 
   // write paraview output
@@ -107,7 +112,6 @@ main(int argc, char *argv[])
 {
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
   MPI_Comm                         mpi_comm(MPI_COMM_WORLD);
-
   test<2>(mpi_comm);
 
   return 0;
