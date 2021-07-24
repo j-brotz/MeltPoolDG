@@ -1,133 +1,133 @@
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || normal_0 ||L2 = 5.0357968929e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.9894594897e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 4.0496364669e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.2931912057e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.2940355766e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 3.5055812471e-02                                     reinitialization_adaflo |
 |  τ = 0.03125                                                                    reinitialization |
-| || normal_0 ||L2 = 4.7143510745e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.6688880896e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 2.4980704268e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.2520297083e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.2529119829e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 2.2298540945e-02                                     reinitialization_adaflo |
 |  τ = 0.046875                                                                   reinitialization |
-| || normal_0 ||L2 = 4.5382883032e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.4933989142e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.5928640323e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.2255049302e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.2264134502e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 1.4562556707e-02                                     reinitialization_adaflo |
 |  τ = 0.0625                                                                     reinitialization |
-| || normal_0 ||L2 = 4.4368376043e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.3922726335e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.0572551424e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.2071913468e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.2081192819e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 9.8635294924e-03                                     reinitialization_adaflo |
 |  τ = 0.078125                                                                   reinitialization |
-| || normal_0 ||L2 = 4.3758087819e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.3314025727e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 7.3292511283e-03                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.1938864799e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1948291679e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 6.9549287200e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.3376547847e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 4.2933082061e+00                                         normal_vector_adaflo |
-| || curvature ||L2 = 7.2720753350e+00                                            curvature_adaflo |
+| || normal_0 ||L2 = 3.1838677078e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1848219173e+00                                         normal_vector_adaflo |
+| || curvature ||L2 = 5.0858764839e+00                                            curvature_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| |phi| = 1.956481434 |phi_n-1| = 1.954351725 |phi_n-2| = 1.968667316   advection_diffusion_adaflo |
+| |phi| = 1.975663387 |phi_n-1| = 1.978874143 |phi_n-2| = 1.990101372   advection_diffusion_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || normal_0 ||L2 = 3.1405998390e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1764041825e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.9083768393e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.1250754618e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1644887900e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 4.8750412848e-03                                     reinitialization_adaflo |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 1.1737228967e-02                                     reinitialization_adaflo |
+| || delta phi ||L2 = 3.3898639280e-03                                     reinitialization_adaflo |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 7.8425281548e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.5061912228e-03                                     reinitialization_adaflo |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 5.5556302768e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.9465654323e-03                                     reinitialization_adaflo |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.1299074672e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 1.5698304912e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.1478308485e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1668076518e+00                                         normal_vector_adaflo |
-| || curvature ||L2 = 1.1506551317e+01                                            curvature_adaflo |
+| || normal_0 ||L2 = 3.1308151137e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1567948234e+00                                         normal_vector_adaflo |
+| || curvature ||L2 = 5.0894898849e+00                                            curvature_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-02 to 2.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| |phi| = 1.953899391 |phi_n-1| = 1.956145287 |phi_n-2| = 1.954351725   advection_diffusion_adaflo |
+| |phi| = 1.972714641 |phi_n-1| = 1.975454861 |phi_n-2| = 1.978874143   advection_diffusion_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || normal_0 ||L2 = 3.0936062642e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1470705898e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.2603902955e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.0776613572e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1375114754e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 3.9416192070e-03                                     reinitialization_adaflo |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 8.7884842679e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 3.2885277585e-03                                     reinitialization_adaflo |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 6.4064511331e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.7969506308e-03                                     reinitialization_adaflo |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 4.8860210344e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.4039573031e-03                                     reinitialization_adaflo |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 3.8938713665e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.0783806382e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.1259566273e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1581159766e+00                                         normal_vector_adaflo |
-| || curvature ||L2 = 1.0892925147e+01                                            curvature_adaflo |
+| || normal_0 ||L2 = 3.1067747768e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1505310467e+00                                         normal_vector_adaflo |
+| || curvature ||L2 = 5.0886346129e+00                                            curvature_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-02 to 3.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| |phi| = 1.953595652 |phi_n-1| = 1.955744676 |phi_n-2| = 1.956145287   advection_diffusion_adaflo |
+| |phi| = 1.971635768 |phi_n-1| = 1.974219752 |phi_n-2| = 1.975454861   advection_diffusion_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || normal_0 ||L2 = 3.0717845982e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1356887952e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.2111889183e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.0562742845e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1311767087e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 4.2785278487e-03                                     reinitialization_adaflo |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 8.1025428127e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 3.6872905666e-03                                     reinitialization_adaflo |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 5.8764644549e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 3.2009209329e-03                                     reinitialization_adaflo |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 4.5880208770e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.7863382020e-03                                     reinitialization_adaflo |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 3.7937841686e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.4270066346e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.1121770464e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1542020454e+00                                         normal_vector_adaflo |
-| || curvature ||L2 = 1.0582415564e+01                                            curvature_adaflo |
+| || normal_0 ||L2 = 3.0935867541e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1514679262e+00                                         normal_vector_adaflo |
+| || curvature ||L2 = 5.0903748786e+00                                            curvature_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-02 to 4.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| |phi| = 1.953718621 |phi_n-1| = 1.955976928 |phi_n-2| = 1.955744676   advection_diffusion_adaflo |
+| |phi| = 1.971203265 |phi_n-1| = 1.973717596 |phi_n-2| = 1.974219752   advection_diffusion_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || normal_0 ||L2 = 3.0594013967e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1312543823e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.1159081839e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.0448889203e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1315850326e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 4.4034065400e-03                                     reinitialization_adaflo |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 7.6010741901e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 3.8303379657e-03                                     reinitialization_adaflo |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 5.7578670170e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 3.3457885822e-03                                     reinitialization_adaflo |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 4.7227595063e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.9249939958e-03                                     reinitialization_adaflo |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.0741335405e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.5553986416e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.1040119587e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1543852826e+00                                         normal_vector_adaflo |
-| || curvature ||L2 = 1.0340694066e+01                                            curvature_adaflo |
+| || normal_0 ||L2 = 3.0852913902e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1548429846e+00                                         normal_vector_adaflo |
+| || curvature ||L2 = 5.1047538908e+00                                            curvature_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-02 to 5.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| |phi| = 1.954184354 |phi_n-1| = 1.956396541 |phi_n-2| = 1.955976928   advection_diffusion_adaflo |
+| |phi| = 1.971033053 |phi_n-1| = 1.97350991  |phi_n-2| = 1.973717596   advection_diffusion_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || normal_0 ||L2 = 3.0526734066e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1310002953e+00                                         normal_vector_adaflo |
-| || delta phi ||L2 = 1.0824404523e-02                                     reinitialization_adaflo |
+| || normal_0 ||L2 = 3.0381512437e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1341704164e+00                                         normal_vector_adaflo |
+| || delta phi ||L2 = 4.4410082856e-03                                     reinitialization_adaflo |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 7.6379884167e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 3.8801154692e-03                                     reinitialization_adaflo |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 5.9529546084e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 3.4004150178e-03                                     reinitialization_adaflo |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 4.9686117937e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.9801337101e-03                                     reinitialization_adaflo |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 4.3213131369e-03                                     reinitialization_adaflo |
+| || delta phi ||L2 = 2.6084715100e-03                                     reinitialization_adaflo |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.0990323359e+00                                         normal_vector_adaflo |
-| || normal_1 ||L2 = 3.1578799749e+00                                         normal_vector_adaflo |
-| || curvature ||L2 = 1.0166874896e+01                                            curvature_adaflo |
+| || normal_0 ||L2 = 3.0795507622e+00                                         normal_vector_adaflo |
+| || normal_1 ||L2 = 3.1588133549e+00                                         normal_vector_adaflo |
+| || curvature ||L2 = 5.0915658670e+00                                            curvature_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

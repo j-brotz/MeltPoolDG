@@ -69,7 +69,7 @@ namespace MeltPoolDG::Heat
                                      scratch_data.get_dof_handler(temp_dof_idx),
                                      initial_field_function_temperature,
                                      temperature);
-    distribute_constraints();
+    scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
     temperature_old.copy_locally_owned_data_from(temperature);
   }
 
