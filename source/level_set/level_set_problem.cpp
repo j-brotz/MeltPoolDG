@@ -125,12 +125,6 @@ namespace MeltPoolDG::LevelSet
     else
       ls_quad_idx =
         scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
-
-    // TODO: only do once!
-    if (base_in->parameters.base.do_simplex)
-      scratch_data->attach_quadrature(QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
-    else
-      scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
     /*
      *  initialize the time iterator
      */
@@ -326,12 +320,11 @@ namespace MeltPoolDG::LevelSet
      */
     advec_func.set_time(time_iterator.get_current_time());
 
-    dealii::VectorTools::project(scratch_data->get_mapping(),
-                                 dof_handler_velocity,
-                                 hanging_node_constraints_velocity,
-                                 scratch_data->get_quadrature(),
-                                 advec_func,
-                                 advection_velocity);
+    dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                     dof_handler_velocity,
+                                     advec_func,
+                                     advection_velocity);
+    hanging_node_constraints_velocity.distribute(advection_velocity);
   }
   /*
    *  This function is to create paraview output

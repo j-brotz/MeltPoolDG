@@ -65,12 +65,11 @@ namespace MeltPoolDG::Heat
   {
     reinit();
 
-    dealii::VectorTools::project(scratch_data.get_mapping(),
-                                 scratch_data.get_dof_handler(temp_dof_idx),
-                                 scratch_data.get_constraint(temp_dof_idx),
-                                 scratch_data.get_quadrature(temp_quad_idx),
-                                 initial_field_function_temperature,
-                                 temperature);
+    dealii::VectorTools::interpolate(scratch_data.get_mapping(),
+                                     scratch_data.get_dof_handler(temp_dof_idx),
+                                     initial_field_function_temperature,
+                                     temperature);
+    distribute_constraints();
     temperature_old.copy_locally_owned_data_from(temperature);
   }
 
