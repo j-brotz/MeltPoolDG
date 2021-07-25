@@ -65,3 +65,14 @@ jobs:
         run: |
           cd build
           ctest -V -R 'unit_tests/|tests/'
+          
+      - name: Failed test log
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-log
+          path: |
+            build/tests/**/*output*
+            build/tests/**/*stdout*
+            build/unit_tests/**/*output*
+            build/unit_tests/**/*stdout*
