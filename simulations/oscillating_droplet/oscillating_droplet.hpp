@@ -65,7 +65,9 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
   public:
     SimulationOscillatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
-    {}
+    {
+      AssertDimension(dim, 2);
+    }
 
     void
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
@@ -87,11 +89,7 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
       this->triangulation =
         std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
 
-      if constexpr (dim == 2)
-        GridGenerator::hyper_cube(*this->triangulation, -side_length / 2, side_length / 2);
-
-      else
-        AssertThrow(false, ExcNotImplemented());
+      GridGenerator::hyper_cube(*this->triangulation, -side_length / 2, side_length / 2);
 
       this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
@@ -99,30 +97,8 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
     void
     set_boundary_conditions() final
     {
-      const types::boundary_id left_bc  = 1;
-      const types::boundary_id right_bc = 2;
-      const types::boundary_id lower_bc = 3;
-      const types::boundary_id upper_bc = 4;
-
-      for (const auto &cell : this->triangulation->cell_iterators())
-        for (auto &face : cell->face_iterators())
-          if (face->at_boundary())
-            {
-              if (face->center()[0] == -side_length / 2)
-                face->set_boundary_id(left_bc);
-              else if (face->center()[0] == side_length / 2)
-                face->set_boundary_id(right_bc);
-              else if (face->center()[1] == -side_length / 2)
-                face->set_boundary_id(lower_bc);
-              else if (face->center()[1] == side_length / 2)
-                face->set_boundary_id(upper_bc);
-            }
-
-      this->attach_no_slip_boundary_condition(left_bc, "navier_stokes_u");
-      this->attach_no_slip_boundary_condition(right_bc, "navier_stokes_u");
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
-      this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
+      this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
+      this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
     }
 
     void
