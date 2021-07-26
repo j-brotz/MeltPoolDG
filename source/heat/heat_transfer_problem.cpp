@@ -326,7 +326,7 @@ namespace MeltPoolDG::Heat
           }
       }
     temp_constraints.close();
-    temp_constraints.merge(temp_constraints,
+    temp_constraints.merge(temp_hanging_nodes_constraints,
                            AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
     UtilityFunctions::check_constraints(dof_handler, temp_constraints);
