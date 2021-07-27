@@ -172,7 +172,7 @@ namespace MeltPoolDG::Heat
                                                temp_dof_idx,
                                                this->quad_idx);
 
-    for (unsigned int face = face_range.first; face < face_range.second; face++)
+    for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
         dQ_dT.reinit(face);
         dQ_dT.read_dof_values(src);
@@ -311,7 +311,7 @@ namespace MeltPoolDG::Heat
                       matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
                 }
 
-              for (unsigned int v = 0; v < n_filled_lanes; v++)
+              for (unsigned int v = 0; v < n_filled_lanes; ++v)
                 {
                   auto cell_v = matrix_free.get_cell_iterator(cell, v);
 
@@ -319,7 +319,7 @@ namespace MeltPoolDG::Heat
                   cell_v->get_dof_indices(dof_indices);
 
                   auto temp = dof_indices;
-                  for (unsigned int j = 0; j < dof_indices.size(); j++)
+                  for (unsigned int j = 0; j < dof_indices.size(); ++j)
                     dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
 
                   scratch_data.get_constraint(temp_dof_idx)
@@ -345,7 +345,7 @@ namespace MeltPoolDG::Heat
 
           const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
 
-          for (unsigned int face = face_range.first; face < face_range.second; face++)
+          for (unsigned int face = face_range.first; face < face_range.second; ++face)
             {
               dQ_dT.reinit(face);
 
@@ -368,7 +368,7 @@ namespace MeltPoolDG::Heat
                       matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
                 }
 
-              for (unsigned int v = 0; v < n_filled_lanes; v++)
+              for (unsigned int v = 0; v < n_filled_lanes; ++v)
                 {
                   unsigned int const cell_number =
                     matrix_free.get_face_info(face).cells_interior[v];
@@ -381,7 +381,7 @@ namespace MeltPoolDG::Heat
                   cell_v->get_dof_indices(dof_indices);
 
                   auto temp = dof_indices;
-                  for (unsigned int j = 0; j < dof_indices.size(); j++)
+                  for (unsigned int j = 0; j < dof_indices.size(); ++j)
                     dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
 
                   scratch_data.get_constraint(temp_dof_idx)
@@ -516,12 +516,8 @@ namespace MeltPoolDG::Heat
                                            true /* is interior face*/,
                                            temp_dof_idx,
                                            this->quad_idx);
-    for (unsigned int face = face_range.first; face < face_range.second; face++)
+    for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
-        dQ_dT.reinit(face);
-        dQ_dT.read_dof_values_plain(temperature);
-        dQ_dT.evaluate(EvaluationFlags::values);
-
         const types::boundary_id bc_index = matrix_free.get_boundary_id(face);
 
         bool do_neumann = neumann_bc.find(bc_index) != neumann_bc.end();
@@ -540,6 +536,10 @@ namespace MeltPoolDG::Heat
 
         if (!do_neumann && !do_radiation && !do_convection)
           continue;
+
+        dQ_dT.reinit(face);
+        dQ_dT.read_dof_values_plain(temperature);
+        dQ_dT.evaluate(EvaluationFlags::values);
 
         for (unsigned int q_index = 0; q_index < dQ_dT.n_q_points; ++q_index)
           {
