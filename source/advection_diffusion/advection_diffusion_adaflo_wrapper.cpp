@@ -81,12 +81,13 @@ namespace MeltPoolDG::AdvectionDiffusion
     const VectorType &   initial_velocity)
   {
     initialize_vectors();
-    dealii::VectorTools::project(scratch_data.get_mapping(),
-                                 scratch_data.get_dof_handler(adaflo_params.dof_index_ls),
-                                 scratch_data.get_constraint(dirichlet_dof_idx),
-                                 scratch_data.get_quadrature(adaflo_params.quad_index),
-                                 initial_field_function,
-                                 advected_field);
+    dealii::VectorTools::interpolate(scratch_data.get_mapping(),
+                                     scratch_data.get_dof_handler(adaflo_params.dof_index_ls),
+                                     initial_field_function,
+                                     advected_field);
+
+    scratch_data.get_constraint(dirichlet_dof_idx).distribute(advected_field);
+
     advected_field_old     = advected_field;
     advected_field_old_old = advected_field;
 

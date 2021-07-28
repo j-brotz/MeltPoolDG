@@ -33,14 +33,15 @@
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit scale factor epsilon": "0.7107"
+    "reinit scale factor epsilon": "1.5"
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
     "normal vec do matrix free": "true"
   },
   "curvature": {
-    "curv do matrix free": "true"
+    "curv do matrix free": "true",
+    "curv damping scale factor": "0.01"
   },
   "paraview": {
     "paraview do output": "false"

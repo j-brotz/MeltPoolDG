@@ -87,12 +87,11 @@ namespace MeltPoolDG::Reinitialization
 
     auto ic = base_in->get_initial_condition("level_set");
 
-    dealii::VectorTools::project(scratch_data->get_mapping(),
-                                 dof_handler,
-                                 constraints,
-                                 scratch_data->get_quadrature(),
-                                 *ic,
-                                 solution_level_set);
+    dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                     dof_handler,
+                                     *ic,
+                                     solution_level_set);
+    constraints.distribute(solution_level_set);
 
     solution_level_set.update_ghost_values();
 

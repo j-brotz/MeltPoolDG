@@ -437,7 +437,7 @@ namespace MeltPoolDG::LevelSet
   {
     // new approach: use curvature values at the interface
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-      1e-6 /*tolerance*/, true /*unique mapping*/);
+      1e-6 /*tolerance*/, false /*unique mapping*/);
 
     const auto [evaluation_points, dof_indices] =
       UtilityFunctions::compute_projected_points_at_interface<dim>(scratch_data->get_mapping(),
@@ -448,25 +448,36 @@ namespace MeltPoolDG::LevelSet
                                                                    get_normal_vector(),
                                                                    5 /*n_iterations*/,
                                                                    remote_point_evaluation);
+
+
     remote_point_evaluation.reinit(evaluation_points,
                                    scratch_data->get_triangulation(),
                                    scratch_data->get_mapping());
 
     curvature_operation->get_curvature().update_ghost_values();
-
     const auto curvature_evaluation_values =
       dealii::VectorTools::point_values<1>(remote_point_evaluation,
                                            scratch_data->get_dof_handler(curv_dof_idx),
                                            curvature_operation->get_curvature());
     curvature_operation->get_curvature().zero_out_ghost_values();
 
-    Assert(curvature_evaluation_values.size() == evaluation_points.size(),
-           ExcMessage("The size of vectors must match."));
+    AssertThrow(curvature_evaluation_values.size() == evaluation_points.size(),
+                ExcMessage("The size of vectors must match."));
 
     curvature_operation->get_curvature() = 0;
 
+    bool do_assert = true;
     for (unsigned int i = 0; i < evaluation_points.size(); ++i)
-      curvature_operation->get_curvature()[dof_indices[i]] = curvature_evaluation_values[i];
+      {
+        if (curvature_evaluation_values[i] == 0)
+          {
+            std::cout << "point: " << evaluation_points[i] << std::endl;
+            do_assert = false;
+          }
+        curvature_operation->get_curvature()[dof_indices[i]] = curvature_evaluation_values[i];
+      }
+
+    AssertThrow(do_assert, ExcMessage("Curvature value for requested point is zero."));
 
     /*
      * old approach --> only kept as back-up

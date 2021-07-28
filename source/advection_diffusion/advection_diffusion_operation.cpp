@@ -42,12 +42,12 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     (void)initial_velocity;
     reinit();
-    dealii::VectorTools::project(scratch_data->get_mapping(),
-                                 scratch_data->get_dof_handler(advec_diff_dof_idx),
-                                 scratch_data->get_constraint(advec_diff_dof_idx),
-                                 scratch_data->get_quadrature(advec_diff_quad_idx),
-                                 initial_field_function,
-                                 solution_advected_field);
+    dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                     scratch_data->get_dof_handler(advec_diff_dof_idx),
+                                     initial_field_function,
+                                     solution_advected_field);
+
+    scratch_data->get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
   }
 
   template <int dim>
