@@ -76,12 +76,14 @@
     "reinit constant epsilon": "0.02"
   },
   "normal vector": {
+    "normal vec damping scale factor": "4",
     "normal vec do matrix free": "true",
     "normal vec implementation": "meltpooldg"
   },
   "curvature": {
     "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "curv verbosity level": "1"
   },
   "evaporation": {
     "evapor evaporative mass flux": "1.e-3",
