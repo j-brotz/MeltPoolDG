@@ -10,8 +10,8 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.002",
-    "time step size": "0.0005"
+    "end time": "0.0005",
+    "time step size": "0.0001"
   },
   "melt pool": {
     "mp do heat transfer": "true",
