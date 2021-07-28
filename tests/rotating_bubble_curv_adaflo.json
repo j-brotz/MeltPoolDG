@@ -23,8 +23,7 @@
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
     "reinit preconditioner type": "Identity",
-    "reinit solver type": "CG",
-    "reinit eps scale factor": "0.5"
+    "reinit solver type": "CG"
   },
   "normal vector": {
     "normal vec damping scale factor": "0.5",

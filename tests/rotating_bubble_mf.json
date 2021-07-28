@@ -21,8 +21,7 @@
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit eps scale factor": "0.5"
+    "reinit do matrix free": "true"
   },
   "normal vector": {
     "normal vec damping scale factor": "0.5",

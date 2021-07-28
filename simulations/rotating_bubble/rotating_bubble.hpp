@@ -35,8 +35,9 @@ namespace MeltPoolDG
       class InitializePhi : public Function<dim>
       {
       public:
-        InitializePhi()
+        InitializePhi(const double eps)
           : Function<dim>()
+          , eps(eps)
         {}
         virtual double
         value(const Point<dim> &p, const unsigned int component = 0) const
@@ -46,18 +47,10 @@ namespace MeltPoolDG
           Point<dim>   center = dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5);
           const double radius = 0.25;
 
-          return UtilityFunctions::CharacteristicFunctions::sgn(
-            DistanceFunctions::spherical_manifold<dim>(p, center, radius));
-
-          /*
-           *  Alternatively, a tanh function could be used, corresponding to the
-           *  analytic solution of the reinitialization problem
-           */
-          // return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          // DistanceFunctions::spherical_manifold<dim>( p, center, radius ),
-          // this->epsInterface
-          //);
+          return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+            DistanceFunctions::spherical_manifold<dim>(p, center, radius), eps);
         }
+        double eps;
       };
 
       template <int dim>
@@ -229,7 +222,9 @@ namespace MeltPoolDG
         void
         set_field_conditions()
         {
-          this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
+          double eps =
+            UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+          this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(eps), "level_set");
           this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "level_set");
           this->attach_exact_solution(std::make_shared<ExactSolution<dim>>(0.01), "level_set");
         }
