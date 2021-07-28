@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import re
+from utils import find_filenames
 
 
 def process_pvd(folder, pvd_file):
@@ -216,7 +217,7 @@ def process_pvd(folder, pvd_file):
     animationScene1.GoToFirst()
 
     # save data
-    SaveData(folder+'/kinetic_energy.csv', proxy=integrateVariables1, WriteTimeSteps=1,
+    SaveData(os.path.join(folder, pvd_file.split(".")[0]+'_kinetic_energy.csv'), proxy=integrateVariables1, WriteTimeSteps=1,
              ChooseArraysToWrite=1,
              PointDataArrays=['KineticEnergy'],
              AddMetaData=0,
@@ -250,11 +251,13 @@ def process_pvd(folder, pvd_file):
 # -------------------------------------------------------
 # [MS] modifications
 # -------------------------------------------------------
-def collect_files_and_write_into_one(folder, prefix="kinetic_energy", suffix=".csv"):
+def collect_files_and_write_into_one(folder, pvdfile, suffix=".csv"):
 
-    if (os.path.isfile(os.path.join(folder, "kinetic_energy.csv"))):
-        os.remove(os.path.join(folder, "kinetic_energy.csv"))
-    csvs = find_filenames(folder, suffix, prefix)
+    if (os.path.isfile(os.path.join(folder, pvdfile.split(".")[0]+"_kinetic_energy.csv"))):
+        os.remove(os.path.join(folder, pvdfile.split(
+            ".")[0]+"_kinetic_energy.csv"))
+    csvs = find_filenames(folder, suffix, pvdfile.split(".")[
+                          0]+"_kinetic_energy")
     csvs.sort(key=lambda f: int(re.sub('\D', '', f)))
 
     kinetic_energy = []
@@ -273,12 +276,7 @@ def collect_files_and_write_into_one(folder, prefix="kinetic_energy", suffix=".c
     np.savetxt(os.path.join(folder, "kinetic_energy.csv"), np.column_stack((np.asarray(
         time_list), np.asarray(kinetic_energy))), delimiter=",", header="time, kinetic energy")
     print(" file written: {:}".format(
-        os.path.join(folder, "kinetic_energy.csv")))
-
-
-def find_filenames(path_to_dir, suffix=".pvd", prefix=""):
-    filenames = os.listdir(path_to_dir)
-    return [filename for filename in filenames if filename.endswith(suffix) and filename.startswith(prefix)]
+        os.path.join(folder, pvdfile.splot(".")+"_kinetic_energy.csv")))
 
 
 if __name__ == "__main__":
@@ -304,7 +302,7 @@ if __name__ == "__main__":
     print(
         " Start processing pvd-file: {:}".format(os.path.join(folder, pvdfile)))
     process_pvd(folder, pvdfile)
-    collect_files_and_write_into_one(folder)
+    collect_files_and_write_into_one(folder, pvdfile)
     print(" The end")
     print(70*"-")
 # -------------------------------------------------------

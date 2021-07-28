@@ -4,6 +4,11 @@
 from paraview.simple import *
 import os
 import argparse
+from utils import find_filenames
+
+import re
+import pandas as pd
+import numpy as np
 
 
 def process_pvd(folder, pvd_file, isosurface_level=0.0):
@@ -162,7 +167,7 @@ def process_pvd(folder, pvd_file, isosurface_level=0.0):
                              'SpreadSheetRepresentation')
 
     # save data
-    SaveData(folder+'/contour.csv', proxy=contour1, WriteTimeSteps=1,
+    SaveData(os.path.join(folder, pvd_file.split(".")[0]+'_contour.csv'), proxy=contour1, WriteTimeSteps=1,
              PointDataArrays=['curvature', 'density', 'distance', 'force_rhs_pressure', 'force_rhs_velocity',
                               'heaviside', 'level_set', 'normal_0', 'normal_1', 'pressure', 'velocity', 'viscosity'],
              AddTime=1)
@@ -196,9 +201,31 @@ def process_pvd(folder, pvd_file, isosurface_level=0.0):
 # -------------------------------------------------------
 
 
-def find_filenames(path_to_dir, suffix=".pvd"):
-    filenames = os.listdir(path_to_dir)
-    return [filename for filename in filenames if filename.endswith(suffix)]
+def export_amplitude_over_time(folder, pvd_file, filename_suffix=".csv"):
+
+    csvs = find_filenames(folder, filename_suffix,
+                          pvd_file.split(".")[0]+"_contour")
+    csvs.sort(key=lambda f: int(re.sub('\D', '', f)))
+
+    x_max = []
+    y_max = []
+    time_list = []
+
+    for csv in csvs:
+        data = pd.read_csv(os.path.join(folder, csv))
+
+        x = pd.DataFrame(data, columns=['Points:0']).to_numpy()
+        y = pd.DataFrame(data, columns=['Points:1']).to_numpy()
+        time = pd.DataFrame(data, columns=['Time']).to_numpy()
+
+        indices_zero = np.where(y == 0)[0]
+        x_max.append(float(max(x[indices_zero])))
+        indices_zero = np.where(x == 0)[0]
+        y_max.append(float(max(y[indices_zero])))
+        time_list.append(time[0])
+
+    np.savetxt(os.path.join(folder, pvd_file.split(".")[0]+"_amplitude_over_time.csv"), np.column_stack((np.asarray(
+        time_list), np.asarray(x_max), np.asarray(y_max))), delimiter=",", header="time, x_semi_axis, y_semi_axis")
 
 
 if __name__ == "__main__":
@@ -228,6 +255,7 @@ if __name__ == "__main__":
     print(
         " Start processing pvd-file: {:}".format(os.path.join(folder, pvdfile)))
     process_pvd(folder, pvdfile, contourlevel)
+    export_amplitude_over_time(folder, pvdfile)
     print(" The end")
     print(70*"-")
 # -------------------------------------------------------
