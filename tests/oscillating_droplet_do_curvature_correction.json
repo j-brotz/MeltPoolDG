@@ -48,7 +48,7 @@
     "advec diff implementation": "meltpooldg"
   },
   "reinitialization": {
-    "reinit max n steps": "2",
+    "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
     "reinit preconditioner type": "AMG",
@@ -56,13 +56,13 @@
     "reinit implementation": "meltpooldg"
   },
   "normal vector": {
-    "normal vec damping scale factor": "1",
+    "normal vec damping scale factor": "4",
     "normal vec do matrix free": "true",
     "normal vec implementation": "meltpooldg"
   },
   "curvature": {
     "curv do matrix free": "true",
-    "curv damping scale factor": "1e-5",
+    "curv damping scale factor": "1e-6",
     "curv implementation": "meltpooldg",
     "curv verbosity level": "0"
   },
