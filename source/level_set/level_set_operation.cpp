@@ -469,6 +469,9 @@ namespace MeltPoolDG::LevelSet
     bool do_assert = true;
     for (unsigned int i = 0; i < evaluation_points.size(); ++i)
       {
+        /*
+         * debug
+         */
         if (curvature_evaluation_values[i] == 0)
           {
             std::cout << "point: " << evaluation_points[i] << std::endl;
@@ -480,7 +483,7 @@ namespace MeltPoolDG::LevelSet
     AssertThrow(do_assert, ExcMessage("Curvature value for requested point is zero."));
 
     /*
-     * old approach --> only kept as back-up
+     * old approach --> only kept as back-up [MS]
      */
     // for (unsigned int i = 0; i < curvature_operation->get_curvature().locally_owned_size(); ++i)
     //// if (std::abs(solution_curvature.local_element(i)) > 1e-4)

@@ -23,7 +23,7 @@
   "time stepping": {
     "start time": "0.0",
     "end time": "0.6e-3",
-    "time step size": "1e-7",
+    "time step size": "5e-8",
     "max n steps": "3"
   },
   "material": {
@@ -48,7 +48,7 @@
     "advec diff implementation": "meltpooldg"
   },
   "reinitialization": {
-    "reinit max n steps": "2",
+    "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
     "reinit preconditioner type": "AMG",
@@ -56,7 +56,7 @@
     "reinit implementation": "meltpooldg"
   },
   "normal vector": {
-    "normal vec damping scale factor": "1",
+    "normal vec damping scale factor": "4",
     "normal vec do matrix free": "true",
     "normal vec implementation": "meltpooldg"
   },
