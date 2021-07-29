@@ -693,6 +693,7 @@ namespace MeltPoolDG::Flow
                       }
                   }
 
+#if 0
                 // check if no spurious densities or viscosities are computed
                 for (auto dens : flow_operation->get_density(cell, q))
                   if (min_density > dens || dens > max_density)
@@ -702,6 +703,7 @@ namespace MeltPoolDG::Flow
                   if (min_viscosity > visc || visc > max_viscosity)
                     std::cout << "WARNING: viscosity does not comply with input:" << visc
                               << std::endl;
+#endif
 
                 // compute overall mass
                 for (unsigned int v = 0;
