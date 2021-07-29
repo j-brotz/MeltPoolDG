@@ -124,8 +124,8 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::create_operator(const VectorType &solution_levelset)
   {
-    const double damping_parameter =
-      scratch_data->get_min_cell_size(curv_dof_idx) * curvature_data.damping_scale_factor;
+    const double damping_parameter = std::pow(scratch_data->get_min_cell_size(curv_dof_idx), 2) *
+                                     curvature_data.damping_scale_factor;
 
     curvature_operator = std::make_unique<CurvatureOperator<dim>>(*scratch_data,
                                                                   damping_parameter,

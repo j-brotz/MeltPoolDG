@@ -1,25 +1,25 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| || normal_0 ||L2 = 1.22683269740e-17                                               normal_vector |
+| || normal_0 ||L2 = 1.22683275491e-17                                               normal_vector |
 | || normal_1 ||L2 = 3.71582091127e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 2.660985980030629e-07                                       reinitialization |
-| || normal_0 ||L2 = 1.55457754578e-14                                               normal_vector |
-| || normal_1 ||L2 = 3.72017383046e+00                                               normal_vector |
+| || delta phi ||L2 = 2.660986034912861e-07                                       reinitialization |
+| || normal_0 ||L2 = 1.55226571146e-14                                               normal_vector |
+| || normal_1 ||L2 = 3.72017384423e+00                                               normal_vector |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 1.831800457963555e-07                                       reinitialization |
-| || normal_0 ||L2 = 2.49425541374e-14                                               normal_vector |
+| || delta phi ||L2 = 1.831800400655798e-07                                       reinitialization |
+| || normal_0 ||L2 = 2.51436612837e-14                                               normal_vector |
 | || normal_1 ||L2 = 3.72436578066e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.49425541374e-14                                               normal_vector |
+| || normal_0 ||L2 = 2.51436612837e-14                                               normal_vector |
 | || normal_1 ||L2 = 3.72436578066e+00                                               normal_vector |
-| || curvature ||L2 = 1.60106969997e-02                                                  curvature |
+| || curvature ||L2 = 4.14444673061e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-07 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.4214781228e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.20866525970e+00                                               normal_vector |
+| || normal_0 ||L2 = 1.20866530182e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.47020368226e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
@@ -28,213 +28,213 @@
 | || delta phi ||L2 = 3.012158203988463e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 1.15267107662e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42794837504e+00                                               normal_vector |
-| || curvature ||L2 = 1.39918720577e-02                                                  curvature |
+| || normal_1 ||L2 = 2.42794839010e+00                                               normal_vector |
+| || curvature ||L2 = 4.29553728872e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 6.7597071127e-05                                                 melt_pool_problem |
 
 Time step #1, advancing from t_n-1 = 0 to t = 5e-07 (dt = 5e-07). 
-| || velocity ||L2 = 3.823936955056686e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.435093572426147e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.158940648712529e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.771281867064963e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-07 to 1.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4221743022e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.15262933708e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42794805356e+00                                               normal_vector |
+| || advected field ||L2 = 1.4221637305e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.15128988435e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42850240486e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 1.917684663221296e-06                                       reinitialization |
+| || delta phi ||L2 = 1.933808390741379e-06                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 1.278493386499821e-06                                       reinitialization |
+| || delta phi ||L2 = 1.292884893669042e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.14416717735e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42457225543e+00                                               normal_vector |
-| || curvature ||L2 = 1.40064767882e-02                                                  curvature |
+| || normal_0 ||L2 = 1.14277245350e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42466572774e+00                                               normal_vector |
+| || curvature ||L2 = 4.29605399998e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.703755206e-05                                                  melt_pool_problem |
+|  total mass = 6.7028667004e-05                                                 melt_pool_problem |
 
 Time step #2, advancing from t_n-1 = 5e-07 to t = 1e-06 (dt = 5e-07). 
-| || velocity ||L2 = 7.161214825687893e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.532232148886339e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 3.804585130288241e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.818884066322578e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-06 to 1.5000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4260777633e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.14408253220e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42457403997e+00                                               normal_vector |
+| || advected field ||L2 = 1.4260413028e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.14021128587e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42567472945e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 8.810777657253973e-07                                       reinitialization |
+| || delta phi ||L2 = 9.412010040211934e-07                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 6.170392285782084e-07                                       reinitialization |
+| || delta phi ||L2 = 6.591749190779831e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.14473658410e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42624101265e+00                                               normal_vector |
-| || curvature ||L2 = 1.40139347627e-02                                                  curvature |
+| || normal_0 ||L2 = 1.14094544952e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42643851549e+00                                               normal_vector |
+| || curvature ||L2 = 4.29612609204e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.6805110321e-05                                                 melt_pool_problem |
+|  total mass = 6.6776361978e-05                                                 melt_pool_problem |
 
 Time step #3, advancing from t_n-1 = 1e-06 to t = 1.5e-06 (dt = 5e-07). 
-| || velocity ||L2 = 1.014505086012003e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.590046021348057e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 4.990180361858962e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.844251826572277e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-06 to 2.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4287259536e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.14460906986e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42624614274e+00                                               normal_vector |
+| || advected field ||L2 = 1.4286871650e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.13753418563e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42777267971e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 4.380967675138663e-07                                       reinitialization |
+| || delta phi ||L2 = 5.646354870353379e-07                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 3.126297951170950e-07                                       reinitialization |
+| || delta phi ||L2 = 3.905298020214625e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.14637774624e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42764877137e+00                                               normal_vector |
-| || curvature ||L2 = 1.40172777436e-02                                                  curvature |
+| || normal_0 ||L2 = 1.13955090704e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42793602481e+00                                               normal_vector |
+| || curvature ||L2 = 4.29570214149e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.6707542682e-05                                                 melt_pool_problem |
+|  total mass = 6.6650119424e-05                                                 melt_pool_problem |
 
 Time step #4, advancing from t_n-1 = 1.5e-06 to t = 2e-06 (dt = 5e-07). 
-| || velocity ||L2 = 1.297365985498954e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.625211153271872e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 5.931834058235658e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.846236873747750e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.0000e-06 to 2.5000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4301456909e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.14620846183e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42765779319e+00                                               normal_vector |
+| || advected field ||L2 = 1.4301342524e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.13541673367e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42953173910e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 2.292876554483093e-07                                       reinitialization |
+| || delta phi ||L2 = 4.357194009221933e-07                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 1.708593070390516e-07                                       reinitialization |
+| || delta phi ||L2 = 2.889033693759648e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.14772093644e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42837708562e+00                                               normal_vector |
-| || curvature ||L2 = 1.40184302924e-02                                                  curvature |
+| || normal_0 ||L2 = 1.13731761057e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42871841020e+00                                               normal_vector |
+| || curvature ||L2 = 4.29491902541e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.6667805397e-05                                                 melt_pool_problem |
+|  total mass = 6.6573926911e-05                                                 melt_pool_problem |
 
 Time step #5, advancing from t_n-1 = 2e-06 to t = 2.5e-06 (dt = 5e-07). 
-| || velocity ||L2 = 1.578116131903048e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.643190956511858e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.669475740856368e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.865211170196124e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 2.5000e-06 to 3.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4308292485e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.14750981864e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42838993651e+00                                               normal_vector |
+| || advected field ||L2 = 1.4308688545e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.13268192255e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.43049655707e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 1.365868917430815e-07                                       reinitialization |
+| || delta phi ||L2 = 4.081156353408308e-07                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 1.115356671840297e-07                                       reinitialization |
+| || delta phi ||L2 = 2.613846830902033e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.14870421802e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42867413697e+00                                               normal_vector |
-| || curvature ||L2 = 1.40185063173e-02                                                  curvature |
+| || normal_0 ||L2 = 1.13434528873e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42902006338e+00                                               normal_vector |
+| || curvature ||L2 = 4.29390967020e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.6654158746e-05                                                 melt_pool_problem |
+|  total mass = 6.6518218124e-05                                                 melt_pool_problem |
 
 Time step #6, advancing from t_n-1 = 2.5e-06 to t = 3e-06 (dt = 5e-07). 
-| || velocity ||L2 = 1.860155298165741e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.662808580176877e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.255856004273986e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.879338985480573e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.0000e-06 to 3.5000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4311333964e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.14845338118e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42869045440e+00                                               normal_vector |
+| || advected field ||L2 = 1.4312384402e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.12937080601e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.43091918838e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 1.002911114225409e-07                                       reinitialization |
+| || delta phi ||L2 = 4.127659164654986e-07                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 8.893101520846438e-08                                       reinitialization |
+| || delta phi ||L2 = 2.600327386740816e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.14944708692e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42874485182e+00                                               normal_vector |
-| || curvature ||L2 = 1.40180878997e-02                                                  curvature |
+| || normal_0 ||L2 = 1.13086302094e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42904326945e+00                                               normal_vector |
+| || curvature ||L2 = 4.29275929186e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.6652442918e-05                                                 melt_pool_problem |
+|  total mass = 6.6470449444e-05                                                 melt_pool_problem |
 
 Time step #7, advancing from t_n-1 = 3e-06 to t = 3.5e-06 (dt = 5e-07). 
-| || velocity ||L2 = 2.144035778064588e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.681196727663445e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.735634173654996e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.890351810381087e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 3.5000e-06 to 4.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4312553303e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.14915856541e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42876345965e+00                                               normal_vector |
+| || advected field ||L2 = 1.4314334303e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.12565609450e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.43102050718e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 8.621693933532490e-08                                       reinitialization |
+| || delta phi ||L2 = 4.252185677649088e-07                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 7.923684472409727e-08                                       reinitialization |
+| || delta phi ||L2 = 2.663666379030068e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.15004231438e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42869965798e+00                                               normal_vector |
-| || curvature ||L2 = 1.40174583294e-02                                                  curvature |
+| || normal_0 ||L2 = 1.12703673971e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42890199553e+00                                               normal_vector |
+| || curvature ||L2 = 4.29151880449e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.6656107204e-05                                                 melt_pool_problem |
+|  total mass = 6.6425107805e-05                                                 melt_pool_problem |
 
 Time step #8, advancing from t_n-1 = 3.5e-06 to t = 4e-06 (dt = 5e-07). 
-| || velocity ||L2 = 2.430411314772148e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.699552305041893e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.138172544999951e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.899986671737218e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.0000e-06 to 4.5000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4312924549e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.14971788740e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42871967382e+00                                               normal_vector |
+| || advected field ||L2 = 1.4315479980e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.12166871196e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.43092691897e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 7.951646104450799e-08                                       reinitialization |
+| || delta phi ||L2 = 4.384520358371352e-07                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 7.375830104827565e-08                                       reinitialization |
+| || delta phi ||L2 = 2.744313975416081e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.15054242880e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42859163370e+00                                               normal_vector |
-| || curvature ||L2 = 1.40167485641e-02                                                  curvature |
+| || normal_0 ||L2 = 1.12297171329e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42865378877e+00                                               normal_vector |
+| || curvature ||L2 = 4.29021822713e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.6662127075e-05                                                 melt_pool_problem |
+|  total mass = 6.6379853944e-05                                                 melt_pool_problem |
 
 Time step #9, advancing from t_n-1 = 4e-06 to t = 4.5e-06 (dt = 5e-07). 
-| || velocity ||L2 = 2.713806431433415e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.730717651920646e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.483738855005301e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.924336212580731e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 4.5000e-06 to 5.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.4312903370e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.15018374680e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42861196730e+00                                               normal_vector |
+| || advected field ||L2 = 1.4316262341e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.11748495373e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.43070287030e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.1735e-06                                                                 reinitialization |
-| || delta phi ||L2 = 7.553926549236324e-08                                       reinitialization |
+| || delta phi ||L2 = 4.505393811305924e-07                                       reinitialization |
 |  τ = 8.347e-06                                                                  reinitialization |
-| || delta phi ||L2 = 7.002954843759752e-08                                       reinitialization |
+| || delta phi ||L2 = 2.821696351531108e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.15097436095e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.42844442762e+00                                               normal_vector |
-| || curvature ||L2 = 1.40160196698e-02                                                  curvature |
+| || normal_0 ||L2 = 1.11872693188e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.42832383814e+00                                               normal_vector |
+| || curvature ||L2 = 4.28887638464e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 6.6669119081e-05                                                 melt_pool_problem |
+|  total mass = 6.6333760618e-05                                                 melt_pool_problem |
 
 Time step #10, advancing from t_n-1 = 4.5e-06 to t = 5e-06 (dt = 5e-07). 
-| || velocity ||L2 = 3.000918278863908e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.763084907995763e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.783441802435958e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.942611313149166e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
