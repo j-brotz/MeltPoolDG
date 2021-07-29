@@ -36,7 +36,7 @@
     "problem name": "melt_pool"
   },
   "curvature": {
-    "curv damping scale factor": "0.1",
+    "curv damping scale factor": "4",
     "curv do matrix free": "true"
   },
   "time stepping": {

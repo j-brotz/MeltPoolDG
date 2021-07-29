@@ -40,7 +40,7 @@
     "normal vec do matrix free": "true"
   },
   "curvature": {
-    "curv damping scale factor": "0.05",
+    "curv damping scale factor": "2",
     "curv do narrow band": "true",
     "curv do matrix free": "true"
   },

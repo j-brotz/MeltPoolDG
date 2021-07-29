@@ -34,7 +34,7 @@
     "normal vec verbosity level": "1"
   },
   "curvature": {
-    "curv damping scale factor": "0.5",
+    "curv damping scale factor": "32",
     "curv do matrix free": "true",
     "curv implementation": "meltpooldg"
   },

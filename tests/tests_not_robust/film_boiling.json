@@ -73,7 +73,7 @@
     "normal vec implementation": "meltpooldg"
   },
   "curvature": {
-    "curv damping scale factor": "0.5",
+    "curv damping scale factor": "4",
     "curv do matrix free": "true",
     "curv implementation": "meltpooldg"
   },
