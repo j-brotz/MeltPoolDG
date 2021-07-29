@@ -7,6 +7,7 @@
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_q_iso_q1.h>
 #include <deal.II/fe/fe_simplex_p.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/mapping.h>
@@ -122,6 +123,9 @@ namespace MeltPoolDG::LevelSet
     if (base_in->parameters.base.do_simplex)
       ls_quad_idx =
         scratch_data->attach_quadrature(QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
+    else if (base_in->parameters.ls.n_subdivisions > 1)
+      ls_quad_idx = scratch_data->attach_quadrature(
+        QIterated<dim>(QGauss<1>(2), base_in->parameters.ls.n_subdivisions));
     else
       ls_quad_idx =
         scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
@@ -235,7 +239,11 @@ namespace MeltPoolDG::LevelSet
       }
     else
       {
-        dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
+        if (base_in->parameters.ls.n_subdivisions > 1)
+          dof_handler.distribute_dofs(FE_Q_iso_Q1<dim>(base_in->parameters.ls.n_subdivisions));
+        else
+          dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
+
         dof_handler_velocity.distribute_dofs(
           FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree), dim));
       }

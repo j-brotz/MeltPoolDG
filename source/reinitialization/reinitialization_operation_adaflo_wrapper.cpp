@@ -39,9 +39,7 @@ namespace MeltPoolDG::Reinitialization
     reinit();
 
     epsilon_used =
-      cell_diameter_max *
-      parameters.reinit.scale_factor_epsilon; /* epsilon used [MS]: adaflo divides in addition by
-                                                 the number of subdivisions*/
+      cell_diameter_max * parameters.reinit.scale_factor_epsilon / parameters.ls.n_subdivisions;
     /*
      * initialize reinitialization operation from adaflo
      */

@@ -31,6 +31,30 @@ namespace MeltPoolDG
       amr.min_grid_refinement_level = base.global_refinements;
 
     /*
+     * The level set problem for simplices can only be solved when no subdivision of the
+     * finite element is undertaken.
+     */
+    AssertThrow((!base.do_simplex || ls.n_subdivisions == 1),
+                ExcMessage(
+                  "If you use a simplex mesh, n_subdivisions for the level set must be 1."));
+    AssertThrow((ls.n_subdivisions == 1 || base.degree == 1),
+                ExcMessage("If you use n_subdivisions for the level set, degree must be 1."));
+
+    switch (base.problem_name)
+      {
+        case ProblemType::advection_diffusion:
+        case ProblemType::reinitialization:
+        case ProblemType::melt_pool:
+        case ProblemType::heat_transfer:
+          AssertThrow(
+            ls.n_subdivisions == 1,
+            ExcMessage(
+              "n_subdivisions for the level set is not supported for your requested problem_type."));
+          break;
+        default:
+          break;
+      }
+    /*
      * calculate the paraview write frequency if a time step for producing the output
      * is specified
      */
@@ -352,6 +376,10 @@ namespace MeltPoolDG
                         ls.implementation,
                         "Choose the corresponding implementation of the ls operation.",
                         Patterns::Selection("meltpooldg|adaflo"));
+      prm.add_parameter(
+        "ls n subdivisions",
+        ls.n_subdivisions,
+        "Set the number of subdivisions for the finite element of the level set operation.");
     }
     prm.leave_subsection();
 

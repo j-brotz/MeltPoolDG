@@ -372,7 +372,7 @@ namespace MeltPoolDG::LevelSet
 
             // If it is the first reinitialization cycle, the normal vector
             // field might not be computed very accurately from the initial level set
-            // field. Thus, in this case we update the normal vector in every renitialization
+            // field. Thus, in this case we update the normal vector in every reinitialization
             // step.
             if (very_first_step)
               update_normal_vector();
@@ -414,7 +414,7 @@ namespace MeltPoolDG::LevelSet
             reinit_constant_epsilon > 0.0 ?
               reinit_constant_epsilon :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                cell, reinit_scale_factor_epsilon);
+                cell, reinit_scale_factor_epsilon / level_set_data.n_subdivisions);
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -513,7 +513,7 @@ namespace MeltPoolDG::LevelSet
                                data_in.reinit.dtau > 0.0 ?
                                  data_in.reinit.dtau :
                                  scratch_data->get_min_cell_size(ls_dof_idx) *
-                                   data_in.reinit.scale_factor_epsilon,
+                                   data_in.reinit.scale_factor_epsilon / data_in.ls.n_subdivisions,
                                (unsigned int)data_in.ls.n_initial_reinit_steps,
                                false});
 
