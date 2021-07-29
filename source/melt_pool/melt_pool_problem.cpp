@@ -589,6 +589,7 @@ namespace MeltPoolDG::Flow
 
     double mass = 0.0;
 
+#if 0
     // compute the limit values of the material parameters
     const double max_density =
       parameters.heat.solidification ?
@@ -614,6 +615,7 @@ namespace MeltPoolDG::Flow
                   parameters.material.first.viscosity,
                   parameters.material.second.viscosity}) :
         std::min(parameters.material.first.viscosity, parameters.material.second.viscosity);
+#endif
 
     scratch_data->get_matrix_free().template cell_loop<double, VectorType>(
       [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto macro_cells) {
