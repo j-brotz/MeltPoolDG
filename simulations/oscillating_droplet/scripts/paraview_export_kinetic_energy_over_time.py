@@ -273,10 +273,10 @@ def collect_files_and_write_into_one(folder, pvdfile, suffix=".csv"):
             float(pd.DataFrame(data, columns=['Time']).to_numpy()[-1]))
         os.remove(os.path.join(folder, csv))
 
-    np.savetxt(os.path.join(folder, "kinetic_energy.csv"), np.column_stack((np.asarray(
+    np.savetxt(os.path.join(folder, pvdfile.split(".")[0] + "_kinetic_energy.csv"), np.column_stack((np.asarray(
         time_list), np.asarray(kinetic_energy))), delimiter=",", header="time, kinetic energy")
     print(" file written: {:}".format(
-        os.path.join(folder, pvdfile.splot(".")+"_kinetic_energy.csv")))
+        os.path.join(folder, pvdfile.split(".")[0]+"_kinetic_energy.csv")))
 
 
 if __name__ == "__main__":
