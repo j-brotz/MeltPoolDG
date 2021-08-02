@@ -136,6 +136,9 @@ namespace MeltPoolDG::Heat
     mutable VectorType                                        evapor_heat_source;
     mutable std::vector<std::vector<VectorizedArray<double>>> q_vapor;
 
+    mutable std::vector<std::vector<VectorizedArray<double>>> conductivity_at_q;
+    mutable VectorType                                        conductivity_vec;
+
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
                          const ScratchData<dim> &                        scratch_data_in,

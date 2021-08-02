@@ -422,6 +422,9 @@ namespace MeltPoolDG::Heat
     q_vapor.resize(scratch_data.get_matrix_free().n_cell_batches(),
                    std::vector<VectorizedArray<double>>(temp_vals.n_q_points));
 
+    conductivity_at_q.resize(scratch_data.get_matrix_free().n_cell_batches(),
+                             std::vector<VectorizedArray<double>>(temp_vals.n_q_points));
+
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
         temp_vals.reinit(cell);
@@ -469,6 +472,8 @@ namespace MeltPoolDG::Heat
                                     temp_vals,
                                     ls_vals,
                                     q_index);
+
+            conductivity_at_q[cell][q_index] = conductivity;
 
             auto val = this->d_tau_inv * rho_cp *
                          (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) -
@@ -608,6 +613,30 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperator<dim, number>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
+    /**
+     * write conductivity vector to dof vector
+     */
+    scratch_data.initialize_dof_vector(conductivity_vec, temp_dof_idx);
+
+    if (!q_vapor.empty() && scratch_data.is_hex_mesh())
+      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+        conductivity_vec,
+        scratch_data.get_matrix_free(),
+        temp_dof_idx,
+        temp_quad_idx,
+        [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
+          return conductivity_at_q[cell][quad];
+        });
+
+    conductivity_vec.update_ghost_values();
+
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                             conductivity_vec,
+                             "conductivity");
+
+    /**
+     * write evaporative mass flux to dof vector
+     */
     if (evaporative_mass_flux)
       {
         scratch_data.initialize_dof_vector(evapor_heat_source, temp_dof_idx);
@@ -625,8 +654,6 @@ namespace MeltPoolDG::Heat
                                  evapor_heat_source,
                                  "evporative_heat_source");
       }
-    else
-      (void)data_out;
   }
 
   template <int dim, typename number>
