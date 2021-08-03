@@ -100,7 +100,18 @@ namespace MeltPoolDG::Heat
       AssertThrow(false, ExcNotImplemented());
 
     heat_operator->set_time_increment(dt);
+
+    VectorType temperature_extrapolated;
+    scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
+
+    UtilityFunctions::compute_linear_predictor(temperature,
+                                               temperature_old,
+                                               temperature_extrapolated,
+                                               dt,
+                                               dt); // @todo adapt for adaptive time stepping
+
     temperature_old = temperature;
+    temperature     = temperature_extrapolated;
 
     const auto create_rhs = [&](VectorType &rhs) {
       // solely homogeneous dirichlet bc are distributed for the
