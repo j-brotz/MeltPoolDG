@@ -835,5 +835,37 @@ namespace MeltPoolDG
                     dof_handler.get_communicator()),
                   ExcInternalError());
     }
+
+    /*
+     * Compute a linearly extrapolated initial guess value (predictor) for the
+     * Newton-Raphson solver at time "t_n+1" from the old solution @param old_vec
+     * computed at time "t_n" and the old old solution @param old_old_vec computed
+     * at time "t_n-1". In addition the @param current_time_increment
+     * dt_n+1 = t_n+1 - t_n and the @param old_time_incrementdt_n = t_n-t_n-1 have
+     * to be provided.
+     *
+     * The predictor is computed as follows
+     *
+     *                    dt_n+1
+     *  q_n+1^(0) = q_n + ------ * (q_n-q_n-1)
+     *                    dt_n
+     *
+     */
+    template <typename VectorType>
+    void
+    compute_linear_predictor(const VectorType &old_vec,
+                             const VectorType &old_old_vec,
+                             VectorType &      predictor,
+                             const double      current_time_increment,
+                             const double      old_time_increment)
+    {
+      predictor.copy_locally_owned_data_from(old_vec);
+      predictor.add(current_time_increment / old_time_increment,
+                    old_vec,
+                    -current_time_increment / old_time_increment,
+                    old_old_vec);
+    }
+
+
   } // namespace UtilityFunctions
 } // namespace MeltPoolDG
