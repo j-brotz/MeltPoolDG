@@ -583,7 +583,7 @@ namespace MeltPoolDG::Flow
                                       const Parameters<double> &parameters) const
   {
     if (parameters.heat.solidification)
-      melt_pool_operation->get_solid().update_ghost_values();
+      heat_operation->get_temperature().update_ghost_values();
 
     double dummy;
 
@@ -622,9 +622,13 @@ namespace MeltPoolDG::Flow
         FECellIntegrator<dim, 1, double> ls_values(matrix_free,
                                                    ls_hanging_nodes_dof_idx,
                                                    flow_operation->get_quad_idx_velocity());
-        FECellIntegrator<dim, 1, double> solid_values(matrix_free,
-                                                      temp_hanging_nodes_dof_idx,
-                                                      flow_operation->get_quad_idx_velocity());
+        FECellIntegrator<dim, 1, double> temp_values(matrix_free,
+                                                     temp_hanging_nodes_dof_idx,
+                                                     flow_operation->get_quad_idx_velocity());
+
+        const auto &material    = parameters.material;
+        const auto  rho_g       = VectorizedArray<double>(material.first.density);
+        const auto  viscosity_g = VectorizedArray<double>(material.first.viscosity);
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
@@ -634,67 +638,65 @@ namespace MeltPoolDG::Flow
 
             if (parameters.heat.solidification)
               {
-                solid_values.reinit(cell);
-                solid_values.read_dof_values_plain(melt_pool_operation->get_solid());
-                solid_values.evaluate(EvaluationFlags::values);
+                temp_values.reinit(cell);
+                temp_values.read_dof_values_plain(heat_operation->get_temperature());
+                temp_values.evaluate(EvaluationFlags::values);
               }
 
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
               {
-                const auto indicator = parameters.material.two_phase_properties_transition_type ==
+                const auto indicator = material.two_phase_properties_transition_type ==
                                            TwoPhasePropertiesTransitionType::sharp ?
                                          UtilityFunctions::heaviside(ls_values.get_value(q), 0.5) :
                                          ls_values.get_value(q);
 
-                // set properties
-                if (parameters.material.two_phase_properties_transition_type ==
-                    TwoPhasePropertiesTransitionType::consistent_with_evaporation)
-                  {
-                    const double rho_g = parameters.material.first.density;
-                    const double rho_l = parameters.material.second.density;
-                    flow_operation->get_density(cell, q) =
-                      rho_g / (1. + (rho_g / rho_l - 1) * indicator);
-                  }
-                else
-                  flow_operation->get_density(cell, q) =
-                    UtilityFunctions::interpolate(indicator,
-                                                  parameters.material.first.density,
-                                                  parameters.material.second.density);
-
-                // set viscosity
-                flow_operation->get_viscosity(cell, q) =
-                  UtilityFunctions::interpolate(indicator,
-                                                parameters.material.first.viscosity,
-                                                parameters.material.second.viscosity);
+                /*
+                 * overwrite the liquid parameters in case of a solid/liquid mixture,
+                 * e.g. rho_l = rho_ls(sf, rho_l, rho_s)
+                 */
+                auto rho_l       = VectorizedArray<double>(material.second.density);
+                auto viscosity_l = VectorizedArray<double>(material.second.viscosity);
 
                 if (parameters.heat.solidification)
                   {
-                    const auto &solid_fraction = solid_values.get_value(q);
-                    if (!(solid_fraction == VectorizedArray<double>(0.0)))
-                      {
-                        if (solid_fraction == VectorizedArray<double>(1.0))
-                          {
-                            flow_operation->get_density(cell, q) =
-                              parameters.material.solid.density;
-                            flow_operation->get_viscosity(cell, q) =
-                              parameters.material.solid.viscosity;
-                          }
-                        else
-                          {
-                            const auto fluid_density = flow_operation->get_density(cell, q);
-                            flow_operation->get_density(cell, q) =
-                              UtilityFunctions::interpolate_cubic(
-                                solid_fraction, fluid_density, parameters.material.solid.density);
-                            const auto fluid_viscosity = flow_operation->get_viscosity(cell, q);
-                            flow_operation->get_viscosity(cell, q) =
-                              UtilityFunctions::interpolate_cubic(
-                                solid_fraction,
-                                fluid_viscosity,
-                                parameters.material.solid.viscosity);
-                          }
-                      }
+                    const auto solid_fraction =
+                      melt_pool_operation->compute_solid_fraction(temp_values.get_value(q));
+
+                    rho_l = UtilityFunctions::interpolate_cubic(solid_fraction,
+                                                                material.second.density,
+                                                                material.solid.density);
+
+
+                    viscosity_l = UtilityFunctions::interpolate_cubic(solid_fraction,
+                                                                      material.second.viscosity,
+                                                                      material.solid.viscosity);
                   }
 
+                /*
+                 * Interpolate the parameters for the two-phase flow system
+                 * consisting of the two phases
+                 *
+                 *    gas <--> liquid
+                 *
+                 * or
+                 *
+                 *    gas <--> liquid/solid mixture
+                 *
+                 * in case of solidification.
+                 */
+
+                if (material.two_phase_properties_transition_type ==
+                    TwoPhasePropertiesTransitionType::consistent_with_evaporation)
+                  {
+                    flow_operation->get_density(cell, q) =
+                      rho_g / (1. + (rho_g / rho_l - 1.) * indicator);
+                  }
+                else
+                  flow_operation->get_density(cell, q) =
+                    UtilityFunctions::interpolate(indicator, rho_g, rho_l);
+
+                flow_operation->get_viscosity(cell, q) =
+                  UtilityFunctions::interpolate(indicator, viscosity_g, viscosity_l);
 #if 0
                 // check if no spurious densities or viscosities are computed
                 for (auto dens : flow_operation->get_density(cell, q))
@@ -708,13 +710,15 @@ namespace MeltPoolDG::Flow
 #endif
 
                 // compute overall mass
+                //
+                // @todo: update to correspond to current formulation
                 for (unsigned int v = 0;
                      v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
                      ++v)
                   {
                     mass += UtilityFunctions::interpolate(ls_values.get_value(q)[v],
-                                                          parameters.material.first.density,
-                                                          parameters.material.second.density) *
+                                                          material.first.density,
+                                                          material.second.density) *
                             ls_values.JxW(q)[v];
                   }
               }
@@ -730,6 +734,9 @@ namespace MeltPoolDG::Flow
             << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm());
         Journal::print_line(scratch_data->get_pcout(), str.str(), "melt_pool_problem");
       }
+
+    if (parameters.heat.solidification)
+      heat_operation->get_temperature().zero_out_ghost_values();
   }
 
   template <int dim>

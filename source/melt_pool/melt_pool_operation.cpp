@@ -329,11 +329,12 @@ namespace MeltPoolDG::MeltPool
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
               solid[local_dof_indices[i]] =
-                compute_solid_fraction(level_set_as_heaviside[local_dof_indices[i]],
-                                       (*temperature)[local_dof_indices[i]]);
+                compute_solid_fraction((*temperature)[local_dof_indices[i]]) *
+                level_set_as_heaviside[local_dof_indices[i]];
+
               liquid[local_dof_indices[i]] =
-                compute_liquid_fraction(level_set_as_heaviside[local_dof_indices[i]],
-                                        (*temperature)[local_dof_indices[i]]);
+                (1. - compute_solid_fraction((*temperature)[local_dof_indices[i]])) *
+                level_set_as_heaviside[local_dof_indices[i]];
             }
         }
 
@@ -468,37 +469,24 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   double
-  MeltPoolOperation<dim>::compute_solid_fraction(const double ls_heaviside, const double T) const
-  {
-    const auto sf = compute_solid_fraction_no_ls(T);
-    if (do_mushy_zone &&
-        ls_heaviside > 0.5) // only original liquid material (ls_heaviside > 0.5) can become solid
-
-      return ls_heaviside * sf;
-    else
-      return ls_heaviside > 0.5 ? sf : 0.0;
-  }
-
-  template <int dim>
-  double
-  MeltPoolOperation<dim>::compute_liquid_fraction(const double ls_heaviside, const double T) const
-  {
-    const auto lf = 1.0 - compute_solid_fraction_no_ls(T);
-    if (do_mushy_zone)
-      return ls_heaviside * lf;
-    else
-      return ls_heaviside > 0.5 ? lf : 0.0;
-  }
-
-  template <int dim>
-  double
-  MeltPoolOperation<dim>::compute_solid_fraction_no_ls(const double T) const
+  MeltPoolOperation<dim>::compute_solid_fraction(const double T) const
   {
     if (do_mushy_zone)
       return UtilityFunctions::limit_to_bounds(
         (material.liquidus_temperature - T) * material.inv_mushy_interval, 0.0, 1.0);
     else
       return T < mp_data.liquid.melting_point ? 1.0 : 0.0;
+  }
+
+  template <int dim>
+  VectorizedArray<double>
+  MeltPoolOperation<dim>::compute_solid_fraction(
+    const VectorizedArray<double> &current_temperature) const
+  {
+    VectorizedArray<double> result;
+    for (unsigned int i = 0; i < VectorizedArray<double>::size(); ++i)
+      result[i] = compute_solid_fraction(current_temperature[i]);
+    return result;
   }
 
   template class MeltPoolOperation<1>;

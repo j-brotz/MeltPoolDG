@@ -117,34 +117,13 @@ namespace MeltPoolDG
       const VectorType &
       get_liquid() const;
 
+      VectorizedArray<double>
+      compute_solid_fraction(const VectorizedArray<double> &current_temperature) const;
+
     private:
       void
       make_constraints_in_spatially_fixed_solid_domain();
 
-
-      void
-      compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside);
-
-      /**
-       *  The constraints of the flow velocity are modified such that they are zero in solid
-       *  regions.
-       */
-      void
-      set_flow_field_in_solid_regions_to_zero(
-        const DoFHandler<dim> &          flow_dof_handler,
-        const AffineConstraints<double> &flow_constraints_no_solid,
-        AffineConstraints<double> &      flow_constraints);
-
-      /**
-       *  The level set constraints are modified such that they are zero in solid
-       *  regions.
-       */
-      void
-      remove_the_level_set_from_solid_regions(const DoFHandler<dim> &    level_set_dof_handler,
-                                              AffineConstraints<double> &level_set_constraints);
-
-      void
-      set_melt_pool_parameters(const Parameters<double> &data_in);
 
       /**
        * This function determines the solid fraction for a given pair of temperature (T) and
@@ -170,23 +149,36 @@ namespace MeltPoolDG
        * If no mushy zone is prescribed, then T_solidus = T_liquidus = T_melting.
        *
        */
-      double
-      compute_solid_fraction(double ls_heaviside, double temperature) const;
+      void
+      compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside);
 
       /**
-       * This function determines the liquid fraction for a given pair of temperature and
-       * level-set-heaviside values.
-       *
-       * The liquid fraction is determined analogously to compute_solid_fraction().
+       *  The constraints of the flow velocity are modified such that they are zero in solid
+       *  regions.
        */
-      double
-      compute_liquid_fraction(double ls_heaviside, double temperature) const;
+      void
+      set_flow_field_in_solid_regions_to_zero(
+        const DoFHandler<dim> &          flow_dof_handler,
+        const AffineConstraints<double> &flow_constraints_no_solid,
+        AffineConstraints<double> &      flow_constraints);
 
       /**
-       * This function return the solid fraction without being informed by the level-set.
+       *  The level set constraints are modified such that they are zero in solid
+       *  regions.
+       */
+      void
+      remove_the_level_set_from_solid_regions(const DoFHandler<dim> &    level_set_dof_handler,
+                                              AffineConstraints<double> &level_set_constraints);
+
+      void
+      set_melt_pool_parameters(const Parameters<double> &data_in);
+
+      /**
+       * This function returns the solid fraction from a linear interpolation between the solidus
+       * and liquidus temperatures, i.e. 0 (T>=T_liquidus) and 1 (T<=T_solidus).
        */
       double
-      compute_solid_fraction_no_ls(double temeprature) const;
+      compute_solid_fraction(double temeprature) const;
     };
   } // namespace MeltPool
 } // namespace MeltPoolDG
