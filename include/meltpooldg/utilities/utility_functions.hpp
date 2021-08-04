@@ -289,9 +289,9 @@ namespace MeltPoolDG
       return eps;
     }
 
-    template <typename value_type>
-    inline value_type
-    interpolate(const value_type &ls, const double val1, const double val2)
+    template <typename value_type1, typename value_type2, typename value_type3>
+    inline value_type1
+    interpolate(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
     {
       return (1. - ls) * val1 + ls * val2;
     }

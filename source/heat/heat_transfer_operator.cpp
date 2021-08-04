@@ -806,34 +806,27 @@ namespace MeltPoolDG::Heat
     if (!with_solidification && !with_two_phase)
       return;
 
-    VectorizedArray<number> liq_capacity     = material.second.capacity;
-    VectorizedArray<number> liq_conductivity = material.second.conductivity;
-    VectorizedArray<number> liq_density      = material.second.density;
-
-    if (with_two_phase)
-      {
-        get_material_parameters_with_two_phase_flow(liq_capacity,
-                                                    liq_conductivity,
-                                                    liq_density,
-                                                    ls_heaviside_val.get_value(q_index));
-        conductivity = liq_conductivity;
-        rho_cp       = liq_density * liq_capacity;
-      }
+    // These values are the material parameters of the liquid/solid domain. In case of no
+    // solidification, they remain the values of the liquid (material.second) phase, since no solid
+    // domain exists.
+    VectorizedArray<number> capacity = material.second.capacity;
+    conductivity                     = material.second.conductivity;
+    VectorizedArray<number> density  = material.second.density;
 
     if (with_solidification)
       {
-        VectorizedArray<number> capacity;
-        VectorizedArray<number> density;
         const auto solid_fraction = calculate_solid_fraction(temp_lin_val.get_value(q_index));
-        get_material_parameters_with_solidification(capacity,
+        get_liquid_solid_material_parameters(capacity, conductivity, density, solid_fraction);
+      }
+
+    if (with_two_phase)
+      {
+        get_material_parameters_with_two_phase_flow(capacity,
                                                     conductivity,
                                                     density,
-                                                    liq_capacity,
-                                                    liq_conductivity,
-                                                    liq_density,
-                                                    solid_fraction);
-        rho_cp = density * capacity;
+                                                    ls_heaviside_val.get_value(q_index));
       }
+    rho_cp = capacity * density;
   }
 
   template <int dim, typename number>
@@ -852,64 +845,50 @@ namespace MeltPoolDG::Heat
     if (!with_solidification && !with_two_phase)
       return;
 
-    VectorizedArray<number> liq_capacity     = material.second.capacity;
-    VectorizedArray<number> liq_density      = material.second.density;
-    VectorizedArray<number> liq_conductivity = material.second.conductivity;
-
-    if (with_two_phase)
-      {
-        get_material_parameters_with_two_phase_flow(liq_capacity,
-                                                    liq_conductivity,
-                                                    liq_density,
-                                                    ls_heaviside_val.get_value(q_index));
-        conductivity = liq_conductivity;
-        rho_cp       = liq_density * liq_capacity;
-      }
+    // These values are the material parameters of the liquid/solid domain. In case of no
+    // solidification, they remain the values of the liquid (material.second) phase, since no solid
+    // domain exists.
+    VectorizedArray<number> capacity      = material.second.capacity;
+    conductivity                          = material.second.conductivity;
+    VectorizedArray<number> density       = material.second.density;
+    VectorizedArray<number> d_capacity_dT = 0.0;
+    VectorizedArray<number> d_density_dT  = 0.0;
 
     if (with_solidification)
       {
-        VectorizedArray<number> capacity;
-        VectorizedArray<number> density;
         const auto solid_fraction = calculate_solid_fraction(temp_lin_val.get_value(q_index));
-        get_material_parameters_with_solidification(capacity,
+        get_liquid_solid_material_parameters(capacity, conductivity, density, solid_fraction);
+        get_liquid_solid_material_parameter_derivatives(d_capacity_dT,
+                                                        d_conductivity_dT,
+                                                        d_density_dT,
+                                                        solid_fraction);
+      }
+
+    if (with_two_phase)
+      {
+        get_material_parameters_with_two_phase_flow(capacity,
                                                     conductivity,
                                                     density,
-                                                    liq_capacity,
-                                                    liq_conductivity,
-                                                    liq_density,
-                                                    solid_fraction);
-        rho_cp = density * capacity;
-        VectorizedArray<number> d_capacity_dT;
-        VectorizedArray<number> d_density_dT;
-        get_material_parameter_derivatives_with_solidification(d_capacity_dT,
+                                                    ls_heaviside_val.get_value(q_index));
+        get_material_parameter_derivatives_with_two_phase_flow(d_capacity_dT,
                                                                d_conductivity_dT,
                                                                d_density_dT,
-                                                               liq_capacity,
-                                                               liq_conductivity,
-                                                               liq_density,
-                                                               solid_fraction);
-        d_rho_cp_dT = d_capacity_dT * density + d_density_dT * capacity;
+                                                               ls_heaviside_val.get_value(q_index));
       }
+    rho_cp      = capacity * density;
+    d_rho_cp_dT = d_capacity_dT * density + d_density_dT * capacity;
   }
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::get_material_parameters_with_solidification(
+  HeatTransferOperator<dim, number>::get_liquid_solid_material_parameters(
     VectorizedArray<number> &      capacity,
     VectorizedArray<number> &      conductivity,
     VectorizedArray<number> &      density,
-    const VectorizedArray<number> &liq_capacity,
-    const VectorizedArray<number> &liq_conductivity,
-    const VectorizedArray<number> &liq_density,
     const VectorizedArray<number> &solid_fraction) const
   {
     if (solid_fraction == VectorizedArray<number>(0.0))
-      {
-        capacity     = liq_capacity;
-        conductivity = liq_conductivity;
-        density      = liq_density;
-        return;
-      }
+      return;
 
     if (solid_fraction == VectorizedArray<number>(1.0))
       {
@@ -919,24 +898,23 @@ namespace MeltPoolDG::Heat
         return;
       }
 
-    capacity =
-      UtilityFunctions::interpolate_cubic(solid_fraction, liq_capacity, material.solid.capacity);
+    capacity     = UtilityFunctions::interpolate_cubic(solid_fraction,
+                                                   material.second.capacity,
+                                                   material.solid.capacity);
     conductivity = UtilityFunctions::interpolate_cubic(solid_fraction,
-                                                       liq_conductivity,
+                                                       material.second.conductivity,
                                                        material.solid.conductivity);
-    density =
-      UtilityFunctions::interpolate_cubic(solid_fraction, liq_density, material.solid.density);
+    density      = UtilityFunctions::interpolate_cubic(solid_fraction,
+                                                  material.second.density,
+                                                  material.solid.density);
   }
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::get_material_parameter_derivatives_with_solidification(
+  HeatTransferOperator<dim, number>::get_liquid_solid_material_parameter_derivatives(
     VectorizedArray<number> &      d_capacity_dT,
     VectorizedArray<number> &      d_conductivity_dT,
     VectorizedArray<number> &      d_density_dT,
-    const VectorizedArray<number> &liq_capacity,
-    const VectorizedArray<number> &liq_conductivity,
-    const VectorizedArray<number> &liq_density,
     const VectorizedArray<number> &solid_fraction) const
   {
     if (solid_fraction == VectorizedArray<number>(0.0) ||
@@ -950,15 +928,15 @@ namespace MeltPoolDG::Heat
 
     d_capacity_dT = -1.0 * material.inv_mushy_interval *
                     UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
-                                                                   liq_capacity,
+                                                                   material.second.capacity,
                                                                    material.solid.capacity);
     d_conductivity_dT = -1.0 * material.inv_mushy_interval *
                         UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
-                                                                       liq_conductivity,
+                                                                       material.second.conductivity,
                                                                        material.solid.conductivity);
     d_density_dT = -1.0 * material.inv_mushy_interval *
                    UtilityFunctions::interpolate_cubic_derivative(solid_fraction,
-                                                                  liq_density,
+                                                                  material.second.density,
                                                                   material.solid.density);
   }
 
@@ -976,19 +954,38 @@ namespace MeltPoolDG::Heat
         ls_heaviside_val :
         UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
 
-    capacity =
-      UtilityFunctions::interpolate(weight, material.first.capacity, material.second.capacity);
-    conductivity = UtilityFunctions::interpolate(weight,
-                                                 material.first.conductivity,
-                                                 material.second.conductivity);
+    if (weight == VectorizedArray<number>(1.0))
+      return;
 
+    capacity     = UtilityFunctions::interpolate(weight, material.first.capacity, capacity);
+    conductivity = UtilityFunctions::interpolate(weight, material.first.conductivity, conductivity);
+    density      = (material.two_phase_properties_transition_type ==
+               TwoPhasePropertiesTransitionType::consistent_with_evaporation) ?
+                     material.first.density / (1. + (material.first.density / density - 1.) * weight) :
+                     UtilityFunctions::interpolate(weight, material.first.density, density);
+  }
 
-    density =
-      (material.two_phase_properties_transition_type ==
-       TwoPhasePropertiesTransitionType::consistent_with_evaporation) ?
-        material.first.density /
-          (1. + (material.first.density / material.second.density - 1.) * weight) :
-        UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::get_material_parameter_derivatives_with_two_phase_flow(
+    VectorizedArray<number> &      d_capacity_dT,
+    VectorizedArray<number> &      d_conductivity_dT,
+    VectorizedArray<number> &      d_density_dT,
+    const VectorizedArray<number> &ls_heaviside_val) const
+  {
+    VectorizedArray<number> weight;
+    weight =
+      (material.two_phase_properties_transition_type != TwoPhasePropertiesTransitionType::sharp) ?
+        ls_heaviside_val :
+        UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
+
+    d_capacity_dT *= weight;
+    d_conductivity_dT *= weight;
+    d_density_dT *= weight;
+
+    // todo:
+    // if (material.two_phase_properties_transition_type ==
+    //       TwoPhasePropertiesTransitionType::consistent_with_evaporation)
   }
 
   template <int dim, typename number>
