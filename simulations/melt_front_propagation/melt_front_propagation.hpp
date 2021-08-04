@@ -304,7 +304,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
         }
       if (this->parameters.base.problem_name == ProblemType::melt_pool)
         {
-          this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(0.0, z_max / 10),
+          const double eps =
+            UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+          this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(0.0, eps),
                                          "level_set");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            std::make_shared<Functions::ZeroFunction<dim>>(dim)),

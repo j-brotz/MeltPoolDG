@@ -121,7 +121,7 @@ namespace MeltPoolDG::Heat
     const unsigned int vel_dof_idx;
     const VectorType * velocity;
 
-    // optional: level-set heaviside field for two phase flow
+    // optional: level set heaviside field for two phase flow
     const unsigned int ls_dof_idx;
     const VectorType * level_set_as_heaviside;
 
@@ -252,7 +252,7 @@ namespace MeltPoolDG::Heat
      * Determine the material parameters. This function takes two-phase flow and solidification
      * effects into account.
      *
-     * The values of \p rho_cp and \p conductivity must be set to the material.first values
+     * The values of @p rho_cp and @p conductivity must be set to the material.first values
      * initially. This function only modifies their values if necessary. I.e. in case of no
      * two-phase flow and no solidification this function does nothing.
      */
@@ -269,10 +269,13 @@ namespace MeltPoolDG::Heat
      * Determine the material parameters and their temperature derivatives. This function takes
      * two-phase flow and solidification effects into account.
      *
-     * The values of \p rho_cp, \p conductivity, \p d_rho_cp_dT and \p d_conductivity_dT must be set
-     * to the material.first values initially. This function only modifies their values if
-     * necessary. I.e. in case of no two-phase flow and no solidification this function does
-     * nothing.
+     * The values of @p rho_cp, @p conductivity, @p d_rho_cp_dT and @p d_conductivity_dT must be set
+     * to the material.first values initially (0 for the derivatives). This function only modifies
+     * their values if necessary. I.e. in case of no two-phase flow and no solidification this
+     * function does nothing.
+     *
+     * @note The derivatives @p d_rho_cp_dT and @p d_conductivity_dT are only non-zero in the case of solidification
+     * and if the temperature is between the solidus- and liquidus temperature.
      */
     void
     get_material_parameters_and_derivatives(
@@ -287,62 +290,119 @@ namespace MeltPoolDG::Heat
       unsigned int                            q_index) const;
 
     /*
-     * Determine material parameters (\p capacity, \p conductivity and \p density) for
-     * solidification/melting. Input the liquid's material parameters via \p liq_capacity, \p
-     * liq_conductivity and \p liq_density. In the mushy zone (where the solid fraction os between 0
-     * and 1) the material parameters will be interpolated with smooth cubic function, see
-     * UtilityFunctions::interpolate_cubic().
+     * Determine material parameters (@p capacity, @p conductivity and @p density) for
+     * solidification/melting. In the mushy zone (where the solid fraction is between 0 and 1) the
+     * material parameters will be interpolated with smooth cubic function, see
+     * UtilityFunctions::interpolate_cubic():
      *
-     * In case of two-phase flow use get_material_parameters_with_two_phase_flow() to determine the
-     * liquid's parameters first.
+     * The parameter x_sl of the solid/liquid mixture, where x stands for
+     * capacity/conductivity/density, is then computed by the cubic spline interpolation:
+     *
+     * x_sl = x_l + (x_s - x_l) * (-2*sf^3 + 3*sf^2)
+     *
+     * with the solid fraction sf, the parameter of the solid phase x_s and the parameter of the
+     * liquid phase x_l. For x_l, the input parameters of capacity/conductivity/density are used.
+     *
+     * The values of @p capacity, @p conductivity and @p density must be set to the material.second
+     * values initially. This function only modifies their values if necessary. I.e., in the case
+     * the solid fraction is zero, this function does nothing.
+     *
+     * @note This function does not consider two-phase flow material parameters. However, the result of
+     * this function can be used as the liquid/solid phases (level set = 1) material properties in
+     * get_material_parameters_with_two_phase_flow().
      */
     void
-    get_material_parameters_with_solidification(
-      VectorizedArray<number> &      capacity,
-      VectorizedArray<number> &      conductivity,
-      VectorizedArray<number> &      density,
-      const VectorizedArray<number> &liq_capacity,
-      const VectorizedArray<number> &liq_conductivity,
-      const VectorizedArray<number> &liq_density,
-      const VectorizedArray<number> &solid_fraction) const;
+    get_liquid_solid_material_parameters(VectorizedArray<number> &      capacity,
+                                         VectorizedArray<number> &      conductivity,
+                                         VectorizedArray<number> &      density,
+                                         const VectorizedArray<number> &solid_fraction) const;
 
     /*
-     * Determine derivatives of the material parameters (\p d_capacity_dT, \p d_conductivity_dT and
-     * \p d_density_dT) with respect to the temperature for solidification/melting. Input the
-     * liquid's material parameters via \p liq_capacity, \p liq_conductivity and \p liq_density.
-     * This function will return the temperature derivatives of the values determined by
+     * Determine derivatives of the material parameters (@p d_capacity_dT, @p d_conductivity_dT and
+     * @p d_density_dT) with respect to the temperature for solidification/melting. This function
+     * will return the temperature derivatives of the values determined by
      * get_material_parameters_with_solidification().
      *
-     * In case of two-phase flow use get_material_parameters_with_two_phase_flow() to determine the
-     * liquid's parameters first.
+     * The parameter x_sl of the solid/liquid mixture, where x stands for
+     * capacity/conductivity/density, is then calculated by
+     *
+     * dx_sl                                      d sf
+     * -----  = (x_s - x_l) * (-6*sf^2 + 6*sf) * ------
+     *  dT                                         dT
+     *
+     *  d sf          -1
+     * ------ = --------------- , if T_sol < T < T_liq , 0 otherwise
+     *   dT      T_liq - T_sol
+     *
+     * with the solid fraction sf, the parameter of the solid phase x_s, the parameter of the liquid
+     * phase x_l, the liquidus temperature T_liq and the solidus temperature T_sol. For x_l, the
+     * input parameters of capacity/conductivity/density are used.
+     *
+     * @note This function does not consider two-phase flow material parameters. However, the result of
+     * this function can be used as the liquid/solid phases (level set = 1) material properties.
      */
     void
-    get_material_parameter_derivatives_with_solidification(
+    get_liquid_solid_material_parameter_derivatives(
       VectorizedArray<number> &      d_capacity_dT,
       VectorizedArray<number> &      d_conductivity_dT,
       VectorizedArray<number> &      d_density_dT,
-      const VectorizedArray<number> &liq_capacity,
-      const VectorizedArray<number> &liq_conductivity,
-      const VectorizedArray<number> &liq_density,
       const VectorizedArray<number> &solid_fraction) const;
 
     /*
-     * Determine the material parameters (\p capacity, \p conductivity and \p density) for two phase
-     * flow. If \p ls_heaviside_val = 0 this function returns the first materials parameters and if
-     * \p ls_heaviside_val = 1 it returns the second materials parameters. At the interface the
+     * Determine the material parameters (@p capacity, @p conductivity and @p density) for two phase
+     * flow. If @p ls_heaviside_val = 0 this function returns the first materials parameters and if
+     * @p ls_heaviside_val = 1 it returns the second materials parameters. At the interface the
      * parameters are smeared if "heat variable properties over interface" is set to true, else the
-     * parameters will jump.
+     * parameters will jump:
      *
-     * This does not account for solidification effect. In case of solidification this function must
-     * be used to determine the liquid's material parameters for
-     * get_material_parameters_with_solidification() and
-     * get_material_parameter_derivatives_with_solidification().
+     * The parameter x_gl of the two-phase mixture, where x stands for
+     * capacity/conductivity/density, is then calculated by
+     *
+     * x_gl = (1-ls) * x_g + ls * x_l
+     *
+     * with the heaviside representation of the level set function ls, the parameter of the gaseous
+     * phase x_g and the parameter of the liquid phase x_l. For x_l, the input arguments
+     * capacity/conductivity/density are used.
+     *
+     * The values of @p capacity, @p conductivity and @p density must be set to the level set = 1
+     * phase's material properties (without solidification: material.second ; with solidification:
+     * result of get_liquid_solid_material_properties()'s result) initially. This function only
+     * modifies their values if necessary. I.e. in case the level set is 1 this function does
+     * nothing.
+     *
+     * @note This does not account for solidification effect. In case of solidification the values of @p
+     * capacity, @p conductivity and @p density must be set to the liquid/solid phases (level set =
+     * 1) parameters, as determined by get_liquid_solid_material_properties().
      */
     void
     get_material_parameters_with_two_phase_flow(
       VectorizedArray<number> &      capacity,
       VectorizedArray<number> &      conductivity,
       VectorizedArray<number> &      density,
+      const VectorizedArray<number> &ls_heaviside_val) const;
+
+    /*
+     * Determine derivatives of the material parameters (@p d_capacity_dT, @p d_conductivity_dT and
+     * @p d_density_dT) for two phase flow. This function will return the temperature derivatives of
+     * the values determined by get_liquid_solid_material_parameters().
+     *
+     * The parameter x_gl of the two-phase mixture, where x stands for
+     * capacity/conductivity/density, is then calculated by
+     *
+     * dx_gl              dx_g          dx_l          dx_l
+     * -----  = (1-ls) * ------ + ls * ------ = ls * ------
+     *  dT                 dT            dT            dT
+     *
+     * with the heaviside representation of the level set function ls, the parameter of the gaseous
+     * phase x_g and the parameter of the liquid phase x_l. The paramerters in the gaseous phase are
+     * constant with respect to the temperature, thus its derivative can be neglected. For dx_l/dT,
+     * the input arguments d_capacity_dT/d_conductivity_dT/d_density_dT are used.
+     */
+    void
+    get_material_parameter_derivatives_with_two_phase_flow(
+      VectorizedArray<number> &      d_capacity_dT,
+      VectorizedArray<number> &      d_conductivity_dT,
+      VectorizedArray<number> &      d_density_dT,
       const VectorizedArray<number> &ls_heaviside_val) const;
 
     /*
