@@ -702,12 +702,19 @@ namespace MeltPoolDG
                         "provided it will be set equally to the laser center");
       prm.add_parameter(
         "mp set velocity to zero in solid",
-        mp.set_velocity_to_zero_in_solid,
+        mp.solid.set_velocity_to_zero,
         "Set this parameter to true to constrain the flow velocity in the solid domain.");
       prm.add_parameter(
         "mp set level set to zero in solid",
-        mp.set_level_set_to_zero_in_solid,
+        mp.solid.set_level_set_to_zero,
         "Set this parameter to true to constrain the level set in the solid domain.");
+      prm.add_parameter(
+        "mp solid fraction lower limit",
+        mp.solid.solid_fraction_lower_limit,
+        "Lower limit of the solid fraction for where the flow velocity / level set is "
+        "set to zero if \"mp set velocity to zero in solid\" or \"mp set level set to zero in solid\" "
+        "are enabled.",
+        Patterns::Double(0.0, 1.0));
       prm.add_parameter("mp do recoil pressure",
                         mp.do_recoil_pressure,
                         "Set this parameter to true to enable recoil pressure.");

@@ -214,14 +214,18 @@ namespace MeltPoolDG
   template <typename number = double>
   struct MeltPoolData
   {
-    bool        do_heat_transfer               = false;
-    bool        do_evaporation                 = false;
-    bool        do_melt_pool                   = false;
-    std::string melt_pool_center               = "not_initialized";
-    bool        set_velocity_to_zero_in_solid  = false;
-    bool        set_level_set_to_zero_in_solid = false;
-    bool        do_recoil_pressure             = false;
-    number      boiling_temperature            = 0.0;
+    bool        do_heat_transfer = false;
+    bool        do_evaporation   = false;
+    bool        do_melt_pool     = false;
+    std::string melt_pool_center = "not_initialized";
+    struct
+    {
+      bool   set_velocity_to_zero       = false;
+      bool   set_level_set_to_zero      = false;
+      number solid_fraction_lower_limit = 1.0;
+    } solid;
+    bool   do_recoil_pressure  = false;
+    number boiling_temperature = 0.0;
 
     struct Liquid
     {
