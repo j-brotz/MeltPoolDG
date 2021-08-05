@@ -866,6 +866,8 @@ namespace MeltPoolDG::Heat
 
     if (with_two_phase)
       {
+        const auto liq_density      = density;
+        const auto d_liq_density_dT = d_density_dT;
         get_material_parameters_with_two_phase_flow(capacity,
                                                     conductivity,
                                                     density,
@@ -873,6 +875,8 @@ namespace MeltPoolDG::Heat
         get_material_parameter_derivatives_with_two_phase_flow(d_capacity_dT,
                                                                d_conductivity_dT,
                                                                d_density_dT,
+                                                               liq_density,
+                                                               d_liq_density_dT,
                                                                ls_heaviside_val.get_value(q_index));
       }
     rho_cp      = capacity * density;
@@ -971,6 +975,8 @@ namespace MeltPoolDG::Heat
     VectorizedArray<number> &      d_capacity_dT,
     VectorizedArray<number> &      d_conductivity_dT,
     VectorizedArray<number> &      d_density_dT,
+    const VectorizedArray<number> &density_liquid,
+    const VectorizedArray<number> &d_density_liquid_dT,
     const VectorizedArray<number> &ls_heaviside_val) const
   {
     VectorizedArray<number> weight;
@@ -981,11 +987,17 @@ namespace MeltPoolDG::Heat
 
     d_capacity_dT *= weight;
     d_conductivity_dT *= weight;
-    d_density_dT *= weight;
 
-    // todo:
-    // if (material.two_phase_properties_transition_type ==
-    //       TwoPhasePropertiesTransitionType::consistent_with_evaporation)
+    if (material.two_phase_properties_transition_type ==
+        TwoPhasePropertiesTransitionType::consistent_with_evaporation)
+      {
+        const auto temp =
+          density_liquid * (1. + weight * (material.first.density / density_liquid - 1.));
+        d_density_dT =
+          weight * std::pow(material.first.density, 2) * d_density_liquid_dT / (temp * temp);
+      }
+    else
+      d_density_dT *= weight;
   }
 
   template <int dim, typename number>

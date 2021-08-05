@@ -364,6 +364,14 @@ namespace MeltPoolDG::Heat
      * phase x_g and the parameter of the liquid phase x_l. For x_l, the input arguments
      * capacity/conductivity/density are used.
      *
+     * In the case the density is interpolated consistent with the evaporation formulation
+     * (material.two_phase_properties_transition_type ==
+     * TwoPhasePropertiesTransitionType::consistent_with_evaporation), the density is calculated by
+     *
+     *                       rho_g
+     * rho_gl = ---------------------------------
+     *           1 + ls * ( rho_g / rho_l - 1 )
+     *
      * The values of @p capacity, @p conductivity and @p density must be set to the level set = 1
      * phase's material properties (without solidification: material.second ; with solidification:
      * result of get_liquid_solid_material_properties()'s result) initially. This function only
@@ -394,15 +402,34 @@ namespace MeltPoolDG::Heat
      *  dT                 dT            dT            dT
      *
      * with the heaviside representation of the level set function ls, the parameter of the gaseous
-     * phase x_g and the parameter of the liquid phase x_l. The paramerters in the gaseous phase are
+     * phase x_g and the parameter of the liquid phase x_l. The parameters in the gaseous phase are
      * constant with respect to the temperature, thus its derivative can be neglected. For dx_l/dT,
      * the input arguments d_capacity_dT/d_conductivity_dT/d_density_dT are used.
+     *
+     * In the case the density is interpolated consistent with the evaporation formulation
+     * (material.two_phase_properties_transition_type ==
+     * TwoPhasePropertiesTransitionType::consistent_with_evaporation), the density's temperature
+     * derivative is calculated by
+     *
+     *  d rho_gl                      ls * rho_g²                        d rho_l
+     * ---------- = ------------------------------------------------- * ---------
+     *     dT        ( rho_l * ( 1 + ls * ( rho_g / rho_l - 1 ) ) )²       dT
+     *
+     * @note For the calculation of the density consistent with the evaporation, the liquid's
+     * parameter must be passed separately via @p density_liquid and @p d_density_liquid_dT.
+     *
+     * @note This does not account for solidification effect. In case of solidification the values of @p
+     * d_capacity_dT, @p d_conductivity_dT, @p d_density_dT, @p density_liquid and @p
+     * d_density_liquid_dT must be set to the liquid/solid phases (level set = 1) parameters, as
+     * determined by get_liquid_solid_material_properties().
      */
     void
     get_material_parameter_derivatives_with_two_phase_flow(
       VectorizedArray<number> &      d_capacity_dT,
       VectorizedArray<number> &      d_conductivity_dT,
       VectorizedArray<number> &      d_density_dT,
+      const VectorizedArray<number> &density_liquid,
+      const VectorizedArray<number> &d_density_liquid_dT,
       const VectorizedArray<number> &ls_heaviside_val) const;
 
     /*
