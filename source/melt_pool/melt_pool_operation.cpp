@@ -424,30 +424,17 @@ namespace MeltPoolDG::MeltPool
                   "The usage of this function assumes that the temperature field "
                   "is interpolated with the polynomial with the same degree as the level set"));
 
-    const unsigned int dofs_per_cell = level_set_dof_handler.get_fe().n_dofs_per_cell();
-
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-    std::map<types::global_dof_index, Point<dim>> support_points;
-    DoFTools::map_dofs_to_support_points(scratch_data->get_mapping(),
-                                         level_set_dof_handler,
-                                         support_points);
-
     AffineConstraints<double> solid_constraints;
 
-    IndexSet ls_locally_relevant_dofs;
+    IndexSet ls_locally_relevant_dofs, ls_locally_active_dofs;
     DoFTools::extract_locally_relevant_dofs(level_set_dof_handler, ls_locally_relevant_dofs);
+    DoFTools::extract_locally_active_dofs(level_set_dof_handler, ls_locally_active_dofs);
 
     solid_constraints.reinit(ls_locally_relevant_dofs);
-    for (const auto &cell : level_set_dof_handler.active_cell_iterators())
-      if (cell->is_locally_owned())
-        {
-          cell->get_dof_indices(local_dof_indices);
 
-          for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            if (solid[local_dof_indices[i]])
-              solid_constraints.add_line(local_dof_indices[i]);
-        }
+    for (const auto i : ls_locally_active_dofs)
+      if (solid[i])
+        solid_constraints.add_line(i);
 
     UtilityFunctions::check_constraints(level_set_dof_handler, solid_constraints);
 
