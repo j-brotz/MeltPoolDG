@@ -815,16 +815,16 @@ namespace MeltPoolDG::Heat
 
     if (with_solidification)
       {
-        const auto solid_fraction = calculate_solid_fraction(temp_lin_val.get_value(q_index));
-        get_liquid_solid_material_parameters(capacity, conductivity, density, solid_fraction);
+        const auto solid_fraction = compute_solid_fraction(temp_lin_val.get_value(q_index));
+        get_liquid_solid_material_parameters(solid_fraction, capacity, conductivity, density);
       }
 
     if (with_two_phase)
       {
-        get_material_parameters_with_two_phase_flow(capacity,
+        get_material_parameters_with_two_phase_flow(ls_heaviside_val.get_value(q_index),
+                                                    capacity,
                                                     conductivity,
-                                                    density,
-                                                    ls_heaviside_val.get_value(q_index));
+                                                    density);
       }
     rho_cp = capacity * density;
   }
@@ -856,28 +856,28 @@ namespace MeltPoolDG::Heat
 
     if (with_solidification)
       {
-        const auto solid_fraction = calculate_solid_fraction(temp_lin_val.get_value(q_index));
-        get_liquid_solid_material_parameters(capacity, conductivity, density, solid_fraction);
-        get_liquid_solid_material_parameter_derivatives(d_capacity_dT,
+        const auto solid_fraction = compute_solid_fraction(temp_lin_val.get_value(q_index));
+        get_liquid_solid_material_parameters(solid_fraction, capacity, conductivity, density);
+        get_liquid_solid_material_parameter_derivatives(solid_fraction,
+                                                        d_capacity_dT,
                                                         d_conductivity_dT,
-                                                        d_density_dT,
-                                                        solid_fraction);
+                                                        d_density_dT);
       }
 
     if (with_two_phase)
       {
         const auto liq_density      = density;
         const auto d_liq_density_dT = d_density_dT;
-        get_material_parameters_with_two_phase_flow(capacity,
+        get_material_parameters_with_two_phase_flow(ls_heaviside_val.get_value(q_index),
+                                                    capacity,
                                                     conductivity,
-                                                    density,
-                                                    ls_heaviside_val.get_value(q_index));
-        get_material_parameter_derivatives_with_two_phase_flow(d_capacity_dT,
-                                                               d_conductivity_dT,
-                                                               d_density_dT,
-                                                               liq_density,
+                                                    density);
+        get_material_parameter_derivatives_with_two_phase_flow(liq_density,
                                                                d_liq_density_dT,
-                                                               ls_heaviside_val.get_value(q_index));
+                                                               ls_heaviside_val.get_value(q_index),
+                                                               d_capacity_dT,
+                                                               d_conductivity_dT,
+                                                               d_density_dT);
       }
     rho_cp      = capacity * density;
     d_rho_cp_dT = d_capacity_dT * density + d_density_dT * capacity;
@@ -886,10 +886,10 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::get_liquid_solid_material_parameters(
+    const VectorizedArray<number> &solid_fraction,
     VectorizedArray<number> &      capacity,
     VectorizedArray<number> &      conductivity,
-    VectorizedArray<number> &      density,
-    const VectorizedArray<number> &solid_fraction) const
+    VectorizedArray<number> &      density) const
   {
     if (solid_fraction == VectorizedArray<number>(0.0))
       return;
@@ -916,10 +916,10 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::get_liquid_solid_material_parameter_derivatives(
+    const VectorizedArray<number> &solid_fraction,
     VectorizedArray<number> &      d_capacity_dT,
     VectorizedArray<number> &      d_conductivity_dT,
-    VectorizedArray<number> &      d_density_dT,
-    const VectorizedArray<number> &solid_fraction) const
+    VectorizedArray<number> &      d_density_dT) const
   {
     if (solid_fraction == VectorizedArray<number>(0.0) ||
         solid_fraction == VectorizedArray<number>(1.0))
@@ -947,10 +947,10 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::get_material_parameters_with_two_phase_flow(
+    const VectorizedArray<number> &ls_heaviside_val,
     VectorizedArray<number> &      capacity,
     VectorizedArray<number> &      conductivity,
-    VectorizedArray<number> &      density,
-    const VectorizedArray<number> &ls_heaviside_val) const
+    VectorizedArray<number> &      density) const
   {
     VectorizedArray<number> weight;
     weight =
@@ -972,12 +972,12 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::get_material_parameter_derivatives_with_two_phase_flow(
-    VectorizedArray<number> &      d_capacity_dT,
-    VectorizedArray<number> &      d_conductivity_dT,
-    VectorizedArray<number> &      d_density_dT,
     const VectorizedArray<number> &density_liquid,
     const VectorizedArray<number> &d_density_liquid_dT,
-    const VectorizedArray<number> &ls_heaviside_val) const
+    const VectorizedArray<number> &ls_heaviside_val,
+    VectorizedArray<number> &      d_capacity_dT,
+    VectorizedArray<number> &      d_conductivity_dT,
+    VectorizedArray<number> &      d_density_dT) const
   {
     VectorizedArray<number> weight;
     weight =
@@ -1002,7 +1002,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   VectorizedArray<number>
-  HeatTransferOperator<dim, number>::calculate_solid_fraction(
+  HeatTransferOperator<dim, number>::compute_solid_fraction(
     const VectorizedArray<number> &current_temperature) const
   {
     return UtilityFunctions::limit_to_bounds((material.liquidus_temperature - current_temperature) *

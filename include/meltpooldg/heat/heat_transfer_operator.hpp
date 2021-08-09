@@ -312,10 +312,10 @@ namespace MeltPoolDG::Heat
      * get_material_parameters_with_two_phase_flow().
      */
     void
-    get_liquid_solid_material_parameters(VectorizedArray<number> &      capacity,
+    get_liquid_solid_material_parameters(const VectorizedArray<number> &solid_fraction,
+                                         VectorizedArray<number> &      capacity,
                                          VectorizedArray<number> &      conductivity,
-                                         VectorizedArray<number> &      density,
-                                         const VectorizedArray<number> &solid_fraction) const;
+                                         VectorizedArray<number> &      density) const;
 
     /*
      * Determine derivatives of the material parameters (@p d_capacity_dT, @p d_conductivity_dT and
@@ -324,7 +324,7 @@ namespace MeltPoolDG::Heat
      * get_material_parameters_with_solidification().
      *
      * The parameter x_sl of the solid/liquid mixture, where x stands for
-     * capacity/conductivity/density, is then calculated by
+     * capacity/conductivity/density, is then computed by
      *
      * dx_sl                                      d sf
      * -----  = (x_s - x_l) * (-6*sf^2 + 6*sf) * ------
@@ -342,11 +342,10 @@ namespace MeltPoolDG::Heat
      * this function can be used as the liquid/solid phases (level set = 1) material properties.
      */
     void
-    get_liquid_solid_material_parameter_derivatives(
-      VectorizedArray<number> &      d_capacity_dT,
-      VectorizedArray<number> &      d_conductivity_dT,
-      VectorizedArray<number> &      d_density_dT,
-      const VectorizedArray<number> &solid_fraction) const;
+    get_liquid_solid_material_parameter_derivatives(const VectorizedArray<number> &solid_fraction,
+                                                    VectorizedArray<number> &      d_capacity_dT,
+                                                    VectorizedArray<number> &d_conductivity_dT,
+                                                    VectorizedArray<number> &d_density_dT) const;
 
     /*
      * Determine the material parameters (@p capacity, @p conductivity and @p density) for two phase
@@ -356,7 +355,7 @@ namespace MeltPoolDG::Heat
      * parameters will jump:
      *
      * The parameter x_gl of the two-phase mixture, where x stands for
-     * capacity/conductivity/density, is then calculated by
+     * capacity/conductivity/density, is then computed by
      *
      * x_gl = (1-ls) * x_g + ls * x_l
      *
@@ -366,7 +365,7 @@ namespace MeltPoolDG::Heat
      *
      * In the case the density is interpolated consistent with the evaporation formulation
      * (material.two_phase_properties_transition_type ==
-     * TwoPhasePropertiesTransitionType::consistent_with_evaporation), the density is calculated by
+     * TwoPhasePropertiesTransitionType::consistent_with_evaporation), the density is computed by
      *
      *                       rho_g
      * rho_gl = ---------------------------------
@@ -383,11 +382,10 @@ namespace MeltPoolDG::Heat
      * 1) parameters, as determined by get_liquid_solid_material_properties().
      */
     void
-    get_material_parameters_with_two_phase_flow(
-      VectorizedArray<number> &      capacity,
-      VectorizedArray<number> &      conductivity,
-      VectorizedArray<number> &      density,
-      const VectorizedArray<number> &ls_heaviside_val) const;
+    get_material_parameters_with_two_phase_flow(const VectorizedArray<number> &ls_heaviside_val,
+                                                VectorizedArray<number> &      capacity,
+                                                VectorizedArray<number> &      conductivity,
+                                                VectorizedArray<number> &      density) const;
 
     /*
      * Determine derivatives of the material parameters (@p d_capacity_dT, @p d_conductivity_dT and
@@ -395,7 +393,7 @@ namespace MeltPoolDG::Heat
      * the values determined by get_liquid_solid_material_parameters().
      *
      * The parameter x_gl of the two-phase mixture, where x stands for
-     * capacity/conductivity/density, is then calculated by
+     * capacity/conductivity/density, is then computed by
      *
      * dx_gl              dx_g          dx_l          dx_l
      * -----  = (1-ls) * ------ + ls * ------ = ls * ------
@@ -409,28 +407,28 @@ namespace MeltPoolDG::Heat
      * In the case the density is interpolated consistent with the evaporation formulation
      * (material.two_phase_properties_transition_type ==
      * TwoPhasePropertiesTransitionType::consistent_with_evaporation), the density's temperature
-     * derivative is calculated by
+     * derivative is computed by
      *
      *  d rho_gl                      ls * rho_g²                        d rho_l
      * ---------- = ------------------------------------------------- * ---------
      *     dT        ( rho_l * ( 1 + ls * ( rho_g / rho_l - 1 ) ) )²       dT
      *
-     * @note For the calculation of the density consistent with the evaporation, the liquid's
+     * @note For the computation of the density consistent with the evaporation, the liquid's
      * parameter must be passed separately via @p density_liquid and @p d_density_liquid_dT.
      *
-     * @note This does not account for solidification effect. In case of solidification the values of @p
-     * d_capacity_dT, @p d_conductivity_dT, @p d_density_dT, @p density_liquid and @p
-     * d_density_liquid_dT must be set to the liquid/solid phases (level set = 1) parameters, as
+     * @note This function does not account for solidification effect. In case of solidification the
+     * values of @p d_capacity_dT, @p d_conductivity_dT, @p d_density_dT, @p density_liquid and
+     * @p d_density_liquid_dT must be set to the liquid/solid phases (level set = 1) parameters, as
      * determined by get_liquid_solid_material_properties().
      */
     void
     get_material_parameter_derivatives_with_two_phase_flow(
-      VectorizedArray<number> &      d_capacity_dT,
-      VectorizedArray<number> &      d_conductivity_dT,
-      VectorizedArray<number> &      d_density_dT,
       const VectorizedArray<number> &density_liquid,
       const VectorizedArray<number> &d_density_liquid_dT,
-      const VectorizedArray<number> &ls_heaviside_val) const;
+      const VectorizedArray<number> &ls_heaviside_val,
+      VectorizedArray<number> &      d_capacity_dT,
+      VectorizedArray<number> &      d_conductivity_dT,
+      VectorizedArray<number> &      d_density_dT) const;
 
     /*
      * Compute the solid fraction for a temperature between the liquidus and the solidus
@@ -439,6 +437,6 @@ namespace MeltPoolDG::Heat
      * fraction is one. In between there is a linear interpolation.
      */
     VectorizedArray<number>
-    calculate_solid_fraction(const VectorizedArray<number> &temperature) const;
+    compute_solid_fraction(const VectorizedArray<number> &temperature) const;
   };
 } // namespace MeltPoolDG::Heat
