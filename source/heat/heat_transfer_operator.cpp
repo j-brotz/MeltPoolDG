@@ -228,6 +228,8 @@ namespace MeltPoolDG::Heat
     TrilinosWrappers::SparseMatrix &system_matrix,
     bool                            include_boundary_terms) const
   {
+    system_matrix = 0.0;
+
     MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
     if (velocity)
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
@@ -313,14 +315,14 @@ namespace MeltPoolDG::Heat
 
               for (unsigned int v = 0; v < n_filled_lanes; ++v)
                 {
-                  auto cell_v = matrix_free.get_cell_iterator(cell, v);
+                  auto cell_v = matrix_free.get_cell_iterator(cell, v, temp_dof_idx);
 
                   std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
                   cell_v->get_dof_indices(dof_indices);
 
                   auto temp = dof_indices;
                   for (unsigned int j = 0; j < dof_indices.size(); ++j)
-                    dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+                    dof_indices[j] = temp[temp_vals.get_shape_info().lexicographic_numbering[j]];
 
                   scratch_data.get_constraint(temp_dof_idx)
                     .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
@@ -375,14 +377,15 @@ namespace MeltPoolDG::Heat
 
                   auto cell_v =
                     matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
-                                                  cell_number % VectorizedArray<number>::size());
+                                                  cell_number % VectorizedArray<number>::size(),
+                                                  temp_dof_idx);
 
                   std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
                   cell_v->get_dof_indices(dof_indices);
 
                   auto temp = dof_indices;
                   for (unsigned int j = 0; j < dof_indices.size(); ++j)
-                    dof_indices[j] = temp[matrix_free.get_shape_info().lexicographic_numbering[j]];
+                    dof_indices[j] = temp[dQ_dT.get_shape_info().lexicographic_numbering[j]];
 
                   scratch_data.get_constraint(temp_dof_idx)
                     .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
