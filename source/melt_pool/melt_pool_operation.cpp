@@ -276,7 +276,7 @@ namespace MeltPoolDG::MeltPool
     /*
      *    limit the level set interface to the touching regions of liquid/gas
      */
-    if (mp_data.set_level_set_to_zero_in_solid)
+    if (mp_data.solid.set_level_set_to_zero)
       {
         remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
                                                 scratch_data->get_constraint(ls_dof_idx));
@@ -284,7 +284,7 @@ namespace MeltPoolDG::MeltPool
                                                 scratch_data->get_constraint(reinit_dof_idx));
       }
 
-    if (mp_data.set_velocity_to_zero_in_solid)
+    if (mp_data.solid.set_velocity_to_zero)
       set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
                                               scratch_data->get_constraint(
                                                 flow_vel_no_solid_dof_idx),
@@ -297,7 +297,7 @@ namespace MeltPoolDG::MeltPool
     // will be updated accordingly. In this case, also the
     // constrained indices in matrix-free have to be updated
     // which is done in the following by rebuilding matrix-free.
-    if (mp_data.set_velocity_to_zero_in_solid || mp_data.set_level_set_to_zero_in_solid)
+    if (mp_data.solid.set_velocity_to_zero || mp_data.solid.set_level_set_to_zero)
       scratch_data->build();
   }
 
@@ -392,7 +392,7 @@ namespace MeltPoolDG::MeltPool
 
             for (const auto q : flow_eval.quadrature_point_indices())
               {
-                if (solid_at_q[q] == 1.0)
+                if (solid_at_q[q] >= mp_data.solid.solid_fraction_lower_limit)
                   solid_constraints.add_line(local_dof_indices[q]);
               }
           }
@@ -433,7 +433,7 @@ namespace MeltPoolDG::MeltPool
     solid_constraints.reinit(ls_locally_relevant_dofs);
 
     for (const auto i : ls_locally_active_dofs)
-      if (solid[i])
+      if (solid[i] >= mp_data.solid.solid_fraction_lower_limit)
         solid_constraints.add_line(i);
 
     UtilityFunctions::check_constraints(level_set_dof_handler, solid_constraints);

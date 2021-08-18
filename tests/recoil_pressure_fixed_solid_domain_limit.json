@@ -89,7 +89,8 @@
     "mp boiling temperature": "3000.",
     "mp liquid melting point": "1700",
     "mp set level set to zero in solid": "false",
-    "mp set velocity to zero in solid": "true"
+    "mp set velocity to zero in solid": "true",
+    "mp solid fraction lower limit": "0.77"
   },
   "simulation specific domain": {
     "domain x max": "0.000100",
