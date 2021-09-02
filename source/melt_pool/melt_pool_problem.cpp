@@ -37,12 +37,16 @@ namespace MeltPoolDG::Flow
              * compute the evaporative mass flux
              */
             evaporation_operation->compute_evaporative_mass_flux();
-            /*
-             * compute level set source term from evaporation
-             */
-            evaporation_operation->compute_evaporation_velocity();
 
-            interface_velocity += evaporation_operation->get_velocity();
+            if (base_in->parameters.mp.do_evaporative_mass_flux)
+              {
+                /*
+                 * compute level set source term from evaporation
+                 */
+                evaporation_operation->compute_evaporation_velocity();
+
+                interface_velocity += evaporation_operation->get_velocity();
+              }
           }
 
         // ... solve level-set problem with the given advection field
@@ -124,7 +128,7 @@ namespace MeltPoolDG::Flow
           }
 
         // .... d) evaporative mass fluxes
-        if (evaporation_operation)
+        if (evaporation_operation && base_in->parameters.mp.do_evaporative_mass_flux)
           {
             evaporation_operation->compute_mass_balance_source_term(
               mass_balance_rhs,
@@ -143,7 +147,7 @@ namespace MeltPoolDG::Flow
 
         // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
         // the mass balance equation
-        if (evaporation_operation)
+        if (evaporation_operation && base_in->parameters.mp.do_evaporative_mass_flux)
           flow_operation->set_mass_balance_rhs(mass_balance_rhs);
 
         // solver Navier-Stokes problem
@@ -309,9 +313,10 @@ namespace MeltPoolDG::Flow
         /*
          * register evaporative mass flux to compute the heat sink
          */
-        heat_operation->register_evaporative_mass_flux(
-          &evaporation_operation->get_evaporative_mass_flux(),
-          base_in->parameters.evapor.latent_heat_of_evaporation);
+        if (base_in->parameters.mp.do_evaporative_heat_flux)
+          heat_operation->register_evaporative_mass_flux(
+            &evaporation_operation->get_evaporative_mass_flux(),
+            base_in->parameters.evapor.latent_heat_of_evaporation);
       }
     /*
      *    initialize the melt pool operation class

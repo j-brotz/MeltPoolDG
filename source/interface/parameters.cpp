@@ -102,12 +102,29 @@ namespace MeltPoolDG
         material.inv_mushy_interval =
           1.0 / (material.liquidus_temperature - material.solidus_temperature);
       }
+
       /*
        *  parameters for adaflo
        */
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     if (base.problem_name == ProblemType::melt_pool)
       {
+        /*
+         * modify parameters for evaporation
+         */
+        if (mp.do_evaporation && (!mp.do_evaporative_heat_flux && !mp.do_evaporative_mass_flux))
+          {
+            mp.do_evaporative_heat_flux = true;
+            mp.do_evaporative_mass_flux = true;
+          }
+        else if (!mp.do_evaporation && (mp.do_evaporative_heat_flux || mp.do_evaporative_mass_flux))
+          mp.do_evaporation = true;
+
+        AssertThrow(!mp.do_evaporative_heat_flux || evapor.latent_heat_of_evaporation > 0.0,
+                    ExcMessage("To consider the evaporative heat flux the value for "
+                               ">>> latent heat of evaporation <<< "
+                               "must be larger than zero."));
+
         if (mp.do_evaporation && !mp.do_heat_transfer)
           AssertThrow(false,
                       ExcMessage("In case of evaporation both flag >>> do evaporation <<< "
@@ -132,7 +149,7 @@ namespace MeltPoolDG
                       "within the adaflo section, which is ignored by MeltPoolDG. "
                       "Please use the >material: material first density:< section instead. "));
 
-        if (mp.do_evaporation)
+        if (mp.do_evaporative_mass_flux)
           {
             if (evapor.formulation_source_term_continuity != "sharp")
               {
@@ -691,7 +708,22 @@ namespace MeltPoolDG
       prm.add_parameter(
         "mp do evaporation",
         mp.do_evaporation,
-        "Set this parameter to true if you want to consider a coupling with evaporation.");
+        "Set this parameter to true if you want to consider a coupling with evaporation. "
+        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
+        "are set, they will be automatically set to true.");
+      prm.add_parameter(
+        "mp do evaporative heat flux",
+        mp.do_evaporative_heat_flux,
+        "Set this parameter to true if you want to consider only the evaporative heat flux in the heat equation. "
+        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
+        "are set, they will be automatically set to true.");
+      prm.add_parameter(
+        "mp do evaporative mass flux",
+        mp.do_evaporative_mass_flux,
+        "Set this parameter to true if you want to consider only the evaporative mass flux. The latter is relevant "
+        "for the source term in the continuity equation and the level set equation. "
+        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
+        "are set, they will be automatically set to true.");
       prm.add_parameter(
         "mp do melt pool",
         mp.do_melt_pool,
@@ -742,9 +774,10 @@ namespace MeltPoolDG
       prm.add_parameter("evapor evaporative mass flux scale factor",
                         evapor.evaporative_mass_flux_scale_factor,
                         "Scale factor for the evaporative flux");
-      prm.add_parameter("evapor evaporative mass flux",
-                        evapor.evaporative_mass_flux,
-                        "Mass flux due to evaporation (SI unit in kg/m²s).");
+      prm.add_parameter(
+        "evapor evaporative mass flux",
+        evapor.evaporative_mass_flux,
+        "Prescribe a spatially and temporally constant mass flux due to evaporation (SI unit in kg/m²s).");
       prm.add_parameter("evapor ls value liquid",
                         evapor.ls_value_liquid,
                         "Set the level set value corresponding to the liquid domain.",
