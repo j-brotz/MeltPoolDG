@@ -2,6 +2,8 @@
 #  define MELT_POOL_DG_DIM 1
 #endif
 
+#include <meltpooldg/flow/adaflo_wrapper.hpp>
+#include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -137,6 +139,13 @@ namespace MeltPoolDG::Flow
         if (melt_pool_operation)
           melt_pool_operation->compute_force_flow_rhs(
             vel_force_rhs, level_set_operation.get_level_set_as_heaviside(), false);
+
+        // ... f) explicit Darcy damping force
+        if (darcy_operation)
+          darcy_operation->compute_darcy_damping(vel_force_rhs,
+                                                 flow_operation->get_velocity(),
+                                                 melt_pool_operation->get_solid(),
+                                                 false);
 
         //  ... and set the resulting forces within the Navier-Stokes solver
         flow_operation->set_force_rhs(vel_force_rhs);
@@ -328,6 +337,16 @@ namespace MeltPoolDG::Flow
         flow_operation->get_quad_idx_velocity(),
         temp_hanging_nodes_dof_idx,
         base_in->parameters.time_stepping.start_time);
+    /*
+     *    initialize the darcy damping operation class
+     */
+    if (melt_pool_operation && base_in->parameters.darcy.mushy_zone_morphology > 0.0)
+      darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim>>(
+        base_in->parameters.darcy,
+        *scratch_data,
+        flow_operation->get_dof_handler_idx_velocity(),
+        flow_operation->get_quad_idx_velocity(),
+        temp_dof_idx);
 
     if (base_in->parameters.heat.solidification)
       AssertThrow(

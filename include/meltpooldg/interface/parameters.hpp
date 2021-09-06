@@ -236,6 +236,13 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct DarcyDampingData
+  {
+    number mushy_zone_morphology   = 0.0;
+    number avoid_div_zero_constant = 1e-3;
+  };
+
+  template <typename number = double>
   struct EvaporationData
   {
     number      evaporative_mass_flux_scale_factor = 1.0;
@@ -355,6 +362,7 @@ namespace MeltPoolDG
     HeatData<number>               heat;
     LaserData<number>              laser;
     MeltPoolData<number>           mp;
+    DarcyDampingData<number>       darcy;
     RecoilPressureData<number>     recoil;
     EvaporationData<number>        evapor;
     MaterialData<number>           material;

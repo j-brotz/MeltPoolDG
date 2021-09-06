@@ -732,7 +732,20 @@ namespace MeltPoolDG
                         mp.liquid.melting_point,
                         "Melting point of the liquid part of domain");
     }
-
+    prm.leave_subsection();
+    /*
+     * Dardy Damping
+     */
+    prm.enter_subsection("darcy damping");
+    {
+      prm.add_parameter("mushy zone morphology",
+                        darcy.mushy_zone_morphology,
+                        "Mushy zone morphology for Darcy damping");
+      prm.add_parameter("avoid div zero constant",
+                        darcy.avoid_div_zero_constant,
+                        "This parameter exists to avoid division by zero in the "
+                        "Kozeny–Carman equation for the Darcy damping force.");
+    }
     prm.leave_subsection();
     /*
      *  evaporation
