@@ -95,9 +95,7 @@
     "mp boiling temperature": "3000.",
     "mp liquid melting point": "1700",
     "mp set level set to zero in solid": "false",
-    "mp set velocity to zero in solid": "true",
-    "mp solid darcy damping mushy zone morphology": "1e8",
-    "mp solid darcy damping avoid div zero constant": "1e-3"
+    "mp set velocity to zero in solid": "true"
   },
   "darcy damping": {
     "mushy zone morphology": "1e8",
