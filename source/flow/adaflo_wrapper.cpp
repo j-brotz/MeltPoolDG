@@ -123,6 +123,10 @@ namespace MeltPoolDG::Flow
     navier_stokes.get_constraints_u().set_zero(navier_stokes.user_rhs.block(0));
     navier_stokes.get_constraints_p().set_zero(navier_stokes.user_rhs.block(1));
 
+    navier_stokes.get_constraints_u().set_zero(navier_stokes.solution.block(0));
+    navier_stokes.get_constraints_u().set_zero(navier_stokes.solution_old.block(0));
+    navier_stokes.get_constraints_u().set_zero(navier_stokes.solution_old_old.block(0));
+
     const auto n_newton_steps = navier_stokes.advance_time_step();
     AssertThrow(n_newton_steps < adaflo_params.max_nl_iteration,
                 ExcMessage(
