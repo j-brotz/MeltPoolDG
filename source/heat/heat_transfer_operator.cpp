@@ -189,6 +189,13 @@ namespace MeltPoolDG::Heat
   {
     scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
 
+    MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
+    if (velocity)
+      MeltPoolDG::VectorTools::update_ghost_values(*velocity);
+    if (level_set_as_heaviside)
+      MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
@@ -220,6 +227,13 @@ namespace MeltPoolDG::Heat
     // ... and invert it
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-10) ? (1.0 / i) : 1.0;
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
+    if (velocity)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
+    if (level_set_as_heaviside)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
   }
 
   template <int dim, typename number>

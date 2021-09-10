@@ -18,7 +18,9 @@
   },
   "melt pool": {
     "mp do heat transfer": "true",
-    "mp do evaporation": "true"
+    "mp do evaporation": "true",
+    "mp do evaporative heat flux": "false",
+    "mp do evaporative mass flux": "true"
   },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
