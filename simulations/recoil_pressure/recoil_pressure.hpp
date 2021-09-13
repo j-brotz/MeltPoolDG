@@ -69,10 +69,11 @@ namespace MeltPoolDG
       class SimulationRecoilPressure : public SimulationBase<dim>
       {
       private:
-        double domain_x_min = 0;
-        double domain_x_max = 0;
-        double domain_y_min = 0;
-        double domain_y_max = 0;
+        double domain_x_min      = 0;
+        double domain_x_max      = 0;
+        double domain_y_min      = 0;
+        double domain_y_max      = 0;
+        bool   periodic_boundary = false;
 
       public:
         SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
@@ -96,6 +97,10 @@ namespace MeltPoolDG
             prm.add_parameter("domain y max",
                               domain_y_max,
                               "maximum y coordinate of simulation domain");
+            prm.add_parameter(
+              "periodic boundary",
+              periodic_boundary,
+              "Set this Parameter to true if the domain should be periodic in x direction.");
           }
           prm.leave_subsection();
         }
@@ -153,7 +158,6 @@ namespace MeltPoolDG
               else
                 {
                   GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
-                  this->triangulation->refine_global(this->parameters.base.global_refinements);
                 }
             }
           else
@@ -165,52 +169,126 @@ namespace MeltPoolDG
         void
         set_boundary_conditions() override
         {
-          if (this->parameters.mp.do_evaporation)
+          /*
+           *                  upper_bc
+           *            +-------------------+
+           *            |                   |
+           *            |      ls = -1      |
+           *            |                   |
+           *   left_bc  |-------------------|  right_bc
+           *            |                   |
+           *            |      ls = 1       |
+           *            |                   |
+           *            +-------------------+
+           *                   lower_bc
+           *
+           * -----------------------------------------------------------------------------
+           * do evaporation    = false
+           * periodic boundary = false
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |  T = T_initial | no-slip  |       -        |     -
+           * lower_bc            |  T = T_initial | no-slip  | fixed constant |     -
+           * upper_bc            |  T = T_initial | no-slip  |       -        |     -
+           * -----------------------------------------------------------------------------
+           * do evaporation    = false
+           * periodic boundary = true
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
+           * lower_bc            |  T = T_initial | no-slip  | fixed constant |     -
+           * upper_bc            |  T = T_initial | no-slip  |       -        |     -
+           * -----------------------------------------------------------------------------
+           * do evaporation    = true
+           * periodic boundary = false
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |  T = T_initial | symmetry |       -        |     -
+           * lower_bc            |  T = T_initial |   open   |       -        |     -
+           * upper_bc            |  T = T_initial | no-slip  |       -        |  ls = -1
+           * -----------------------------------------------------------------------------
+           * do evaporation    = true
+           * periodic boundary = true
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
+           * lower_bc            |  T = T_initial |   open   |       -        |     -
+           * upper_bc            |  T = T_initial | no-slip  |       -        |  ls = -1
+           * -----------------------------------------------------------------------------
+           */
+          const types::boundary_id lower_bc = 1;
+          const types::boundary_id upper_bc = 2;
+          const types::boundary_id left_bc  = 3;
+          const types::boundary_id right_bc = 4;
+
+          if constexpr (dim == 2)
             {
-              const types::boundary_id lower_bc = 1;
-              const types::boundary_id upper_bc = 2;
-              const types::boundary_id left_bc  = 3;
-              const types::boundary_id right_bc = 4;
+              for (const auto &cell : this->triangulation->cell_iterators())
+                for (const auto &face : cell->face_iterators())
+                  if ((face->at_boundary()))
+                    {
+                      if (face->center()[1] == domain_y_min)
+                        face->set_boundary_id(lower_bc);
+                      else if (face->center()[1] == domain_y_max)
+                        face->set_boundary_id(upper_bc);
+                      else if (face->center()[0] == domain_x_min)
+                        face->set_boundary_id(left_bc);
+                      else if (face->center()[0] == domain_x_max)
+                        face->set_boundary_id(right_bc);
+                    }
+            }
+          else
+            AssertThrow(false, ExcNotImplemented());
 
-              if constexpr (dim == 2)
-                {
-                  for (const auto &cell : this->triangulation->cell_iterators())
-                    for (const auto &face : cell->face_iterators())
-                      if ((face->at_boundary()))
-                        {
-                          if (face->center()[1] == domain_y_min)
-                            face->set_boundary_id(lower_bc);
-                          else if (face->center()[1] == domain_y_max)
-                            face->set_boundary_id(upper_bc);
-                          else if (face->center()[0] == domain_x_min)
-                            face->set_boundary_id(left_bc);
-                          else if (face->center()[0] == domain_x_max)
-                            face->set_boundary_id(right_bc);
-                        }
-                }
-              else
-                AssertThrow(false, ExcNotImplemented());
+          if (periodic_boundary)
+            this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
 
-              this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-              this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+          /*
+           * BC for two-phase flow
+           */
+          if (this->parameters.base.problem_name == ProblemType::melt_pool)
+            {
               this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-              this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
-
-              this->attach_dirichlet_boundary_condition(
-                upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
-              /*
-               * BC for heat transfer
-               */
-              if (this->parameters.laser.heat_source_model != "Analytical")
+              if (this->parameters.mp.do_evaporation)
                 {
-                  this->attach_dirichlet_boundary_condition(
-                    lower_bc,
-                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                    "heat_transfer");
+                  this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
+                  if (!periodic_boundary)
+                    {
+                      this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
+                      this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+                    }
                   this->attach_dirichlet_boundary_condition(
                     upper_bc,
-                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                    "heat_transfer");
+                    std::make_shared<Functions::ConstantFunction<dim>>(-1.0),
+                    "level_set");
+                }
+              else // no evaporation
+                {
+                  // The fix pressure constant condition can be set on any boundary (that is not a
+                  // periodic boundary).
+                  this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
+                  this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
+                  if (!periodic_boundary)
+                    {
+                      this->attach_no_slip_boundary_condition(left_bc, "navier_stokes_u");
+                      this->attach_no_slip_boundary_condition(right_bc, "navier_stokes_u");
+                    }
+                }
+            }
+          else
+            AssertThrow(false, ExcNotImplemented());
+
+          /*
+           * BC for heat transfer
+           */
+          if (this->parameters.laser.heat_source_model != "Analytical")
+            {
+              this->attach_dirichlet_boundary_condition(
+                lower_bc,
+                std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                "heat_transfer");
+              this->attach_dirichlet_boundary_condition(
+                upper_bc,
+                std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                "heat_transfer");
+              if (!periodic_boundary)
+                {
                   this->attach_dirichlet_boundary_condition(
                     left_bc,
                     std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
@@ -221,23 +299,9 @@ namespace MeltPoolDG
                     "heat_transfer");
                 }
             }
-          else if (this->parameters.base.problem_name == ProblemType::melt_pool)
-            {
-              this->attach_no_slip_boundary_condition(0, "navier_stokes_u");
-              this->attach_fix_pressure_constant_condition(0, "navier_stokes_p");
-              /*
-               * BC for heat transfer
-               */
-              if (this->parameters.laser.heat_source_model != "Analytical")
-                {
-                  this->attach_dirichlet_boundary_condition(
-                    0,
-                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                    "heat_transfer");
-                }
-            }
-          else
-            AssertThrow(false, ExcNotImplemented());
+
+          if (!this->parameters.base.do_simplex)
+            this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
 
         void
