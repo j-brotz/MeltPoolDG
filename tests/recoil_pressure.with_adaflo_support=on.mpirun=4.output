@@ -32,7 +32,7 @@
 | || curvature ||L2 = 6.03874313831e+00                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 0.00042081085469                                                 melt_pool_problem |
+|  total mass = 0.00041884303125                                                 melt_pool_problem |
 
 Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06). 
 | || velocity ||L2 = 7.003844147858458e-07                                    navier_stokes_adaflo |
@@ -54,7 +54,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06).
 | || curvature ||L2 = 6.03874349594e+00                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 0.00042081138082                                                 melt_pool_problem |
+|  total mass = 0.00041884303125                                                 melt_pool_problem |
 
 Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.355995787676422e-06                                    navier_stokes_adaflo |

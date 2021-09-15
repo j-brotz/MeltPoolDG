@@ -138,7 +138,7 @@
 | || normal_0 ||L2 = 7.16327897984e-11                                               normal_vector |
 | || normal_1 ||L2 = 5.00748994560e+00                                               normal_vector |
 | || curvature ||L2 = 8.70131166518e+00                                                  curvature |
-|  total mass = 0.50881335204                                                    melt_pool_problem |
+|  total mass = 0.46398479905                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.099             evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.9743432752e-03            evaporation_source_terms_continuous |
 
