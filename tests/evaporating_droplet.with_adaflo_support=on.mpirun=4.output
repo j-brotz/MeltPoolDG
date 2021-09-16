@@ -30,7 +30,7 @@
 | || normal_0 ||L2 = 2.05090784075e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05090781318e+00                                               normal_vector |
 | || curvature ||L2 = 5.78573941940e+00                                                  curvature |
-|  total mass = 0.83800460597                                                    melt_pool_problem |
+|  total mass = 0.16214510025                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14878           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6672023615e-01            evaporation_source_terms_continuous |
 
@@ -54,7 +54,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.001 (dt = 0.001).
 | || normal_0 ||L2 = 2.05273525526e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05273521587e+00                                               normal_vector |
 | || curvature ||L2 = 5.77934195857e+00                                                  curvature |
-|  total mass = 0.83814944195                                                    melt_pool_problem |
+|  total mass = 0.16250417298                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14993           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6719189695e-01            evaporation_source_terms_continuous |
 
@@ -78,7 +78,7 @@ Time step #2, advancing from t_n-1 = 0.001 to t = 0.002 (dt = 0.001).
 | || normal_0 ||L2 = 2.05331209563e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05331207072e+00                                               normal_vector |
 | || curvature ||L2 = 5.77926547299e+00                                                  curvature |
-|  total mass = 0.83794580354                                                    melt_pool_problem |
+|  total mass = 0.16247077145                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.15007           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6741093957e-01            evaporation_source_terms_continuous |
 
@@ -102,7 +102,7 @@ Time step #3, advancing from t_n-1 = 0.002 to t = 0.003 (dt = 0.001).
 | || normal_0 ||L2 = 2.05328328270e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05328316626e+00                                               normal_vector |
 | || curvature ||L2 = 5.77910982672e+00                                                  curvature |
-|  total mass = 0.83756918962                                                    melt_pool_problem |
+|  total mass = 0.16228973384                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14973           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6750514493e-01            evaporation_source_terms_continuous |
 
@@ -126,7 +126,7 @@ Time step #4, advancing from t_n-1 = 0.003 to t = 0.004 (dt = 0.001).
 | || normal_0 ||L2 = 2.05296442179e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05296447076e+00                                               normal_vector |
 | || curvature ||L2 = 5.77892434967e+00                                                  curvature |
-|  total mass = 0.83711264015                                                    melt_pool_problem |
+|  total mass = 0.16203405673                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14918           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6753961838e-01            evaporation_source_terms_continuous |
 
@@ -150,7 +150,7 @@ Time step #5, advancing from t_n-1 = 0.004 to t = 0.005 (dt = 0.001).
 | || normal_0 ||L2 = 2.05250860688e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05250861591e+00                                               normal_vector |
 | || curvature ||L2 = 5.77735570683e+00                                                  curvature |
-|  total mass = 0.8366198835                                                     melt_pool_problem |
+|  total mass = 0.16173932046                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14854           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6754634437e-01            evaporation_source_terms_continuous |
 
@@ -174,7 +174,7 @@ Time step #6, advancing from t_n-1 = 0.005 to t = 0.006 (dt = 0.001).
 | || normal_0 ||L2 = 2.05198852966e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05198862607e+00                                               normal_vector |
 | || curvature ||L2 = 5.77715832028e+00                                                  curvature |
-|  total mass = 0.83611088925                                                    melt_pool_problem |
+|  total mass = 0.16142259151                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14788           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6754090313e-01            evaporation_source_terms_continuous |
 
@@ -198,7 +198,7 @@ Time step #7, advancing from t_n-1 = 0.006 to t = 0.007 (dt = 0.001).
 | || normal_0 ||L2 = 2.05143754088e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05143772339e+00                                               normal_vector |
 | || curvature ||L2 = 5.77696141480e+00                                                  curvature |
-|  total mass = 0.83559463057                                                    melt_pool_problem |
+|  total mass = 0.16109180859                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14722           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6753071365e-01            evaporation_source_terms_continuous |
 
@@ -222,7 +222,7 @@ Time step #8, advancing from t_n-1 = 0.007 to t = 0.008 (dt = 0.001).
 | || normal_0 ||L2 = 2.05087147472e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05087173213e+00                                               normal_vector |
 | || curvature ||L2 = 5.77676652310e+00                                                  curvature |
-|  total mass = 0.83507509811                                                    melt_pool_problem |
+|  total mass = 0.16075057727                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14657           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6751923833e-01            evaporation_source_terms_continuous |
 
@@ -246,7 +246,7 @@ Time step #9, advancing from t_n-1 = 0.008 to t = 0.009 (dt = 0.001).
 | || normal_0 ||L2 = 2.05029714133e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.05029726641e+00                                               normal_vector |
 | || curvature ||L2 = 5.77657374256e+00                                                  curvature |
-|  total mass = 0.83455405696                                                    melt_pool_problem |
+|  total mass = 0.16040047985                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14594           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6750806947e-01            evaporation_source_terms_continuous |
 
@@ -270,7 +270,7 @@ Time step #10, advancing from t_n-1 = 0.009 to t = 0.01 (dt = 0.001).
 | || normal_0 ||L2 = 2.04971761346e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04971776697e+00                                               normal_vector |
 | || curvature ||L2 = 5.77638326273e+00                                                  curvature |
-|  total mass = 0.83403228706                                                    melt_pool_problem |
+|  total mass = 0.16004217693                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14534           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6749793145e-01            evaporation_source_terms_continuous |
 
@@ -294,7 +294,7 @@ Time step #11, advancing from t_n-1 = 0.01 to t = 0.011 (dt = 0.001).
 | || normal_0 ||L2 = 2.04913438040e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04913453892e+00                                               normal_vector |
 | || curvature ||L2 = 5.77619507324e+00                                                  curvature |
-|  total mass = 0.83351013146                                                    melt_pool_problem |
+|  total mass = 0.15967592608                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14476           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6748915156e-01            evaporation_source_terms_continuous |
 
@@ -318,7 +318,7 @@ Time step #12, advancing from t_n-1 = 0.011 to t = 0.012 (dt = 0.001).
 | || normal_0 ||L2 = 2.04854798907e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04854829591e+00                                               normal_vector |
 | || curvature ||L2 = 5.77600909811e+00                                                  curvature |
-|  total mass = 0.83298774262                                                    melt_pool_problem |
+|  total mass = 0.15930182233                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14421           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6748187477e-01            evaporation_source_terms_continuous |
 
@@ -342,7 +342,7 @@ Time step #13, advancing from t_n-1 = 0.012 to t = 0.013 (dt = 0.001).
 | || normal_0 ||L2 = 2.04795894221e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04795910910e+00                                               normal_vector |
 | || curvature ||L2 = 5.77582511567e+00                                                  curvature |
-|  total mass = 0.83246519123                                                    melt_pool_problem |
+|  total mass = 0.15891990783                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14367           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6747616079e-01            evaporation_source_terms_continuous |
 
@@ -366,7 +366,7 @@ Time step #14, advancing from t_n-1 = 0.013 to t = 0.014 (dt = 0.001).
 | || normal_0 ||L2 = 2.04736722642e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04736755749e+00                                               normal_vector |
 | || curvature ||L2 = 5.77564352694e+00                                                  curvature |
-|  total mass = 0.83194251269                                                    melt_pool_problem |
+|  total mass = 0.15853022079                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14317           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6747202836e-01            evaporation_source_terms_continuous |
 
@@ -390,7 +390,7 @@ Time step #15, advancing from t_n-1 = 0.014 to t = 0.015 (dt = 0.001).
 | || normal_0 ||L2 = 2.04677307499e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04677345684e+00                                               normal_vector |
 | || curvature ||L2 = 5.77546392388e+00                                                  curvature |
-|  total mass = 0.83141972727                                                    melt_pool_problem |
+|  total mass = 0.15813281619                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14269           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6746947516e-01            evaporation_source_terms_continuous |
 
@@ -414,7 +414,7 @@ Time step #16, advancing from t_n-1 = 0.015 to t = 0.016 (dt = 0.001).
 | || normal_0 ||L2 = 2.04617663717e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04617687852e+00                                               normal_vector |
 | || curvature ||L2 = 5.77528613509e+00                                                  curvature |
-|  total mass = 0.83089684883                                                    melt_pool_problem |
+|  total mass = 0.15772777388                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14223           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6746848698e-01            evaporation_source_terms_continuous |
 
@@ -438,7 +438,7 @@ Time step #17, advancing from t_n-1 = 0.016 to t = 0.017 (dt = 0.001).
 | || normal_0 ||L2 = 2.04557766313e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04557806949e+00                                               normal_vector |
 | || curvature ||L2 = 5.77511023298e+00                                                  curvature |
-|  total mass = 0.83037388858                                                    melt_pool_problem |
+|  total mass = 0.15731520081                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14179           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6746904208e-01            evaporation_source_terms_continuous |
 
@@ -462,7 +462,7 @@ Time step #18, advancing from t_n-1 = 0.017 to t = 0.018 (dt = 0.001).
 | || normal_0 ||L2 = 2.04497663711e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04497693443e+00                                               normal_vector |
 | || curvature ||L2 = 5.77493625576e+00                                                  curvature |
-|  total mass = 0.82985085663                                                    melt_pool_problem |
+|  total mass = 0.15689523065                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14138           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6747111341e-01            evaporation_source_terms_continuous |
 
@@ -486,7 +486,7 @@ Time step #19, advancing from t_n-1 = 0.018 to t = 0.019 (dt = 0.001).
 | || normal_0 ||L2 = 2.04437330267e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.04437355718e+00                                               normal_vector |
 | || curvature ||L2 = 5.77476407263e+00                                                  curvature |
-|  total mass = 0.8293277627                                                     melt_pool_problem |
+|  total mass = 0.15646802231                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14099           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6747466988e-01            evaporation_source_terms_continuous |
 

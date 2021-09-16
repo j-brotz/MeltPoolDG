@@ -734,16 +734,12 @@ namespace MeltPoolDG::Flow
 #endif
 
                 // compute overall mass
-                //
-                // @todo: update to correspond to current formulation
+                const auto mass_contrib = flow_operation->get_density(cell, q) * ls_values.JxW(q);
                 for (unsigned int v = 0;
                      v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
                      ++v)
                   {
-                    mass += UtilityFunctions::interpolate(ls_values.get_value(q)[v],
-                                                          material.first.density,
-                                                          material.second.density) *
-                            ls_values.JxW(q)[v];
+                    mass += mass_contrib[v];
                   }
               }
           }
