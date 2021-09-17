@@ -315,8 +315,10 @@ namespace MeltPoolDG::Flow
   {
     navier_stokes.solution.block(0).update_ghost_values();
     navier_stokes.solution_old.block(0).update_ghost_values();
+    navier_stokes.solution_old_old.block(0).update_ghost_values();
     vectors.push_back(&navier_stokes.solution.block(0));
     vectors.push_back(&navier_stokes.solution_old.block(0));
+    vectors.push_back(&navier_stokes.solution_old_old.block(0));
   }
 
   template <int dim>
@@ -326,8 +328,10 @@ namespace MeltPoolDG::Flow
   {
     navier_stokes.solution.block(1).update_ghost_values();
     navier_stokes.solution_old.block(1).update_ghost_values();
+    navier_stokes.solution_old_old.block(1).update_ghost_values();
     vectors.push_back(&navier_stokes.solution.block(1));
     vectors.push_back(&navier_stokes.solution_old.block(1));
+    vectors.push_back(&navier_stokes.solution_old_old.block(1));
   }
 
   template <int dim>
@@ -336,8 +340,12 @@ namespace MeltPoolDG::Flow
   {
     navier_stokes.get_constraints_u().distribute(navier_stokes.solution.block(0));
     navier_stokes.get_hanging_node_constraints_u().distribute(navier_stokes.solution_old.block(0));
+    navier_stokes.get_hanging_node_constraints_u().distribute(
+      navier_stokes.solution_old_old.block(0));
     navier_stokes.get_constraints_p().distribute(navier_stokes.solution.block(1));
     navier_stokes.get_hanging_node_constraints_p().distribute(navier_stokes.solution_old.block(1));
+    navier_stokes.get_hanging_node_constraints_p().distribute(
+      navier_stokes.solution_old_old.block(1));
   }
 
   template <int dim>
