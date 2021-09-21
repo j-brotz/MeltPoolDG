@@ -127,6 +127,12 @@ namespace MeltPoolDG::Flow
     const VectorizedArray<double> &
     get_viscosity(const unsigned int cell, const unsigned int q) const override;
 
+    VectorizedArray<double> &
+    get_damping(const unsigned int cell, const unsigned int q) override;
+
+    const VectorizedArray<double> &
+    get_damping(const unsigned int cell, const unsigned int q) const override;
+
     void
     attach_vectors_u(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 

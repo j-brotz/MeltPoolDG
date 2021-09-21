@@ -315,6 +315,21 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim>
+  VectorizedArray<double> &
+  AdafloWrapper<dim>::get_damping(const unsigned int cell, const unsigned int q)
+  {
+    return navier_stokes.get_matrix().begin_damping_coeff(cell)[q];
+  }
+
+  template <int dim>
+  const VectorizedArray<double> &
+  AdafloWrapper<dim>::get_damping(const unsigned int cell, const unsigned int q) const
+  {
+    return navier_stokes.get_matrix().begin_damping_coeff(cell)[q];
+  }
+
+
+  template <int dim>
   void
   AdafloWrapper<dim>::attach_vectors_u(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)

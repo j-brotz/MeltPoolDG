@@ -99,6 +99,12 @@ namespace MeltPoolDG
       virtual const VectorizedArray<double> &
       get_viscosity(const unsigned int cell, const unsigned int q) const = 0;
 
+      virtual VectorizedArray<double> &
+      get_damping(const unsigned int cell, const unsigned int q) = 0;
+
+      virtual const VectorizedArray<double> &
+      get_damping(const unsigned int cell, const unsigned int q) const = 0;
+
       virtual void
       attach_vectors_u(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
 

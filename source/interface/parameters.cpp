@@ -777,6 +777,10 @@ namespace MeltPoolDG
                         darcy.avoid_div_zero_constant,
                         "This parameter exists to avoid division by zero in the "
                         "Kozeny–Carman equation for the Darcy damping force.");
+      prm.add_parameter("formulation",
+                        darcy.formulation,
+                        "Set the formulation of the Darcy damping force.",
+                        Patterns::Selection("explicit_formulation|implicit_formulation"));
     }
     prm.leave_subsection();
     /*

@@ -31,6 +31,7 @@ namespace MeltPoolDG
     consistent_with_evaporation // the density is smeared between the phases consistent with the
                                 // evaporation formulation
   )
+  BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
 
   template <typename number = double>
   struct SolverData
@@ -240,8 +241,9 @@ namespace MeltPoolDG
   template <typename number = double>
   struct DarcyDampingData
   {
-    number mushy_zone_morphology   = 0.0;
-    number avoid_div_zero_constant = 1e-3;
+    number                  mushy_zone_morphology   = 0.0;
+    number                  avoid_div_zero_constant = 1e-3;
+    DarcyDampingFormulation formulation             = DarcyDampingFormulation::explicit_formulation;
   };
 
   template <typename number = double>
