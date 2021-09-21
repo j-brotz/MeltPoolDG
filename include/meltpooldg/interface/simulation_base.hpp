@@ -230,6 +230,13 @@ namespace MeltPoolDG
       bc.push_back(id);
     }
 
+    /**
+     * This boundary condition fixes the pressure to a constant level. On the given boundary @p id,
+     * an arbitrary point is selected for a constant dirichlet condition.
+     *
+     * @note The boundary @p id must not be a periodic boundary selected by
+     *   attach_periodic_boundary_condition().
+     */
     void
     attach_fix_pressure_constant_condition(types::boundary_id id, const std::string operation_name)
     {

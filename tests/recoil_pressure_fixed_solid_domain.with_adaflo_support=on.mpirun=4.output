@@ -36,7 +36,7 @@
 
 Time step #1, advancing from t_n-1 = 0 to t = 5e-07 (dt = 5e-07). 
 | || velocity ||L2 = 3.798925219804149e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.298211029567392e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.299906600284059e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-07 to 1.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -58,7 +58,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 5e-07 (dt = 5e-07).
 
 Time step #2, advancing from t_n-1 = 5e-07 to t = 1e-06 (dt = 5e-07). 
 | || velocity ||L2 = 7.155733286048864e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.393211014140246e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.394950510123690e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-06 to 1.5000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -80,7 +80,7 @@ Time step #2, advancing from t_n-1 = 5e-07 to t = 1e-06 (dt = 5e-07).
 
 Time step #3, advancing from t_n-1 = 1e-06 to t = 1.5e-06 (dt = 5e-07). 
 | || velocity ||L2 = 1.016519280060096e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.446996948167745e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.448762118994922e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-06 to 2.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -102,7 +102,7 @@ Time step #3, advancing from t_n-1 = 1e-06 to t = 1.5e-06 (dt = 5e-07).
 
 Time step #4, advancing from t_n-1 = 1.5e-06 to t = 2e-06 (dt = 5e-07). 
 | || velocity ||L2 = 1.298685200606079e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.477014968477857e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.478795612660851e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.0000e-06 to 2.5000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -124,7 +124,7 @@ Time step #4, advancing from t_n-1 = 1.5e-06 to t = 2e-06 (dt = 5e-07).
 
 Time step #5, advancing from t_n-1 = 2e-06 to t = 2.5e-06 (dt = 5e-07). 
 | || velocity ||L2 = 1.571756344186555e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.495028840955515e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.496819961919043e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 2.5000e-06 to 3.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -146,7 +146,7 @@ Time step #5, advancing from t_n-1 = 2e-06 to t = 2.5e-06 (dt = 5e-07).
 
 Time step #6, advancing from t_n-1 = 2.5e-06 to t = 3e-06 (dt = 5e-07). 
 | || velocity ||L2 = 1.840522345518971e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.507432223329444e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.509231433230541e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.0000e-06 to 3.5000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -168,7 +168,7 @@ Time step #6, advancing from t_n-1 = 2.5e-06 to t = 3e-06 (dt = 5e-07).
 
 Time step #7, advancing from t_n-1 = 3e-06 to t = 3.5e-06 (dt = 5e-07). 
 | || velocity ||L2 = 2.107988555717628e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.517248704891980e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.519055046319124e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 3.5000e-06 to 4.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -190,7 +190,7 @@ Time step #7, advancing from t_n-1 = 3e-06 to t = 3.5e-06 (dt = 5e-07).
 
 Time step #8, advancing from t_n-1 = 3.5e-06 to t = 4e-06 (dt = 5e-07). 
 | || velocity ||L2 = 2.376972434460048e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.525759835142127e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.527572896221120e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.0000e-06 to 4.5000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -212,7 +212,7 @@ Time step #8, advancing from t_n-1 = 3.5e-06 to t = 4e-06 (dt = 5e-07).
 
 Time step #9, advancing from t_n-1 = 4e-06 to t = 4.5e-06 (dt = 5e-07). 
 | || velocity ||L2 = 2.650510675797786e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.533464321322989e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.535283929574471e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 4.5000e-06 to 5.0000e-06 ( dt = 5.0000e-07 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -234,7 +234,7 @@ Time step #9, advancing from t_n-1 = 4e-06 to t = 4.5e-06 (dt = 5e-07).
 
 Time step #10, advancing from t_n-1 = 4.5e-06 to t = 5e-06 (dt = 5e-07). 
 | || velocity ||L2 = 2.931743886753553e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.540545421228751e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.542371479079853e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
