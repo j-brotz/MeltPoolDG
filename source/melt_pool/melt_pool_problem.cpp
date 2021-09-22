@@ -145,11 +145,11 @@ namespace MeltPoolDG::Flow
             vel_force_rhs, level_set_operation.get_level_set_as_heaviside(), false);
 
         // ... f) explicit Darcy damping force
-        if (darcy_operation)
+        if (darcy_operation &&
+            base_in->parameters.darcy.formulation == DarcyDampingFormulation::explicit_formulation)
           darcy_operation->compute_darcy_damping(vel_force_rhs,
                                                  flow_operation->get_velocity(),
-                                                 melt_pool_operation->get_solid(),
-                                                 false);
+                                                 false /*zero_out*/);
 
         //  ... and set the resulting forces within the Navier-Stokes solver
         flow_operation->set_force_rhs(vel_force_rhs);
@@ -650,6 +650,11 @@ namespace MeltPoolDG::Flow
                                                      temp_hanging_nodes_dof_idx,
                                                      flow_operation->get_quad_idx_velocity());
 
+        if (darcy_operation)
+          darcy_operation->get_damping_at_q().resize(matrix_free.n_cell_batches(),
+                                                     std::vector<VectorizedArray<double>>(
+                                                       temp_values.n_q_points));
+
         const auto &material    = parameters.material;
         const auto  rho_g       = VectorizedArray<double>(material.first.density);
         const auto  viscosity_g = VectorizedArray<double>(material.first.viscosity);
@@ -694,6 +699,17 @@ namespace MeltPoolDG::Flow
                     viscosity_l = UtilityFunctions::interpolate_cubic(solid_fraction,
                                                                       material.second.viscosity,
                                                                       material.solid.viscosity);
+
+                    if (darcy_operation)
+                      {
+                        darcy_operation->get_damping(cell, q) =
+                          darcy_operation->get_darcy_damping_coefficient(solid_fraction *
+                                                                         ls_values.get_value(q));
+                        if (parameters.darcy.formulation ==
+                            DarcyDampingFormulation::implicit_formulation)
+                          flow_operation->get_damping(cell, q) =
+                            darcy_operation->get_damping(cell, q);
+                      }
                   }
 
                 /*
@@ -811,6 +827,8 @@ namespace MeltPoolDG::Flow
         evaporation_operation->attach_output_vectors(data_out);
       if (heat_operation)
         heat_operation->attach_output_vectors(data_out);
+      if (darcy_operation)
+        darcy_operation->attach_output_vectors(data_out);
     };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(), current_time);

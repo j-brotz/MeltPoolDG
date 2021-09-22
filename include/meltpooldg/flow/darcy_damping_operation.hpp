@@ -4,6 +4,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Flow
@@ -39,12 +40,14 @@ namespace MeltPoolDG::Flow
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    const double            mushy_zone_morphology;
-    const double            avoid_div_zero_constant;
-    const ScratchData<dim> &scratch_data;
-    const unsigned int      flow_vel_hanging_nodes_dof_idx;
-    const unsigned int      flow_quad_idx;
-    const unsigned int      solid_dof_idx;
+    const double                                              mushy_zone_morphology;
+    const double                                              avoid_div_zero_constant;
+    const ScratchData<dim> &                                  scratch_data;
+    const unsigned int                                        flow_vel_hanging_nodes_dof_idx;
+    const unsigned int                                        flow_quad_idx;
+    const unsigned int                                        solid_dof_idx;
+    mutable VectorType                                        damping;
+    mutable std::vector<std::vector<VectorizedArray<double>>> damping_at_q;
 
   public:
     DarcyDampingOperation(const DarcyDampingData<double> &data_in,
@@ -53,10 +56,55 @@ namespace MeltPoolDG::Flow
                           const unsigned int              flow_quad_idx,
                           const unsigned int              solid_dof_idx);
 
+    /**
+     * Compute the contribution of the Darcy damping force into a force vector @param force_rhs.
+     *
+     * @note: The Darcy damping coefficient is computed based on the @param solid_fraction_vec.
+     */
     void
     compute_darcy_damping(VectorType &      force_rhs,
                           const VectorType &velocity_vec,
                           const VectorType &solid_fraction_vec,
                           const bool        zero_out = true);
+
+    /**
+     * Compute the contribution of the Darcy damping force into a force vector @param force_rhs.
+     *
+     * @note: To use this function, the Darcy damping coefficient at the quadrature points of every
+     * cell, stored in @param damping_at_q, must be set IN ADVANCE. The latter is accessible cellwise
+     * by get_damping(cell, q) or as a global vector by get_damping_at_q().
+     */
+    void
+    compute_darcy_damping(VectorType &      force_rhs,
+                          const VectorType &velocity_vec,
+                          const bool        zero_out = true);
+
+    /**
+     * Compute the Darcy damping coefficient based on a given @param solid_fraction.
+     */
+    VectorizedArray<double>
+    get_darcy_damping_coefficient(const VectorizedArray<double> &solid_fraction) const;
+
+    /**
+     * Store the damping coefficients in a global DoF vector and attach it to the output data.
+     */
+    void
+    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+
+    /**
+     * Getter functions for the damping coefficients cellwise at each quadrature point.
+     */
+    VectorizedArray<double> &
+    get_damping(const unsigned int cell, const unsigned int q);
+
+    const VectorizedArray<double> &
+    get_damping(const unsigned int cell, const unsigned int q) const;
+
+    /**
+     * Getter function for the vector of damping coefficients, holding the values at each cell and
+     * at each quadrature point.
+     */
+    std::vector<std::vector<VectorizedArray<double>>> &
+    get_damping_at_q();
   };
 } // namespace MeltPoolDG::Flow
