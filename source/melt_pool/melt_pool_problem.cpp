@@ -333,6 +333,7 @@ namespace MeltPoolDG::Flow
         if (base_in->parameters.mp.do_evaporative_heat_flux)
           heat_operation->register_evaporative_mass_flux(
             &evaporation_operation->get_evaporative_mass_flux(),
+            evapor_mass_flux_dof_idx,
             base_in->parameters.evapor.latent_heat_of_evaporation);
       }
     /*

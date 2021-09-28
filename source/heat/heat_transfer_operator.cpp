@@ -74,10 +74,12 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::register_evaporative_mass_flux(
-    VectorType * evaporative_mass_flux_in,
-    const double latent_heat_of_evaporation_in)
+    VectorType *       evaporative_mass_flux_in,
+    const unsigned int evapor_mass_flux_dof_idx_in,
+    const double       latent_heat_of_evaporation_in)
   {
     evaporative_mass_flux      = evaporative_mass_flux_in;
+    evapor_mass_flux_dof_idx   = evapor_mass_flux_dof_idx_in;
     latent_heat_of_evaporation = latent_heat_of_evaporation_in;
   }
 
@@ -431,7 +433,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   heat_source_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
-    FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free, temp_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
+                                                 evapor_mass_flux_dof_idx,
+                                                 this->quad_idx);
 
     VectorizedArray<number> rho_cp       = material.first.density * material.first.capacity;
     VectorizedArray<number> conductivity = material.first.conductivity;
