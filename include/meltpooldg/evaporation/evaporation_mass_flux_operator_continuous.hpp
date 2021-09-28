@@ -28,12 +28,10 @@ namespace MeltPoolDG::Evaporation
 
     const ScratchData<dim> &    scratch_data;
     const EvaporationModelBase &evaporation_model;
-    const unsigned int          temp_dof_idx;
 
   public:
     EvaporationMassFluxOperatorContinuous(const ScratchData<dim> &    scratch_data,
-                                          const EvaporationModelBase &evaporation_model,
-                                          const unsigned int          temp_dof_idx);
+                                          const EvaporationModelBase &evaporation_model);
 
     /**
      * DOCU: TODO

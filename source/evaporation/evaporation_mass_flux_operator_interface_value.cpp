@@ -17,7 +17,7 @@ namespace MeltPoolDG::Evaporation
     const VectorType &          distance,
     const BlockVectorType &     normal_vector,
     const unsigned int          ls_dof_idx,
-    const unsigned int          temp_dof_idx,
+    const unsigned int          temp_hanging_nodes_dof_idx,
     const unsigned int          n_iterations)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
@@ -25,13 +25,14 @@ namespace MeltPoolDG::Evaporation
     , distance(distance)
     , normal_vector(normal_vector)
     , ls_dof_idx(ls_dof_idx)
-    , temp_dof_idx(temp_dof_idx)
+    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx)
     , n_iterations(n_iterations)
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
   {
-    AssertThrow(scratch_data.get_degree(temp_dof_idx) == scratch_data.get_degree(ls_dof_idx),
+    AssertThrow(scratch_data.get_degree(temp_hanging_nodes_dof_idx) ==
+                  scratch_data.get_degree(ls_dof_idx),
                 ExcMessage("This algorithm is currently only supported for the same degree "
                            "between the heat transfer and the level set."));
   }
@@ -67,7 +68,7 @@ namespace MeltPoolDG::Evaporation
 
     const auto temperature_evaluation_values =
       dealii::VectorTools::point_values<1>(remote_point_evaluation,
-                                           scratch_data.get_dof_handler(temp_dof_idx),
+                                           scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                                            temperature);
     temperature.zero_out_ghost_values();
 
@@ -77,7 +78,7 @@ namespace MeltPoolDG::Evaporation
     /*
      * compute evaporative mass flux from the temperature value at the interface
      */
-    scratch_data.initialize_dof_vector(evaporative_mass_flux, ls_dof_idx);
+    scratch_data.initialize_dof_vector(evaporative_mass_flux, temp_hanging_nodes_dof_idx);
     evaporative_mass_flux = 0.0;
 
     for (unsigned int i = 0; i < evaluation_points.size(); ++i)
@@ -86,7 +87,7 @@ namespace MeltPoolDG::Evaporation
           evaporation_model.local_compute_evaporative_mass_flux(temperature_evaluation_values[i]);
       }
 
-    evaporative_mass_flux.update_ghost_values();
+    evaporative_mass_flux.update_ghost_values(); //@todo: zero out ghost values
 
     distance.zero_out_ghost_values();
     normal_vector.zero_out_ghost_values();

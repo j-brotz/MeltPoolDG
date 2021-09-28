@@ -23,10 +23,9 @@ namespace MeltPoolDG::Evaporation
     std::shared_ptr<SimulationBase<dim>>           base_in,
     const unsigned int                             normal_dof_idx_in,
     const unsigned int                             evapor_vel_dof_idx_in,
+    const unsigned int                             evapor_mass_flux_dof_idx_in,
     const unsigned int                             ls_hanging_nodes_dof_idx_in,
-    const unsigned int                             ls_quad_idx_in,
-    const VectorType *                             temperature,
-    const unsigned int                             temp_dof_idx)
+    const unsigned int                             ls_quad_idx_in)
 
     : scratch_data(scratch_data_in)
     , evaporation_data(base_in->parameters.evapor)
@@ -35,13 +34,12 @@ namespace MeltPoolDG::Evaporation
     , normal_vector(normal_vector_in)
     , normal_dof_idx(normal_dof_idx_in)
     , evapor_vel_dof_idx(evapor_vel_dof_idx_in)
+    , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx_in)
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx_in)
     , ls_quad_idx(ls_quad_idx_in)
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data->get_triangulation(),
                                                               scratch_data->get_mapping()))
-    , temperature(temperature)
-    , temp_dof_idx(temp_dof_idx)
   {
     AssertThrow(material.first.density > 0.0 && material.second.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
@@ -57,6 +55,7 @@ namespace MeltPoolDG::Evaporation
         ls_quad_idx,
         normal_dof_idx,
         evapor_vel_dof_idx,
+        evapor_mass_flux_dof_idx,
         tolerance_normal_vector,
         material.first.density,
         material.second.density,
@@ -72,33 +71,26 @@ namespace MeltPoolDG::Evaporation
                                                            ls_quad_idx,
                                                            normal_dof_idx,
                                                            evapor_vel_dof_idx,
+                                                           evapor_mass_flux_dof_idx,
                                                            tolerance_normal_vector,
                                                            material.first.density,
                                                            material.second.density);
     else
       Assert(false, ExcMessage("Specified evaporation source term is not implemented!"));
-
     reinit();
   }
 
   template <int dim>
   void
-  EvaporationOperation<dim>::register_temperature_vector(const VectorType * temperature,
-                                                         const unsigned int temp_dof_idx_)
+  EvaporationOperation<dim>::reinit(const VectorType *                temperature_in,
+                                    const VectorType &                distance,
+                                    const RecoilPressureData<double> &recoil_data,
+                                    const double                      constant_epsilon,
+                                    const double                      scale_factor_epsilon,
+                                    const unsigned int                temp_dof_idx_in)
   {
-    temperature  = temperature;
-    temp_dof_idx = temp_dof_idx_;
-  }
-
-  //@todo move to constructor
-  template <int dim>
-  void
-  EvaporationOperation<dim>::register_evaporative_mass_flux_model(
-    const RecoilPressureData<double> &recoil_data,
-    const VectorType &                distance,
-    const double                      constant_epsilon,
-    const double                      scale_factor_epsilon)
-  {
+    temperature  = temperature_in;
+    temp_dof_idx = temp_dof_idx_in;
     /*                 .
      * local operation m(T)
      */
@@ -126,9 +118,7 @@ namespace MeltPoolDG::Evaporation
      */
     if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "continuous")
       evapor_mass_flux_operator =
-        std::make_shared<EvaporationMassFluxOperatorContinuous<dim>>(*scratch_data,
-                                                                     *evapor_model,
-                                                                     temp_dof_idx);
+        std::make_shared<EvaporationMassFluxOperatorContinuous<dim>>(*scratch_data, *evapor_model);
     else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "interface value")
       {
         evapor_mass_flux_operator =
@@ -166,7 +156,7 @@ namespace MeltPoolDG::Evaporation
       evaporative_mass_flux = evaporation_data.evaporative_mass_flux;
     else
       {
-        Assert(evapor_mass_flux_operator,
+        Assert(evapor_mass_flux_operator && temperature,
                ExcMessage(
                  "Before computing the evaporative mass flux, register_evaporative_mass_flux_model "
                  "needs to be called."));
@@ -176,7 +166,7 @@ namespace MeltPoolDG::Evaporation
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   MeltPoolDG::VectorTools::compute_L2_norm(evaporative_mass_flux,
                                                                            *scratch_data,
-                                                                           ls_hanging_nodes_dof_idx,
+                                                                           evapor_mass_flux_dof_idx,
                                                                            ls_quad_idx),
                                   "evaporative_mass_flux",
                                   "evaporation_operation",
@@ -210,8 +200,7 @@ namespace MeltPoolDG::Evaporation
   void
   EvaporationOperation<dim>::reinit()
   {
-    scratch_data->initialize_dof_vector(
-      evaporative_mass_flux, ls_hanging_nodes_dof_idx); // @todo: evapor_dof_idx/temp_dof_idx
+    scratch_data->initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
     scratch_data->initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
   }
 
@@ -238,7 +227,7 @@ namespace MeltPoolDG::Evaporation
   EvaporationOperation<dim>::distribute_constraints()
   {
     scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
-    scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(evaporative_mass_flux);
+    scratch_data->get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
   }
 
   template <int dim>
@@ -259,7 +248,7 @@ namespace MeltPoolDG::Evaporation
     /*
      *  evaporation mass flux
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data->get_dof_handler(evapor_mass_flux_dof_idx),
                              evaporative_mass_flux,
                              "evaporative_mass_flux");
   }

@@ -313,12 +313,20 @@ namespace MeltPoolDG::Flow
           level_set_operation.get_normal_vector(),
           base_in,
           normal_dof_idx,
-          vel_dof_idx,
+          evapor_vel_dof_idx,
+          evapor_mass_flux_dof_idx,
           ls_hanging_nodes_dof_idx,
-          ls_quad_idx,
-          &heat_operation->get_temperature(),
-          temp_dof_idx);
+          ls_quad_idx);
 
+        /*
+         * register temperature field
+         */
+        evaporation_operation->reinit(&heat_operation->get_temperature(),
+                                      level_set_operation.get_distance_to_level_set(),
+                                      base_in->parameters.recoil,
+                                      base_in->parameters.reinit.constant_epsilon,
+                                      base_in->parameters.reinit.scale_factor_epsilon,
+                                      temp_dof_idx);
         /*
          * register evaporative mass flux to compute the heat sink
          */
@@ -359,14 +367,6 @@ namespace MeltPoolDG::Flow
         ExcMessage("If solidifcation is enabled the melt pool operation must be initialized! Check "
                    "if the parameter >>>do melt pool<<< is set to true. Abort..."));
 
-    if (evaporation_operation)
-      {
-        evaporation_operation->register_evaporative_mass_flux_model(
-          base_in->parameters.recoil,
-          level_set_operation.get_distance_to_level_set(),
-          base_in->parameters.reinit.constant_epsilon,
-          base_in->parameters.reinit.scale_factor_epsilon);
-      }
     /*
      *  set initial conditions of all operations
      */
