@@ -101,12 +101,14 @@ namespace MeltPoolDG::Flow
     refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
 
     TimeIterator<double> time_iterator;
-    DoFHandler<dim>      dof_handler;
+    DoFHandler<dim>      dof_handler_ls;
+    DoFHandler<dim>      dof_handler_heat;
 
     AffineConstraints<double> ls_constraints_dirichlet;
     AffineConstraints<double> ls_hanging_node_constraints;
     AffineConstraints<double> reinit_constraints_dirichlet;
     AffineConstraints<double> temp_constraints_dirichlet;
+    AffineConstraints<double> temp_hanging_node_constraints;
     AffineConstraints<double> flow_velocity_constraints_no_solid;
 
     VectorType vel_force_rhs;
@@ -121,12 +123,12 @@ namespace MeltPoolDG::Flow
     unsigned int vel_dof_idx;
     unsigned int pressure_dof_idx;
     unsigned int flow_vel_no_solid_dof_idx;
+    unsigned int temp_hanging_nodes_dof_idx;
+    unsigned int temp_quad_idx;
 
     const unsigned int &reinit_hanging_nodes_dof_idx = ls_hanging_nodes_dof_idx;
     const unsigned int &curv_dof_idx                 = ls_hanging_nodes_dof_idx;
     const unsigned int &normal_dof_idx               = ls_hanging_nodes_dof_idx;
-    const unsigned int &temp_quad_idx                = ls_quad_idx;
-    const unsigned int &temp_hanging_nodes_dof_idx   = ls_hanging_nodes_dof_idx;
     const unsigned int &evapor_vel_dof_idx           = vel_dof_idx;
     const unsigned int &evapor_mass_flux_dof_idx     = temp_hanging_nodes_dof_idx;
 

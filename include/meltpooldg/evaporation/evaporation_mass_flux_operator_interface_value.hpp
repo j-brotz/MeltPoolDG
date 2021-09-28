@@ -34,6 +34,7 @@ namespace MeltPoolDG::Evaporation
     const BlockVectorType &     normal_vector;
     const unsigned int          ls_dof_idx;
     const unsigned int          temp_hanging_nodes_dof_idx;
+    const unsigned int          evapor_mass_flux_dof_idx;
     const unsigned int          n_iterations;
     const double                tolerance_normal_vector;
 
@@ -45,6 +46,7 @@ namespace MeltPoolDG::Evaporation
                                               const BlockVectorType &     normal_vector,
                                               const unsigned int          ls_dof_idx,
                                               const unsigned int temp_hanging_nodes_dof_idx,
+                                              const unsigned int evapor_mass_flux_dof_idx,
                                               const unsigned int n_iterations);
 
     /**

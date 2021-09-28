@@ -16,16 +16,18 @@ namespace MeltPoolDG::Evaporation
     const VectorType &          level_set_as_heaviside,
     const VectorType &          distance,
     const BlockVectorType &     normal_vector,
-    const unsigned int          ls_dof_idx,
-    const unsigned int          temp_hanging_nodes_dof_idx,
+    const unsigned int          ls_dof_idx_in,
+    const unsigned int          temp_hanging_nodes_dof_idx_in,
+    const unsigned int          evapor_mass_flux_dof_idx_in,
     const unsigned int          n_iterations)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
     , level_set_as_heaviside(level_set_as_heaviside)
     , distance(distance)
     , normal_vector(normal_vector)
-    , ls_dof_idx(ls_dof_idx)
-    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx)
+    , ls_dof_idx(ls_dof_idx_in)
+    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
+    , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx_in)
     , n_iterations(n_iterations)
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
@@ -78,7 +80,7 @@ namespace MeltPoolDG::Evaporation
     /*
      * compute evaporative mass flux from the temperature value at the interface
      */
-    scratch_data.initialize_dof_vector(evaporative_mass_flux, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
     evaporative_mass_flux = 0.0;
 
     for (unsigned int i = 0; i < evaluation_points.size(); ++i)
