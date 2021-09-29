@@ -50,6 +50,9 @@ namespace MeltPoolDG
 
       virtual const LinearAlgebra::distributed::BlockVector<double> &
       get_normal_vector() const = 0;
+
+      virtual LinearAlgebra::distributed::BlockVector<double> &
+      get_normal_vector() = 0;
       /*
        *  setter functions
        */

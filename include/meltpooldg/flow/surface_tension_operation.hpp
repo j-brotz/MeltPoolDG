@@ -48,46 +48,49 @@ namespace MeltPoolDG::Flow
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-  public:
-    //@todo: merge the two following functions
+    const SurfaceTensionData<double> &data;
 
-    /*
-     *  temperature-independent surface tension
-     */
-    static void
-    compute_surface_tension(VectorType &            force_rhs,
-                            const ScratchData<dim> &scratch_data,
-                            const VectorType &      level_set_as_heaviside,
-                            const VectorType &      curvature_vec,
-                            const double            surface_tension_coefficient,
-                            const unsigned int      ls_dof_idx,
-                            const unsigned int      curv_dof_idx,
-                            const unsigned int      flow_vel_hanging_nodes_dof_idx,
-                            const unsigned int      flow_quad_idx,
-                            const bool              zero_out = true);
+    const ScratchData<dim> &scratch_data;
+
+    const VectorType &level_set_as_heaviside;
+    const VectorType &solution_curvature;
+
+    const unsigned int ls_dof_idx;
+    const unsigned int curv_dof_idx;
+    const unsigned int flow_vel_dof_idx;
+    const unsigned int flow_pressure_hanging_nodes_dof_idx;
+    const unsigned int flow_vel_quad_idx;
+
+    VectorType *     temperature            = nullptr;
+    BlockVectorType *solution_normal_vector = nullptr;
+    unsigned int     temp_dof_idx           = 0;
+    unsigned int     normal_dof_idx         = 0;
+
+  public:
+    SurfaceTensionOperation(const SurfaceTensionData<double> &data_in,
+                            const ScratchData<dim> &          scratch_data,
+                            const VectorType &                level_set_as_heaviside,
+                            const VectorType &                solution_curvature,
+                            const unsigned int                ls_dof_idx,
+                            const unsigned int                curv_dof_idx,
+                            const unsigned int                flow_vel_hanging_nodes_dof_idx,
+                            const unsigned int                flow_pressure_hanging_nodes_dof_idx,
+                            const unsigned int                flow_quad_idx);
 
     /**
      *  This function introduces the basic framework for temperature-dependent surface tension
      *  forces, i.e. Marangoni convection.
      */
-    static void
-    compute_temperature_dependent_surface_tension(
-      const ScratchData<dim> &scratch_data,
-      VectorType &            force_rhs,
-      const VectorType &      level_set_as_heaviside,
-      const VectorType &      solution_curvature,
-      const VectorType &      temperature,
-      const BlockVectorType & solution_normal_vector,
-      const double            surface_tension_coefficient,
-      const double            temperature_dependent_surface_tension_coefficient,
-      const double            surface_tension_reference_temperature,
-      const double            surface_tension_coefficient_residual_fraction,
-      const unsigned int      ls_dof_idx,
-      const unsigned int      curv_dof_idx,
-      const unsigned int      normal_dof_idx,
-      const unsigned int      flow_vel_dof_idx,
-      const unsigned int      flow_vel_quad_idx,
-      const unsigned int      temp_dof_idx,
-      const bool              zero_out = true);
+    void
+    reinit(const unsigned int temp_dof_idx,
+           const unsigned int normal_dof_idx,
+           VectorType *       temperature,
+           BlockVectorType *  solution_normal_vector);
+
+    /*
+     *  Compute surface tension
+     */
+    void
+    compute_surface_tension(VectorType &force_rhs, const bool zero_out = true);
   };
 } // namespace MeltPoolDG::Flow

@@ -60,6 +60,9 @@ namespace MeltPoolDG::Curvature
     const LinearAlgebra::distributed::BlockVector<double> &
     get_normal_vector() const override;
 
+    LinearAlgebra::distributed::BlockVector<double> &
+    get_normal_vector() override;
+
   private:
     void
     set_adaflo_parameters(const Parameters<double> &parameters,

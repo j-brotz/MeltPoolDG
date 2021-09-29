@@ -90,44 +90,9 @@ namespace MeltPoolDG::Flow
                               base_in->parameters.base.gravity,
                               true /* true means force vector is zeroed out before */);
 
-        // ... b) (temperature-independent) surface tension
-        if (base_in->parameters.flow.temperature_dependent_surface_tension_coefficient == 0.0)
-          SurfaceTensionOperation<dim>::compute_surface_tension(
-            vel_force_rhs,
-            *scratch_data,
-            level_set_operation.get_level_set_as_heaviside(),
-            level_set_operation.get_curvature(),
-            base_in->parameters.flow.surface_tension_coefficient,
-            ls_hanging_nodes_dof_idx,
-            curv_dof_idx,
-            flow_operation->get_dof_handler_idx_velocity(),
-            flow_operation->get_quad_idx_velocity(),
-            false /* false means not to zero out the force vector */);
-
-        // ... c) temperature-dependent surface tension
-        if (base_in->parameters.mp.do_heat_transfer &&
-            std::abs(base_in->parameters.flow.temperature_dependent_surface_tension_coefficient) >
-              0.0)
-          {
-            Flow::SurfaceTensionOperation<dim>::compute_temperature_dependent_surface_tension(
-              *scratch_data,
-              vel_force_rhs,
-              level_set_operation.get_level_set_as_heaviside(),
-              level_set_operation.get_curvature(),
-              heat_operation->get_temperature(),
-              level_set_operation.get_normal_vector(),
-              base_in->parameters.flow.surface_tension_coefficient,
-              base_in->parameters.flow.temperature_dependent_surface_tension_coefficient,
-              base_in->parameters.flow.surface_tension_reference_temperature,
-              base_in->parameters.flow.surface_tension_coefficient_residual_fraction,
-              ls_hanging_nodes_dof_idx,
-              curv_dof_idx,
-              normal_dof_idx,
-              vel_dof_idx,
-              flow_operation->get_quad_idx_velocity(),
-              temp_dof_idx,
-              false /*false means add to force vector*/);
-          }
+        // ... b) (temperature-dependent) surface tension
+        surface_tension_operation->compute_surface_tension(vel_force_rhs,
+                                                           false /*do not zero out*/);
 
         // .... d) evaporative mass fluxes
         if (evaporation_operation && base_in->parameters.mp.do_evaporative_mass_flux)
@@ -302,6 +267,28 @@ namespace MeltPoolDG::Flow
         &flow_operation->get_velocity(),
         ls_hanging_nodes_dof_idx,
         &level_set_operation.get_level_set_as_heaviside());
+
+    /*
+     *    initialize the surface tension operation class
+     */
+    surface_tension_operation = std::make_shared<Flow::SurfaceTensionOperation<dim>>(
+      base_in->parameters.surften,
+      *scratch_data,
+      level_set_operation.get_level_set_as_heaviside(),
+      level_set_operation.get_curvature(),
+      ls_dof_idx,
+      curv_dof_idx,
+      vel_dof_idx,
+      pressure_dof_idx,
+      flow_operation->get_quad_idx_velocity());
+
+    if (heat_operation &&
+        base_in->parameters.surften.temperature_dependent_surface_tension_coefficient != 0.0)
+      surface_tension_operation->reinit(temp_dof_idx,
+                                        normal_dof_idx,
+                                        &heat_operation->get_temperature(),
+                                        &level_set_operation.get_normal_vector());
+
     /*
      *    initialize the evaporation class
      */

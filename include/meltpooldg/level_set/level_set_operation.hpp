@@ -116,6 +116,9 @@ namespace MeltPoolDG::LevelSet
     const LinearAlgebra::distributed::BlockVector<double> &
     get_normal_vector() const;
 
+    LinearAlgebra::distributed::BlockVector<double> &
+    get_normal_vector();
+
     const LinearAlgebra::distributed::Vector<double> &
     get_level_set() const;
 

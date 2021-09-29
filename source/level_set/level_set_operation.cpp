@@ -265,6 +265,16 @@ namespace MeltPoolDG::LevelSet
   }
 
   template <int dim>
+  LinearAlgebra::distributed::BlockVector<double> &
+  LevelSetOperation<dim>::get_normal_vector()
+  {
+    if (level_set_data.do_reinitialization)
+      return reinit_operation->get_normal_vector();
+    else
+      return curvature_operation->get_normal_vector();
+  }
+
+  template <int dim>
   const LinearAlgebra::distributed::Vector<double> &
   LevelSetOperation<dim>::get_level_set() const
   {

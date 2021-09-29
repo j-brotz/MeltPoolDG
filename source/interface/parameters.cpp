@@ -518,21 +518,6 @@ namespace MeltPoolDG
       prm.add_parameter("flow n q points 1d",
                         flow.velocity_n_q_points_1d,
                         "number of 1d quadrature points for the velocity field of the flow");
-      prm.add_parameter("flow surface tension coefficient",
-                        flow.surface_tension_coefficient,
-                        "constant coefficient for calculating surface tension");
-      prm.add_parameter("flow temperature dependent surface tension coefficient",
-                        flow.temperature_dependent_surface_tension_coefficient,
-                        "temperature dependent coefficient for calculating temperetaure-dependent "
-                        "surface tension (Marangoni convection)");
-      prm.add_parameter("flow surface tension reference temperature",
-                        flow.surface_tension_reference_temperature,
-                        "Reference temperature for calculating surface tension");
-      prm.add_parameter(
-        "flow surface tension coefficient residual fraction",
-        flow.surface_tension_coefficient_residual_fraction,
-        "Define the minimum fraction of the constant surface tension reference value "
-        "that can be reached.");
     }
     prm.leave_subsection();
     /*
@@ -766,7 +751,29 @@ namespace MeltPoolDG
     }
     prm.leave_subsection();
     /*
-     * Dardy Damping
+     * surface tension
+     */
+    prm.enter_subsection("surface tension");
+    {
+      prm.add_parameter("surface tension coefficient",
+                        surften.surface_tension_coefficient,
+                        "constant coefficient for calculating surface tension");
+      prm.add_parameter("temperature dependent surface tension coefficient",
+                        surften.temperature_dependent_surface_tension_coefficient,
+                        "temperature dependent coefficient for calculating temperetaure-dependent "
+                        "surface tension (Marangoni convection)");
+      prm.add_parameter("reference temperature",
+                        surften.reference_temperature,
+                        "Reference temperature for calculating surface tension");
+      prm.add_parameter(
+        "coefficient residual fraction",
+        surften.coefficient_residual_fraction,
+        "Define the minimum fraction of the constant surface tension reference value "
+        "that can be reached.");
+    }
+    prm.leave_subsection();
+    /*
+     * Darcy Damping
      */
     prm.enter_subsection("darcy damping");
     {
@@ -783,6 +790,8 @@ namespace MeltPoolDG
                         Patterns::Selection("explicit_formulation|implicit_formulation"));
     }
     prm.leave_subsection();
+
+
     /*
      *  evaporation
      */
