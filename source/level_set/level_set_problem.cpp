@@ -175,6 +175,7 @@ namespace MeltPoolDG::LevelSet
           normal_dof_idx,
           vel_dof_idx,
           ls_hanging_nodes_dof_idx,
+          ls_hanging_nodes_dof_idx,
           ls_quad_idx);
 
         /**
@@ -182,15 +183,6 @@ namespace MeltPoolDG::LevelSet
          */
         evaporation_operation->get_evaporative_mass_flux() =
           base_in->parameters.evapor.evaporative_mass_flux;
-
-        /**
-         * register evaporative mass flux model
-         */
-        evaporation_operation->register_evaporative_mass_flux_model(
-          base_in->parameters.recoil,
-          level_set_operation.get_distance_to_level_set(),
-          base_in->parameters.reinit.constant_epsilon,
-          base_in->parameters.reinit.scale_factor_epsilon);
       }
     /**
      * set the initial velocity field

@@ -27,6 +27,7 @@ namespace MeltPoolDG::Evaporation
     const unsigned int                      ls_quad_idx,
     const unsigned int                      normal_dof_idx,
     const unsigned int                      evapor_vel_dof_idx,
+    const unsigned int                      evapor_mass_flux_dof_idx,
     const double                            tolerance_normal_vector,
     const double                            density_vapor,
     const double                            density_liquid,
@@ -40,6 +41,7 @@ namespace MeltPoolDG::Evaporation
     , ls_quad_idx(ls_quad_idx)
     , normal_dof_idx(normal_dof_idx)
     , evapor_vel_dof_idx(evapor_vel_dof_idx)
+    , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx)
     , tolerance_normal_vector(tolerance_normal_vector)
     , density_vapor(density_vapor)
     , density_liquid(density_liquid)
@@ -63,10 +65,9 @@ namespace MeltPoolDG::Evaporation
                                                   normal_dof_idx,
                                                   ls_quad_idx);
 
-    FECellIntegrator<dim, 1, double> evap_flux(
-      scratch_data.get_matrix_free(),
-      ls_hanging_nodes_dof_idx, // @todo: generalize --> temp_dof_idx
-      ls_quad_idx);
+    FECellIntegrator<dim, 1, double> evap_flux(scratch_data.get_matrix_free(),
+                                               evapor_mass_flux_dof_idx,
+                                               ls_quad_idx);
 
     evaporation_velocities.resize(scratch_data.get_matrix_free().n_cell_batches() * ls.n_q_points);
 
@@ -178,10 +179,9 @@ namespace MeltPoolDG::Evaporation
                                                    pressure_dof_idx,
                                                    pressure_quad_idx);
 
-        FECellIntegrator<dim, 1, double> evap_flux(
-          scratch_data.get_matrix_free(),
-          ls_hanging_nodes_dof_idx, // @todo: generalize --> temp_dof_idx
-          pressure_quad_idx);
+        FECellIntegrator<dim, 1, double> evap_flux(scratch_data.get_matrix_free(),
+                                                   evapor_mass_flux_dof_idx,
+                                                   pressure_quad_idx);
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {

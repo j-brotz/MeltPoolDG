@@ -20,6 +20,7 @@ namespace MeltPoolDG::Evaporation
     const unsigned int             ls_quad_idx,
     const unsigned int             normal_dof_idx,
     const unsigned int             evapor_vel_dof_idx,
+    const unsigned int             evapor_mass_flux_dof_idx,
     const double                   tolerance_normal_vector,
     const double                   density_vapor,
     const double                   density_liquid)
@@ -32,6 +33,7 @@ namespace MeltPoolDG::Evaporation
     , ls_quad_idx(ls_quad_idx)
     , normal_dof_idx(normal_dof_idx)
     , evapor_vel_dof_idx(evapor_vel_dof_idx)
+    , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx)
     , tolerance_normal_vector(tolerance_normal_vector)
     , density_vapor(density_vapor)
     , density_liquid(density_liquid)
@@ -58,10 +60,9 @@ namespace MeltPoolDG::Evaporation
                                                   normal_dof_idx,
                                                   ls_quad_idx);
 
-    FECellIntegrator<dim, 1, double> evap_flux(
-      scratch_data.get_matrix_free(),
-      ls_hanging_nodes_dof_idx, // @todo: generalize --> temp_dof_idx
-      ls_quad_idx);
+    FECellIntegrator<dim, 1, double> evap_flux(scratch_data.get_matrix_free(),
+                                               evapor_mass_flux_dof_idx,
+                                               ls_quad_idx);
 
     evaporation_velocities.resize(scratch_data.get_matrix_free().n_cell_batches() * ls.n_q_points);
 
@@ -149,7 +150,7 @@ namespace MeltPoolDG::Evaporation
 
         FEPointEvaluation<1, dim> mass_flux(
           scratch_data.get_mapping(),
-          scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).get_fe(),
+          scratch_data.get_dof_handler(evapor_mass_flux_dof_idx).get_fe(),
           update_values);
         FEPointEvaluation<1, dim> rhs_continuity(
           scratch_data.get_mapping(),

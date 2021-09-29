@@ -26,9 +26,9 @@ namespace MeltPoolDG::Evaporation
                                                     const double           eps_scale_factor,
                                                     const unsigned int     ls_hanging_nodes_dof_idx,
                                                     const unsigned int     normal_dof_idx,
-                                                    const unsigned int     temp_dof_idx,
-                                                    const unsigned int     n_subdivisions_per_side,
-                                                    const unsigned int     n_subdivisions_MCA)
+                                                    const unsigned int temp_hanging_nodes_dof_idx,
+                                                    const unsigned int n_subdivisions_per_side,
+                                                    const unsigned int n_subdivisions_MCA)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
     , level_set_as_heaviside(level_set_as_heaviside)
@@ -37,7 +37,7 @@ namespace MeltPoolDG::Evaporation
     , eps_scale_factor(eps_scale_factor)
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx)
     , normal_dof_idx(normal_dof_idx)
-    , temp_dof_idx(temp_dof_idx)
+    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx)
     , fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim)
     , n_subdivisions_per_side(n_subdivisions_per_side)
     , n_subdivisions_MCA(n_subdivisions_MCA)
@@ -53,7 +53,7 @@ namespace MeltPoolDG::Evaporation
 
     if constexpr (dim > 1)
       {
-        scratch_data.initialize_dof_vector(evaporative_mass_flux, ls_hanging_nodes_dof_idx);
+        scratch_data.initialize_dof_vector(evaporative_mass_flux, temp_hanging_nodes_dof_idx);
         /*
          * generate point cloud normal to interface
          */
@@ -127,7 +127,8 @@ namespace MeltPoolDG::Evaporation
 
         const auto temperature_evaluation_values =
           dealii::VectorTools::point_values<1>(remote_point_evaluation,
-                                               scratch_data.get_dof_handler(temp_dof_idx),
+                                               scratch_data.get_dof_handler(
+                                                 temp_hanging_nodes_dof_idx),
                                                temperature);
 
         const std::vector<Tensor<1, dim, double>> level_set_gradient_values =

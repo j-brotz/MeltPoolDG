@@ -10,11 +10,9 @@ namespace MeltPoolDG::Evaporation
   template <int dim>
   EvaporationMassFluxOperatorContinuous<dim>::EvaporationMassFluxOperatorContinuous(
     const ScratchData<dim> &    scratch_data,
-    const EvaporationModelBase &evaporation_model,
-    const unsigned int          temp_dof_idx)
+    const EvaporationModelBase &evaporation_model)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
-    , temp_dof_idx(temp_dof_idx)
   {}
 
 
@@ -24,9 +22,13 @@ namespace MeltPoolDG::Evaporation
     VectorType &      evaporative_mass_flux,
     const VectorType &temperature) const
   {
+    temperature.update_ghost_values();
+
     for (unsigned int i = 0; i < evaporative_mass_flux.locally_owned_size(); ++i)
       evaporative_mass_flux.local_element(i) =
         evaporation_model.local_compute_evaporative_mass_flux(temperature.local_element(i));
+
+    temperature.zero_out_ghost_values();
   }
 
   template class EvaporationMassFluxOperatorContinuous<1>;

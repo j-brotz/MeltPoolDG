@@ -39,7 +39,7 @@ namespace MeltPoolDG::Evaporation
 
     const unsigned int ls_hanging_nodes_dof_idx;
     const unsigned int normal_dof_idx;
-    const unsigned int temp_dof_idx;
+    const unsigned int temp_hanging_nodes_dof_idx;
 
     const FESystem<dim> fe_dim;
 
@@ -55,9 +55,9 @@ namespace MeltPoolDG::Evaporation
                                                     const double           eps_scale_factor,
                                                     const unsigned int     ls_hanging_nodes_dof_idx,
                                                     const unsigned int     normal_dof_idx,
-                                                    const unsigned int     temp_dof_idx,
-                                                    const unsigned int     n_subdivisions_per_side,
-                                                    const unsigned int     n_subdivisions_MCA);
+                                                    const unsigned int temp_hanging_nodes_dof_idx,
+                                                    const unsigned int n_subdivisions_per_side,
+                                                    const unsigned int n_subdivisions_MCA);
 
     /**
      *  Compute the evaporative mass flux by means of 1d integration across the

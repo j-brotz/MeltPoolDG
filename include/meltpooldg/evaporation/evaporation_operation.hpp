@@ -57,6 +57,7 @@ namespace MeltPoolDG::Evaporation
      */
     const unsigned int normal_dof_idx;
     const unsigned int evapor_vel_dof_idx;
+    const unsigned int evapor_mass_flux_dof_idx;
     const unsigned int ls_hanging_nodes_dof_idx;
     const unsigned int ls_quad_idx;
     /*
@@ -67,7 +68,8 @@ namespace MeltPoolDG::Evaporation
      * optional: temperature-dependent evaporation
      */
     mutable const VectorType *temperature;
-    double                    temp_dof_idx;
+    unsigned int              temp_dof_idx;
+    unsigned int              temp_hanging_nodes_dof_idx;
     /**
      * evaporative mass flux
      */
@@ -92,27 +94,22 @@ namespace MeltPoolDG::Evaporation
                          std::shared_ptr<SimulationBase<dim>>           base_in,
                          const unsigned int                             normal_dof_idx_in,
                          const unsigned int                             evapor_vel_dof_idx_in,
+                         const unsigned int                             evapor_mass_flux_dof_idx_in,
                          const unsigned int                             ls_hanging_nodes_dof_idx_in,
-                         const unsigned int                             ls_quad_idx_in,
-                         const VectorType *                             temperature  = nullptr,
-                         const unsigned int                             temp_dof_idx = 0);
+                         const unsigned int                             ls_quad_idx_in);
 
 
     /*
-     * This function enables to set the pointer to the temperature vector separately from the
-     * constructor
+     * Configure the evaporation operation with temperature dependence.
      */
     void
-    register_temperature_vector(const VectorType *temperature, const unsigned int temp_dof_idx);
+    reinit(const VectorType *                temperature_in,
+           const VectorType &                distance,
+           const RecoilPressureData<double> &recoil_data,
+           const double                      constant_epsilon,
+           const double                      scale_factor_epsilon,
+           const unsigned int                temp_dof_idx_in);
 
-    /*
-     * Set the evaporative mass flux model
-     */
-    void
-    register_evaporative_mass_flux_model(const RecoilPressureData<double> &recoil_data,
-                                         const VectorType &                distance,
-                                         const double                      constant_epsilon,
-                                         const double                      scale_factor_epsilon);
     /*
      * Compute DoF vector holding evaporative mass flux depending on the given evaporation model
      * and the evaporation mass flux operator for computing the distribution across the interface.
