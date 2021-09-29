@@ -7,8 +7,8 @@
     "degree": "2",
     "gravity": "0.98"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.0245"
+  "surface tension": {
+    "surface tension coefficient": "0.0245"
   },
   "time stepping": {
     "start time": "0.0",

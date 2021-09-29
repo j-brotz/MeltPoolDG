@@ -14,9 +14,6 @@
     "end time": "0.00003",
     "time step size": "1e-5"
   },
-  "flow": {
-    "flow surface tension coefficient": "0."
-  },
   "melt pool": {
     "mp do heat transfer": "true",
     "mp do evaporation": "true"

@@ -63,8 +63,8 @@ namespace MeltPoolDG::Flow
 
     VectorType *     temperature            = nullptr;
     BlockVectorType *solution_normal_vector = nullptr;
-    unsigned int     temp_dof_idx           = 0;
-    unsigned int     normal_dof_idx         = 0;
+    unsigned int     temp_dof_idx;
+    unsigned int     normal_dof_idx;
 
   public:
     SurfaceTensionOperation(const SurfaceTensionData<double> &data_in,

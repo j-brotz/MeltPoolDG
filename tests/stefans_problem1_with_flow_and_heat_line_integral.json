@@ -19,9 +19,6 @@
     "mp do heat transfer": "true",
     "mp do evaporation": "true"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.0"
-  },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
     "material first density": "1.",

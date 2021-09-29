@@ -9,8 +9,8 @@
     "verbosity level": "0",
     "do print parameters": "false"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.1"
+  "surface tension": {
+    "surface tension coefficient": "0.1"
   },
   "time stepping": {
     "start time": "0.0",

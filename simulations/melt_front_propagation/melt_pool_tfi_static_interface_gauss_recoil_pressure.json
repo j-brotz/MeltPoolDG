@@ -9,8 +9,8 @@
     "verbosity level": "2",
     "gravity": "0.0"
   },
-  "flow": {
-    "flow surface tension coefficient": "1.8"
+  "surface tension": {
+    "surface tension coefficient": "1.8"
   },
   "time stepping": {
     "start time": "0.0",

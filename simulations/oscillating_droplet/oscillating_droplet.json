@@ -33,8 +33,8 @@
     "material second viscosity": "6e-3",
     "material two phase properties transition type": "smooth"
   },
-  "flow": {
-    "flow surface tension coefficient": "1.8"
+  "surface tension": {
+    "surface tension coefficient": "1.8"
   },
   "levelset": {
     "ls do reinitialization": "true",

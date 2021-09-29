@@ -51,9 +51,9 @@
     "curv damping scale factor": "0.1",
     "curv do matrix free": "true"
   },
-  "flow": {
-    "flow surface tension coefficient": "1.8",
-    "flow surface tension reference temperature": "1700"
+  "surface tension": {
+    "surface tension coefficient": "1.8",
+    "reference temperature": "1700"
   },
   "material": {
     "material first capacity": "0",

@@ -5,8 +5,8 @@
     "dimension": "2",
     "degree": "2"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.01"
+  "surface tension": {
+    "surface tension coefficient": "0.01"
   },
   "time stepping": {
     "start time": "0.0",

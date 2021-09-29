@@ -22,9 +22,9 @@
     "material second density": "250",
     "material second viscosity": "0.012"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.01",
-    "flow temperature dependent surface tension coefficient": "0.002"
+  "surface tension": {
+    "surface tension coefficient": "0.01",
+    "temperature dependent surface tension coefficient": "0.002"
   },
   "time stepping": {
     "start time": "0.0",
