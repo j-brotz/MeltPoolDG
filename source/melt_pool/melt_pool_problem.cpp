@@ -540,7 +540,7 @@ namespace MeltPoolDG::Flow
                "reinitialization")) // @todo: add name of bc at a more central place
           {
             dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
-                                                             dof_handler_heat,
+                                                             dof_handler_ls,
                                                              bc.first,
                                                              *bc.second,
                                                              reinit_constraints_dirichlet);
@@ -927,7 +927,7 @@ namespace MeltPoolDG::Flow
                           [&](std::vector<VectorType *> &vectors) {
                             evaporation_operation->attach_dim_vectors(vectors);
                           });
-        data.emplace_back(&dof_handler_ls, [&](std::vector<VectorType *> &vectors) {
+        data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
           evaporation_operation->attach_vectors(vectors);
         });
       }

@@ -86,6 +86,8 @@ namespace MeltPoolDG::Flow
                                      navier_stokes.solution.block(0));
 
     navier_stokes.get_constraints_u().distribute(navier_stokes.solution.block(0));
+    navier_stokes.get_constraints_p().distribute(navier_stokes.solution.block(1));
+
     navier_stokes.solution.update_ghost_values();
     navier_stokes.solution_old.update_ghost_values();
   }
