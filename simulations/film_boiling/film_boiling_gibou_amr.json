@@ -79,7 +79,6 @@
   "evaporation": {
     "evapor evaporation model": "Hardt Wondra",
     "evapor evaporative mass flux": "0.0",
-    "evapor boiling temperature": "500.",
     "evapor molar mass": "0.01801528",
     "evapor latent heat of evaporation": "1.e3",
     "evapor coefficient": "1."
@@ -97,6 +96,7 @@
     "paraview do output": "true"
   },
   "material": {
+    "material boiling temperature": "500.",
     "material first capacity": "200",
     "material first conductivity": "1",
     "material first density": "5",

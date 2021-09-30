@@ -62,6 +62,7 @@
     "material solid capacity": "965",
     "material solid conductivity": "35.95",
     "material solid density": "7430.0",
+    "material boiling temperature": "3000.",
     "material solid viscosity": "0.6"
   },
   "levelset": {
@@ -92,7 +93,6 @@
     "mp do heat transfer": "true",
     "mp do melt pool": "true",
     "mp do recoil pressure": "true",
-    "mp boiling temperature": "3000.",
     "mp liquid melting point": "1700",
     "mp set level set to zero in solid": "false",
     "mp set velocity to zero in solid": "true"
