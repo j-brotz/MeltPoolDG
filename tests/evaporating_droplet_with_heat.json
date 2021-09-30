@@ -31,7 +31,9 @@
     "material second conductivity": "40",
     "material second density": "200",
     "material second viscosity": "0.1",
-    "material boiling temperature": "1."
+    "material boiling temperature": "1.",
+    "material molar mass": "0.01801528",
+    "material latent heat of evaporation": "1.e3"
   },
   "levelset": {
     "ls do reinitialization": "true",
@@ -68,8 +70,6 @@
   "evaporation": {
     "evapor evaporation model": "Hardt Wondra",
     "evapor evaporative mass flux": "0.000000",
-    "evapor molar mass": "0.01801528",
-    "evapor latent heat of evaporation": "1.e3",
     "evapor coefficient": "0.01"
   },
   "Navier-Stokes": {

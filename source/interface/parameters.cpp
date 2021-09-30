@@ -120,7 +120,7 @@ namespace MeltPoolDG
         else if (!mp.do_evaporation && (mp.do_evaporative_heat_flux || mp.do_evaporative_mass_flux))
           mp.do_evaporation = true;
 
-        AssertThrow(!mp.do_evaporative_heat_flux || evapor.latent_heat_of_evaporation > 0.0,
+        AssertThrow(!mp.do_evaporative_heat_flux || material.latent_heat_of_evaporation > 0.0,
                     ExcMessage("To consider the evaporative heat flux the value for "
                                ">>> latent heat of evaporation <<< "
                                "must be larger than zero."));
@@ -827,10 +827,6 @@ namespace MeltPoolDG
                         "will be calculated.",
                         Patterns::Selection("constant|recoil pressure|Hardt Wondra"));
       prm.add_parameter("evapor coefficient", evapor.coefficient, "Evaporation coefficient.");
-      prm.add_parameter("evapor latent heat of evaporation",
-                        evapor.latent_heat_of_evaporation,
-                        "Latent heat of evaporation (J/kg).");
-      prm.add_parameter("evapor molar mass", evapor.molar_mass, "Molar mass (mol/kg).");
       prm.add_parameter("evapor interface value n iterations",
                         evapor.interface_value_n_iterations,
                         "Number of corrections of the point projection towards the interface.");
@@ -902,6 +898,13 @@ namespace MeltPoolDG
       prm.add_parameter("material boiling temperature",
                         material.boiling_temperature,
                         "Boiling temperature (K).");
+      prm.add_parameter("material latent heat of evaporation",
+                        material.latent_heat_of_evaporation,
+                        "Latent heat of evaporation (J/kg).");
+      prm.add_parameter("material molar mass", material.molar_mass, "Molar mass (mol/kg).");
+      prm.add_parameter("material sticking constant",
+                        material.sticking_constant,
+                        "Sticking constant.");
     }
     prm.leave_subsection();
     /*

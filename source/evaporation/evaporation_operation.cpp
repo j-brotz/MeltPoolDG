@@ -103,13 +103,15 @@ namespace MeltPoolDG::Evaporation
         material.boiling_temperature,
         recoil_data.pressure_constant,
         recoil_data.temperature_constant,
+        material.sticking_constant,
+        material.molar_mass,
         evaporation_data.evaporative_mass_flux_scale_factor);
     else if (evaporation_data.evaporation_model == "Hardt Wondra")
       evapor_model =
         std::make_shared<EvaporationModelHardtWondra>(evaporation_data.coefficient,
-                                                      evaporation_data.latent_heat_of_evaporation,
+                                                      material.latent_heat_of_evaporation,
                                                       material.first.density,
-                                                      evaporation_data.molar_mass,
+                                                      material.molar_mass,
                                                       material.boiling_temperature);
     else
       AssertThrow(false, ExcNotImplemented());
