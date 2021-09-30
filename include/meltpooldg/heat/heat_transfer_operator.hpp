@@ -235,6 +235,7 @@ namespace MeltPoolDG::Heat
                                  FECellIntegrator<dim, 1, number> &  temp_old_vals,
                                  FECellIntegrator<dim, dim, number> &velocity_vals,
                                  FECellIntegrator<dim, 1, number> &  ls_vals,
+                                 FECellIntegrator<dim, 1, number> &  evapor_vals,
                                  bool                                do_reinit_cells) const;
 
     /**

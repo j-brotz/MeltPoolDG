@@ -892,6 +892,9 @@ namespace MeltPoolDG
       prm.add_parameter("material liquidus temperature",
                         material.liquidus_temperature,
                         "Liquidus temperature");
+      prm.add_parameter("material specific enthalpy reference temperature",
+                        material.specific_enthalpy_reference_temperature,
+                        "Reference temperature of the specific enthalpy");
       prm.add_parameter("material two phase properties transition type",
                         material.two_phase_properties_transition_type,
                         "Choose how to interpolate the properties over the interface.");
