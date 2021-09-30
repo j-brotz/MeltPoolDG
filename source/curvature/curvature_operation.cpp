@@ -112,6 +112,13 @@ namespace MeltPoolDG::Curvature
   }
 
   template <int dim>
+  LinearAlgebra::distributed::BlockVector<double> &
+  CurvatureOperation<dim>::get_normal_vector()
+  {
+    return normal_vector_operation.get_solution_normal_vector();
+  }
+
+  template <int dim>
   void
   CurvatureOperation<dim>::reinit()
   {

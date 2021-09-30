@@ -20,8 +20,8 @@
     "max grid refinement level": "5",
     "n initial refinement cycles": "0"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.0245"
+  "surface tension": {
+    "surface tension coefficient": "0.0245"
   },
   "material": {
     "material first density": "1",

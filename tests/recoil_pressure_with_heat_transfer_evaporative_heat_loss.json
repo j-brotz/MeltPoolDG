@@ -14,8 +14,8 @@
     "time step size": "0.000001",
     "max n steps": "30"
   },
-  "flow": {
-    "flow surface tension coefficient": "1.8"
+  "surface tension": {
+    "surface tension coefficient": "1.8"
   },
   "material": {
     "material first capacity": "0",

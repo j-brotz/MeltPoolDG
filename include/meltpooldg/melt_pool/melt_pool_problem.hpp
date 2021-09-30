@@ -25,6 +25,7 @@
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/flow/flow_base.hpp>
+#include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
@@ -136,6 +137,7 @@ namespace MeltPoolDG::Flow
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation = nullptr;
     std::shared_ptr<Heat::HeatTransferOperation<dim>>       heat_operation;
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>       darcy_operation;
+    std::shared_ptr<Flow::SurfaceTensionOperation<dim>>     surface_tension_operation;
     std::shared_ptr<Postprocessor<dim>>                     post_processor;
   };
 } // namespace MeltPoolDG::Flow

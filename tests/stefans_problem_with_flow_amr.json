@@ -19,9 +19,6 @@
     "mp do evaporative heat flux": "false",
     "mp do evaporative mass flux": "true"
   },
-  "flow": {
-    "flow surface tension coefficient": "0."
-  },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
     "material first density": "0.01",

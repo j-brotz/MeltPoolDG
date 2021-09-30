@@ -14,8 +14,8 @@
     "end time": "0.0001",
     "time step size": "1.e-7"
   },
-  "flow": {
-    "flow surface tension coefficient": "1.8"
+  "surface tension": {
+    "surface tension coefficient": "1.8"
   },
   "material": {
     "material boiling temperature": "3500.",

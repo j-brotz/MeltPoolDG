@@ -30,9 +30,9 @@
   "melt pool": {
     "mp do heat transfer": "true"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.023040369",
-    "flow temperature dependent surface tension coefficient": "0.002"
+  "surface tension": {
+    "surface tension coefficient": "0.023040369",
+    "temperature dependent surface tension coefficient": "0.002"
   },
   "Navier-Stokes": {
     "adaflo": {

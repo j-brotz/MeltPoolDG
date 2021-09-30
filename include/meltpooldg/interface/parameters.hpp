@@ -128,12 +128,8 @@ namespace MeltPoolDG
   template <typename number = double>
   struct FlowData
   {
-    int    velocity_degree                                   = -1;
-    int    velocity_n_q_points_1d                            = -1;
-    number surface_tension_coefficient                       = 0.0;
-    number temperature_dependent_surface_tension_coefficient = 0.0;
-    number surface_tension_reference_temperature             = 0.0;
-    number surface_tension_coefficient_residual_fraction     = 0.0;
+    int velocity_degree        = -1;
+    int velocity_n_q_points_1d = -1;
   };
 
   template <typename number = double>
@@ -235,6 +231,15 @@ namespace MeltPoolDG
       number melt_pool_depth  = 0.0;
       number melting_point    = 0.0;
     } liquid;
+  };
+
+  template <typename number = double>
+  struct SurfaceTensionData
+  {
+    number surface_tension_coefficient                       = 0.0;
+    number temperature_dependent_surface_tension_coefficient = 0.0;
+    number reference_temperature                             = 0.0;
+    number coefficient_residual_fraction                     = 0.0;
   };
 
   template <typename number = double>
@@ -365,6 +370,7 @@ namespace MeltPoolDG
     HeatData<number>               heat;
     LaserData<number>              laser;
     MeltPoolData<number>           mp;
+    SurfaceTensionData<number>     surface_tension;
     DarcyDampingData<number>       darcy;
     RecoilPressureData<number>     recoil;
     EvaporationData<number>        evapor;

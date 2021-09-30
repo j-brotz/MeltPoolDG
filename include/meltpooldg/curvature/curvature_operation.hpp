@@ -62,6 +62,8 @@ namespace MeltPoolDG::Curvature
     const LinearAlgebra::distributed::BlockVector<double> &
     get_normal_vector() const override;
 
+    LinearAlgebra::distributed::BlockVector<double> &
+    get_normal_vector() override;
 
     void
     reinit();

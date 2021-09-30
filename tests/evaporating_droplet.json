@@ -8,8 +8,8 @@
     "gravity": "0.00",
     "do print parameters": "false"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.00"
+  "surface tension": {
+    "surface tension coefficient": "0.00"
   },
   "time stepping": {
     "start time": "0.0",
