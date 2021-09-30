@@ -756,18 +756,18 @@ namespace MeltPoolDG
     prm.enter_subsection("surface tension");
     {
       prm.add_parameter("surface tension coefficient",
-                        surften.surface_tension_coefficient,
-                        "constant coefficient for calculating surface tension");
+                        surface_tension.surface_tension_coefficient,
+                        "Constant coefficient for calculating surface tension");
       prm.add_parameter("temperature dependent surface tension coefficient",
-                        surften.temperature_dependent_surface_tension_coefficient,
-                        "temperature dependent coefficient for calculating temperetaure-dependent "
+                        surface_tension.temperature_dependent_surface_tension_coefficient,
+                        "Temperature-dependent coefficient for calculating temperetaure-dependent "
                         "surface tension (Marangoni convection)");
       prm.add_parameter("reference temperature",
-                        surften.reference_temperature,
+                        surface_tension.reference_temperature,
                         "Reference temperature for calculating surface tension");
       prm.add_parameter(
         "coefficient residual fraction",
-        surften.coefficient_residual_fraction,
+        surface_tension.coefficient_residual_fraction,
         "Define the minimum fraction of the constant surface tension reference value "
         "that can be reached.");
     }

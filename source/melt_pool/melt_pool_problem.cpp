@@ -272,7 +272,7 @@ namespace MeltPoolDG::Flow
      *    initialize the surface tension operation class
      */
     surface_tension_operation = std::make_shared<Flow::SurfaceTensionOperation<dim>>(
-      base_in->parameters.surften,
+      base_in->parameters.surface_tension,
       *scratch_data,
       level_set_operation.get_level_set_as_heaviside(),
       level_set_operation.get_curvature(),
@@ -283,7 +283,8 @@ namespace MeltPoolDG::Flow
       flow_operation->get_quad_idx_velocity());
 
     if (heat_operation &&
-        base_in->parameters.surften.temperature_dependent_surface_tension_coefficient != 0.0)
+        base_in->parameters.surface_tension.temperature_dependent_surface_tension_coefficient !=
+          0.0)
       surface_tension_operation->reinit(temp_dof_idx,
                                         normal_dof_idx,
                                         &heat_operation->get_temperature(),

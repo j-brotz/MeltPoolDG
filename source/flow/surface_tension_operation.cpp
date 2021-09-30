@@ -67,15 +67,17 @@ namespace MeltPoolDG::Flow
         FECellIntegrator<dim, 1, double> curvature(matrix_free, curv_dof_idx, flow_vel_quad_idx);
 
         std::unique_ptr<FECellIntegrator<dim, dim, double>> normal_vec;
+        std::unique_ptr<FECellIntegrator<dim, 1, double>>   temperature_val;
 
         if (temperature)
-          normal_vec = std::make_unique<FECellIntegrator<dim, dim, double>>(matrix_free,
-                                                                            normal_dof_idx,
-                                                                            flow_vel_quad_idx);
-
-        FECellIntegrator<dim, 1, double> temperature_val(matrix_free,
-                                                         temp_dof_idx,
-                                                         flow_vel_quad_idx);
+          {
+            normal_vec      = std::make_unique<FECellIntegrator<dim, dim, double>>(matrix_free,
+                                                                              normal_dof_idx,
+                                                                              flow_vel_quad_idx);
+            temperature_val = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
+                                                                                 temp_dof_idx,
+                                                                                 flow_vel_quad_idx);
+          }
 
         FECellIntegrator<dim, dim, double> surface_tension(matrix_free,
                                                            flow_vel_dof_idx,
@@ -106,9 +108,9 @@ namespace MeltPoolDG::Flow
                 normal_vec->read_dof_values_plain(*solution_normal_vector);
                 normal_vec->evaluate(EvaluationFlags::values);
 
-                temperature_val.reinit(cell);
-                temperature_val.read_dof_values_plain(*temperature);
-                temperature_val.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+                temperature_val->reinit(cell);
+                temperature_val->read_dof_values_plain(*temperature);
+                temperature_val->evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
               }
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
@@ -120,8 +122,8 @@ namespace MeltPoolDG::Flow
                     const auto n =
                       MeltPoolDG::VectorTools::normalize<dim>(normal_vec->get_value(q_index),
                                                               tolerance_normal_vector);
-                    const auto T      = temperature_val.get_value(q_index);
-                    const auto grad_T = temperature_val.get_gradient(q_index);
+                    const auto T      = temperature_val->get_value(q_index);
+                    const auto grad_T = temperature_val->get_gradient(q_index);
 
                     Tensor<1, dim, VectorizedArray<double>> temp_surf_ten;
 

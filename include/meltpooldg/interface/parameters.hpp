@@ -371,7 +371,7 @@ namespace MeltPoolDG
     HeatData<number>               heat;
     LaserData<number>              laser;
     MeltPoolData<number>           mp;
-    SurfaceTensionData<number>     surften;
+    SurfaceTensionData<number>     surface_tension;
     DarcyDampingData<number>       darcy;
     RecoilPressureData<number>     recoil;
     EvaporationData<number>        evapor;
