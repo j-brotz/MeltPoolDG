@@ -106,6 +106,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
 
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -129,6 +131,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -201,6 +205,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
@@ -243,6 +249,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -260,6 +268,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
     if (!include_boundary_terms)
       {
         // note: not thread safe!!!
@@ -433,6 +443,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
