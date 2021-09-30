@@ -29,13 +29,15 @@ namespace MeltPoolDG::Evaporation
     const double mass_flux_scale_factor;
 
     // according to Meier 2020
-    const double cs = 1.0;  // sticking coefficient                 @todo introduce parameter
-    const double Cm = 1e-3; // molar_mass/(2*pi*molar_gas_constant) @todo introduce parameter
+    const double sticking_constant;
+    const double Cm; // molar_mass/(2*pi*molar_gas_constant)
 
   public:
     EvaporationModelRecoilPressure(const double boiling_temperature,
                                    const double pressure_constant,
                                    const double temperature_constant,
+                                   const double sticking_constant,
+                                   const double molar_mass,
                                    const double mass_flux_scale_factor = 1.0);
 
     /*

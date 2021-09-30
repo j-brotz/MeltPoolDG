@@ -103,6 +103,8 @@ namespace MeltPoolDG::Evaporation
         material.boiling_temperature,
         recoil_data.pressure_constant,
         recoil_data.temperature_constant,
+        material.sticking_constant,
+        material.molar_mass,
         evaporation_data.evaporative_mass_flux_scale_factor);
     else if (evaporation_data.evaporation_model == "Hardt Wondra")
       evapor_model =

@@ -902,6 +902,9 @@ namespace MeltPoolDG
                         material.latent_heat_of_evaporation,
                         "Latent heat of evaporation (J/kg).");
       prm.add_parameter("material molar mass", material.molar_mass, "Molar mass (mol/kg).");
+      prm.add_parameter("material sticking constant",
+                        material.sticking_constant,
+                        "Sticking constant.");
     }
     prm.leave_subsection();
     /*

@@ -34,7 +34,9 @@
     "material liquidus temperature": "1700.0",
     "material two phase properties transition type": "smooth",
     "material boiling temperature": "2000.",
-    "material latent heat of evaporation": "1.e6"
+    "material latent heat of evaporation": "1.e6",
+    "material sticking constant": "1",
+    "material molar mass": "0.05224130936"
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",

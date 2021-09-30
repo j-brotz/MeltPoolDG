@@ -310,6 +310,7 @@ namespace MeltPoolDG
     number boiling_temperature        = 0.0;
     number latent_heat_of_evaporation = 0.0;
     number molar_mass                 = 0.0;
+    number sticking_constant          = 0.0;
 
     TwoPhasePropertiesTransitionType two_phase_properties_transition_type =
       TwoPhasePropertiesTransitionType::sharp;
