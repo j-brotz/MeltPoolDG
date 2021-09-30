@@ -17,6 +17,7 @@
     "flow surface tension coefficient": "1.8"
   },
   "material": {
+    "material boiling temperature": "3000.",
     "material first capacity": "0",
     "material first conductivity": "10",
     "material first density": "74.30",
@@ -41,7 +42,6 @@
     "laser analytical ambient temperature": "500."
   },
   "melt pool": {
-    "mp boiling temperature": "3000.",
     "mp do melt pool": "true",
     "mp do heat transfer": "true"
   },

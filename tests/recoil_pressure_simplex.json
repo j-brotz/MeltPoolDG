@@ -56,6 +56,7 @@
     "material second capacity": "965",
     "material second conductivity": "35.95",
     "material second density": "7430.0",
+    "material boiling temperature": "3000.",
     "material second viscosity": "0.006"
   },
   "levelset": {
@@ -84,7 +85,6 @@
     "mp do heat transfer": "true",
     "mp do melt pool": "true",
     "mp do recoil pressure": "true",
-    "mp boiling temperature": "3000.",
     "mp liquid melting point": "1700"
   },
   "simulation specific domain": {

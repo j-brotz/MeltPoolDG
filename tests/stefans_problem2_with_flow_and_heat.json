@@ -23,6 +23,7 @@
   },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
+    "material boiling temperature": "373.15",
     "material first density": "0.01",
     "material first viscosity": "0.001",
     "material first conductivity": "0.01",
@@ -93,7 +94,6 @@
   "evaporation": {
     "evapor evaporation model": "Hardt Wondra",
     "evapor evaporative mass flux": "0.0",
-    "evapor boiling temperature": "373.15",
     "evapor molar mass": "0.01801528",
     "evapor latent heat of evaporation": "1.e3",
     "evapor coefficient": "0.1"

@@ -18,6 +18,7 @@
     "flow surface tension coefficient": "1.8"
   },
   "material": {
+    "material boiling temperature": "3500.",
     "material two phase properties transition type": "smooth",
     "material first capacity": "965",
     "material first conductivity": "35.95",
@@ -52,7 +53,6 @@
   "melt pool": {
     "mp do melt pool": "true",
     "mp do heat transfer": "true",
-    "mp boiling temperature": "3500.",
     "mp do recoil pressure": "true",
     "mp set level set to zero in solid": "false",
     "mp set velocity to zero in solid": "true"

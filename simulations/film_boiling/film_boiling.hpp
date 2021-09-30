@@ -290,7 +290,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
 
       this->attach_dirichlet_boundary_condition(lower_bc,
                                                 std::make_shared<Functions::ConstantFunction<dim>>(
-                                                  this->parameters.evapor.boiling_temperature + 5.),
+                                                  this->parameters.material.boiling_temperature +
+                                                  5.),
                                                 "heat_transfer");
 
       // @todo: had to comment out the following line to not get a partitioner error --> maybe its
@@ -314,8 +315,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
 
       // boiling temperature at the interface
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(
-                                       this->parameters.evapor.boiling_temperature + 5,
-                                       this->parameters.evapor.boiling_temperature,
+                                       this->parameters.material.boiling_temperature + 5,
+                                       this->parameters.material.boiling_temperature,
                                        9. * lambda0 / 128.,
                                        lambda0),
                                      "heat_transfer");

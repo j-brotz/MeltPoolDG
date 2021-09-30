@@ -32,7 +32,8 @@
     "material solid viscosity": "0.06",
     "material solidus temperature": "1000",
     "material liquidus temperature": "1700.0",
-    "material two phase properties transition type": "smooth"
+    "material two phase properties transition type": "smooth",
+    "material boiling temperature": "2000."
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",
@@ -40,7 +41,6 @@
   },
   "evaporation": {
     "evapor evaporation model": "recoil pressure",
-    "evapor boiling temperature": "2000.",
     "evapor latent heat of evaporation": "1.e6"
   },
   "laser": {
@@ -60,7 +60,7 @@
     "mp do recoil pressure": "true",
     "mp do evaporative heat flux": "true",
     "mp do evaporative mass flux": "false",
-    "mp boiling temperature": "2000.",
+    "material boiling temperature": "2000.",
     "mp set level set to zero in solid": "false",
     "mp set velocity to zero in solid": "true"
   },

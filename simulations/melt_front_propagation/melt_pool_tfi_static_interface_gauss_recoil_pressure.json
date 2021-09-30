@@ -67,8 +67,7 @@
     "mp do melt pool": "true",
     "mp do heat transfer": "true",
     "mp set velocity to zero in solid": "false",
-    "mp do recoil pressure": "true",
-    "mp boiling temperature": "3000."
+    "mp do recoil pressure": "true"
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",
@@ -88,6 +87,7 @@
     "material solid capacity": "700.0",
     "material solid density": "7850.0",
     "material solid viscosity": "1.0",
+    "material boiling temperature": "3000.",
     "material solidus temperature": "1966.0",
     "material liquidus temperature": "1974.0"
   },
