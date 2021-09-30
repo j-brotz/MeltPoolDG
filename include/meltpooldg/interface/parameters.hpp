@@ -263,8 +263,6 @@ namespace MeltPoolDG
     std::string evaporation_model =
       "constant"; // @todo: instead of constant --> temperature-independent ?
     number       coefficient                           = 0.0;
-    number       latent_heat_of_evaporation            = 0.0;
-    number       molar_mass                            = 0.0;
     unsigned int interface_value_n_iterations          = 3;
     unsigned int line_integral_n_subdivisions_per_side = 10;
     unsigned int line_integral_n_subdivisions_MCA      = 1;
@@ -306,10 +304,12 @@ namespace MeltPoolDG
       number viscosity    = 0.0;
     } solid;
 
-    number solidus_temperature  = 0.0;
-    number liquidus_temperature = 0.0;
-    number inv_mushy_interval   = 0.0;
-    number boiling_temperature  = 0.0;
+    number solidus_temperature        = 0.0;
+    number liquidus_temperature       = 0.0;
+    number inv_mushy_interval         = 0.0;
+    number boiling_temperature        = 0.0;
+    number latent_heat_of_evaporation = 0.0;
+    number molar_mass                 = 0.0;
 
     TwoPhasePropertiesTransitionType two_phase_properties_transition_type =
       TwoPhasePropertiesTransitionType::sharp;

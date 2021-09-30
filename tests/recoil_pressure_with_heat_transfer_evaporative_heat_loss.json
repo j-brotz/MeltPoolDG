@@ -33,15 +33,15 @@
     "material solidus temperature": "1000",
     "material liquidus temperature": "1700.0",
     "material two phase properties transition type": "smooth",
-    "material boiling temperature": "2000."
+    "material boiling temperature": "2000.",
+    "material latent heat of evaporation": "1.e6"
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",
     "recoil temperature constant": "10000."
   },
   "evaporation": {
-    "evapor evaporation model": "recoil pressure",
-    "evapor latent heat of evaporation": "1.e6"
+    "evapor evaporation model": "recoil pressure"
   },
   "laser": {
     "laser power": "156.",

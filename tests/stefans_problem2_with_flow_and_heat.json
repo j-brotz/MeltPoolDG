@@ -28,7 +28,9 @@
     "material second density": "1.0",
     "material second viscosity": "0.01",
     "material second conductivity": "0.01",
-    "material second capacity": "1000"
+    "material second capacity": "1000",
+    "material molar mass": "0.01801528",
+    "material latent heat of evaporation": "1.e3"
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -91,8 +93,6 @@
   "evaporation": {
     "evapor evaporation model": "Hardt Wondra",
     "evapor evaporative mass flux": "0.0",
-    "evapor molar mass": "0.01801528",
-    "evapor latent heat of evaporation": "1.e3",
     "evapor coefficient": "0.1"
   },
   "heat": {

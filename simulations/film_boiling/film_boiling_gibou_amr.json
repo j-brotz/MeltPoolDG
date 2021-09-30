@@ -79,8 +79,6 @@
   "evaporation": {
     "evapor evaporation model": "Hardt Wondra",
     "evapor evaporative mass flux": "0.0",
-    "evapor molar mass": "0.01801528",
-    "evapor latent heat of evaporation": "1.e3",
     "evapor coefficient": "1."
   },
   "heat": {
@@ -105,6 +103,8 @@
     "material second conductivity": "40",
     "material second density": "200",
     "material second viscosity": "0.1",
-    "material two phase properties transition type": "consistent_with_evaporation"
+    "material two phase properties transition type": "consistent_with_evaporation",
+    "material molar mass": "0.01801528",
+    "material latent heat of evaporation": "1.e3"
   }
 }
