@@ -227,8 +227,7 @@ namespace MeltPoolDG
       bool   set_level_set_to_zero      = false;
       number solid_fraction_lower_limit = 1.0;
     } solid;
-    bool   do_recoil_pressure  = false;
-    number boiling_temperature = 0.0;
+    bool do_recoil_pressure = false;
 
     struct Liquid
     {
@@ -261,7 +260,6 @@ namespace MeltPoolDG
     number       coefficient                           = 0.0;
     number       latent_heat_of_evaporation            = 0.0;
     number       molar_mass                            = 0.0;
-    number       boiling_temperature                   = 0.0;
     unsigned int interface_value_n_iterations          = 3;
     unsigned int line_integral_n_subdivisions_per_side = 10;
     unsigned int line_integral_n_subdivisions_MCA      = 1;
@@ -306,6 +304,7 @@ namespace MeltPoolDG
     number solidus_temperature  = 0.0;
     number liquidus_temperature = 0.0;
     number inv_mushy_interval   = 0.0;
+    number boiling_temperature  = 0.0;
 
     TwoPhasePropertiesTransitionType two_phase_properties_transition_type =
       TwoPhasePropertiesTransitionType::sharp;

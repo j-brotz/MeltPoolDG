@@ -83,8 +83,8 @@ namespace MeltPoolDG
     /*
      *  set the maximum temperature of the melt pool if not specified
      */
-    if (laser.analytical.max_temperature < mp.boiling_temperature)
-      laser.analytical.max_temperature = mp.boiling_temperature + 500;
+    if (laser.analytical.max_temperature < material.boiling_temperature)
+      laser.analytical.max_temperature = material.boiling_temperature + 500;
     /*
      *  check if level set assignment of gaseous/liquid phase is done correctly
      */
@@ -750,9 +750,6 @@ namespace MeltPoolDG
       prm.add_parameter("mp do recoil pressure",
                         mp.do_recoil_pressure,
                         "Set this parameter to true to enable recoil pressure.");
-      prm.add_parameter("mp boiling temperature",
-                        mp.boiling_temperature,
-                        "Boiling temperature of the melt.");
       prm.add_parameter("mp liquid melt pool radius",
                         mp.liquid.melt_pool_radius,
                         "Set the radius of the liquid parts of the melt pool ellipse "
@@ -825,9 +822,6 @@ namespace MeltPoolDG
                         evapor.latent_heat_of_evaporation,
                         "Latent heat of evaporation (J/kg).");
       prm.add_parameter("evapor molar mass", evapor.molar_mass, "Molar mass (mol/kg).");
-      prm.add_parameter("evapor boiling temperature",
-                        evapor.boiling_temperature,
-                        "Boiling temperature (K).");
       prm.add_parameter("evapor interface value n iterations",
                         evapor.interface_value_n_iterations,
                         "Number of corrections of the point projection towards the interface.");
@@ -896,6 +890,9 @@ namespace MeltPoolDG
       prm.add_parameter("material two phase properties transition type",
                         material.two_phase_properties_transition_type,
                         "Choose how to interpolate the properties over the interface.");
+      prm.add_parameter("material boiling temperature",
+                        material.boiling_temperature,
+                        "Boiling temperature (K).");
     }
     prm.leave_subsection();
     /*

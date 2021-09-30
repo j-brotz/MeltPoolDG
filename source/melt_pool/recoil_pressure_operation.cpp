@@ -11,7 +11,7 @@ namespace MeltPoolDG::MeltPool
                                                         const unsigned int temp_dof_idx_in)
     : scratch_data(scratch_data_in)
     , recoil_pressure_data(data_in.recoil)
-    , boiling_temperature(data_in.mp.boiling_temperature)
+    , boiling_temperature(data_in.material.boiling_temperature)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
