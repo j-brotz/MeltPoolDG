@@ -563,16 +563,17 @@ namespace MeltPoolDG::Heat
                  *      +  c_p^liquid * (T - T_evaporation)
                  *
                  */
-                const auto temp = evapor_vals.get_value(q_index) *
-                                  (latent_heat_of_evaporation +
-                                   (temp_vals.get_value(q_index) - material.boiling_temperature) *
-                                     material.first.capacity +
-                                   (material.boiling_temperature - material.solidus_temperature) *
-                                     material.second.capacity +
-                                   (material.solidus_temperature -
-                                    material.specific_enthalpy_reference_temperature) *
-                                     material.solid.capacity) *
-                                  ls_vals.get_gradient(q_index).norm();
+                const auto temp =
+                  evapor_vals.get_value(q_index) *
+                  (latent_heat_of_evaporation +
+                   material.solid.capacity *
+                     (material.solidus_temperature - // TODO liquidus instead?
+                      material.specific_enthalpy_reference_temperature) +
+                   material.second.capacity *
+                     (material.boiling_temperature - material.solidus_temperature) +
+                   material.first.capacity * // TODO second capacity??
+                     (temp_vals.get_value(q_index) - material.boiling_temperature)) *
+                  ls_vals.get_gradient(q_index).norm();
 
                 q_vapor[cell][q_index] = -temp;
                 val += temp;
@@ -832,13 +833,27 @@ namespace MeltPoolDG::Heat
             /*
              * @todo: consider piecewise constant integral
              *
-             * e.g.
+             * heat sink due to evaporation:
+             *             .
+             *    q_s =  - m · ( h_v + h(T)) · δ
+             *                                  Γ
+             * with the specific enthalpy:
              *
              * if T_h0 < T_melting and T > T_evaporation
              *
              * h(T) =  c_p^solid * (T_melting - T_h0)
              *      +  c_p^liquid * (T_evaporation - T_melting)
              *      +  c_p^liquid * (T - T_evaporation)
+             *
+             *  d h(T)
+             * -------- = c_p^liquid
+             *    dT
+             *
+             * tangent of heat sink due to evaporation:
+             *
+             *  d q_s      .
+             * ------- = - m * c_p^liquid * δ
+             *    dT                         Γ
              *
              */
             val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
