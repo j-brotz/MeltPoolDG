@@ -66,6 +66,8 @@ namespace MeltPoolDG::Flow
     unsigned int     temp_dof_idx;
     unsigned int     normal_dof_idx;
 
+    FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
+
   public:
     SurfaceTensionOperation(const SurfaceTensionData<double> &data_in,
                             const ScratchData<dim> &          scratch_data,

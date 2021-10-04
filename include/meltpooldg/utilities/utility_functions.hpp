@@ -9,6 +9,8 @@
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_q_dg0.h>
+#include <deal.II/fe/fe_q_iso_q1.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_tools.h>
 
@@ -865,6 +867,61 @@ namespace MeltPoolDG
                     -current_time_increment / old_time_increment,
                     old_old_vec);
     }
+
+    /**
+     * Copied from adaflo; semantics slightly modified
+     */
+    template <int dim, int spacedim = dim>
+    FullMatrix<double>
+    create_dof_interpolation_matrix(const DoFHandler<dim, spacedim> &dof_handler_1, // flow
+                                    const DoFHandler<dim, spacedim> &dof_handler_2) // ls
+    {
+      FullMatrix<double> dof_interpolation_matrix;
+
+      dof_interpolation_matrix.reinit(dof_handler_1.get_fe().dofs_per_cell,
+                                      dof_handler_2.get_fe().dofs_per_cell);
+
+      const FE_Q_iso_Q1<dim, spacedim> &fe_mine =
+        dynamic_cast<const FE_Q_iso_Q1<dim, spacedim> &>(dof_handler_2.get_fe());
+
+      const std::vector<unsigned int> lexicographic_ls = fe_mine.get_poly_space_numbering_inverse();
+
+      if (const FE_Q<dim, spacedim> *fe_p =
+            dynamic_cast<const FE_Q<dim, spacedim> *>(&dof_handler_1.get_fe()))
+        {
+          const std::vector<unsigned int> lexicographic_p =
+            fe_p->get_poly_space_numbering_inverse();
+          for (unsigned int j = 0; j < fe_p->dofs_per_cell; ++j)
+            {
+              const Point<dim> p = fe_p->get_unit_support_points()[lexicographic_p[j]];
+              for (unsigned int i = 0; i < fe_mine.dofs_per_cell; ++i)
+                dof_interpolation_matrix(j, i) =
+                  dof_handler_2.get_fe().shape_value(lexicographic_ls[i], p);
+            }
+        }
+      else if (const FE_Q_DG0<dim, spacedim> *fe_p =
+                 dynamic_cast<const FE_Q_DG0<dim, spacedim> *>(&dof_handler_1.get_fe()))
+        {
+          const std::vector<unsigned int> lexicographic_p =
+            fe_p->get_poly_space_numbering_inverse();
+          for (unsigned int j = 0; j < fe_p->dofs_per_cell - 1; ++j)
+            {
+              const Point<dim> p = fe_p->get_unit_support_points()[lexicographic_p[j]];
+              for (unsigned int i = 0; i < fe_mine.dofs_per_cell; ++i)
+                dof_interpolation_matrix(j, i) =
+                  dof_handler_2.get_fe().shape_value(lexicographic_ls[i], p);
+            }
+        }
+      else
+        AssertThrow(
+          false,
+          ExcMessage(
+            "The operation for the requested pair of DoFHandler "
+            "is not supported. Types must be: dof_handler_1 = FE_Q_iso_Q1; dof_handler_2 = FE_Q || FE_Q_DG0."));
+
+      return dof_interpolation_matrix;
+    }
+
 
 
   } // namespace UtilityFunctions

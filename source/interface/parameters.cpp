@@ -49,6 +49,14 @@ namespace MeltPoolDG
                   "using the value at the interface or a line integral, n_subdivisions for the "
                   "level set must be 1."));
 
+    if (base.problem_name == ProblemType::melt_pool && ls.n_subdivisions > 1 &&
+        !surface_tension.do_level_set_pressure_gradient_interpolation)
+      AssertThrow(false,
+                  ExcMessage(
+                    "If you use n_subdivisions for the melt pool problem, it is. "
+                    "recommended to set the surface tension parameter >>> do level set pressure "
+                    "gradient interpolation <<< to true."));
+
     switch (base.problem_name)
       {
         case ProblemType::advection_diffusion:
@@ -775,6 +783,13 @@ namespace MeltPoolDG
         surface_tension.coefficient_residual_fraction,
         "Define the minimum fraction of the constant surface tension reference value "
         "that can be reached.");
+      prm.add_parameter(
+        "do level set pressure gradient interpolation",
+        surface_tension.do_level_set_pressure_gradient_interpolation,
+        "Set this parameter to true, if the gradient of the level set should be "
+        "calculated at the pressure DoF points. This is recommended if the resolution "
+        "of the level set is finer than the pressure field, e.g. by setting ls n subdivisions "
+        "> 1.");
     }
     prm.leave_subsection();
     /*
