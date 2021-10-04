@@ -13,8 +13,8 @@
     "end time": "0.14",
     "time step size": "0.02"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.0245"
+  "surface tension": {
+    "surface tension coefficient": "0.0245"
   },
   "material": {
     "material first density": "1",
