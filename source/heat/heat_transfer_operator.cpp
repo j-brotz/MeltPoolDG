@@ -555,25 +555,50 @@ namespace MeltPoolDG::Heat
                  * @note: it is assumed that c_p is temperature-INDEPENDENT and mDot > 0 only
                  *        if the temperature is above the evaporation temperature
                  *
+                 *                               .                           .
+                 * assumption: T >= T_boiling && m > 0  or  T < T_boiling && m == 0
                  *
-                 * if T_h0 < T_melting and T > T_evaporation
+                 * if T_h0 <= T_melting   (I)
+                 * h(T) =  c_p^solid * (T_melting - T_h0)  (1)
+                 *      +  c_p^liquid * (T_boiling - T_melting)  (2)
+                 *      +  c_p^gas * (T - T_boiling)  (3)
                  *
-                 * h(T) =  c_p^solid * (T_melting - T_h0)
-                 *      +  c_p^liquid * (T_evaporation - T_melting)
-                 *      +  c_p^liquid * (T - T_evaporation)
+                 * if T_melting < T_h0 <= T_boiling   (II)
+                 * h(T) =  c_p^liquid * (T_boiling - T_h0)  (4)
+                 *      +  c_p^gas * (T - T_boiling)  (3)
                  *
+                 * if T_h0 > T_boiling   (III)
+                 * h(T) = c_p^gas * (T - T_h0)  (5)
+                 *
+                 * @note: We use the liquidus temperature as the melting point here.
                  */
-                const auto temp =
-                  evapor_vals.get_value(q_index) *
-                  (latent_heat_of_evaporation +
-                   material.solid.capacity *
-                     (material.solidus_temperature - // TODO liquidus instead?
-                      material.specific_enthalpy_reference_temperature) +
-                   material.second.capacity *
-                     (material.boiling_temperature - material.solidus_temperature) +
-                   material.first.capacity * // TODO second capacity??
-                     (temp_vals.get_value(q_index) - material.boiling_temperature)) *
-                  ls_vals.get_gradient(q_index).norm();
+                decltype(temp_vals.get_value(q_index)) specific_enthalpy;
+                if (material.specific_enthalpy_reference_temperature <=
+                    material.liquidus_temperature) // (I)
+                  specific_enthalpy =
+                    material.solid.capacity *
+                      (material.liquidus_temperature -
+                       material.specific_enthalpy_reference_temperature) // (1)
+                    + material.second.capacity *
+                        (material.boiling_temperature - material.solidus_temperature) // (2)
+                    + material.first.capacity *
+                        (temp_vals.get_value(q_index) - material.boiling_temperature); // (3)
+                else if (material.specific_enthalpy_reference_temperature >
+                         material.solidus_temperature) // (II)
+                  specific_enthalpy =
+                    material.second.capacity *
+                      (material.boiling_temperature -
+                       material.specific_enthalpy_reference_temperature) // (4)
+                    + material.first.capacity *
+                        (temp_vals.get_value(q_index) - material.boiling_temperature); // (3)
+                else                                                                   // (III)
+                  specific_enthalpy = material.first.capacity *
+                                      (temp_vals.get_value(q_index) -
+                                       material.specific_enthalpy_reference_temperature); // (5)
+
+                const auto temp = evapor_vals.get_value(q_index) *
+                                  (latent_heat_of_evaporation + specific_enthalpy) *
+                                  ls_vals.get_gradient(q_index).norm();
 
                 q_vapor[cell][q_index] = -temp;
                 val += temp;
@@ -838,26 +863,38 @@ namespace MeltPoolDG::Heat
              *    q_s =  - m · ( h_v + h(T)) · δ
              *                                  Γ
              * with the specific enthalpy:
+             *                               .                           .
+             * assumption: T >= T_boiling && m > 0  or  T < T_boiling && m == 0
              *
-             * if T_h0 < T_melting and T > T_evaporation
+             * if T_h0 <= T_melting   (I)
+             * h(T) =  c_p^solid * (T_melting - T_h0)  (1)
+             *      +  c_p^liquid * (T_boiling - T_melting)  (2)
+             *      +  c_p^gas * (T - T_boiling)  (3)
              *
-             * h(T) =  c_p^solid * (T_melting - T_h0)
-             *      +  c_p^liquid * (T_evaporation - T_melting)
-             *      +  c_p^liquid * (T - T_evaporation)
+             * if T_melting < T_h0 <= T_boiling   (II)
+             * h(T) =  c_p^liquid * (T_boiling - T_h0)  (4)
+             *      +  c_p^gas * (T - T_boiling)  (3)
+             *
+             * if T_h0 > T_boiling   (III)
+             * h(T) = c_p^gas * (T - T_h0)  (5)
+             *
+             * derivative of specific enthalpy h(T) with respect to the temperature:
              *
              *  d h(T)
-             * -------- = c_p^liquid
+             * -------- = c_p^gas
              *    dT
              *
              * tangent of heat sink due to evaporation:
              *
              *  d q_s      .
-             * ------- = - m * c_p^liquid * δ
-             *    dT                         Γ
+             * ------- = - m * c_p^gas * δ
+             *    dT                      Γ
              *
+             *
+             * @note: We use the liquidus temperature as the melting point here.
              */
             val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
-                   material.second.capacity * ls_vals.get_gradient(q_index).norm();
+                   material.first.capacity * ls_vals.get_gradient(q_index).norm();
           }
 
 
