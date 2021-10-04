@@ -308,35 +308,48 @@ namespace MeltPoolDG::MeltPool
     level_set_as_heaviside.update_ghost_values();
     temperature->update_ghost_values();
 
-    const unsigned int dofs_per_cell =
-      scratch_data->get_n_dofs_per_cell(temp_hanging_nodes_dof_idx);
+    std::vector<types::global_dof_index> local_dof_indices(
+      scratch_data->get_n_dofs_per_cell(temp_hanging_nodes_dof_idx));
 
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+    FEValues<dim> ls_heaviside_eval(scratch_data->get_mapping(),
+                                    scratch_data->get_dof_handler(ls_dof_idx).get_fe(),
+                                    Quadrature<dim>(
+                                      scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx)
+                                        .get_fe()
+                                        .get_unit_support_points()),
+                                    update_values);
 
-    std::map<types::global_dof_index, Point<dim>> support_points;
-    DoFTools::map_dofs_to_support_points(scratch_data->get_mapping(),
-                                         scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
-                                         support_points);
+    std::vector<double> ls_heaviside_at_q(ls_heaviside_eval.n_quadrature_points);
 
     liquid = 0;
     solid  = 0;
 
+    typename DoFHandler<dim>::active_cell_iterator ls_cell =
+      scratch_data->get_dof_handler(ls_dof_idx).begin_active();
+
     for (const auto &cell :
          scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
-      if (cell->is_locally_owned())
-        {
-          cell->get_dof_indices(local_dof_indices);
-          for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            {
-              solid[local_dof_indices[i]] =
-                compute_solid_fraction((*temperature)[local_dof_indices[i]]) *
-                level_set_as_heaviside[local_dof_indices[i]];
+      {
+        if (cell->is_locally_owned())
+          {
+            cell->get_dof_indices(local_dof_indices);
 
-              liquid[local_dof_indices[i]] =
-                (1. - compute_solid_fraction((*temperature)[local_dof_indices[i]])) *
-                level_set_as_heaviside[local_dof_indices[i]];
-            }
-        }
+            ls_heaviside_eval.reinit(ls_cell);
+            ls_heaviside_eval.get_function_values(level_set_as_heaviside, ls_heaviside_at_q);
+
+            for (const auto q : ls_heaviside_eval.quadrature_point_indices())
+              {
+                solid[local_dof_indices[q]] =
+                  compute_solid_fraction((*temperature)[local_dof_indices[q]]) *
+                  ls_heaviside_at_q[q];
+
+                liquid[local_dof_indices[q]] =
+                  (1. - compute_solid_fraction((*temperature)[local_dof_indices[q]])) *
+                  ls_heaviside_at_q[q];
+              }
+          }
+        ++ls_cell;
+      }
 
     liquid.compress(VectorOperation::insert);
     solid.compress(VectorOperation::insert);

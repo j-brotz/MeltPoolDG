@@ -69,7 +69,6 @@ namespace MeltPoolDG::Evaporation
      */
     mutable const VectorType *temperature;
     unsigned int              temp_dof_idx;
-    unsigned int              temp_hanging_nodes_dof_idx;
     /**
      * evaporative mass flux
      */

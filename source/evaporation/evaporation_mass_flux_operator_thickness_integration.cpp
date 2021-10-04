@@ -27,6 +27,7 @@ namespace MeltPoolDG::Evaporation
                                                     const unsigned int     ls_hanging_nodes_dof_idx,
                                                     const unsigned int     normal_dof_idx,
                                                     const unsigned int temp_hanging_nodes_dof_idx,
+                                                    const unsigned int evapor_mass_flux_dof_idx,
                                                     const unsigned int n_subdivisions_per_side,
                                                     const unsigned int n_subdivisions_MCA)
     : scratch_data(scratch_data)
@@ -38,6 +39,7 @@ namespace MeltPoolDG::Evaporation
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx)
     , normal_dof_idx(normal_dof_idx)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx)
+    , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx)
     , fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim)
     , n_subdivisions_per_side(n_subdivisions_per_side)
     , n_subdivisions_MCA(n_subdivisions_MCA)
@@ -53,7 +55,7 @@ namespace MeltPoolDG::Evaporation
 
     if constexpr (dim > 1)
       {
-        scratch_data.initialize_dof_vector(evaporative_mass_flux, temp_hanging_nodes_dof_idx);
+        scratch_data.initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
         /*
          * generate point cloud normal to interface
          */
@@ -219,7 +221,7 @@ namespace MeltPoolDG::Evaporation
               for (auto &n : nodal_values)
                 n = average;
 
-              scratch_data.get_constraint(ls_hanging_nodes_dof_idx)
+              scratch_data.get_constraint(evapor_mass_flux_dof_idx)
                 .distribute_local_to_global(nodal_values, local_dof_indices, evaporative_mass_flux);
 
               // count the number of written values (multiplicity)
@@ -247,7 +249,7 @@ namespace MeltPoolDG::Evaporation
             evaporative_mass_flux.local_element(i) /= vector_multiplicity.local_element(i);
 
         evaporative_mass_flux.update_ghost_values();
-        scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(evaporative_mass_flux);
+        scratch_data.get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
         temperature.zero_out_ghost_values();
         level_set_as_heaviside.zero_out_ghost_values();
       }

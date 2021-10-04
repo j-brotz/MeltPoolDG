@@ -2,6 +2,8 @@
 #  define MELT_POOL_DG_DIM 1
 #endif
 
+#include <deal.II/fe/fe_q_iso_q1.h>
+
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
@@ -170,7 +172,8 @@ namespace MeltPoolDG::Flow
     /*
      *  setup DoFHandler
      */
-    dof_handler.reinit(*base_in->triangulation);
+    dof_handler_ls.reinit(*base_in->triangulation);
+    dof_handler_heat.reinit(*base_in->triangulation);
 
     /*
      *  setup scratch data
@@ -178,7 +181,6 @@ namespace MeltPoolDG::Flow
     scratch_data = std::make_shared<ScratchData<dim>>(base_in->mpi_communicator,
                                                       base_in->parameters.base.verbosity_level,
                                                       /*do_matrix_free*/ true);
-
     /*
      *  setup mapping
      */
@@ -187,15 +189,18 @@ namespace MeltPoolDG::Flow
     else
       scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
 
-    scratch_data->attach_dof_handler(dof_handler);
-    scratch_data->attach_dof_handler(dof_handler);
-    scratch_data->attach_dof_handler(dof_handler);
-    scratch_data->attach_dof_handler(dof_handler);
+    scratch_data->attach_dof_handler(dof_handler_ls);
+    scratch_data->attach_dof_handler(dof_handler_ls);
+    scratch_data->attach_dof_handler(dof_handler_ls);
+    scratch_data->attach_dof_handler(dof_handler_heat);
+    scratch_data->attach_dof_handler(dof_handler_heat);
 
     ls_hanging_nodes_dof_idx = scratch_data->attach_constraint_matrix(ls_hanging_node_constraints);
     ls_dof_idx               = scratch_data->attach_constraint_matrix(ls_constraints_dirichlet);
     reinit_dof_idx           = scratch_data->attach_constraint_matrix(reinit_constraints_dirichlet);
     temp_dof_idx             = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
+    temp_hanging_nodes_dof_idx =
+      scratch_data->attach_constraint_matrix(temp_hanging_node_constraints);
 
     /*
      *  create quadrature rule
@@ -204,10 +209,21 @@ namespace MeltPoolDG::Flow
       {
         ls_quad_idx = scratch_data->attach_quadrature(
           QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
+        temp_quad_idx = scratch_data->attach_quadrature(
+          QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
+      }
+    else if (base_in->parameters.ls.n_subdivisions > 1)
+      {
+        ls_quad_idx = scratch_data->attach_quadrature(
+          QIterated<dim>(QGauss<1>(2), base_in->parameters.ls.n_subdivisions));
+        temp_quad_idx =
+          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
       }
     else
       {
         ls_quad_idx =
+          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+        temp_quad_idx =
           scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
       }
 
@@ -372,11 +388,12 @@ namespace MeltPoolDG::Flow
     /*
      *    Do initial refinement steps if requested
      */
+
     if (base_in->parameters.amr.do_amr && base_in->parameters.amr.n_initial_refinement_cycles > 0)
       for (int i = 0; i < base_in->parameters.amr.n_initial_refinement_cycles; ++i)
         {
           std::ostringstream str;
-          str << "cycle: " << i << " n_dofs: " << dof_handler.n_dofs() << "(ls) + "
+          str << "cycle: " << i << " n_dofs: " << dof_handler_ls.n_dofs() << "(ls) + "
               << flow_operation->get_dof_handler_velocity().n_dofs() << "(vel) + "
               << flow_operation->get_dof_handler_pressure().n_dofs() << "(p)";
 
@@ -444,12 +461,19 @@ namespace MeltPoolDG::Flow
   {
     if (base_in->parameters.base.do_simplex)
       {
-        dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
+        dof_handler_heat.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
+        dof_handler_ls.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
       }
     else
       {
-        dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
+        if (base_in->parameters.ls.n_subdivisions > 1)
+          dof_handler_ls.distribute_dofs(FE_Q_iso_Q1<dim>(base_in->parameters.ls.n_subdivisions));
+        else
+          dof_handler_ls.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
+
+        dof_handler_heat.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
       }
+
       /*
        *    initialize the flow operation class
        */
@@ -470,7 +494,7 @@ namespace MeltPoolDG::Flow
     ls_hanging_node_constraints.clear();
     ls_hanging_node_constraints.reinit(
       scratch_data->get_locally_relevant_dofs(ls_hanging_nodes_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler, ls_hanging_node_constraints);
+    DoFTools::make_hanging_node_constraints(dof_handler_ls, ls_hanging_node_constraints);
 
     ls_constraints_dirichlet.clear();
     ls_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(ls_dof_idx));
@@ -480,7 +504,7 @@ namespace MeltPoolDG::Flow
                "level_set")) // @todo: add name of bc at a more central place
           {
             dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
-                                                             dof_handler,
+                                                             dof_handler_ls,
                                                              bc.first,
                                                              *bc.second,
                                                              ls_constraints_dirichlet);
@@ -495,12 +519,17 @@ namespace MeltPoolDG::Flow
                "heat_transfer")) // @todo: add name of bc at a more central place
           {
             dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
-                                                             dof_handler,
+                                                             dof_handler_heat,
                                                              bc.first,
                                                              *bc.second,
                                                              temp_constraints_dirichlet);
           }
       }
+
+    temp_hanging_node_constraints.clear();
+    temp_hanging_node_constraints.reinit(
+      scratch_data->get_locally_relevant_dofs(temp_hanging_nodes_dof_idx));
+    DoFTools::make_hanging_node_constraints(dof_handler_heat, temp_hanging_node_constraints);
 
     reinit_constraints_dirichlet.clear();
     reinit_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs());
@@ -511,7 +540,7 @@ namespace MeltPoolDG::Flow
                "reinitialization")) // @todo: add name of bc at a more central place
           {
             dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
-                                                             dof_handler,
+                                                             dof_handler_ls,
                                                              bc.first,
                                                              *bc.second,
                                                              reinit_constraints_dirichlet);
@@ -523,34 +552,37 @@ namespace MeltPoolDG::Flow
       {
         const auto [id_in, id_out, direction] = bc;
         DoFTools::make_periodicity_constraints(
-          dof_handler, id_in, id_out, direction, ls_hanging_node_constraints);
+          dof_handler_ls, id_in, id_out, direction, ls_hanging_node_constraints);
+        DoFTools::make_periodicity_constraints(
+          dof_handler_heat, id_in, id_out, direction, temp_hanging_node_constraints);
       }
 
-    // ize constraints
+    temp_hanging_node_constraints.close();
     ls_hanging_node_constraints.close();
 
-    UtilityFunctions::check_constraints(dof_handler, ls_hanging_node_constraints);
+    UtilityFunctions::check_constraints(dof_handler_heat, temp_hanging_node_constraints);
+    UtilityFunctions::check_constraints(dof_handler_ls, ls_hanging_node_constraints);
 
     ls_constraints_dirichlet.close();
     ls_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
-    UtilityFunctions::check_constraints(dof_handler, ls_constraints_dirichlet);
+    UtilityFunctions::check_constraints(dof_handler_ls, ls_constraints_dirichlet);
 
     reinit_constraints_dirichlet.close();
     reinit_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
-    UtilityFunctions::check_constraints(dof_handler, reinit_constraints_dirichlet);
+    UtilityFunctions::check_constraints(dof_handler_ls, reinit_constraints_dirichlet);
 
     temp_constraints_dirichlet.close();
     temp_constraints_dirichlet.merge(
-      ls_hanging_node_constraints,
+      temp_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
 
-    UtilityFunctions::check_constraints(dof_handler, temp_constraints_dirichlet);
+    UtilityFunctions::check_constraints(dof_handler_heat, temp_constraints_dirichlet);
 
     scratch_data->build();
 
@@ -872,7 +904,7 @@ namespace MeltPoolDG::Flow
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
       data;
 
-    data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
+    data.emplace_back(&dof_handler_ls, [&](std::vector<VectorType *> &vectors) {
       level_set_operation.attach_vectors(vectors); // ls + heaviside
     });
     data.emplace_back(&flow_operation->get_dof_handler_velocity(),
@@ -885,7 +917,7 @@ namespace MeltPoolDG::Flow
                       });
 
     if (melt_pool_operation)
-      data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
+      data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
         melt_pool_operation->attach_vectors(vectors); // temperature + solid + liquid
       });
 
@@ -895,13 +927,13 @@ namespace MeltPoolDG::Flow
                           [&](std::vector<VectorType *> &vectors) {
                             evaporation_operation->attach_dim_vectors(vectors);
                           });
-        data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
+        data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
           evaporation_operation->attach_vectors(vectors);
         });
       }
 
     if (heat_operation)
-      data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
+      data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
         heat_operation->attach_vectors(vectors);
       });
 

@@ -124,15 +124,27 @@ namespace MeltPoolDG::Heat
 
     // TODO: find a better way to interpolate the (level-set dependent) laser heat source onto the
     // heat source dof vector. Problem: if ls-degree=1, its gradient may be discontinuous!
-    for (const auto &cell : scratch_data.get_dof_handler(temp_dof_idx).active_cell_iterators())
+    for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
       {
         if (cell->is_locally_owned())
           {
-            cell->get_dof_indices(local_dof_indices);
+            TriaIterator<DoFCellAccessor<dim, dim, false>> ls_dof_cell(
+              &scratch_data.get_triangulation(),
+              cell->level(),
+              cell->index(),
+              &scratch_data.get_dof_handler(ls_dof_idx));
 
-            heat_source_eval.reinit(cell);
-            ls_heaviside_eval.reinit(cell);
-            normal_eval.reinit(cell);
+            TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
+              &scratch_data.get_triangulation(),
+              cell->level(),
+              cell->index(),
+              &scratch_data.get_dof_handler(temp_dof_idx));
+
+            temp_dof_cell->get_dof_indices(local_dof_indices);
+
+            heat_source_eval.reinit(temp_dof_cell);
+            ls_heaviside_eval.reinit(ls_dof_cell);
+            normal_eval.reinit(ls_dof_cell);
 
             ls_heaviside_eval.get_function_gradients(level_set_heaviside, grad_ls_heaviside_at_q);
             ls_heaviside_eval.get_function_values(level_set_heaviside, ls_heaviside_at_q);

@@ -132,6 +132,7 @@ namespace MeltPoolDG::Evaporation
             normal_vector,
             ls_hanging_nodes_dof_idx,
             temp_dof_idx,
+            evapor_mass_flux_dof_idx,
             evaporation_data.interface_value_n_iterations);
       }
     else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "line integral")
@@ -146,6 +147,7 @@ namespace MeltPoolDG::Evaporation
           ls_hanging_nodes_dof_idx,
           normal_dof_idx,
           temp_dof_idx,
+          evapor_mass_flux_dof_idx,
           evaporation_data.line_integral_n_subdivisions_per_side,
           evaporation_data.line_integral_n_subdivisions_MCA);
   }
