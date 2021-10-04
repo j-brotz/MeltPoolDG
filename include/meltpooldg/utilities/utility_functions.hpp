@@ -871,23 +871,25 @@ namespace MeltPoolDG
     /**
      * Copied from adaflo; semantics slightly modified
      */
-    template <int dim, int spacedim = dim>
+    template <int dim>
     FullMatrix<double>
-    create_dof_interpolation_matrix(const DoFHandler<dim, spacedim> &dof_handler_1, // flow
-                                    const DoFHandler<dim, spacedim> &dof_handler_2) // ls
+    create_dof_interpolation_matrix(const DoFHandler<dim> &dof_handler_1, // flow
+                                    const DoFHandler<dim> &dof_handler_2) // ls
     {
       FullMatrix<double> dof_interpolation_matrix;
 
       dof_interpolation_matrix.reinit(dof_handler_1.get_fe().dofs_per_cell,
                                       dof_handler_2.get_fe().dofs_per_cell);
 
-      const FE_Q_iso_Q1<dim, spacedim> &fe_mine =
-        dynamic_cast<const FE_Q_iso_Q1<dim, spacedim> &>(dof_handler_2.get_fe());
+      const FE_Q_iso_Q1<dim> &fe_mine =
+        dynamic_cast<const FE_Q_iso_Q1<dim> &>(dof_handler_2.get_fe());
 
       const std::vector<unsigned int> lexicographic_ls = fe_mine.get_poly_space_numbering_inverse();
 
-      if (const FE_Q<dim, spacedim> *fe_p =
-            dynamic_cast<const FE_Q<dim, spacedim> *>(&dof_handler_1.get_fe()))
+
+      //@todo: get rid of base_element
+      if (const FE_Q<dim> *fe_p =
+            dynamic_cast<const FE_Q<dim> *>(&dof_handler_1.get_fe().base_element(0)))
         {
           const std::vector<unsigned int> lexicographic_p =
             fe_p->get_poly_space_numbering_inverse();
@@ -899,8 +901,8 @@ namespace MeltPoolDG
                   dof_handler_2.get_fe().shape_value(lexicographic_ls[i], p);
             }
         }
-      else if (const FE_Q_DG0<dim, spacedim> *fe_p =
-                 dynamic_cast<const FE_Q_DG0<dim, spacedim> *>(&dof_handler_1.get_fe()))
+      else if (const FE_Q_DG0<dim> *fe_p =
+                 dynamic_cast<const FE_Q_DG0<dim> *>(&dof_handler_1.get_fe()))
         {
           const std::vector<unsigned int> lexicographic_p =
             fe_p->get_poly_space_numbering_inverse();
