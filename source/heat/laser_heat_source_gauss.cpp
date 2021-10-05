@@ -1,3 +1,5 @@
+#include <deal.II/numerics/data_out.h>
+
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 
@@ -97,7 +99,11 @@ namespace MeltPoolDG::Heat
 
     level_set_heaviside.update_ghost_values();
 
-    FEValues<dim> ls_heaviside_eval(
+    const VectorType *             used_level_set  = &level_set_heaviside;
+    unsigned int                   used_ls_dof_idx = ls_dof_idx;
+    std::unique_ptr<FEValues<dim>> ls_heaviside_eval;
+
+    ls_heaviside_eval = std::make_unique<FEValues<dim>>(
       scratch_data.get_mapping(),
       scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
       Quadrature<dim>(
@@ -115,15 +121,90 @@ namespace MeltPoolDG::Heat
       scratch_data.get_dof_handler(temp_dof_idx).get_fe().n_dofs_per_cell();
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    std::vector<double> ls_heaviside_at_q(ls_heaviside_eval.n_quadrature_points);
+    std::vector<double> ls_heaviside_at_q(ls_heaviside_eval->n_quadrature_points);
     std::vector<dealii::Tensor<1, dim, double>> grad_ls_heaviside_at_q(
-      ls_heaviside_eval.n_quadrature_points);
-    std::vector<double> delta_value_at_q(ls_heaviside_eval.n_quadrature_points);
-
+      ls_heaviside_eval->n_quadrature_points);
+    std::vector<double>         delta_value_at_q(ls_heaviside_eval->n_quadrature_points);
     std::vector<Tensor<1, dim>> normal_at_q(dofs_per_cell, Tensor<1, dim>());
 
-    // TODO: find a better way to interpolate the (level-set dependent) laser heat source onto the
-    // heat source dof vector. Problem: if ls-degree=1, its gradient may be discontinuous!
+    /*
+     * Interpolate the level set DoFs to the temperature DoFs
+     */
+    VectorType interpolated_vec;
+
+    if (const FE_Q_iso_Q1<dim> *fe_interpolated = dynamic_cast<const FE_Q_iso_Q1<dim> *>(
+          &scratch_data.get_dof_handler(ls_dof_idx).get_fe()))
+      {
+        const auto ls_to_temperature_grad_interpolation_matrix =
+          UtilityFunctions::create_dof_interpolation_matrix<dim>(
+            scratch_data.get_dof_handler(temp_dof_idx),
+            scratch_data.get_dof_handler(ls_dof_idx),
+            false);
+
+        ls_heaviside_eval = std::make_unique<FEValues<dim>>(
+          scratch_data.get_mapping(),
+          scratch_data.get_dof_handler(temp_dof_idx).get_fe(),
+          Quadrature<dim>(
+            scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
+          update_values | update_gradients);
+
+        std::vector<types::global_dof_index> ls_local_dof_indices(
+          scratch_data.get_dof_handler(ls_dof_idx).get_fe().n_dofs_per_cell());
+
+        // create vector of interpolated values of level set at DoF points of the temperature field
+        used_level_set  = &interpolated_vec;
+        used_ls_dof_idx = temp_dof_idx;
+        scratch_data.initialize_dof_vector(interpolated_vec, temp_dof_idx);
+
+        for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
+          {
+            if (cell->is_locally_owned())
+              {
+                TriaIterator<DoFCellAccessor<dim, dim, false>> ls_dof_cell(
+                  &scratch_data.get_triangulation(),
+                  cell->level(),
+                  cell->index(),
+                  &scratch_data.get_dof_handler(ls_dof_idx));
+                ls_dof_cell->get_dof_indices(ls_local_dof_indices);
+
+                TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
+                  &scratch_data.get_triangulation(),
+                  cell->level(),
+                  cell->index(),
+                  &scratch_data.get_dof_handler(temp_dof_idx));
+
+                temp_dof_cell->get_dof_indices(local_dof_indices);
+
+                for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                  {
+                    double interpolated_value = 0;
+
+                    /* Interpolate the level set Φ from the support points of the level set space j
+                     * to the one of the temperature space i, using the interpolation matrix P
+                     * _
+                     * Φ   = P   · Φ
+                     *  i     ij    j
+                     */
+                    for (unsigned int j = 0;
+                         j < scratch_data.get_dof_handler(ls_dof_idx).get_fe().n_dofs_per_cell();
+                         ++j)
+                      interpolated_value += ls_to_temperature_grad_interpolation_matrix(i, j) *
+                                            level_set_heaviside[ls_local_dof_indices[j]];
+
+                    // Store the interpolated values at the support points of the pressure space
+                    interpolated_vec[local_dof_indices[i]] = interpolated_value;
+                  }
+              }
+          }
+
+        interpolated_vec.compress(VectorOperation::insert);
+        interpolated_vec.update_ghost_values();
+      }
+
+    // count the number of nodal assembly entries
+    VectorType vector_multiplicity;
+    vector_multiplicity.reinit(heat_source_vector);
+
     for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
       {
         if (cell->is_locally_owned())
@@ -132,7 +213,7 @@ namespace MeltPoolDG::Heat
               &scratch_data.get_triangulation(),
               cell->level(),
               cell->index(),
-              &scratch_data.get_dof_handler(ls_dof_idx));
+              &scratch_data.get_dof_handler(used_ls_dof_idx));
 
             TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
               &scratch_data.get_triangulation(),
@@ -140,19 +221,35 @@ namespace MeltPoolDG::Heat
               cell->index(),
               &scratch_data.get_dof_handler(temp_dof_idx));
 
+            TriaIterator<DoFCellAccessor<dim, dim, false>> normal_dof_cell(
+              &scratch_data.get_triangulation(),
+              cell->level(),
+              cell->index(),
+              &scratch_data.get_dof_handler(normal_dof_idx));
+
             temp_dof_cell->get_dof_indices(local_dof_indices);
 
-            heat_source_eval.reinit(temp_dof_cell);
-            ls_heaviside_eval.reinit(ls_dof_cell);
-            normal_eval.reinit(ls_dof_cell);
+            // fill multiplicity
+            Vector<double> nodal_values(dofs_per_cell);
+            for (auto &val : nodal_values)
+              val = 1.0;
+            scratch_data.get_constraint(temp_dof_idx)
+              .distribute_local_to_global(nodal_values, local_dof_indices, vector_multiplicity);
 
-            ls_heaviside_eval.get_function_gradients(level_set_heaviside, grad_ls_heaviside_at_q);
-            ls_heaviside_eval.get_function_values(level_set_heaviside, ls_heaviside_at_q);
+
+            heat_source_eval.reinit(temp_dof_cell);
+            normal_eval.reinit(normal_dof_cell);
+            ls_heaviside_eval->reinit(ls_dof_cell);
+
+            ls_heaviside_eval->get_function_gradients(*used_level_set, grad_ls_heaviside_at_q);
+            ls_heaviside_eval->get_function_values(*used_level_set, ls_heaviside_at_q);
 
             // use filtered normal vector computation ..
             if (normal_vector)
               NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
                 normal_eval, *normal_vector, normal_at_q, tolerance_normal_vector);
+
+            Vector<double> nodal_heat_values(dofs_per_cell);
 
             for (const auto q : heat_source_eval.quadrature_point_indices())
               {
@@ -160,28 +257,40 @@ namespace MeltPoolDG::Heat
 
                 if (delta_value == 0.0)
                   {
-                    heat_source_vector[local_dof_indices[q]] = 0.0;
+                    nodal_heat_values[q] = 0;
                     continue;
                   }
-
 
                 // ... or use (unfiltered) gradient of the level set function
                 if (normal_vector == nullptr)
                   normal_at_q[q] = grad_ls_heaviside_at_q[q] / delta_value;
 
-                const double temp =
+                nodal_heat_values[q] =
                   local_compute_interfacial_heat_source(heat_source_eval.quadrature_point(q),
                                                         laser_position,
                                                         laser_power,
                                                         normal_at_q[q],
                                                         delta_value,
                                                         ls_heaviside_at_q[q]);
-
-                heat_source_vector[local_dof_indices[q]] = temp;
               }
+
+            scratch_data.get_constraint(temp_dof_idx)
+              .distribute_local_to_global(nodal_heat_values, local_dof_indices, heat_source_vector);
           }
       }
 
+    heat_source_vector.compress(VectorOperation::add);
+    vector_multiplicity.compress(VectorOperation::add);
+
+    /*
+     * average the nodally assembled values to smoothen discontinuous gradients of
+     * the level set field
+     */
+    for (unsigned int i = 0; i < vector_multiplicity.locally_owned_size(); ++i)
+      if (vector_multiplicity.local_element(i) > 1.0)
+        heat_source_vector.local_element(i) /= vector_multiplicity.local_element(i);
+
+    heat_source_vector.zero_out_ghost_values();
     level_set_heaviside.zero_out_ghost_values();
     if (normal_vector)
       normal_vector->zero_out_ghost_values();
