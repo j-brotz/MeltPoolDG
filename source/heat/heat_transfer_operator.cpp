@@ -570,14 +570,21 @@ namespace MeltPoolDG::Heat
                  * if T_h0 > T_boiling   (III)
                  * h(T) = c_p^gas * (T - T_h0)  (5)
                  *
-                 * @note: We use the liquidus temperature as the melting point here.
+                 * @note: We use the solidus temperature as the melting point here.
+                 *
+                 * @note: This assumes constant capacity between solid and liquid.
                  */
+                Assert(material.solid.capacity == material.second.capacity,
+                       ExcMessage("The equation for specific enthalpy for evaporative heat sink "
+                                  "assumes constant heat capacity between the solid and liquid "
+                                  "phase! Abort..."));
+
                 decltype(temp_vals.get_value(q_index)) specific_enthalpy;
                 if (material.specific_enthalpy_reference_temperature <=
-                    material.liquidus_temperature) // (I)
+                    material.solidus_temperature) // (I)
                   specific_enthalpy =
                     material.solid.capacity *
-                      (material.liquidus_temperature -
+                      (material.solidus_temperature -
                        material.specific_enthalpy_reference_temperature) // (1)
                     + material.second.capacity *
                         (material.boiling_temperature - material.solidus_temperature) // (2)
@@ -856,28 +863,6 @@ namespace MeltPoolDG::Heat
         if (evaporative_mass_flux)
           {
             /*
-             * @todo: consider piecewise constant integral
-             *
-             * heat sink due to evaporation:
-             *             .
-             *    q_s =  - m · ( h_v + h(T)) · δ
-             *                                  Γ
-             * with the specific enthalpy:
-             *                               .                           .
-             * assumption: T >= T_boiling && m > 0  or  T < T_boiling && m == 0
-             *
-             * if T_h0 <= T_melting   (I)
-             * h(T) =  c_p^solid * (T_melting - T_h0)  (1)
-             *      +  c_p^liquid * (T_boiling - T_melting)  (2)
-             *      +  c_p^gas * (T - T_boiling)  (3)
-             *
-             * if T_melting < T_h0 <= T_boiling   (II)
-             * h(T) =  c_p^liquid * (T_boiling - T_h0)  (4)
-             *      +  c_p^gas * (T - T_boiling)  (3)
-             *
-             * if T_h0 > T_boiling   (III)
-             * h(T) = c_p^gas * (T - T_h0)  (5)
-             *
              * derivative of specific enthalpy h(T) with respect to the temperature:
              *
              *  d h(T)
@@ -889,9 +874,6 @@ namespace MeltPoolDG::Heat
              *  d q_s      .
              * ------- = - m * c_p^gas * δ
              *    dT                      Γ
-             *
-             *
-             * @note: We use the liquidus temperature as the melting point here.
              */
             val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
                    material.first.capacity * ls_vals.get_gradient(q_index).norm();
