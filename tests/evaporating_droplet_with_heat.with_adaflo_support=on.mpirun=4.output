@@ -35,8 +35,7 @@
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
-Time step #1, advancing from t_n-1 = 0 to t = 0.001 (dt = 0.001). 
-  Residual/iterations: [0.0172/ILU/19] [1.29e-06/21] [3.84e-10/conv.]
+Time step #1, advancing from t_n-1 = 0 to t = 0.001 (dt = 0.001).
 | || velocity ||L2 = 1.903673137767366e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.619311472703006e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -62,7 +61,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.001 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #2, advancing from t_n-1 = 0.001 to t = 0.002 (dt = 0.001). 
-  Residual/iterations: [0.00027/ILU/17] [2.39e-08/8] [4.05e-10/conv.]
 | || velocity ||L2 = 3.558310904853274e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.619683736837421e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -88,7 +86,6 @@ Time step #2, advancing from t_n-1 = 0.001 to t = 0.002 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #3, advancing from t_n-1 = 0.002 to t = 0.003 (dt = 0.001). 
-  Residual/iterations: [4.83e-05/18] [2.61e-09/4] [2.87e-10/conv.]
 | || velocity ||L2 = 4.945711202219147e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.619933569666907e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -114,7 +111,6 @@ Time step #3, advancing from t_n-1 = 0.002 to t = 0.003 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #4, advancing from t_n-1 = 0.003 to t = 0.004 (dt = 0.001). 
-  Residual/iterations: [3.85e-05/17] [3.85e-09/4] [4.12e-10/conv.]
 | || velocity ||L2 = 6.107615522571360e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.620114423275835e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -140,7 +136,6 @@ Time step #4, advancing from t_n-1 = 0.003 to t = 0.004 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #5, advancing from t_n-1 = 0.004 to t = 0.005 (dt = 0.001). 
-  Residual/iterations: [2.97e-05/17] [2.77e-09/4] [2.81e-10/conv.]
 | || velocity ||L2 = 7.093244021147356e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.620264770054436e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -166,7 +161,6 @@ Time step #5, advancing from t_n-1 = 0.004 to t = 0.005 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #6, advancing from t_n-1 = 0.005 to t = 0.006 (dt = 0.001). 
-  Residual/iterations: [2.31e-05/17] [1.99e-09/3] [3.75e-10/conv.]
 | || velocity ||L2 = 7.943848630074961e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.620407204142531e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -192,7 +186,6 @@ Time step #6, advancing from t_n-1 = 0.005 to t = 0.006 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #7, advancing from t_n-1 = 0.006 to t = 0.007 (dt = 0.001). 
-  Residual/iterations: [1.83e-05/17] [1.46e-09/2] [4.66e-10/conv.]
 | || velocity ||L2 = 8.690963801958918e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.620548721798045e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -218,7 +211,6 @@ Time step #7, advancing from t_n-1 = 0.006 to t = 0.007 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #8, advancing from t_n-1 = 0.007 to t = 0.008 (dt = 0.001). 
-  Residual/iterations: [1.45e-05/17] [1.05e-09/2] [3.4e-10/conv.]
 | || velocity ||L2 = 9.360610475586842e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.620698534208564e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -244,7 +236,6 @@ Time step #8, advancing from t_n-1 = 0.007 to t = 0.008 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #9, advancing from t_n-1 = 0.008 to t = 0.009 (dt = 0.001). 
-  Residual/iterations: [1.13e-05/17] [7.75e-10/conv.]
 | || velocity ||L2 = 9.973419474402447e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.620861734240218e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -270,7 +261,6 @@ Time step #9, advancing from t_n-1 = 0.008 to t = 0.009 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #10, advancing from t_n-1 = 0.009 to t = 0.01 (dt = 0.001). 
-  Residual/iterations: [8.54e-06/17] [5.87e-10/conv.]
 | || velocity ||L2 = 1.054523996432679e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.621036129239994e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -296,7 +286,6 @@ Time step #10, advancing from t_n-1 = 0.009 to t = 0.01 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #11, advancing from t_n-1 = 0.01 to t = 0.011 (dt = 0.001). 
-  Residual/iterations: [6.37e-06/17] [4.44e-10/conv.]
 | || velocity ||L2 = 1.108809681059828e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.621218729210119e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -322,7 +311,6 @@ Time step #11, advancing from t_n-1 = 0.01 to t = 0.011 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #12, advancing from t_n-1 = 0.011 to t = 0.012 (dt = 0.001). 
-  Residual/iterations: [4.85e-06/17] [3.67e-10/conv.]
 | || velocity ||L2 = 1.161102011635991e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.621407880908086e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -348,7 +336,6 @@ Time step #12, advancing from t_n-1 = 0.011 to t = 0.012 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 6.0677626897e-10            evaporation_source_terms_continuous |
 
 Time step #13, advancing from t_n-1 = 0.012 to t = 0.013 (dt = 0.001). 
-  Residual/iterations: [4.41e-06/17] [4.29e-10/conv.]
 | || velocity ||L2 = 1.212284579430038e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.621612863568724e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -374,7 +361,6 @@ Time step #13, advancing from t_n-1 = 0.012 to t = 0.013 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.0118429053e-09            evaporation_source_terms_continuous |
 
 Time step #14, advancing from t_n-1 = 0.013 to t = 0.014 (dt = 0.001). 
-  Residual/iterations: [5.04e-06/18] [3.11e-10/conv.]
 | || velocity ||L2 = 1.263155903077726e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.621834789926196e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -400,7 +386,6 @@ Time step #14, advancing from t_n-1 = 0.013 to t = 0.014 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.0803502893e-09            evaporation_source_terms_continuous |
 
 Time step #15, advancing from t_n-1 = 0.014 to t = 0.015 (dt = 0.001). 
-  Residual/iterations: [6.15e-06/17] [6.02e-10/conv.]
 | || velocity ||L2 = 1.314363352788318e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.622070807294785e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -426,7 +411,6 @@ Time step #15, advancing from t_n-1 = 0.014 to t = 0.015 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 9.4024692230e-10            evaporation_source_terms_continuous |
 
 Time step #16, advancing from t_n-1 = 0.015 to t = 0.016 (dt = 0.001). 
-  Residual/iterations: [7.35e-06/ILU/17] [5.94e-10/conv.]
 | || velocity ||L2 = 1.366401771874461e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.622317878787205e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -452,7 +436,6 @@ Time step #16, advancing from t_n-1 = 0.015 to t = 0.016 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 7.0248403046e-10            evaporation_source_terms_continuous |
 
 Time step #17, advancing from t_n-1 = 0.016 to t = 0.017 (dt = 0.001). 
-  Residual/iterations: [8.43e-06/17] [5.94e-10/conv.]
 | || velocity ||L2 = 1.419630066203177e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.622574098914387e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -478,7 +461,6 @@ Time step #17, advancing from t_n-1 = 0.016 to t = 0.017 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 4.5219173217e-10            evaporation_source_terms_continuous |
 
 Time step #18, advancing from t_n-1 = 0.017 to t = 0.018 (dt = 0.001). 
-  Residual/iterations: [9.3e-06/17] [5.81e-10/conv.]
 | || velocity ||L2 = 1.474286734491113e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.622838341933382e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -504,7 +486,6 @@ Time step #18, advancing from t_n-1 = 0.017 to t = 0.018 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 8.6353712036e-10            evaporation_source_terms_continuous |
 
 Time step #19, advancing from t_n-1 = 0.018 to t = 0.019 (dt = 0.001). 
-  Residual/iterations: [9.92e-06/16] [8.62e-10/conv.]
 | || velocity ||L2 = 1.530475122457959e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.623112122663100e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -530,7 +511,6 @@ Time step #19, advancing from t_n-1 = 0.018 to t = 0.019 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 7.6199013887e-08            evaporation_source_terms_continuous |
 
 Time step #20, advancing from t_n-1 = 0.019 to t = 0.02 (dt = 0.001). 
-  Residual/iterations: [1.04e-05/16] [8.47e-10/conv.]
 | || velocity ||L2 = 1.588341687524715e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.623488717376670e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -556,7 +536,6 @@ Time step #20, advancing from t_n-1 = 0.019 to t = 0.02 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 3.7589197008e-07            evaporation_source_terms_continuous |
 
 Time step #21, advancing from t_n-1 = 0.02 to t = 0.021 (dt = 0.001). 
-  Residual/iterations: [1.09e-05/16] [1.03e-09/2] [3.87e-10/conv.]
 | || velocity ||L2 = 1.648506784578537e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.624073503739276e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -582,7 +561,6 @@ Time step #21, advancing from t_n-1 = 0.02 to t = 0.021 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 6.7778873518e-07            evaporation_source_terms_continuous |
 
 Time step #22, advancing from t_n-1 = 0.021 to t = 0.022 (dt = 0.001). 
-  Residual/iterations: [1.25e-05/17] [9.26e-10/conv.]
 | || velocity ||L2 = 1.710858392835654e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.624259397491029e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -608,7 +586,6 @@ Time step #22, advancing from t_n-1 = 0.021 to t = 0.022 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 9.4701008990e-07            evaporation_source_terms_continuous |
 
 Time step #23, advancing from t_n-1 = 0.022 to t = 0.023 (dt = 0.001). 
-  Residual/iterations: [1.24e-05/16] [1.11e-09/2] [3.98e-10/conv.]
 | || velocity ||L2 = 1.775471676174090e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.624555916823069e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -634,7 +611,6 @@ Time step #23, advancing from t_n-1 = 0.022 to t = 0.023 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.1831144446e-06            evaporation_source_terms_continuous |
 
 Time step #24, advancing from t_n-1 = 0.023 to t = 0.024 (dt = 0.001). 
-  Residual/iterations: [1.25e-05/16] [1.06e-09/2] [3.74e-10/conv.]
 | || velocity ||L2 = 1.842352024546755e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.624867851487972e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -660,7 +636,6 @@ Time step #24, advancing from t_n-1 = 0.023 to t = 0.024 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.3871673829e-06            evaporation_source_terms_continuous |
 
 Time step #25, advancing from t_n-1 = 0.024 to t = 0.025 (dt = 0.001). 
-  Residual/iterations: [1.27e-05/16] [1e-09/2] [3.53e-10/conv.]
 | || velocity ||L2 = 1.911431668964155e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.625189902858617e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -686,7 +661,6 @@ Time step #25, advancing from t_n-1 = 0.024 to t = 0.025 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.5606962732e-06            evaporation_source_terms_continuous |
 
 Time step #26, advancing from t_n-1 = 0.025 to t = 0.026 (dt = 0.001). 
-  Residual/iterations: [1.27e-05/16] [9.22e-10/conv.]
 | || velocity ||L2 = 1.982567036466266e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.625521710434572e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -712,7 +686,6 @@ Time step #26, advancing from t_n-1 = 0.025 to t = 0.026 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.7054650704e-06            evaporation_source_terms_continuous |
 
 Time step #27, advancing from t_n-1 = 0.026 to t = 0.027 (dt = 0.001). 
-  Residual/iterations: [1.24e-05/16] [8.09e-10/conv.]
 | || velocity ||L2 = 2.055528681129998e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.625864230474580e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -738,7 +711,6 @@ Time step #27, advancing from t_n-1 = 0.026 to t = 0.027 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.8234037296e-06            evaporation_source_terms_continuous |
 
 Time step #28, advancing from t_n-1 = 0.027 to t = 0.028 (dt = 0.001). 
-  Residual/iterations: [1.19e-05/16] [6.89e-10/conv.]
 | || velocity ||L2 = 2.130014582288079e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.626226775364104e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -764,7 +736,6 @@ Time step #28, advancing from t_n-1 = 0.027 to t = 0.028 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.9174891391e-06            evaporation_source_terms_continuous |
 
 Time step #29, advancing from t_n-1 = 0.028 to t = 0.029 (dt = 0.001). 
-  Residual/iterations: [1.11e-05/15] [1.03e-09/1] [4.69e-10/conv.]
 | || velocity ||L2 = 2.205692441198813e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.626629730606346e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -790,7 +761,6 @@ Time step #29, advancing from t_n-1 = 0.028 to t = 0.029 (dt = 0.001).
 | || evapartive_mass_source ||L2 = 1.9931394341e-06            evaporation_source_terms_continuous |
 
 Time step #30, advancing from t_n-1 = 0.029 to t = 0.03 (dt = 0.001). 
-  Residual/iterations: [1.03e-05/15] [8.98e-10/conv.]
 | || velocity ||L2 = 2.282229347513255e-04                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.627039448244325e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
