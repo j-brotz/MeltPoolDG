@@ -9,6 +9,8 @@
 
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_q_dg0.h>
+#include <deal.II/fe/fe_q_iso_q1.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_tools.h>
 
@@ -865,6 +867,88 @@ namespace MeltPoolDG
                     -current_time_increment / old_time_increment,
                     old_old_vec);
     }
+
+    /**
+     * This function creates a n x m interpolation matrix P, to interpolate DoF values
+     * per cell from one space (n) given by @param dof_handler_1 to another space (m)
+     * given py @param dof_handler_2.
+     *
+     * The interpolation of cell-wise DoF values x, using the matrix P can be done
+     * as follows
+     *   _
+     *   x   = P   x
+     *    i     ij  j
+     *
+     * with i=0...n-1 and j=0...m-1.
+     *
+     * @note: The row/column indices are sorted in lexicographic order.
+     *
+     *
+     * ---------------------------------------------------------------------------------
+     * Copied from adaflo:
+     *
+     * https://github.com/kronbichler/adaflo/blob/f873472c43798304bbdb7f0cbeb556061c489020/source/level_set_base.cc#L68-L137
+     *
+     * @note: semantics slightly modified
+     * ---------------------------------------------------------------------------------
+     */
+    template <int dim>
+    FullMatrix<double>
+    create_dof_interpolation_matrix(const DoFHandler<dim> &dof_handler_1, // e.g. pressure
+                                    const DoFHandler<dim> &dof_handler_2) // e.g. level set
+    {
+      FullMatrix<double> dof_interpolation_matrix(dof_handler_1.get_fe().n_dofs_per_cell(),
+                                                  dof_handler_2.get_fe().n_dofs_per_cell());
+
+      const FE_Q_iso_Q1<dim> *fe_2 =
+        dynamic_cast<const FE_Q_iso_Q1<dim> *>(&dof_handler_2.get_fe());
+
+      AssertThrow(fe_2,
+                  ExcMessage("dof_handler_2 must contain finite elements of type FE_Q_iso_Q1."));
+
+      const std::vector<unsigned int> lexicographic_ls = fe_2->get_poly_space_numbering_inverse();
+
+
+      //@todo: get rid of base_element
+      if (const FE_Q<dim> *fe_1 =
+            dynamic_cast<const FE_Q<dim> *>(&dof_handler_1.get_fe().base_element(0)))
+        {
+          const std::vector<unsigned int> lexicographic_p =
+            fe_1->get_poly_space_numbering_inverse();
+          for (unsigned int j = 0; j < fe_1->dofs_per_cell; ++j)
+            {
+              const Point<dim> p = fe_1->get_unit_support_points()[lexicographic_p[j]];
+              for (unsigned int i = 0; i < fe_2->dofs_per_cell; ++i)
+                dof_interpolation_matrix(j, i) =
+                  dof_handler_2.get_fe().shape_value(lexicographic_ls[i], p);
+            }
+        }
+      else if (const FE_Q_DG0<dim> *fe_1 =
+                 dynamic_cast<const FE_Q_DG0<dim> *>(&dof_handler_1.get_fe()))
+        {
+          const std::vector<unsigned int> lexicographic_p =
+            fe_1->get_poly_space_numbering_inverse();
+
+          // Loop over all support points except the one for the discontinuous
+          // shape function in the middle of the cell (dofs_per_cell - 1).
+          for (unsigned int j = 0; j < fe_1->dofs_per_cell - 1; ++j)
+            {
+              const Point<dim> p = fe_1->get_unit_support_points()[lexicographic_p[j]];
+              for (unsigned int i = 0; i < fe_2->dofs_per_cell; ++i)
+                dof_interpolation_matrix(j, i) =
+                  dof_handler_2.get_fe().shape_value(lexicographic_ls[i], p);
+            }
+        }
+      else
+        AssertThrow(
+          false,
+          ExcMessage(
+            "The operation for the requested pair of DoFHandler "
+            "is not supported. Types must be: dof_handler_1 = FE_Q_iso_Q1; dof_handler_2 = FE_Q || FE_Q_DG0."));
+
+      return dof_interpolation_matrix;
+    }
+
 
 
   } // namespace UtilityFunctions

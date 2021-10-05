@@ -11,7 +11,7 @@ namespace MeltPoolDG::Flow
     const unsigned int                ls_dof_idx,
     const unsigned int                curv_dof_idx,
     const unsigned int                flow_vel_dof_idx,
-    const unsigned int                flow_pressure_hanging_nodes_dof_idx,
+    const unsigned int                flow_pressure_hanging_nodes_dof_idx_in,
     const unsigned int                flow_vel_quad_idx)
     : data(data_in)
     , scratch_data(scratch_data)
@@ -20,10 +20,18 @@ namespace MeltPoolDG::Flow
     , ls_dof_idx(ls_dof_idx)
     , curv_dof_idx(curv_dof_idx)
     , flow_vel_dof_idx(flow_vel_dof_idx)
-    , flow_pressure_hanging_nodes_dof_idx(flow_pressure_hanging_nodes_dof_idx)
+    , flow_pressure_hanging_nodes_dof_idx(flow_pressure_hanging_nodes_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx)
   {
-    //@todo add assert
+    if (data.do_level_set_pressure_gradient_interpolation)
+      {
+        ls_to_pressure_grad_interpolation_matrix =
+          UtilityFunctions::create_dof_interpolation_matrix<dim>(
+            scratch_data.get_dof_handler(flow_pressure_hanging_nodes_dof_idx),
+            scratch_data.get_dof_handler(ls_dof_idx));
+      }
+
+    //@todo add assert for parameters
   }
 
   template <int dim>
@@ -37,8 +45,6 @@ namespace MeltPoolDG::Flow
     normal_dof_idx         = normal_dof_idx_in;
     temperature            = temperature_in;
     solution_normal_vector = solution_normal_vector_in;
-
-    //@todo add assert
   }
 
   template <int dim>
@@ -66,8 +72,15 @@ namespace MeltPoolDG::Flow
 
         FECellIntegrator<dim, 1, double> curvature(matrix_free, curv_dof_idx, flow_vel_quad_idx);
 
+        FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(
+          matrix_free, flow_pressure_hanging_nodes_dof_idx, flow_vel_quad_idx);
+
         std::unique_ptr<FECellIntegrator<dim, dim, double>> normal_vec;
         std::unique_ptr<FECellIntegrator<dim, 1, double>>   temperature_val;
+
+        auto &used_level_set = data.do_level_set_pressure_gradient_interpolation ?
+                                 interpolated_level_set_to_pressure_space :
+                                 level_set;
 
         if (temperature)
           {
@@ -94,7 +107,42 @@ namespace MeltPoolDG::Flow
           {
             level_set.reinit(cell);
             level_set.read_dof_values_plain(level_set_as_heaviside);
-            level_set.evaluate(EvaluationFlags::gradients);
+
+            interpolated_level_set_to_pressure_space.reinit(cell);
+
+            if (data.do_level_set_pressure_gradient_interpolation)
+              {
+                // Evaluate the level set Φ at the support points of the level set space j
+                level_set.evaluate(EvaluationFlags::values);
+
+                // Loop over the support points of the pressure space i
+                for (unsigned int i = 0; i < interpolated_level_set_to_pressure_space.dofs_per_cell;
+                     ++i)
+                  {
+                    VectorizedArray<double> interpolated_value = 0;
+
+                    // Interpolate the level set Φ from the support points of the level set space j
+                    // to the one of the pressure space i, using the interpolation matrix P
+                    // _
+                    // Φ   = P   · Φ
+                    //  i     ij    j
+                    for (unsigned int j = 0; j < level_set.dofs_per_cell; ++j)
+                      interpolated_value +=
+                        ls_to_pressure_grad_interpolation_matrix(i, j) * level_set.get_dof_value(j);
+
+                    // Store the interpolated values at the support points of the pressure space
+                    interpolated_level_set_to_pressure_space.submit_dof_value(interpolated_value,
+                                                                              i);
+                  }
+
+                // Evaluate the gradient from the interpolated level set field
+                //                       _
+                //                     ∇ Φ
+                //
+                interpolated_level_set_to_pressure_space.evaluate(EvaluationFlags::gradients);
+              }
+            else
+              level_set.evaluate(EvaluationFlags::gradients);
 
             surface_tension.reinit(cell);
 
@@ -115,7 +163,7 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
               {
-                const auto delta = level_set.get_gradient(q_index).norm();
+                const auto delta = used_level_set.get_gradient(q_index).norm();
 
                 if (temperature)
                   {
@@ -148,7 +196,7 @@ namespace MeltPoolDG::Flow
                                                  q_index);
                   }
                 else
-                  surface_tension.submit_value(alpha * level_set.get_gradient(q_index) *
+                  surface_tension.submit_value(alpha * used_level_set.get_gradient(q_index) *
                                                  curvature.get_value(q_index),
                                                q_index);
               }

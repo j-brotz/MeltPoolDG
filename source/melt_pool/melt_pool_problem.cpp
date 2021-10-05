@@ -295,7 +295,7 @@ namespace MeltPoolDG::Flow
       ls_dof_idx,
       curv_dof_idx,
       vel_dof_idx,
-      pressure_dof_idx,
+      flow_operation->get_dof_handler_idx_pressure(),
       flow_operation->get_quad_idx_velocity());
 
     if (heat_operation &&
