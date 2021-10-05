@@ -53,8 +53,8 @@ namespace MeltPoolDG
         !surface_tension.do_level_set_pressure_gradient_interpolation)
       AssertThrow(false,
                   ExcMessage(
-                    "If you use n_subdivisions for the melt pool problem, it is. "
-                    "recommended to set the surface tension parameter >>> do level set pressure "
+                    "If you use n_subdivisions for the melt pool problem, it is "
+                    "required to set the surface tension parameter >>> do level set pressure "
                     "gradient interpolation <<< to true."));
 
     switch (base.problem_name)
@@ -788,8 +788,8 @@ namespace MeltPoolDG
         surface_tension.do_level_set_pressure_gradient_interpolation,
         "Set this parameter to true, if the gradient of the level set should be "
         "calculated at the pressure DoF points. This is recommended if the resolution "
-        "of the level set is finer than the pressure field, e.g. by setting ls n subdivisions "
-        "> 1.");
+        "of the level set is finer than the pressure field, e.g., if \"ls n subdivisions\" "
+        "is chosen > 1.");
     }
     prm.leave_subsection();
     /*
