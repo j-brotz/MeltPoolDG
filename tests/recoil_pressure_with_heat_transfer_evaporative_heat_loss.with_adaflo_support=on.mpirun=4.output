@@ -1153,7 +1153,7 @@ Time step #26, advancing from t_n-1 = 2.5e-05 to t = 2.6e-05 (dt = 1e-06).
 
 Time step #27, advancing from t_n-1 = 2.6e-05 to t = 2.7e-05 (dt = 1e-06). 
 | || velocity ||L2 = 8.354368709712001e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.529934478005824e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.530067135964157e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 28     t = 2.7000e-05 to 2.8000e-05 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -1189,12 +1189,12 @@ Time step #27, advancing from t_n-1 = 2.6e-05 to t = 2.7e-05 (dt = 1e-06).
 | || curvature ||L2 = 7.31921494706e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.45373e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.45374e-01                newton_raphson_solver |
 |  total mass = 0.00030269123692                                                 melt_pool_problem |
 
 Time step #28, advancing from t_n-1 = 2.7e-05 to t = 2.8e-05 (dt = 1e-06). 
 | || velocity ||L2 = 9.299175710903540e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.761913375622707e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.762166468842499e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 29     t = 2.8000e-05 to 2.9000e-05 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -1230,19 +1230,19 @@ Time step #28, advancing from t_n-1 = 2.7e-05 to t = 2.8e-05 (dt = 1e-06).
 | || curvature ||L2 = 7.31937874528e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.47338e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.47341e-01                newton_raphson_solver |
 |  total mass = 0.00030267224114                                                 melt_pool_problem |
 
 Time step #29, advancing from t_n-1 = 2.8e-05 to t = 2.9e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.028975404055864e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 3.000123813039068e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 3.000747905998973e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 30     t = 2.9000e-05 to 3.0000e-05 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.15449479536e-02                                               normal_vector |
 | || normal_1 ||L2 = 5.10559583031e+00                                               normal_vector |
 | || advected field ||L2 = 3.2777366615e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 5.86477290136e-02                                               normal_vector |
+| || normal_0 ||L2 = 5.86493200703e-02                                               normal_vector |
 | || normal_1 ||L2 = 5.10558581612e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 7.8522e-06                                                                 reinitialization |
@@ -1266,17 +1266,17 @@ Time step #29, advancing from t_n-1 = 2.8e-05 to t = 2.9e-05 (dt = 1e-06).
 |  τ = 7.8522e-05                                                                 reinitialization |
 | || delta phi ||L2 = 1.062700232604058e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.85522036251e-02                                               normal_vector |
+| || normal_0 ||L2 = 5.85537604362e-02                                               normal_vector |
 | || normal_1 ||L2 = 5.10554805419e+00                                               normal_vector |
 | || curvature ||L2 = 7.31957699743e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.49280e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.49286e-01                newton_raphson_solver |
 |  total mass = 0.00030265374094                                                 melt_pool_problem |
 
 Time step #30, advancing from t_n-1 = 2.9e-05 to t = 3e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.132466867988260e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 3.245280395808482e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 3.246251253844877e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
