@@ -106,6 +106,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
 
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -129,6 +131,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -144,6 +148,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
+                                                 evapor_mass_flux_dof_idx,
+                                                 this->quad_idx);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -151,7 +158,7 @@ namespace MeltPoolDG::Heat
         temp_vals.read_dof_values(src);
 
         tangent_local_cell_operation(
-          temp_vals, temp_lin_vals, temp_old_vals, velocity_vals, ls_vals, true);
+          temp_vals, temp_lin_vals, temp_old_vals, velocity_vals, ls_vals, evapor_vals, true);
 
         temp_vals.distribute_local_to_global(dst);
       }
@@ -198,12 +205,17 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
+                                                 evapor_mass_flux_dof_idx,
+                                                 this->quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -219,6 +231,7 @@ namespace MeltPoolDG::Heat
                                      temp_old_vals,
                                      velocity_vals,
                                      ls_vals,
+                                     evapor_vals,
                                      old_cell_index != current_cell_index);
 
         old_cell_index = current_cell_index;
@@ -236,6 +249,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -253,6 +268,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
     if (!include_boundary_terms)
       {
         // note: not thread safe!!!
@@ -261,6 +278,9 @@ namespace MeltPoolDG::Heat
         FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
         FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
         FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
+        FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
+                                                     evapor_mass_flux_dof_idx,
+                                                     this->quad_idx);
 
         unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -277,6 +297,7 @@ namespace MeltPoolDG::Heat
                                          temp_old_vals,
                                          velocity_vals,
                                          ls_vals,
+                                         evapor_vals,
                                          old_cell_index != current_cell_index);
 
             old_cell_index = current_cell_index;
@@ -297,6 +318,9 @@ namespace MeltPoolDG::Heat
           FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
           FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
           FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
+          FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
+                                                       evapor_mass_flux_dof_idx,
+                                                       this->quad_idx);
 
           const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
 
@@ -322,6 +346,7 @@ namespace MeltPoolDG::Heat
                                                temp_old_vals,
                                                velocity_vals,
                                                ls_vals,
+                                               evapor_vals,
                                                j == 0 /*do_reinit_cell*/);
 
                   for (unsigned int i = 0; i < dofs_per_cell; ++i)
@@ -418,6 +443,8 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
     if (data.solidification)
       MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -510,13 +537,69 @@ namespace MeltPoolDG::Heat
             if (evaporative_mass_flux)
               {
                 /*
-                 * compute the heat sink due to evaporation
+                 * Compute the heat sink due to evaporation
                  *             .
-                 *    q_s =  - m · h_v · δ
-                 *                        Γ
+                 *    q_s =  - m · ( h_v + h(T)) · δ
+                 *                                  Γ
+                 *
+                 * with the latent heat of evaporation h_v, the specific enthalpy
+                 *
+                 *          T
+                 *         /
+                 *        |
+                 * h(T) = | c_p  .  (1)
+                 *        |
+                 *       /
+                 *     T_ref
+                 *
+                 * where T_ref denotes an artificial reference temperature for
+                 * the specific enthalpy.
+                 *
+                 * h_v + h(T) is the total enthalpy leaving the system with the
+                 * evaporative mass flux. h(T) can be typically found in tables.
+                 * However, we assume for the computation of the specific
+                 * enthalpy a linear temperature-dependence
+                 *
+                 *    h(T) = h_ref + c_p * T .  (2)
+                 *
+                 * see also
+                 * Meier, Christoph, et al. "A novel smoothed particle hydrodynamics
+                 * formulation for thermo-capillary phase change problems with focus
+                 * on metal additive manufacturing melt pool modeling." CMAME 381
+                 * (2021).
+                 *
+                 * By setting (1) equal to (2) and assuming the heat capacity to
+                 * be temperature-independent, we obtain
+                 *
+                 *    h_ref = - c_p * T_ref
+                 *
+                 * Inserting into (2) yields
+                 *
+                 *    h(T) = c_p * (T - T_ref).
+                 *
+                 *
+                 * @note: For the computation of h(T), it is assumed that the
+                 *        specific heat capacity c_p corresponds to the value
+                 *        for the liquid and solid phase.
+                 *
+                 * @note: Instead of T_ref we could have also introduced directly
+                 *        h_ref as an input parameter.
                  */
-                const auto temp = evapor_vals.get_value(q_index) * latent_heat_of_evaporation *
+                Assert(!data.solidification ||
+                         (material.solid.capacity == material.second.capacity),
+                       ExcMessage("The equation for specific enthalpy for evaporative heat sink "
+                                  "assumes equality between the solid and liquid "
+                                  "phase heat capacity! Abort..."));
+
+                VectorizedArray<number> specific_enthalpy;
+                specific_enthalpy =
+                  material.second.capacity *
+                  (temp_vals.get_value(q_index) - material.specific_enthalpy_reference_temperature);
+
+                const auto temp = evapor_vals.get_value(q_index) *
+                                  (latent_heat_of_evaporation + specific_enthalpy) *
                                   ls_vals.get_gradient(q_index).norm();
+
                 q_vapor[cell][q_index] = -temp;
                 val += temp;
               }
@@ -685,6 +768,7 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number> &  temp_old_vals,
     FECellIntegrator<dim, dim, number> &velocity_vals,
     FECellIntegrator<dim, 1, number> &  ls_vals,
+    FECellIntegrator<dim, 1, number> &  evapor_vals,
     const bool                          do_reinit_cells) const
   {
     VectorizedArray<number> rho_cp            = material.first.density * material.first.capacity;
@@ -723,6 +807,11 @@ namespace MeltPoolDG::Heat
             temp_lin_vals.reinit(temp_vals.get_current_cell_index());
             temp_lin_vals.gather_evaluate(temperature,
                                           EvaluationFlags::values | EvaluationFlags::gradients);
+          }
+        if (evaporative_mass_flux)
+          {
+            evapor_vals.reinit(temp_vals.get_current_cell_index());
+            evapor_vals.gather_evaluate(*evaporative_mass_flux, EvaluationFlags::values);
           }
       }
 
@@ -763,6 +852,29 @@ namespace MeltPoolDG::Heat
                    velocity_vals.get_value(q_index) * temp_vals.get_value(q_index);
             // todo: add term containing ∇·u  in case of evaporation
           }
+
+        if (evaporative_mass_flux)
+          {
+            /*
+             * derivative of specific enthalpy h(T) with respect to the temperature:
+             *
+             *  d h(T)
+             * -------- = c_p^sl
+             *    dT
+             *
+             * tangent of heat sink due to evaporation:
+             *
+             *  d q_s      .
+             * ------- = - m * c_p^sl * δ
+             *    dT                      Γ
+             *
+             * For the details regarding h(t)/c_p, see the documentation in
+             * rhs_cell_loop().
+             */
+            val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
+                   material.second.capacity * ls_vals.get_gradient(q_index).norm();
+          }
+
 
         temp_vals.submit_value(val, q_index);
         temp_vals.submit_gradient(val_grad, q_index);
