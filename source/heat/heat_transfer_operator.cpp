@@ -552,42 +552,42 @@ namespace MeltPoolDG::Heat
                  *       /
                  *     T_h0
                  *
-                 * @note: it is assumed that c_p is temperature-INDEPENDENT and mDot > 0 only
-                 *        if the temperature is above the evaporation temperature
+                 *       .
+                 * Since m is zero for T <= T_boiling, we only consider h(T)/c_p
+                 * for the case that T > T_boiling. The specific enthalpy
+                 * h(T) is given for temperature-independent c_p as:
                  *
-                 *                               .                           .
-                 * assumption: T >= T_boiling && m > 0  or  T < T_boiling && m == 0
+                 * if T_h0 <= T_melting:
+                 *   h(T) =  c_p^solid  * (T_melting - T_h0)
+                 *        +  c_p^liquid * (T_boiling - T_melting)
+                 *        +  c_p^gas    * (T - T_boiling)
                  *
-                 * if T_h0 <= T_melting
-                 * h(T) =  c_p^solid * (T_melting - T_h0)
-                 *      +  c_p^liquid * (T_boiling - T_melting)
-                 *      +  c_p^gas * (T - T_boiling)
+                 * if T_melting < T_h0 <= T_boiling:
+                 *   h(T) =  c_p^liquid * (T_boiling - T_h0)
+                 *        +  c_p^gas    * (T - T_boiling)
                  *
-                 * if T_melting < T_h0 <= T_boiling
-                 * h(T) =  c_p^liquid * (T_boiling - T_h0)
-                 *      +  c_p^gas * (T - T_boiling)
+                 * if T_h0 > T_boiling:
+                 *   h(T) = c_p^gas * (T - T_h0)
                  *
-                 * if T_h0 > T_boiling
-                 * h(T) = c_p^gas * (T - T_h0)
+                 * We use the solidus temperature as the melting point here.
+                 * Furthermore since we assume that c_p^solid = c_p^liquid
+                 * and T_boiling > T_melting, we can merge the first two
+                 * equations:
                  *
-                 * @note: We use the solidus temperature as the melting point here.
+                 * if T_h0 <= T_boiling (a):
+                 *   h(T) =  c_p^liquid * (T_boiling - T_h0)  (1)
+                 *        +  c_p^gas    * (T - T_boiling)     (2)
                  *
-                 * assumption: c_p^solid = c_p^liquid
-                 *
-                 * if T_h0 <= T_boiling   (a)
-                 * h(T) =  c_p^liquid * (T_boiling - T_h0)  (1)
-                 *      +  c_p^gas * (T - T_boiling)  (2)
-                 *
-                 * if T_h0 > T_boiling   (b)
-                 * h(T) = c_p^gas * (T - T_h0)  (3)
+                 * if T_h0 > T_boiling (b):
+                 *   h(T) = c_p^gas     * (T - T_h0)          (3)
                  */
                 Assert(!data.solidification ||
                          (material.solid.capacity == material.second.capacity),
                        ExcMessage("The equation for specific enthalpy for evaporative heat sink "
-                                  "assumes constant heat capacity between the solid and liquid "
-                                  "phase! Abort..."));
+                                  "assumes equality between the solid and liquid "
+                                  "phase heat capacity! Abort..."));
 
-                decltype(temp_vals.get_value(q_index)) specific_enthalpy;
+                VectorizedArray<number> specific_enthalpy;
                 if (material.specific_enthalpy_reference_temperature <=
                     material.boiling_temperature) // (a)
                   specific_enthalpy =
@@ -872,6 +872,9 @@ namespace MeltPoolDG::Heat
              *  d q_s      .
              * ------- = - m * c_p^gas * δ
              *    dT                      Γ
+             *
+             * For the details regarding h(t)/c_p, see the documentation in
+             * rhs_cell_loop().
              */
             val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
                    material.first.capacity * ls_vals.get_gradient(q_index).norm();
