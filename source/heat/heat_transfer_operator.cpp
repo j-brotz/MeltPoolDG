@@ -537,49 +537,53 @@ namespace MeltPoolDG::Heat
             if (evaporative_mass_flux)
               {
                 /*
-                 * compute the heat sink due to evaporation
+                 * Compute the heat sink due to evaporation
                  *             .
                  *    q_s =  - m · ( h_v + h(T)) · δ
                  *                                  Γ
                  *
-                 * with the specific enthalpy
+                 * with the latent heat of evaporation h_v, the specific enthalpy
                  *
                  *          T
                  *         /
                  *        |
-                 * h(T) = | c_p
+                 * h(T) = | c_p  .  (1)
                  *        |
                  *       /
-                 *     T_h0
+                 *     T_ref
                  *
-                 *       .
-                 * Since m is zero for T <= T_boiling, we only consider h(T)/c_p
-                 * for the case that T > T_boiling. The specific enthalpy
-                 * h(T) is given for temperature-independent c_p as:
+                 * where T_ref denotes an artificial reference temperature for
+                 * the specific enthalpy.
                  *
-                 * if T_h0 <= T_melting:
-                 *   h(T) =  c_p^solid  * (T_melting - T_h0)
-                 *        +  c_p^liquid * (T_boiling - T_melting)
-                 *        +  c_p^gas    * (T - T_boiling)
+                 * h_v + h(T) is the total enthalpy leaving the system with the
+                 * evaporative mass flux. h(T) can be typically found in tables.
+                 * However, we assume for the computation of the specific
+                 * enthalpy a linear temperature-dependence
                  *
-                 * if T_melting < T_h0 <= T_boiling:
-                 *   h(T) =  c_p^liquid * (T_boiling - T_h0)
-                 *        +  c_p^gas    * (T - T_boiling)
+                 *    h(T) = h_ref + c_p * T .  (2)
                  *
-                 * if T_h0 > T_boiling:
-                 *   h(T) = c_p^gas * (T - T_h0)
+                 * see also
+                 * Meier, Christoph, et al. "A novel smoothed particle hydrodynamics
+                 * formulation for thermo-capillary phase change problems with focus
+                 * on metal additive manufacturing melt pool modeling." CMAME 381
+                 * (2021).
                  *
-                 * We use the solidus temperature as the melting point here.
-                 * Furthermore since we assume that c_p^solid = c_p^liquid
-                 * and T_boiling > T_melting, we can merge the first two
-                 * equations:
+                 * By setting (1) equal to (2) and assuming the heat capacity to
+                 * be temperature-independent, we obtain
                  *
-                 * if T_h0 <= T_boiling (a):
-                 *   h(T) =  c_p^liquid * (T_boiling - T_h0)  (1)
-                 *        +  c_p^gas    * (T - T_boiling)     (2)
+                 *    h_ref = - c_p * T_ref
                  *
-                 * if T_h0 > T_boiling (b):
-                 *   h(T) = c_p^gas     * (T - T_h0)          (3)
+                 * Inserting into (2) yields
+                 *
+                 *    h(T) = c_p * (T - T_ref).
+                 *
+                 *
+                 * @note: For the computation of h(T), it is assumed that the
+                 *        specific heat capacity c_p corresponds to the value
+                 *        for the liquid and solid phase.
+                 *
+                 * @note: Instead of T_ref we could have also introduced directly
+                 *        h_ref as an input parameter.
                  */
                 Assert(!data.solidification ||
                          (material.solid.capacity == material.second.capacity),
@@ -588,18 +592,9 @@ namespace MeltPoolDG::Heat
                                   "phase heat capacity! Abort..."));
 
                 VectorizedArray<number> specific_enthalpy;
-                if (material.specific_enthalpy_reference_temperature <=
-                    material.boiling_temperature) // (a)
-                  specific_enthalpy =
-                    material.second.capacity *
-                      (material.boiling_temperature -
-                       material.specific_enthalpy_reference_temperature) // (1)
-                    + material.first.capacity *
-                        (temp_vals.get_value(q_index) - material.boiling_temperature); // (2)
-                else                                                                   // (b)
-                  specific_enthalpy = material.first.capacity *
-                                      (temp_vals.get_value(q_index) -
-                                       material.specific_enthalpy_reference_temperature); // (3)
+                specific_enthalpy =
+                  material.second.capacity *
+                  (temp_vals.get_value(q_index) - material.specific_enthalpy_reference_temperature);
 
                 const auto temp = evapor_vals.get_value(q_index) *
                                   (latent_heat_of_evaporation + specific_enthalpy) *
@@ -864,20 +859,20 @@ namespace MeltPoolDG::Heat
              * derivative of specific enthalpy h(T) with respect to the temperature:
              *
              *  d h(T)
-             * -------- = c_p^gas
+             * -------- = c_p^sl
              *    dT
              *
              * tangent of heat sink due to evaporation:
              *
              *  d q_s      .
-             * ------- = - m * c_p^gas * δ
+             * ------- = - m * c_p^sl * δ
              *    dT                      Γ
              *
              * For the details regarding h(t)/c_p, see the documentation in
              * rhs_cell_loop().
              */
             val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
-                   material.first.capacity * ls_vals.get_gradient(q_index).norm();
+                   material.second.capacity * ls_vals.get_gradient(q_index).norm();
           }
 
 
