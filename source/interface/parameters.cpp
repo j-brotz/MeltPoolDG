@@ -711,6 +711,19 @@ namespace MeltPoolDG
       prm.add_parameter("recoil temperature constant",
                         recoil.temperature_constant,
                         "Temperature constant for the recoil pressure model.");
+      prm.add_parameter("recoil interface smearing type",
+                        recoil.interface_smearing_type,
+                        "Choose how to smear the properties over the interface.");
+      prm.add_parameter(
+        "recoil gas phase weight",
+        recoil.gas_phase_weight,
+        "If >>> recoil interface smearing type <<< is set to >>> phase_weighted_delta <<< "
+        "this parameter controls the weight of the gas phase (level set = -1).");
+      prm.add_parameter(
+        "recoil heavy phase weight",
+        recoil.heavy_phase_weight,
+        "If >>> recoil interface smearing type <<< is set to >>> c <<< "
+        "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
     }
     prm.leave_subsection();
     /*

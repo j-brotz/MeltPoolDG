@@ -40,6 +40,11 @@ namespace MeltPoolDG
               sharp       // the liquid and solid properties jump at melting temperature
   )
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
+  BETTER_ENUM(InterfaceSmearingType,
+              char,
+              delta, // smeared across interface with delta function  ||∇ls_heaviside||
+              phase_weighted_delta // smeared across interface with phase-weighted delta function
+  )
 
   template <typename number = double>
   struct SolverData
@@ -212,8 +217,11 @@ namespace MeltPoolDG
   template <typename number = double>
   struct RecoilPressureData
   {
-    number pressure_constant    = 0.0;
-    number temperature_constant = 0.0;
+    number                pressure_constant       = 0.0;
+    number                temperature_constant    = 0.0;
+    InterfaceSmearingType interface_smearing_type = InterfaceSmearingType::delta;
+    number                gas_phase_weight        = 1.0;
+    number                heavy_phase_weight      = 1.0;
   };
 
   template <typename number = double>
