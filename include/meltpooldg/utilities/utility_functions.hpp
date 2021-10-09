@@ -895,8 +895,8 @@ namespace MeltPoolDG
     template <int dim>
     FullMatrix<double>
     create_dof_interpolation_matrix(const DoFHandler<dim> &dof_handler_1, // e.g. pressure
-                                    const DoFHandler<dim> &dof_handler_2,
-                                    const bool             do_lex = true) // e.g. level set
+                                    const DoFHandler<dim> &dof_handler_2, // e.g. level set
+                                    const bool             do_lex = true)
     {
       FullMatrix<double> dof_interpolation_matrix(dof_handler_1.get_fe().n_dofs_per_cell(),
                                                   dof_handler_2.get_fe().n_dofs_per_cell());
