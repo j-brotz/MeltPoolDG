@@ -15,19 +15,7 @@ namespace MeltPoolDG
     , triangulation(triangulation_in)
     , pcout(pcout_in)
     , do_simplex(!triangulation.all_reference_cells_are_hyper_cube())
-  {
-    // check if the requested paraview directory exists and if not create the directory
-    AssertThrow(!std::filesystem::exists(pv_data.directory) ||
-                  std::filesystem::is_directory(pv_data.directory),
-                ExcMessage("You are trying to create a folder with the name <" +
-                           std::string(pv_data.directory) +
-                           ">. However, a file with the same name already exists! "
-                           "Possible solutions could be to either rename the output "
-                           "folder in the parameter file or to rename/move the existing file."));
-
-    if (!std::filesystem::exists(pv_data.directory))
-      std::filesystem::create_directory(pv_data.directory);
-  }
+  {}
 
   /*
    *  This function collects and performs all relevant postprocessing steps.

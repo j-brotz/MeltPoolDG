@@ -1,5 +1,7 @@
 #include <meltpooldg/interface/parameters.hpp>
 
+#include <filesystem>
+
 namespace MeltPoolDG
 {
   template <typename number>
@@ -229,6 +231,28 @@ namespace MeltPoolDG
         adaflo_params.params.use_simplex_mesh     = base.do_simplex;
       }
 #endif
+
+    // create output directory and copy parameter file
+    {
+      // check if the requested paraview directory exists and if not create the directory
+      AssertThrow(!std::filesystem::exists(paraview.directory) ||
+                    std::filesystem::is_directory(paraview.directory),
+                  ExcMessage("You are trying to create a folder with the name <" +
+                             std::string(paraview.directory) +
+                             ">. However, a file with the same name already exists! "
+                             "Possible solutions could be to either rename the output "
+                             "folder in the parameter file or to rename/move the existing file."));
+
+      if (!std::filesystem::exists(paraview.directory))
+        std::filesystem::create_directory(paraview.directory);
+
+      // copy parameter file
+      std::filesystem::copy(parameter_filename,
+                            paraview.directory,
+                            std::filesystem::copy_options::overwrite_existing);
+    }
+
+
     parameters_read = true;
   }
 
