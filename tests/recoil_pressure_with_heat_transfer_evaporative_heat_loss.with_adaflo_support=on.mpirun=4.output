@@ -120,7 +120,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.43995019084e-08                                               normal_vector |
 | || normal_1 ||L2 = 5.10576593191e+00                                               normal_vector |
-| || curvature ||L2 = 7.31867218018e+00                                                  curvature |
+| || curvature ||L2 = 7.31867241859e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.82459e-01                newton_raphson_solver |
@@ -202,7 +202,7 @@ Time step #3, advancing from t_n-1 = 2e-06 to t = 3e-06 (dt = 1e-06).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 1.70133982346e-06                                               normal_vector |
 | || normal_1 ||L2 = 5.10576643732e+00                                               normal_vector |
-| || curvature ||L2 = 7.31867218018e+00                                                  curvature |
+| || curvature ||L2 = 7.31867229939e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.89076e-01                newton_raphson_solver |
@@ -243,7 +243,7 @@ Time step #4, advancing from t_n-1 = 3e-06 to t = 4e-06 (dt = 1e-06).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 6.20269159709e-06                                               normal_vector |
 | || normal_1 ||L2 = 5.10576643732e+00                                               normal_vector |
-| || curvature ||L2 = 7.31867218018e+00                                                  curvature |
+| || curvature ||L2 = 7.31867229939e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.92023e-01                newton_raphson_solver |
@@ -1277,6 +1277,7 @@ Time step #29, advancing from t_n-1 = 2.8e-05 to t = 2.9e-05 (dt = 1e-06).
 Time step #30, advancing from t_n-1 = 2.9e-05 to t = 3e-05 (dt = 1e-06). 
 | || velocity ||L2 = 7.872544735935132e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.959978591796187e-01                                    navier_stokes_adaflo |
+
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

@@ -26,7 +26,7 @@
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 7.459424864464381e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.18053e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.18044e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -50,7 +50,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 1.175012130261166e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.16229e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.16215e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -74,7 +74,7 @@ Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 1.502948293818918e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.15193e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.15177e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -98,7 +98,7 @@ Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 1.750066871863964e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.14806e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.14787e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -122,7 +122,7 @@ Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 1.935022055477020e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.14981e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.14961e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -146,7 +146,7 @@ Time step #5, advancing from t_n-1 = 0.002 to t = 0.0025 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 2.073027189908316e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.15657e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.15635e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -170,7 +170,7 @@ Time step #6, advancing from t_n-1 = 0.0025 to t = 0.003 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 2.175849431296228e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.16784e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.16761e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -194,7 +194,7 @@ Time step #7, advancing from t_n-1 = 0.003 to t = 0.0035 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 2.252416834380710e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.18321e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.18297e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -218,7 +218,7 @@ Time step #8, advancing from t_n-1 = 0.0035 to t = 0.004 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 2.309471028638654e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.20231e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.20205e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -242,7 +242,7 @@ Time step #9, advancing from t_n-1 = 0.004 to t = 0.0045 (dt = 0.0005).
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 2.352109049752471e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.22480e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.22454e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |

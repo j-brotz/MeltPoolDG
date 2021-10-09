@@ -313,6 +313,8 @@ namespace MeltPoolDG
     number molar_mass                 = 0.0;
     number sticking_constant          = 1.0;
 
+    number specific_enthalpy_reference_temperature = 0.0;
+
     TwoPhasePropertiesTransitionType two_phase_properties_transition_type =
       TwoPhasePropertiesTransitionType::sharp;
   };

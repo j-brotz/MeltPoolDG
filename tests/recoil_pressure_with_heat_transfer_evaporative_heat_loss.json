@@ -36,7 +36,8 @@
     "material boiling temperature": "2000.",
     "material latent heat of evaporation": "1.e6",
     "material sticking constant": "1",
-    "material molar mass": "0.05224130936"
+    "material molar mass": "0.05224130936",
+    "material specific enthalpy reference temperature": "663.731"
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",
@@ -62,7 +63,6 @@
     "mp do recoil pressure": "true",
     "mp do evaporative heat flux": "true",
     "mp do evaporative mass flux": "false",
-    "material boiling temperature": "2000.",
     "mp set level set to zero in solid": "false",
     "mp set velocity to zero in solid": "true"
   },
