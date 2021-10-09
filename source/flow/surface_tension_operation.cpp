@@ -28,7 +28,8 @@ namespace MeltPoolDG::Flow
         ls_to_pressure_grad_interpolation_matrix =
           UtilityFunctions::create_dof_interpolation_matrix<dim>(
             scratch_data.get_dof_handler(flow_pressure_hanging_nodes_dof_idx),
-            scratch_data.get_dof_handler(ls_dof_idx));
+            scratch_data.get_dof_handler(ls_dof_idx),
+            true);
       }
 
     //@todo add assert for parameters

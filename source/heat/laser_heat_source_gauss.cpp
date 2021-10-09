@@ -1,5 +1,3 @@
-#include <deal.II/numerics/data_out.h>
-
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 
@@ -124,7 +122,6 @@ namespace MeltPoolDG::Heat
     std::vector<double> ls_heaviside_at_q(ls_heaviside_eval->n_quadrature_points);
     std::vector<dealii::Tensor<1, dim, double>> grad_ls_heaviside_at_q(
       ls_heaviside_eval->n_quadrature_points);
-    std::vector<double>         delta_value_at_q(ls_heaviside_eval->n_quadrature_points);
     std::vector<Tensor<1, dim>> normal_at_q(dofs_per_cell, Tensor<1, dim>());
 
     /*
@@ -202,8 +199,8 @@ namespace MeltPoolDG::Heat
       }
 
     // count the number of nodal assembly entries
-    VectorType vector_multiplicity;
-    vector_multiplicity.reinit(heat_source_vector);
+    VectorType heat_source_vector_multiplicity;
+    heat_source_vector_multiplicity.reinit(heat_source_vector);
 
     for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
       {
@@ -230,11 +227,13 @@ namespace MeltPoolDG::Heat
             temp_dof_cell->get_dof_indices(local_dof_indices);
 
             // fill multiplicity
-            Vector<double> nodal_values(dofs_per_cell);
-            for (auto &val : nodal_values)
+            Vector<double> heat_source_vector_multiplicity_local(dofs_per_cell);
+            for (auto &val : heat_source_vector_multiplicity_local)
               val = 1.0;
             scratch_data.get_constraint(temp_dof_idx)
-              .distribute_local_to_global(nodal_values, local_dof_indices, vector_multiplicity);
+              .distribute_local_to_global(heat_source_vector_multiplicity_local,
+                                          local_dof_indices,
+                                          heat_source_vector_multiplicity);
 
 
             heat_source_eval.reinit(temp_dof_cell);
@@ -249,7 +248,7 @@ namespace MeltPoolDG::Heat
               NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
                 normal_eval, *normal_vector, normal_at_q, tolerance_normal_vector);
 
-            Vector<double> nodal_heat_values(dofs_per_cell);
+            Vector<double> heat_source_vector_local(dofs_per_cell);
 
             for (const auto q : heat_source_eval.quadrature_point_indices())
               {
@@ -257,7 +256,7 @@ namespace MeltPoolDG::Heat
 
                 if (delta_value == 0.0)
                   {
-                    nodal_heat_values[q] = 0;
+                    heat_source_vector_local[q] = 0;
                     continue;
                   }
 
@@ -265,7 +264,7 @@ namespace MeltPoolDG::Heat
                 if (normal_vector == nullptr)
                   normal_at_q[q] = grad_ls_heaviside_at_q[q] / delta_value;
 
-                nodal_heat_values[q] =
+                heat_source_vector_local[q] =
                   local_compute_interfacial_heat_source(heat_source_eval.quadrature_point(q),
                                                         laser_position,
                                                         laser_power,
@@ -275,20 +274,22 @@ namespace MeltPoolDG::Heat
               }
 
             scratch_data.get_constraint(temp_dof_idx)
-              .distribute_local_to_global(nodal_heat_values, local_dof_indices, heat_source_vector);
+              .distribute_local_to_global(heat_source_vector_local,
+                                          local_dof_indices,
+                                          heat_source_vector);
           }
       }
 
     heat_source_vector.compress(VectorOperation::add);
-    vector_multiplicity.compress(VectorOperation::add);
+    heat_source_vector_multiplicity.compress(VectorOperation::add);
 
     /*
      * average the nodally assembled values to smoothen discontinuous gradients of
      * the level set field
      */
-    for (unsigned int i = 0; i < vector_multiplicity.locally_owned_size(); ++i)
-      if (vector_multiplicity.local_element(i) > 1.0)
-        heat_source_vector.local_element(i) /= vector_multiplicity.local_element(i);
+    for (unsigned int i = 0; i < heat_source_vector_multiplicity.locally_owned_size(); ++i)
+      if (heat_source_vector_multiplicity.local_element(i) > 1.0)
+        heat_source_vector.local_element(i) /= heat_source_vector_multiplicity.local_element(i);
 
     heat_source_vector.zero_out_ghost_values();
     level_set_heaviside.zero_out_ghost_values();
