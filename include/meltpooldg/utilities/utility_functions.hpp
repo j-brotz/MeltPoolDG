@@ -881,7 +881,10 @@ namespace MeltPoolDG
      *
      * with i=0...n-1 and j=0...m-1.
      *
-     * @note: The row/column indices are sorted in lexicographic order.
+     * @note The row/column indices are sorted in lexicographic order.
+     *
+     * @note Enable do_sort_lexicographically if the interpolation matrix
+     *   should be used in matrix-free loops.
      *
      *
      * ---------------------------------------------------------------------------------
@@ -895,7 +898,8 @@ namespace MeltPoolDG
     template <int dim>
     FullMatrix<double>
     create_dof_interpolation_matrix(const DoFHandler<dim> &dof_handler_1, // e.g. pressure
-                                    const DoFHandler<dim> &dof_handler_2) // e.g. level set
+                                    const DoFHandler<dim> &dof_handler_2, // e.g. level set
+                                    const bool             do_sort_lexicographically)
     {
       FullMatrix<double> dof_interpolation_matrix(dof_handler_1.get_fe().n_dofs_per_cell(),
                                                   dof_handler_2.get_fe().n_dofs_per_cell());
@@ -917,10 +921,11 @@ namespace MeltPoolDG
             fe_1->get_poly_space_numbering_inverse();
           for (unsigned int j = 0; j < fe_1->dofs_per_cell; ++j)
             {
-              const Point<dim> p = fe_1->get_unit_support_points()[lexicographic_p[j]];
+              const Point<dim> p =
+                fe_1->get_unit_support_points()[do_sort_lexicographically ? lexicographic_p[j] : j];
               for (unsigned int i = 0; i < fe_2->dofs_per_cell; ++i)
-                dof_interpolation_matrix(j, i) =
-                  dof_handler_2.get_fe().shape_value(lexicographic_ls[i], p);
+                dof_interpolation_matrix(j, i) = dof_handler_2.get_fe().shape_value(
+                  do_sort_lexicographically ? lexicographic_ls[i] : i, p);
             }
         }
       else if (const FE_Q_DG0<dim> *fe_1 =
@@ -933,10 +938,11 @@ namespace MeltPoolDG
           // shape function in the middle of the cell (dofs_per_cell - 1).
           for (unsigned int j = 0; j < fe_1->dofs_per_cell - 1; ++j)
             {
-              const Point<dim> p = fe_1->get_unit_support_points()[lexicographic_p[j]];
+              const Point<dim> p =
+                fe_1->get_unit_support_points()[do_sort_lexicographically ? lexicographic_p[j] : j];
               for (unsigned int i = 0; i < fe_2->dofs_per_cell; ++i)
-                dof_interpolation_matrix(j, i) =
-                  dof_handler_2.get_fe().shape_value(lexicographic_ls[i], p);
+                dof_interpolation_matrix(j, i) = dof_handler_2.get_fe().shape_value(
+                  do_sort_lexicographically ? lexicographic_ls[i] : i, p);
             }
         }
       else

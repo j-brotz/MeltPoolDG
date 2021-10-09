@@ -15,12 +15,12 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.7875609284e-04                                    advection_diffusion |
+| || advected field ||L2 = 4.7875610017e-04                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
-| || delta phi ||L2 = 1.736173231565450e-07                                       reinitialization |
+| || delta phi ||L2 = 1.736173272588654e-07                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
-| || delta phi ||L2 = 1.305921007169056e-07                                       reinitialization |
+| || delta phi ||L2 = 1.305920951641958e-07                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
 | || delta phi ||L2 = 9.566929028979397e-08                                       reinitialization |
 |  τ = 1.77675e-05                                                                reinitialization |
@@ -30,7 +30,7 @@
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 5.02318e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 5.04945e-01                newton_raphson_solver |
 |  total mass = 0.00095091636                                                    melt_pool_problem |
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.0001 (dt = 0.0001). 
@@ -39,7 +39,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0001 (dt = 0.0001).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-04 to 2.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.7887313879e-04                                    advection_diffusion |
+| || advected field ||L2 = 4.7887314612e-04                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
 | || delta phi ||L2 = 3.361089584785322e-08                                       reinitialization |
@@ -54,7 +54,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0001 (dt = 0.0001).
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 5.09362e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 5.12075e-01                newton_raphson_solver |
 |  total mass = 0.00095091636                                                    melt_pool_problem |
 
 Time step #2, advancing from t_n-1 = 0.0001 to t = 0.0002 (dt = 0.0001). 
@@ -63,22 +63,22 @@ Time step #2, advancing from t_n-1 = 0.0001 to t = 0.0002 (dt = 0.0001).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-04 to 3.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.7889129472e-04                                    advection_diffusion |
+| || advected field ||L2 = 4.7889130205e-04                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
 | || delta phi ||L2 = 4.746865287742545e-09                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
-| || delta phi ||L2 = 3.157089243227139e-09                                       reinitialization |
+| || delta phi ||L2 = 3.157089307325895e-09                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
 | || delta phi ||L2 = 2.094163162080340e-09                                       reinitialization |
 |  τ = 1.77675e-05                                                                reinitialization |
 | || delta phi ||L2 = 1.386603469921452e-09                                       reinitialization |
 |  τ = 2.22094e-05                                                                reinitialization |
-| || delta phi ||L2 = 9.171072460702315e-10                                       reinitialization |
+| || delta phi ||L2 = 9.171072574013977e-10                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 5.15084e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 5.17841e-01                newton_raphson_solver |
 |  total mass = 0.00095091636                                                    melt_pool_problem |
 
 Time step #3, advancing from t_n-1 = 0.0002 to t = 0.0003 (dt = 0.0001). 
@@ -87,12 +87,12 @@ Time step #3, advancing from t_n-1 = 0.0002 to t = 0.0003 (dt = 0.0001).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-04 to 4.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.7889368206e-04                                    advection_diffusion |
+| || advected field ||L2 = 4.7889368928e-04                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
 | || delta phi ||L2 = 6.062593136467451e-10                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
-| || delta phi ||L2 = 4.007299750644141e-10                                       reinitialization |
+| || delta phi ||L2 = 4.007299670520694e-10                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
 | || delta phi ||L2 = 2.649296231157983e-10                                       reinitialization |
 |  τ = 1.77675e-05                                                                reinitialization |
@@ -102,7 +102,7 @@ Time step #3, advancing from t_n-1 = 0.0002 to t = 0.0003 (dt = 0.0001).
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 5.20038e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 5.22825e-01                newton_raphson_solver |
 |  total mass = 0.00095091636                                                    melt_pool_problem |
 
 Time step #4, advancing from t_n-1 = 0.0003 to t = 0.0004 (dt = 0.0001). 
@@ -114,7 +114,7 @@ Time step #4, advancing from t_n-1 = 0.0003 to t = 0.0004 (dt = 0.0001).
 | || advected field ||L2 = 4.7889399408e-04                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
-| || delta phi ||L2 = 7.675629108147592e-11                                       reinitialization |
+| || delta phi ||L2 = 7.675629308456202e-11                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
 | || delta phi ||L2 = 5.083981023949823e-11                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
@@ -126,7 +126,7 @@ Time step #4, advancing from t_n-1 = 0.0003 to t = 0.0004 (dt = 0.0001).
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 5.24438e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 5.27246e-01                newton_raphson_solver |
 |  total mass = 0.00095091636                                                    melt_pool_problem |
 
 Time step #5, advancing from t_n-1 = 0.0004 to t = 0.0005 (dt = 0.0001). 
