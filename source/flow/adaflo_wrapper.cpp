@@ -120,6 +120,41 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
+  AdafloWrapper<dim>::reinit_3()
+  {
+    VectorType vel_temp, vel_temp_old, vel_temp_old_old, pressure_temp, pressure_temp_old,
+      pressure_temp_old_old;
+
+    scratch_data.initialize_dof_vector(vel_temp, dof_index_u);
+    scratch_data.initialize_dof_vector(vel_temp_old, dof_index_u);
+    scratch_data.initialize_dof_vector(vel_temp_old_old, dof_index_u);
+
+    scratch_data.initialize_dof_vector(pressure_temp, dof_index_p);
+    scratch_data.initialize_dof_vector(pressure_temp_old, dof_index_p);
+    scratch_data.initialize_dof_vector(pressure_temp_old_old, dof_index_p);
+
+    vel_temp.copy_locally_owned_data_from(this->get_velocity());
+    vel_temp_old.copy_locally_owned_data_from(this->get_velocity_old());
+    vel_temp_old_old.copy_locally_owned_data_from(this->get_velocity_old_old());
+
+    pressure_temp.copy_locally_owned_data_from(this->get_pressure());
+    pressure_temp_old.copy_locally_owned_data_from(this->get_pressure_old());
+    pressure_temp_old_old.copy_locally_owned_data_from(this->get_pressure_old_old());
+
+    reinit_2();
+
+    this->get_velocity().copy_locally_owned_data_from(vel_temp);
+    this->get_velocity_old().copy_locally_owned_data_from(vel_temp_old);
+    this->get_velocity_old_old().copy_locally_owned_data_from(vel_temp_old_old);
+
+    this->get_pressure().copy_locally_owned_data_from(pressure_temp);
+    this->get_pressure_old().copy_locally_owned_data_from(pressure_temp_old);
+    this->get_pressure_old_old().copy_locally_owned_data_from(pressure_temp_old_old);
+  }
+
+
+  template <int dim>
+  void
   AdafloWrapper<dim>::solve()
   {
     navier_stokes.get_constraints_u().set_zero(navier_stokes.user_rhs.block(0));
@@ -244,6 +279,13 @@ namespace MeltPoolDG::Flow
   AdafloWrapper<dim>::get_pressure_old()
   {
     return navier_stokes.solution_old.block(1);
+  }
+
+  template <int dim>
+  LinearAlgebra::distributed::Vector<double> &
+  AdafloWrapper<dim>::get_pressure_old_old()
+  {
+    return navier_stokes.solution_old_old.block(1);
   }
 
   template <int dim>

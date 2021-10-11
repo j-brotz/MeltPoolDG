@@ -46,6 +46,9 @@ namespace MeltPoolDG::Flow
     void
     reinit_2();
 
+    void
+    reinit_3();
+
     /**
      * Solver time step
      */
@@ -96,6 +99,9 @@ namespace MeltPoolDG::Flow
 
     LinearAlgebra::distributed::Vector<double> &
     get_pressure_old() override;
+
+    LinearAlgebra::distributed::Vector<double> &
+    get_pressure_old_old() override;
 
     const DoFHandler<dim> &
     get_dof_handler_pressure() const override;
