@@ -147,6 +147,13 @@ namespace MeltPoolDG
      * particularly suited in the context of MatrixFree routines.
      */
     template <typename number>
+    number
+    heaviside(const number in, const number limit = 0.0)
+    {
+      return in > limit ? 1.0 : 0.0;
+    }
+
+    template <typename number>
     VectorizedArray<number>
     heaviside(const VectorizedArray<number> &in, const number limit = 0.0)
     {
