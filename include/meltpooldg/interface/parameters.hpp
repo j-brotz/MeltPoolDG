@@ -240,7 +240,6 @@ namespace MeltPoolDG
     number temperature_dependent_surface_tension_coefficient = 0.0;
     number reference_temperature                             = 0.0;
     number coefficient_residual_fraction                     = 0.0;
-    bool   do_level_set_pressure_gradient_interpolation      = false;
   };
 
   template <typename number = double>
