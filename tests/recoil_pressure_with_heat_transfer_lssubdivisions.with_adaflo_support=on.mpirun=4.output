@@ -30,7 +30,7 @@
 | || curvature ||L2 = 4.25629091263e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 3.46432e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 3.46429e-01                newton_raphson_solver |
 |  total mass = 0.001801032                                                      melt_pool_problem |
 
 Time step #1, advancing from t_n-1 = 0 to t = 2e-08 (dt = 2e-08). 
@@ -55,7 +55,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 2e-08 (dt = 2e-08).
 | || curvature ||L2 = 4.25629091263e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 3.46454e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 3.46447e-01                newton_raphson_solver |
 |  total mass = 0.001801032                                                      melt_pool_problem |
 
 Time step #2, advancing from t_n-1 = 2e-08 to t = 4e-08 (dt = 2e-08). 
@@ -80,7 +80,7 @@ Time step #2, advancing from t_n-1 = 2e-08 to t = 4e-08 (dt = 2e-08).
 | || curvature ||L2 = 4.25629091263e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 3.46476e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 3.46466e-01                newton_raphson_solver |
 |  total mass = 0.001801032                                                      melt_pool_problem |
 
 Time step #3, advancing from t_n-1 = 4e-08 to t = 6e-08 (dt = 2e-08). 
@@ -105,7 +105,7 @@ Time step #3, advancing from t_n-1 = 4e-08 to t = 6e-08 (dt = 2e-08).
 | || curvature ||L2 = 4.25629091263e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 3.46497e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 3.46485e-01                newton_raphson_solver |
 |  total mass = 0.001801032                                                      melt_pool_problem |
 
 Time step #4, advancing from t_n-1 = 6e-08 to t = 8e-08 (dt = 2e-08). 
@@ -130,7 +130,7 @@ Time step #4, advancing from t_n-1 = 6e-08 to t = 8e-08 (dt = 2e-08).
 | || curvature ||L2 = 4.25629091263e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 3.46519e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 3.46504e-01                newton_raphson_solver |
 |  total mass = 0.001801032                                                      melt_pool_problem |
 
 Time step #5, advancing from t_n-1 = 8e-08 to t = 1e-07 (dt = 2e-08). 
