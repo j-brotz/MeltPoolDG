@@ -71,6 +71,7 @@ namespace MeltPoolDG
                         const unsigned int                       flow_vel_dof_idx_in,
                         const unsigned int                       flow_vel_no_solid_dof_idx_in,
                         const unsigned int                       flow_vel_quad_idx_in,
+                        const unsigned int                       flow_pressure_dof_idx_in,
                         const unsigned int                       temp_hanging_nodes_dof_idx_in,
                         const double                             start_time_in);
 

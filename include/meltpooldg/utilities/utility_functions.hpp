@@ -956,6 +956,51 @@ namespace MeltPoolDG
     }
 
 
+    /**
+     * Compute from @param values of a given field, @param interpolated_values by
+     * means of a given @param interpolation_matrix. Finally, from the interpolated_values
+     * the gradients are evaluated.
+     *
+     * @note: The interpolation_matrix should be computed using
+     *        UtilityFunctions::create_dof_interpolation_matrix().
+     *
+     */
+    template <int dim>
+    void
+    compute_gradient_at_interpolated_dof_values(
+      FECellIntegrator<dim, 1, double> &values,
+      FECellIntegrator<dim, 1, double> &interpolated_values,
+      const FullMatrix<double> &        interpolation_matrix)
+    {
+      // Evaluate the field Φ at the support points of its space j
+      values.evaluate(EvaluationFlags::values);
+
+      // Loop over the support points of the to be interpolated space i
+      for (unsigned int i = 0; i < interpolated_values.dofs_per_cell; ++i)
+        {
+          VectorizedArray<double> interpolated_value = 0;
+
+          // Interpolate the field Φ from the support points of the space j
+          // of the original field to the one of the interpolated field i,
+          // using the interpolation matrix P
+          // _
+          // Φ   = P   · Φ
+          //  i     ij    j
+          for (unsigned int j = 0; j < values.dofs_per_cell; ++j)
+            interpolated_value += interpolation_matrix(i, j) * values.get_dof_value(j);
+
+          // Store the interpolated values at the support points of the pressure space
+          interpolated_values.submit_dof_value(interpolated_value, i);
+        }
+
+      // Evaluate the gradient from the interpolated field
+      //                       _
+      //                     ∇ Φ
+      //
+      interpolated_values.evaluate(EvaluationFlags::gradients);
+    }
+
+
 
   } // namespace UtilityFunctions
 } // namespace MeltPoolDG

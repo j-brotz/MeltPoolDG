@@ -3,22 +3,35 @@
 namespace MeltPoolDG::MeltPool
 {
   template <int dim>
-  RecoilPressureOperation<dim>::RecoilPressureOperation(const ScratchData<dim> &  scratch_data_in,
-                                                        const Parameters<double> &data_in,
-                                                        const unsigned int flow_vel_dof_idx_in,
-                                                        const unsigned int flow_vel_quad_idx_in,
-                                                        const unsigned int ls_dof_idx_in,
-                                                        const unsigned int temp_dof_idx_in)
+  RecoilPressureOperation<dim>::RecoilPressureOperation(
+    const ScratchData<dim> &  scratch_data_in,
+    const Parameters<double> &data_in,
+    const unsigned int        flow_vel_dof_idx_in,
+    const unsigned int        flow_vel_quad_idx_in,
+    const unsigned int        flow_pressure_hanging_nodes_dof_idx_in,
+    const unsigned int        ls_dof_idx_in,
+    const unsigned int        temp_dof_idx_in)
     : scratch_data(scratch_data_in)
     , recoil_pressure_data(data_in.recoil)
     , boiling_temperature(data_in.material.boiling_temperature)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
+    , flow_pressure_hanging_nodes_dof_idx(flow_pressure_hanging_nodes_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , temp_dof_idx(temp_dof_idx_in)
+    , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in))
   {
     AssertThrow(boiling_temperature > 0.0,
                 ExcMessage("The boiling temperature must be greater than zero! Abort..."));
+
+    if (do_level_set_pressure_gradient_interpolation)
+      {
+        ls_to_pressure_grad_interpolation_matrix =
+          UtilityFunctions::create_dof_interpolation_matrix<dim>(
+            scratch_data.get_dof_handler(flow_pressure_hanging_nodes_dof_idx),
+            scratch_data.get_dof_handler(ls_dof_idx),
+            true /*do_matrix_free*/);
+      }
   }
 
   template <int dim>
@@ -45,10 +58,29 @@ namespace MeltPoolDG::MeltPool
                                                          temp_dof_idx,
                                                          flow_vel_quad_idx);
 
+        FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(
+          matrix_free, flow_pressure_hanging_nodes_dof_idx, flow_vel_quad_idx);
+
+        auto &used_level_set = do_level_set_pressure_gradient_interpolation ?
+                                 interpolated_level_set_to_pressure_space :
+                                 level_set;
+
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             level_set.reinit(cell);
-            level_set.gather_evaluate(level_set_as_heaviside, EvaluationFlags::gradients);
+            level_set.read_dof_values_plain(level_set_as_heaviside);
+
+            if (do_level_set_pressure_gradient_interpolation)
+              {
+                interpolated_level_set_to_pressure_space.reinit(cell);
+
+                UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                  level_set,
+                  interpolated_level_set_to_pressure_space,
+                  ls_to_pressure_grad_interpolation_matrix);
+              }
+            else
+              level_set.evaluate(EvaluationFlags::gradients);
 
             temperature_val.reinit(cell);
             temperature_val.read_dof_values_plain(temperature);
@@ -66,7 +98,7 @@ namespace MeltPoolDG::MeltPool
                   recoil_pressure_coefficient[v] = compute_recoil_pressure_coefficient(t[v]);
 
                 recoil_pressure.submit_value(recoil_pressure_coefficient *
-                                               level_set.get_gradient(q_index),
+                                               used_level_set.get_gradient(q_index),
                                              q_index);
               }
             recoil_pressure.integrate_scatter(EvaluationFlags::values, force_rhs);
