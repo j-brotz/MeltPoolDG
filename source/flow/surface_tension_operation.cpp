@@ -110,8 +110,6 @@ namespace MeltPoolDG::Flow
             level_set.reinit(cell);
             level_set.read_dof_values_plain(level_set_as_heaviside);
 
-            interpolated_level_set_to_pressure_space.reinit(cell);
-
             if (do_level_set_pressure_gradient_interpolation)
               {
                 interpolated_level_set_to_pressure_space.reinit(cell);

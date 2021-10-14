@@ -130,6 +130,10 @@ namespace MeltPoolDG::Heat
     unsigned int evapor_mass_flux_dof_idx   = 0;
     double       latent_heat_of_evaporation = 0;
 
+    // interpolation of the level set space to the temperature space
+    FullMatrix<double> ls_to_temp_grad_interpolation_matrix;
+    bool               do_level_set_temperature_gradient_interpolation = false;
+
     /*
      * contribution to heat source due to evaporation;
      * just for output purposes
@@ -235,6 +239,7 @@ namespace MeltPoolDG::Heat
                                  FECellIntegrator<dim, 1, number> &  temp_old_vals,
                                  FECellIntegrator<dim, dim, number> &velocity_vals,
                                  FECellIntegrator<dim, 1, number> &  ls_vals,
+                                 FECellIntegrator<dim, 1, number> &  ls_interpolated_vals,
                                  FECellIntegrator<dim, 1, number> &  evapor_vals,
                                  bool                                do_reinit_cells) const;
 
