@@ -78,8 +78,9 @@ namespace MeltPoolDG::Heat
     const unsigned int evapor_mass_flux_dof_idx_in,
     const double       latent_heat_of_evaporation_in)
   {
-    if ((do_level_set_temperature_gradient_interpolation =
-           scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx)))
+    do_level_set_temperature_gradient_interpolation = scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx);
+
+    if (do_level_set_temperature_gradient_interpolation)
       ls_to_temp_grad_interpolation_matrix = UtilityFunctions::create_dof_interpolation_matrix<dim>(
         scratch_data.get_dof_handler(temp_dof_idx),
         scratch_data.get_dof_handler(ls_dof_idx),

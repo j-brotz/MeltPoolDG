@@ -132,7 +132,7 @@ namespace MeltPoolDG::Heat
 
     // interpolation of the level set space to the temperature space
     FullMatrix<double> ls_to_temp_grad_interpolation_matrix;
-    bool               do_level_set_temperature_gradient_interpolation;
+    bool               do_level_set_temperature_gradient_interpolation = false;
 
     /*
      * contribution to heat source due to evaporation;
