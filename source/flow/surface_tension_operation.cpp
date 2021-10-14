@@ -22,8 +22,9 @@ namespace MeltPoolDG::Flow
     , flow_vel_dof_idx(flow_vel_dof_idx)
     , flow_pressure_hanging_nodes_dof_idx(flow_pressure_hanging_nodes_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx)
+    , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx))
   {
-    if (data.do_level_set_pressure_gradient_interpolation)
+    if (do_level_set_pressure_gradient_interpolation)
       {
         ls_to_pressure_grad_interpolation_matrix =
           UtilityFunctions::create_dof_interpolation_matrix<dim>(
@@ -79,7 +80,7 @@ namespace MeltPoolDG::Flow
         std::unique_ptr<FECellIntegrator<dim, dim, double>> normal_vec;
         std::unique_ptr<FECellIntegrator<dim, 1, double>>   temperature_val;
 
-        auto &used_level_set = data.do_level_set_pressure_gradient_interpolation ?
+        auto &used_level_set = do_level_set_pressure_gradient_interpolation ?
                                  interpolated_level_set_to_pressure_space :
                                  level_set;
 
@@ -111,7 +112,7 @@ namespace MeltPoolDG::Flow
 
             interpolated_level_set_to_pressure_space.reinit(cell);
 
-            if (data.do_level_set_pressure_gradient_interpolation)
+            if (do_level_set_pressure_gradient_interpolation)
               {
                 interpolated_level_set_to_pressure_space.reinit(cell);
 

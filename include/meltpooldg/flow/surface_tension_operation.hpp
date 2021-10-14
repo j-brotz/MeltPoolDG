@@ -66,6 +66,7 @@ namespace MeltPoolDG::Flow
     unsigned int     temp_dof_idx;
     unsigned int     normal_dof_idx;
 
+    const bool         do_level_set_pressure_gradient_interpolation;
     FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
 
   public:
