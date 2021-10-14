@@ -178,6 +178,9 @@ namespace MeltPoolDG
     bool
     is_hex_mesh(const unsigned int dof_idx = 0) const;
 
+    bool
+    is_FE_Q_iso_Q_1(const unsigned int dof_idx = 0) const;
+
   private:
     bool                                                      do_matrix_free;
     std::vector<ConditionalOStream>                           pcout;

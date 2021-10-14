@@ -113,34 +113,12 @@ namespace MeltPoolDG::Flow
 
             if (data.do_level_set_pressure_gradient_interpolation)
               {
-                // Evaluate the level set Φ at the support points of the level set space j
-                level_set.evaluate(EvaluationFlags::values);
+                interpolated_level_set_to_pressure_space.reinit(cell);
 
-                // Loop over the support points of the pressure space i
-                for (unsigned int i = 0; i < interpolated_level_set_to_pressure_space.dofs_per_cell;
-                     ++i)
-                  {
-                    VectorizedArray<double> interpolated_value = 0;
-
-                    // Interpolate the level set Φ from the support points of the level set space j
-                    // to the one of the pressure space i, using the interpolation matrix P
-                    // _
-                    // Φ   = P   · Φ
-                    //  i     ij    j
-                    for (unsigned int j = 0; j < level_set.dofs_per_cell; ++j)
-                      interpolated_value +=
-                        ls_to_pressure_grad_interpolation_matrix(i, j) * level_set.get_dof_value(j);
-
-                    // Store the interpolated values at the support points of the pressure space
-                    interpolated_level_set_to_pressure_space.submit_dof_value(interpolated_value,
-                                                                              i);
-                  }
-
-                // Evaluate the gradient from the interpolated level set field
-                //                       _
-                //                     ∇ Φ
-                //
-                interpolated_level_set_to_pressure_space.evaluate(EvaluationFlags::gradients);
+                UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                  level_set,
+                  interpolated_level_set_to_pressure_space,
+                  ls_to_pressure_grad_interpolation_matrix);
               }
             else
               level_set.evaluate(EvaluationFlags::gradients);

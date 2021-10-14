@@ -467,6 +467,17 @@ namespace MeltPoolDG
     return get_triangulation(dof_idx).all_reference_cells_are_hyper_cube();
   }
 
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  bool
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::is_FE_Q_iso_Q_1(
+    const unsigned int dof_idx) const
+  {
+    if (const FE_Q_iso_Q1<dim> *fe = dynamic_cast<const FE_Q_iso_Q1<dim> *>(&this->get_fe(dof_idx)))
+      return true;
+    else
+      return false;
+  }
+
   template class ScratchData<1>;
   template class ScratchData<2>;
   template class ScratchData<3>;
