@@ -472,10 +472,7 @@ namespace MeltPoolDG
   ScratchData<dim, spacedim, number, VectorizedArrayType>::is_FE_Q_iso_Q_1(
     const unsigned int dof_idx) const
   {
-    if (const FE_Q_iso_Q1<dim> *fe = dynamic_cast<const FE_Q_iso_Q1<dim> *>(&this->get_fe(dof_idx)))
-      return true;
-    else
-      return false;
+    return dynamic_cast<const FE_Q_iso_Q1<dim> *>(&this->get_fe(dof_idx)) != nullptr;
   }
 
   template class ScratchData<1>;
