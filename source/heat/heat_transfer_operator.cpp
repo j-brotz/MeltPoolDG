@@ -78,6 +78,13 @@ namespace MeltPoolDG::Heat
     const unsigned int evapor_mass_flux_dof_idx_in,
     const double       latent_heat_of_evaporation_in)
   {
+    if ((do_level_set_temperature_gradient_interpolation =
+           scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx)))
+      ls_to_temp_grad_interpolation_matrix = UtilityFunctions::create_dof_interpolation_matrix<dim>(
+        scratch_data.get_dof_handler(temp_dof_idx),
+        scratch_data.get_dof_handler(ls_dof_idx),
+        true /* do_matrix_free */);
+
     evaporative_mass_flux      = evaporative_mass_flux_in;
     evapor_mass_flux_dof_idx   = evapor_mass_flux_dof_idx_in;
     latent_heat_of_evaporation = latent_heat_of_evaporation_in;
@@ -146,6 +153,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
+                                                          temp_dof_idx,
+                                                          this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
@@ -157,8 +167,14 @@ namespace MeltPoolDG::Heat
         temp_vals.reinit(cell);
         temp_vals.read_dof_values(src);
 
-        tangent_local_cell_operation(
-          temp_vals, temp_lin_vals, temp_old_vals, velocity_vals, ls_vals, evapor_vals, true);
+        tangent_local_cell_operation(temp_vals,
+                                     temp_lin_vals,
+                                     temp_old_vals,
+                                     velocity_vals,
+                                     ls_vals,
+                                     ls_interpolated_vals,
+                                     evapor_vals,
+                                     true);
 
         temp_vals.distribute_local_to_global(dst);
       }
@@ -211,6 +227,9 @@ namespace MeltPoolDG::Heat
     const auto &                       matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
+                                                          temp_dof_idx,
+                                                          this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
@@ -231,6 +250,7 @@ namespace MeltPoolDG::Heat
                                      temp_old_vals,
                                      velocity_vals,
                                      ls_vals,
+                                     ls_interpolated_vals,
                                      evapor_vals,
                                      old_cell_index != current_cell_index);
 
@@ -276,6 +296,9 @@ namespace MeltPoolDG::Heat
         const auto &                       matrix_free = scratch_data.get_matrix_free();
         FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
         FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+        FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
+                                                              temp_dof_idx,
+                                                              this->quad_idx);
         FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
         FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
         FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
@@ -297,6 +320,7 @@ namespace MeltPoolDG::Heat
                                          temp_old_vals,
                                          velocity_vals,
                                          ls_vals,
+                                         ls_interpolated_vals,
                                          evapor_vals,
                                          old_cell_index != current_cell_index);
 
@@ -316,6 +340,9 @@ namespace MeltPoolDG::Heat
                                                            vel_dof_idx,
                                                            this->quad_idx);
           FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+          FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
+                                                                temp_dof_idx,
+                                                                this->quad_idx);
           FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
           FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
           FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
@@ -346,6 +373,7 @@ namespace MeltPoolDG::Heat
                                                temp_old_vals,
                                                velocity_vals,
                                                ls_vals,
+                                               ls_interpolated_vals,
                                                evapor_vals,
                                                j == 0 /*do_reinit_cell*/);
 
@@ -460,9 +488,15 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   heat_source_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
+                                                          temp_dof_idx,
+                                                          this->quad_idx);
     FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
                                                  evapor_mass_flux_dof_idx,
                                                  this->quad_idx);
+
+    auto &ls_vals_used =
+      do_level_set_temperature_gradient_interpolation ? ls_interpolated_vals : ls_vals;
 
     VectorizedArray<number> rho_cp       = material.first.density * material.first.capacity;
     VectorizedArray<number> conductivity = material.first.conductivity;
@@ -498,8 +532,22 @@ namespace MeltPoolDG::Heat
           {
             ls_vals.reinit(cell);
             ls_vals.read_dof_values_plain(*level_set_as_heaviside);
+
             if (evaporative_mass_flux)
-              ls_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+              {
+                if (do_level_set_temperature_gradient_interpolation)
+                  {
+                    ls_interpolated_vals.reinit(cell);
+
+                    UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                      ls_vals, ls_interpolated_vals, ls_to_temp_grad_interpolation_matrix);
+
+                    ls_interpolated_vals.evaluate(EvaluationFlags::values |
+                                                  EvaluationFlags::gradients);
+                  }
+                else
+                  ls_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+              }
             else
               ls_vals.evaluate(EvaluationFlags::values);
           }
@@ -518,7 +566,7 @@ namespace MeltPoolDG::Heat
                                     data.solidification,
                                     level_set_as_heaviside,
                                     temp_vals,
-                                    ls_vals,
+                                    ls_vals_used,
                                     q_index);
 
             conductivity_at_q[cell][q_index] = conductivity;
@@ -598,7 +646,7 @@ namespace MeltPoolDG::Heat
 
                 const auto temp = evapor_vals.get_value(q_index) *
                                   (latent_heat_of_evaporation + specific_enthalpy) *
-                                  ls_vals.get_gradient(q_index).norm();
+                                  ls_vals_used.get_gradient(q_index).norm();
 
                 q_vapor[cell][q_index] = -temp;
                 val += temp;
@@ -768,6 +816,7 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number> &  temp_old_vals,
     FECellIntegrator<dim, dim, number> &velocity_vals,
     FECellIntegrator<dim, 1, number> &  ls_vals,
+    FECellIntegrator<dim, 1, number> &  ls_interpolated_vals,
     FECellIntegrator<dim, 1, number> &  evapor_vals,
     const bool                          do_reinit_cells) const
   {
@@ -775,6 +824,9 @@ namespace MeltPoolDG::Heat
     VectorizedArray<number> conductivity      = material.first.conductivity;
     VectorizedArray<number> d_rho_cp_dT       = 0.0;
     VectorizedArray<number> d_conductivity_dT = 0.0;
+
+    auto &ls_vals_used =
+      do_level_set_temperature_gradient_interpolation ? ls_interpolated_vals : ls_vals;
 
     temp_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
@@ -789,11 +841,25 @@ namespace MeltPoolDG::Heat
         if (level_set_as_heaviside)
           {
             ls_vals.reinit(temp_vals.get_current_cell_index());
+            ls_vals.read_dof_values(*level_set_as_heaviside);
+
             if (evaporative_mass_flux)
-              ls_vals.gather_evaluate(*level_set_as_heaviside,
-                                      EvaluationFlags::values | EvaluationFlags::gradients);
+              {
+                if (do_level_set_temperature_gradient_interpolation)
+                  {
+                    ls_interpolated_vals.reinit(temp_vals.get_current_cell_index());
+
+                    UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                      ls_vals, ls_interpolated_vals, ls_to_temp_grad_interpolation_matrix);
+
+                    ls_interpolated_vals.evaluate(EvaluationFlags::values |
+                                                  EvaluationFlags::gradients);
+                  }
+                else
+                  ls_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+              }
             else
-              ls_vals.gather_evaluate(*level_set_as_heaviside, EvaluationFlags::values);
+              ls_vals.evaluate(EvaluationFlags::values);
           }
 
         if (data.solidification)
@@ -824,7 +890,7 @@ namespace MeltPoolDG::Heat
                                                 data.solidification,
                                                 level_set_as_heaviside,
                                                 temp_lin_vals,
-                                                ls_vals,
+                                                ls_vals_used,
                                                 q_index);
 
         auto val = this->d_tau_inv * rho_cp * temp_vals.get_value(q_index);
@@ -872,7 +938,7 @@ namespace MeltPoolDG::Heat
              * rhs_cell_loop().
              */
             val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
-                   material.second.capacity * ls_vals.get_gradient(q_index).norm();
+                   material.second.capacity * ls_vals_used.get_gradient(q_index).norm();
           }
 
 
