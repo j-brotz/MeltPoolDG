@@ -24,12 +24,20 @@ namespace MeltPoolDG
               level_set_with_evaporation,
               heat_transfer)
   BETTER_ENUM(
-    TwoPhasePropertiesTransitionType,
+    TwoPhaseFluidPropertiesTransitionType,
     char,
+    not_initialized,
     sharp,  // properties jump at level-set = 0
     smooth, // properties are smeared between the phases with the factor level-set-as-heaviside
     consistent_with_evaporation // the density is smeared between the phases consistent with the
                                 // evaporation formulation
+  )
+  BETTER_ENUM(SolidLiquidPropertiesTransitionType,
+              char,
+              not_initialized,
+              mushy_zone, // the liquid and solid properties are smeared between the liquidus and
+                          // solididus temperature
+              sharp       // the liquid and solid properties jump at melting temperature
   )
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
 
@@ -229,7 +237,7 @@ namespace MeltPoolDG
     {
       number melt_pool_radius = 0.0;
       number melt_pool_depth  = 0.0;
-      number melting_point    = 0.0;
+      number melting_point    = 0.0; // TODO move to MaterialData
     } liquid;
   };
 
@@ -306,6 +314,7 @@ namespace MeltPoolDG
 
     number solidus_temperature        = 0.0;
     number liquidus_temperature       = 0.0;
+    number melting_point              = 0.0;
     number inv_mushy_interval         = 0.0;
     number boiling_temperature        = 0.0;
     number latent_heat_of_evaporation = 0.0;
@@ -314,8 +323,10 @@ namespace MeltPoolDG
 
     number specific_enthalpy_reference_temperature = 0.0;
 
-    TwoPhasePropertiesTransitionType two_phase_properties_transition_type =
-      TwoPhasePropertiesTransitionType::sharp;
+    SolidLiquidPropertiesTransitionType solidification_type =
+      SolidLiquidPropertiesTransitionType::sharp; // TODO rename parameter according to enum
+    TwoPhaseFluidPropertiesTransitionType two_phase_properties_transition_type =
+      TwoPhaseFluidPropertiesTransitionType::sharp; // TODO rename parameter according to enum
   };
 
   template <typename number = double>

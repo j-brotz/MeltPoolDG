@@ -172,7 +172,7 @@ namespace MeltPoolDG
                     "term momentum balance: convective }"));
 
                 // AssertThrow(material.two_phase_properties_transition_type ==
-                // TwoPhasePropertiesTransitionType::consistent_with_evaporation,
+                // TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation,
                 // ExcMessage(
                 //"For the consideration of phase change, the density "
                 //"has to be interpolated consistently with the continuity equation "

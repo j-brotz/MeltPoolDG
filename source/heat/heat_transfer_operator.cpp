@@ -1153,10 +1153,10 @@ namespace MeltPoolDG::Heat
     VectorizedArray<number> &      density) const
   {
     VectorizedArray<number> weight;
-    weight =
-      (material.two_phase_properties_transition_type != TwoPhasePropertiesTransitionType::sharp) ?
-        ls_heaviside_val :
-        UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
+    weight = (material.two_phase_properties_transition_type !=
+              TwoPhaseFluidPropertiesTransitionType::sharp) ?
+               ls_heaviside_val :
+               UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
 
     if (weight == VectorizedArray<number>(1.0))
       return;
@@ -1164,7 +1164,7 @@ namespace MeltPoolDG::Heat
     capacity     = UtilityFunctions::interpolate(weight, material.first.capacity, capacity);
     conductivity = UtilityFunctions::interpolate(weight, material.first.conductivity, conductivity);
     density      = (material.two_phase_properties_transition_type ==
-               TwoPhasePropertiesTransitionType::consistent_with_evaporation) ?
+               TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation) ?
                      material.first.density / (1. + (material.first.density / density - 1.) * weight) :
                      UtilityFunctions::interpolate(weight, material.first.density, density);
   }
@@ -1180,16 +1180,16 @@ namespace MeltPoolDG::Heat
     VectorizedArray<number> &      d_density_dT) const
   {
     VectorizedArray<number> weight;
-    weight =
-      (material.two_phase_properties_transition_type != TwoPhasePropertiesTransitionType::sharp) ?
-        ls_heaviside_val :
-        UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
+    weight = (material.two_phase_properties_transition_type !=
+              TwoPhaseFluidPropertiesTransitionType::sharp) ?
+               ls_heaviside_val :
+               UtilityFunctions::heaviside(ls_heaviside_val, 0.5);
 
     d_capacity_dT *= weight;
     d_conductivity_dT *= weight;
 
     if (material.two_phase_properties_transition_type ==
-        TwoPhasePropertiesTransitionType::consistent_with_evaporation)
+        TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
       {
         const auto temp =
           density_liquid * (1. + weight * (material.first.density / density_liquid - 1.));

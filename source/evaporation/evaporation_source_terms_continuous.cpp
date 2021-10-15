@@ -18,20 +18,20 @@ namespace MeltPoolDG::Evaporation
    */
   template <int dim>
   EvaporationSourceTermsContinuous<dim>::EvaporationSourceTermsContinuous(
-    const ScratchData<dim> &                scratch_data,
-    const EvaporationData<double> &         evapor_data,
-    const VectorType &                      level_set_as_heaviside,
-    const BlockVectorType &                 normal_vector,
-    const VectorType &                      evaporative_mass_flux,
-    const unsigned int                      ls_hanging_nodes_dof_idx,
-    const unsigned int                      ls_quad_idx,
-    const unsigned int                      normal_dof_idx,
-    const unsigned int                      evapor_vel_dof_idx,
-    const unsigned int                      evapor_mass_flux_dof_idx,
-    const double                            tolerance_normal_vector,
-    const double                            density_vapor,
-    const double                            density_liquid,
-    const TwoPhasePropertiesTransitionType &two_phase_properties_transition_type)
+    const ScratchData<dim> &                     scratch_data,
+    const EvaporationData<double> &              evapor_data,
+    const VectorType &                           level_set_as_heaviside,
+    const BlockVectorType &                      normal_vector,
+    const VectorType &                           evaporative_mass_flux,
+    const unsigned int                           ls_hanging_nodes_dof_idx,
+    const unsigned int                           ls_quad_idx,
+    const unsigned int                           normal_dof_idx,
+    const unsigned int                           evapor_vel_dof_idx,
+    const unsigned int                           evapor_mass_flux_dof_idx,
+    const double                                 tolerance_normal_vector,
+    const double                                 density_vapor,
+    const double                                 density_liquid,
+    const TwoPhaseFluidPropertiesTransitionType &two_phase_properties_transition_type)
     : scratch_data(scratch_data)
     , evapor_data(evapor_data)
     , level_set_as_heaviside(level_set_as_heaviside)
@@ -98,7 +98,8 @@ namespace MeltPoolDG::Evaporation
             //            dρ/dΦ
             VectorizedArray<double> rho_d_rho_d_phi = 1.0;
 
-            if (two_phase_properties_transition_type == TwoPhasePropertiesTransitionType::smooth)
+            if (two_phase_properties_transition_type ==
+                TwoPhaseFluidPropertiesTransitionType::smooth)
               {
                 // clang-format off
                   rho_d_rho_d_phi = (ls.get_value(q_index) * density_liquid + (1.-ls.get_value(q_index) * density_vapor)) 
