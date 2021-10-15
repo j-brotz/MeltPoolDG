@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  *
- * Author: Nils Much, TUM, September 2021
+ * Author: Nils Much, Peter Munch, TUM, September 2021
  *
  * ---------------------------------------------------------------------*/
 #pragma once
@@ -43,12 +43,12 @@ namespace MeltPoolDG
   {
     enum MaterialUpdateFlags
     {
-      none              = 0x0,
-      capacity          = 0x1,
-      conductivity      = 0x2,
+      none              = 0,
+      capacity          = 1 << 0,
+      conductivity      = 1 << 1,
       density           = 0x4,
       viscosity         = 0x8,
-      d_capacity_dT     = 0x10,
+      d_capacity_d_T     = 0x10,
       d_conductivity_dT = 0x20,
       d_density_dT      = 0x40,
       phase_fractions   = 0x80
@@ -95,7 +95,7 @@ namespace MeltPoolDG
     {}
 
     /**
-     * This overload of get_parameters() can be used only in the context of single phase
+     * This overload of compute_parameters() can be used only in the context of single phase
      * simulations.
      */
     template <typename value_type>
@@ -114,8 +114,8 @@ namespace MeltPoolDG
      * This overload of get_parameters() can be used only in the context of two-phase simulations
      * (gas-liquid or liquid-solid).
      *
-     * If the material_type is MaterialTypes::gas_liquid @p v is the heaviside representation of the
-     * level set, if the material_type is MaterialTypes::liquid_solid @p v is the temperature.
+     * If the material_type is MaterialTypes::gas_liquid, @p v is the heaviside representation of the
+     * level set, if the material_type is MaterialTypes::liquid_solid, @p v is the temperature.
      */
     template <typename value_type>
     inline MaterialParameterValues<value_type>
@@ -179,7 +179,8 @@ namespace MeltPoolDG
                 t.gas_fraction = 1.0;
               break;
             }
-            case MaterialTypes::gas_liquid: {
+            case MaterialTypes::gas_liquid: 
+            case MaterialTypes::gas_liquid_consistent_with_evaporation: {
               const auto &level_set_heaviside = v1;
 
               if (flags & MaterialUpdateFlags::capacity)
@@ -275,6 +276,7 @@ namespace MeltPoolDG
                 {
                   t.liquid_fraction = 1. - temperature_dependent_solid_fraction;
                   t.solid_fraction  = temperature_dependent_solid_fraction;
+                  // @note: gas_fraction = 0
                 }
               break;
             }
@@ -404,7 +406,7 @@ namespace MeltPoolDG
               break;
             }
             default: {
-              AssertThrow(false, ExcNotImplemented());
+              Assert(false, ExcNotImplemented());
             }
         }
 
@@ -416,10 +418,9 @@ namespace MeltPoolDG
      * function sets the parameter equal to the @p gas_value and if @p ls_heaviside_val = 1 it
      * sets the parameter equal to the @p liquid_solid_value. At the interface, the
      * parameter jumps if "material two phase properties transition type" is set to
-     * "sharp",
-     * otherwise the parameter is smeared.
+     * "sharp", otherwise the parameter is distributed according to the level set function.
      *
-     * The smeared parameter x of the two-phase mixture is then computed by
+     * The distributed parameter x of the two-phase fluid is then computed by
      *
      * x = (1-ls) * x_g + ls * x_l
      *
@@ -434,7 +435,7 @@ namespace MeltPoolDG
      */
     template <typename value_type>
     inline value_type
-    compute_two_phase(const value_type &level_set_heaviside,
+    compute_two_phase_fluid_property(const value_type &level_set_heaviside,
                       const value_type &gas_value,
                       const value_type &liquid_solid_value) const
     {
@@ -446,41 +447,39 @@ namespace MeltPoolDG
     }
 
     /**
-     * Determine a material parameter for two phase flow consistent with the evaporation. If
-     * level_set_heaviside = 0 this function sets the parameter equal to the @p gas_value and if
-     * @p ls_heaviside_val = 1 it sets the parameter equal to the @p liquid_solid_value. At the
-     * interface, the parameter is smeared.
+     * Determine the density for two phase flow consistent with mass flux due to evaporation.  If
+     * level_set_heaviside = 0 this function sets the parameter equal to the @p gas_density and if
+     * @p ls_heaviside_val = 1 it sets the parameter equal to the @p liquid_solid_density. At the
+     * interface, the density is distributed following a reciprocal distribution
      *
-     * The smeared parameter x of the two-phase mixture is computed by
-     *
-     *                 x_g
-     * x = ----------------------------
-     *      1 + ls * ( x_g / x_l - 1 )
+     * 1       ls        (1-ls)
+     * --- =  ---   + --------
+     *  x      x_l        x_g
      *
      * with the heaviside representation of the level set function ls (level_set_heaviside),
-     * the value of the gaseous phase x_g (@p gas_value) and the value of the liquid (and
-     * solid) phase x_l (@p liquid_solid_value).
+     * the density of the gaseous phase x_g (@p gas_density) and the density of the liquid (and
+     * solid) phase x_l (@p liquid_solid_density).
      *
      * @note This does not account for solidification/melting effects. In case of
-     * solidification/melting the value of @p liquid_solid_value must be set to the liquid/solid
-     * phase's (level set = 1) value, as determined by
+     * solidification/melting the value of @p liquid_solid_density must be set to the mixed liquid/solid
+     * phase's (level set = 1) density, as determined by
      * compute_solidification().
      */
     template <typename value_type>
     inline value_type
-    compute_two_phase_consistent_with_evaporation(const value_type &level_set_heaviside,
-                                                  const value_type &gas_value,
-                                                  const value_type &liquid_solid_value) const
+    compute_two_phase_fluid_density_consistent_with_evaporation(const value_type &level_set_heaviside,
+                                                  const value_type &gas_density,
+                                                  const value_type &liquid_solid_density) const
     {
       return gas_value / (1. + (gas_value / liquid_solid_value - 1.) * level_set_heaviside);
     }
 
     /**
-     * Determine a material parameter for solidification/melting. In the mushy zone (where
+     * Determine a material parameter for the solid/liquid phases. In the mushy zone (where
      * the solid_fraction is between 0 and 1) the material parameter will be interpolated
      * with smooth cubic function, see UtilityFunctions::interpolate_cubic():
      *
-     * The parameter x of the solid/liquid mixture is computed by the cubic spline
+     * The parameter x of the solid/liquid phases is computed by the cubic spline
      * interpolation:
      *
      * x = x_l + (x_s - x_l) * (-2*sf^3 + 3*sf^2)
@@ -489,12 +488,12 @@ namespace MeltPoolDG
      * value of the liquid phase x_l (@p liquid_value).
      *
      * @note This function does not consider two-phase flow material parameters. However, the result
-     * of this function can be used as the liquid/solid phases (level set = 1) material
+     * of this function can be used as the liquid/solid phases' (level set = 1) material
      * properties in compute_two_phase().
      */
     template <typename value_type>
     inline value_type
-    compute_solidification(const value_type &temperature_dependent_solid_fraction,
+    compute_solid_liquid_phases_property(const value_type &temperature_dependent_solid_fraction,
                            const value_type &liquid_value,
                            const value_type &solid_value) const
     {
@@ -508,11 +507,7 @@ namespace MeltPoolDG
     }
 
     /**
-     * Determine the derivative of a material parameter with respect to the temperature for
-     * solidification/melting. This function will return the temperature derivatives of the
-     * values determined by compute_solidification().
-     *
-     * The derivative dx_dT of the solid/liquid mixture is then computed by
+     * Determine the derivative of a material parameter for the solid/liquid phases, calculated by compute_solid_liquid_phases_property(), with respect to the temperature, given as
      *
      *  dx                                       d sf
      * ----  = (x_s - x_l) * (-6*sf^2 + 6*sf) * ------
@@ -527,12 +522,12 @@ namespace MeltPoolDG
      * the solidus temperature T_sol.
      *
      * @note This function does not consider two-phase flow material parameters. However, the result
-     * of this function can be used as the liquid/solid phases (level set = 1) material
+     * of this function can be used as the liquid/solid phases' (level set = 1) material
      * properties.
      */
     template <typename value_type>
     inline value_type
-    compute_derivative_solidification(const value_type &temperature_dependent_solid_fraction,
+    compute_temperature_derivative_of_solid_liquid_phases_property(const value_type &temperature_dependent_solid_fraction,
                                       const value_type &liquid_value,
                                       const value_type &solid_value) const
     {
@@ -559,7 +554,7 @@ namespace MeltPoolDG
      */
     template <typename value_type>
     inline value_type
-    compute_two_phase_and_solidification(const value_type &level_set_heaviside,
+    compute_solid_liquid_gas_phases_property(const value_type &level_set_heaviside,
                                          const value_type &temperature_dependent_solid_fraction,
                                          const value_type &gas_value,
                                          const value_type &liquid_value,
@@ -571,7 +566,7 @@ namespace MeltPoolDG
     }
 
     /**
-     * Determine a material parameter with respect to two-phase flow and solidification
+     * Determine the density of a material exhibiting solid/liquid/gas phases consistent with mass flux due to evaporation
      * effects consistent with evaporation.
      *
      * See compute_solidification() and
@@ -584,7 +579,7 @@ namespace MeltPoolDG
      */
     template <typename value_type>
     inline value_type
-    compute_two_phase_and_solidification_consistent_with_evaporation(
+    compute_solid_liquid_gas_phases_density_consistent_with_evaporation(
       const value_type &level_set_heaviside,
       const value_type &temperature_dependent_solid_fraction,
       const value_type &gas_value,

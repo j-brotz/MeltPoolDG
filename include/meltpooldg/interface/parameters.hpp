@@ -24,7 +24,7 @@ namespace MeltPoolDG
               level_set_with_evaporation,
               heat_transfer)
   BETTER_ENUM(
-    TwoPhasePropertiesTransitionType,
+    TwoPhaseFluidPropertiesTransitionType,
     char,
     not_initialized,
     sharp,  // properties jump at level-set = 0
@@ -32,12 +32,12 @@ namespace MeltPoolDG
     consistent_with_evaporation // the density is smeared between the phases consistent with the
                                 // evaporation formulation
   )
-  BETTER_ENUM(SolidificationType,
+  BETTER_ENUM(SolidLiquidPropertiesTransitionType,
               char,
               not_initialized,
               mushy_zone,   // the liquid and solid properties are smeared between the liquidus and
                             // solididus temperature
-              melting_point // the liquid and solid properties jump at melting temperature
+              sharp // the liquid and solid properties jump at melting temperature
   )
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
 
