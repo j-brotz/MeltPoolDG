@@ -40,10 +40,14 @@ namespace MeltPoolDG
               sharp       // the liquid and solid properties jump at melting temperature
   )
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
-  BETTER_ENUM(InterfaceSmearingType,
-              char,
-              delta, // smeared across interface with delta function  ||∇ls_heaviside||
-              phase_weighted_delta // smeared across interface with phase-weighted delta function
+  BETTER_ENUM(
+    DiracDeltaFunctionApproximationType,
+    char,
+    norm_of_indicator_gradient, // use δ = ||∇ϕ|| as approximation for the Dirac delta function
+    // with the heaviside representation of the level set ϕ
+    phase_weighted_delta // approximate the Dirac delta function with
+                         // δ_w = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ ) 2 / ( w_g + w_h )
+                         // with the weight the gas phase w_g and the weight of the heavy phase w_h
   )
 
   template <typename number = double>
@@ -217,11 +221,13 @@ namespace MeltPoolDG
   template <typename number = double>
   struct RecoilPressureData
   {
-    number                pressure_constant       = 0.0;
-    number                temperature_constant    = 0.0;
-    InterfaceSmearingType interface_smearing_type = InterfaceSmearingType::delta;
-    number                gas_phase_weight        = 1.0;
-    number                heavy_phase_weight      = 1.0;
+    number                              pressure_constant    = 0.0;
+    number                              temperature_constant = 0.0;
+    DiracDeltaFunctionApproximationType delta_function_type =
+      DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
+    number gas_phase_weight               = 1.0;
+    number heavy_phase_weight             = 1.0;
+    number phase_weight_correction_factor = 0.0;
   };
 
   template <typename number = double>
