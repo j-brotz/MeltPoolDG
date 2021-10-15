@@ -325,9 +325,9 @@ namespace MeltPoolDG
     number specific_enthalpy_reference_temperature = 0.0;
 
     SolidLiquidPropertiesTransitionType solidification_type =
-      SolidLiquidPropertiesTransitionType::sharp;
+      SolidLiquidPropertiesTransitionType::sharp; // TODO rename parameter according to enum
     TwoPhaseFluidPropertiesTransitionType two_phase_properties_transition_type =
-      TwoPhaseFluidPropertiesTransitionType::sharp;
+      TwoPhaseFluidPropertiesTransitionType::sharp; // TODO rename parameter according to enum
   };
 
   template <typename number = double>
