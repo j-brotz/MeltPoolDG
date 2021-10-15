@@ -696,7 +696,7 @@ namespace MeltPoolDG::Flow
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
               {
                 const auto indicator = material.two_phase_properties_transition_type ==
-                                           TwoPhasePropertiesTransitionType::sharp ?
+                                           TwoPhaseFluidPropertiesTransitionType::sharp ?
                                          UtilityFunctions::heaviside(ls_values.get_value(q), 0.5) :
                                          ls_values.get_value(q);
 
@@ -747,7 +747,7 @@ namespace MeltPoolDG::Flow
                  */
 
                 if (material.two_phase_properties_transition_type ==
-                    TwoPhasePropertiesTransitionType::consistent_with_evaporation)
+                    TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
                   {
                     flow_operation->get_density(cell, q) =
                       rho_g / (1. + (rho_g / rho_l - 1.) * indicator);

@@ -368,7 +368,8 @@ namespace MeltPoolDG::Heat
      *
      * In the case the density is interpolated consistent with the evaporation formulation
      * (material.two_phase_properties_transition_type ==
-     * TwoPhasePropertiesTransitionType::consistent_with_evaporation), the density is computed by
+     * TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation), the density is computed
+     * by
      *
      *                       rho_g
      * rho_gl = ---------------------------------
@@ -409,8 +410,8 @@ namespace MeltPoolDG::Heat
      *
      * In the case the density is interpolated consistent with the evaporation formulation
      * (material.two_phase_properties_transition_type ==
-     * TwoPhasePropertiesTransitionType::consistent_with_evaporation), the density's temperature
-     * derivative is computed by
+     * TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation), the density's
+     * temperature derivative is computed by
      *
      *  d rho_gl                      ls * rho_g²                        d rho_l
      * ---------- = ------------------------------------------------- * ---------

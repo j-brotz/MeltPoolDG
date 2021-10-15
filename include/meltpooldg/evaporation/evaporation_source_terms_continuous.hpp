@@ -34,15 +34,15 @@ namespace MeltPoolDG::Evaporation
     /**
      * select the relevant DoFHandlers and quadrature rules
      */
-    const unsigned int                     ls_hanging_nodes_dof_idx;
-    const unsigned int                     ls_quad_idx;
-    const unsigned int                     normal_dof_idx;
-    const unsigned int                     evapor_vel_dof_idx;
-    const unsigned int                     evapor_mass_flux_dof_idx;
-    const double                           tolerance_normal_vector;
-    const double                           density_vapor;
-    const double                           density_liquid;
-    const TwoPhasePropertiesTransitionType two_phase_properties_transition_type;
+    const unsigned int                          ls_hanging_nodes_dof_idx;
+    const unsigned int                          ls_quad_idx;
+    const unsigned int                          normal_dof_idx;
+    const unsigned int                          evapor_vel_dof_idx;
+    const unsigned int                          evapor_mass_flux_dof_idx;
+    const double                                tolerance_normal_vector;
+    const double                                density_vapor;
+    const double                                density_liquid;
+    const TwoPhaseFluidPropertiesTransitionType two_phase_properties_transition_type;
     /**
      * evaporation velocity at quadrature points
      */
@@ -56,20 +56,20 @@ namespace MeltPoolDG::Evaporation
 
   public:
     EvaporationSourceTermsContinuous(
-      const ScratchData<dim> &                scratch_data,
-      const EvaporationData<double> &         evapor_data,
-      const VectorType &                      level_set_as_heaviside,
-      const BlockVectorType &                 normal_vector,
-      const VectorType &                      evaporative_mass_flux,
-      const unsigned int                      ls_hanging_nodes_dof_idx,
-      const unsigned int                      ls_quad_idx,
-      const unsigned int                      normal_dof_idx,
-      const unsigned int                      evapor_vel_dof_idx,
-      const unsigned int                      evapor_mass_flux_dof_idx,
-      const double                            tolerance_normal_vector,
-      const double                            density_vapor,
-      const double                            density_liquid,
-      const TwoPhasePropertiesTransitionType &two_phase_properties_transition_type);
+      const ScratchData<dim> &                     scratch_data,
+      const EvaporationData<double> &              evapor_data,
+      const VectorType &                           level_set_as_heaviside,
+      const BlockVectorType &                      normal_vector,
+      const VectorType &                           evaporative_mass_flux,
+      const unsigned int                           ls_hanging_nodes_dof_idx,
+      const unsigned int                           ls_quad_idx,
+      const unsigned int                           normal_dof_idx,
+      const unsigned int                           evapor_vel_dof_idx,
+      const unsigned int                           evapor_mass_flux_dof_idx,
+      const double                                 tolerance_normal_vector,
+      const double                                 density_vapor,
+      const double                                 density_liquid,
+      const TwoPhaseFluidPropertiesTransitionType &two_phase_properties_transition_type);
 
     void
     compute_evaporation_velocity(VectorType &evaporation_velocity) final;

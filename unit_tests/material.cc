@@ -15,8 +15,8 @@ print_material_parameter_values(const MaterialParameterValues<double> &values)
 {
   std::cout << setw << values.capacity << "|" << setw << values.conductivity << "|" << setw
             << values.density << "|" << setw << values.viscosity << "|" << setw
-            << values.d_capacity_dT << "|" << setw << values.d_conductivity_dT << "|" << setw
-            << values.d_density_dT << "|" << setw << values.gas_fraction << "|" << setw
+            << values.d_capacity_d_T << "|" << setw << values.d_conductivity_d_T << "|" << setw
+            << values.d_density_d_T << "|" << setw << values.gas_fraction << "|" << setw
             << values.liquid_fraction << "|" << setw << values.solid_fraction << std::endl;
 }
 
@@ -25,9 +25,10 @@ print_material_parameter_values(const MaterialParameterValues<VectorizedArray<do
 {
   std::cout << setw << values.capacity[0] << "|" << setw << values.conductivity[0] << "|" << setw
             << values.density[0] << "|" << setw << values.viscosity[0] << "|" << setw
-            << values.d_capacity_dT[0] << "|" << setw << values.d_conductivity_dT[0] << "|" << setw
-            << values.d_density_dT[0] << "|" << setw << values.gas_fraction[0] << "|" << setw
-            << values.liquid_fraction[0] << "|" << setw << values.solid_fraction[0] << std::endl;
+            << values.d_capacity_d_T[0] << "|" << setw << values.d_conductivity_d_T[0] << "|"
+            << setw << values.d_density_d_T[0] << "|" << setw << values.gas_fraction[0] << "|"
+            << setw << values.liquid_fraction[0] << "|" << setw << values.solid_fraction[0]
+            << std::endl;
 }
 
 int
@@ -50,16 +51,16 @@ main()
   material_data.solid.density      = 7000.0;
   material_data.solid.viscosity    = 1000.0;
 
-  material_data.solidification_type  = SolidificationType::mushy_zone;
+  material_data.solidification_type  = SolidLiquidPropertiesTransitionType::mushy_zone;
   material_data.solidus_temperature  = 0.0;
   material_data.liquidus_temperature = 100.0;
   material_data.inv_mushy_interval =
     1 / (material_data.liquidus_temperature - material_data.solidus_temperature);
 
   const auto update_all = MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
-                          MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_dT |
-                          MaterialUpdateFlags::viscosity | MaterialUpdateFlags::d_conductivity_dT |
-                          MaterialUpdateFlags::d_density_dT | MaterialUpdateFlags::phase_fractions;
+                          MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_d_T |
+                          MaterialUpdateFlags::viscosity | MaterialUpdateFlags::d_conductivity_d_T |
+                          MaterialUpdateFlags::d_density_d_T | MaterialUpdateFlags::phase_fractions;
 
   // testing values
   const double                  ls_heaviside_val = 0.2;
@@ -70,17 +71,17 @@ main()
   // test material types
 
   std::cout
-    << "     c_p|       k|     rho|      nu| dc_p_dT|   dk_dT| drho_dT|     X_g|     X_l|     X_s"
+    << "      cp|       k|     rho|      nu|d_cp_d_T| d_k_d_T|d_rho_dT|     X_g|     X_l|     X_s"
     << std::endl;
   std::cout << "single phase material" << std::endl;
   {
     const Material material(material_data, MaterialTypes::single_phase);
 
     const auto data_double = material.compute_parameters<double>(update_all);
-    print_MaterialParameterValues(data_double);
+    print_material_parameter_values(data_double);
 
     const auto data_vec = material.compute_parameters<VectorizedArray<double>>(update_all);
-    print_MaterialParameterValues(data_vec);
+    print_material_parameter_values(data_vec);
   }
 
   std::cout << "two phase material" << std::endl;
@@ -88,11 +89,11 @@ main()
     const Material material(material_data, MaterialTypes::gas_liquid);
 
     const auto data_double = material.compute_parameters<double>(ls_heaviside_val, update_all);
-    print_MaterialParameterValues(data_double);
+    print_material_parameter_values(data_double);
 
     const auto data_vec =
       material.compute_parameters<VectorizedArray<double>>(ls_heaviside_vec, update_all);
-    print_MaterialParameterValues(data_vec);
+    print_material_parameter_values(data_vec);
   }
 
   std::cout << "two phase material consistent with evaporation" << std::endl;
@@ -100,12 +101,11 @@ main()
     const Material material(material_data, MaterialTypes::gas_liquid_consistent_with_evaporation);
 
     const auto data_double = material.compute_parameters<double>(ls_heaviside_val, update_all);
-    print_MaterialParameterValues(data_double);
+    print_material_parameter_values(data_double);
 
-    const VectorizedArray<double> ls_heaviside_vec(0.6);
-    const auto                    data_vec =
+    const auto data_vec =
       material.compute_parameters<VectorizedArray<double>>(ls_heaviside_vec, update_all);
-    print_MaterialParameterValues(data_vec);
+    print_material_parameter_values(data_vec);
   }
 
   std::cout << "solidification material" << std::endl;
@@ -113,12 +113,11 @@ main()
     const Material material(material_data, MaterialTypes::liquid_solid);
 
     const auto data_double = material.compute_parameters<double>(temperature_val, update_all);
-    print_MaterialParameterValues(data_double);
+    print_material_parameter_values(data_double);
 
-    const VectorizedArray<double> temperature_vec(60.0);
-    const auto                    data_vec =
+    const auto data_vec =
       material.compute_parameters<VectorizedArray<double>>(temperature_vec, update_all);
-    print_MaterialParameterValues(data_vec);
+    print_material_parameter_values(data_vec);
   }
 
   std::cout << "three phase material" << std::endl;
@@ -127,12 +126,12 @@ main()
 
     const auto data_double =
       material.compute_parameters<double>(ls_heaviside_val, temperature_val, update_all);
-    print_MaterialParameterValues(data_double);
+    print_material_parameter_values(data_double);
 
     const auto data_vec = material.compute_parameters<VectorizedArray<double>>(ls_heaviside_vec,
                                                                                temperature_vec,
                                                                                update_all);
-    print_MaterialParameterValues(data_vec);
+    print_material_parameter_values(data_vec);
   }
 
   std::cout << "three phase material consistent with evaporation" << std::endl;
@@ -142,12 +141,12 @@ main()
 
     const auto data_double =
       material.compute_parameters<double>(ls_heaviside_val, temperature_val, update_all);
-    print_MaterialParameterValues(data_double);
+    print_material_parameter_values(data_double);
 
     const auto data_vec = material.compute_parameters<VectorizedArray<double>>(ls_heaviside_vec,
                                                                                temperature_vec,
                                                                                update_all);
-    print_MaterialParameterValues(data_vec);
+    print_material_parameter_values(data_vec);
   }
 
   // test functionalities
@@ -158,5 +157,5 @@ main()
                                                              temperature_val,
                                                              MaterialUpdateFlags::density |
                                                                MaterialUpdateFlags::viscosity);
-  print_MaterialParameterValues(data_flow);
+  print_material_parameter_values(data_flow);
 }

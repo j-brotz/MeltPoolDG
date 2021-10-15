@@ -1,4 +1,4 @@
-     c_p|       k|     rho|      nu| dc_p_dT|   dk_dT| drho_dT|     X_g|     X_l|     X_s
+      cp|       k|     rho|      nu|d_cp_d_T| d_k_d_T|d_rho_dT|     X_g|     X_l|     X_s
 single phase material
        0|      10|    1000|       1|       0|       0|       0|       1|       0|       0
        0|      10|    1000|       1|       0|       0|       0|       1|       0|       0

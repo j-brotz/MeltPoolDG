@@ -35,9 +35,9 @@ namespace MeltPoolDG
   BETTER_ENUM(SolidLiquidPropertiesTransitionType,
               char,
               not_initialized,
-              mushy_zone,   // the liquid and solid properties are smeared between the liquidus and
-                            // solididus temperature
-              sharp // the liquid and solid properties jump at melting temperature
+              mushy_zone, // the liquid and solid properties are smeared between the liquidus and
+                          // solididus temperature
+              sharp       // the liquid and solid properties jump at melting temperature
   )
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
 
@@ -324,9 +324,10 @@ namespace MeltPoolDG
 
     number specific_enthalpy_reference_temperature = 0.0;
 
-    SolidificationType               solidification_type = SolidificationType::not_initialized;
-    TwoPhasePropertiesTransitionType two_phase_properties_transition_type =
-      TwoPhasePropertiesTransitionType::not_initialized;
+    SolidLiquidPropertiesTransitionType solidification_type =
+      SolidLiquidPropertiesTransitionType::not_initialized;
+    TwoPhaseFluidPropertiesTransitionType two_phase_properties_transition_type =
+      TwoPhaseFluidPropertiesTransitionType::not_initialized;
   };
 
   template <typename number = double>

@@ -5,8 +5,8 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   LaserHeatSourceGauss<dim>::LaserHeatSourceGauss(
-    const LaserData<double>::GaussData &    data_in,
-    const TwoPhasePropertiesTransitionType &variable_properties_over_interface)
+    const LaserData<double>::GaussData &         data_in,
+    const TwoPhaseFluidPropertiesTransitionType &variable_properties_over_interface)
     : data(data_in)
     , variable_properties_over_interface(variable_properties_over_interface)
     , vol_peak_power_density_factor(
@@ -52,7 +52,7 @@ namespace MeltPoolDG::Heat
       projection_factor = 0.0;
 
     const double weight =
-      (variable_properties_over_interface != TwoPhasePropertiesTransitionType::sharp) ?
+      (variable_properties_over_interface != TwoPhaseFluidPropertiesTransitionType::sharp) ?
         heaviside :
         ((heaviside > 0.5) ? 1.0 : 0.0);
 
