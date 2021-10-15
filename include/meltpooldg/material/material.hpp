@@ -17,16 +17,52 @@ namespace MeltPoolDG
   template <typename value_type>
   struct MaterialParameterValues
   {
-    value_type capacity{0};
-    value_type conductivity{0};
-    value_type density{0};
-    value_type viscosity{0};
-    value_type d_capacity_d_T{0};
-    value_type d_conductivity_d_T{0};
-    value_type d_density_d_T{0};
-    value_type gas_fraction{0};
-    value_type liquid_fraction{0};
-    value_type solid_fraction{0};
+    MaterialParameterValues(const double capacity           = 0.0,
+                            const double conductivity       = 0.0,
+                            const double density            = 0.0,
+                            const double viscosity          = 0.0,
+                            const double d_capacity_d_T     = 0.0,
+                            const double d_conductivity_d_T = 0.0,
+                            const double d_density_d_T      = 0.0,
+                            const double gas_fraction       = 0.0,
+                            const double liquid_fraction    = 0.0,
+                            const double solid_fraction     = 0.0)
+      : capacity(capacity)
+      , conductivity(conductivity)
+      , density(density)
+      , viscosity(viscosity)
+      , d_capacity_d_T(d_capacity_d_T)
+      , d_conductivity_d_T(d_conductivity_d_T)
+      , d_density_d_T(d_density_d_T)
+      , gas_fraction(gas_fraction)
+      , liquid_fraction(liquid_fraction)
+      , solid_fraction(solid_fraction)
+    {}
+
+    template <typename material_phase_data_struct>
+    MaterialParameterValues(const material_phase_data_struct &data)
+      : capacity(data.capacity)
+      , conductivity(data.conductivity)
+      , density(data.density)
+      , viscosity(data.viscosity)
+      , d_capacity_d_T(0.0)
+      , d_conductivity_d_T(0.0)
+      , d_density_d_T(0.0)
+      , gas_fraction(1.0)
+      , liquid_fraction(0.0)
+      , solid_fraction(0.0)
+    {}
+
+    value_type capacity;
+    value_type conductivity;
+    value_type density;
+    value_type viscosity;
+    value_type d_capacity_d_T;
+    value_type d_conductivity_d_T;
+    value_type d_density_d_T;
+    value_type gas_fraction;
+    value_type liquid_fraction;
+    value_type solid_fraction;
   };
 
   enum class MaterialTypes
@@ -91,6 +127,9 @@ namespace MeltPoolDG
   public:
     Material(const MaterialData<number> &material_data, const MaterialTypes material_type)
       : data(material_data)
+      , gas(data.first)
+      , liquid(data.second)
+      , solid(data.solid)
       , material_type(material_type) // TODO determine material type depending on MaterialData
     {}
 
@@ -165,48 +204,38 @@ namespace MeltPoolDG
       switch (material_type)
         {
             case MaterialTypes::single_phase: {
-              if (flags & MaterialUpdateFlags::capacity)
-                t.capacity = data.first.capacity;
-              if (flags & MaterialUpdateFlags::conductivity)
-                t.conductivity = data.first.conductivity;
-              if (flags & MaterialUpdateFlags::density)
-                t.density = data.first.density;
-              if (flags & MaterialUpdateFlags::viscosity)
-                t.viscosity = data.first.viscosity;
-              // note: For the single phase case, the derivatives with respect to temperature are
-              // zero.
-              if (flags & MaterialUpdateFlags::phase_fractions)
-                t.gas_fraction = 1.0;
-              break;
+              return gas;
             }
           case MaterialTypes::gas_liquid:
             case MaterialTypes::gas_liquid_consistent_with_evaporation: {
+              const MaterialParameterValues<value_type> &g = gas;
+              const MaterialParameterValues<value_type> &l = liquid;
+
               const auto &level_set_heaviside = v1;
 
               if (flags & MaterialUpdateFlags::capacity)
                 t.capacity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                                          data.first.capacity,
-                                                                          data.second.capacity);
+                                                                          g.capacity,
+                                                                          l.capacity);
               if (flags & MaterialUpdateFlags::conductivity)
-                t.conductivity =
-                  compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                               data.first.conductivity,
-                                                               data.second.conductivity);
+                t.conductivity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                                              g.conductivity,
+                                                                              l.conductivity);
               if (flags & MaterialUpdateFlags::density)
                 {
                   if (material_type == MaterialTypes::gas_liquid_consistent_with_evaporation)
                     t.density =
                       compute_two_phase_fluid_density_consistent_with_evaporation<value_type>(
-                        level_set_heaviside, data.first.density, data.second.density);
+                        level_set_heaviside, g.density, l.density);
                   else
                     t.density = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                                             data.first.density,
-                                                                             data.second.density);
+                                                                             g.density,
+                                                                             l.density);
                 }
               if (flags & MaterialUpdateFlags::viscosity)
                 t.viscosity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                                           data.first.viscosity,
-                                                                           data.second.viscosity);
+                                                                           g.viscosity,
+                                                                           l.viscosity);
               // note: For the gas-liquid phase case, the derivatives with respect to temperature
               // are zero.
               if (flags & MaterialUpdateFlags::phase_fractions)
@@ -217,42 +246,37 @@ namespace MeltPoolDG
               break;
             }
             case MaterialTypes::liquid_solid: {
+              const MaterialParameterValues<value_type> &l = liquid;
+              const MaterialParameterValues<value_type> &s = solid;
+
               const auto &temperature = v1;
               const auto  temperature_dependent_solid_fraction =
                 compute_temperature_dependent_solid_fraction(temperature);
 
               if (flags & MaterialUpdateFlags::capacity)
                 t.capacity = compute_solid_liquid_phases_property<value_type>(
-                  temperature_dependent_solid_fraction, data.second.capacity, data.solid.capacity);
+                  temperature_dependent_solid_fraction, l.capacity, s.capacity);
               if (flags & MaterialUpdateFlags::conductivity)
                 t.conductivity = compute_solid_liquid_phases_property<value_type>(
-                  temperature_dependent_solid_fraction,
-                  data.second.conductivity,
-                  data.solid.conductivity);
+                  temperature_dependent_solid_fraction, l.conductivity, s.conductivity);
               if (flags & MaterialUpdateFlags::density)
                 t.density = compute_solid_liquid_phases_property<value_type>(
-                  temperature_dependent_solid_fraction, data.second.density, data.solid.density);
+                  temperature_dependent_solid_fraction, l.density, s.density);
               if (flags & MaterialUpdateFlags::viscosity)
                 t.viscosity = compute_solid_liquid_phases_property<value_type>(
-                  temperature_dependent_solid_fraction,
-                  data.second.viscosity,
-                  data.solid.viscosity);
+                  temperature_dependent_solid_fraction, l.viscosity, s.viscosity);
               if (flags & MaterialUpdateFlags::d_capacity_d_T)
                 t.d_capacity_d_T =
                   compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
-                    temperature_dependent_solid_fraction,
-                    data.second.capacity,
-                    data.solid.capacity);
+                    temperature_dependent_solid_fraction, l.capacity, s.capacity);
               if (flags & MaterialUpdateFlags::d_conductivity_d_T)
                 t.d_conductivity_d_T =
                   compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
-                    temperature_dependent_solid_fraction,
-                    data.second.conductivity,
-                    data.solid.conductivity);
+                    temperature_dependent_solid_fraction, l.conductivity, s.conductivity);
               if (flags & MaterialUpdateFlags::d_density_d_T)
                 t.d_density_d_T =
                   compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
-                    temperature_dependent_solid_fraction, data.second.density, data.solid.density);
+                    temperature_dependent_solid_fraction, l.density, s.density);
               if (flags & MaterialUpdateFlags::phase_fractions)
                 {
                   t.liquid_fraction = 1. - temperature_dependent_solid_fraction;
@@ -263,6 +287,10 @@ namespace MeltPoolDG
             }
           case MaterialTypes::gas_liquid_solid:
             case MaterialTypes::gas_liquid_solid_consistent_with_evaporation: {
+              const MaterialParameterValues<value_type> &g = gas;
+              const MaterialParameterValues<value_type> &l = liquid;
+              const MaterialParameterValues<value_type> &s = solid;
+
               const auto &level_set_heaviside = v1;
               const auto &temperature         = v2;
               const auto  temperature_dependent_solid_fraction =
@@ -272,54 +300,54 @@ namespace MeltPoolDG
                 t.capacity = compute_solid_liquid_gas_phases_property<value_type>(
                   level_set_heaviside,
                   temperature_dependent_solid_fraction,
-                  data.first.capacity,
-                  data.second.capacity,
-                  data.solid.capacity);
+                  g.capacity,
+                  l.capacity,
+                  s.capacity);
               if (flags & MaterialUpdateFlags::conductivity)
                 t.conductivity = compute_solid_liquid_gas_phases_property<value_type>(
                   level_set_heaviside,
                   temperature_dependent_solid_fraction,
-                  data.first.conductivity,
-                  data.second.conductivity,
-                  data.solid.conductivity);
+                  g.conductivity,
+                  l.conductivity,
+                  s.conductivity);
               if (flags & MaterialUpdateFlags::density)
                 {
                   if (material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation)
                     t.density = compute_solid_liquid_gas_phases_density_consistent_with_evaporation<
                       value_type>(level_set_heaviside,
                                   temperature_dependent_solid_fraction,
-                                  data.first.density,
-                                  data.second.density,
-                                  data.solid.density);
+                                  g.density,
+                                  l.density,
+                                  s.density);
                   else
                     t.density = compute_solid_liquid_gas_phases_property<value_type>(
                       level_set_heaviside,
                       temperature_dependent_solid_fraction,
-                      data.first.density,
-                      data.second.density,
-                      data.solid.density);
+                      g.density,
+                      l.density,
+                      s.density);
                 }
               if (flags & MaterialUpdateFlags::viscosity)
                 t.viscosity = compute_solid_liquid_gas_phases_property<value_type>(
                   level_set_heaviside,
                   temperature_dependent_solid_fraction,
-                  data.first.viscosity,
-                  data.second.viscosity,
-                  data.solid.viscosity);
+                  g.viscosity,
+                  l.viscosity,
+                  s.viscosity);
               if (flags & MaterialUpdateFlags::d_capacity_d_T)
                 t.d_capacity_d_T =
                   compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
                     level_set_heaviside,
                     temperature_dependent_solid_fraction,
-                    data.second.capacity,
-                    data.solid.capacity);
+                    l.capacity,
+                    s.capacity);
               if (flags & MaterialUpdateFlags::d_conductivity_d_T)
                 t.d_conductivity_d_T =
                   compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
                     level_set_heaviside,
                     temperature_dependent_solid_fraction,
-                    data.second.conductivity,
-                    data.solid.conductivity);
+                    l.conductivity,
+                    s.conductivity);
               if (flags & MaterialUpdateFlags::d_density_d_T)
                 {
                   if (material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation)
@@ -327,16 +355,16 @@ namespace MeltPoolDG
                       compute_temperature_derivative_of_solid_liquid_gas_density_consistent_with_evaporation<
                         value_type>(level_set_heaviside,
                                     temperature_dependent_solid_fraction,
-                                    data.first.density,
-                                    data.second.density,
-                                    data.solid.density);
+                                    g.density,
+                                    l.density,
+                                    s.density);
                   else
                     t.d_density_d_T =
                       compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
                         level_set_heaviside,
                         temperature_dependent_solid_fraction,
-                        data.second.density,
-                        data.solid.density);
+                        l.density,
+                        s.density);
                 }
               if (flags & MaterialUpdateFlags::phase_fractions)
                 {
@@ -492,7 +520,6 @@ namespace MeltPoolDG
      * See compute_solid_liquid_phases_property() and compute_two_phase_fluid_property()
      * for more detail.
      *
-     * parameter Parameter to be determined.
      * @p gas_value The parameter's value in the gaseous phase
      * @p liquid_value The parameter's value in the liquid phase
      * @p solid_value The parameter's value in the solid phase
@@ -519,7 +546,6 @@ namespace MeltPoolDG
      * See compute_solid_liquid_phases_property() and
      * compute_two_phase_fluid_density_consistent_with_evaporation() for more detail.
      *
-     * parameter Parameter to be determined.
      * @p gas_value The parameter's value in the gaseous phase
      * @p liquid_value The parameter's value in the liquid phase
      * @p solid_value The parameter's value in the solid phase
@@ -563,7 +589,6 @@ namespace MeltPoolDG
      * @note The value in the gaseous phase are constant with respect to the temperature, thus its
      * derivative can be neglected.
      *
-     * derivative Derivative to be determined.
      * @p liquid_value The parameter's value in the liquid phase
      * @p solid_value The parameter's value in the solid phase
      */
@@ -604,7 +629,6 @@ namespace MeltPoolDG
      * temperature derivative dx_ls_d_T as determined by
      * compute_temperature_derivative_of_solid_liquid_phases_property().
      *
-     * derivative Derivative to be determined.
      * @p gas_value The parameter's value in the gaseous phase
      * @p liquid_value The parameter's value in the liquid phase
      * @p solid_value The parameter's value in the solid phase
@@ -652,7 +676,8 @@ namespace MeltPoolDG
           (data.liquidus_temperature - temperature) * data.inv_mushy_interval, 0.0, 1.0);
       else if (data.solidification_type == SolidLiquidPropertiesTransitionType::sharp)
         return temperature < data.melting_point ? 1.0 : 0.0;
-      AssertThrow(false, ExcNotImplemented());
+      Assert(false, ExcNotImplemented());
+      return 0.0;
     }
 
     inline VectorizedArray<number>
@@ -666,10 +691,37 @@ namespace MeltPoolDG
                                                                  data.melting_point,
                                                                  1.0,
                                                                  0.0);
-      AssertThrow(false, ExcNotImplemented());
+      Assert(false, ExcNotImplemented());
+      return VectorizedArray<number>(0.0);
     }
 
+    struct MaterialParameterValuesContainer
+    {
+      template <typename material_phase_data_struct>
+      MaterialParameterValuesContainer(const material_phase_data_struct data)
+        : scalar_parameters(data)
+        , vectorized_parameters(data)
+      {}
+
+      const MaterialParameterValues<number>                          scalar_parameters;
+      const MaterialParameterValues<dealii::VectorizedArray<number>> vectorized_parameters;
+
+      constexpr operator const MaterialParameterValues<number> &() const
+      {
+        return scalar_parameters;
+      }
+
+      constexpr operator const MaterialParameterValues<VectorizedArray<number>> &() const
+      {
+        return vectorized_parameters;
+      }
+    };
+
     const MaterialData<number> &data;
+
+    MaterialParameterValuesContainer gas;
+    MaterialParameterValuesContainer liquid;
+    MaterialParameterValuesContainer solid;
 
     const MaterialTypes material_type;
   };

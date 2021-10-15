@@ -73,7 +73,7 @@ main()
   std::cout
     << "      cp|       k|     rho|      nu|d_cp_d_T| d_k_d_T|d_rho_dT|     X_g|     X_l|     X_s"
     << std::endl;
-  std::cout << "single phase material" << std::endl;
+  std::cout << "single_phase" << std::endl;
   {
     const Material material(material_data, MaterialTypes::single_phase);
 
@@ -84,7 +84,7 @@ main()
     print_material_parameter_values(data_vec);
   }
 
-  std::cout << "two phase material" << std::endl;
+  std::cout << "gas_liquid" << std::endl;
   {
     const Material material(material_data, MaterialTypes::gas_liquid);
 
@@ -96,7 +96,7 @@ main()
     print_material_parameter_values(data_vec);
   }
 
-  std::cout << "two phase material consistent with evaporation" << std::endl;
+  std::cout << "gas_liquid_consistent_with_evaporation" << std::endl;
   {
     const Material material(material_data, MaterialTypes::gas_liquid_consistent_with_evaporation);
 
@@ -108,7 +108,7 @@ main()
     print_material_parameter_values(data_vec);
   }
 
-  std::cout << "solidification material" << std::endl;
+  std::cout << "liquid_solid" << std::endl;
   {
     const Material material(material_data, MaterialTypes::liquid_solid);
 
@@ -120,7 +120,7 @@ main()
     print_material_parameter_values(data_vec);
   }
 
-  std::cout << "three phase material" << std::endl;
+  std::cout << "gas_liquid_solid" << std::endl;
   {
     const Material material(material_data, MaterialTypes::gas_liquid_solid);
 
@@ -134,7 +134,7 @@ main()
     print_material_parameter_values(data_vec);
   }
 
-  std::cout << "three phase material consistent with evaporation" << std::endl;
+  std::cout << "gas_liquid_solid_consistent_with_evaporation" << std::endl;
   {
     const Material material(material_data,
                             MaterialTypes::gas_liquid_solid_consistent_with_evaporation);
