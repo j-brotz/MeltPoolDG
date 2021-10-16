@@ -119,15 +119,15 @@ namespace MeltPoolDG
   {
     const auto &triangulation = dof_handler.get_triangulation();
 
-    const auto     qGauss = QGauss<dim>(n_q_points);
-    Vector<double> norm_per_cell(triangulation.n_active_cells());
+    const QGauss<dim> quadrature(n_q_points);
+    Vector<double>    norm_per_cell(triangulation.n_active_cells());
 
     dealii::VectorTools::integrate_difference(mapping,
                                               dof_handler,
                                               approximate_solution,
                                               ExactSolution,
                                               norm_per_cell,
-                                              qGauss,
+                                              quadrature,
                                               dealii::VectorTools::L2_norm);
 
     pcout << "L2 error =    " << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
@@ -141,7 +141,7 @@ namespace MeltPoolDG
                                               approximate_solution,
                                               ExactSolution,
                                               difference_per_cell,
-                                              qGauss,
+                                              quadrature,
                                               dealii::VectorTools::L1_norm);
 
     double h1_error = dealii::VectorTools::compute_global_error(triangulation,
