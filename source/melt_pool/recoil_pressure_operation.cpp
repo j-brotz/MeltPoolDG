@@ -74,28 +74,20 @@ namespace MeltPoolDG::MeltPool
               {
                 interpolated_level_set_to_pressure_space.reinit(cell);
 
-                if (recoil_pressure_data.delta_function_type ==
-                    DiracDeltaFunctionApproximationType::norm_of_indicator_gradient)
-                  UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
-                    level_set,
-                    interpolated_level_set_to_pressure_space,
-                    ls_to_pressure_grad_interpolation_matrix);
-                else if (recoil_pressure_data.delta_function_type ==
-                         DiracDeltaFunctionApproximationType::phase_weighted_delta)
-                  AssertThrow(false, ExcNotImplemented()) // todo
-                    else AssertThrow(false, ExcNotImplemented())
+                UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                  level_set,
+                  interpolated_level_set_to_pressure_space,
+                  ls_to_pressure_grad_interpolation_matrix);
               }
+
+            if (recoil_pressure_data.delta_function_type ==
+                DiracDeltaFunctionApproximationType::norm_of_indicator_gradient)
+              used_level_set.evaluate(EvaluationFlags::gradients);
+            else if (recoil_pressure_data.delta_function_type ==
+                     DiracDeltaFunctionApproximationType::phase_weighted_delta)
+              used_level_set.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
             else
-              {
-                if (recoil_pressure_data.delta_function_type ==
-                    DiracDeltaFunctionApproximationType::norm_of_indicator_gradient)
-                  level_set.evaluate(EvaluationFlags::gradients);
-                else if (recoil_pressure_data.delta_function_type ==
-                         DiracDeltaFunctionApproximationType::phase_weighted_delta)
-                  level_set.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
-                else
-                  AssertThrow(false, ExcNotImplemented())
-              }
+              AssertThrow(false, ExcNotImplemented());
 
             temperature_val.reinit(cell);
             temperature_val.read_dof_values_plain(temperature);
@@ -112,25 +104,20 @@ namespace MeltPoolDG::MeltPool
                 for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
                   recoil_pressure_coefficient[v] = compute_recoil_pressure_coefficient(t[v]);
 
+                VectorizedArray<double> weight(1.0);
+
                 if (recoil_pressure_data.delta_function_type ==
-                    DiracDeltaFunctionApproximationType::norm_of_indicator_gradient)
-                  recoil_pressure.submit_value(recoil_pressure_coefficient *
-                                                 used_level_set.get_gradient(q_index),
-                                               q_index);
-                else if (recoil_pressure_data.delta_function_type ==
-                         DiracDeltaFunctionApproximationType::phase_weighted_delta)
+                    DiracDeltaFunctionApproximationType::phase_weighted_delta)
                   {
-                    const auto weight =
+                    weight =
                       UtilityFunctions::interpolate(used_level_set.get_value(q_index),
                                                     recoil_pressure_data.gas_phase_weight,
                                                     recoil_pressure_data.heavy_phase_weight) *
                       recoil_pressure_data.phase_weight_correction_factor;
-                    recoil_pressure.submit_value(recoil_pressure_coefficient *
-                                                   used_level_set.get_gradient(q_index) * weight,
-                                                 q_index);
                   }
-                else
-                  AssertThrow(false, ExcNotImplemented());
+                recoil_pressure.submit_value(recoil_pressure_coefficient *
+                                               used_level_set.get_gradient(q_index) * weight,
+                                             q_index);
               }
             recoil_pressure.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
