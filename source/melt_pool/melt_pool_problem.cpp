@@ -17,6 +17,14 @@ namespace MeltPoolDG::Flow
   {
     initialize(base_in);
 
+    {
+      VectorType vel_temp;
+      scratch_data->initialize_dof_vector(vel_temp, vel_dof_idx);
+      vel_temp.copy_locally_owned_data_from(flow_operation->get_velocity());
+      scratch_data->initialize_dof_vector(flow_operation->get_velocity(), vel_dof_idx);
+      flow_operation->get_velocity().copy_locally_owned_data_from(vel_temp);
+    }
+
     while (!time_iterator.is_finished())
       {
         const auto dt = time_iterator.get_next_time_increment();
@@ -61,24 +69,12 @@ namespace MeltPoolDG::Flow
          * HEAT TRANSFER
          ******************************************************************************************/
         if (melt_pool_operation)
-          {
-            melt_pool_operation->compute_heat_source(
-              heat_operation->get_heat_source(),
-              level_set_operation.get_level_set_as_heaviside(),
-              level_set_operation.get_normal_vector(),
-              normal_dof_idx,
-              dt,
-              true /* zero_out */);
-            if (base_in->parameters.mp.solid.set_velocity_to_zero ||
-                base_in->parameters.mp.solid.set_level_set_to_zero)
-              {
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-                dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
-#else
-                AssertThrow(false, ExcNotImplemented());
-#endif
-              }
-          }
+          melt_pool_operation->compute_heat_source(heat_operation->get_heat_source(),
+                                                   level_set_operation.get_level_set_as_heaviside(),
+                                                   level_set_operation.get_normal_vector(),
+                                                   normal_dof_idx,
+                                                   dt,
+                                                   true /* zero_out */);
 
         // the heat equation will NOT be solved if
         //    * the evaporative mass flux is given as a constant (temperature-independent) value
