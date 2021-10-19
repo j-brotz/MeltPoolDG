@@ -401,26 +401,30 @@ namespace MeltPoolDG::MeltPool
           {
             cell->get_dof_indices(local_dof_indices);
 
+            Vector<double> temp(dofs_per_cell);
+
             flow_eval.reinit(cell);
 
             solid_eval.reinit(solid_cell);
             solid_eval.get_function_values(solid, solid_at_q);
 
             for (const auto q : flow_eval.quadrature_point_indices())
-              {
-                if (solid_at_q[q] >= mp_data.solid.solid_fraction_lower_limit)
-                  solid_constraints.add_line(local_dof_indices[q]);
-              }
+              if (solid_at_q[q] >= mp_data.solid.solid_fraction_lower_limit)
+                solid_constraints.add_line(local_dof_indices[q]);
           }
         ++solid_cell;
       }
 
+    solid_constraints.make_consistent_in_parallel(flow_dof_handler.locally_owned_dofs(),
+                                                  flow_locally_relevant_dofs,
+                                                  scratch_data->get_mpi_comm());
     solid_constraints.close();
 
     UtilityFunctions::check_constraints(flow_dof_handler, solid_constraints);
 
     flow_constraints.merge(solid_constraints,
                            AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
+    flow_constraints.close();
 
     UtilityFunctions::check_constraints(flow_dof_handler, flow_constraints);
 

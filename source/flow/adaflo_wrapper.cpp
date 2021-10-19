@@ -120,6 +120,41 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
+  AdafloWrapper<dim>::reinit_3()
+  {
+    VectorType vel_temp, vel_temp_old, vel_temp_old_old, pressure_temp, pressure_temp_old,
+      pressure_temp_old_old;
+
+    scratch_data.initialize_dof_vector(vel_temp, dof_index_u);
+    scratch_data.initialize_dof_vector(vel_temp_old, dof_index_u);
+    scratch_data.initialize_dof_vector(vel_temp_old_old, dof_index_u);
+
+    scratch_data.initialize_dof_vector(pressure_temp, dof_index_p);
+    scratch_data.initialize_dof_vector(pressure_temp_old, dof_index_p);
+    scratch_data.initialize_dof_vector(pressure_temp_old_old, dof_index_p);
+
+    vel_temp.copy_locally_owned_data_from(navier_stokes.solution.block(0));
+    vel_temp_old.copy_locally_owned_data_from(navier_stokes.solution_old.block(0));
+    vel_temp_old_old.copy_locally_owned_data_from(navier_stokes.solution_old_old.block(0));
+
+    pressure_temp.copy_locally_owned_data_from(navier_stokes.solution.block(1));
+    pressure_temp_old.copy_locally_owned_data_from(navier_stokes.solution_old.block(1));
+    pressure_temp_old_old.copy_locally_owned_data_from(navier_stokes.solution_old_old.block(1));
+
+    reinit_2();
+
+    navier_stokes.solution.block(0).copy_locally_owned_data_from(vel_temp);
+    navier_stokes.solution_old.block(0).copy_locally_owned_data_from(vel_temp_old);
+    navier_stokes.solution_old_old.block(0).copy_locally_owned_data_from(vel_temp_old_old);
+
+    navier_stokes.solution.block(1).copy_locally_owned_data_from(pressure_temp);
+    navier_stokes.solution_old.block(1).copy_locally_owned_data_from(pressure_temp_old);
+    navier_stokes.solution_old_old.block(1).copy_locally_owned_data_from(pressure_temp_old_old);
+  }
+
+
+  template <int dim>
+  void
   AdafloWrapper<dim>::solve()
   {
     navier_stokes.get_constraints_u().set_zero(navier_stokes.user_rhs.block(0));
@@ -156,15 +191,15 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_velocity_old()
+  const LinearAlgebra::distributed::Vector<double> &
+  AdafloWrapper<dim>::get_velocity_old() const
   {
     return navier_stokes.solution_old.block(0);
   }
 
   template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_velocity_old_old()
+  const LinearAlgebra::distributed::Vector<double> &
+  AdafloWrapper<dim>::get_velocity_old_old() const
   {
     return navier_stokes.solution_old_old.block(0);
   }
@@ -240,10 +275,17 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  AdafloWrapper<dim>::get_pressure_old()
+  const LinearAlgebra::distributed::Vector<double> &
+  AdafloWrapper<dim>::get_pressure_old() const
   {
     return navier_stokes.solution_old.block(1);
+  }
+
+  template <int dim>
+  const LinearAlgebra::distributed::Vector<double> &
+  AdafloWrapper<dim>::get_pressure_old_old() const
+  {
+    return navier_stokes.solution_old_old.block(1);
   }
 
   template <int dim>

@@ -30,12 +30,6 @@ namespace MeltPoolDG
       virtual LinearAlgebra::distributed::Vector<double> &
       get_velocity() = 0;
 
-      virtual LinearAlgebra::distributed::Vector<double> &
-      get_velocity_old() = 0;
-
-      virtual LinearAlgebra::distributed::Vector<double> &
-      get_velocity_old_old() = 0;
-
       virtual const DoFHandler<dim> &
       get_dof_handler_velocity() const = 0;
 
@@ -65,9 +59,6 @@ namespace MeltPoolDG
 
       virtual LinearAlgebra::distributed::Vector<double> &
       get_pressure() = 0;
-
-      virtual LinearAlgebra::distributed::Vector<double> &
-      get_pressure_old() = 0;
 
       virtual const DoFHandler<dim> &
       get_dof_handler_pressure() const = 0;

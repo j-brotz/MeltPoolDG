@@ -61,12 +61,24 @@ namespace MeltPoolDG::Flow
          * HEAT TRANSFER
          ******************************************************************************************/
         if (melt_pool_operation)
-          melt_pool_operation->compute_heat_source(heat_operation->get_heat_source(),
-                                                   level_set_operation.get_level_set_as_heaviside(),
-                                                   level_set_operation.get_normal_vector(),
-                                                   normal_dof_idx,
-                                                   dt,
-                                                   true /* zero_out */);
+          {
+            melt_pool_operation->compute_heat_source(
+              heat_operation->get_heat_source(),
+              level_set_operation.get_level_set_as_heaviside(),
+              level_set_operation.get_normal_vector(),
+              normal_dof_idx,
+              dt,
+              true /* zero_out */);
+            if (base_in->parameters.mp.solid.set_velocity_to_zero ||
+                base_in->parameters.mp.solid.set_level_set_to_zero)
+              {
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+                dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+#else
+                AssertThrow(false, ExcNotImplemented());
+#endif
+              }
+          }
 
         // the heat equation will NOT be solved if
         //    * the evaporative mass flux is given as a constant (temperature-independent) value
@@ -78,8 +90,22 @@ namespace MeltPoolDG::Flow
           heat_operation->solve(dt);
 
         if (melt_pool_operation)
-          melt_pool_operation->compute_melt_front_propagation(
-            level_set_operation.get_level_set_as_heaviside());
+          {
+            melt_pool_operation->compute_melt_front_propagation(
+              level_set_operation.get_level_set_as_heaviside());
+
+            if (base_in->parameters.mp.solid.set_velocity_to_zero ||
+                base_in->parameters.mp.solid.set_level_set_to_zero)
+              {
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+                dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+#else
+                AssertThrow(false, ExcNotImplemented());
+#endif
+              }
+
+            scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
+          }
 
         /******************************************************************************************
          * NAVIER - STOKES
