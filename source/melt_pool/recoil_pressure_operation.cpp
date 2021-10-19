@@ -3,20 +3,19 @@
 namespace MeltPoolDG::MeltPool
 {
   template <int dim>
-  RecoilPressureOperation<dim>::RecoilPressureOperation(
-    const ScratchData<dim> &  scratch_data_in,
-    const Parameters<double> &data_in,
-    const unsigned int        flow_vel_dof_idx_in,
-    const unsigned int        flow_vel_quad_idx_in,
-    const unsigned int        flow_pressure_hanging_nodes_dof_idx_in,
-    const unsigned int        ls_dof_idx_in,
-    const unsigned int        temp_dof_idx_in)
+  RecoilPressureOperation<dim>::RecoilPressureOperation(const ScratchData<dim> &  scratch_data_in,
+                                                        const Parameters<double> &data_in,
+                                                        const unsigned int flow_vel_dof_idx_in,
+                                                        const unsigned int flow_vel_quad_idx_in,
+                                                        const unsigned int flow_pressure_dof_idx_in,
+                                                        const unsigned int ls_dof_idx_in,
+                                                        const unsigned int temp_dof_idx_in)
     : scratch_data(scratch_data_in)
     , recoil_pressure_data(data_in.recoil)
     , boiling_temperature(data_in.material.boiling_temperature)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
-    , flow_pressure_hanging_nodes_dof_idx(flow_pressure_hanging_nodes_dof_idx_in)
+    , flow_pressure_dof_idx(flow_pressure_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , temp_dof_idx(temp_dof_idx_in)
     , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in))
@@ -28,7 +27,7 @@ namespace MeltPoolDG::MeltPool
       {
         ls_to_pressure_grad_interpolation_matrix =
           UtilityFunctions::create_dof_interpolation_matrix<dim>(
-            scratch_data.get_dof_handler(flow_pressure_hanging_nodes_dof_idx),
+            scratch_data.get_dof_handler(flow_pressure_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             true /*do_matrix_free*/);
       }
@@ -59,7 +58,7 @@ namespace MeltPoolDG::MeltPool
                                                          flow_vel_quad_idx);
 
         FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(
-          matrix_free, flow_pressure_hanging_nodes_dof_idx, flow_vel_quad_idx);
+          matrix_free, flow_pressure_dof_idx, flow_vel_quad_idx);
 
         auto &used_level_set = do_level_set_pressure_gradient_interpolation ?
                                  interpolated_level_set_to_pressure_space :

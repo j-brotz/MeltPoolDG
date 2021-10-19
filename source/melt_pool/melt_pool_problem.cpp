@@ -27,6 +27,7 @@ namespace MeltPoolDG::Flow
         /******************************************************************************************
          * LEVEL SET
          ******************************************************************************************/
+        scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
         interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
 
         if (evaporation_operation)
@@ -292,7 +293,7 @@ namespace MeltPoolDG::Flow
       *scratch_data,
       level_set_operation.get_level_set_as_heaviside(),
       level_set_operation.get_curvature(),
-      ls_dof_idx,
+      ls_hanging_nodes_dof_idx,
       curv_dof_idx,
       vel_dof_idx,
       flow_operation->get_dof_handler_idx_pressure(),
@@ -347,13 +348,14 @@ namespace MeltPoolDG::Flow
       melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
         scratch_data,
         base_in->parameters,
-        ls_dof_idx,
+        ls_hanging_nodes_dof_idx,
         &heat_operation->get_temperature(),
         reinit_dof_idx,
         flow_operation->get_dof_handler_idx_velocity(),
         flow_vel_no_solid_dof_idx,
         flow_operation->get_quad_idx_velocity(),
         flow_operation->get_dof_handler_idx_pressure(),
+        temp_dof_idx,
         temp_hanging_nodes_dof_idx,
         base_in->parameters.time_stepping.start_time);
     /*
@@ -669,7 +671,7 @@ namespace MeltPoolDG::Flow
                                                    ls_hanging_nodes_dof_idx,
                                                    flow_operation->get_quad_idx_velocity());
         FECellIntegrator<dim, 1, double> temp_values(matrix_free,
-                                                     temp_hanging_nodes_dof_idx,
+                                                     temp_dof_idx,
                                                      flow_operation->get_quad_idx_velocity());
 
         if (darcy_operation)

@@ -33,6 +33,9 @@ namespace MeltPoolDG
       virtual LinearAlgebra::distributed::Vector<double> &
       get_velocity_old() = 0;
 
+      virtual LinearAlgebra::distributed::Vector<double> &
+      get_velocity_old_old() = 0;
+
       virtual const DoFHandler<dim> &
       get_dof_handler_velocity() const = 0;
 

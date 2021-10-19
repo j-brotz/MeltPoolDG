@@ -71,9 +71,10 @@ namespace MeltPoolDG
                         const unsigned int                       flow_vel_dof_idx_in,
                         const unsigned int                       flow_vel_no_solid_dof_idx_in,
                         const unsigned int                       flow_vel_quad_idx_in,
-                        const unsigned int                       flow_pressure_dof_idx_in,
-                        const unsigned int                       temp_hanging_nodes_dof_idx_in,
-                        const double                             start_time_in);
+                        const unsigned int flow_pressure_hanging_nodes_dof_idx,
+                        const unsigned int temp_dof_idx_in,
+                        const unsigned int temp_hanging_nodes_dof_idx_in,
+                        const double       start_time_in);
 
       void
       set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
