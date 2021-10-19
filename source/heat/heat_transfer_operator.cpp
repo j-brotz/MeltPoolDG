@@ -18,6 +18,7 @@ namespace MeltPoolDG::Heat
     const MaterialData<number> &                    material_data_in,
     const unsigned int                              temp_dof_idx_in,
     const unsigned int                              temp_quad_idx_in,
+    const unsigned int                              temp_hanging_nodes_dof_idx_in,
     const VectorType &                              temperature_in,
     const VectorType &                              temperature_old_in,
     const VectorType &                              heat_source_in,
@@ -30,6 +31,7 @@ namespace MeltPoolDG::Heat
     , material(material_data_in)
     , temp_dof_idx(temp_dof_idx_in)
     , temp_quad_idx(temp_quad_idx_in)
+    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , temperature(temperature_in)
     , temperature_old(temperature_old_in)
     , heat_source(heat_source_in)
@@ -486,7 +488,9 @@ namespace MeltPoolDG::Heat
   {
     FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   temp_vals_old(matrix_free, temp_dof_idx, this->quad_idx);
-    FECellIntegrator<dim, 1, number>   heat_source_vals(matrix_free, temp_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   heat_source_vals(matrix_free,
+                                                      temp_hanging_nodes_dof_idx,
+                                                      this->quad_idx);
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
     FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,

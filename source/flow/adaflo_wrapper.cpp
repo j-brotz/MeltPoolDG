@@ -163,6 +163,13 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim>
+  LinearAlgebra::distributed::Vector<double> &
+  AdafloWrapper<dim>::get_velocity_old_old()
+  {
+    return navier_stokes.solution_old_old.block(0);
+  }
+
+  template <int dim>
   const DoFHandler<dim> &
   AdafloWrapper<dim>::get_dof_handler_velocity() const
   {

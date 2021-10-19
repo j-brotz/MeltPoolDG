@@ -37,6 +37,7 @@ namespace MeltPoolDG::Heat
                                                                 material_data,
                                                                 temp_dof_idx,
                                                                 temp_quad_idx,
+                                                                temp_hanging_nodes_dof_idx,
                                                                 temperature,
                                                                 temperature_old,
                                                                 heat_source,
@@ -81,7 +82,7 @@ namespace MeltPoolDG::Heat
   {
     scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
     scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
-    scratch_data.initialize_dof_vector(heat_source, temp_dof_idx);
+    scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
     /*
      * setup sparsity pattern of system matrix only if the latter is
      * needed for computing the preconditioner
@@ -229,7 +230,7 @@ namespace MeltPoolDG::Heat
     /**
      *  heat source
      */
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              heat_source,
                              "heat_source");
     /**

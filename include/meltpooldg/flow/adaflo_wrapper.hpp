@@ -61,6 +61,9 @@ namespace MeltPoolDG::Flow
     LinearAlgebra::distributed::Vector<double> &
     get_velocity_old() override;
 
+    LinearAlgebra::distributed::Vector<double> &
+    get_velocity_old_old() override;
+
     const DoFHandler<dim> &
     get_dof_handler_velocity() const override;
 
