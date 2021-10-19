@@ -61,11 +61,11 @@ namespace MeltPoolDG::Flow
     LinearAlgebra::distributed::Vector<double> &
     get_velocity() override;
 
-    LinearAlgebra::distributed::Vector<double> &
-    get_velocity_old() override;
+    const LinearAlgebra::distributed::Vector<double> &
+    get_velocity_old() const;
 
-    LinearAlgebra::distributed::Vector<double> &
-    get_velocity_old_old() override;
+    const LinearAlgebra::distributed::Vector<double> &
+    get_velocity_old_old() const;
 
     const DoFHandler<dim> &
     get_dof_handler_velocity() const override;
@@ -97,11 +97,11 @@ namespace MeltPoolDG::Flow
     LinearAlgebra::distributed::Vector<double> &
     get_pressure() override;
 
-    LinearAlgebra::distributed::Vector<double> &
-    get_pressure_old() override;
+    const LinearAlgebra::distributed::Vector<double> &
+    get_pressure_old() const;
 
-    LinearAlgebra::distributed::Vector<double> &
-    get_pressure_old_old() override;
+    const LinearAlgebra::distributed::Vector<double> &
+    get_pressure_old_old() const;
 
     const DoFHandler<dim> &
     get_dof_handler_pressure() const override;

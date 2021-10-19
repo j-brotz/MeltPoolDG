@@ -69,6 +69,15 @@ namespace MeltPoolDG::Flow
               normal_dof_idx,
               dt,
               true /* zero_out */);
+            if (base_in->parameters.mp.solid.set_velocity_to_zero ||
+                base_in->parameters.mp.solid.set_level_set_to_zero)
+              {
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+                dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+#else
+                AssertThrow(false, ExcNotImplemented());
+#endif
+              }
           }
 
         // the heat equation will NOT be solved if
