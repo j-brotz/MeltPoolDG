@@ -17,14 +17,6 @@ namespace MeltPoolDG::Flow
   {
     initialize(base_in);
 
-    {
-      VectorType vel_temp;
-      scratch_data->initialize_dof_vector(vel_temp, vel_dof_idx);
-      vel_temp.copy_locally_owned_data_from(flow_operation->get_velocity());
-      scratch_data->initialize_dof_vector(flow_operation->get_velocity(), vel_dof_idx);
-      flow_operation->get_velocity().copy_locally_owned_data_from(vel_temp);
-    }
-
     while (!time_iterator.is_finished())
       {
         const auto dt = time_iterator.get_next_time_increment();
@@ -469,6 +461,7 @@ namespace MeltPoolDG::Flow
         (evaporation_operation && !(base_in->parameters.evapor.evaporation_model == "constant")) ||
         (melt_pool_operation && !(base_in->parameters.laser.heat_source_model == "Analytical")))
       heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+
     /*
      * set initial condition of the melt pool class
      */
@@ -476,6 +469,13 @@ namespace MeltPoolDG::Flow
       {
         melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
                                                    level_set_operation.get_level_set());
+        if (base_in->parameters.mp.solid.set_velocity_to_zero ||
+            base_in->parameters.mp.solid.set_level_set_to_zero)
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+          dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+#else
+          AssertThrow(false, ExcNotImplemented());
+#endif
       }
   }
 
