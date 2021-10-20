@@ -75,6 +75,8 @@ namespace MeltPoolDG
       const bool        do_narrow_band;
       const VectorType *solution_level_set;
 
+      const double n_subdivisions;
+
       const double narrow_band_threshold = 0.9999999;
     };
   } // namespace NormalVector
