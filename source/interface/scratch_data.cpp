@@ -207,7 +207,11 @@ namespace MeltPoolDG
                 VectorizedArray<double> diameter = VectorizedArray<double>();
                 for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
                   {
-                    diameter[v] = this->matrix_free.get_cell_iterator(cell, v, dof_idx)->diameter();
+                    // the diameter is subdivided by 2 to get the same value as
+                    // CellAccessor->diameter()
+                    diameter[v] =
+                      this->matrix_free.get_cell_iterator(cell, v, dof_idx)->diameter() /
+                      numbers::SQRT2;
 
                     Assert(diameter[v] > 0.0,
                            ExcMessage("The calculated diameter should be larger than zero."));
