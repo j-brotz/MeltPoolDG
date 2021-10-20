@@ -343,7 +343,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                                                     bottom_left,
                                                     top_right);
 
-          GridTools::rotate(0.5 * numbers::PI, 0, tria_slice);
+          GridTools::rotate(Point<dim>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
 
           tria_slice.refine_global(this->parameters.base.global_refinements);
 
