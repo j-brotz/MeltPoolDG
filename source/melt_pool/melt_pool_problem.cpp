@@ -61,24 +61,12 @@ namespace MeltPoolDG::Flow
          * HEAT TRANSFER
          ******************************************************************************************/
         if (melt_pool_operation)
-          {
-            melt_pool_operation->compute_heat_source(
-              heat_operation->get_heat_source(),
-              level_set_operation.get_level_set_as_heaviside(),
-              level_set_operation.get_normal_vector(),
-              normal_dof_idx,
-              dt,
-              true /* zero_out */);
-            if (base_in->parameters.mp.solid.set_velocity_to_zero ||
-                base_in->parameters.mp.solid.set_level_set_to_zero)
-              {
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-                dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
-#else
-                AssertThrow(false, ExcNotImplemented());
-#endif
-              }
-          }
+          melt_pool_operation->compute_heat_source(heat_operation->get_heat_source(),
+                                                   level_set_operation.get_level_set_as_heaviside(),
+                                                   level_set_operation.get_normal_vector(),
+                                                   normal_dof_idx,
+                                                   dt,
+                                                   true /* zero_out */);
 
         // the heat equation will NOT be solved if
         //    * the evaporative mass flux is given as a constant (temperature-independent) value
@@ -473,6 +461,7 @@ namespace MeltPoolDG::Flow
         (evaporation_operation && !(base_in->parameters.evapor.evaporation_model == "constant")) ||
         (melt_pool_operation && !(base_in->parameters.laser.heat_source_model == "Analytical")))
       heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+
     /*
      * set initial condition of the melt pool class
      */
@@ -480,6 +469,13 @@ namespace MeltPoolDG::Flow
       {
         melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
                                                    level_set_operation.get_level_set());
+        if (base_in->parameters.mp.solid.set_velocity_to_zero ||
+            base_in->parameters.mp.solid.set_level_set_to_zero)
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+          dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+#else
+          AssertThrow(false, ExcNotImplemented());
+#endif
       }
   }
 

@@ -141,7 +141,8 @@ namespace MeltPoolDG::Flow
     pressure_temp_old.copy_locally_owned_data_from(navier_stokes.solution_old.block(1));
     pressure_temp_old_old.copy_locally_owned_data_from(navier_stokes.solution_old_old.block(1));
 
-    reinit_2();
+    navier_stokes.initialize_matrix_free(
+      &scratch_data.get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
 
     navier_stokes.solution.block(0).copy_locally_owned_data_from(vel_temp);
     navier_stokes.solution_old.block(0).copy_locally_owned_data_from(vel_temp_old);
