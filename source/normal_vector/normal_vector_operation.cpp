@@ -110,11 +110,9 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::create_operator(const VectorType &solution_levelset_in)
   {
-    const double damping_parameter = std::pow(scratch_data->get_min_cell_size(normal_dof_idx), 2) *
-                                     normal_vector_data.damping_scale_factor;
     normal_vector_operator =
       std::make_unique<NormalVectorOperator<dim>>(*scratch_data,
-                                                  damping_parameter,
+                                                  normal_vector_data,
                                                   normal_dof_idx,
                                                   normal_quad_idx,
                                                   ls_dof_idx,

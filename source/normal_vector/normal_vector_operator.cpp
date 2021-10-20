@@ -4,15 +4,16 @@
 namespace MeltPoolDG::NormalVector
 {
   template <int dim, typename number>
-  NormalVectorOperator<dim, number>::NormalVectorOperator(const ScratchData<dim> &scratch_data_in,
-                                                          const double            damping_in,
-                                                          const unsigned int      normal_dof_idx_in,
-                                                          const unsigned int normal_quad_idx_in,
-                                                          const unsigned int ls_dof_idx_in,
-                                                          const bool         do_narrow_band_in,
-                                                          const VectorType * solution_level_set_in)
+  NormalVectorOperator<dim, number>::NormalVectorOperator(
+    const ScratchData<dim> &        scratch_data_in,
+    const NormalVectorData<double> &normal_vector_data_in,
+    const unsigned int              normal_dof_idx_in,
+    const unsigned int              normal_quad_idx_in,
+    const unsigned int              ls_dof_idx_in,
+    const bool                      do_narrow_band_in,
+    const VectorType *              solution_level_set_in)
     : scratch_data(scratch_data_in)
-    , damping(damping_in)
+    , normal_vector_data(normal_vector_data_in)
     , normal_dof_idx(normal_dof_idx_in)
     , normal_quad_idx(normal_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
@@ -67,6 +68,12 @@ namespace MeltPoolDG::NormalVector
 
           ls_values.get_function_gradients(
             level_set_in, normal_at_q); // compute normals from level set solution at tau=0
+
+          const double damping =
+            std::pow(std::max(scratch_data.get_min_cell_size(normal_dof_idx), cell->diameter()),
+                     2) *
+            normal_vector_data.damping_scale_factor;
+
           for (const unsigned int q_index : normal_values.quadrature_point_indices())
             {
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
@@ -137,6 +144,14 @@ namespace MeltPoolDG::NormalVector
                 level_set.read_dof_values_plain(*solution_level_set);
                 level_set.evaluate(EvaluationFlags::values);
               }
+
+            //@todo: do only once in create_rhs
+            const VectorizedArray<double> damping =
+              std::pow(std::max(VectorizedArray<double>(
+                                  scratch_data.get_min_cell_size(normal_dof_idx)),
+                                scratch_data.get_cell_diameters(normal_dof_idx)[cell]),
+                       2.) *
+              normal_vector_data.damping_scale_factor;
 
             for (unsigned int q_index = 0; q_index < normal.n_q_points; ++q_index)
               {

@@ -190,6 +190,8 @@ namespace MeltPoolDG
 
         /*
          *  create vector of cell diameters for matrix free
+         *
+         *  @todo: do we really have to do it for every DoF Handler?
          */
         int dof_idx = 0;
         for (const auto &dof : dof_handler)
@@ -204,8 +206,13 @@ namespace MeltPoolDG
               {
                 VectorizedArray<double> diameter = VectorizedArray<double>();
                 for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
-                  diameter[v] = this->matrix_free.get_cell_iterator(cell, v, dof_idx)->diameter();
-                cell_diameters_temp[cell] = make_vectorized_array<double>(0.0); // diameter;
+                  {
+                    diameter[v] = this->matrix_free.get_cell_iterator(cell, v, dof_idx)->diameter();
+
+                    Assert(diameter[v] > 0.0,
+                           ExcMessage("The calculated diameter should be larger than zero."));
+                  }
+                cell_diameters_temp[cell] = diameter;
               }
             this->cell_diameters.push_back(cell_diameters_temp);
             dof_idx += 1;

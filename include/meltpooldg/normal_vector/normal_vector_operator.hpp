@@ -34,13 +34,13 @@ namespace MeltPoolDG
       using VectorizedArrayType = VectorizedArray<number>;
       using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
 
-      NormalVectorOperator(const ScratchData<dim> &scratch_data_in,
-                           const double            damping_in,
-                           const unsigned int      normal_dof_idx_in,
-                           const unsigned int      normal_quad_idx_in,
-                           const unsigned int      ls_dof_idx_in,
-                           const bool              do_narrow_band        = false,
-                           const VectorType *      solution_level_set_in = nullptr);
+      NormalVectorOperator(const ScratchData<dim> &        scratch_data_in,
+                           const NormalVectorData<double> &normal_vector_data_in,
+                           const unsigned int              normal_dof_idx_in,
+                           const unsigned int              normal_quad_idx_in,
+                           const unsigned int              ls_dof_idx_in,
+                           const bool                      do_narrow_band        = false,
+                           const VectorType *              solution_level_set_in = nullptr);
 
       void
       assemble_matrixbased(const VectorType &level_set_in,
@@ -64,9 +64,9 @@ namespace MeltPoolDG
                                      const double                 zero = 1e-16);
 
     private:
-      const ScratchData<dim> &scratch_data;
+      const ScratchData<dim> &        scratch_data;
+      const NormalVectorData<double> &normal_vector_data;
 
-      double             damping;
       const unsigned int normal_dof_idx;
       const unsigned int normal_quad_idx;
       const unsigned int ls_dof_idx;
