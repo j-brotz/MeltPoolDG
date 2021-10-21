@@ -36,7 +36,7 @@ namespace MeltPoolDG::NormalVector
       std::make_shared<LevelSetOKZSolverComputeNormal<dim>>(normal_vector_field,
                                                             rhs,
                                                             advected_field,
-                                                            scratch_data.get_cell_diameters(),
+                                                            scratch_data.get_cell_sizes(),
                                                             epsilon_used,
                                                             cell_diameter_min,
                                                             scratch_data.get_constraint(
@@ -83,7 +83,7 @@ namespace MeltPoolDG::NormalVector
       normal_vec_adaflo_params.quad_index,
       epsilon_used,
       normal_vec_adaflo_params.epsilon,
-      scratch_data.get_cell_diameters(),
+      scratch_data.get_cell_sizes(),
       *projection_matrix,
       *ilu_projection_matrix);
   }

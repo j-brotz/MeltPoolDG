@@ -39,7 +39,7 @@ namespace MeltPoolDG::Curvature
      * initialize adaflo operation for computing curvature
      */
     curvature_operation = std::make_shared<LevelSetOKZSolverComputeCurvature<dim>>(
-      scratch_data.get_cell_diameters(),
+      scratch_data.get_cell_sizes(),
       normal_vector_operation_adaflo->get_solution_normal_vector(),
       scratch_data.get_constraint(curv_dof_idx),
       scratch_data.get_constraint(

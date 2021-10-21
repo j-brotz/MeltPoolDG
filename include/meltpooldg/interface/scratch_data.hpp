@@ -152,13 +152,13 @@ namespace MeltPoolDG
     get_degree(const unsigned int dof_idx = 0) const;
 
     const double &
-    get_min_cell_size(const unsigned int dof_idx = 0) const;
+    get_min_cell_size() const;
 
     const double &
     get_diameter() const;
 
     const AlignedVector<VectorizedArray<double>> &
-    get_cell_diameters(const unsigned int dof_idx = 0) const;
+    get_cell_sizes() const;
 
     MPI_Comm
     get_mpi_comm(const unsigned int dof_idx = 0) const;
@@ -189,9 +189,9 @@ namespace MeltPoolDG
     std::vector<const AffineConstraints<number> *>            constraint;
     std::vector<Quadrature<dim>>                              quad;
     std::vector<Quadrature<dim - 1>>                          face_quad;
-    std::vector<double>                                       min_cell_size;
+    double                                                    min_cell_size;
     double                                                    diameter;
-    std::vector<AlignedVector<VectorizedArray<double>>>       cell_diameters;
+    AlignedVector<VectorizedArray<double>>                    cell_sizes;
     std::vector<IndexSet>                                     locally_owned_dofs;
     std::vector<IndexSet>                                     locally_relevant_dofs;
     std::vector<std::shared_ptr<Utilities::MPI::Partitioner>> partitioner;

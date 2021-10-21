@@ -7,16 +7,16 @@
 namespace MeltPoolDG::Curvature
 {
   template <int dim, typename number>
-  CurvatureOperator<dim, number>::CurvatureOperator(const ScratchData<dim> &scratch_data_in,
-                                                    const double            damping_in,
-                                                    const unsigned int      curv_dof_idx_in,
-                                                    const unsigned int      curv_quad_idx_in,
-                                                    const unsigned int      normal_dof_idx_in,
-                                                    const unsigned int      ls_dof_idx_in,
-                                                    const bool              do_narrow_band_in,
-                                                    const VectorType *      solution_level_set_in)
+  CurvatureOperator<dim, number>::CurvatureOperator(const ScratchData<dim> &     scratch_data_in,
+                                                    const CurvatureData<double> &curvature_data_in,
+                                                    const unsigned int           curv_dof_idx_in,
+                                                    const unsigned int           curv_quad_idx_in,
+                                                    const unsigned int           normal_dof_idx_in,
+                                                    const unsigned int           ls_dof_idx_in,
+                                                    const bool                   do_narrow_band_in,
+                                                    const VectorType *solution_level_set_in)
     : scratch_data(scratch_data_in)
-    , damping(damping_in)
+    , curvature_data(curvature_data_in)
     , curv_dof_idx(curv_dof_idx_in)
     , curv_quad_idx(curv_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
@@ -26,6 +26,7 @@ namespace MeltPoolDG::Curvature
     , do_narrow_band(do_narrow_band_in)
     , ls_dof_idx(ls_dof_idx_in)
     , solution_level_set(solution_level_set_in)
+
   {
     this->reset_indices(curv_dof_idx_in, curv_quad_idx_in);
   }
@@ -75,6 +76,9 @@ namespace MeltPoolDG::Curvature
 
           NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
             normal_values, solution_normal_vector_in, normal_at_q, tolerance_normal_vector);
+
+          const double damping = NormalVector::compute_cell_size_dependent_filter_parameter<dim>(
+            scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
 
           for (const unsigned int q_index : curv_values.quadrature_point_indices())
             {
@@ -130,6 +134,11 @@ namespace MeltPoolDG::Curvature
                 level_set.read_dof_values_plain(*solution_level_set);
                 level_set.evaluate(EvaluationFlags::values);
               }
+
+            //@todo: do only once in create_rhs
+            const VectorizedArray<double> damping =
+              NormalVector::compute_cell_size_dependent_filter_parameter_mf<dim>(
+                scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
 
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {

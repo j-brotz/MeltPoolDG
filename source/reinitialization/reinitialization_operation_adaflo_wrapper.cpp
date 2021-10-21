@@ -45,7 +45,7 @@ namespace MeltPoolDG::Reinitialization
      */
     reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
       normal_vector_operation_adaflo->get_solution_normal_vector(),
-      scratch_data.get_cell_diameters(),
+      scratch_data.get_cell_sizes(),
       epsilon_used,
       cell_diameter_min,
       scratch_data.get_constraint(reinit_dof_idx),
@@ -68,7 +68,7 @@ namespace MeltPoolDG::Reinitialization
 
     reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
       normal_vector_operation_adaflo->get_solution_normal_vector(),
-      scratch_data.get_cell_diameters(),
+      scratch_data.get_cell_sizes(),
       epsilon_used,
       cell_diameter_min,
       scratch_data.get_constraint(reinit_dof_idx),

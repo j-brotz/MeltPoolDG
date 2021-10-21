@@ -45,7 +45,7 @@ namespace MeltPoolDG::AdvectionDiffusion
       velocity_vec,
       velocity_vec_old,
       velocity_vec_old_old,
-      scratch_data.get_cell_diameters(),
+      scratch_data.get_cell_sizes(),
       scratch_data.get_constraint(advec_diff_zero_dirichlet_dof_idx),
       pcout,
       bcs,

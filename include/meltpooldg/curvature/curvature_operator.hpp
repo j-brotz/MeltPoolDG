@@ -38,9 +38,11 @@ namespace MeltPoolDG::Curvature
     using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
     using vector              = Tensor<1, dim, VectorizedArray<number>>;
     using scalar              = VectorizedArray<number>;
+
     const ScratchData<dim> &scratch_data;
 
-    double             damping;
+    const CurvatureData<double> &curvature_data;
+
     const unsigned int curv_dof_idx;
     const unsigned int curv_quad_idx;
     const unsigned int normal_dof_idx;
@@ -53,14 +55,14 @@ namespace MeltPoolDG::Curvature
     const double       narrow_band_threshold = 0.9999999;
 
   public:
-    CurvatureOperator(const ScratchData<dim> &scratch_data_in,
-                      double                  damping_in,
-                      unsigned int            curv_dof_idx_in,
-                      unsigned int            curv_quad_idx_in,
-                      unsigned int            normal_dof_idx_in,
-                      const unsigned int      ls_dof_idx_in,
-                      const bool              do_narrow_band        = false,
-                      const VectorType *      solution_level_set_in = nullptr);
+    CurvatureOperator(const ScratchData<dim> &     scratch_data_in,
+                      const CurvatureData<double> &curvature_data,
+                      const unsigned int           curv_dof_idx_in,
+                      const unsigned int           curv_quad_idx_in,
+                      const unsigned int           normal_dof_idx_in,
+                      const unsigned int           ls_dof_idx_in,
+                      const bool                   do_narrow_band        = false,
+                      const VectorType *           solution_level_set_in = nullptr);
 
     void
     assemble_matrixbased(const BlockVectorType &solution_normal_vector_in,
