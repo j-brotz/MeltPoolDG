@@ -26,9 +26,6 @@ namespace MeltPoolDG::Curvature
     , do_narrow_band(do_narrow_band_in)
     , ls_dof_idx(ls_dof_idx_in)
     , solution_level_set(solution_level_set_in)
-    , n_subdivisions(scratch_data.is_FE_Q_iso_Q_1(normal_dof_idx) ?
-                       scratch_data.get_degree(normal_dof_idx) :
-                       1.0)
 
   {
     this->reset_indices(curv_dof_idx_in, curv_quad_idx_in);
@@ -80,10 +77,8 @@ namespace MeltPoolDG::Curvature
           NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
             normal_values, solution_normal_vector_in, normal_at_q, tolerance_normal_vector);
 
-          const double damping = std::pow(std::max(scratch_data.get_min_cell_size(curv_dof_idx),
-                                                   cell->diameter() / n_subdivisions),
-                                          2.) *
-                                 curvature_data.damping_scale_factor;
+          const double damping = NormalVector::compute_cell_size_dependent_filter_parameter<dim>(
+            scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
 
           for (const unsigned int q_index : curv_values.quadrature_point_indices())
             {
@@ -142,11 +137,8 @@ namespace MeltPoolDG::Curvature
 
             //@todo: do only once in create_rhs
             const VectorizedArray<double> damping =
-              std::pow(
-                std::max(VectorizedArray<double>(scratch_data.get_min_cell_size(curv_dof_idx)),
-                         scratch_data.get_cell_diameters(curv_dof_idx)[cell] / n_subdivisions),
-                2.) *
-              curvature_data.damping_scale_factor;
+              NormalVector::compute_cell_size_dependent_filter_parameter_mf<dim>(
+                scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
 
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {

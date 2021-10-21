@@ -127,9 +127,8 @@ namespace MeltPoolDG::Reinitialization
     const double eps_ =
       eps > 0 ?
         eps :
-        eps_scale_factor *
-          scratch_data.get_min_cell_size(
-            this->dof_idx); // @ todo: check how cell size can be extracted from matrix free class
+        eps_scale_factor * scratch_data.get_min_cell_size(); // @ todo: check how cell size can be
+                                                             // extracted from matrix free class
 
     Assert(eps_ > 0.0, ExcMessage("reinitialization operator: epsilon must be set"));
 
@@ -189,9 +188,8 @@ namespace MeltPoolDG::Reinitialization
     const double eps_ =
       eps > 0 ?
         eps :
-        eps_scale_factor *
-          scratch_data.get_min_cell_size(
-            this->dof_idx); // @ todo: check how cell size can be extracted from matrix free class
+        eps_scale_factor * scratch_data.get_min_cell_size(); // @ todo: check how cell size can be
+                                                             // extracted from matrix free class
 
     AssertThrow(eps_ > 0.0,
                 ExcMessage("reinitialization matrix-free operator: epsilon must be set"));

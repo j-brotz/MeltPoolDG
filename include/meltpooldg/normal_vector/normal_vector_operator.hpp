@@ -75,9 +75,58 @@ namespace MeltPoolDG
       const bool        do_narrow_band;
       const VectorType *solution_level_set;
 
-      const double n_subdivisions;
-
       const double narrow_band_threshold = 0.9999999;
     };
+
+    /**
+     * Matrix-free
+     *
+     * For a given @param cell, compute the cell_size dependent filter parameter
+     *
+     *    scale_factor * h^2
+     *
+     * using a given @param scale_factor.
+     *
+     * @todo: move to normal_vector_utils.hpp
+     */
+    template <int dim>
+    inline VectorizedArray<double>
+    compute_cell_size_dependent_filter_parameter_mf(const ScratchData<dim> &scratch_data,
+                                                    const unsigned int      dof_idx,
+                                                    const unsigned int      cell_idx,
+                                                    const double            scale_factor)
+    {
+      const double n_subdivisions =
+        scratch_data.is_FE_Q_iso_Q_1(dof_idx) ? scratch_data.get_degree(dof_idx) : 1;
+      return std::pow(std::max(VectorizedArray<double>(scratch_data.get_min_cell_size()),
+                               scratch_data.get_cell_sizes()[cell_idx] / (double)n_subdivisions),
+                      2.) *
+             scale_factor;
+    }
+
+    /**
+     * For a given @param cell, compute the cell_size dependent filter parameter
+     *
+     *    scale_factor * h^2
+     *
+     * using a given @param scale_factor.
+     *
+     * @todo: move to normal_vector_utils.hpp
+     */
+    template <int dim, typename cell_type>
+    double
+    compute_cell_size_dependent_filter_parameter(const ScratchData<dim> &scratch_data,
+                                                 const unsigned int      dof_idx,
+                                                 const cell_type         cell,
+                                                 const double            scale_factor)
+    {
+      const double n_subdivisions =
+        scratch_data.is_FE_Q_iso_Q_1(dof_idx) ? scratch_data.get_degree(dof_idx) : 1;
+
+      return std::pow(std::max(scratch_data.get_min_cell_size(),
+                               cell->diameter() / (std::sqrt(dim) * n_subdivisions)),
+                      2.) *
+             scale_factor;
+    }
   } // namespace NormalVector
 } // namespace MeltPoolDG

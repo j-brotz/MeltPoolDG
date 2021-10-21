@@ -125,27 +125,22 @@ namespace MeltPoolDG
     /*
      *  recreate DoF-dependent partitioning data
      */
-    this->min_cell_size.clear();
-    this->diameter = 0.0;
     this->locally_owned_dofs.clear();
     this->locally_relevant_dofs.clear();
     this->partitioner.clear();
 
+    /*
+     *  create minimum cell sizes
+     */
+    this->min_cell_size = GridTools::minimal_cell_diameter(get_triangulation()) / std::sqrt(dim);
+    /*
+     *  create diameter of the object
+     */
+    this->diameter = GridTools::minimal_cell_diameter(get_triangulation());
+
     int dof_idx = 0;
     for (const auto &dof : dof_handler)
       {
-        /*
-         *  create vector of minimum cell sizes
-         */
-        this->min_cell_size.push_back(GridTools::minimal_cell_diameter(dof->get_triangulation()) /
-                                      std::sqrt(dim));
-        /*
-         *  create diameter of the object
-         */
-        if (dof_idx == 0)
-          // @todo: this should actually mean GridTools::diameter; however dealii does not
-          // support diameter for parallel triangulations atm
-          this->diameter = GridTools::minimal_cell_diameter(dof->get_triangulation());
         /*
          *  create partitioning
          */
@@ -186,40 +181,29 @@ namespace MeltPoolDG
         this->matrix_free.reinit(
           *this->mapping, this->dof_handler, this->constraint, this->quad, additional_data);
 
-        this->cell_diameters.clear();
+        this->cell_sizes.clear();
 
         /*
-         *  create vector of cell diameters for matrix free
-         *
-         *  @todo: do we really have to do it for every DoF Handler?
+         *  create vector of cell sizes for matrix free
          */
-        int dof_idx = 0;
-        for (const auto &dof : dof_handler)
+        this->cell_sizes.resize(this->matrix_free.n_cell_batches());
+
+        FullMatrix<double> mat(dim, dim);
+
+        for (unsigned int cell = 0; cell < this->matrix_free.n_cell_batches(); ++cell)
           {
-            (void)dof;
-            AlignedVector<VectorizedArray<double>> cell_diameters_temp;
-            cell_diameters_temp.resize(this->matrix_free.n_cell_batches());
-
-            FullMatrix<double> mat(dim, dim);
-
-            for (unsigned int cell = 0; cell < this->matrix_free.n_cell_batches(); ++cell)
+            VectorizedArray<double> cell_size = VectorizedArray<double>();
+            for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
               {
-                VectorizedArray<double> diameter = VectorizedArray<double>();
-                for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
-                  {
-                    // the diameter is subdivided by 2 to get the same value as
-                    // CellAccessor->diameter()
-                    diameter[v] =
-                      this->matrix_free.get_cell_iterator(cell, v, dof_idx)->diameter() /
-                      numbers::SQRT2;
+                // the diameter is subdivided by 2 to get the edge length for quadratic elements
+                cell_size[v] =
+                  this->matrix_free.get_cell_iterator(cell, v, 0 /*dof_idx*/)->diameter() /
+                  sqrt(dim);
 
-                    Assert(diameter[v] > 0.0,
-                           ExcMessage("The calculated diameter should be larger than zero."));
-                  }
-                cell_diameters_temp[cell] = diameter;
+                Assert(cell_size[v] > 0.0,
+                       ExcMessage("The calculated diameter should be larger than zero."));
               }
-            this->cell_diameters.push_back(cell_diameters_temp);
-            dof_idx += 1;
+            this->cell_sizes[cell] = cell_size;
           }
       }
   }
@@ -279,9 +263,9 @@ namespace MeltPoolDG
     this->constraint.clear();
     this->dof_handler.clear();
     this->mapping.reset();
-    this->min_cell_size.clear();
-    this->diameter = 0.0;
-    this->cell_diameters.clear();
+    this->min_cell_size = 0.0;
+    this->diameter      = 0.0;
+    this->cell_sizes.clear();
     this->locally_owned_dofs.clear();
     this->locally_relevant_dofs.clear();
     this->pcout.clear();
@@ -409,10 +393,9 @@ namespace MeltPoolDG
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   const double &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_min_cell_size(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_min_cell_size() const
   {
-    return this->min_cell_size[dof_idx];
+    return this->min_cell_size;
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
@@ -424,10 +407,9 @@ namespace MeltPoolDG
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   const AlignedVector<VectorizedArray<double>> &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_cell_diameters(
-    const unsigned int dof_idx) const
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_cell_sizes() const
   {
-    return this->cell_diameters[dof_idx];
+    return this->cell_sizes;
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>

@@ -1,6 +1,7 @@
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
+
 namespace MeltPoolDG::NormalVector
 {
   template <int dim, typename number>
@@ -19,10 +20,6 @@ namespace MeltPoolDG::NormalVector
     , ls_dof_idx(ls_dof_idx_in)
     , do_narrow_band(do_narrow_band_in)
     , solution_level_set(solution_level_set_in)
-    , n_subdivisions(scratch_data.is_FE_Q_iso_Q_1(normal_dof_idx) ?
-                       scratch_data.get_degree(normal_dof_idx) :
-                       1.0)
-
   {
     this->reset_indices(normal_dof_idx_in, normal_quad_idx_in);
   }
@@ -73,10 +70,8 @@ namespace MeltPoolDG::NormalVector
           ls_values.get_function_gradients(
             level_set_in, normal_at_q); // compute normals from level set solution at tau=0
 
-          const double damping = std::pow(std::max(scratch_data.get_min_cell_size(normal_dof_idx),
-                                                   cell->diameter() / n_subdivisions),
-                                          2) *
-                                 normal_vector_data.damping_scale_factor;
+          const double damping = compute_cell_size_dependent_filter_parameter<dim>(
+            scratch_data, normal_dof_idx, cell, normal_vector_data.damping_scale_factor);
 
           for (const unsigned int q_index : normal_values.quadrature_point_indices())
             {
@@ -149,13 +144,9 @@ namespace MeltPoolDG::NormalVector
                 level_set.evaluate(EvaluationFlags::values);
               }
 
-            //@todo: do only once in create_rhs
             const VectorizedArray<double> damping =
-              std::pow(
-                std::max(VectorizedArray<double>(scratch_data.get_min_cell_size(normal_dof_idx)),
-                         scratch_data.get_cell_diameters(normal_dof_idx)[cell] / n_subdivisions),
-                2.) *
-              normal_vector_data.damping_scale_factor;
+              compute_cell_size_dependent_filter_parameter_mf<dim>(
+                scratch_data, normal_dof_idx, cell, normal_vector_data.damping_scale_factor);
 
             for (unsigned int q_index = 0; q_index < normal.n_q_points; ++q_index)
               {

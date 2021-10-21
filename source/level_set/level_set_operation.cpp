@@ -522,7 +522,7 @@ namespace MeltPoolDG::LevelSet
                                100000.,
                                data_in.reinit.dtau > 0.0 ?
                                  data_in.reinit.dtau :
-                                 scratch_data->get_min_cell_size(ls_dof_idx) *
+                                 scratch_data->get_min_cell_size() *
                                    data_in.reinit.scale_factor_epsilon / data_in.ls.n_subdivisions,
                                (unsigned int)data_in.ls.n_initial_reinit_steps,
                                false});
