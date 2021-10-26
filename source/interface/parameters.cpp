@@ -113,16 +113,6 @@ namespace MeltPoolDG
           1.0 / (material.liquidus_temperature - material.solidus_temperature);
       }
 
-    if (recoil.delta_function_type == DiracDeltaFunctionApproximationType::phase_weighted_delta)
-      {
-        AssertThrow(
-          recoil.gas_phase_weight + recoil.heavy_phase_weight != 0.0,
-          ExcMessage("When using a phase weighted dirac delta function approximation"
-                     " type for recoil pressure, use weights that don't sum up to zero! Abort..."));
-        recoil.phase_weight_correction_factor =
-          2. / (recoil.gas_phase_weight + recoil.heavy_phase_weight);
-      }
-
       /*
        *  parameters for adaflo
        */
@@ -726,12 +716,12 @@ namespace MeltPoolDG
                         "Choose how to smear the properties over the interface.");
       prm.add_parameter(
         "recoil gas phase weight",
-        recoil.gas_phase_weight,
+        recoil.delta_approximation_phase_weighted.gas_phase_weight,
         "If >>> recoil dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
         "this parameter controls the weight of the gas phase (level set = -1).");
       prm.add_parameter(
         "recoil heavy phase weight",
-        recoil.heavy_phase_weight,
+        recoil.delta_approximation_phase_weighted.heavy_phase_weight,
         "If >>> recoil dirac delta function approximation type <<< is set to >>> c <<< "
         "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
     }

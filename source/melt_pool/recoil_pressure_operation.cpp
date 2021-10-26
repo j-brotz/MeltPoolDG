@@ -1,5 +1,4 @@
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::MeltPool
 {
@@ -31,6 +30,14 @@ namespace MeltPoolDG::MeltPool
             scratch_data.get_dof_handler(flow_pressure_dof_idx),
             scratch_data.get_dof_handler(ls_dof_idx),
             true /*do_matrix_free*/);
+      }
+
+    // todo: move construction of DeltaApproximationPhaseWeighted outside of recoil pressure
+    if (recoil_pressure_data.delta_function_type ==
+        DiracDeltaFunctionApproximationType::phase_weighted_delta)
+      {
+        delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
+          recoil_pressure_data.delta_approximation_phase_weighted);
       }
   }
 
@@ -108,13 +115,8 @@ namespace MeltPoolDG::MeltPool
 
                 if (recoil_pressure_data.delta_function_type ==
                     DiracDeltaFunctionApproximationType::phase_weighted_delta)
-                  {
-                    weight =
-                      UtilityFunctions::interpolate(used_level_set.get_value(q_index),
-                                                    recoil_pressure_data.gas_phase_weight,
-                                                    recoil_pressure_data.heavy_phase_weight) *
-                      recoil_pressure_data.phase_weight_correction_factor;
-                  }
+                  weight = delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
+
                 recoil_pressure.submit_value(recoil_pressure_coefficient *
                                                used_level_set.get_gradient(q_index) * weight,
                                              q_index);

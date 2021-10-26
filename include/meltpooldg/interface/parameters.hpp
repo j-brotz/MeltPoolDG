@@ -225,9 +225,11 @@ namespace MeltPoolDG
     number                              temperature_constant = 0.0;
     DiracDeltaFunctionApproximationType delta_function_type =
       DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
-    number gas_phase_weight               = 1.0;
-    number heavy_phase_weight             = 1.0;
-    number phase_weight_correction_factor = 0.0;
+    struct DeltaApproximationPhaseWeightedData
+    {
+      number gas_phase_weight   = 1.0;
+      number heavy_phase_weight = 1.0;
+    } delta_approximation_phase_weighted;
   };
 
   template <typename number = double>
