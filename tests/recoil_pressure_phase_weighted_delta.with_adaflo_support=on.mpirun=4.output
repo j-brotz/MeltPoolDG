@@ -73,7 +73,7 @@ Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06).
 
 Time step #3, advancing from t_n-1 = 2e-06 to t = 3e-06 (dt = 1e-06). 
 | || velocity ||L2 = 3.912252380158918e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.215131749922916e+02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 4.215131563791275e+02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
