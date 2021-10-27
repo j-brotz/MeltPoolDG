@@ -33,47 +33,5 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-07 (dt = 1e-07).
 | || velocity ||L2 = 5.814876298793707e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.204003160121641e+02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
-|  Time increment # 2      t = 1.0000e-07 to 2.0000e-07 ( dt = 1.0000e-07 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.2660491614e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 3.77879368796e-06                                               normal_vector |
-| || normal_1 ||L2 = 4.70385945020e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 8.28641e-06                                                                reinitialization |
-| || delta phi ||L2 = 6.187772650053622e-08                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.04674527990e-06                                               normal_vector |
-| || normal_1 ||L2 = 4.70543964216e+00                                               normal_vector |
-| || curvature ||L2 = 7.20543134212e+00                                                  curvature |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.73205e-01                newton_raphson_solver |
-|  total mass = 0.00028891259718                                                 melt_pool_problem |
-
-Time step #2, advancing from t_n-1 = 1e-07 to t = 2e-07 (dt = 1e-07). 
-| || velocity ||L2 = 9.658090277169208e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.205169520212257e+02                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 3      t = 2.0000e-07 to 3.0000e-07 ( dt = 1.0000e-07 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.2663365880e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 7.56319715736e-06                                               normal_vector |
-| || normal_1 ||L2 = 4.70542244689e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 8.28641e-06                                                                reinitialization |
-| || delta phi ||L2 = 5.319865133681002e-08                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.02815968528e-06                                               normal_vector |
-| || normal_1 ||L2 = 4.70674673544e+00                                               normal_vector |
-| || curvature ||L2 = 7.20543134212e+00                                                  curvature |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.73205e-01                newton_raphson_solver |
-|  total mass = 0.0002889126266                                                  melt_pool_problem |
-
-Time step #3, advancing from t_n-1 = 2e-07 to t = 3e-07 (dt = 1e-07). 
-| || velocity ||L2 = 1.186570446471625e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.205768999544413e+02                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

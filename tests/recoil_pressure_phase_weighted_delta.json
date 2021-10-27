@@ -12,7 +12,7 @@
     "start time": "0.0",
     "end time": "0.0006",
     "time step size": "1e-7",
-    "max n steps": "3"
+    "max n steps": "1"
   },
   "material": {
     "material first capacity": "1000",
