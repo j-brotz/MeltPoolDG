@@ -14,6 +14,7 @@ namespace MeltPoolDG::MeltPool
     const unsigned int                       ls_dof_idx_in,
     VectorType *                             temperature,
     const unsigned int                       reinit_dof_idx_in,
+    const unsigned int                       reinit_no_solid_dof_idx_in,
     const unsigned int                       flow_vel_dof_idx_in,
     const unsigned int                       flow_vel_no_solid_dof_idx_in,
     const unsigned int                       flow_vel_quad_idx_in,
@@ -26,6 +27,7 @@ namespace MeltPoolDG::MeltPool
     , do_mushy_zone(data_in.heat.solidification)
     , ls_dof_idx(ls_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
+    , reinit_no_solid_dof_idx(reinit_no_solid_dof_idx_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
@@ -282,10 +284,18 @@ namespace MeltPoolDG::MeltPool
     if (mp_data.solid.set_level_set_to_zero)
       {
         remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
+                                                scratch_data->get_constraint(ls_dof_idx),
                                                 scratch_data->get_constraint(ls_dof_idx));
         remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
+                                                scratch_data->get_constraint(
+                                                  reinit_no_solid_dof_idx),
                                                 scratch_data->get_constraint(reinit_dof_idx));
       }
+
+    if (mp_data.solid.set_reinit_to_zero)
+      remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
+                                              scratch_data->get_constraint(reinit_no_solid_dof_idx),
+                                              scratch_data->get_constraint(reinit_dof_idx));
 
     if (mp_data.solid.set_velocity_to_zero)
       set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
@@ -401,8 +411,6 @@ namespace MeltPoolDG::MeltPool
           {
             cell->get_dof_indices(local_dof_indices);
 
-            Vector<double> temp(dofs_per_cell);
-
             flow_eval.reinit(cell);
 
             solid_eval.reinit(solid_cell);
@@ -434,27 +442,61 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   MeltPoolOperation<dim>::remove_the_level_set_from_solid_regions(
-    const DoFHandler<dim> &    level_set_dof_handler,
-    AffineConstraints<double> &level_set_constraints)
+    const DoFHandler<dim> &          level_set_dof_handler,
+    const AffineConstraints<double> &level_set_constraints_no_solid,
+    AffineConstraints<double> &      level_set_constraints)
   {
+    level_set_constraints.copy_from(level_set_constraints_no_solid);
+
     solid.update_ghost_values();
-    AssertThrow(scratch_data->get_degree(temp_hanging_nodes_dof_idx) ==
-                  scratch_data->get_degree(ls_dof_idx),
-                ExcMessage(
-                  "The usage of this function assumes that the temperature field "
-                  "is interpolated with the polynomial with the same degree as the level set"));
 
     AffineConstraints<double> solid_constraints;
 
-    IndexSet ls_locally_relevant_dofs, ls_locally_active_dofs;
+    IndexSet ls_locally_relevant_dofs;
     DoFTools::extract_locally_relevant_dofs(level_set_dof_handler, ls_locally_relevant_dofs);
-    DoFTools::extract_locally_active_dofs(level_set_dof_handler, ls_locally_active_dofs);
 
     solid_constraints.reinit(ls_locally_relevant_dofs);
 
-    for (const auto i : ls_locally_active_dofs)
-      if (solid[i] >= mp_data.solid.solid_fraction_lower_limit)
-        solid_constraints.add_line(i);
+    FEValues<dim> ls_eval(scratch_data->get_mapping(),
+                          level_set_dof_handler.get_fe(),
+                          Quadrature<dim>(level_set_dof_handler.get_fe().get_unit_support_points()),
+                          update_quadrature_points);
+
+    FEValues<dim> solid_eval(scratch_data->get_mapping(),
+                             scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).get_fe(),
+                             Quadrature<dim>(
+                               level_set_dof_handler.get_fe().get_unit_support_points()),
+                             update_values);
+
+    const unsigned int dofs_per_cell = level_set_dof_handler.get_fe().n_dofs_per_cell();
+    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+    std::vector<double>                  solid_at_q(dofs_per_cell);
+
+    typename DoFHandler<dim>::active_cell_iterator solid_cell =
+      scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
+
+    for (const auto &cell : level_set_dof_handler.active_cell_iterators())
+      {
+        if (cell->is_locally_owned())
+          {
+            cell->get_dof_indices(local_dof_indices);
+
+            ls_eval.reinit(cell);
+
+            solid_eval.reinit(solid_cell);
+            solid_eval.get_function_values(solid, solid_at_q);
+
+            for (const auto q : ls_eval.quadrature_point_indices())
+              if (solid_at_q[q] >= mp_data.solid.solid_fraction_lower_limit)
+                solid_constraints.add_line(local_dof_indices[q]);
+          }
+        ++solid_cell;
+      }
+
+    solid_constraints.make_consistent_in_parallel(level_set_dof_handler.locally_owned_dofs(),
+                                                  ls_locally_relevant_dofs,
+                                                  scratch_data->get_mpi_comm());
+    solid_constraints.close();
 
     UtilityFunctions::check_constraints(level_set_dof_handler, solid_constraints);
 
@@ -465,6 +507,24 @@ namespace MeltPoolDG::MeltPool
     UtilityFunctions::check_constraints(level_set_dof_handler, level_set_constraints);
 
     solid.zero_out_ghost_values();
+
+    VectorType constraint_vec;
+    scratch_data->initialize_dof_vector(constraint_vec, reinit_dof_idx);
+    constraint_vec = 2;
+
+    level_set_constraints.set_zero(constraint_vec);
+
+    DataOut<dim>          data_out;
+    DataOutBase::VtkFlags flags;
+    flags.write_higher_order_cells = true;
+    data_out.set_flags(flags);
+
+    data_out.add_data_vector(level_set_dof_handler, constraint_vec, "constraint");
+    data_out.build_patches(scratch_data->get_mapping());
+    data_out.write_vtu_with_pvtu_record("./",
+                                        "reinit_constraints",
+                                        0,
+                                        scratch_data->get_mpi_comm());
   }
 
   template <int dim>

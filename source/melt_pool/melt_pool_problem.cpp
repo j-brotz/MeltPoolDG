@@ -207,13 +207,16 @@ namespace MeltPoolDG::Flow
     scratch_data->attach_dof_handler(dof_handler_ls);
     scratch_data->attach_dof_handler(dof_handler_ls);
     scratch_data->attach_dof_handler(dof_handler_ls);
+    scratch_data->attach_dof_handler(dof_handler_ls);
     scratch_data->attach_dof_handler(dof_handler_heat);
     scratch_data->attach_dof_handler(dof_handler_heat);
 
     ls_hanging_nodes_dof_idx = scratch_data->attach_constraint_matrix(ls_hanging_node_constraints);
     ls_dof_idx               = scratch_data->attach_constraint_matrix(ls_constraints_dirichlet);
     reinit_dof_idx           = scratch_data->attach_constraint_matrix(reinit_constraints_dirichlet);
-    temp_dof_idx             = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
+    reinit_no_solid_dof_idx =
+      scratch_data->attach_constraint_matrix(reinit_no_solid_constraints_dirichlet);
+    temp_dof_idx = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
     temp_hanging_nodes_dof_idx =
       scratch_data->attach_constraint_matrix(temp_hanging_node_constraints);
 
@@ -365,6 +368,7 @@ namespace MeltPoolDG::Flow
         ls_hanging_nodes_dof_idx,
         &heat_operation->get_temperature(),
         reinit_dof_idx,
+        reinit_no_solid_dof_idx,
         flow_operation->get_dof_handler_idx_velocity(),
         flow_vel_no_solid_dof_idx,
         flow_operation->get_quad_idx_velocity(),
@@ -571,6 +575,7 @@ namespace MeltPoolDG::Flow
                                                              reinit_constraints_dirichlet);
           }
       }
+    reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
     // periodic constraints
     for (const auto &bc : base_in->get_periodic_bc())

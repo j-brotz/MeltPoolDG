@@ -781,6 +781,10 @@ namespace MeltPoolDG
         mp.solid.set_level_set_to_zero,
         "Set this parameter to true to constrain the level set in the solid domain.");
       prm.add_parameter(
+        "mp set reinit to zero in solid",
+        mp.solid.set_reinit_to_zero,
+        "Set this parameter to true to constrain the level set in the solid domain.");
+      prm.add_parameter(
         "mp solid fraction lower limit",
         mp.solid.solid_fraction_lower_limit,
         "Lower limit of the solid fraction for where the flow velocity / level set is "

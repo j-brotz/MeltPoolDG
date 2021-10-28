@@ -50,6 +50,7 @@ namespace MeltPoolDG
        */
       const unsigned int ls_dof_idx;
       const unsigned int reinit_dof_idx;
+      const unsigned int reinit_no_solid_dof_idx;
       const unsigned int flow_vel_dof_idx;
       const unsigned int flow_vel_no_solid_dof_idx;
       const unsigned int flow_vel_quad_idx;
@@ -68,6 +69,7 @@ namespace MeltPoolDG
                         const unsigned int                       ls_dof_idx_in,
                         VectorType *                             temperature,
                         const unsigned int                       reinit_dof_idx_in,
+                        const unsigned int                       reinit_no_solid_dof_idx_in,
                         const unsigned int                       flow_vel_dof_idx_in,
                         const unsigned int                       flow_vel_no_solid_dof_idx_in,
                         const unsigned int                       flow_vel_quad_idx_in,
@@ -169,8 +171,10 @@ namespace MeltPoolDG
        *  regions.
        */
       void
-      remove_the_level_set_from_solid_regions(const DoFHandler<dim> &    level_set_dof_handler,
-                                              AffineConstraints<double> &level_set_constraints);
+      remove_the_level_set_from_solid_regions(
+        const DoFHandler<dim> &          level_set_dof_handler,
+        const AffineConstraints<double> &ls_constraints_no_solid,
+        AffineConstraints<double> &      level_set_constraints);
 
       void
       set_melt_pool_parameters(const Parameters<double> &data_in);
