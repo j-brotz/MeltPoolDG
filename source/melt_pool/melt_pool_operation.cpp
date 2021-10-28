@@ -279,24 +279,17 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::make_constraints_in_spatially_fixed_solid_domain()
   {
     /*
-     *    limit the level set interface to the touching regions of liquid/gas
+     *  Do not reinitialize the level set field in the solid domain
      */
-    if (mp_data.solid.set_level_set_to_zero)
-      {
-        remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(ls_dof_idx),
-                                                scratch_data->get_constraint(ls_dof_idx),
-                                                scratch_data->get_constraint(ls_dof_idx));
-        remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
-                                                scratch_data->get_constraint(
-                                                  reinit_no_solid_dof_idx),
-                                                scratch_data->get_constraint(reinit_dof_idx));
-      }
+    if (mp_data.solid.do_not_reinitialize)
+      ignore_reinitialization_in_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
+                                               scratch_data->get_constraint(
+                                                 reinit_no_solid_dof_idx),
+                                               scratch_data->get_constraint(reinit_dof_idx));
 
-    if (mp_data.solid.set_reinit_to_zero)
-      remove_the_level_set_from_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
-                                              scratch_data->get_constraint(reinit_no_solid_dof_idx),
-                                              scratch_data->get_constraint(reinit_dof_idx));
-
+    /*
+     *  Set the flow velocity to zero in the solid domain
+     */
     if (mp_data.solid.set_velocity_to_zero)
       set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
                                               scratch_data->get_constraint(
@@ -310,7 +303,7 @@ namespace MeltPoolDG::MeltPool
     // will be updated accordingly. In this case, also the
     // constrained indices in matrix-free have to be updated
     // which is done in the following by rebuilding matrix-free.
-    if (mp_data.solid.set_velocity_to_zero || mp_data.solid.set_level_set_to_zero)
+    if (mp_data.solid.set_velocity_to_zero || mp_data.solid.do_not_reinitialize)
       scratch_data->build();
   }
 
@@ -441,12 +434,12 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::remove_the_level_set_from_solid_regions(
+  MeltPoolOperation<dim>::ignore_reinitialization_in_solid_regions(
     const DoFHandler<dim> &          level_set_dof_handler,
-    const AffineConstraints<double> &level_set_constraints_no_solid,
-    AffineConstraints<double> &      level_set_constraints)
+    const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
+    AffineConstraints<double> &      reinit_dirichlet_constraints)
   {
-    level_set_constraints.copy_from(level_set_constraints_no_solid);
+    reinit_dirichlet_constraints.copy_from(reinit_dirichlet_constraints_no_solid);
 
     solid.update_ghost_values();
 
@@ -500,11 +493,11 @@ namespace MeltPoolDG::MeltPool
 
     UtilityFunctions::check_constraints(level_set_dof_handler, solid_constraints);
 
-    level_set_constraints.merge(solid_constraints,
-                                AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
-    level_set_constraints.close();
+    reinit_dirichlet_constraints.merge(
+      solid_constraints, AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
+    reinit_dirichlet_constraints.close();
 
-    UtilityFunctions::check_constraints(level_set_dof_handler, level_set_constraints);
+    UtilityFunctions::check_constraints(level_set_dof_handler, reinit_dirichlet_constraints);
 
     solid.zero_out_ghost_values();
 
@@ -512,19 +505,7 @@ namespace MeltPoolDG::MeltPool
     scratch_data->initialize_dof_vector(constraint_vec, reinit_dof_idx);
     constraint_vec = 2;
 
-    level_set_constraints.set_zero(constraint_vec);
-
-    DataOut<dim>          data_out;
-    DataOutBase::VtkFlags flags;
-    flags.write_higher_order_cells = true;
-    data_out.set_flags(flags);
-
-    data_out.add_data_vector(level_set_dof_handler, constraint_vec, "constraint");
-    data_out.build_patches(scratch_data->get_mapping());
-    data_out.write_vtu_with_pvtu_record("./",
-                                        "reinit_constraints",
-                                        0,
-                                        scratch_data->get_mpi_comm());
+    reinit_dirichlet_constraints.set_zero(constraint_vec);
   }
 
   template <int dim>

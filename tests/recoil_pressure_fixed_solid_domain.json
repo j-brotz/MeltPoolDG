@@ -88,7 +88,7 @@
     "mp do melt pool": "true",
     "mp do recoil pressure": "true",
     "mp liquid melting point": "1700",
-    "mp set level set to zero in solid": "false",
+    "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "true"
   },
   "simulation specific domain": {

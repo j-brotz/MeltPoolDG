@@ -167,14 +167,15 @@ namespace MeltPoolDG
         AffineConstraints<double> &      flow_constraints);
 
       /**
-       *  The level set constraints are modified such that they are zero in solid
-       *  regions.
+       *  The reinitialization constraints are modified such that they are zero in solid
+       *  regions. This means, the level set field is not modified due to reinitialization
+       *  in the solid regions.
        */
       void
-      remove_the_level_set_from_solid_regions(
+      ignore_reinitialization_in_solid_regions(
         const DoFHandler<dim> &          level_set_dof_handler,
-        const AffineConstraints<double> &ls_constraints_no_solid,
-        AffineConstraints<double> &      level_set_constraints);
+        const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
+        AffineConstraints<double> &      reinit_dirichlet_constraints);
 
       void
       set_melt_pool_parameters(const Parameters<double> &data_in);

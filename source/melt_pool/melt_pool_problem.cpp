@@ -83,7 +83,7 @@ namespace MeltPoolDG::Flow
               level_set_operation.get_level_set_as_heaviside());
 
             if (base_in->parameters.mp.solid.set_velocity_to_zero ||
-                base_in->parameters.mp.solid.set_level_set_to_zero)
+                base_in->parameters.mp.solid.do_not_reinitialize)
               {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
                 dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
@@ -474,7 +474,7 @@ namespace MeltPoolDG::Flow
         melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
                                                    level_set_operation.get_level_set());
         if (base_in->parameters.mp.solid.set_velocity_to_zero ||
-            base_in->parameters.mp.solid.set_level_set_to_zero)
+            base_in->parameters.mp.solid.do_not_reinitialize)
 #ifdef MELT_POOL_DG_WITH_ADAFLO
           dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
 #else
