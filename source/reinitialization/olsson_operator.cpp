@@ -157,16 +157,13 @@ namespace MeltPoolDG::Reinitialization
 
             for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
               {
-                const scalar phi = delta_psi.get_value(q_index);
-
-                const vector grad_phi = delta_psi.get_gradient(q_index);
-
                 const auto n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
 
-                delta_psi.submit_value(phi, q_index);
-                delta_psi.submit_gradient(this->d_tau * eps_ * scalar_product(grad_phi, n_phi) *
+                delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
+                delta_psi.submit_gradient(this->d_tau * eps_ *
+                                            scalar_product(delta_psi.get_gradient(q_index), n_phi) *
                                             n_phi,
                                           q_index);
               }
