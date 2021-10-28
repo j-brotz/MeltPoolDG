@@ -60,8 +60,6 @@
     "initial temperature": "1000.0"
   },
   "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do melt pool": "true",
     "mp set velocity to zero in solid": "false"
   },
   "material": {
@@ -104,5 +102,9 @@
   },
   "paraview": {
     "paraview do output": "false"
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do heat transfer": "true"
   }
 }

@@ -89,9 +89,6 @@
     "laser analytical ambient temperature": "500."
   },
   "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do melt pool": "true",
-    "mp do recoil pressure": "true",
     "mp liquid melting point": "1700"
   },
   "simulation specific domain": {
@@ -112,5 +109,10 @@
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
     "reinit constant epsilon": "0.000005"
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do recoil pressure": "true",
+    "do heat transfer": "true"
   }
 }

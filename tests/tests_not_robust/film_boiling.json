@@ -17,10 +17,7 @@
     "end time": "0.01",
     "time step size": "0.002"
   },
-  "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do evaporation": "true"
-  },
+  "melt pool": {},
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -105,5 +102,9 @@
     "material second viscosity": "0.1",
     "material molar mass": "0.01801528",
     "material latent heat of evaporation": "1.e3"
+  },
+  "problem specific": {
+    "do evaporation": "true",
+    "do heat transfer": "true"
   }
 }

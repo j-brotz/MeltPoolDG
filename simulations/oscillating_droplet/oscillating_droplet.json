@@ -14,12 +14,7 @@
     "reference radius": "100e-6",
     "elliptical deviation": "1.5"
   },
-  "melt pool": {
-    "mp do heat transfer": "false",
-    "mp do evaporation": "false",
-    "mp do melt pool": "false",
-    "mp do recoil pressure": "false"
-  },
+  "melt pool": {},
   "time stepping": {
     "start time": "0.0",
     "end time": "0.6e-3",
@@ -105,5 +100,11 @@
     "paraview directory": "result_viscosity_ratio_1000_dt_1e-6_surften_1.8_etaN_1_etaK_3e-4_refine_8_reinit_scale_1.5/",
     "paraview filename": "result_viscosity_ratio_1000_dt_1e-6_surften_1.8_etaN_1_etaK_3e-4_refine_8_reinit_scale_1.5",
     "paraview write frequency": "2"
+  },
+  "problem specific": {
+    "do evaporation": "false",
+    "do melt pool": "false",
+    "do recoil pressure": "false",
+    "do heat transfer": "false"
   }
 }

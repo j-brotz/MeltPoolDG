@@ -81,9 +81,6 @@
     "laser analytical absorptivity liquid": "0.5"
   },
   "melt pool": {
-    "mp do melt pool": "true",
-    "mp do heat transfer": "true",
-    "mp do recoil pressure": "true",
     "mp liquid melting point": "1700"
   },
   "simulation specific domain": {
@@ -105,5 +102,10 @@
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit scale factor epsilon": "0.7107"
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do recoil pressure": "true",
+    "do heat transfer": "true"
   }
 }

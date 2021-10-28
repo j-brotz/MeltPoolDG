@@ -44,6 +44,17 @@ namespace MeltPoolDG
       // default: do nothing
     }
 
+    /**
+     * add problem-specific parameters to the parameter handler
+     * @note: they will be available after create() has been
+     * called.
+     */
+    virtual void
+    add_problem_specific_parameters(dealii::ParameterHandler &)
+    {
+      // default: do nothing
+    }
+
     virtual void
     set_parameters()
     {
@@ -66,6 +77,7 @@ namespace MeltPoolDG
     create()
     {
       set_simulation_specific_parameters();
+      set_problem_specific_parameters();
       create_spatial_discretization();
       AssertThrow(
         this->triangulation,
@@ -96,6 +108,28 @@ namespace MeltPoolDG
      */
     void
     set_simulation_specific_parameters()
+    {
+      /*
+       * read user-defined parameters
+       */
+      add_simulation_specific_parameters(prm_simulation_specific);
+
+      std::ifstream file;
+      file.open(parameter_file);
+
+      if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "json")
+        prm_simulation_specific.parse_input_from_json(file, true);
+      else if (parameter_file.substr(parameter_file.find_last_of(".") + 1) == "prm")
+        prm_simulation_specific.parse_input(parameter_file);
+      else
+        AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
+    }
+
+    /**
+     * Read the problem specific parameters
+     */
+    void
+    set_problem_specific_parameters()
     {
       /*
        * read user-defined parameters

@@ -33,9 +33,7 @@
     "flow surface tension coefficient": "0.023040369",
     "flow temperature dependent surface tension coefficient": "0.002"
   },
-  "melt pool": {
-    "mp do heat transfer": "true"
-  },
+  "melt pool": {},
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -89,5 +87,8 @@
   "paraview": {
     "paraview directory": "output_thermo_capillary/",
     "paraview do output": "true"
+  },
+  "problem specific": {
+    "do heat transfer": "true"
   }
 }

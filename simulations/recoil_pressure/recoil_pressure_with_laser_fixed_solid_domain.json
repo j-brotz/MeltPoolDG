@@ -51,9 +51,6 @@
     "laser gauss absorptivity liquid": "0.5"
   },
   "melt pool": {
-    "mp do melt pool": "true",
-    "mp do heat transfer": "true",
-    "mp do recoil pressure": "true",
     "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "true"
   },
@@ -132,5 +129,10 @@
         "output walltimes": "0"
       }
     }
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do recoil pressure": "true",
+    "do heat transfer": "true"
   }
 }

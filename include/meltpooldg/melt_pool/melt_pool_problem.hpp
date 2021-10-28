@@ -58,6 +58,21 @@ namespace MeltPoolDG::Flow
     get_name() final;
 
   private:
+    struct ProblemSpecificParameters
+    {
+      bool do_heat_transfer         = false;
+      bool do_evaporation           = false;
+      bool do_evaporative_heat_flux = false;
+      bool do_evaporative_mass_flux = false;
+      bool do_melt_pool             = false;
+      bool do_recoil_pressure       = false;
+    } problem_specific_parameters;
+
+    void
+    add_parameters(dealii::ParameterHandler &) final;
+
+    void
+    check_input_parameters(Parameters<double> &) final;
     /*
      *  This function initials the relevant scratch data
      *  for the computation of the level set problem

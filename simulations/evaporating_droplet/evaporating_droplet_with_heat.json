@@ -17,10 +17,7 @@
   "surface tension": {
     "surface tension coefficient": "0.1"
   },
-  "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do evaporation": "true"
-  },
+  "melt pool": {},
   "material": {
     "material boiling temperature": "1.",
     "material two phase properties transition type": "consistent_with_evaporation",
@@ -97,5 +94,9 @@
         "scheme": "bdf_2"
       }
     }
+  },
+  "problem specific": {
+    "do evaporation": "true",
+    "do heat transfer": "true"
   }
 }

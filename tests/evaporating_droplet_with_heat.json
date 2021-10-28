@@ -17,10 +17,6 @@
     "end time": "0.03",
     "time step size": "0.001"
   },
-  "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do evaporation": "true"
-  },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
     "material first capacity": "200",
@@ -97,5 +93,9 @@
         "scheme": "bdf_2"
       }
     }
+  },
+  "problem specific": {
+    "do evaporation": "true",
+    "do heat transfer": "true"
   }
 }
