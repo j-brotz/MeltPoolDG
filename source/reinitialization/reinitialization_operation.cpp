@@ -10,13 +10,15 @@ namespace MeltPoolDG::Reinitialization
     const Parameters<double> &                     data_in,
     const unsigned int                             reinit_dof_idx_in,
     const unsigned int                             reinit_quad_idx_in,
+    const unsigned int                             ls_dof_idx_in,
     const unsigned int                             normal_dof_idx_in)
   {
     scratch_data    = scratch_data_in;
     reinit_dof_idx  = reinit_dof_idx_in;
     reinit_quad_idx = reinit_quad_idx_in;
+    ls_dof_idx      = ls_dof_idx_in;
     normal_dof_idx  = normal_dof_idx_in;
-    scratch_data->initialize_dof_vector(solution_level_set, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx_in);
     /*
      *    initialize the (local) parameters of the reinitialization
      *    from the global user-defined parameters
@@ -35,20 +37,20 @@ namespace MeltPoolDG::Reinitialization
         normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperation<dim>>();
 
         normal_vector_operation->initialize(
-          scratch_data_in, data_in, normal_dof_idx, reinit_quad_idx, reinit_dof_idx);
+          scratch_data_in, data_in, normal_dof_idx, reinit_quad_idx, ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (data_in.normal_vec.implementation == "adaflo")
       {
         AssertThrow(data_in.normal_vec.do_matrix_free, ExcNotImplemented());
 
-        normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-          *scratch_data_in,
-          reinit_dof_idx, //@todo -- this is actually ls dof idx; must this be added??
-          normal_dof_idx,
-          reinit_quad_idx,
-          solution_level_set,
-          data_in);
+        normal_vector_operation =
+          std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(*scratch_data_in,
+                                                                           ls_dof_idx_in,
+                                                                           normal_dof_idx,
+                                                                           reinit_quad_idx,
+                                                                           solution_level_set,
+                                                                           data_in);
       }
 #endif
     else
@@ -64,7 +66,7 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::reinit()
   {
-    scratch_data->initialize_dof_vector(solution_level_set, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
     update_operator();
     normal_vector_operation->reinit();
   }
@@ -76,7 +78,7 @@ namespace MeltPoolDG::Reinitialization
     /*
      *    copy the given solution into the member variable
      */
-    scratch_data->initialize_dof_vector(solution_level_set, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
     solution_level_set.copy_locally_owned_data_from(solution_level_set_in);
     solution_level_set.update_ghost_values();
     /*
@@ -113,11 +115,7 @@ namespace MeltPoolDG::Reinitialization
 
     if (reinit_data.solver.do_matrix_free)
       {
-        VectorType src_rhs;
-        scratch_data->initialize_dof_vector(src_rhs, reinit_dof_idx);
-        src_rhs.copy_locally_owned_data_from(solution_level_set);
-        src_rhs.update_ghost_values();
-        reinit_operator->create_rhs(rhs, src_rhs);
+        reinit_operator->create_rhs(rhs, solution_level_set);
         iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
           *reinit_operator, src, rhs);
       }
@@ -281,7 +279,9 @@ namespace MeltPoolDG::Reinitialization
           reinit_data.constant_epsilon,
           reinit_data.scale_factor_epsilon,
           reinit_dof_idx,
-          reinit_quad_idx);
+          reinit_quad_idx,
+          ls_dof_idx,
+          normal_dof_idx);
       }
     /*
      * add your desired operators here

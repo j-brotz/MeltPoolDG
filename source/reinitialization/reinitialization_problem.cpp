@@ -83,7 +83,7 @@ namespace MeltPoolDG::Reinitialization
      *  set initial conditions of the levelset function
      */
     VectorType solution_level_set;
-    scratch_data->initialize_dof_vector(solution_level_set);
+    scratch_data->initialize_dof_vector(solution_level_set, reinit_dof_idx);
 
     auto ic = base_in->get_initial_condition("level_set");
 
@@ -103,8 +103,12 @@ namespace MeltPoolDG::Reinitialization
       {
         reinit_operation = std::make_shared<ReinitializationOperation<dim>>();
 
-        reinit_operation->initialize(
-          scratch_data, base_in->parameters, reinit_dof_idx, reinit_quad_idx, normal_dof_idx);
+        reinit_operation->initialize(scratch_data,
+                                     base_in->parameters,
+                                     reinit_dof_idx,
+                                     reinit_quad_idx,
+                                     reinit_dof_idx,
+                                     normal_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.reinit.implementation == "adaflo")

@@ -95,6 +95,7 @@ namespace MeltPoolDG::LevelSet
                                      base_in->parameters,
                                      reinit_hanging_nodes_dof_idx_in,
                                      ls_quad_idx_in,
+                                     ls_dof_idx,
                                      normal_dof_idx_in);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO

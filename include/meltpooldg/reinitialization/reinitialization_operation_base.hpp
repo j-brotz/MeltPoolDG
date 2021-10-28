@@ -30,6 +30,7 @@ namespace MeltPoolDG
                  const Parameters<double> &                     data_in,
                  const unsigned int                             reinit_dof_idx_in,
                  const unsigned int                             reinit_quad_idx_in,
+                 const unsigned int                             ls_dof_idx_in,
                  const unsigned int                             normal_dof_idx_in);
 
       virtual void

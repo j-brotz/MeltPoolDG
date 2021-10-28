@@ -8,7 +8,9 @@ namespace MeltPoolDG::Reinitialization
                                               const double &          constant_epsilon,
                                               const double &          eps_scale_factor,
                                               const unsigned int      dof_idx_in,
-                                              const unsigned int      quad_idx_in)
+                                              const unsigned int      quad_idx_in,
+                                              const unsigned int      ls_dof_idx_in,
+                                              const unsigned int      normal_dof_idx_in)
     : scratch_data(scratch_data_in)
     , eps(constant_epsilon)
     , eps_scale_factor(eps_scale_factor)
@@ -16,6 +18,8 @@ namespace MeltPoolDG::Reinitialization
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
+    , ls_dof_idx(ls_dof_idx_in)
+    , normal_dof_idx(normal_dof_idx_in)
   {
     this->reset_indices(dof_idx_in, quad_idx_in);
   }
@@ -136,38 +140,35 @@ namespace MeltPoolDG::Reinitialization
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, 1, number>   levelset(scratch_data.get_matrix_free(),
-                                                  this->dof_idx,
-                                                  this->quad_idx);
+        FECellIntegrator<dim, 1, number>   delta_psi(scratch_data.get_matrix_free(),
+                                                   this->dof_idx,
+                                                   this->quad_idx);
         FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                         this->dof_idx,
+                                                         normal_dof_idx,
                                                          this->quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
-            levelset.reinit(cell);
-            levelset.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
+            delta_psi.reinit(cell);
+            delta_psi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
             normal_vector.reinit(cell);
-            normal_vector.read_dof_values_plain(this->normal_vec);
+            normal_vector.read_dof_values(this->normal_vec);
             normal_vector.evaluate(EvaluationFlags::values);
 
-            for (unsigned int q_index = 0; q_index < levelset.n_q_points; q_index++)
+            for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
               {
-                const scalar phi = levelset.get_value(q_index);
-
-                const vector grad_phi = levelset.get_gradient(q_index);
-
                 const auto n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
 
-                levelset.submit_value(phi, q_index);
-                levelset.submit_gradient(this->d_tau * eps_ * scalar_product(grad_phi, n_phi) *
-                                           n_phi,
-                                         q_index);
+                delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
+                delta_psi.submit_gradient(this->d_tau * eps_ *
+                                            scalar_product(delta_psi.get_gradient(q_index), n_phi) *
+                                            n_phi,
+                                          q_index);
               }
 
-            levelset.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
+            delta_psi.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
           }
       },
       dst,
@@ -200,36 +201,42 @@ namespace MeltPoolDG::Reinitialization
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &, auto &dst, const auto &src, auto macro_cells) {
-        FECellIntegrator<dim, 1, number>   psi(scratch_data.get_matrix_free(),
+        FECellIntegrator<dim, 1, number>   rhs(scratch_data.get_matrix_free(),
                                              this->dof_idx,
                                              this->quad_idx);
+        FECellIntegrator<dim, 1, number>   psi_old(scratch_data.get_matrix_free(),
+                                                 ls_dof_idx,
+                                                 this->quad_idx);
         FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                         this->dof_idx,
+                                                         normal_dof_idx,
                                                          this->quad_idx);
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
-            psi.reinit(cell);
-            psi.read_dof_values_plain(src);
-            psi.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+            rhs.reinit(cell);
+
+            psi_old.reinit(cell);
+            psi_old.read_dof_values_plain(src);
+            psi_old.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             normal_vector.reinit(cell);
             normal_vector.read_dof_values_plain(this->normal_vec);
             normal_vector.evaluate(EvaluationFlags::values);
 
-            for (unsigned int q_index = 0; q_index < psi.n_q_points; ++q_index)
+            for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
               {
-                const scalar val = psi.get_value(q_index);
+                const scalar val = psi_old.get_value(q_index);
                 const auto   n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
 
-                psi.submit_gradient(this->d_tau * compressive_flux(val) * n_phi -
+                rhs.submit_gradient(this->d_tau * compressive_flux(val) * n_phi -
                                       this->d_tau * eps_ *
-                                        scalar_product(psi.get_gradient(q_index), n_phi) * n_phi,
+                                        scalar_product(psi_old.get_gradient(q_index), n_phi) *
+                                        n_phi,
                                     q_index);
               }
 
-            psi.integrate_scatter(EvaluationFlags::gradients, dst);
+            rhs.integrate_scatter(EvaluationFlags::gradients, dst);
           }
       },
       dst,

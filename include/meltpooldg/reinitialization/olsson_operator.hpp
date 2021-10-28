@@ -41,7 +41,9 @@ namespace MeltPoolDG
                      const double &          constant_epsilon,
                      const double &          eps_scale_factor,
                      const unsigned int      dof_idx_in,
-                     const unsigned int      quad_idx_in);
+                     const unsigned int      quad_idx_in,
+                     const unsigned int      ls_dof_idx_in,
+                     const unsigned int      normal_dof_idx_in);
 
       /*
        *    this is the matrix-based implementation of the rhs and the system_matrix
@@ -70,10 +72,12 @@ namespace MeltPoolDG
     private:
       const ScratchData<dim> &scratch_data;
 
-      double           eps = -1.0;
-      double           eps_scale_factor;
-      BlockVectorType &normal_vec;
-      const double     tolerance_normal_vector;
+      double             eps = -1.0;
+      double             eps_scale_factor;
+      BlockVectorType &  normal_vec;
+      const double       tolerance_normal_vector;
+      const unsigned int ls_dof_idx;
+      const unsigned int normal_dof_idx;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG
