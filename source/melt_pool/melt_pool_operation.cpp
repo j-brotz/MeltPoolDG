@@ -500,12 +500,6 @@ namespace MeltPoolDG::MeltPool
     UtilityFunctions::check_constraints(level_set_dof_handler, reinit_dirichlet_constraints);
 
     solid.zero_out_ghost_values();
-
-    VectorType constraint_vec;
-    scratch_data->initialize_dof_vector(constraint_vec, reinit_dof_idx);
-    constraint_vec = 2;
-
-    reinit_dirichlet_constraints.set_zero(constraint_vec);
   }
 
   template <int dim>
