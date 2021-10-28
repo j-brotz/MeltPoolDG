@@ -88,9 +88,8 @@
     "mp do melt pool": "true",
     "mp do recoil pressure": "true",
     "mp liquid melting point": "1700",
-    "mp do not reinitialize in solid": "false",
-    "mp set velocity to zero in solid": "true",
-    "mp solid fraction lower limit": "0.77"
+    "mp do not reinitialize in solid": "true",
+    "mp set velocity to zero in solid": "true"
   },
   "simulation specific domain": {
     "domain x max": "0.000100",
@@ -103,7 +102,7 @@
     "normal vec do matrix free": "true"
   },
   "paraview": {
-    "paraview do output": "false"
+    "paraview do output": "true"
   },
   "reinitialization": {
     "reinit do matrix free": "true",

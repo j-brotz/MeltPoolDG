@@ -242,7 +242,7 @@ namespace MeltPoolDG
     struct
     {
       bool   set_velocity_to_zero       = false;
-      bool   set_level_set_to_zero      = false;
+      bool   do_not_reinitialize        = false;
       number solid_fraction_lower_limit = 1.0;
     } solid;
     bool do_recoil_pressure = false;

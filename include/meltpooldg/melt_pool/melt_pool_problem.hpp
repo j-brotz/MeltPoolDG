@@ -107,6 +107,7 @@ namespace MeltPoolDG::Flow
     AffineConstraints<double> ls_constraints_dirichlet;
     AffineConstraints<double> ls_hanging_node_constraints;
     AffineConstraints<double> reinit_constraints_dirichlet;
+    AffineConstraints<double> reinit_no_solid_constraints_dirichlet;
     AffineConstraints<double> temp_constraints_dirichlet;
     AffineConstraints<double> temp_hanging_node_constraints;
     AffineConstraints<double> flow_velocity_constraints_no_solid;
@@ -119,6 +120,7 @@ namespace MeltPoolDG::Flow
     unsigned int ls_hanging_nodes_dof_idx;
     unsigned int ls_quad_idx;
     unsigned int reinit_dof_idx;
+    unsigned int reinit_no_solid_dof_idx;
     unsigned int temp_dof_idx;
     unsigned int vel_dof_idx;
     unsigned int pressure_dof_idx;

@@ -45,7 +45,7 @@
     "mp do recoil pressure": "true",
     "mp do evaporative heat flux": "false",
     "mp do evaporative mass flux": "false",
-    "mp set level set to zero in solid": "false",
+    "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "false"
   },
   "simulation specific domain": {
