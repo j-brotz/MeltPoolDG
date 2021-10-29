@@ -722,7 +722,7 @@ namespace MeltPoolDG
       prm.add_parameter(
         "recoil heavy phase weight",
         recoil.delta_approximation_phase_weighted.heavy_phase_weight,
-        "If >>> recoil dirac delta function approximation type <<< is set to >>> c <<< "
+        "If >>> recoil dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
         "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
     }
     prm.leave_subsection();
@@ -812,6 +812,19 @@ namespace MeltPoolDG
         surface_tension.coefficient_residual_fraction,
         "Define the minimum fraction of the constant surface tension reference value "
         "that can be reached.");
+      prm.add_parameter("dirac delta function approximation type",
+                        surface_tension.delta_function_type,
+                        "Choose how to smear the properties over the interface.");
+      prm.add_parameter(
+        "gas phase weight",
+        surface_tension.delta_approximation_phase_weighted.gas_phase_weight,
+        "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
+        "this parameter controls the weight of the gas phase (level set = -1).");
+      prm.add_parameter(
+        "heavy phase weight",
+        surface_tension.delta_approximation_phase_weighted.heavy_phase_weight,
+        "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
+        "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
     }
     prm.leave_subsection();
     /*

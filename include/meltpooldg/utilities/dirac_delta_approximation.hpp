@@ -10,8 +10,7 @@ namespace MeltPoolDG
   class DeltaApproximationPhaseWeighted
   {
   public:
-    DeltaApproximationPhaseWeighted(
-      const typename RecoilPressureData<number>::DeltaApproximationPhaseWeightedData &data)
+    DeltaApproximationPhaseWeighted(const DeltaApproximationPhaseWeightedData<number> &data)
       : w_g(data.gas_phase_weight)
       , w_h(data.heavy_phase_weight)
       , correction_factor(2. / (w_g + w_h))

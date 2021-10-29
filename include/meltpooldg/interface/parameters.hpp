@@ -184,6 +184,13 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct DeltaApproximationPhaseWeightedData
+  {
+    number gas_phase_weight   = 1.0;
+    number heavy_phase_weight = 1.0;
+  };
+
+  template <typename number = double>
   struct LaserData
   {
     number      power             = 0.0;
@@ -225,11 +232,7 @@ namespace MeltPoolDG
     number                              temperature_constant = 0.0;
     DiracDeltaFunctionApproximationType delta_function_type =
       DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
-    struct DeltaApproximationPhaseWeightedData
-    {
-      number gas_phase_weight   = 1.0;
-      number heavy_phase_weight = 1.0;
-    } delta_approximation_phase_weighted;
+    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 
   template <typename number = double>
@@ -260,10 +263,13 @@ namespace MeltPoolDG
   template <typename number = double>
   struct SurfaceTensionData
   {
-    number surface_tension_coefficient                       = 0.0;
-    number temperature_dependent_surface_tension_coefficient = 0.0;
-    number reference_temperature                             = 0.0;
-    number coefficient_residual_fraction                     = 0.0;
+    number                              surface_tension_coefficient                       = 0.0;
+    number                              temperature_dependent_surface_tension_coefficient = 0.0;
+    number                              reference_temperature                             = 0.0;
+    number                              coefficient_residual_fraction                     = 0.0;
+    DiracDeltaFunctionApproximationType delta_function_type =
+      DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
+    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 
   template <typename number = double>
