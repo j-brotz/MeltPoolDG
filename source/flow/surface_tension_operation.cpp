@@ -33,7 +33,6 @@ namespace MeltPoolDG::Flow
             true);
       }
 
-    // todo: move construction of DeltaApproximationPhaseWeighted outside of recoil pressure
     if (data.delta_function_type == DiracDeltaFunctionApproximationType::phase_weighted_delta)
       {
         delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(

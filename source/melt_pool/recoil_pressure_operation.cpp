@@ -32,7 +32,6 @@ namespace MeltPoolDG::MeltPool
             true /*do_matrix_free*/);
       }
 
-    // todo: move construction of DeltaApproximationPhaseWeighted outside of recoil pressure
     if (recoil_pressure_data.delta_function_type ==
         DiracDeltaFunctionApproximationType::phase_weighted_delta)
       {
