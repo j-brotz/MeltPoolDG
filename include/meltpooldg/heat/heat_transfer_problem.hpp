@@ -51,6 +51,7 @@ namespace MeltPoolDG::Heat
 
     std::shared_ptr<ScratchData<dim>>           scratch_data;
     std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
+    std::shared_ptr<Material<double>>           material;
     std::shared_ptr<Postprocessor<dim>>         post_processor;
 
     std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;

@@ -333,6 +333,25 @@ namespace MeltPoolDG::Flow
           scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
       }
 
+    /*
+     * initialize material
+     */
+    // todo: clean up
+    MaterialTypes material_type;
+    if (base_in->parameters.heat.solidification &&
+        base_in->parameters.material.two_phase_properties_transition_type ==
+          TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
+      material_type = MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
+    else if (base_in->parameters.heat.solidification)
+      material_type = MaterialTypes::gas_liquid_solid;
+    else if (base_in->parameters.material.two_phase_properties_transition_type ==
+             TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
+      material_type = MaterialTypes::gas_liquid_consistent_with_evaporation;
+    else
+      material_type = MaterialTypes::gas_liquid;
+
+    material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
+
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     flow_operation =
       std::make_shared<AdafloWrapper<dim>>(*scratch_data,
@@ -385,7 +404,7 @@ namespace MeltPoolDG::Flow
         base_in->get_bc("heat_transfer"),
         *scratch_data,
         base_in->parameters.heat,
-        base_in->parameters.material,
+        *material,
         temp_dof_idx,
         temp_hanging_nodes_dof_idx,
         temp_quad_idx,

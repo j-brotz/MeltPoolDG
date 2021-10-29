@@ -152,6 +152,7 @@ namespace MeltPoolDG::Flow
     const unsigned int &evapor_mass_flux_dof_idx     = temp_hanging_nodes_dof_idx;
 
     std::shared_ptr<ScratchData<dim>>                       scratch_data;
+    std::shared_ptr<Material<double>>                       material;
     std::shared_ptr<FlowBase<dim>>                          flow_operation;
     LevelSet::LevelSetOperation<dim>                        level_set_operation;
     std::shared_ptr<MeltPool::MeltPoolOperation<dim>>       melt_pool_operation;

@@ -134,6 +134,15 @@ namespace MeltPoolDG
     {}
 
     /**
+     * Return a reference to the material MaterialData.
+     */
+    const MaterialData<number> &
+    get_data() const
+    {
+      return data;
+    }
+
+    /**
      * This overload of compute_parameters() can be used only in the context of single phase
      * simulations.
      */
