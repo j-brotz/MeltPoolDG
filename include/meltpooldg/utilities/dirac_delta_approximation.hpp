@@ -15,12 +15,10 @@ namespace MeltPoolDG
    *
    * δ_w(φ) = δ(φ) * W(φ).
    *
-   * The function is dependent only on the heaviside representation of the level set φ.
+   * The function is dependent only on the heaviside representation of the level set φ (=indicator)
    * The symmetric delta function δ(φ) is defined as the norm of the indicator gradient ∇φ:
    *
-   *        ∇φ
-   * δ = --------
-   *      ||∇φ||
+   * δ = ||∇φ||
    *
    * The weight function W(φ) is defined as
    *
@@ -43,13 +41,12 @@ namespace MeltPoolDG
       , correction_factor(2. / (w_g + w_h))
     {
       AssertThrow(w_g + w_h != 0.0,
-                  ExcMessage(
-                    "When using a phase weighted dirac delta function approximation"
-                    " type for recoil pressure, use weights that don't sum up to zero! Abort..."));
+                  ExcMessage("When using a phase weighted Dirac delta function approximation"
+                             "use weights that don't sum up to zero! Abort..."));
     }
 
     /**
-     * This function returns the weight function value
+     * This function calculates the asymmetric
      *
      *         2 ( (1 - φ) w_g + φ w_h )
      * W(φ) = ---------------------------
