@@ -31,7 +31,6 @@
     "end time": "1.0",
     "time step size": "0.0005"
   },
-  "melt pool": {},
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {

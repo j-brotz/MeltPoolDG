@@ -14,7 +14,6 @@
     "end time": "0.01",
     "time step size": "0.00005"
   },
-  "melt pool": {},
   "material": {
     "material boiling temperature": "373.15",
     "material two phase properties transition type": "consistent_with_evaporation",

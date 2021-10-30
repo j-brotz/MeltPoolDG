@@ -15,7 +15,6 @@
     "end time": "0.0006",
     "time step size": "0.000001"
   },
-  "melt pool": {},
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
     "material first density": "0.01",

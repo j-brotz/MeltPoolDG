@@ -14,7 +14,6 @@
     "reference radius": "100e-6",
     "elliptical deviation": "1.5"
   },
-  "melt pool": {},
   "time stepping": {
     "start time": "0.0",
     "end time": "0.6e-3",
