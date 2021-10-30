@@ -536,7 +536,7 @@ namespace MeltPoolDG::Flow
         scratch_data,
         base_in->parameters,
         problem_specific_parameters.do_recoil_pressure,
-        ls_dof_idx,
+        ls_hanging_nodes_dof_idx,
         &heat_operation->get_temperature(),
         reinit_dof_idx,
         reinit_no_solid_dof_idx,

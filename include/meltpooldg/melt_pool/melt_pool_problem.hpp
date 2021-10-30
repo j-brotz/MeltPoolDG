@@ -57,6 +57,13 @@ namespace MeltPoolDG::Flow
     std::string
     get_name() final;
 
+  protected:
+    void
+    add_parameters(dealii::ParameterHandler &) final;
+
+    void
+    check_input_parameters(Parameters<double> &) final;
+
   private:
     struct ProblemSpecificParameters
     {
@@ -68,11 +75,6 @@ namespace MeltPoolDG::Flow
       bool do_recoil_pressure       = false;
     } problem_specific_parameters;
 
-    void
-    add_parameters(dealii::ParameterHandler &) final;
-
-    void
-    check_input_parameters(Parameters<double> &) final;
     /*
      *  This function initials the relevant scratch data
      *  for the computation of the level set problem
@@ -97,7 +99,7 @@ namespace MeltPoolDG::Flow
     /**
      * Compute gravity force.
      *
-     * @todo Find a better place.
+     * @todo Move to own class.
      */
     void
     compute_gravity_force(VectorType &vec, const double gravity, const bool zero_out = true) const;

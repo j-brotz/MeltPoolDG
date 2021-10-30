@@ -41,7 +41,6 @@ namespace MeltPoolDG
         AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
     }
 
-  private:
     /**
      * add parameters to the parameter handler
      *
@@ -52,8 +51,18 @@ namespace MeltPoolDG
     virtual void
     add_parameters(dealii::ParameterHandler &)
     {
-      // default: do nothing
+      AssertThrow(false,
+                  ExcMessage(
+                    "If problem specific parameters should be added, "
+                    "add_parameters() has to be implemented in the derived class. Abort..."))
     }
+
+    /**
+     *
+     * Check the input parameters for validity.
+     *
+     * This function is intended to be overriden by derived classes.
+     */
 
     virtual void
     check_input_parameters(Parameters<double> &)
