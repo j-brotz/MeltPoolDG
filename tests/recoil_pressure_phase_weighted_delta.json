@@ -32,9 +32,11 @@
   "recoil pressure": {
     "recoil pressure constant": "10000.",
     "recoil temperature constant": "10000.",
-    "recoil dirac delta function approximation type": "phase_weighted_delta",
-    "recoil gas phase weight": "74.30",
-    "recoil heavy phase weight": "7074.3"
+    "dirac delta function approximation": {
+      "type": "phase_weighted_delta",
+      "gas phase weight": "74.30",
+      "heavy phase weight": "7074.3"
+    }
   },
   "evaporation": {
     "evapor evaporation model": "recoil pressure"

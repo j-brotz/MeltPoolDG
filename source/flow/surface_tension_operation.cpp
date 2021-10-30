@@ -33,6 +33,12 @@ namespace MeltPoolDG::Flow
             true);
       }
 
+    if (data.delta_function_type == DiracDeltaFunctionApproximationType::phase_weighted_delta)
+      {
+        delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
+          data.delta_approximation_phase_weighted);
+      }
+
     //@todo add assert for parameters
   }
 
@@ -119,8 +125,15 @@ namespace MeltPoolDG::Flow
                   interpolated_level_set_to_pressure_space,
                   ls_to_pressure_grad_interpolation_matrix);
               }
+
+            if (data.delta_function_type ==
+                DiracDeltaFunctionApproximationType::norm_of_indicator_gradient)
+              used_level_set.evaluate(EvaluationFlags::gradients);
+            else if (data.delta_function_type ==
+                     DiracDeltaFunctionApproximationType::phase_weighted_delta)
+              used_level_set.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
             else
-              level_set.evaluate(EvaluationFlags::gradients);
+              AssertThrow(false, ExcNotImplemented());
 
             surface_tension.reinit(cell);
 
@@ -141,7 +154,10 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
               {
-                const auto delta = used_level_set.get_gradient(q_index).norm();
+                auto delta = used_level_set.get_gradient(q_index).norm();
+                if (data.delta_function_type ==
+                    DiracDeltaFunctionApproximationType::phase_weighted_delta)
+                  delta *= delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
 
                 if (temperature)
                   {
