@@ -7,7 +7,11 @@ namespace MeltPoolDG
   using namespace dealii;
 
   /**
-   * Asymmetric, phase weighted Dirac delta approximation function.
+   * Asymmetric, phase weighted Dirac delta approximation function, as proposed in
+   *
+   * Yokoi, K. (2014). A density-scaled continuum surface force model within a balanced
+   * force formulation. Journal of Computational Physics, 278, 221-228.
+   * DOI: 10.1016/j.jcp.2014.08.034
    *
    * This function can be used to approximate the Dirac delta function for diffuse interfaces. The
    * approximation is asymmetric and you can weigh the two phases individually. The function is

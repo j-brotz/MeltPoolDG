@@ -33,9 +33,11 @@
   "surface tension": {
     "surface tension coefficient": "0.01",
     "temperature dependent surface tension coefficient": "0.002",
-    "dirac delta function approximation type": "phase_weighted_delta",
-    "gas phase weight": "1",
-    "heavy phase weight": "100"
+    "dirac delta function approximation": {
+      "type": "phase_weighted_delta",
+      "gas phase weight": "1",
+      "heavy phase weight": "100"
+    }
   },
   "Navier-Stokes": {
     "adaflo": {

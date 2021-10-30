@@ -9,7 +9,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 
-#include <meltpooldg/utilities/dirac_delta_approximation.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Flow
