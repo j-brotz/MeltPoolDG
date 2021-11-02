@@ -136,7 +136,8 @@
     "domain x max": "400e-6",
     "domain x min": "-400e-6",
     "domain y max": "300e-6",
-    "domain y min": "-300e-6"
+    "domain y min": "-300e-6",
+    "evaporation boundary": "true"
   },
   "time stepping": {
     "end time": "1e-7",
