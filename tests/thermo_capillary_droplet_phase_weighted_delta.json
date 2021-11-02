@@ -22,8 +22,8 @@
     "material second density": "250",
     "material second viscosity": "0.012"
   },
-  "melt pool": {
-    "mp do heat transfer": "true"
+  "problem specific": {
+    "do heat transfer": "true"
   },
   "time stepping": {
     "start time": "0.0",

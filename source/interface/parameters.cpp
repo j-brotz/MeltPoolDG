@@ -620,33 +620,6 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("melt pool");
     {
-      prm.add_parameter(
-        "mp do heat transfer",
-        mp.do_heat_transfer,
-        "Set this parameter to true if you want to consider a coupling with heat transfer.");
-      prm.add_parameter(
-        "mp do evaporation",
-        mp.do_evaporation,
-        "Set this parameter to true if you want to consider a coupling with evaporation. "
-        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
-        "are set, they will be automatically set to true.");
-      prm.add_parameter(
-        "mp do evaporative heat flux",
-        mp.do_evaporative_heat_flux,
-        "Set this parameter to true if you want to consider only the evaporative heat flux in the heat equation. "
-        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
-        "are set, they will be automatically set to true.");
-      prm.add_parameter(
-        "mp do evaporative mass flux",
-        mp.do_evaporative_mass_flux,
-        "Set this parameter to true if you want to consider only the evaporative mass flux. The latter is relevant "
-        "for the source term in the continuity equation and the level set equation. "
-        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
-        "are set, they will be automatically set to true.");
-      prm.add_parameter(
-        "mp do melt pool",
-        mp.do_melt_pool,
-        "Set this parameter to true if you want to consider a melt pool simulation including a solid phase.");
       prm.add_parameter("mp melt pool center",
                         mp.melt_pool_center,
                         "Center coordinates of the melt pool ellipse/parabola. If no value is "
@@ -666,9 +639,6 @@ namespace MeltPoolDG
         "set to zero if \"mp set velocity to zero in solid\" or \"mp set level set to zero in solid\" "
         "are enabled.",
         Patterns::Double(0.0, 1.0));
-      prm.add_parameter("mp do recoil pressure",
-                        mp.do_recoil_pressure,
-                        "Set this parameter to true to enable recoil pressure.");
       prm.add_parameter("mp liquid melt pool radius",
                         mp.liquid.melt_pool_radius,
                         "Set the radius of the liquid parts of the melt pool ellipse "

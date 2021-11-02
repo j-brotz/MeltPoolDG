@@ -43,15 +43,15 @@ namespace MeltPoolDG::Flow
              */
             evaporation_operation->compute_evaporative_mass_flux();
 
-            if (problem_specific_parameters.do_evaporative_mass_flux)
-              {
-                /*
-                 * compute level set source term from evaporation
-                 */
-                evaporation_operation->compute_evaporation_velocity();
+            // if (problem_specific_parameters.do_evaporative_mass_flux)
+            //{
+            /*
+             * compute level set source term from evaporation
+             */
+            // evaporation_operation->compute_evaporation_velocity();
 
-                interface_velocity += evaporation_operation->get_velocity();
-              }
+            // interface_velocity += evaporation_operation->get_velocity();
+            //}
           }
 
         // ... solve level-set problem with the given advection field
@@ -112,14 +112,14 @@ namespace MeltPoolDG::Flow
                                                            false /*do not zero out*/);
 
         // .... d) evaporative mass fluxes
-        if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
-          {
-            evaporation_operation->compute_mass_balance_source_term(
-              mass_balance_rhs,
-              flow_operation->get_dof_handler_idx_pressure(),
-              flow_operation->get_quad_idx_pressure(),
-              true /* zero out rhs */);
-          }
+        // if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
+        //{
+        // evaporation_operation->compute_mass_balance_source_term(
+        // mass_balance_rhs,
+        // flow_operation->get_dof_handler_idx_pressure(),
+        // flow_operation->get_quad_idx_pressure(),
+        // true [> zero out rhs <]);
+        //}
 
         // ... e) recoil pressure forces
         if (melt_pool_operation)
@@ -138,8 +138,8 @@ namespace MeltPoolDG::Flow
 
         // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
         // the mass balance equation
-        if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
-          flow_operation->set_mass_balance_rhs(mass_balance_rhs);
+        // if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
+        // flow_operation->set_mass_balance_rhs(mass_balance_rhs);
 
         // solver Navier-Stokes problem
         flow_operation->solve();
