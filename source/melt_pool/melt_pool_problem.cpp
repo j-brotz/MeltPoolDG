@@ -43,15 +43,13 @@ namespace MeltPoolDG::Flow
              */
             evaporation_operation->compute_evaporative_mass_flux();
 
-            // if (problem_specific_parameters.do_evaporative_mass_flux)
-            //{
-            /*
-             * compute level set source term from evaporation
-             */
-            // evaporation_operation->compute_evaporation_velocity();
+            if (problem_specific_parameters.do_evaporative_mass_flux)
+              {
+                // compute level set source term from evaporation
+                evaporation_operation->compute_evaporation_velocity();
 
-            // interface_velocity += evaporation_operation->get_velocity();
-            //}
+                interface_velocity += evaporation_operation->get_velocity();
+              }
           }
 
         // ... solve level-set problem with the given advection field
@@ -112,14 +110,14 @@ namespace MeltPoolDG::Flow
                                                            false /*do not zero out*/);
 
         // .... d) evaporative mass fluxes
-        // if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
-        //{
-        // evaporation_operation->compute_mass_balance_source_term(
-        // mass_balance_rhs,
-        // flow_operation->get_dof_handler_idx_pressure(),
-        // flow_operation->get_quad_idx_pressure(),
-        // true [> zero out rhs <]);
-        //}
+        if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
+          {
+            evaporation_operation->compute_mass_balance_source_term(
+              mass_balance_rhs,
+              flow_operation->get_dof_handler_idx_pressure(),
+              flow_operation->get_quad_idx_pressure(),
+              true /* zero out rhs */);
+          }
 
         // ... e) recoil pressure forces
         if (melt_pool_operation)
@@ -138,8 +136,8 @@ namespace MeltPoolDG::Flow
 
         // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
         // the mass balance equation
-        // if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
-        // flow_operation->set_mass_balance_rhs(mass_balance_rhs);
+        if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
+          flow_operation->set_mass_balance_rhs(mass_balance_rhs);
 
         // solver Navier-Stokes problem
         flow_operation->solve();
@@ -254,87 +252,6 @@ namespace MeltPoolDG::Flow
       AssertThrow(false,
                   ExcMessage("In case of do melt pool both flag >>> do melt pool <<< "
                              "and >>> do heat transfer <<< have to be set to true."));
-
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-    AssertThrow(parameters.adaflo_params.params.density ==
-                  1.0, // 1.0 is the default value from adaflo
-                ExcMessage("It seems that you specified the density parameter "
-                           "within the adaflo section, which is ignored by MeltPoolDG. "
-                           "Please use the >material: material first density:< section instead. "));
-
-    AssertThrow(parameters.adaflo_params.params.viscosity ==
-                  1.0, // 1.0 is the default value from adaflo
-                ExcMessage("It seems that you specified the viscosity parameter "
-                           "within the adaflo section, which is ignored by MeltPoolDG. "
-                           "Please use the >material: material first density:< section instead. "));
-
-    if (problem_specific_parameters.do_evaporative_mass_flux)
-      {
-        if (parameters.evapor.formulation_source_term_continuity != "sharp")
-          {
-            AssertThrow(
-              parameters.adaflo_params.params.beta_convective_term_momentum_balance == 0,
-              ExcMessage(
-                "For the consideration of phase change, the convective "
-                "formulation of the momentum balance in the Navier-Stokes equations "
-                "must be chosen: Navier-Stokes: adaflo: Navier-Stokes: {formulation convective "
-                "term momentum balance: convective }"));
-
-            //@todo: the following is kept as back-up
-
-            // AssertThrow(material.two_phase_properties_transition_type ==
-            // TwoPhasePropertiesTransitionType::consistent_with_evaporation,
-            // ExcMessage(
-            //"For the consideration of phase change, the density "
-            //"has to be interpolated consistently with the continuity equation "
-            //"including phase change."));
-          }
-      }
-    // WARNING: by setting the differences to a non-zero value we force
-    //   adaflo to assume that we are running a simulation with variable
-    //   coefficients, i.e., it allocates memory for the data structures
-    //   variable_densities and variable_viscosities, which are accessed
-    //   during NavierStokesMatrix::begin_densities() and
-    //   NavierStokesMatrix::begin_viscosity(). However, we do not actually
-    //   use these values, since we fill the density and viscosity
-    //   differently.
-    parameters.adaflo_params.params.density_diff   = 1.0;
-    parameters.adaflo_params.params.viscosity_diff = 1.0;
-
-    if (parameters.material.first.density > 0.0)
-      {
-        // adaflo assumes the parameter density to be the one of heaviside == 0
-        parameters.adaflo_params.params.density = parameters.material.first.density;
-        parameters.adaflo_params.params.density_diff =
-          (parameters.material.second.density > 0.0) ?
-            parameters.material.first.density - parameters.material.second.density :
-            0.0;
-      }
-    if (parameters.material.first.viscosity > 0.0)
-      {
-        // adaflo assumes the parameter viscosity to be the one of heaviside == 0
-        parameters.adaflo_params.params.viscosity = parameters.material.first.viscosity;
-        parameters.adaflo_params.params.viscosity_diff =
-          (parameters.material.second.viscosity > 0.0) ?
-            parameters.material.first.viscosity - parameters.material.second.viscosity :
-            0.0;
-      }
-
-    parameters.flow.velocity_degree        = (parameters.flow.velocity_degree > 0.0) ?
-                                               parameters.flow.velocity_degree :
-                                               parameters.adaflo_params.params.velocity_degree;
-    parameters.flow.velocity_n_q_points_1d = (parameters.flow.velocity_n_q_points_1d < 1) ?
-                                               parameters.flow.velocity_degree + 1 :
-                                               parameters.flow.velocity_n_q_points_1d;
-
-    /// synchronize time stepping schemes
-    parameters.adaflo_params.params.start_time           = parameters.time_stepping.start_time;
-    parameters.adaflo_params.params.end_time             = parameters.time_stepping.end_time;
-    parameters.adaflo_params.params.time_step_size_start = parameters.time_stepping.time_step_size;
-    parameters.adaflo_params.params.time_step_size_min   = parameters.time_stepping.time_step_size;
-    parameters.adaflo_params.params.time_step_size_max   = parameters.time_stepping.time_step_size;
-    parameters.adaflo_params.params.use_simplex_mesh     = parameters.base.do_simplex;
-#endif
   }
 
   template <int dim>
@@ -417,7 +334,10 @@ namespace MeltPoolDG::Flow
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    flow_operation = std::make_shared<AdafloWrapper<dim>>(*scratch_data, base_in);
+    flow_operation =
+      std::make_shared<AdafloWrapper<dim>>(*scratch_data,
+                                           base_in,
+                                           problem_specific_parameters.do_evaporative_mass_flux);
     flow_vel_no_solid_dof_idx =
       scratch_data->attach_constraint_matrix(flow_velocity_constraints_no_solid);
     scratch_data->attach_dof_handler(flow_operation->get_dof_handler_velocity());
