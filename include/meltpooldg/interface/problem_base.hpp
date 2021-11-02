@@ -22,12 +22,13 @@ namespace MeltPoolDG
     perform_convergence_study(){};
 
   protected:
-    virtual void
+    void
     add_problem_specific_parameters(const std::string &parameter_file)
     {
       /*
-       * read user-defined parameters
+       * Read user-defined parameters.
        */
+      ParameterHandler prm_problem_specific;
       add_parameters(prm_problem_specific);
 
       std::ifstream file;
@@ -42,7 +43,7 @@ namespace MeltPoolDG
     }
 
     /**
-     * add parameters to the parameter handler
+     * Add parameters to the parameter handler.
      *
      * This function is intended to be overriden by derived classes.
      * If so, add_problem_specific_parameters() must be called from
@@ -52,9 +53,8 @@ namespace MeltPoolDG
     add_parameters(dealii::ParameterHandler &)
     {
       AssertThrow(false,
-                  ExcMessage(
-                    "If problem specific parameters should be added, "
-                    "add_parameters() has to be implemented in the derived class. Abort..."))
+                  ExcMessage("If problem specific parameters should be added, "
+                             "add_parameters() has to be overriden in the derived class. Abort..."))
     }
 
     /**
@@ -69,12 +69,5 @@ namespace MeltPoolDG
     {
       // default: do nothing
     }
-
-
-    /**
-     * Read the simulation specific parameters
-     */
-
-    ParameterHandler prm_problem_specific;
   };
 } // namespace MeltPoolDG

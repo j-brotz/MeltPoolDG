@@ -280,6 +280,8 @@ namespace MeltPoolDG::Flow
                 "must be chosen: Navier-Stokes: adaflo: Navier-Stokes: {formulation convective "
                 "term momentum balance: convective }"));
 
+            //@todo: the following is kept as back-up
+
             // AssertThrow(material.two_phase_properties_transition_type ==
             // TwoPhasePropertiesTransitionType::consistent_with_evaporation,
             // ExcMessage(

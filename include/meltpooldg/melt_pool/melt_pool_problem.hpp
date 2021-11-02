@@ -65,7 +65,7 @@ namespace MeltPoolDG::Flow
     check_input_parameters(Parameters<double> &) final;
 
   private:
-    struct ProblemSpecificParameters
+    struct
     {
       bool do_heat_transfer         = false;
       bool do_evaporation           = false;
