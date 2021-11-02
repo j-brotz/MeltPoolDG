@@ -53,8 +53,9 @@ namespace MeltPoolDG
     add_parameters(dealii::ParameterHandler &)
     {
       AssertThrow(false,
-                  ExcMessage("If problem specific parameters should be added, "
-                             "add_parameters() has to be overriden in the derived class. Abort..."))
+                  ExcMessage(
+                    "If problem specific parameters should be added, "
+                    "add_parameters() has to be overriden in the derived class. Abort..."));
     }
 
     /**

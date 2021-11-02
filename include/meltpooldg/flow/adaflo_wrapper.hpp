@@ -157,7 +157,7 @@ namespace MeltPoolDG::Flow
 
   private:
     void
-    check_input_parameters(Parameters<double> &parameters);
+    create_parameters(Parameters<double> &parameters, const std::string parameter_file);
 
     ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data;
     /**

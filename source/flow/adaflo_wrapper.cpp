@@ -14,9 +14,9 @@ namespace MeltPoolDG::Flow
     , do_evaporative_mass_flux(do_evaporative_mass_flux)
   {
     /*
-     * check input parameters for validity
+     *  create input parameters for adaflo
      */
-    check_input_parameters(base_in->parameters);
+    create_parameters(base_in->parameters, base_in->parameter_file);
     /*
      * setup Navier-Stokes solver
      */
@@ -84,8 +84,11 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  AdafloWrapper<dim>::check_input_parameters(Parameters<double> &parameters)
+  AdafloWrapper<dim>::create_parameters(Parameters<double> &parameters,
+                                        const std::string   parameter_file)
   {
+    parameters.adaflo_params.parse_parameters(parameter_file);
+
     AssertThrow(parameters.adaflo_params.params.density ==
                   1.0, // 1.0 is the default value from adaflo
                 ExcMessage("It seems that you specified the density parameter "
