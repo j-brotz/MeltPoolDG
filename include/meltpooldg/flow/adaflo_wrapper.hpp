@@ -35,7 +35,8 @@ namespace MeltPoolDG::Flow
      * Constructor.
      */
     AdafloWrapper(ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data,
-                  std::shared_ptr<SimulationBase<dim>>                    base_in);
+                  std::shared_ptr<SimulationBase<dim>>                    base_in,
+                  const bool                                              do_evaporative_mass_flux);
 
     void
     set_initial_condition(const Function<dim> &initial_field_function_velocity);
@@ -155,6 +156,9 @@ namespace MeltPoolDG::Flow
     attach_output_vectors(GenericDataOut<dim> &data_out);
 
   private:
+    void
+    create_parameters(Parameters<double> &parameters, const std::string parameter_file);
+
     ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data;
     /**
      * Timer
@@ -164,9 +168,11 @@ namespace MeltPoolDG::Flow
     /**
      * Reference to the actual Navier-Stokes solver from adaflo
      */
-    NavierStokes<dim> navier_stokes;
+    std::unique_ptr<NavierStokes<dim>> navier_stokes;
 
     const FlowParameters &adaflo_params;
+
+    const bool do_evaporative_mass_flux;
 
     unsigned int dof_index_u;
     unsigned int dof_index_p;

@@ -41,10 +41,6 @@
     "laser analytical absorptivity gas": "0",
     "laser analytical ambient temperature": "500."
   },
-  "melt pool": {
-    "mp do melt pool": "true",
-    "mp do heat transfer": "true"
-  },
   "simulation specific domain": {
     "domain x min": "-0.0002",
     "domain x max": "0.0002",
@@ -103,5 +99,9 @@
         "output walltimes": "0"
       }
     }
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do heat transfer": "true"
   }
 }

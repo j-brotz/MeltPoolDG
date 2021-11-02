@@ -22,9 +22,6 @@
     "material second density": "250",
     "material second viscosity": "0.012"
   },
-  "melt pool": {
-    "mp do heat transfer": "true"
-  },
   "time stepping": {
     "start time": "0.0",
     "end time": "0.002",
@@ -86,5 +83,8 @@
   },
   "paraview": {
     "paraview do output": "false"
+  },
+  "problem specific": {
+    "do heat transfer": "true"
   }
 }

@@ -27,9 +27,6 @@
     "end time": "0.25",
     "time step size": "0.05"
   },
-  "melt pool": {
-    "mp do heat transfer": "true"
-  },
   "surface tension": {
     "surface tension coefficient": "0.023040369",
     "temperature dependent surface tension coefficient": "0.002"
@@ -86,5 +83,8 @@
   },
   "paraview": {
     "paraview do output": "false"
+  },
+  "problem specific": {
+    "do heat transfer": "true"
   }
 }

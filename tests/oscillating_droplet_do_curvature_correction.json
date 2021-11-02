@@ -14,12 +14,6 @@
     "reference radius": "100e-6",
     "elliptical deviation": "1.5"
   },
-  "melt pool": {
-    "mp do heat transfer": "false",
-    "mp do evaporation": "false",
-    "mp do melt pool": "false",
-    "mp do recoil pressure": "false"
-  },
   "time stepping": {
     "start time": "0.0",
     "end time": "0.6e-3",
@@ -104,5 +98,11 @@
   },
   "paraview": {
     "paraview do output": "true"
+  },
+  "problem specific": {
+    "do evaporation": "false",
+    "do melt pool": "false",
+    "do recoil pressure": "false",
+    "do heat transfer": "false"
   }
 }

@@ -64,10 +64,7 @@
     "initial temperature": "1000.0"
   },
   "melt pool": {
-    "mp do melt pool": "true",
-    "mp do heat transfer": "true",
-    "mp set velocity to zero in solid": "false",
-    "mp do recoil pressure": "true"
+    "mp set velocity to zero in solid": "false"
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",
@@ -121,5 +118,10 @@
     "paraview do output": "true",
     "paraview directory": "output_recoil_pressure",
     "paraview filename": "melt_pool_tfi_static_interface_gauss_recoil_pressure"
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do recoil pressure": "true",
+    "do heat transfer": "true"
   }
 }

@@ -13,12 +13,7 @@
     "end time": "0.0005",
     "time step size": "0.0001"
   },
-  "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do evaporation": "true",
-    "mp do evaporative heat flux": "false",
-    "mp do evaporative mass flux": "true"
-  },
+  "melt pool": {},
   "material": {
     "material first density": "0.01",
     "material first viscosity": "0.001",
@@ -92,5 +87,11 @@
   },
   "paraview": {
     "paraview do output": "false"
+  },
+  "problem specific": {
+    "do evaporative heat flux": "false",
+    "do evaporative mass flux": "true",
+    "do evaporation": "true",
+    "do heat transfer": "true"
   }
 }

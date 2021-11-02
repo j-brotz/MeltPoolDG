@@ -31,9 +31,6 @@
     "end time": "1.0",
     "time step size": "0.0005"
   },
-  "melt pool": {
-    "mp do heat transfer": "true"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -87,5 +84,8 @@
   "paraview": {
     "paraview directory": "output_thermo_capillary/",
     "paraview do output": "true"
+  },
+  "problem specific": {
+    "do heat transfer": "true"
   }
 }

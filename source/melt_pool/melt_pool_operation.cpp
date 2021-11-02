@@ -11,6 +11,7 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::MeltPoolOperation(
     const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
     const Parameters<double> &               data_in,
+    const bool                               do_recoil_pressure,
     const unsigned int                       ls_dof_idx_in,
     VectorType *                             temperature,
     const unsigned int                       reinit_dof_idx_in,
@@ -51,7 +52,7 @@ namespace MeltPoolDG::MeltPool
     /*
      * initialize the recoil pressure operation class
      */
-    if (data_in.mp.do_recoil_pressure)
+    if (do_recoil_pressure)
       recoil_pressure_operation =
         std::make_shared<RecoilPressureOperation<dim>>(*scratch_data_in,
                                                        data_in,

@@ -84,9 +84,6 @@
     "laser analytical temperature x to y ratio": "3."
   },
   "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do melt pool": "true",
-    "mp do recoil pressure": "true",
     "mp liquid melting point": "1700",
     "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "true"
@@ -109,5 +106,10 @@
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit scale factor epsilon": "0.7107"
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do recoil pressure": "true",
+    "do heat transfer": "true"
   }
 }

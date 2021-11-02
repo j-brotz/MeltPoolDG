@@ -14,10 +14,6 @@
     "end time": "0.1",
     "time step size": "5.e-4"
   },
-  "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do evaporation": "true"
-  },
   "material": {
     "material boiling temperature": "373.15",
     "material two phase properties transition type": "consistent_with_evaporation",
@@ -101,5 +97,9 @@
     "paraview do output": "true",
     "paraview directory": "output_stefan_1/",
     "paraview filename": "solution"
+  },
+  "problem specific": {
+    "do evaporation": "true",
+    "do heat transfer": "true"
   }
 }

@@ -107,12 +107,6 @@
   },
   "melt pool": {
     "mp boiling temperature": "3000.",
-    "mp do evaporation": "false",
-    "mp do evaporative heat flux": "true",
-    "mp do evaporative mass flux": "false",
-    "mp do heat transfer": "true",
-    "mp do melt pool": "true",
-    "mp do recoil pressure": "true",
     "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "false"
   },
@@ -142,11 +136,20 @@
     "domain x max": "400e-6",
     "domain x min": "-400e-6",
     "domain y max": "300e-6",
-    "domain y min": "-300e-6"
+    "domain y min": "-300e-6",
+    "evaporation boundary": "true"
   },
   "time stepping": {
     "end time": "1e-7",
     "start time": "0.0",
     "time step size": "2e-8"
+  },
+  "problem specific": {
+    "do evaporative heat flux": "true",
+    "do evaporative mass flux": "false",
+    "do evaporation": "false",
+    "do melt pool": "true",
+    "do recoil pressure": "true",
+    "do heat transfer": "true"
   }
 }

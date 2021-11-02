@@ -69,11 +69,12 @@ namespace MeltPoolDG
       class SimulationRecoilPressure : public SimulationBase<dim>
       {
       private:
-        double domain_x_min      = 0;
-        double domain_x_max      = 0;
-        double domain_y_min      = 0;
-        double domain_y_max      = 0;
-        bool   periodic_boundary = false;
+        double domain_x_min         = 0;
+        double domain_x_max         = 0;
+        double domain_y_min         = 0;
+        double domain_y_max         = 0;
+        bool   periodic_boundary    = false;
+        bool   evaporation_boundary = false;
 
       public:
         SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
@@ -100,7 +101,12 @@ namespace MeltPoolDG
             prm.add_parameter(
               "periodic boundary",
               periodic_boundary,
-              "Set this Parameter to true if the domain should be periodic in x direction.");
+              "Set this parameter to true if the domain should be periodic in x direction.");
+            prm.add_parameter(
+              "evaporation boundary",
+              evaporation_boundary,
+              "Set this Parameter to true if the upper boundary of the domain should be open "
+              "to enable an outward mass flow.");
           }
           prm.leave_subsection();
         }
@@ -183,28 +189,28 @@ namespace MeltPoolDG
            *                   lower_bc
            *
            * -----------------------------------------------------------------------------
-           * do evaporation    = false
+           * evaporation boundary    = false
            * periodic boundary = false
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |  T = T_initial | no-slip  |       -        |     -
            * lower_bc            |  T = T_initial | no-slip  | fixed constant |     -
            * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
-           * do evaporation    = false
+           * evaporation boundary    = false
            * periodic boundary = true
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
            * lower_bc            |  T = T_initial | no-slip  | fixed constant |     -
            * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
-           * do evaporation    = true
+           * evaporation boundary    = true
            * periodic boundary = false
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |  T = T_initial | symmetry |       -        |     -
            * lower_bc            |  T = T_initial |   open   |       -        |     -
            * upper_bc            |  T = T_initial | no-slip  |       -        |  ls = -1
            * -----------------------------------------------------------------------------
-           * do evaporation    = true
+           * evaporation boundary    = true
            * periodic boundary = true
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
@@ -245,7 +251,7 @@ namespace MeltPoolDG
           if (this->parameters.base.problem_name == ProblemType::melt_pool)
             {
               this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-              if (this->parameters.mp.do_evaporation)
+              if (evaporation_boundary)
                 {
                   this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
                   if (!periodic_boundary)

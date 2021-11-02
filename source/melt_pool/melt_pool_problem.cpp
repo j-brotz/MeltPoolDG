@@ -43,11 +43,9 @@ namespace MeltPoolDG::Flow
              */
             evaporation_operation->compute_evaporative_mass_flux();
 
-            if (base_in->parameters.mp.do_evaporative_mass_flux)
+            if (problem_specific_parameters.do_evaporative_mass_flux)
               {
-                /*
-                 * compute level set source term from evaporation
-                 */
+                // compute level set source term from evaporation
                 evaporation_operation->compute_evaporation_velocity();
 
                 interface_velocity += evaporation_operation->get_velocity();
@@ -112,7 +110,7 @@ namespace MeltPoolDG::Flow
                                                            false /*do not zero out*/);
 
         // .... d) evaporative mass fluxes
-        if (evaporation_operation && base_in->parameters.mp.do_evaporative_mass_flux)
+        if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
           {
             evaporation_operation->compute_mass_balance_source_term(
               mass_balance_rhs,
@@ -138,7 +136,7 @@ namespace MeltPoolDG::Flow
 
         // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
         // the mass balance equation
-        if (evaporation_operation && base_in->parameters.mp.do_evaporative_mass_flux)
+        if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
           flow_operation->set_mass_balance_rhs(mass_balance_rhs);
 
         // solver Navier-Stokes problem
@@ -182,8 +180,98 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
+  MeltPoolProblem<dim>::add_parameters(dealii::ParameterHandler &prm)
+  {
+    prm.enter_subsection("problem specific");
+    {
+      prm.add_parameter(
+        "do heat transfer",
+        problem_specific_parameters.do_heat_transfer,
+        "Set this parameter to true if you want to consider a coupling with heat transfer.");
+      prm.add_parameter(
+        "do evaporation",
+        problem_specific_parameters.do_evaporation,
+        "Set this parameter to true if you want to consider a coupling with evaporation. "
+        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
+        "are set, they will be automatically set to true.");
+      prm.add_parameter(
+        "do evaporative heat flux",
+        problem_specific_parameters.do_evaporative_heat_flux,
+        "Set this parameter to true if you want to consider only the evaporative heat flux in the heat equation. "
+        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
+        "are set, they will be automatically set to true.");
+      prm.add_parameter(
+        "do evaporative mass flux",
+        problem_specific_parameters.do_evaporative_mass_flux,
+        "Set this parameter to true if you want to consider only the evaporative mass flux. The latter is relevant "
+        "for the source term in the continuity equation and the level set equation. "
+        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
+        "are set, they will be automatically set to true.");
+      prm.add_parameter(
+        "do melt pool",
+        problem_specific_parameters.do_melt_pool,
+        "Set this parameter to true if you want to consider a melt pool simulation including solid/liquid/gaseous phases.");
+      prm.add_parameter("do recoil pressure",
+                        problem_specific_parameters.do_recoil_pressure,
+                        "Set this parameter to true to enable recoil pressure.");
+    }
+    prm.leave_subsection();
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::check_input_parameters(Parameters<double> &parameters)
+  {
+    /*
+     * modify parameters for evaporation
+     */
+    if (problem_specific_parameters.do_evaporation &&
+        (!problem_specific_parameters.do_evaporative_heat_flux &&
+         !problem_specific_parameters.do_evaporative_mass_flux))
+      {
+        problem_specific_parameters.do_evaporative_heat_flux = true;
+        problem_specific_parameters.do_evaporative_mass_flux = true;
+      }
+    else if (!problem_specific_parameters.do_evaporation &&
+             (problem_specific_parameters.do_evaporative_heat_flux ||
+              problem_specific_parameters.do_evaporative_mass_flux))
+      problem_specific_parameters.do_evaporation = true;
+
+    AssertThrow(!problem_specific_parameters.do_evaporative_heat_flux ||
+                  parameters.material.latent_heat_of_evaporation > 0.0,
+                ExcMessage("To consider the evaporative heat flux the value for "
+                           ">>> latent heat of evaporation <<< "
+                           "must be larger than zero."));
+
+    if (problem_specific_parameters.do_evaporation && !problem_specific_parameters.do_heat_transfer)
+      AssertThrow(false,
+                  ExcMessage("In case of evaporation both flag >>> do evaporation <<< "
+                             "and >>> do heat transfer <<< have to be set to true."));
+
+    if (problem_specific_parameters.do_melt_pool && !problem_specific_parameters.do_heat_transfer)
+      AssertThrow(false,
+                  ExcMessage("In case of do melt pool both flag >>> do melt pool <<< "
+                             "and >>> do heat transfer <<< have to be set to true."));
+  }
+
+  template <int dim>
+  void
   MeltPoolProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
   {
+    /*
+     *  parameters for adaflo
+     */
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+    base_in->parameters.adaflo_params.parse_parameters(base_in->parameter_file);
+#endif
+    /*
+     *  Add problem specific parameters defined within add_parameters()
+     */
+    this->add_problem_specific_parameters(base_in->parameter_file);
+    /*
+     *  Check parameters for validity
+     */
+    check_input_parameters(base_in->parameters);
     /*
      *  setup DoFHandler
      */
@@ -246,7 +334,10 @@ namespace MeltPoolDG::Flow
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    flow_operation = std::make_shared<AdafloWrapper<dim>>(*scratch_data, base_in);
+    flow_operation =
+      std::make_shared<AdafloWrapper<dim>>(*scratch_data,
+                                           base_in,
+                                           problem_specific_parameters.do_evaporative_mass_flux);
     flow_vel_no_solid_dof_idx =
       scratch_data->attach_constraint_matrix(flow_velocity_constraints_no_solid);
     scratch_data->attach_dof_handler(flow_operation->get_dof_handler_velocity());
@@ -256,7 +347,8 @@ namespace MeltPoolDG::Flow
     /*
      *  set indices of flow dof handlers
      */
-    vel_dof_idx      = flow_operation->get_dof_handler_idx_velocity();
+    vel_dof_idx = flow_operation->get_dof_handler_idx_velocity();
+
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
 
     setup_dof_system(base_in, false);
@@ -288,7 +380,7 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the heat operation class
      */
-    if (base_in->parameters.mp.do_heat_transfer)
+    if (problem_specific_parameters.do_heat_transfer)
       heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
         base_in->get_bc("heat_transfer"),
         *scratch_data,
@@ -327,7 +419,7 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the evaporation class
      */
-    if (base_in->parameters.mp.do_evaporation)
+    if (problem_specific_parameters.do_evaporation)
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
           scratch_data,
@@ -352,7 +444,7 @@ namespace MeltPoolDG::Flow
         /*
          * register evaporative mass flux to compute the heat sink
          */
-        if (base_in->parameters.mp.do_evaporative_heat_flux)
+        if (problem_specific_parameters.do_evaporative_heat_flux)
           heat_operation->register_evaporative_mass_flux(
             &evaporation_operation->get_evaporative_mass_flux(),
             evapor_mass_flux_dof_idx,
@@ -361,10 +453,11 @@ namespace MeltPoolDG::Flow
     /*
      *    initialize the melt pool operation class
      */
-    if (base_in->parameters.mp.do_melt_pool)
+    if (problem_specific_parameters.do_melt_pool)
       melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
         scratch_data,
         base_in->parameters,
+        problem_specific_parameters.do_recoil_pressure,
         ls_hanging_nodes_dof_idx,
         &heat_operation->get_temperature(),
         reinit_dof_idx,

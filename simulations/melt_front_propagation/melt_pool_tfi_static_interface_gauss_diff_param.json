@@ -61,9 +61,7 @@
     "initial temperature": "0.0"
   },
   "melt pool": {
-    "mp set velocity to zero in solid": "false",
-    "mp do melt pool": "true",
-    "mp do heat transfer": "true"
+    "mp set velocity to zero in solid": "false"
   },
   "material": {
     "material two phase properties transition type": "smooth",
@@ -112,5 +110,9 @@
     "paraview do output": "true",
     "paraview directory": "output",
     "paraview filename": "melt_pool_tfi_static_interface_gauss_diff_param"
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do heat transfer": "true"
   }
 }

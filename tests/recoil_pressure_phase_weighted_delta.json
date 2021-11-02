@@ -42,11 +42,6 @@
     "evapor evaporation model": "recoil pressure"
   },
   "melt pool": {
-    "mp do melt pool": "true",
-    "mp do heat transfer": "true",
-    "mp do recoil pressure": "true",
-    "mp do evaporative heat flux": "false",
-    "mp do evaporative mass flux": "false",
     "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "false"
   },
@@ -115,5 +110,12 @@
         "output walltimes": "0"
       }
     }
+  },
+  "problem specific": {
+    "do evaporative heat flux": "false",
+    "do evaporative mass flux": "false",
+    "do melt pool": "true",
+    "do recoil pressure": "true",
+    "do heat transfer": "true"
   }
 }

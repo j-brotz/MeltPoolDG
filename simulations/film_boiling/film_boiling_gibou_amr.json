@@ -17,10 +17,6 @@
   "surface tension": {
     "surface tension coefficient": "0.1"
   },
-  "melt pool": {
-    "mp do heat transfer": "true",
-    "mp do evaporation": "true"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -106,5 +102,9 @@
     "material two phase properties transition type": "consistent_with_evaporation",
     "material molar mass": "0.01801528",
     "material latent heat of evaporation": "1.e3"
+  },
+  "problem specific": {
+    "do evaporation": "true",
+    "do heat transfer": "true"
   }
 }

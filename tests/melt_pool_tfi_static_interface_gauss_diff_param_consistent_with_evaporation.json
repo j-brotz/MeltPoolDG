@@ -61,9 +61,7 @@
     "initial temperature": "0.0"
   },
   "melt pool": {
-    "mp set velocity to zero in solid": "false",
-    "mp do melt pool": "true",
-    "mp do heat transfer": "true"
+    "mp set velocity to zero in solid": "false"
   },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
@@ -110,5 +108,9 @@
   },
   "paraview": {
     "paraview do output": "false"
+  },
+  "problem specific": {
+    "do melt pool": "true",
+    "do heat transfer": "true"
   }
 }

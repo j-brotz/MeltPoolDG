@@ -105,124 +105,10 @@ namespace MeltPoolDG
 
     if (heat.solidification)
       {
-        AssertThrow(
-          material.solidus_temperature < material.liquidus_temperature,
-          ExcMessage(
-            "The liquidus temperature must be greater than the solidus temperature! Abort..."));
         material.inv_mushy_interval =
-          1.0 / (material.liquidus_temperature - material.solidus_temperature);
+          1.0 / (material.liquidus_temperature -
+                 material.solidus_temperature); //@todo: move to new material class
       }
-
-      /*
-       *  parameters for adaflo
-       */
-#ifdef MELT_POOL_DG_WITH_ADAFLO
-    if (base.problem_name == ProblemType::melt_pool)
-      {
-        /*
-         * modify parameters for evaporation
-         */
-        if (mp.do_evaporation && (!mp.do_evaporative_heat_flux && !mp.do_evaporative_mass_flux))
-          {
-            mp.do_evaporative_heat_flux = true;
-            mp.do_evaporative_mass_flux = true;
-          }
-        else if (!mp.do_evaporation && (mp.do_evaporative_heat_flux || mp.do_evaporative_mass_flux))
-          mp.do_evaporation = true;
-
-        AssertThrow(!mp.do_evaporative_heat_flux || material.latent_heat_of_evaporation > 0.0,
-                    ExcMessage("To consider the evaporative heat flux the value for "
-                               ">>> latent heat of evaporation <<< "
-                               "must be larger than zero."));
-
-        if (mp.do_evaporation && !mp.do_heat_transfer)
-          AssertThrow(false,
-                      ExcMessage("In case of evaporation both flag >>> do evaporation <<< "
-                                 "and >>> do heat transfer <<< have to be set to true."));
-
-        if (mp.do_melt_pool && !mp.do_heat_transfer)
-          AssertThrow(false,
-                      ExcMessage("In case of do melt pool both flag >>> do melt pool <<< "
-                                 "and >>> do heat transfer <<< have to be set to true."));
-
-        adaflo_params.parse_parameters(parameter_filename);
-
-        AssertThrow(adaflo_params.params.density == 1.0, // 1.0 is the default value from adaflo
-                    ExcMessage(
-                      "It seems that you specified the density parameter "
-                      "within the adaflo section, which is ignored by MeltPoolDG. "
-                      "Please use the >material: material first density:< section instead. "));
-
-        AssertThrow(adaflo_params.params.viscosity == 1.0, // 1.0 is the default value from adaflo
-                    ExcMessage(
-                      "It seems that you specified the viscosity parameter "
-                      "within the adaflo section, which is ignored by MeltPoolDG. "
-                      "Please use the >material: material first density:< section instead. "));
-
-        if (mp.do_evaporative_mass_flux)
-          {
-            if (evapor.formulation_source_term_continuity != "sharp")
-              {
-                AssertThrow(
-                  adaflo_params.params.beta_convective_term_momentum_balance == 0,
-                  ExcMessage(
-                    "For the consideration of phase change, the convective "
-                    "formulation of the momentum balance in the Navier-Stokes equations "
-                    "must be chosen: Navier-Stokes: adaflo: Navier-Stokes: {formulation convective "
-                    "term momentum balance: convective }"));
-
-                // AssertThrow(material.two_phase_properties_transition_type ==
-                // TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation,
-                // ExcMessage(
-                //"For the consideration of phase change, the density "
-                //"has to be interpolated consistently with the continuity equation "
-                //"including phase change."));
-              }
-          }
-        // WARNING: by setting the differences to a non-zero value we force
-        //   adaflo to assume that we are running a simulation with variable
-        //   coefficients, i.e., it allocates memory for the data structures
-        //   variable_densities and variable_viscosities, which are accessed
-        //   during NavierStokesMatrix::begin_densities() and
-        //   NavierStokesMatrix::begin_viscosity(). However, we do not actually
-        //   use these values, since we fill the density and viscosity
-        //   differently.
-        adaflo_params.params.density_diff   = 1.0;
-        adaflo_params.params.viscosity_diff = 1.0;
-
-        if (material.first.density > 0.0)
-          {
-            // adaflo assumes the parameter density to be the one of heaviside == 0
-            adaflo_params.params.density      = material.first.density;
-            adaflo_params.params.density_diff = (material.second.density > 0.0) ?
-                                                  material.first.density - material.second.density :
-                                                  0.0;
-          }
-        if (material.first.viscosity > 0.0)
-          {
-            // adaflo assumes the parameter viscosity to be the one of heaviside == 0
-            adaflo_params.params.viscosity = material.first.viscosity;
-            adaflo_params.params.viscosity_diff =
-              (material.second.viscosity > 0.0) ?
-                material.first.viscosity - material.second.viscosity :
-                0.0;
-          }
-
-        flow.velocity_degree        = (flow.velocity_degree > 0.0) ? flow.velocity_degree :
-                                                                     adaflo_params.params.velocity_degree;
-        flow.velocity_n_q_points_1d = (flow.velocity_n_q_points_1d < 1) ?
-                                        flow.velocity_degree + 1 :
-                                        flow.velocity_n_q_points_1d;
-
-        /// synchronize time stepping schemes
-        adaflo_params.params.start_time           = time_stepping.start_time;
-        adaflo_params.params.end_time             = time_stepping.end_time;
-        adaflo_params.params.time_step_size_start = time_stepping.time_step_size;
-        adaflo_params.params.time_step_size_min   = time_stepping.time_step_size;
-        adaflo_params.params.time_step_size_max   = time_stepping.time_step_size;
-        adaflo_params.params.use_simplex_mesh     = base.do_simplex;
-      }
-#endif
 
     // create output directory and copy parameter file
     {
@@ -243,7 +129,6 @@ namespace MeltPoolDG
                             paraview.directory,
                             std::filesystem::copy_options::overwrite_existing);
     }
-
 
     parameters_read = true;
   }
@@ -735,33 +620,6 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("melt pool");
     {
-      prm.add_parameter(
-        "mp do heat transfer",
-        mp.do_heat_transfer,
-        "Set this parameter to true if you want to consider a coupling with heat transfer.");
-      prm.add_parameter(
-        "mp do evaporation",
-        mp.do_evaporation,
-        "Set this parameter to true if you want to consider a coupling with evaporation. "
-        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
-        "are set, they will be automatically set to true.");
-      prm.add_parameter(
-        "mp do evaporative heat flux",
-        mp.do_evaporative_heat_flux,
-        "Set this parameter to true if you want to consider only the evaporative heat flux in the heat equation. "
-        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
-        "are set, they will be automatically set to true.");
-      prm.add_parameter(
-        "mp do evaporative mass flux",
-        mp.do_evaporative_mass_flux,
-        "Set this parameter to true if you want to consider only the evaporative mass flux. The latter is relevant "
-        "for the source term in the continuity equation and the level set equation. "
-        "If >>> do evaporation <<< is set to true and neither >>> do evaporative heat flux <<< nor >>> do evaporative mass flux <<< "
-        "are set, they will be automatically set to true.");
-      prm.add_parameter(
-        "mp do melt pool",
-        mp.do_melt_pool,
-        "Set this parameter to true if you want to consider a melt pool simulation including a solid phase.");
       prm.add_parameter("mp melt pool center",
                         mp.melt_pool_center,
                         "Center coordinates of the melt pool ellipse/parabola. If no value is "
@@ -781,9 +639,6 @@ namespace MeltPoolDG
         "set to zero if \"mp set velocity to zero in solid\" or \"mp set level set to zero in solid\" "
         "are enabled.",
         Patterns::Double(0.0, 1.0));
-      prm.add_parameter("mp do recoil pressure",
-                        mp.do_recoil_pressure,
-                        "Set this parameter to true to enable recoil pressure.");
       prm.add_parameter("mp liquid melt pool radius",
                         mp.liquid.melt_pool_radius,
                         "Set the radius of the liquid parts of the melt pool ellipse "
