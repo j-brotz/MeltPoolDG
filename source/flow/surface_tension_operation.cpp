@@ -1,4 +1,5 @@
 #include <meltpooldg/flow/surface_tension_operation.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -55,7 +56,7 @@ namespace MeltPoolDG::Flow
     solution_normal_vector = solution_normal_vector_in;
 
     AssertThrow(
-      data.reference_temperature >= 0.0,
+      data.reference_temperature > numbers::invalid_double,
       ExcMessage(
         "For temperature-dependent surface tension, a reference temperature needs to be defined. Abort..."));
   }
