@@ -154,13 +154,15 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
               {
-                auto delta = used_level_set.get_gradient(q_index).norm();
+                VectorizedArray<double> weight(1.0);
                 if (data.delta_function_type ==
                     DiracDeltaFunctionApproximationType::phase_weighted_delta)
-                  delta *= delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
+                  weight = delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
 
                 if (temperature)
                   {
+                    const auto delta = used_level_set.get_gradient(q_index).norm() * weight;
+
                     const auto n =
                       MeltPoolDG::VectorTools::normalize<dim>(normal_vec->get_value(q_index),
                                                               tolerance_normal_vector);
@@ -191,7 +193,7 @@ namespace MeltPoolDG::Flow
                   }
                 else
                   surface_tension.submit_value(alpha * used_level_set.get_gradient(q_index) *
-                                                 curvature.get_value(q_index),
+                                                 weight * curvature.get_value(q_index),
                                                q_index);
               }
             surface_tension.integrate_scatter(EvaluationFlags::values, force_rhs);
