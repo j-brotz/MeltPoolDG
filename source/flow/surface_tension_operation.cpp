@@ -53,6 +53,11 @@ namespace MeltPoolDG::Flow
     normal_dof_idx         = normal_dof_idx_in;
     temperature            = temperature_in;
     solution_normal_vector = solution_normal_vector_in;
+
+    AssertThrow(
+      data.reference_temperature >= 0.0,
+      ExcMessage(
+        "For temperature-dependent surface tension, a reference temperature needs to be defined. Abort..."));
   }
 
   template <int dim>

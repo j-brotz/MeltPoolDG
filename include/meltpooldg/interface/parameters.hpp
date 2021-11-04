@@ -259,7 +259,7 @@ namespace MeltPoolDG
   {
     number                              surface_tension_coefficient                       = 0.0;
     number                              temperature_dependent_surface_tension_coefficient = 0.0;
-    number                              reference_temperature                             = 0.0;
+    number                              reference_temperature                             = -1e12;
     number                              coefficient_residual_fraction                     = 0.0;
     DiracDeltaFunctionApproximationType delta_function_type =
       DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
