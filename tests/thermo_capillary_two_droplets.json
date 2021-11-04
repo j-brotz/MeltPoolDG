@@ -29,7 +29,8 @@
   },
   "surface tension": {
     "surface tension coefficient": "0.023040369",
-    "temperature dependent surface tension coefficient": "0.002"
+    "temperature dependent surface tension coefficient": "0.002",
+    "reference temperature": "290"
   },
   "Navier-Stokes": {
     "adaflo": {
