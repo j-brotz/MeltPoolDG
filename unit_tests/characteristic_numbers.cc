@@ -1,5 +1,3 @@
-#include <deal.II/base/mpi.h>
-
 #include <meltpooldg/flow/characteristic_numbers.hpp>
 
 #include <iostream>
@@ -11,14 +9,15 @@ main()
 {
   MaterialParameterValues<double> material_data;
 
+  // parameter values taken from Meier et al. (2020)
   material_data.capacity     = 1e-4;
   material_data.conductivity = 2.4e-6;
   material_data.density      = 500.0;
-  material_data.viscosity    = 0.012;
+  material_data.viscosity    = 0.024;
 
   // testing values
   const double surface_tension_coefficient = 0.01;
-  const double characteristic_velocity     = 24;
+  const double characteristic_velocity     = 0.024;
   const double characteristic_length       = 1.44e-3;
 
   // run test
