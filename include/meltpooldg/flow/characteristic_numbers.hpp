@@ -32,7 +32,7 @@ namespace MeltPoolDG::Flow
      *   λ   ... heat conductivity (W/(mK))
      */
     number
-    Mach(const number &characteristic_velocity, const number &characteristic_length);
+    Mach(const number &characteristic_velocity, const number &characteristic_length) const;
 
     /**
      * Compute the Reynolds number Re
@@ -48,7 +48,7 @@ namespace MeltPoolDG::Flow
      *   µ ... dynamic viscosity (Ns/m²)
      */
     number
-    Reynolds(const number &characteristic_velocity, const number &characteristic_length);
+    Reynolds(const number &characteristic_velocity, const number &characteristic_length) const;
 
     /**
      * Compute the capillary number Ca
@@ -63,6 +63,7 @@ namespace MeltPoolDG::Flow
      *   σ ... surface tension coefficient (N/m)
      */
     number
-    capillary(const number &characteristic_velocity, const number &surface_tension_coefficient);
+    capillary(const number &characteristic_velocity,
+              const number &surface_tension_coefficient) const;
   };
 } // namespace MeltPoolDG::Flow
