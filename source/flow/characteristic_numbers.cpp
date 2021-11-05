@@ -11,7 +11,7 @@ namespace MeltPoolDG::Flow
   template <typename number>
   number
   CharacteristicNumbers<number>::Reynolds(const number &characteristic_velocity,
-                                          const number &characteristic_length)
+                                          const number &characteristic_length) const
   {
     AssertThrow(material.viscosity >= std::numeric_limits<number>::epsilon(),
                 ExcMessage("The dynamic viscosity must be >0. Abort ..."));
@@ -21,7 +21,7 @@ namespace MeltPoolDG::Flow
   template <typename number>
   number
   CharacteristicNumbers<number>::Mach(const number &characteristic_velocity,
-                                      const number &characteristic_length)
+                                      const number &characteristic_length) const
   {
     AssertThrow(material.conductivity >= std::numeric_limits<number>::epsilon(),
                 ExcMessage("The conductivity must be >0. Abort ..."));
@@ -32,7 +32,7 @@ namespace MeltPoolDG::Flow
   template <typename number>
   number
   CharacteristicNumbers<number>::capillary(const number &characteristic_velocity,
-                                           const number &surface_tension_coefficient)
+                                           const number &surface_tension_coefficient) const
   {
     AssertThrow(surface_tension_coefficient >= std::numeric_limits<number>::epsilon(),
                 ExcMessage("The surface tension coefficient must be >0. Abort ..."));

@@ -8,7 +8,6 @@
 #include <meltpooldg/flow/characteristic_numbers.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
-#include <meltpooldg/utilities/postprocessor_utility_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
@@ -125,7 +124,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
         grad_T * a / this->parameters.material.first.viscosity;
       time_reference = a / velocity_reference;
 
-      auto characteristic_numbers =
+      const auto characteristic_numbers =
         Flow::CharacteristicNumbers<double>(this->parameters.material.first);
       reynolds_number  = characteristic_numbers.Reynolds(velocity_reference, a);
       mach_number      = characteristic_numbers.Mach(velocity_reference, a);
@@ -363,14 +362,6 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
                                                {global_center_of_mass},
                                                cache);
 
-              const auto global_velocity_of_center =
-                Utilities::MPI::reduce<std::vector<Tensor<1, dim>>>(
-                  velocity_of_center, this->mpi_communicator, [](const auto &a, const auto &b) {
-                    auto result = a;
-                    result.insert(result.end(), b.begin(), b.end());
-                    return result;
-                  });
-
               pcout << "---------------------------------------------" << std::endl;
               pcout << "    user defined postprocessing" << std::endl;
               pcout << "---------------------------------------------" << std::endl;
@@ -383,15 +374,17 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
                   pcout << "Capillary number: " << capillary_number << std::endl;
                 }
 
-              auto max_vel = generic_data_out.get_vector("velocity").linfty_norm();
+              const auto max_vel = generic_data_out.get_vector("velocity").linfty_norm();
               if (file.is_open())
                 {
+                  pcout << "centroid: " << global_center_of_mass << std::endl;
+                  pcout << "vel: " << velocity_of_center[0][dim - 1] << std::endl;
                   if (print_once)
                     file << "time,y_center,t/tr,u/ur,u_max/ur,u_avg/ur" << std::endl;
 
                   file << generic_data_out.get_time() << ", " << global_center_of_mass[dim - 1]
                        << ", " << generic_data_out.get_time() / time_reference << ", "
-                       << global_velocity_of_center[0][dim - 1] / velocity_reference << ", "
+                       << velocity_of_center[0][dim - 1] / velocity_reference << ", "
                        << max_vel / velocity_reference << ", "
                        << global_average_velocity / velocity_reference << std::endl;
                 }
