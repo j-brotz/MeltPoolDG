@@ -325,30 +325,33 @@ namespace MeltPoolDG
           /*
            * locally refined region
            */
-          if constexpr (dim == 2)
+          if (n_local_refinement > 0)
             {
-              const auto bl = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                local_refinement_bottom_left);
-              const auto tr = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                local_refinement_top_right);
-
-              const auto refinement_region = BoundingBox<dim>({bl, tr});
-
-              for (unsigned int j = 0; j < n_local_refinement; ++j)
+              if constexpr (dim == 2)
                 {
-                  for (auto &cell : this->triangulation->active_cell_iterators())
+                  const auto bl = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
+                    local_refinement_bottom_left);
+                  const auto tr = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
+                    local_refinement_top_right);
+
+                  const auto refinement_region = BoundingBox<dim>({bl, tr});
+
+                  for (unsigned int j = 0; j < n_local_refinement; ++j)
                     {
-                      if (cell->is_locally_owned())
+                      for (auto &cell : this->triangulation->active_cell_iterators())
                         {
-                          for (unsigned int i = 0; i < cell->n_vertices(); ++i)
-                            if (refinement_region.point_inside(cell->vertex(i)))
-                              {
-                                cell->set_refine_flag();
-                                break;
-                              }
+                          if (cell->is_locally_owned())
+                            {
+                              for (unsigned int i = 0; i < cell->n_vertices(); ++i)
+                                if (refinement_region.point_inside(cell->vertex(i)))
+                                  {
+                                    cell->set_refine_flag();
+                                    break;
+                                  }
+                            }
                         }
+                      this->triangulation->execute_coarsening_and_refinement();
                     }
-                  this->triangulation->execute_coarsening_and_refinement();
                 }
             }
         }
