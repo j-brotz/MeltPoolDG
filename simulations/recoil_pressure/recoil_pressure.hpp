@@ -336,8 +336,6 @@ namespace MeltPoolDG
 
               for (unsigned int j = 0; j < n_local_refinement; ++j)
                 {
-                  Vector<float> refinement_per_cell(this->triangulation->n_active_cells());
-                  unsigned int  counter = 0;
                   for (auto &cell : this->triangulation->active_cell_iterators())
                     {
                       if (cell->is_locally_owned())
@@ -345,15 +343,11 @@ namespace MeltPoolDG
                           for (unsigned int i = 0; i < cell->n_vertices(); ++i)
                             if (refinement_region.point_inside(cell->vertex(i)))
                               {
-                                refinement_per_cell[counter] = 1.0;
+                                cell->set_refine_flag();
                                 break;
                               }
                         }
-                      counter++;
                     }
-
-                  GridRefinement::refine(*this->triangulation, refinement_per_cell, 0.99);
-                  this->triangulation->prepare_coarsening_and_refinement();
                   this->triangulation->execute_coarsening_and_refinement();
                 }
             }
