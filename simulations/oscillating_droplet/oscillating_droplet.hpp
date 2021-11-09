@@ -1,12 +1,12 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 
 #include <deal.II/grid/grid_generator.h>
 
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
@@ -34,29 +34,22 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
   class InitialLevelSet : public Function<dim>
   {
   public:
-    InitialLevelSet(const double reference_radius,
-                    const double elliptical_deviation,
-                    const double eps)
+    InitialLevelSet(const std::array<double, dim> &radii, const double eps)
       : Function<dim>()
-      , center()
-      , semiaxis_x(reference_radius * elliptical_deviation)
-      , semiaxis_y(reference_radius / elliptical_deviation)
+      , distance_ellipse(Point<dim>(), radii)
       , eps(eps)
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        DistanceFunctions::ellipsoidal_manifold<dim>(
-          p, center, Point<dim>(semiaxis_x, semiaxis_y), false),
-        eps);
+        -distance_ellipse.value(p), eps);
     }
 
-    const Point<dim> center;
-    const double     semiaxis_x;
-    const double     semiaxis_y;
-    const double     eps;
+  private:
+    const Functions::SignedDistance::Ellipsoid<dim> distance_ellipse;
+    const double                                    eps;
   };
 
   template <int dim>
@@ -109,10 +102,16 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
 
       AssertThrow(eps > 0, ExcNotImplemented());
 
-      this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(reference_radius,
-                                                                            elliptical_deviation,
-                                                                            eps),
+      std::array<double, dim> radii;
+      if constexpr (dim == 2)
+        radii = {
+          {reference_radius * elliptical_deviation, reference_radius / elliptical_deviation}};
+      else
+        AssertThrow(false, ExcNotImplemented());
+
+      this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(radii, eps),
                                      "level_set");
+
       this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                        std::make_shared<Functions::ZeroFunction<dim>>(dim)),
                                      "navier_stokes_u");

@@ -2,6 +2,7 @@
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -13,7 +14,6 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG::Simulation::SpuriousCurrents
 {
@@ -23,52 +23,46 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
   class InitialLevelSetCircle : public Function<dim>
   {
   public:
-    InitialLevelSetCircle(const double eps)
+    InitialLevelSetCircle(const Point<dim> &center, const double radius, const double eps)
       : Function<dim>()
+      , distance_sphere(center, radius)
       , eps(eps)
     {}
-    virtual double
-    value(const Point<dim> &p, const unsigned int component = 0) const
+
+    double
+    value(const Point<dim> &p, const unsigned int) const override
     {
-      (void)component;
-
-      // set radius of bubble to 0.5, slightly shifted away from the center
-      Point<dim> center;
-      for (unsigned int d = 0; d < dim; ++d)
-        center[d] = 0.02 + 0.01 * d;
-
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        DistanceFunctions::spherical_manifold<dim>(p, center, 0.5), eps);
-
-      // Alternative if no signed distance function should be used in the beginning:
-      //
-      // return UtilityFunctions::CharacteristicFunctions::sgn(
-      // DistanceFunctions::spherical_manifold<dim>(p, center, 0.5));
+        -distance_sphere.value(p), eps);
     }
 
-    double eps = 0.0;
+  private:
+    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    double                                       eps;
   };
 
   template <int dim>
   class InitialLevelSetEllipse : public Function<dim>
   {
   public:
-    InitialLevelSetEllipse(const double eps)
+    InitialLevelSetEllipse(const Point<dim> &             center,
+                           const std::array<double, dim> &radii,
+                           const double                   eps)
       : Function<dim>()
+      , distance_ellipse(center, radii)
       , eps(eps)
     {}
-    virtual double
-    value(const Point<dim> &p, const unsigned int) const
-    {
-      Point<dim> center;
-      for (unsigned int d = 0; d < dim; ++d)
-        center[d] = 0.02 + 0.01 * d;
 
+    double
+    value(const Point<dim> &p, const unsigned int) const override
+    {
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        DistanceFunctions::ellipsoidal_manifold<dim>(p, center, Point<dim>(0.75, 0.5)), eps);
+        -distance_ellipse.value(p), eps);
     }
 
-    double eps = 0.0;
+  private:
+    const Functions::SignedDistance::Ellipsoid<dim> distance_ellipse;
+    double                                          eps;
   };
 
   /*
@@ -130,12 +124,27 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
 
       AssertThrow(eps > 0, ExcNotImplemented());
 
+      Point<dim> center;
+      for (unsigned int d = 0; d < dim; ++d)
+        center[d] = 0.02 + 0.01 * d;
+
       if (droplet_shape == "circle")
-        this->attach_initial_condition(std::make_shared<InitialLevelSetCircle<dim>>(eps),
-                                       "level_set");
+        {
+          const double radius = 0.5;
+          this->attach_initial_condition(
+            std::make_shared<InitialLevelSetCircle<dim>>(center, radius, eps), "level_set");
+        }
       else if (droplet_shape == "ellipse")
-        this->attach_initial_condition(std::make_shared<InitialLevelSetEllipse<dim>>(eps),
-                                       "level_set");
+        {
+          std::array<double, dim> radii;
+          if constexpr (dim == 2)
+            radii = {{0.75, 0.5}};
+          else
+            AssertThrow(false, ExcNotImplemented());
+
+          this->attach_initial_condition(
+            std::make_shared<InitialLevelSetEllipse<dim>>(center, radii, eps), "level_set");
+        }
       else
         AssertThrow(false,
                     ExcMessage("Unknown droptlet shape: \"" + droplet_shape + "\"! Abort..."));
