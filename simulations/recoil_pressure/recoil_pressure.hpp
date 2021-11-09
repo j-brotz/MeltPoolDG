@@ -9,6 +9,7 @@
 #include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/manifold_lib.h>
 
 #include <iostream>
@@ -69,12 +70,15 @@ namespace MeltPoolDG
       class SimulationRecoilPressure : public SimulationBase<dim>
       {
       private:
-        double domain_x_min         = 0;
-        double domain_x_max         = 0;
-        double domain_y_min         = 0;
-        double domain_y_max         = 0;
-        bool   periodic_boundary    = false;
-        bool   evaporation_boundary = false;
+        double       domain_x_min                 = 0;
+        double       domain_x_max                 = 0;
+        double       domain_y_min                 = 0;
+        double       domain_y_max                 = 0;
+        bool         periodic_boundary            = false;
+        bool         evaporation_boundary         = false;
+        unsigned int n_local_refinement           = 0;
+        std::string  local_refinement_bottom_left = "";
+        std::string  local_refinement_top_right   = "";
 
       public:
         SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
@@ -98,6 +102,15 @@ namespace MeltPoolDG
             prm.add_parameter("domain y max",
                               domain_y_max,
                               "maximum y coordinate of simulation domain");
+            prm.add_parameter("n local refinement",
+                              n_local_refinement,
+                              "number of (additional to the global) refinements for local region.");
+            prm.add_parameter("local refinement bottom left",
+                              local_refinement_bottom_left,
+                              "Bottom left point of locally refined region.");
+            prm.add_parameter("local refinement top right",
+                              local_refinement_top_right,
+                              "Bottom left point of locally refined region.");
             prm.add_parameter(
               "periodic boundary",
               periodic_boundary,
@@ -308,6 +321,42 @@ namespace MeltPoolDG
 
           if (!this->parameters.base.do_simplex)
             this->triangulation->refine_global(this->parameters.base.global_refinements);
+
+          /*
+           * locally refined region
+           */
+          if constexpr (dim == 2)
+            {
+              const auto bl = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
+                local_refinement_bottom_left);
+              const auto tr = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
+                local_refinement_top_right);
+
+              const auto refinement_region = BoundingBox<dim>({bl, tr});
+
+              for (unsigned int j = 0; j < n_local_refinement; ++j)
+                {
+                  Vector<float> refinement_per_cell(this->triangulation->n_active_cells());
+                  unsigned int  counter = 0;
+                  for (auto &cell : this->triangulation->active_cell_iterators())
+                    {
+                      if (cell->is_locally_owned())
+                        {
+                          for (unsigned int i = 0; i < cell->n_vertices(); ++i)
+                            if (refinement_region.point_inside(cell->vertex(i)))
+                              {
+                                refinement_per_cell[counter] = 1.0;
+                                break;
+                              }
+                        }
+                      counter++;
+                    }
+
+                  GridRefinement::refine(*this->triangulation, refinement_per_cell, 0.99);
+                  this->triangulation->prepare_coarsening_and_refinement();
+                  this->triangulation->execute_coarsening_and_refinement();
+                }
+            }
         }
 
         void
