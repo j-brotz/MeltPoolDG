@@ -16,6 +16,12 @@ namespace MeltPoolDG::Heat
   {
     AssertThrow(data.laser_beam_radius > 0.0,
                 ExcMessage("The laser beam radius must be greater than zero! Abort.."));
+
+    if (data.delta_function_type == DiracDeltaFunctionApproximationType::phase_weighted_delta)
+      {
+        delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
+          data.delta_approximation_phase_weighted);
+      }
   }
 
   template <int dim>
@@ -94,8 +100,6 @@ namespace MeltPoolDG::Heat
       Quadrature<dim>(
         scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
       update_quadrature_points);
-
-    level_set_heaviside.update_ghost_values();
 
     const VectorType *             used_level_set  = &level_set_heaviside;
     unsigned int                   used_ls_dof_idx = ls_dof_idx;
@@ -252,7 +256,11 @@ namespace MeltPoolDG::Heat
 
             for (const auto q : heat_source_eval.quadrature_point_indices())
               {
-                const double delta_value = grad_ls_heaviside_at_q[q].norm();
+                const double grad_ls_norm = grad_ls_heaviside_at_q[q].norm();
+                const double delta_value =
+                  delta_phase_weighted == nullptr ?
+                    grad_ls_norm :
+                    grad_ls_norm * delta_phase_weighted->compute_weight(ls_heaviside_at_q[q]);
 
                 if (delta_value == 0.0)
                   {
@@ -262,7 +270,7 @@ namespace MeltPoolDG::Heat
 
                 // ... or use (unfiltered) gradient of the level set function
                 if (normal_vector == nullptr)
-                  normal_at_q[q] = grad_ls_heaviside_at_q[q] / delta_value;
+                  normal_at_q[q] = grad_ls_heaviside_at_q[q] / grad_ls_norm;
 
                 heat_source_vector_local[q] =
                   local_compute_interfacial_heat_source(heat_source_eval.quadrature_point(q),

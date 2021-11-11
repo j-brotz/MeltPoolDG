@@ -212,9 +212,12 @@ namespace MeltPoolDG
     } gusarov;
     struct GaussData
     {
-      number laser_beam_radius   = 0.0;
-      number absorptivity_liquid = 0.0;
-      number absorptivity_gas    = 0.0;
+      number                              laser_beam_radius   = 0.0;
+      number                              absorptivity_liquid = 0.0;
+      number                              absorptivity_gas    = 0.0;
+      DiracDeltaFunctionApproximationType delta_function_type =
+        DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
+      DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     } gauss;
     struct AnalyticalData
     {
