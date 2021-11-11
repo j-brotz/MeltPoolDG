@@ -60,6 +60,16 @@ namespace MeltPoolDG
                                std::get<2>(data),
                                std::get<3>(data));
 
+
+    if (pv_data.output_subdomains)
+      {
+        const auto &   tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
+        Vector<double> subdomains(tria.n_active_cells());
+        subdomains = Utilities::MPI::this_mpi_process(mpi_communicator);
+
+        data_out.add_data_vector(subdomains, "subdomains");
+      }
+
     DataOutBase::VtkFlags flags;
     if ((do_simplex == false) && (dim > 1))
       flags.write_higher_order_cells = true;

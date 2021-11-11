@@ -356,6 +356,7 @@ namespace MeltPoolDG
     double      write_time_step_size = 0.0;
     bool        do_initial_state     = true;
     bool        print_boundary_id    = false;
+    bool        output_subdomains    = false;
     int         n_digits_timestep    = 4;
     int         n_groups             = 1;
     int         n_patches            = 1;
