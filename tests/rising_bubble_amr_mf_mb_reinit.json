@@ -52,7 +52,7 @@
     "curv do matrix free": "true"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "Navier-Stokes": {
     "adaflo": {

@@ -117,7 +117,7 @@
   },
   "paraview": {
     "paraview directory": "recoil_pressure_lssubdivisions",
-    "paraview do output": "true",
+    "paraview do output": "false",
     "paraview filename": "solution_recoil_pressure",
     "paraview write time step size": "2e-8"
   },

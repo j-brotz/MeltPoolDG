@@ -46,7 +46,7 @@
     "curv do matrix free": "true"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "evaporation": {
     "evapor evaporative mass flux": "1.0e-3",

@@ -24,6 +24,6 @@
     "normal vec do matrix free": "true"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   }
 }

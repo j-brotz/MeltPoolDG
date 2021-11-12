@@ -22,6 +22,6 @@
     "reinit implementation": "adaflo"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   }
 }
