@@ -1,0 +1,17 @@
+#!/bin/bash
+
+result=$(find tests -type f -name "*.json" | xargs grep 'paraview do output' | grep "true" | cut -d':' -f1)
+
+[ -z "$result" ] && return 0
+
+echo "Error in test .json-files: output is enabled in following files:"
+
+sorted=($(sort <<<"${result[*]}"));
+
+for i in "${sorted[@]}"
+do
+   echo "  $i"
+done
+
+return 1
+
