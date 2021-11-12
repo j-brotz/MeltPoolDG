@@ -265,7 +265,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out) final
+    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
     {
       if (this->parameters.paraview.do_output)
         {
@@ -396,14 +396,15 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     }
 
   private:
-    const double  x_min = -2 * a;
-    const double  x_max = 2 * a;
-    double        velocity_reference;
-    double        time_reference;
-    std::ofstream file;
-    double        reynolds_number;
-    double        mach_number;
-    double        capillary_number;
-    bool          print_once = true;
+    const double x_min = -2 * a;
+    const double x_max = 2 * a;
+    double       velocity_reference;
+    double       time_reference;
+    double       reynolds_number;
+    double       mach_number;
+    double       capillary_number;
+    // postprocessing
+    mutable std::ofstream file;
+    mutable bool          print_once = true;
   };
 } // namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet

@@ -323,7 +323,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     }
 
     void
-    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) final
+    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
     {
       if (this->parameters.paraview.do_output == false)
         return;

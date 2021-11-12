@@ -229,7 +229,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     }
 
     void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out) final
+    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
     {
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
@@ -284,28 +284,33 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
           // write values to file
           if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
-              const auto file_name = this->parameters.paraview.directory + "/" +
-                                     this->parameters.paraview.filename + "_pressure_profile_" +
-                                     std::to_string(generic_data_out.get_time()) + ".txt";
-              file_pressure_profile.open(file_name);
-              file_pressure_profile
-                << " coordinate | velocity | analytical velocity | pressure value | analytical pressure value "
-                << std::endl;
-
-              for (unsigned int i = 0; i < pressure_evaluation_values.size(); ++i)
+              if (this->parameters.paraview.do_output)
                 {
-                  file_pressure_profile << vertices_along_vertical_axis[i][dim - 1] << " ";
+                  const auto file_name = this->parameters.paraview.directory + "/" +
+                                         this->parameters.paraview.filename + "_pressure_profile_" +
+                                         std::to_string(generic_data_out.get_time()) + ".txt";
+                  file_pressure_profile.open(file_name);
+                  file_pressure_profile
+                    << " coordinate | velocity | analytical velocity | pressure value | analytical pressure value "
+                    << std::endl;
 
-                  if constexpr (dim > 1)
-                    file_pressure_profile << vel_evaluation_values[i][dim - 1] << " ";
-                  else
-                    file_pressure_profile << vel_evaluation_values[i] << " ";
-                  file_pressure_profile << analytical_velocity(ls_evaluation_values[i]) << " "
-                                        << pressure_evaluation_values[i] << " "
-                                        << analytical_pressure(ls_evaluation_values[i])
-                                        << std::endl;
+                  for (unsigned int i = 0; i < pressure_evaluation_values.size(); ++i)
+                    {
+                      file_pressure_profile << vertices_along_vertical_axis[i][dim - 1] << " ";
+
+                      if constexpr (dim > 1)
+                        file_pressure_profile << vel_evaluation_values[i][dim - 1] << " ";
+                      else
+                        file_pressure_profile << vel_evaluation_values[i] << " ";
+                      file_pressure_profile << analytical_velocity(ls_evaluation_values[i]) << " "
+                                            << pressure_evaluation_values[i] << " "
+                                            << analytical_pressure(ls_evaluation_values[i])
+                                            << std::endl;
+                    }
+                  file_pressure_profile.close();
                 }
-              file_pressure_profile.close();
+
+              // console output
               if constexpr (dim > 1)
                 {
                   pcout << "POSTPROCESSOR: min velocity: " << vel_evaluation_values[0][dim - 1]
@@ -357,11 +362,11 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     const double y_interface = 0.5;
 
     // Postprocessor
-    std::ofstream                                   file_velocity_profile;
-    std::ofstream                                   file_pressure_profile;
-    int                                             n_time_step = 0.0;
-    std::vector<Point<dim>>                         vertices_along_vertical_axis;
-    bool                                            remote_point_is_initialized = false;
-    Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
+    mutable std::ofstream                                   file_velocity_profile;
+    mutable std::ofstream                                   file_pressure_profile;
+    mutable int                                             n_time_step = 0.0;
+    mutable std::vector<Point<dim>>                         vertices_along_vertical_axis;
+    mutable bool                                            remote_point_is_initialized = false;
+    mutable Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
   };
 } // namespace MeltPoolDG::Simulation::StefansProblemWithFlow
