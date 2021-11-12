@@ -3,23 +3,23 @@
     "problem name": "melt_pool",
     "application name": "stefans_problem_with_flow",
     "dimension": "2",
-    "global refinements": "5",
+    "global refinements": "6",
     "gravity": "0.",
     "degree": "1",
     "do print parameters": "false"
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.002",
+    "end time": "0.5",
     "time step size": "0.005"
   },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
     "material first density": "0.01",
-    "material first viscosity": "1e-6",
+    "material first viscosity": "0.0000001",
     "material first conductivity": "1e-16",
     "material second density": "1.0",
-    "material second viscosity": "1e-6",
+    "material second viscosity": "0.0000001",
     "material second conductivity": "1e-16"
   },
   "Navier-Stokes": {
@@ -54,15 +54,6 @@
     "ls time integration scheme": "crank_nicolson",
     "ls do matrix free": "true"
   },
-  "adaptive meshing": {
-    "do amr": "true",
-    "do not modify boundary cells": "false",
-    "upper perc to refine": "     0.1",
-    "lower perc to coarsen": "0.05",
-    "n initial refinement cycles": "5",
-    "max grid refinement level": "7",
-    "every n step": "1"
-  },
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
@@ -78,12 +69,11 @@
     "curv implementation": "meltpooldg"
   },
   "evaporation": {
-    "evapor evaporative mass flux": "1.e-3",
-    "evapor ls value liquid": "1",
-    "evapor ls value gas": "-1"
+    "evapor evaporative mass flux": "1.e-2"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "true",
+    "paraview directory": "not_amr"
   },
   "problem specific": {
     "do evaporative heat flux": "false",

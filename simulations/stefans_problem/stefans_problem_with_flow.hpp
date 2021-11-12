@@ -250,7 +250,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
               remote_point_evaluation.reinit(vertices_along_vertical_axis,
                                              *this->triangulation,
                                              generic_data_out.get_mapping());
-              remote_point_is_initialized = true;
+              if (this->parameters.amr.do_amr == false)
+                remote_point_is_initialized = true;
             }
 
           const auto pressure_evaluation_values =
@@ -267,6 +268,18 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
             dealii::VectorTools::point_values<dim>(remote_point_evaluation,
                                                    generic_data_out.get_dof_handler("velocity"),
                                                    generic_data_out.get_vector("velocity"));
+
+          const auto analytical_velocity = [&](const double &ls) -> double {
+            return this->parameters.evapor.evaporative_mass_flux * (1. - ls) *
+                   (1. / this->parameters.material.first.density -
+                    1. / this->parameters.material.second.density);
+          };
+
+          const auto analytical_pressure = [&](const double &ls) -> double {
+            return std::pow(this->parameters.evapor.evaporative_mass_flux, 2) * ls *
+                   (1. / this->parameters.material.first.density -
+                    1. / this->parameters.material.second.density);
+          };
 
           // write values to file
           if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
@@ -287,37 +300,45 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
                     file_pressure_profile << vel_evaluation_values[i][dim - 1] << " ";
                   else
                     file_pressure_profile << vel_evaluation_values[i] << " ";
-                  file_pressure_profile
-                    << this->parameters.evapor.evaporative_mass_flux * ls_evaluation_values[i] *
-                         (1. / this->parameters.material.first.density -
-                          1. / this->parameters.material.second.density)
-                    << " " << pressure_evaluation_values[i] << " "
-                    << std::pow(this->parameters.evapor.evaporative_mass_flux, 2) *
-                         ls_evaluation_values[i] *
-                         (1. / this->parameters.material.first.density -
-                          1. / this->parameters.material.second.density)
-                    << std::endl;
+                  file_pressure_profile << analytical_velocity(ls_evaluation_values[i]) << " "
+                                        << pressure_evaluation_values[i] << " "
+                                        << analytical_pressure(ls_evaluation_values[i])
+                                        << std::endl;
                 }
               file_pressure_profile.close();
               if constexpr (dim > 1)
                 {
                   pcout << "POSTPROCESSOR: min velocity: " << vel_evaluation_values[0][dim - 1]
+                        << " (analytical: " << analytical_velocity(ls_evaluation_values[0]) << ")"
                         << std::endl;
                   pcout << "POSTPROCESSOR: max velocity: "
                         << vel_evaluation_values[vel_evaluation_values.size() - 1][dim - 1]
-                        << std::endl;
+                        << " (analytical: "
+                        << analytical_velocity(
+                             ls_evaluation_values[vel_evaluation_values.size() - 1])
+                        << ")" << std::endl;
                 }
               else
                 {
-                  pcout << "POSTPROCESSOR: min velocity: " << vel_evaluation_values[0] << std::endl;
+                  pcout << "POSTPROCESSOR: min velocity: " << vel_evaluation_values[0]
+                        << " (analytical: " << analytical_velocity(ls_evaluation_values[0]) << ")"
+                        << std::endl;
                   pcout << "POSTPROCESSOR: max velocity: "
-                        << vel_evaluation_values[vel_evaluation_values.size() - 1] << std::endl;
+                        << vel_evaluation_values[vel_evaluation_values.size() - 1]
+                        << " (analytical: "
+                        << analytical_velocity(
+                             ls_evaluation_values[vel_evaluation_values.size() - 1])
+                        << ")" << std::endl;
                 }
               pcout << "POSTPROCESSOR: max pressure: " << pressure_evaluation_values[0]
+                    << " (analytical: " << analytical_pressure(ls_evaluation_values[0]) << ")"
                     << std::endl;
               pcout << "POSTPROCESSOR: min pressure: "
                     << pressure_evaluation_values[pressure_evaluation_values.size() - 1]
-                    << std::endl;
+                    << " (analytical: "
+                    << analytical_pressure(
+                         ls_evaluation_values[pressure_evaluation_values.size() - 1])
+                    << ")" << std::endl;
             }
 
           generic_data_out.get_vector("level_set").zero_out_ghost_values();
