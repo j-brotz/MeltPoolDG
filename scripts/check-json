@@ -1,9 +1,12 @@
 #!/bin/bash
 
 result=$(find tests -type f -name "*.json" | xargs grep 'paraview do output' | grep "true" | cut -d':' -f1)
+result=$(find tests -type f -name "*.json" | xargs grep -F '"verbosity level"' | grep "1|2|3|4|5" | cut -d':' -f1)
+result=$(find tests -type f -name "*.json" | xargs grep -F '"output verbosity"' | grep "1|2|3" | cut -d':' -f1)
 
 [ -z "$result" ] && return 0
 
+echo $result
 echo "Error in test .json-files: output is enabled in following files:"
 
 sorted=($(sort <<<"${result[*]}"));
