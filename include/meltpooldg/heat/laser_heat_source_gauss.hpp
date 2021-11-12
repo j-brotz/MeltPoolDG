@@ -5,6 +5,7 @@
 
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -114,5 +115,7 @@ namespace MeltPoolDG::Heat
      * So that laser_power = int_R^2 p dx
      */
     const double surf_peak_power_density_factor;
+
+    std::unique_ptr<const DeltaApproximationPhaseWeighted<double>> delta_phase_weighted;
   };
 } // namespace MeltPoolDG::Heat

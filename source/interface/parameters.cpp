@@ -563,6 +563,23 @@ namespace MeltPoolDG
       prm.add_parameter("laser gauss absorptivity liquid",
                         laser.gauss.absorptivity_liquid,
                         "Laser energy absorptivity of the liquid part of the domain.");
+      prm.enter_subsection("dirac delta function approximation");
+      {
+        prm.add_parameter("type",
+                          laser.gauss.delta_function_type,
+                          "Choose how to smear the interface heat source over the interface.");
+        prm.add_parameter(
+          "gas phase weight",
+          laser.gauss.delta_approximation_phase_weighted.gas_phase_weight,
+          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
+          "this parameter controls the weight of the gas phase (level set = -1).");
+        prm.add_parameter(
+          "heavy phase weight",
+          laser.gauss.delta_approximation_phase_weighted.heavy_phase_weight,
+          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
+          "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
+      }
+      prm.leave_subsection();
       /*
        *   Analytical temperature field
        */
