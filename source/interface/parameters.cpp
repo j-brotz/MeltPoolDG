@@ -875,6 +875,9 @@ namespace MeltPoolDG
       prm.add_parameter("paraview print boundary id",
                         paraview.print_boundary_id,
                         "boolean for printing a vtk-file with the boundary id");
+      prm.add_parameter("paraview output subdomains",
+                        paraview.output_subdomains,
+                        "boolean for outputting the subdomain ranks");
       prm.add_parameter("paraview n digits timestep",
                         paraview.n_digits_timestep,
                         "number of digits for the frame number of the vtk-file.");
