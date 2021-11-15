@@ -483,7 +483,7 @@ namespace MeltPoolDG::LevelSet
         /*
          * debug
          */
-        if (curvature_evaluation_values[i] == 0)
+        if (!level_set_data.do_curvature_correction && curvature_evaluation_values[i] == 0)
           {
             std::cout << "point: " << evaluation_points[i] << std::endl;
             do_assert = false;

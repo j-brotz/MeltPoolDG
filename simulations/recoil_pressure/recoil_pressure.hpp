@@ -70,15 +70,17 @@ namespace MeltPoolDG
       class SimulationRecoilPressure : public SimulationBase<dim>
       {
       private:
-        double       domain_x_min                 = 0;
-        double       domain_x_max                 = 0;
-        double       domain_y_min                 = 0;
-        double       domain_y_max                 = 0;
-        bool         periodic_boundary            = false;
-        bool         evaporation_boundary         = false;
-        unsigned int n_local_refinement           = 0;
-        std::string  local_refinement_bottom_left = "";
-        std::string  local_refinement_top_right   = "";
+        double       domain_x_min                   = 0;
+        double       domain_x_max                   = 0;
+        double       domain_y_min                   = 0;
+        double       domain_y_max                   = 0;
+        bool         periodic_boundary              = false;
+        bool         evaporation_boundary           = false;
+        unsigned int n_local_refinement             = 0;
+        std::string  local_refinement_1_bottom_left = "";
+        std::string  local_refinement_1_top_right   = "";
+        std::string  local_refinement_2_bottom_left = "";
+        std::string  local_refinement_2_top_right   = "";
 
       public:
         SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
@@ -105,11 +107,17 @@ namespace MeltPoolDG
             prm.add_parameter("n local refinement",
                               n_local_refinement,
                               "number of (additional to the global) refinements for local region.");
-            prm.add_parameter("local refinement bottom left",
-                              local_refinement_bottom_left,
+            prm.add_parameter("local refinement 1 bottom left",
+                              local_refinement_1_bottom_left,
                               "Bottom left point of locally refined region.");
-            prm.add_parameter("local refinement top right",
-                              local_refinement_top_right,
+            prm.add_parameter("local refinement 1 top right",
+                              local_refinement_1_top_right,
+                              "Bottom left point of locally refined region.");
+            prm.add_parameter("local refinement 2 bottom left",
+                              local_refinement_2_bottom_left,
+                              "Bottom left point of locally refined region.");
+            prm.add_parameter("local refinement 2 top right",
+                              local_refinement_2_top_right,
                               "Bottom left point of locally refined region.");
             prm.add_parameter(
               "periodic boundary",
@@ -323,18 +331,50 @@ namespace MeltPoolDG
             this->triangulation->refine_global(this->parameters.base.global_refinements);
 
           /*
-           * locally refined region
+           * locally refined region described by max. 2 bounding boxes
+           *
+           *
+           *  +-------------------------+
+           *  |                         |
+           *  |         +--------+      |
+           *  |         |refine 1|      |
+           *  |         +--------+      |
+           *  |                         |
+           *  |                         |
+           *  |         +--------+      |
+           *  |         |refine 2|      |
+           *  |         +--------+      |
+           *  |                         |
+           *  |                         |
+           *  +-------------------------+
+           *
            */
           if (n_local_refinement > 0)
             {
               if constexpr (dim == 2)
                 {
+                  // 1. region
+                  AssertThrow(local_refinement_1_bottom_left.size() > 0 &&
+                                local_refinement_1_bottom_left.size() > 0,
+                              ExcMessage("The points of the refinement region must be specified."));
                   const auto bl = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                    local_refinement_bottom_left);
+                    local_refinement_1_bottom_left);
                   const auto tr = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                    local_refinement_top_right);
-
+                    local_refinement_1_top_right);
                   const auto refinement_region = BoundingBox<dim>({bl, tr});
+
+                  // 2. region (optional)
+                  Point<dim> bl_2;
+                  Point<dim> tr_2;
+                  if (local_refinement_2_bottom_left.size() > 0 &&
+                      local_refinement_2_top_right.size() > 0)
+                    {
+                      bl_2 = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
+                        local_refinement_2_bottom_left);
+                      tr_2 = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
+                        local_refinement_2_top_right);
+                    }
+                  const auto refinement_region_2 = BoundingBox<dim>({bl_2, tr_2});
 
                   for (unsigned int j = 0; j < n_local_refinement; ++j)
                     {
@@ -343,7 +383,8 @@ namespace MeltPoolDG
                           if (cell->is_locally_owned())
                             {
                               for (unsigned int i = 0; i < cell->n_vertices(); ++i)
-                                if (refinement_region.point_inside(cell->vertex(i)))
+                                if (refinement_region.point_inside(cell->vertex(i)) ||
+                                    refinement_region_2.point_inside(cell->vertex(i)))
                                   {
                                     cell->set_refine_flag();
                                     break;
