@@ -141,27 +141,6 @@ namespace MeltPoolDG::Flow
 
         // solver Navier-Stokes problem
         flow_operation->solve();
-
-        Journal::print_formatted_norm(
-          scratch_data->get_pcout(0),
-          VectorTools::compute_L2_norm<dim>(flow_operation->get_velocity(),
-                                            *scratch_data,
-                                            flow_operation->get_dof_handler_idx_velocity(),
-                                            flow_operation->get_quad_idx_velocity()),
-          "velocity",
-          "navier_stokes_adaflo",
-          15 /*precision*/
-        );
-        Journal::print_formatted_norm(
-          scratch_data->get_pcout(0),
-          VectorTools::compute_L2_norm<dim>(flow_operation->get_pressure(),
-                                            *scratch_data,
-                                            flow_operation->get_dof_handler_idx_pressure(),
-                                            flow_operation->get_quad_idx_pressure()),
-          "pressure",
-          "navier_stokes_adaflo",
-          15 /*precision*/
-        );
         // ... and output the results to vtk files.
         output_results(n, time_iterator.get_current_time(), base_in);
 
