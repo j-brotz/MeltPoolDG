@@ -125,16 +125,28 @@ namespace MeltPoolDG
       if (!fs::exists(paraview.directory))
         fs::create_directory(paraview.directory);
 
-      // copy parameter file (workaround since overwrite_existing complains with certain compilers)
-      const auto path_orig = fs::path(parameter_filename);
-      const auto path_dest = fs::path(paraview.directory) / parameter_filename;
 
-      if (!fs::equivalent(path_orig, path_dest))
+      try
         {
-          if (fs::exists(path_dest))
-            fs::remove(path_dest);
+          std::filesystem::copy(parameter_filename,
+                                paraview.directory,
+                                std::filesystem::copy_options::overwrite_existing);
+        }
+      catch (...)
+        {
+          // copy parameter file (workaround since overwrite_existing complains with certain
+          // compilers)
+          const auto path_orig = fs::path(parameter_filename);
+          const auto path_dest =
+            fs::path(paraview.directory) / fs::path(parameter_filename).filename();
 
-          fs::copy(path_orig, path_dest, fs::copy_options::overwrite_existing);
+          if (!fs::equivalent(path_orig, path_dest))
+            {
+              if (fs::exists(path_dest))
+                fs::remove(path_dest);
+
+              fs::copy(path_orig, path_dest, fs::copy_options::overwrite_existing);
+            }
         }
     }
 
