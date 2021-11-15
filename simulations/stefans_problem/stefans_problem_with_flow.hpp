@@ -40,29 +40,33 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
   public:
     InitialValuesLS(const double x_min,
                     const double x_max,
-                    const double y_min,
-                    const double y_interface)
+                    const double y_interface,
+                    const double eps)
       : Function<dim>()
       , x_min(x_min)
       , x_max(x_max)
-      , y_min(y_min)
       , y_interface(y_interface)
+      , eps(eps)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      Point<dim> lower_left  = dim == 1 ? Point<dim>(y_min) :
-                               dim == 2 ? Point<dim>(x_min, y_min) :
-                                          Point<dim>(x_min, x_min, y_min);
-      Point<dim> upper_right = dim == 1 ? Point<dim>(y_interface) :
-                               dim == 2 ? Point<dim>(x_max, y_interface) :
-                                          Point<dim>(x_max, x_max, y_interface);
+      Point<dim> left  = dim == 1 ? Point<dim>(y_interface) :
+                         dim == 2 ? Point<dim>(x_min, y_interface) :
+                                    Point<dim>(x_min, x_min, y_interface);
+      Point<dim> right = dim == 1 ? Point<dim>(0) /* not relevant */ :
+                         dim == 2 ? Point<dim>(x_max, y_interface) :
+                                    Point<dim>(x_max, x_max, y_interface);
 
-      return UtilityFunctions::CharacteristicFunctions::sgn(
-        DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
+      if (p[dim - 1] >= y_interface)
+        return -UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+          DistanceFunctions::infinite_line<dim>(p, left, right), eps);
+      else
+        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+          DistanceFunctions::infinite_line<dim>(p, left, right), eps);
     }
-    double x_min, x_max, y_min, y_interface;
+    double x_min, x_max, y_interface, eps;
   };
   /*
    *      This class collects all relevant input data for the level set simulation
@@ -118,6 +122,17 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
           GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
+
+      // get vertices along the vertical axis on rank 0
+      if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+        {
+          for (unsigned int i = 0; i <= 100.; ++i)
+            {
+              auto p     = Point<dim>();
+              p[dim - 1] = y_min + (y_max - y_min) / 100. * i;
+              vertices_along_vertical_axis.emplace_back(p);
+            }
+        }
     }
 
     void
@@ -134,17 +149,11 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
 
       if (this->parameters.evapor.ls_value_liquid == -1)
         {
-          // lower part = gas; upper part = liquid
-          this->attach_dirichlet_boundary_condition(
-            lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(1.0), "level_set");
           this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
           this->attach_open_boundary_condition(lower_bc, "navier_stokes_u");
         }
       else if (this->parameters.evapor.ls_value_liquid == 1)
         {
-          // lower part = liquid; upper part = gas
-          this->attach_dirichlet_boundary_condition(
-            upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
           this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
           this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
         }
@@ -209,11 +218,140 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     void
     set_field_conditions() final
     {
+      const double eps =
+        UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+
+      AssertThrow(eps > 0, ExcNotImplemented());
       this->attach_initial_condition(
-        std::make_shared<InitialValuesLS<dim>>(x_min, x_max, y_min, y_interface), "level_set");
+        std::make_shared<InitialValuesLS<dim>>(x_min, x_max, y_interface, eps), "level_set");
       this->attach_initial_condition(
         std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
     }
+
+    void
+    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
+    {
+      dealii::ConditionalOStream pcout(std::cout,
+                                       Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
+                                         0);
+      if (!(n_time_step % this->parameters.paraview.write_frequency) ||
+          generic_data_out.get_time() == this->parameters.time_stepping.end_time)
+        {
+          generic_data_out.get_vector("velocity").update_ghost_values();
+          generic_data_out.get_vector("heaviside").update_ghost_values();
+          generic_data_out.get_vector("pressure").update_ghost_values();
+
+          /*
+           * evaluate pressure profile
+           */
+          if (!remote_point_is_initialized)
+            {
+              remote_point_evaluation.reinit(vertices_along_vertical_axis,
+                                             *this->triangulation,
+                                             generic_data_out.get_mapping());
+              if (this->parameters.amr.do_amr == false)
+                remote_point_is_initialized = true;
+            }
+
+          const auto pressure_evaluation_values =
+            dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                                 generic_data_out.get_dof_handler("pressure"),
+                                                 generic_data_out.get_vector("pressure"));
+
+          const auto ls_evaluation_values =
+            dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                                 generic_data_out.get_dof_handler("heaviside"),
+                                                 generic_data_out.get_vector("heaviside"));
+
+          const auto vel_evaluation_values =
+            dealii::VectorTools::point_values<dim>(remote_point_evaluation,
+                                                   generic_data_out.get_dof_handler("velocity"),
+                                                   generic_data_out.get_vector("velocity"));
+
+          const auto analytical_velocity = [&](const double &ls) -> double {
+            return this->parameters.evapor.evaporative_mass_flux * (1. - ls) *
+                   (1. / this->parameters.material.first.density -
+                    1. / this->parameters.material.second.density);
+          };
+
+          const auto analytical_pressure = [&](const double &ls) -> double {
+            return std::pow(this->parameters.evapor.evaporative_mass_flux, 2) * ls *
+                   (1. / this->parameters.material.first.density -
+                    1. / this->parameters.material.second.density);
+          };
+
+          // write values to file
+          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+            {
+              if (this->parameters.paraview.do_output)
+                {
+                  const auto file_name = this->parameters.paraview.directory + "/" +
+                                         this->parameters.paraview.filename + "_pressure_profile_" +
+                                         std::to_string(generic_data_out.get_time()) + ".txt";
+                  file_pressure_profile.open(file_name);
+                  file_pressure_profile
+                    << " coordinate | velocity | analytical velocity | pressure value | analytical pressure value "
+                    << std::endl;
+
+                  for (unsigned int i = 0; i < pressure_evaluation_values.size(); ++i)
+                    {
+                      file_pressure_profile << vertices_along_vertical_axis[i][dim - 1] << " ";
+
+                      if constexpr (dim > 1)
+                        file_pressure_profile << vel_evaluation_values[i][dim - 1] << " ";
+                      else
+                        file_pressure_profile << vel_evaluation_values[i] << " ";
+                      file_pressure_profile << analytical_velocity(ls_evaluation_values[i]) << " "
+                                            << pressure_evaluation_values[i] << " "
+                                            << analytical_pressure(ls_evaluation_values[i])
+                                            << std::endl;
+                    }
+                  file_pressure_profile.close();
+                }
+
+              // console output
+              if constexpr (dim > 1)
+                {
+                  pcout << "POSTPROCESSOR: min velocity: " << vel_evaluation_values[0][dim - 1]
+                        << " (analytical: " << analytical_velocity(ls_evaluation_values[0]) << ")"
+                        << std::endl;
+                  pcout << "POSTPROCESSOR: max velocity: "
+                        << vel_evaluation_values[vel_evaluation_values.size() - 1][dim - 1]
+                        << " (analytical: "
+                        << analytical_velocity(
+                             ls_evaluation_values[vel_evaluation_values.size() - 1])
+                        << ")" << std::endl;
+                }
+              else
+                {
+                  pcout << "POSTPROCESSOR: min velocity: " << vel_evaluation_values[0]
+                        << " (analytical: " << analytical_velocity(ls_evaluation_values[0]) << ")"
+                        << std::endl;
+                  pcout << "POSTPROCESSOR: max velocity: "
+                        << vel_evaluation_values[vel_evaluation_values.size() - 1]
+                        << " (analytical: "
+                        << analytical_velocity(
+                             ls_evaluation_values[vel_evaluation_values.size() - 1])
+                        << ")" << std::endl;
+                }
+              pcout << "POSTPROCESSOR: max pressure: " << pressure_evaluation_values[0]
+                    << " (analytical: " << analytical_pressure(ls_evaluation_values[0]) << ")"
+                    << std::endl;
+              pcout << "POSTPROCESSOR: min pressure: "
+                    << pressure_evaluation_values[pressure_evaluation_values.size() - 1]
+                    << " (analytical: "
+                    << analytical_pressure(
+                         ls_evaluation_values[pressure_evaluation_values.size() - 1])
+                    << ")" << std::endl;
+            }
+
+          generic_data_out.get_vector("level_set").zero_out_ghost_values();
+          generic_data_out.get_vector("velocity").zero_out_ghost_values();
+          generic_data_out.get_vector("pressure").zero_out_ghost_values();
+        }
+      n_time_step += 1;
+    }
+
 
   private:
     const double x_min       = 0.0;
@@ -221,5 +359,13 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     const double y_min       = 0.0;
     const double y_max       = 1.0;
     const double y_interface = 0.5;
+
+    // Postprocessor
+    mutable std::ofstream                                   file_velocity_profile;
+    mutable std::ofstream                                   file_pressure_profile;
+    mutable int                                             n_time_step = 0.0;
+    mutable std::vector<Point<dim>>                         vertices_along_vertical_axis;
+    mutable bool                                            remote_point_is_initialized = false;
+    mutable Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
   };
 } // namespace MeltPoolDG::Simulation::StefansProblemWithFlow

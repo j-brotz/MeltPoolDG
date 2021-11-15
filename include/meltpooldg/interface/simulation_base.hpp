@@ -85,7 +85,7 @@ namespace MeltPoolDG
      * It is called after every time step.
      */
     virtual void
-    do_postprocessing(const GenericDataOut<dim> &generic_data_out)
+    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const
     {
       (void)generic_data_out;
       // do nothing default
