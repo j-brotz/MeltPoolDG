@@ -90,7 +90,7 @@
     "curv damping scale factor": "0.5"
   },
   "paraview": {
-    "paraview do output": "true",
+    "paraview do output": "false",
     "paraview write frequency": "1",
     "paraview filename": "solution_recoil_pressure"
   },

@@ -87,7 +87,7 @@
     "heat nlsolve field correction tolerance": "1e-9"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "material": {
     "material boiling temperature": "500.",

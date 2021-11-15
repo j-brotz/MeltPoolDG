@@ -26,3 +26,6 @@ jobs:
         scripts/format-all-json
         git diff
         git diff-files --quiet || exit $?
+    - name: json-check
+      run: |
+        . ./scripts/check-json || exit $?
