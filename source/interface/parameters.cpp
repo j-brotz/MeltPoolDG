@@ -112,25 +112,22 @@ namespace MeltPoolDG
 
     // create output directory and copy parameter file
     {
+      namespace fs = std::filesystem;
       // check if the requested paraview directory exists and if not create the directory
-      AssertThrow(!std::filesystem::exists(paraview.directory) ||
-                    std::filesystem::is_directory(paraview.directory),
+      AssertThrow(!fs::exists(paraview.directory) || fs::is_directory(paraview.directory),
                   ExcMessage("You are trying to create a folder with the name <" +
                              std::string(paraview.directory) +
                              ">. However, a file with the same name already exists! "
                              "Possible solutions could be to either rename the output "
                              "folder in the parameter file or to rename/move the existing file."));
 
-      namespace fs = std::filesystem;
       if (!fs::exists(paraview.directory))
         fs::create_directory(paraview.directory);
 
 
       try
         {
-          std::filesystem::copy(parameter_filename,
-                                paraview.directory,
-                                std::filesystem::copy_options::overwrite_existing);
+          fs::copy(parameter_filename, paraview.directory, fs::copy_options::overwrite_existing);
         }
       catch (...)
         {
