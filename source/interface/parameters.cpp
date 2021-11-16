@@ -112,22 +112,39 @@ namespace MeltPoolDG
 
     // create output directory and copy parameter file
     {
+      namespace fs = std::filesystem;
       // check if the requested paraview directory exists and if not create the directory
-      AssertThrow(!std::filesystem::exists(paraview.directory) ||
-                    std::filesystem::is_directory(paraview.directory),
+      AssertThrow(!fs::exists(paraview.directory) || fs::is_directory(paraview.directory),
                   ExcMessage("You are trying to create a folder with the name <" +
                              std::string(paraview.directory) +
                              ">. However, a file with the same name already exists! "
                              "Possible solutions could be to either rename the output "
                              "folder in the parameter file or to rename/move the existing file."));
 
-      if (!std::filesystem::exists(paraview.directory))
-        std::filesystem::create_directory(paraview.directory);
+      if (!fs::exists(paraview.directory))
+        fs::create_directory(paraview.directory);
 
-      // copy parameter file
-      std::filesystem::copy(parameter_filename,
-                            paraview.directory,
-                            std::filesystem::copy_options::overwrite_existing);
+
+      try
+        {
+          fs::copy(parameter_filename, paraview.directory, fs::copy_options::overwrite_existing);
+        }
+      catch (...)
+        {
+          // copy parameter file (workaround since overwrite_existing complains with certain
+          // compilers)
+          const auto path_orig = fs::path(parameter_filename);
+          const auto path_dest =
+            fs::path(paraview.directory) / fs::path(parameter_filename).filename();
+
+          if (!fs::equivalent(path_orig, path_dest))
+            {
+              if (fs::exists(path_dest))
+                fs::remove(path_dest);
+
+              fs::copy(path_orig, path_dest, fs::copy_options::overwrite_existing);
+            }
+        }
     }
 
     parameters_read = true;
