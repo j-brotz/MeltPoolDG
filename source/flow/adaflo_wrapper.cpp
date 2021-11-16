@@ -1,5 +1,6 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
+#  include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -175,6 +176,7 @@ namespace MeltPoolDG::Flow
   {
     navier_stokes->solution.zero_out_ghost_values();
     navier_stokes->solution_old.zero_out_ghost_values();
+    navier_stokes->solution_old_old.zero_out_ghost_values();
     dealii::VectorTools::interpolate(navier_stokes->mapping,
                                      navier_stokes->get_dof_handler_u(),
                                      initial_field_function_velocity,
@@ -185,6 +187,7 @@ namespace MeltPoolDG::Flow
 
     navier_stokes->solution.update_ghost_values();
     navier_stokes->solution_old.update_ghost_values();
+    navier_stokes->solution_old_old.update_ghost_values();
   }
 
   template <int dim>
@@ -256,20 +259,32 @@ namespace MeltPoolDG::Flow
     navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
     navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
 
-    navier_stokes->get_constraints_u().set_zero(navier_stokes->solution.block(0));
-    navier_stokes->get_constraints_u().set_zero(navier_stokes->solution_old.block(0));
-    navier_stokes->get_constraints_u().set_zero(navier_stokes->solution_old_old.block(0));
-
-    navier_stokes->get_constraints_p().set_zero(navier_stokes->solution.block(1));
-    navier_stokes->get_constraints_p().set_zero(navier_stokes->solution_old.block(1));
-    navier_stokes->get_constraints_p().set_zero(navier_stokes->solution_old_old.block(1));
-
     const auto n_newton_steps = navier_stokes->advance_time_step();
     AssertThrow(n_newton_steps < adaflo_params.max_nl_iteration,
                 ExcMessage(
                   "Newton Raphson solver for the Navier-Stokes equations did not converge."));
 
     distribute_constraints();
+
+    Journal::print_formatted_norm(scratch_data.get_pcout(0),
+                                  VectorTools::compute_L2_norm<dim>(get_velocity(),
+                                                                    scratch_data,
+                                                                    get_dof_handler_idx_velocity(),
+                                                                    get_quad_idx_velocity()),
+                                  "velocity",
+                                  "navier_stokes_adaflo",
+                                  15 /*precision*/
+    );
+
+    Journal::print_formatted_norm(scratch_data.get_pcout(0),
+                                  VectorTools::compute_L2_norm<dim>(get_pressure(),
+                                                                    scratch_data,
+                                                                    get_dof_handler_idx_pressure(),
+                                                                    get_quad_idx_pressure()),
+                                  "pressure",
+                                  "navier_stokes_adaflo",
+                                  15 /*precision*/
+    );
   }
 
   template <int dim>
@@ -507,12 +522,19 @@ namespace MeltPoolDG::Flow
   AdafloWrapper<dim>::distribute_constraints()
   {
     navier_stokes->get_constraints_u().distribute(navier_stokes->solution.block(0));
-    navier_stokes->get_constraints_u().distribute(navier_stokes->solution_old.block(0));
-    navier_stokes->get_constraints_u().distribute(navier_stokes->solution_old_old.block(0));
+    navier_stokes->get_hanging_node_constraints_u().distribute(
+      navier_stokes->solution_old.block(0));
+    navier_stokes->get_hanging_node_constraints_u().distribute(
+      navier_stokes->solution_old_old.block(0));
 
     navier_stokes->get_constraints_p().distribute(navier_stokes->solution.block(1));
-    navier_stokes->get_constraints_p().distribute(navier_stokes->solution_old.block(1));
-    navier_stokes->get_constraints_p().distribute(navier_stokes->solution_old_old.block(1));
+    navier_stokes->get_hanging_node_constraints_p().distribute(
+      navier_stokes->solution_old.block(1));
+    navier_stokes->get_hanging_node_constraints_p().distribute(
+      navier_stokes->solution_old_old.block(1));
+
+    navier_stokes->get_constraints_u().distribute(navier_stokes->user_rhs.block(0));
+    navier_stokes->get_constraints_p().distribute(navier_stokes->user_rhs.block(1));
   }
 
   template <int dim>
