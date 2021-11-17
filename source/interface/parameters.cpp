@@ -442,19 +442,6 @@ namespace MeltPoolDG
     }
     prm.leave_subsection();
     /*
-     *   flow
-     */
-    prm.enter_subsection("flow");
-    {
-      prm.add_parameter("flow velocity degree",
-                        flow.velocity_degree,
-                        "velocity degree of the flow field");
-      prm.add_parameter("flow n q points 1d",
-                        flow.velocity_n_q_points_1d,
-                        "number of 1d quadrature points for the velocity field of the flow");
-    }
-    prm.leave_subsection();
-    /*
      *   heat
      */
     prm.enter_subsection("heat");

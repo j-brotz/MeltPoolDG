@@ -29,9 +29,9 @@
     "end time": "115.2",
     "time step size": "0.05"
   },
-  "flow": {
-    "flow surface tension coefficient": "0.023040369",
-    "flow temperature dependent surface tension coefficient": "0.002"
+  "surface tension": {
+    "surface tension coefficient": "0.023040369",
+    "temperature dependent surface tension coefficient": "0.002"
   },
   "Navier-Stokes": {
     "adaflo": {

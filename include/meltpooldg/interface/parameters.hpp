@@ -152,13 +152,6 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
-  struct FlowData
-  {
-    int velocity_degree        = -1;
-    int velocity_n_q_points_1d = -1;
-  };
-
-  template <typename number = double>
   struct NormalVectorData
   {
     number       damping_scale_factor = 0.5;
@@ -407,7 +400,6 @@ namespace MeltPoolDG
     LevelSetData<number>           ls;
     ReinitializationData<number>   reinit;
     AdvectionDiffusionData<number> advec_diff;
-    FlowData<number>               flow;
     NormalVectorData<number>       normal_vec;
     CurvatureData<number>          curv;
     HeatData<number>               heat;
