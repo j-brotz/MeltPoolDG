@@ -309,10 +309,6 @@ namespace MeltPoolDG
                         ls.time_integration_scheme,
                         "Determines the time integration scheme.",
                         Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson"));
-      prm.add_parameter("ls enable CFL condition",
-                        ls.enable_CFL_condition,
-                        "Enables to dynamically adapt the time step to meet the CFL condition"
-                        " in case of explicit time integration.");
       prm.add_parameter(
         "ls do matrix free",
         ls.do_matrix_free,
