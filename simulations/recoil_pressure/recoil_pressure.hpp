@@ -304,7 +304,7 @@ namespace MeltPoolDG
           /*
            * BC for heat transfer
            */
-          if (this->parameters.laser.heat_source_model != "Analytical")
+          if (this->parameters.laser.heat_source_model != LaserHeatSourceModel::Analytical)
             {
               this->attach_dirichlet_boundary_condition(
                 lower_bc,
@@ -412,7 +412,7 @@ namespace MeltPoolDG
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
-          if (this->parameters.laser.heat_source_model != "Analytical")
+          if (this->parameters.laser.heat_source_model != LaserHeatSourceModel::Analytical)
             this->attach_initial_condition(
               std::make_shared<Functions::ConstantFunction<dim>>(T_initial), "heat_transfer");
         }

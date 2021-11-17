@@ -546,8 +546,7 @@ namespace MeltPoolDG
         "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.");
       prm.add_parameter("laser heat source model",
                         laser.heat_source_model,
-                        "Laser heat source model.",
-                        Patterns::Selection("Gusarov|Gauss|Analytical"));
+                        "Laser heat source model.");
       /*
        *   Gusarov
        */

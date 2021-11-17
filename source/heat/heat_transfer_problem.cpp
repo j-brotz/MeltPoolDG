@@ -194,12 +194,12 @@ namespace MeltPoolDG::Heat
                                                                       base_in->parameters.material);
         laser_operation->set_initial_condition(base_in->parameters.time_stepping.start_time);
 
-        if (base_in->parameters.laser.heat_source_model == "Gusarov")
+        if (base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Gusarov)
           {
             laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(
               base_in->parameters.laser.gusarov);
           }
-        else if (base_in->parameters.laser.heat_source_model == "Gauss")
+        else if (base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Gauss)
           {
             laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
               base_in->parameters.laser.gauss,

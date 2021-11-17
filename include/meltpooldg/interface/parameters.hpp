@@ -50,6 +50,14 @@ namespace MeltPoolDG
                          // δ_w = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ ) 2 / ( w_g + w_h )
                          // with the weight the gas phase w_g and the weight of the heavy phase w_h
   )
+  BETTER_ENUM(
+    LaserHeatSourceModel,
+    char,
+    not_initialized, // must be specified by user
+    Gauss,           // Gauss heat source distribution, see MeltPoolDG::Heat::LaserHeatSourceGauss
+    Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
+    Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
+  )
 
   template <typename number = double>
   struct SolverData
@@ -194,22 +202,15 @@ namespace MeltPoolDG
   template <typename number = double>
   struct LaserData
   {
-    number      power             = 0.0;
-    std::string power_over_time   = "constant";
-    number      power_start_time  = 0.0;
-    number      power_end_time    = 1.e12;
-    std::string center            = "0,0,0";
-    bool        do_move           = false;
-    number      scan_speed        = 0.0;
-    std::string impact_type       = "volumetric";
-    std::string heat_source_model = "Gusarov";
-    struct GusarovData
-    {
-      number laser_beam_radius      = 0.0; // R
-      number reflectivity           = 0.0; // rho
-      number extinction_coefficient = 0.0; // beta
-      number layer_thickness        = 0.0; // L
-    } gusarov;
+    number               power             = 0.0;
+    std::string          power_over_time   = "constant";
+    number               power_start_time  = 0.0;
+    number               power_end_time    = 1.e12;
+    std::string          center            = "0,0,0";
+    bool                 do_move           = false;
+    number               scan_speed        = 0.0;
+    std::string          impact_type       = "volumetric";
+    LaserHeatSourceModel heat_source_model = LaserHeatSourceModel::not_initialized;
     struct GaussData
     {
       number                              laser_beam_radius   = 0.0;
@@ -219,6 +220,13 @@ namespace MeltPoolDG
         DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
       DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     } gauss;
+    struct GusarovData
+    {
+      number laser_beam_radius      = 0.0; // R
+      number reflectivity           = 0.0; // rho
+      number extinction_coefficient = 0.0; // beta
+      number layer_thickness        = 0.0; // L
+    } gusarov;
     struct AnalyticalData
     {
       number temperature_x_to_y_ratio = 1.0;
