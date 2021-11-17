@@ -107,7 +107,7 @@ namespace MeltPoolDG
   struct AdaptiveMeshingData
   {
     bool         do_amr                       = false;
-    bool         do_not_modify_boundary_cells = true;
+    bool         do_not_modify_boundary_cells = false;
     double       upper_perc_to_refine         = 0.0;
     double       lower_perc_to_coarsen        = 0.0;
     int          n_initial_refinement_cycles  = 0;
