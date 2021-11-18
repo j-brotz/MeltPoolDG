@@ -18,10 +18,12 @@ namespace MeltPoolDG::Heat
                 ExcMessage("The laser beam radius must be greater than zero! Abort.."));
 
     if (data.delta_function_type == DiracDeltaFunctionApproximationType::phase_weighted_delta)
-      {
-        delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
-          data.delta_approximation_phase_weighted);
-      }
+      delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
+        data.delta_approximation_phase_weighted);
+    else if (data.delta_function_type ==
+             DiracDeltaFunctionApproximationType::quad_phase_weighted_delta)
+      delta_phase_weighted = std::make_unique<DeltaApproximationQuadPhaseWeighted<double>>(
+        data.delta_approximation_phase_weighted);
   }
 
   template <int dim>

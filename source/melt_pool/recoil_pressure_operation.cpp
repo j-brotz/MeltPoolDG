@@ -34,10 +34,12 @@ namespace MeltPoolDG::MeltPool
 
     if (recoil_pressure_data.delta_function_type ==
         DiracDeltaFunctionApproximationType::phase_weighted_delta)
-      {
-        delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
-          recoil_pressure_data.delta_approximation_phase_weighted);
-      }
+      delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
+        recoil_pressure_data.delta_approximation_phase_weighted);
+    else if (recoil_pressure_data.delta_function_type ==
+             DiracDeltaFunctionApproximationType::quad_phase_weighted_delta)
+      delta_phase_weighted = std::make_unique<DeltaApproximationQuadPhaseWeighted<double>>(
+        recoil_pressure_data.delta_approximation_phase_weighted);
   }
 
   template <int dim>
@@ -86,14 +88,10 @@ namespace MeltPoolDG::MeltPool
                   ls_to_pressure_grad_interpolation_matrix);
               }
 
-            if (recoil_pressure_data.delta_function_type ==
-                DiracDeltaFunctionApproximationType::norm_of_indicator_gradient)
-              used_level_set.evaluate(EvaluationFlags::gradients);
-            else if (recoil_pressure_data.delta_function_type ==
-                     DiracDeltaFunctionApproximationType::phase_weighted_delta)
+            if (delta_phase_weighted)
               used_level_set.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
             else
-              AssertThrow(false, ExcNotImplemented());
+              used_level_set.evaluate(EvaluationFlags::gradients);
 
             temperature_val.reinit(cell);
             temperature_val.read_dof_values_plain(temperature);
@@ -112,8 +110,7 @@ namespace MeltPoolDG::MeltPool
 
                 VectorizedArray<double> weight(1.0);
 
-                if (recoil_pressure_data.delta_function_type ==
-                    DiracDeltaFunctionApproximationType::phase_weighted_delta)
+                if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
 
                 recoil_pressure.submit_value(recoil_pressure_coefficient *
