@@ -1,10 +1,23 @@
 #pragma once
+#include <deal.II/base/vectorization.h>
+
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
 {
   using namespace dealii;
+
+  template <typename number>
+  class DeltaApproximationBase
+  {
+  public:
+    virtual number
+    compute_weight(const number ls_heaviside) const = 0;
+
+    virtual VectorizedArray<number>
+    compute_weight(const VectorizedArray<number> &ls_heaviside) const = 0;
+  };
 
   /**
    * Asymmetric, phase weighted Dirac delta approximation function, as proposed in
@@ -36,7 +49,7 @@ namespace MeltPoolDG
    *
    */
   template <typename number>
-  class DeltaApproximationPhaseWeighted
+  class DeltaApproximationPhaseWeighted : public DeltaApproximationBase<number>
   {
   public:
     DeltaApproximationPhaseWeighted(const DeltaApproximationPhaseWeightedData<number> &data)
@@ -49,6 +62,19 @@ namespace MeltPoolDG
                              "use weights that don't sum up to zero! Abort..."));
     }
 
+    inline number
+    compute_weight(const number level_set_heaviside) const override
+    {
+      return compute_weight_internal(level_set_heaviside);
+    }
+
+    inline VectorizedArray<number>
+    compute_weight(const VectorizedArray<number> &level_set_heaviside) const override
+    {
+      return compute_weight_internal(level_set_heaviside);
+    }
+
+  private:
     /**
      * This function calculates the asymmetric
      *
@@ -59,12 +85,11 @@ namespace MeltPoolDG
      */
     template <typename value_type>
     inline value_type
-    compute_weight(const value_type &level_set_heaviside) const
+    compute_weight_internal(const value_type &level_set_heaviside) const
     {
       return UtilityFunctions::interpolate(level_set_heaviside, w_g, w_h) * correction_factor;
     }
 
-  private:
     const number w_g;
     const number w_h;
 
