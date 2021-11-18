@@ -70,17 +70,17 @@ namespace MeltPoolDG::MeltPool
     /*
      * Choose the laser heat source model
      */
-    if (data_in.laser.heat_source_model == "Gusarov")
+    if (data_in.laser.heat_source_model == LaserHeatSourceModel::Gusarov)
       {
         laser_heat_source_operation =
           std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(data_in.laser.gusarov);
       }
-    else if (data_in.laser.heat_source_model == "Gauss")
+    else if (data_in.laser.heat_source_model == LaserHeatSourceModel::Gauss)
       {
         laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
           data_in.laser.gauss, data_in.material.two_phase_properties_transition_type);
       }
-    else if (data_in.laser.heat_source_model == "Analytical")
+    else if (data_in.laser.heat_source_model == LaserHeatSourceModel::Analytical)
       {
         laser_analytical_temperature_field =
           std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(

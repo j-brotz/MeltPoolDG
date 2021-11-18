@@ -50,6 +50,14 @@ namespace MeltPoolDG
                          // δ_w = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ ) 2 / ( w_g + w_h )
                          // with the weight the gas phase w_g and the weight of the heavy phase w_h
   )
+  BETTER_ENUM(
+    LaserHeatSourceModel,
+    char,
+    not_initialized, // must be specified by user
+    Gauss,           // Gauss heat source distribution, see MeltPoolDG::Heat::LaserHeatSourceGauss
+    Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
+    Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
+  )
 
   template <typename number = double>
   struct SolverData
@@ -99,7 +107,7 @@ namespace MeltPoolDG
   struct AdaptiveMeshingData
   {
     bool         do_amr                       = false;
-    bool         do_not_modify_boundary_cells = true;
+    bool         do_not_modify_boundary_cells = false;
     double       upper_perc_to_refine         = 0.0;
     double       lower_perc_to_coarsen        = 0.0;
     int          n_initial_refinement_cycles  = 0;
@@ -115,7 +123,6 @@ namespace MeltPoolDG
     int         n_initial_reinit_steps  = -1.0;
     number      artificial_diffusivity  = 0.0;
     std::string time_integration_scheme = "crank_nicolson";
-    bool        enable_CFL_condition    = false;
     bool        do_curvature_correction = false;
     bool        do_matrix_free          = true;
     int         n_subdivisions          = 1;
@@ -141,13 +148,6 @@ namespace MeltPoolDG
     std::string time_integration_scheme = "crank_nicolson";
     bool        do_matrix_free          = true;
     std::string implementation          = "meltpooldg";
-  };
-
-  template <typename number = double>
-  struct FlowData
-  {
-    int velocity_degree        = -1;
-    int velocity_n_q_points_1d = -1;
   };
 
   template <typename number = double>
@@ -194,22 +194,15 @@ namespace MeltPoolDG
   template <typename number = double>
   struct LaserData
   {
-    number      power             = 0.0;
-    std::string power_over_time   = "constant";
-    number      power_start_time  = 0.0;
-    number      power_end_time    = 1.e12;
-    std::string center            = "0,0,0";
-    bool        do_move           = false;
-    number      scan_speed        = 0.0;
-    std::string impact_type       = "volumetric";
-    std::string heat_source_model = "Gusarov";
-    struct GusarovData
-    {
-      number laser_beam_radius      = 0.0; // R
-      number reflectivity           = 0.0; // rho
-      number extinction_coefficient = 0.0; // beta
-      number layer_thickness        = 0.0; // L
-    } gusarov;
+    number               power             = 0.0;
+    std::string          power_over_time   = "constant";
+    number               power_start_time  = 0.0;
+    number               power_end_time    = 1.e12;
+    std::string          center            = "0,0,0";
+    bool                 do_move           = false;
+    number               scan_speed        = 0.0;
+    std::string          impact_type       = "volumetric";
+    LaserHeatSourceModel heat_source_model = LaserHeatSourceModel::not_initialized;
     struct GaussData
     {
       number                              laser_beam_radius   = 0.0;
@@ -219,6 +212,13 @@ namespace MeltPoolDG
         DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
       DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     } gauss;
+    struct GusarovData
+    {
+      number laser_beam_radius      = 0.0; // R
+      number reflectivity           = 0.0; // rho
+      number extinction_coefficient = 0.0; // beta
+      number layer_thickness        = 0.0; // L
+    } gusarov;
     struct AnalyticalData
     {
       number temperature_x_to_y_ratio = 1.0;
@@ -399,7 +399,6 @@ namespace MeltPoolDG
     LevelSetData<number>           ls;
     ReinitializationData<number>   reinit;
     AdvectionDiffusionData<number> advec_diff;
-    FlowData<number>               flow;
     NormalVectorData<number>       normal_vec;
     CurvatureData<number>          curv;
     HeatData<number>               heat;

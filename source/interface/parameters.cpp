@@ -309,10 +309,6 @@ namespace MeltPoolDG
                         ls.time_integration_scheme,
                         "Determines the time integration scheme.",
                         Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson"));
-      prm.add_parameter("ls enable CFL condition",
-                        ls.enable_CFL_condition,
-                        "Enables to dynamically adapt the time step to meet the CFL condition"
-                        " in case of explicit time integration.");
       prm.add_parameter(
         "ls do matrix free",
         ls.do_matrix_free,
@@ -442,19 +438,6 @@ namespace MeltPoolDG
     }
     prm.leave_subsection();
     /*
-     *   flow
-     */
-    prm.enter_subsection("flow");
-    {
-      prm.add_parameter("flow velocity degree",
-                        flow.velocity_degree,
-                        "velocity degree of the flow field");
-      prm.add_parameter("flow n q points 1d",
-                        flow.velocity_n_q_points_1d,
-                        "number of 1d quadrature points for the velocity field of the flow");
-    }
-    prm.leave_subsection();
-    /*
      *   heat
      */
     prm.enter_subsection("heat");
@@ -546,8 +529,7 @@ namespace MeltPoolDG
         "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.");
       prm.add_parameter("laser heat source model",
                         laser.heat_source_model,
-                        "Laser heat source model.",
-                        Patterns::Selection("Gusarov|Gauss|Analytical"));
+                        "Laser heat source model.");
       /*
        *   Gusarov
        */

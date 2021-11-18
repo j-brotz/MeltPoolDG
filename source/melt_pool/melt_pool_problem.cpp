@@ -72,7 +72,8 @@ namespace MeltPoolDG::Flow
         if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
             (evaporation_operation &&
              !(base_in->parameters.evapor.evaporation_model == "constant")) ||
-            (melt_pool_operation && !(base_in->parameters.laser.heat_source_model == "Analytical")))
+            (melt_pool_operation &&
+             !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
           heat_operation->solve(dt);
 
         if (melt_pool_operation)
@@ -535,7 +536,8 @@ namespace MeltPoolDG::Flow
      */
     if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
         (evaporation_operation && !(base_in->parameters.evapor.evaporation_model == "constant")) ||
-        (melt_pool_operation && !(base_in->parameters.laser.heat_source_model == "Analytical")))
+        (melt_pool_operation &&
+         !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
       heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
 
     /*

@@ -154,13 +154,6 @@ namespace MeltPoolDG::Flow
             0.0;
       }
 
-    parameters.flow.velocity_degree        = (parameters.flow.velocity_degree > 0.0) ?
-                                               parameters.flow.velocity_degree :
-                                               parameters.adaflo_params.params.velocity_degree;
-    parameters.flow.velocity_n_q_points_1d = (parameters.flow.velocity_n_q_points_1d < 1) ?
-                                               parameters.flow.velocity_degree + 1 :
-                                               parameters.flow.velocity_n_q_points_1d;
-
     /// synchronize time stepping schemes
     parameters.adaflo_params.params.start_time           = parameters.time_stepping.start_time;
     parameters.adaflo_params.params.end_time             = parameters.time_stepping.end_time;
