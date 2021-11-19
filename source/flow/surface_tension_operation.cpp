@@ -34,13 +34,9 @@ namespace MeltPoolDG::Flow
             true);
       }
 
-    if (data.delta_function_type == DiracDeltaFunctionApproximationType::phase_weighted_delta)
-      delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
-        data.delta_approximation_phase_weighted);
-    else if (data.delta_function_type ==
-             DiracDeltaFunctionApproximationType::quad_phase_weighted_delta)
-      delta_phase_weighted = std::make_unique<DeltaApproximationQuadPhaseWeighted<double>>(
-        data.delta_approximation_phase_weighted);
+    delta_phase_weighted =
+      create_phase_weighted_delta_approximation(data.delta_function_type,
+                                                data.delta_approximation_phase_weighted);
 
     //@todo add assert for parameters
   }

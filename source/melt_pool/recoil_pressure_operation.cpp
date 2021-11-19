@@ -32,14 +32,9 @@ namespace MeltPoolDG::MeltPool
             true /*do_matrix_free*/);
       }
 
-    if (recoil_pressure_data.delta_function_type ==
-        DiracDeltaFunctionApproximationType::phase_weighted_delta)
-      delta_phase_weighted = std::make_unique<DeltaApproximationPhaseWeighted<double>>(
-        recoil_pressure_data.delta_approximation_phase_weighted);
-    else if (recoil_pressure_data.delta_function_type ==
-             DiracDeltaFunctionApproximationType::quad_phase_weighted_delta)
-      delta_phase_weighted = std::make_unique<DeltaApproximationQuadPhaseWeighted<double>>(
-        recoil_pressure_data.delta_approximation_phase_weighted);
+    delta_phase_weighted = create_phase_weighted_delta_approximation(
+      recoil_pressure_data.delta_function_type,
+      recoil_pressure_data.delta_approximation_phase_weighted);
   }
 
   template <int dim>

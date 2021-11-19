@@ -112,10 +112,10 @@ namespace MeltPoolDG
    *
    * δ_w(φ) = δ(φ) * W(φ).
    *
-   * The function is dependent only on the heaviside representation of the level set φ (=indicator)
-   * The symmetric delta function δ(φ) is defined as the norm of the indicator gradient ∇φ:
+   * with the heaviside representation of the level set φ (=indicator).
+   * The symmetric delta function δ(φ) is defined as
    *
-   * δ = ||∇φ||
+   * δ = ||∇φ||.
    *
    * The weight function W(φ) is defined as
    *
@@ -137,7 +137,8 @@ namespace MeltPoolDG
       , w_h(data.heavy_phase_weight)
       , correction_factor(3. / (w_g * w_g + w_g * w_h + w_h * w_h))
     {
-      AssertThrow(w_g * w_g + w_g * w_h + w_h * w_h != 0.0,
+      AssertThrow(std::abs(w_g * w_g + w_g * w_h + w_h * w_h) >
+                    std::numeric_limits<number>::epsilon(),
                   ExcMessage("When using a phase quadratic weighted Dirac delta function"
                              "approximation use weights that fulfill this condition! Abort..."));
     }
@@ -183,4 +184,23 @@ namespace MeltPoolDG
      */
     const number correction_factor;
   };
+
+  template <typename number>
+  std::unique_ptr<DeltaApproximationBase<number>>
+  create_phase_weighted_delta_approximation(const DiracDeltaFunctionApproximationType          type,
+                                            const DeltaApproximationPhaseWeightedData<number> &data)
+  {
+    switch (type)
+      {
+        case DiracDeltaFunctionApproximationType::norm_of_indicator_gradient:
+          return nullptr;
+        case DiracDeltaFunctionApproximationType::phase_weighted_delta:
+          return std::make_unique<DeltaApproximationPhaseWeighted<number>>(data);
+        case DiracDeltaFunctionApproximationType::quad_phase_weighted_delta:
+          return std::make_unique<DeltaApproximationQuadPhaseWeighted<number>>(data);
+        default:
+          Assert(false, ExcNotImplemented());
+      }
+    return nullptr;
+  }
 } // namespace MeltPoolDG
