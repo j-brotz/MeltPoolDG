@@ -64,7 +64,7 @@ jobs:
       - name: Test
         run: |
           cd build
-          ctest -V -R 'unit_tests/|tests/'
+          ctest --output-on-failure -R 'unit_tests/|tests/'
           
       - name: Failed test log
         if: ${{ failure() }}
