@@ -116,6 +116,6 @@ namespace MeltPoolDG::Heat
      */
     const double surf_peak_power_density_factor;
 
-    std::unique_ptr<const DeltaApproximationPhaseWeighted<double>> delta_phase_weighted;
+    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
   };
 } // namespace MeltPoolDG::Heat

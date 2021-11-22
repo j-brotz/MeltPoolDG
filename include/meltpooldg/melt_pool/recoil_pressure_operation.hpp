@@ -41,7 +41,7 @@ namespace MeltPoolDG::MeltPool
     const bool         do_level_set_pressure_gradient_interpolation;
     FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
 
-    std::unique_ptr<const DeltaApproximationPhaseWeighted<double>> delta_phase_weighted;
+    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
 
   public:
     RecoilPressureOperation(const ScratchData<dim> &  scratch_data_in,

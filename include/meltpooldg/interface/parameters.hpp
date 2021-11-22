@@ -46,9 +46,15 @@ namespace MeltPoolDG
     char,
     norm_of_indicator_gradient, // use δ = ||∇ϕ|| as approximation for the Dirac delta function
     // with the heaviside representation of the level set ϕ
-    phase_weighted_delta // approximate the Dirac delta function with
-                         // δ_w = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ ) 2 / ( w_g + w_h )
-                         // with the weight the gas phase w_g and the weight of the heavy phase w_h
+    phase_weighted_delta, // approximate the Dirac delta function with
+                          // δ = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ ) 2 / ( w_g + w_h )
+                          // with the weight of the gas phase w_g and the weight of the heavy phase
+                          // w_h
+    // with the heaviside representation of the level set ϕ
+    quad_phase_weighted_delta // approximate the Dirac delta function with
+                              // δ = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ )² 3 / ( w_g² + w_g w_h + w_h² )
+                              // with the weight of the gas phase w_g and the weight of the heavy
+                              // phase w_h
   )
   BETTER_ENUM(
     LaserHeatSourceModel,
