@@ -71,6 +71,10 @@ namespace MeltPoolDG::Heat
       }
 
     this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
+
+    delta_phase_weighted =
+      create_phase_weighted_delta_approximation(data.delta_function_type,
+                                                data.delta_approximation_phase_weighted);
   }
 
   template <int dim, typename number>
@@ -546,12 +550,9 @@ namespace MeltPoolDG::Heat
 
                     UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
                       ls_vals, ls_interpolated_vals, ls_to_temp_grad_interpolation_matrix);
-
-                    ls_interpolated_vals.evaluate(EvaluationFlags::values |
-                                                  EvaluationFlags::gradients);
                   }
-                else
-                  ls_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+                ls_vals_used.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
               }
             else
               ls_vals.evaluate(EvaluationFlags::values);
@@ -649,9 +650,14 @@ namespace MeltPoolDG::Heat
                   material.second.capacity *
                   (temp_vals.get_value(q_index) - material.specific_enthalpy_reference_temperature);
 
+                VectorizedArray<double> weight(1.0);
+
+                if (delta_phase_weighted)
+                  weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
+
                 const auto temp = evapor_vals.get_value(q_index) *
                                   (latent_heat_of_evaporation + specific_enthalpy) *
-                                  ls_vals_used.get_gradient(q_index).norm();
+                                  ls_vals_used.get_gradient(q_index).norm() * weight;
 
                 q_vapor[cell][q_index] = -temp;
                 val += temp;

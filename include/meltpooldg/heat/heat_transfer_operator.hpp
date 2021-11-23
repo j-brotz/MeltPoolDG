@@ -9,6 +9,7 @@
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -141,6 +142,9 @@ namespace MeltPoolDG::Heat
      */
     mutable VectorType                                        evapor_heat_source;
     mutable std::vector<std::vector<VectorizedArray<double>>> q_vapor;
+
+    // phase weighted delta functin, only used for evaporative heat loss
+    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
 
     mutable std::vector<std::vector<VectorizedArray<double>>> conductivity_at_q;
     mutable VectorType                                        conductivity_vec;
