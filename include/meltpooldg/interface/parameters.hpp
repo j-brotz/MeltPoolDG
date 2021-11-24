@@ -51,10 +51,16 @@ namespace MeltPoolDG
                           // with the weight of the gas phase w_g and the weight of the heavy phase
                           // w_h
     // with the heaviside representation of the level set ϕ
-    quad_phase_weighted_delta // approximate the Dirac delta function with
-                              // δ = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ )² 3 / ( w_g² + w_g w_h + w_h² )
-                              // with the weight of the gas phase w_g and the weight of the heavy
-                              // phase w_h
+    quad_phase_weighted_delta, // approximate the Dirac delta function with
+                               // δ = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ )² 3 / ( w_g² + w_g w_h + w_h² )
+                               // with the weight of the gas phase w_g and the weight of the heavy
+                               // phase w_h
+    double_phase_weighted_delta // approximate the Dirac delta function with
+                                //      6 ||∇ϕ|| ( w_1g (1-ϕ) + w_1h ϕ )( w_2g (1-ϕ) + w_2h ϕ )
+                                // δ = ---------------------------------------------------------
+                                //         2 w_1g w_2g + w_1g w_2h + w_1h w_2g + 2 w_1h w_2h
+                                // with the weights of the gas phase w_1g and w_2g and the weights
+                                // of the heavy phase w_1h and w_2h
   )
   BETTER_ENUM(
     LaserHeatSourceModel,
@@ -68,8 +74,10 @@ namespace MeltPoolDG
   template <typename number = double>
   struct DeltaApproximationPhaseWeightedData
   {
-    number gas_phase_weight   = 1.0;
-    number heavy_phase_weight = 1.0;
+    number gas_phase_weight     = 1.0;
+    number heavy_phase_weight   = 1.0;
+    number gas_phase_weight_2   = 1.0;
+    number heavy_phase_weight_2 = 1.0;
   };
 
   template <typename number = double>

@@ -594,6 +594,16 @@ namespace MeltPoolDG
           laser.gauss.delta_approximation_phase_weighted.heavy_phase_weight,
           "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
           "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
+        prm.add_parameter(
+          "gas phase weight 2",
+          laser.gauss.delta_approximation_phase_weighted.gas_phase_weight_2,
+          "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
+          "this parameter controls the second weight of the gas phase (level set = -1).");
+        prm.add_parameter(
+          "heavy phase weight 2",
+          laser.gauss.delta_approximation_phase_weighted.heavy_phase_weight_2,
+          "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
+          "this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).");
       }
       prm.leave_subsection();
       /*
