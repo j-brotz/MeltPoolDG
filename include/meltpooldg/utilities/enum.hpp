@@ -1,3 +1,4 @@
+#pragma once
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/patterns.h>
 

@@ -33,7 +33,6 @@ namespace MeltPoolDG::MeltPool
       }
 
     delta_phase_weighted = create_phase_weighted_delta_approximation(
-      recoil_pressure_data.delta_function_type,
       recoil_pressure_data.delta_approximation_phase_weighted);
   }
 

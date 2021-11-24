@@ -73,8 +73,7 @@ namespace MeltPoolDG::Heat
     this->reset_indices(temp_dof_idx_in, temp_quad_idx_in);
 
     delta_phase_weighted =
-      create_phase_weighted_delta_approximation(data.delta_function_type,
-                                                data.delta_approximation_phase_weighted);
+      create_phase_weighted_delta_approximation(data.delta_approximation_phase_weighted);
   }
 
   template <int dim, typename number>

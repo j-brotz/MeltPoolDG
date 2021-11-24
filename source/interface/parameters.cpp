@@ -501,23 +501,8 @@ namespace MeltPoolDG
       prm.add_parameter("heat solidification",
                         heat.solidification,
                         "Set this parameter to true to consider solidification.");
-      prm.enter_subsection("dirac delta function approximation");
-      {
-        prm.add_parameter("type",
-                          heat.delta_function_type,
-                          "Choose how to smear the evaporative heat loss over the interface.");
-        prm.add_parameter(
-          "gas phase weight",
-          heat.delta_approximation_phase_weighted.gas_phase_weight,
-          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the gas phase (level set = -1).");
-        prm.add_parameter(
-          "heavy phase weight",
-          heat.delta_approximation_phase_weighted.heavy_phase_weight,
-          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
-      }
-      prm.leave_subsection();
+      add_parameter_delta_approximation_phase_weighted_data(
+        prm, heat.delta_approximation_phase_weighted);
     }
     prm.leave_subsection();
     /*
@@ -579,33 +564,8 @@ namespace MeltPoolDG
       prm.add_parameter("laser gauss absorptivity liquid",
                         laser.gauss.absorptivity_liquid,
                         "Laser energy absorptivity of the liquid part of the domain.");
-      prm.enter_subsection("dirac delta function approximation");
-      {
-        prm.add_parameter("type",
-                          laser.gauss.delta_function_type,
-                          "Choose how to smear the interface heat source over the interface.");
-        prm.add_parameter(
-          "gas phase weight",
-          laser.gauss.delta_approximation_phase_weighted.gas_phase_weight,
-          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the gas phase (level set = -1).");
-        prm.add_parameter(
-          "heavy phase weight",
-          laser.gauss.delta_approximation_phase_weighted.heavy_phase_weight,
-          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
-        prm.add_parameter(
-          "gas phase weight 2",
-          laser.gauss.delta_approximation_phase_weighted.gas_phase_weight_2,
-          "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
-          "this parameter controls the second weight of the gas phase (level set = -1).");
-        prm.add_parameter(
-          "heavy phase weight 2",
-          laser.gauss.delta_approximation_phase_weighted.heavy_phase_weight_2,
-          "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
-          "this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).");
-      }
-      prm.leave_subsection();
+      add_parameter_delta_approximation_phase_weighted_data(
+        prm, laser.gauss.delta_approximation_phase_weighted);
       /*
        *   Analytical temperature field
        */
@@ -639,23 +599,8 @@ namespace MeltPoolDG
       prm.add_parameter("recoil temperature constant",
                         recoil.temperature_constant,
                         "Temperature constant for the recoil pressure model.");
-      prm.enter_subsection("dirac delta function approximation");
-      {
-        prm.add_parameter("type",
-                          recoil.delta_function_type,
-                          "Choose how to smear the properties over the interface.");
-        prm.add_parameter(
-          "gas phase weight",
-          recoil.delta_approximation_phase_weighted.gas_phase_weight,
-          "If >>> recoil dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the gas phase (level set = -1).");
-        prm.add_parameter(
-          "heavy phase weight",
-          recoil.delta_approximation_phase_weighted.heavy_phase_weight,
-          "If >>> recoil dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
-      }
-      prm.leave_subsection();
+      add_parameter_delta_approximation_phase_weighted_data(
+        prm, recoil.delta_approximation_phase_weighted);
     }
     prm.leave_subsection();
     /*
@@ -714,23 +659,8 @@ namespace MeltPoolDG
         surface_tension.coefficient_residual_fraction,
         "Define the minimum fraction of the constant surface tension reference value "
         "that can be reached.");
-      prm.enter_subsection("dirac delta function approximation");
-      {
-        prm.add_parameter("type",
-                          surface_tension.delta_function_type,
-                          "Choose how to smear the properties over the interface.");
-        prm.add_parameter(
-          "gas phase weight",
-          surface_tension.delta_approximation_phase_weighted.gas_phase_weight,
-          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the gas phase (level set = -1).");
-        prm.add_parameter(
-          "heavy phase weight",
-          surface_tension.delta_approximation_phase_weighted.heavy_phase_weight,
-          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
-      }
-      prm.leave_subsection();
+      add_parameter_delta_approximation_phase_weighted_data(
+        prm, surface_tension.delta_approximation_phase_weighted);
     }
     prm.leave_subsection();
     /*

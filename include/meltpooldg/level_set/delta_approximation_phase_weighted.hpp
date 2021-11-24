@@ -1,7 +1,7 @@
 #pragma once
 #include <deal.II/base/vectorization.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
@@ -274,10 +274,9 @@ namespace MeltPoolDG
 
   template <typename number>
   std::unique_ptr<DeltaApproximationBase<number>>
-  create_phase_weighted_delta_approximation(const DiracDeltaFunctionApproximationType          type,
-                                            const DeltaApproximationPhaseWeightedData<number> &data)
+  create_phase_weighted_delta_approximation(const DeltaApproximationPhaseWeightedData<number> &data)
   {
-    switch (type)
+    switch (data.type)
       {
         case DiracDeltaFunctionApproximationType::norm_of_indicator_gradient:
           return nullptr;
