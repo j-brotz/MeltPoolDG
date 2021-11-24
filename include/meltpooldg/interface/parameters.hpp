@@ -66,6 +66,13 @@ namespace MeltPoolDG
   )
 
   template <typename number = double>
+  struct DeltaApproximationPhaseWeightedData
+  {
+    number gas_phase_weight   = 1.0;
+    number heavy_phase_weight = 1.0;
+  };
+
+  template <typename number = double>
   struct SolverData
   {
     bool         do_matrix_free      = true;
@@ -179,22 +186,18 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
-    number                      emissivity             = 0.0;
-    number                      convection_coefficient = 0.0;
-    number                      temperature_infinity   = 0.0;
-    bool                        do_matrix_free         = true;
-    number                      velocity               = 0.0;
-    bool                        two_phase              = false;
-    bool                        solidification         = false;
-    NonlinearSolverData<number> nlsolve;
-    SolverData<number>          solver;
-  };
-
-  template <typename number = double>
-  struct DeltaApproximationPhaseWeightedData
-  {
-    number gas_phase_weight   = 1.0;
-    number heavy_phase_weight = 1.0;
+    number                              emissivity             = 0.0;
+    number                              convection_coefficient = 0.0;
+    number                              temperature_infinity   = 0.0;
+    bool                                do_matrix_free         = true;
+    number                              velocity               = 0.0;
+    bool                                two_phase              = false;
+    bool                                solidification         = false;
+    NonlinearSolverData<number>         nlsolve;
+    SolverData<number>                  solver;
+    DiracDeltaFunctionApproximationType delta_function_type =
+      DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
+    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 
   template <typename number = double>

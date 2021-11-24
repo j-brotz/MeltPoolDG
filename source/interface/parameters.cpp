@@ -501,6 +501,23 @@ namespace MeltPoolDG
       prm.add_parameter("heat solidification",
                         heat.solidification,
                         "Set this parameter to true to consider solidification.");
+      prm.enter_subsection("dirac delta function approximation");
+      {
+        prm.add_parameter("type",
+                          heat.delta_function_type,
+                          "Choose how to smear the evaporative heat loss over the interface.");
+        prm.add_parameter(
+          "gas phase weight",
+          heat.delta_approximation_phase_weighted.gas_phase_weight,
+          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
+          "this parameter controls the weight of the gas phase (level set = -1).");
+        prm.add_parameter(
+          "heavy phase weight",
+          heat.delta_approximation_phase_weighted.heavy_phase_weight,
+          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
+          "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
+      }
+      prm.leave_subsection();
     }
     prm.leave_subsection();
     /*
