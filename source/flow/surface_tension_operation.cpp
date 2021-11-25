@@ -43,10 +43,10 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  SurfaceTensionOperation<dim>::reinit(const unsigned int temp_dof_idx_in,
-                                       const unsigned int normal_dof_idx_in,
-                                       VectorType *       temperature_in,
-                                       BlockVectorType *  solution_normal_vector_in)
+  SurfaceTensionOperation<dim>::reinit(const unsigned int     temp_dof_idx_in,
+                                       const unsigned int     normal_dof_idx_in,
+                                       const VectorType *     temperature_in,
+                                       const BlockVectorType *solution_normal_vector_in)
   {
     temp_dof_idx           = temp_dof_idx_in;
     normal_dof_idx         = normal_dof_idx_in;
@@ -61,12 +61,12 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  SurfaceTensionOperation<dim>::reinit(const unsigned int temp_dof_idx_in,
-                                       const unsigned int normal_dof_idx_in,
-                                       const unsigned int solid_dof_idx_in,
-                                       VectorType *       temperature_in,
-                                       BlockVectorType *  solution_normal_vector_in,
-                                       const VectorType * solid_in)
+  SurfaceTensionOperation<dim>::reinit(const unsigned int     temp_dof_idx_in,
+                                       const unsigned int     normal_dof_idx_in,
+                                       const unsigned int     solid_dof_idx_in,
+                                       const VectorType *     temperature_in,
+                                       const BlockVectorType *solution_normal_vector_in,
+                                       const VectorType *     solid_in)
   {
     solid_dof_idx = solid_dof_idx_in;
     solid         = solid_in;
@@ -179,11 +179,9 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
               {
-                VectorizedArray<double> solid_fraction = 0.0;
-                if (solid)
-                  solid_fraction = solid_val->get_value(q_index);
-                const auto mask =
-                  compare_and_apply_mask<SIMDComparison::equal>(solid_fraction, 0.0, 1.0, 0.0);
+                const auto mask = solid ? compare_and_apply_mask<SIMDComparison::equal>(
+                                            solid_val->get_value(q_index), 0.0, 1.0, 0.0) :
+                                          VectorizedArray<double>(1.0);
 
                 VectorizedArray<double> weight(1.0);
                 if (delta_phase_weighted)
