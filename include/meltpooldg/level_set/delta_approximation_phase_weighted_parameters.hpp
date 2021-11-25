@@ -36,38 +36,35 @@ namespace MeltPoolDG
     number heavy_phase_weight   = 1.0;
     number gas_phase_weight_2   = 1.0;
     number heavy_phase_weight_2 = 1.0;
-  };
 
-  template <typename number>
-  void
-  add_parameter_delta_approximation_phase_weighted_data(
-    ParameterHandler &                           prm,
-    DeltaApproximationPhaseWeightedData<number> &data)
-  {
-    prm.enter_subsection("dirac delta function approximation");
+    void
+    add_parameters(ParameterHandler &prm)
     {
-      prm.add_parameter("type", data.type, "Choose how to smear a parameter over the interface.");
-      prm.add_parameter(
-        "gas phase weight",
-        data.gas_phase_weight,
-        "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-        "this parameter controls the weight of the gas phase (level set = -1).");
-      prm.add_parameter(
-        "heavy phase weight",
-        data.heavy_phase_weight,
-        "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-        "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
-      prm.add_parameter(
-        "gas phase weight 2",
-        data.gas_phase_weight_2,
-        "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
-        "this parameter controls the second weight of the gas phase (level set = -1).");
-      prm.add_parameter(
-        "heavy phase weight 2",
-        data.heavy_phase_weight_2,
-        "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
-        "this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).");
+      prm.enter_subsection("dirac delta function approximation");
+      {
+        prm.add_parameter("type", type, "Choose how to smear a parameter over the interface.");
+        prm.add_parameter(
+          "gas phase weight",
+          gas_phase_weight,
+          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
+          "this parameter controls the weight of the gas phase (level set = -1).");
+        prm.add_parameter(
+          "heavy phase weight",
+          heavy_phase_weight,
+          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
+          "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
+        prm.add_parameter(
+          "gas phase weight 2",
+          gas_phase_weight_2,
+          "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
+          "this parameter controls the second weight of the gas phase (level set = -1).");
+        prm.add_parameter(
+          "heavy phase weight 2",
+          heavy_phase_weight_2,
+          "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
+          "this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).");
+      }
+      prm.leave_subsection();
     }
-    prm.leave_subsection();
-  }
+  };
 } // namespace MeltPoolDG

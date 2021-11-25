@@ -501,8 +501,7 @@ namespace MeltPoolDG
       prm.add_parameter("heat solidification",
                         heat.solidification,
                         "Set this parameter to true to consider solidification.");
-      add_parameter_delta_approximation_phase_weighted_data(
-        prm, heat.delta_approximation_phase_weighted);
+      heat.delta_approximation_phase_weighted.add_parameters(prm);
     }
     prm.leave_subsection();
     /*
@@ -564,8 +563,7 @@ namespace MeltPoolDG
       prm.add_parameter("laser gauss absorptivity liquid",
                         laser.gauss.absorptivity_liquid,
                         "Laser energy absorptivity of the liquid part of the domain.");
-      add_parameter_delta_approximation_phase_weighted_data(
-        prm, laser.gauss.delta_approximation_phase_weighted);
+      laser.gauss.delta_approximation_phase_weighted.add_parameters(prm);
       /*
        *   Analytical temperature field
        */
@@ -599,8 +597,7 @@ namespace MeltPoolDG
       prm.add_parameter("recoil temperature constant",
                         recoil.temperature_constant,
                         "Temperature constant for the recoil pressure model.");
-      add_parameter_delta_approximation_phase_weighted_data(
-        prm, recoil.delta_approximation_phase_weighted);
+      recoil.delta_approximation_phase_weighted.add_parameters(prm);
     }
     prm.leave_subsection();
     /*
@@ -659,8 +656,7 @@ namespace MeltPoolDG
         surface_tension.coefficient_residual_fraction,
         "Define the minimum fraction of the constant surface tension reference value "
         "that can be reached.");
-      add_parameter_delta_approximation_phase_weighted_data(
-        prm, surface_tension.delta_approximation_phase_weighted);
+      surface_tension.delta_approximation_phase_weighted.add_parameters(prm);
     }
     prm.leave_subsection();
     /*
