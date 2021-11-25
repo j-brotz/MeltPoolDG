@@ -285,7 +285,7 @@ namespace MeltPoolDG
         case DiracDeltaFunctionApproximationType::quad_phase_weighted_delta:
           return std::make_unique<DeltaApproximationQuadPhaseWeighted<number>>(data);
         case DiracDeltaFunctionApproximationType::double_phase_weighted_delta:
-          return std::make_unique<DeltaApproximationQuadPhaseWeighted<number>>(data);
+          return std::make_unique<DeltaApproximationDoublePhaseWeighted<number>>(data);
         default:
           Assert(false, ExcNotImplemented());
       }
