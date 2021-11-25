@@ -3,6 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
@@ -42,21 +43,6 @@ namespace MeltPoolDG
   )
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
   BETTER_ENUM(
-    DiracDeltaFunctionApproximationType,
-    char,
-    norm_of_indicator_gradient, // use δ = ||∇ϕ|| as approximation for the Dirac delta function
-    // with the heaviside representation of the level set ϕ
-    phase_weighted_delta, // approximate the Dirac delta function with
-                          // δ = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ ) 2 / ( w_g + w_h )
-                          // with the weight of the gas phase w_g and the weight of the heavy phase
-                          // w_h
-    // with the heaviside representation of the level set ϕ
-    quad_phase_weighted_delta // approximate the Dirac delta function with
-                              // δ = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ )² 3 / ( w_g² + w_g w_h + w_h² )
-                              // with the weight of the gas phase w_g and the weight of the heavy
-                              // phase w_h
-  )
-  BETTER_ENUM(
     LaserHeatSourceModel,
     char,
     not_initialized, // must be specified by user
@@ -64,13 +50,6 @@ namespace MeltPoolDG
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
     Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
   )
-
-  template <typename number = double>
-  struct DeltaApproximationPhaseWeightedData
-  {
-    number gas_phase_weight   = 1.0;
-    number heavy_phase_weight = 1.0;
-  };
 
   template <typename number = double>
   struct SolverData
@@ -186,17 +165,15 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
-    number                              emissivity             = 0.0;
-    number                              convection_coefficient = 0.0;
-    number                              temperature_infinity   = 0.0;
-    bool                                do_matrix_free         = true;
-    number                              velocity               = 0.0;
-    bool                                two_phase              = false;
-    bool                                solidification         = false;
-    NonlinearSolverData<number>         nlsolve;
-    SolverData<number>                  solver;
-    DiracDeltaFunctionApproximationType delta_function_type =
-      DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
+    number                                      emissivity             = 0.0;
+    number                                      convection_coefficient = 0.0;
+    number                                      temperature_infinity   = 0.0;
+    bool                                        do_matrix_free         = true;
+    number                                      velocity               = 0.0;
+    bool                                        two_phase              = false;
+    bool                                        solidification         = false;
+    NonlinearSolverData<number>                 nlsolve;
+    SolverData<number>                          solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 
@@ -214,11 +191,9 @@ namespace MeltPoolDG
     LaserHeatSourceModel heat_source_model = LaserHeatSourceModel::not_initialized;
     struct GaussData
     {
-      number                              laser_beam_radius   = 0.0;
-      number                              absorptivity_liquid = 0.0;
-      number                              absorptivity_gas    = 0.0;
-      DiracDeltaFunctionApproximationType delta_function_type =
-        DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
+      number                                      laser_beam_radius   = 0.0;
+      number                                      absorptivity_liquid = 0.0;
+      number                                      absorptivity_gas    = 0.0;
       DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     } gauss;
     struct GusarovData
@@ -241,10 +216,8 @@ namespace MeltPoolDG
   template <typename number = double>
   struct RecoilPressureData
   {
-    number                              pressure_constant    = 0.0;
-    number                              temperature_constant = 0.0;
-    DiracDeltaFunctionApproximationType delta_function_type =
-      DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
+    number                                      pressure_constant    = 0.0;
+    number                                      temperature_constant = 0.0;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 
@@ -270,12 +243,10 @@ namespace MeltPoolDG
   template <typename number = double>
   struct SurfaceTensionData
   {
-    number                              surface_tension_coefficient                       = 0.0;
-    number                              temperature_dependent_surface_tension_coefficient = 0.0;
-    number                              reference_temperature         = numbers::invalid_double;
-    number                              coefficient_residual_fraction = 0.0;
-    DiracDeltaFunctionApproximationType delta_function_type =
-      DiracDeltaFunctionApproximationType::norm_of_indicator_gradient;
+    number surface_tension_coefficient                       = 0.0;
+    number temperature_dependent_surface_tension_coefficient = 0.0;
+    number reference_temperature                             = numbers::invalid_double;
+    number coefficient_residual_fraction                     = 0.0;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 

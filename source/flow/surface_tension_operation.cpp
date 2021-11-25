@@ -35,8 +35,7 @@ namespace MeltPoolDG::Flow
       }
 
     delta_phase_weighted =
-      create_phase_weighted_delta_approximation(data.delta_function_type,
-                                                data.delta_approximation_phase_weighted);
+      create_phase_weighted_delta_approximation(data.delta_approximation_phase_weighted);
 
     //@todo add assert for parameters
   }

@@ -18,8 +18,7 @@ namespace MeltPoolDG::Heat
                 ExcMessage("The laser beam radius must be greater than zero! Abort.."));
 
     delta_phase_weighted =
-      create_phase_weighted_delta_approximation(data.delta_function_type,
-                                                data.delta_approximation_phase_weighted);
+      create_phase_weighted_delta_approximation(data.delta_approximation_phase_weighted);
   }
 
   template <int dim>
