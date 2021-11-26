@@ -42,10 +42,10 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  SurfaceTensionOperation<dim>::reinit(const unsigned int temp_dof_idx_in,
-                                       const unsigned int normal_dof_idx_in,
-                                       VectorType *       temperature_in,
-                                       BlockVectorType *  solution_normal_vector_in)
+  SurfaceTensionOperation<dim>::reinit(const unsigned int     temp_dof_idx_in,
+                                       const unsigned int     normal_dof_idx_in,
+                                       const VectorType *     temperature_in,
+                                       const BlockVectorType *solution_normal_vector_in)
   {
     temp_dof_idx           = temp_dof_idx_in;
     normal_dof_idx         = normal_dof_idx_in;
@@ -56,6 +56,20 @@ namespace MeltPoolDG::Flow
       data.reference_temperature > numbers::invalid_double,
       ExcMessage(
         "For temperature-dependent surface tension, a reference temperature needs to be defined. Abort..."));
+  }
+
+  template <int dim>
+  void
+  SurfaceTensionOperation<dim>::reinit(const unsigned int     temp_dof_idx_in,
+                                       const unsigned int     normal_dof_idx_in,
+                                       const unsigned int     solid_dof_idx_in,
+                                       const VectorType *     temperature_in,
+                                       const BlockVectorType *solution_normal_vector_in,
+                                       const VectorType *     solid_in)
+  {
+    solid_dof_idx = solid_dof_idx_in;
+    solid         = solid_in;
+    reinit(temp_dof_idx_in, normal_dof_idx_in, temperature_in, solution_normal_vector_in);
   }
 
   template <int dim>
@@ -88,6 +102,7 @@ namespace MeltPoolDG::Flow
 
         std::unique_ptr<FECellIntegrator<dim, dim, double>> normal_vec;
         std::unique_ptr<FECellIntegrator<dim, 1, double>>   temperature_val;
+        std::unique_ptr<FECellIntegrator<dim, 1, double>>   solid_val;
 
         auto &used_level_set = do_level_set_pressure_gradient_interpolation ?
                                  interpolated_level_set_to_pressure_space :
@@ -102,6 +117,10 @@ namespace MeltPoolDG::Flow
                                                                                  temp_dof_idx,
                                                                                  flow_vel_quad_idx);
           }
+        if (solid)
+          solid_val = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
+                                                                         solid_dof_idx,
+                                                                         flow_vel_quad_idx);
 
         FECellIntegrator<dim, dim, double> surface_tension(matrix_free,
                                                            flow_vel_dof_idx,
@@ -150,9 +169,19 @@ namespace MeltPoolDG::Flow
                 temperature_val->read_dof_values_plain(*temperature);
                 temperature_val->evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
               }
+            if (solid)
+              {
+                solid_val->reinit(cell);
+                solid_val->read_dof_values_plain(*solid);
+                solid_val->evaluate(EvaluationFlags::values);
+              }
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
               {
+                const auto mask = solid ? compare_and_apply_mask<SIMDComparison::equal>(
+                                            solid_val->get_value(q_index), 0.0, 1.0, 0.0) :
+                                          VectorizedArray<double>(1.0);
+
                 VectorizedArray<double> weight(1.0);
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
@@ -185,12 +214,13 @@ namespace MeltPoolDG::Flow
                                                                               alpha_residual,
                                                                               alpha_residual,
                                                                               alpha);
-                    surface_tension.submit_value(alpha * n * curvature.get_value(q_index) * delta +
+                    surface_tension.submit_value(mask * alpha * n * curvature.get_value(q_index) *
+                                                     delta +
                                                    temp_surf_ten * delta,
                                                  q_index);
                   }
                 else
-                  surface_tension.submit_value(alpha * used_level_set.get_gradient(q_index) *
+                  surface_tension.submit_value(mask * alpha * used_level_set.get_gradient(q_index) *
                                                  weight * curvature.get_value(q_index),
                                                q_index);
               }

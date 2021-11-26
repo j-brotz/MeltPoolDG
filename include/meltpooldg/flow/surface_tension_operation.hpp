@@ -62,10 +62,12 @@ namespace MeltPoolDG::Flow
     const unsigned int flow_pressure_hanging_nodes_dof_idx;
     const unsigned int flow_vel_quad_idx;
 
-    VectorType *     temperature            = nullptr;
-    BlockVectorType *solution_normal_vector = nullptr;
-    unsigned int     temp_dof_idx;
-    unsigned int     normal_dof_idx;
+    const VectorType *     temperature            = nullptr;
+    const BlockVectorType *solution_normal_vector = nullptr;
+    const VectorType *     solid                  = nullptr;
+    unsigned int           temp_dof_idx;
+    unsigned int           normal_dof_idx;
+    unsigned int           solid_dof_idx;
 
     const bool         do_level_set_pressure_gradient_interpolation;
     FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
@@ -88,10 +90,18 @@ namespace MeltPoolDG::Flow
      *  forces, i.e. Marangoni convection.
      */
     void
-    reinit(const unsigned int temp_dof_idx,
-           const unsigned int normal_dof_idx,
-           VectorType *       temperature,
-           BlockVectorType *  solution_normal_vector);
+    reinit(const unsigned int     temp_dof_idx,
+           const unsigned int     normal_dof_idx,
+           const VectorType *     temperature,
+           const BlockVectorType *solution_normal_vector);
+
+    void
+    reinit(const unsigned int     temp_dof_idx,
+           const unsigned int     normal_dof_idx,
+           const unsigned int     solid_dof_idx,
+           const VectorType *     temperature,
+           const BlockVectorType *solution_normal_vector,
+           const VectorType *     solid);
 
     /*
      *  Compute surface tension

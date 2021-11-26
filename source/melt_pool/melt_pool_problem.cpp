@@ -391,10 +391,20 @@ namespace MeltPoolDG::Flow
     if (heat_operation &&
         base_in->parameters.surface_tension.temperature_dependent_surface_tension_coefficient !=
           0.0)
-      surface_tension_operation->reinit(temp_dof_idx,
-                                        normal_dof_idx,
-                                        &heat_operation->get_temperature(),
-                                        &level_set_operation.get_normal_vector());
+      {
+        if (melt_pool_operation)
+          surface_tension_operation->reinit(temp_dof_idx,
+                                            normal_dof_idx,
+                                            temp_hanging_nodes_dof_idx,
+                                            &heat_operation->get_temperature(),
+                                            &level_set_operation.get_normal_vector(),
+                                            &melt_pool_operation->get_solid());
+        else
+          surface_tension_operation->reinit(temp_dof_idx,
+                                            normal_dof_idx,
+                                            &heat_operation->get_temperature(),
+                                            &level_set_operation.get_normal_vector());
+      }
 
     /*
      *    initialize the evaporation class
