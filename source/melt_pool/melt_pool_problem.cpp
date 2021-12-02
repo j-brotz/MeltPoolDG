@@ -437,37 +437,39 @@ namespace MeltPoolDG::Flow
      *    initialize the melt pool operation class
      */
     if (problem_specific_parameters.do_melt_pool)
-      melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
-        scratch_data,
-        base_in->parameters,
-        problem_specific_parameters.do_recoil_pressure,
-        ls_hanging_nodes_dof_idx,
-        &heat_operation->get_temperature(),
-        reinit_dof_idx,
-        reinit_no_solid_dof_idx,
-        flow_operation->get_dof_handler_idx_velocity(),
-        flow_vel_no_solid_dof_idx,
-        flow_operation->get_quad_idx_velocity(),
-        flow_operation->get_dof_handler_idx_pressure(),
-        temp_dof_idx,
-        temp_hanging_nodes_dof_idx,
-        base_in->parameters.time_stepping.start_time);
-    /*
-     * Register solid fraction in surface tension
-     */
-    if (base_in->parameters.surface_tension.zero_surface_tension_in_solid)
-      surface_tension_operation->register_solid_fraction(temp_hanging_nodes_dof_idx,
-                                                         &melt_pool_operation->get_solid());
-    /*
-     *    initialize the darcy damping operation class
-     */
-    if (melt_pool_operation && base_in->parameters.darcy.mushy_zone_morphology > 0.0)
-      darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim>>(
-        base_in->parameters.darcy,
-        *scratch_data,
-        flow_operation->get_dof_handler_idx_velocity(),
-        flow_operation->get_quad_idx_velocity(),
-        temp_dof_idx);
+      {
+        melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
+          scratch_data,
+          base_in->parameters,
+          problem_specific_parameters.do_recoil_pressure,
+          ls_hanging_nodes_dof_idx,
+          &heat_operation->get_temperature(),
+          reinit_dof_idx,
+          reinit_no_solid_dof_idx,
+          flow_operation->get_dof_handler_idx_velocity(),
+          flow_vel_no_solid_dof_idx,
+          flow_operation->get_quad_idx_velocity(),
+          flow_operation->get_dof_handler_idx_pressure(),
+          temp_dof_idx,
+          temp_hanging_nodes_dof_idx,
+          base_in->parameters.time_stepping.start_time);
+        /*
+         * Register solid fraction in surface tension
+         */
+        if (base_in->parameters.surface_tension.zero_surface_tension_in_solid)
+          surface_tension_operation->register_solid_fraction(temp_hanging_nodes_dof_idx,
+                                                             &melt_pool_operation->get_solid());
+        /*
+         *    initialize the darcy damping operation class
+         */
+        if (base_in->parameters.darcy.mushy_zone_morphology > 0.0)
+          darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim>>(
+            base_in->parameters.darcy,
+            *scratch_data,
+            flow_operation->get_dof_handler_idx_velocity(),
+            flow_operation->get_quad_idx_velocity(),
+            temp_dof_idx);
+      }
 
     if (base_in->parameters.heat.solidification)
       AssertThrow(
