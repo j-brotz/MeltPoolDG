@@ -455,7 +455,7 @@ namespace MeltPoolDG::Flow
     /*
      * Register solid fraction in surface tension
      */
-    if (melt_pool_operation)
+    if (base_in->parameters.surface_tension.zero_surface_tension_in_solid && melt_pool_operation)
       surface_tension_operation->register_solid_fraction(temp_hanging_nodes_dof_idx,
                                                          &melt_pool_operation->get_solid());
     /*

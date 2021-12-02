@@ -248,6 +248,7 @@ namespace MeltPoolDG
     number reference_temperature                             = numbers::invalid_double;
     number coefficient_residual_fraction                     = 0.0;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+    bool                                        zero_surface_tension_in_solid = false;
   };
 
   template <typename number = double>
