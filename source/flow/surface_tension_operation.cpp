@@ -85,9 +85,7 @@ namespace MeltPoolDG::Flow
         temperature->update_ghost_values();
       }
     if (solid)
-      {
-        solid->update_ghost_values();
-      }
+      solid->update_ghost_values();
 
     const double tolerance_normal_vector =
       UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
@@ -244,9 +242,7 @@ namespace MeltPoolDG::Flow
         solution_normal_vector->zero_out_ghost_values();
       }
     if (solid)
-      {
-        solid->zero_out_ghost_values();
-      }
+      solid->zero_out_ghost_values();
   }
 
   template class SurfaceTensionOperation<1>;
