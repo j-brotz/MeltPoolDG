@@ -40,37 +40,38 @@ namespace MeltPoolDG::Flow
     //@todo add assert for parameters
   }
 
+
+
   template <int dim>
   void
-  SurfaceTensionOperation<dim>::reinit(const unsigned int     temp_dof_idx_in,
-                                       const unsigned int     normal_dof_idx_in,
-                                       const VectorType *     temperature_in,
-                                       const BlockVectorType *solution_normal_vector_in)
+  SurfaceTensionOperation<dim>::register_temperature_and_normal_vector(
+    const unsigned int     temp_dof_idx_in,
+    const unsigned int     normal_dof_idx_in,
+    const VectorType *     temperature_in,
+    const BlockVectorType *solution_normal_vector_in)
   {
     temp_dof_idx           = temp_dof_idx_in;
     normal_dof_idx         = normal_dof_idx_in;
     temperature            = temperature_in;
     solution_normal_vector = solution_normal_vector_in;
-
     AssertThrow(
       data.reference_temperature > numbers::invalid_double,
       ExcMessage(
         "For temperature-dependent surface tension, a reference temperature needs to be defined. Abort..."));
   }
 
+
+
   template <int dim>
   void
-  SurfaceTensionOperation<dim>::reinit(const unsigned int     temp_dof_idx_in,
-                                       const unsigned int     normal_dof_idx_in,
-                                       const unsigned int     solid_dof_idx_in,
-                                       const VectorType *     temperature_in,
-                                       const BlockVectorType *solution_normal_vector_in,
-                                       const VectorType *     solid_in)
+  SurfaceTensionOperation<dim>::register_solid_fraction(const unsigned int solid_dof_idx_in,
+                                                        const VectorType * solid_in)
   {
     solid_dof_idx = solid_dof_idx_in;
     solid         = solid_in;
-    reinit(temp_dof_idx_in, normal_dof_idx_in, temperature_in, solution_normal_vector_in);
   }
+
+
 
   template <int dim>
   void
@@ -82,6 +83,10 @@ namespace MeltPoolDG::Flow
       {
         solution_normal_vector->update_ghost_values();
         temperature->update_ghost_values();
+      }
+    if (solid)
+      {
+        solid->update_ghost_values();
       }
 
     const double tolerance_normal_vector =
@@ -237,6 +242,10 @@ namespace MeltPoolDG::Flow
       {
         temperature->zero_out_ghost_values();
         solution_normal_vector->zero_out_ghost_values();
+      }
+    if (solid)
+      {
+        solid->zero_out_ghost_values();
       }
   }
 

@@ -86,22 +86,20 @@ namespace MeltPoolDG::Flow
                             const unsigned int                flow_quad_idx);
 
     /**
-     *  This function introduces the basic framework for temperature-dependent surface tension
-     *  forces, i.e. Marangoni convection.
+     * Registers the temperature and normal vector, which are required for temperature-dependent
+     * surface tension forces, i.e. Marangoni convection.
      */
     void
-    reinit(const unsigned int     temp_dof_idx,
-           const unsigned int     normal_dof_idx,
-           const VectorType *     temperature,
-           const BlockVectorType *solution_normal_vector);
-
+    register_temperature_and_normal_vector(const unsigned int     temp_dof_idx,
+                                           const unsigned int     normal_dof_idx,
+                                           const VectorType *     temperature,
+                                           const BlockVectorType *solution_normal_vector);
+    /**
+     * Registers the solid fraction, which is required if surface tension should be zeroed out in
+     * the solid domain.
+     */
     void
-    reinit(const unsigned int     temp_dof_idx,
-           const unsigned int     normal_dof_idx,
-           const unsigned int     solid_dof_idx,
-           const VectorType *     temperature,
-           const BlockVectorType *solution_normal_vector,
-           const VectorType *     solid);
+    register_solid_fraction(const unsigned int solid_dof_idx, const VectorType *solid);
 
     /*
      *  Compute surface tension

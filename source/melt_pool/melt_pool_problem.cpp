@@ -387,24 +387,17 @@ namespace MeltPoolDG::Flow
       vel_dof_idx,
       flow_operation->get_dof_handler_idx_pressure(),
       flow_operation->get_quad_idx_velocity());
-
+    /*
+     * Register temperature and normal vector in case of temperature dependent surface tension
+     */
     if (heat_operation &&
         base_in->parameters.surface_tension.temperature_dependent_surface_tension_coefficient !=
           0.0)
-      {
-        if (melt_pool_operation)
-          surface_tension_operation->reinit(temp_dof_idx,
-                                            normal_dof_idx,
-                                            temp_hanging_nodes_dof_idx,
-                                            &heat_operation->get_temperature(),
-                                            &level_set_operation.get_normal_vector(),
-                                            &melt_pool_operation->get_solid());
-        else
-          surface_tension_operation->reinit(temp_dof_idx,
-                                            normal_dof_idx,
-                                            &heat_operation->get_temperature(),
-                                            &level_set_operation.get_normal_vector());
-      }
+      surface_tension_operation->register_temperature_and_normal_vector(
+        temp_dof_idx,
+        normal_dof_idx,
+        &heat_operation->get_temperature(),
+        &level_set_operation.get_normal_vector());
 
     /*
      *    initialize the evaporation class
@@ -459,6 +452,12 @@ namespace MeltPoolDG::Flow
         temp_dof_idx,
         temp_hanging_nodes_dof_idx,
         base_in->parameters.time_stepping.start_time);
+    /*
+     * Register solid fraction in surface tension
+     */
+    if (melt_pool_operation)
+      surface_tension_operation->register_solid_fraction(temp_hanging_nodes_dof_idx,
+                                                         &melt_pool_operation->get_solid());
     /*
      *    initialize the darcy damping operation class
      */
