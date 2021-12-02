@@ -657,6 +657,10 @@ namespace MeltPoolDG
         "Define the minimum fraction of the constant surface tension reference value "
         "that can be reached.");
       surface_tension.delta_approximation_phase_weighted.add_parameters(prm);
+      prm.add_parameter(
+        "zero surface tension in solid",
+        surface_tension.zero_surface_tension_in_solid,
+        "Set this parameter to true to only apply surface tension if the solid fraction is zero.");
     }
     prm.leave_subsection();
     /*
