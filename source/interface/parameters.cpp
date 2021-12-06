@@ -740,68 +740,7 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("material");
     {
-      prm.add_parameter(
-        "material first capacity",
-        material.first.capacity,
-        "capacity of the primary material (in case of two-phases corresponding to level-set = -1)");
-      prm.add_parameter(
-        "material first conductivity",
-        material.first.conductivity,
-        "conductivity of the primary material (in case of two-phases corresponding to level-set = -1)");
-      prm.add_parameter(
-        "material first density",
-        material.first.density,
-        "density of the primary material (in case of two-phases corresponding to level-set = -1)");
-      prm.add_parameter(
-        "material first viscosity",
-        material.first.viscosity,
-        "viscosity of the primary material (in case of two-phases corresponding to level-set = -1)");
-      prm.add_parameter("material second capacity",
-                        material.second.capacity,
-                        "capacity of the secondary material (level-set = 1)");
-      prm.add_parameter("material second conductivity",
-                        material.second.conductivity,
-                        "conductivity of the secondary material (level-set = 1)");
-      prm.add_parameter("material second density",
-                        material.second.density,
-                        "density of the secondary material (level-set = 1)");
-      prm.add_parameter("material second viscosity",
-                        material.second.viscosity,
-                        "viscosity of the secondary material (level-set = 1)");
-      prm.add_parameter("material solid capacity",
-                        material.solid.capacity,
-                        "capacity of the solid phase");
-      prm.add_parameter("material solid conductivity",
-                        material.solid.conductivity,
-                        "conductivity of the solid phase");
-      prm.add_parameter("material solid density",
-                        material.solid.density,
-                        "density of the solid phase");
-      prm.add_parameter("material solid viscosity",
-                        material.solid.viscosity,
-                        "viscosity of the solid phase");
-      prm.add_parameter("material solidus temperature",
-                        material.solidus_temperature,
-                        "Solidus temperature");
-      prm.add_parameter("material liquidus temperature",
-                        material.liquidus_temperature,
-                        "Liquidus temperature");
-      prm.add_parameter("material specific enthalpy reference temperature",
-                        material.specific_enthalpy_reference_temperature,
-                        "Reference temperature of the specific enthalpy");
-      prm.add_parameter("material two phase properties transition type",
-                        material.two_phase_properties_transition_type,
-                        "Choose how to interpolate the properties over the interface.");
-      prm.add_parameter("material boiling temperature",
-                        material.boiling_temperature,
-                        "Boiling temperature (K).");
-      prm.add_parameter("material latent heat of evaporation",
-                        material.latent_heat_of_evaporation,
-                        "Latent heat of evaporation (J/kg).");
-      prm.add_parameter("material molar mass", material.molar_mass, "Molar mass (mol/kg).");
-      prm.add_parameter("material sticking constant",
-                        material.sticking_constant,
-                        "Sticking constant.");
+      material.add_parameters(prm);
     }
     prm.leave_subsection();
     /*
