@@ -4,6 +4,13 @@
 
 namespace MeltPoolDG
 {
+  BETTER_ENUM(
+    DefaultMaterial,
+    char,
+    not_initialized, // all material parameters must be specified
+    stainless_steel, // melt and solid material parameters will be set to stainless steel values
+    Ti64             // melt and solid material parameters will be set to Ti-6Al-4V values
+  )
   BETTER_ENUM(SolidLiquidPropertiesTransitionType,
               char,
               not_initialized,
@@ -24,6 +31,7 @@ namespace MeltPoolDG
   template <typename number = double>
   struct MaterialData
   {
+    DefaultMaterial default_material = DefaultMaterial::not_initialized;
     /**
      * Default material. In case of two-phase flow; heaviside(level set) == 0
      */
@@ -75,5 +83,27 @@ namespace MeltPoolDG
 
     void
     add_parameters(ParameterHandler &prm);
+
+    /**
+     * Sets the liquid's and solid's material parameters to the selected default material,
+     * specified by >> default material <<. The following material paramters will be overritten:
+     *
+     * liquid capacity
+     * liquid conductivity
+     * liquid density
+     * liquid viscosity
+     * solid capacity
+     * solid conductivity
+     * solid density
+     * solidus temperature
+     * melting point
+     * boiling temperature
+     * latent heat of evaporation
+     * molar mass
+     * sticking constant
+     * specific enthalpy reference temperature
+     */
+    void
+    set_default_material_parameters();
   };
 } // namespace MeltPoolDG

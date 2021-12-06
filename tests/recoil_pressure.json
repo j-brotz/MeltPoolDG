@@ -52,11 +52,7 @@
     "material first conductivity": "10",
     "material first density": "74.30",
     "material first viscosity": "0.0006",
-    "material second capacity": "965",
-    "material second conductivity": "35.95",
-    "material second density": "7430.0",
-    "material boiling temperature": "3000.",
-    "material second viscosity": "0.006"
+    "default material": "stainless_steel"
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",

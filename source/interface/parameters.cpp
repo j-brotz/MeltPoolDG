@@ -23,6 +23,10 @@ namespace MeltPoolDG
     else
       AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
     /*
+     * Set default material parameters if specified
+     */
+    material.set_default_material_parameters();
+    /*
      *  set the number of quadrature points in 1d
      */
     base.n_q_points_1d = (base.n_q_points_1d < 1) ? base.degree + 1 : base.n_q_points_1d;
