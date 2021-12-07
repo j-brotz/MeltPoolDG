@@ -102,6 +102,7 @@
     "material solid viscosity": "0.6",
     "material solidus temperature": "1500",
     "material two phase properties transition type": "smooth",
+    "material solidification type": "mushy_zone",
     "material latent heat of evaporation": "1e6",
     "material boiling temperature": "3000."
   },

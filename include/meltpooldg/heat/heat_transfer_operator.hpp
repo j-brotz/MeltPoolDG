@@ -9,8 +9,8 @@
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

@@ -57,7 +57,8 @@
     "material second conductivity": "35.95",
     "material second density": "7430.0",
     "material boiling temperature": "3000.",
-    "material second viscosity": "0.006"
+    "material second viscosity": "0.006",
+    "material solidification type": "mushy_zone"
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",

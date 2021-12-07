@@ -27,7 +27,8 @@
     "material solid conductivity": "2.22",
     "material solid density": "1000.0",
     "material solidus temperature": "270.0",
-    "material liquidus temperature": "276.0"
+    "material liquidus temperature": "276.0",
+    "material solidification type": "mushy_zone"
   },
   "paraview": {
     "paraview do output": "false"
