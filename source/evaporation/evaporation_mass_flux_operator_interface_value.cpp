@@ -11,11 +11,11 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   EvaporationMassFluxOperatorInterfaceValue<dim>::EvaporationMassFluxOperatorInterfaceValue(
-    const ScratchData<dim> &    scratch_data,
+    const ScratchData<dim>     &scratch_data,
     const EvaporationModelBase &evaporation_model,
-    const VectorType &          level_set_as_heaviside,
-    const VectorType &          distance,
-    const BlockVectorType &     normal_vector,
+    const VectorType           &level_set_as_heaviside,
+    const VectorType           &distance,
+    const BlockVectorType      &normal_vector,
     const unsigned int          ls_dof_idx_in,
     const unsigned int          temp_hanging_nodes_dof_idx_in,
     const unsigned int          evapor_mass_flux_dof_idx_in,
@@ -43,21 +43,22 @@ namespace MeltPoolDG::Evaporation
   template <int dim>
   void
   EvaporationMassFluxOperatorInterfaceValue<dim>::compute_evaporative_mass_flux(
-    VectorType &      evaporative_mass_flux,
+    VectorType       &evaporative_mass_flux,
     const VectorType &temperature) const
   {
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, true /*unique mapping*/);
 
     const auto [evaluation_points, dof_indices] =
-      UtilityFunctions::compute_projected_points_at_interface<dim>(scratch_data.get_mapping(),
-                                                                   scratch_data.get_dof_handler(
-                                                                     ls_dof_idx),
-                                                                   level_set_as_heaviside,
-                                                                   distance,
-                                                                   normal_vector,
-                                                                   n_iterations,
-                                                                   remote_point_evaluation);
+      UtilityFunctions::compute_projected_points_at_interface<dim>(
+        scratch_data.get_mapping(),
+        scratch_data.get_dof_handler(ls_dof_idx),
+        scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+        level_set_as_heaviside,
+        distance,
+        normal_vector,
+        remote_point_evaluation,
+        n_iterations);
     /*
      * get temperature values at projected interface points
      */

@@ -153,7 +153,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::set_initial_condition(
     const Function<dim> &initial_field_function_level_set,
-    const VectorType &   initial_velocity_in)
+    const VectorType    &initial_velocity_in)
   {
     advec_diff_operation->set_initial_condition(initial_field_function_level_set,
                                                 initial_velocity_in);
@@ -451,14 +451,15 @@ namespace MeltPoolDG::LevelSet
       1e-6 /*tolerance*/, false /*unique mapping*/);
 
     const auto [evaluation_points, dof_indices] =
-      UtilityFunctions::compute_projected_points_at_interface<dim>(scratch_data->get_mapping(),
-                                                                   scratch_data->get_dof_handler(
-                                                                     ls_dof_idx),
-                                                                   level_set_as_heaviside,
-                                                                   distance_to_level_set,
-                                                                   get_normal_vector(),
-                                                                   5 /*n_iterations*/,
-                                                                   remote_point_evaluation);
+      UtilityFunctions::compute_projected_points_at_interface<dim>(
+        scratch_data->get_mapping(),
+        scratch_data->get_dof_handler(ls_dof_idx),
+        scratch_data->get_dof_handler(curv_dof_idx),
+        level_set_as_heaviside,
+        distance_to_level_set,
+        get_normal_vector(),
+        remote_point_evaluation,
+        5 /*n_iterations*/);
 
 
     remote_point_evaluation.reinit(evaluation_points,
