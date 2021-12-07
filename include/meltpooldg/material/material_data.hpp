@@ -4,13 +4,6 @@
 
 namespace MeltPoolDG
 {
-  BETTER_ENUM(
-    DefaultMaterial,
-    char,
-    not_initialized, // all material parameters must be specified
-    stainless_steel, // melt and solid material parameters will be set to stainless steel values
-    Ti64             // melt and solid material parameters will be set to Ti-6Al-4V values
-  )
   BETTER_ENUM(SolidLiquidPropertiesTransitionType,
               char,
               not_initialized,
@@ -31,7 +24,7 @@ namespace MeltPoolDG
   template <typename number = double>
   struct MaterialData
   {
-    DefaultMaterial default_material = DefaultMaterial::not_initialized;
+    std::string default_material = "not initialized";
     /**
      * Default material. In case of two-phase flow; heaviside(level set) == 0
      */
@@ -79,15 +72,20 @@ namespace MeltPoolDG
     SolidLiquidPropertiesTransitionType solidification_type =
       SolidLiquidPropertiesTransitionType::sharp; // TODO rename parameter according to enum
     TwoPhaseFluidPropertiesTransitionType two_phase_properties_transition_type =
-      TwoPhaseFluidPropertiesTransitionType::sharp; // TODO rename parameter according to enum
+      TwoPhaseFluidPropertiesTransitionType::sharp; // TODO rename parameter according to enum  and
+                                                    // set default value to smooth
 
     void
     add_parameters(ParameterHandler &prm);
   };
 
   /**
-   * Sets the liquid's and solid's material parameters to stainless steel values:
+   * Sets the material parameters to stainless steel values:
    *
+   * gas capacity               = 10.0  J / (kg K)
+   * gas conductivity           = 0.026  W / (m K)
+   * gas density                = 74.3  kg / m³
+   * gas viscosity              = 6.0e-4  kg / (m s)
    * liquid capacity            = 965  J / (kg K)
    * liquid conductivity        = 35.95  W / (m K)
    * liquid density             = 7430  kg / m³
@@ -105,11 +103,15 @@ namespace MeltPoolDG
    */
   template <typename number>
   void
-  create_stainless_steel_material_data(MaterialData<number> &);
+  set_stainless_steel_parameters(MaterialData<number> &);
 
   /**
-   * Sets the liquid's and solid's material parameters to Ti-6Al-4V values:
+   * Sets the material parameters to Ti-6Al-4V values:
    *
+   * gas capacity               = 11.3  J / (kg K)
+   * gas conductivity           = 0.02863  W / (m K)
+   * gas density                = 44.1  kg / m³
+   * gas viscosity              = 0.00035  kg / (m s)
    * liquid capacity            = 1130  J / (kg K)
    * liquid conductivity        = 28.63  W / (m K)
    * liquid density             = 4087  kg / m³
@@ -127,5 +129,5 @@ namespace MeltPoolDG
    */
   template <typename number>
   void
-  create_Ti64_material_data(MaterialData<number> &);
+  set_Ti64_parameters(MaterialData<number> &);
 } // namespace MeltPoolDG

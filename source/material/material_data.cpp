@@ -9,7 +9,8 @@ namespace MeltPoolDG
     prm.add_parameter("default material",
                       default_material,
                       "If this parameter is initialized, the liquid and solid material parameters "
-                      "will be set to the default material parameters of the specified material.");
+                      "will be set to the default material parameters of the specified material.",
+                      Patterns::Selection("not initialized|stainless steel|Ti64"));
     prm.add_parameter(
       "material first capacity",
       first.capacity,
@@ -62,14 +63,15 @@ namespace MeltPoolDG
                       "Latent heat of evaporation (J/kg).");
     prm.add_parameter("material molar mass", molar_mass, "Molar mass (mol/kg).");
     prm.add_parameter("material sticking constant", sticking_constant, "Sticking constant.");
+
     // set default material values if specified
     prm.add_action("default material", [this](const auto value) {
-      if (value == "not_initialized")
+      if (value == "not initialized")
         return;
-      else if (value == "stainless_steel")
-        create_stainless_steel_material_data(*this);
+      else if (value == "stainless steel")
+        set_stainless_steel_parameters<number>(*this);
       else if (value == "Ti64")
-        create_Ti64_material_data(*this);
+        set_Ti64_parameters<number>(*this);
       else
         Assert(false, ExcNotImplemented());
     });
@@ -79,8 +81,12 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  create_stainless_steel_material_data(MaterialData<number> &data)
+  set_stainless_steel_parameters(MaterialData<number> &data)
   {
+    data.first.capacity     = 10.0;   //  J / (kg K)
+    data.first.conductivity = 0.026;  //  W / (m K)
+    data.first.density      = 74.3;   //  kg / m³
+    data.first.viscosity    = 6.0e-4; //  kg / (m s)
     // clang-format off
     data.second.capacity     = data.solid.capacity     = 965.0;  //  J / (kg K)
     data.second.conductivity = data.solid.conductivity = 35.95;  //  W / (m K)
@@ -91,18 +97,20 @@ namespace MeltPoolDG
     data.boiling_temperature                     = 3000.0;  //  K
     data.latent_heat_of_evaporation              = 6.0e6;   //  J / kg
     data.molar_mass                              = 5.22e-2; //  kg / mol
-    data.sticking_constant                       = 1.0;
+    data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 663.731; //  K
-
-    // TODO set surface tension to 1.8 N/m here, too
   }
 
 
 
   template <typename number>
   void
-  create_Ti64_material_data(MaterialData<number> &data)
+  set_Ti64_parameters(MaterialData<number> &data)
   {
+    data.first.capacity     = 11.3;    //  J / (kg K)
+    data.first.conductivity = 0.02863; //  W / (m K)
+    data.first.density      = 44.1;    //  kg / m³
+    data.first.viscosity    = 0.00035; //  kg / (m s)
     // clang-format off
     data.second.capacity     = data.solid.capacity     = 1130.0; //  J / (kg K)
     data.second.conductivity = data.solid.conductivity = 28.63;  //  W / (m K)
@@ -113,17 +121,15 @@ namespace MeltPoolDG
     data.boiling_temperature                     = 3133.0;  //  K
     data.latent_heat_of_evaporation              = 8.84e6;  //  J / kg
     data.molar_mass                              = 4.78e-2; //  kg / mol
-    data.sticking_constant                       = 1.0;
-    data.specific_enthalpy_reference_temperature = 538.0; //  K
-
-    // TODO set surface tension to 1.493 N/m here, too
+    data.sticking_constant                       = 1.0;     //  dimensionless
+    data.specific_enthalpy_reference_temperature = 538.0;   //  K
   }
 
 
 
   template struct MaterialData<double>;
   template void
-  create_stainless_steel_material_data<double>(MaterialData<double> &);
+  set_stainless_steel_parameters<double>(MaterialData<double> &);
   template void
-  create_Ti64_material_data<double>(MaterialData<double> &);
+  set_Ti64_parameters<double>(MaterialData<double> &);
 } // namespace MeltPoolDG
