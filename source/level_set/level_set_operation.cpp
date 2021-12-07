@@ -9,6 +9,7 @@
 #include <meltpooldg/curvature/curvature_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -153,7 +154,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::set_initial_condition(
     const Function<dim> &initial_field_function_level_set,
-    const VectorType    &initial_velocity_in)
+    const VectorType &   initial_velocity_in)
   {
     advec_diff_operation->set_initial_condition(initial_field_function_level_set,
                                                 initial_velocity_in);
@@ -450,49 +451,17 @@ namespace MeltPoolDG::LevelSet
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, false /*unique mapping*/);
 
-    const auto [evaluation_points, dof_indices] =
-      UtilityFunctions::compute_projected_points_at_interface<dim>(
-        scratch_data->get_mapping(),
-        scratch_data->get_dof_handler(ls_dof_idx),
-        scratch_data->get_dof_handler(curv_dof_idx),
-        level_set_as_heaviside,
-        distance_to_level_set,
-        get_normal_vector(),
-        remote_point_evaluation,
-        5 /*n_iterations*/);
-
-
-    remote_point_evaluation.reinit(evaluation_points,
-                                   scratch_data->get_triangulation(),
-                                   scratch_data->get_mapping());
-
-    curvature_operation->get_curvature().update_ghost_values();
-    const auto curvature_evaluation_values =
-      dealii::VectorTools::point_values<1>(remote_point_evaluation,
-                                           scratch_data->get_dof_handler(curv_dof_idx),
-                                           curvature_operation->get_curvature());
-    curvature_operation->get_curvature().zero_out_ghost_values();
-
-    AssertThrow(curvature_evaluation_values.size() == evaluation_points.size(),
-                ExcMessage("The size of vectors must match."));
-
-    curvature_operation->get_curvature() = 0;
-
-    bool do_assert = true;
-    for (unsigned int i = 0; i < evaluation_points.size(); ++i)
-      {
-        /*
-         * debug
-         */
-        if (!level_set_data.do_curvature_correction && curvature_evaluation_values[i] == 0)
-          {
-            std::cout << "point: " << evaluation_points[i] << std::endl;
-            do_assert = false;
-          }
-        curvature_operation->get_curvature()[dof_indices[i]] = curvature_evaluation_values[i];
-      }
-
-    AssertThrow(do_assert, ExcMessage("Curvature value for requested point is zero."));
+    LevelSet::Tools::broadcast_interface_value_to_vector<dim>(
+      scratch_data->get_mapping(),
+      scratch_data->get_dof_handler(ls_dof_idx),
+      scratch_data->get_dof_handler(curv_dof_idx),
+      level_set_as_heaviside,
+      distance_to_level_set,
+      get_normal_vector(),
+      curvature_operation->get_curvature(),
+      curvature_operation->get_curvature(),
+      remote_point_evaluation,
+      5 /*n_iterations*/);
 
     /*
      * old approach --> only kept as back-up [MS]
