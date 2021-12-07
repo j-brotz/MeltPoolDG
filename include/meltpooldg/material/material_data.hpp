@@ -83,27 +83,49 @@ namespace MeltPoolDG
 
     void
     add_parameters(ParameterHandler &prm);
-
-    /**
-     * Sets the liquid's and solid's material parameters to the selected default material,
-     * specified by >> default material <<. The following material paramters will be overritten:
-     *
-     * liquid capacity
-     * liquid conductivity
-     * liquid density
-     * liquid viscosity
-     * solid capacity
-     * solid conductivity
-     * solid density
-     * solidus temperature
-     * melting point
-     * boiling temperature
-     * latent heat of evaporation
-     * molar mass
-     * sticking constant
-     * specific enthalpy reference temperature
-     */
-    void
-    set_default_material_parameters();
   };
+
+  /**
+   * Sets the liquid's and solid's material parameters to stainless steel values:
+   *
+   * liquid capacity            = 965  J / (kg K)
+   * liquid conductivity        = 35.95  W / (m K)
+   * liquid density             = 7430  kg / m³
+   * liquid viscosity           = 6.0e-3  kg / (m s)
+   * solid capacity             = 965  J / (kg K)
+   * solid conductivity         = 35.95  W / (m K)
+   * solid density              = 7430  kg / m³
+   * solidus temperature        = 1700  K
+   * melting point              = 1700  K
+   * boiling temperature        = 3000  K
+   * latent heat of evaporation = 6.0e6  J / kg
+   * molar mass                 = 5.22e-2  kg / mol
+   * sticking constant          = 1
+   * specific enthalpy reference temperature = 663.731  K
+   */
+  template <typename number>
+  void
+  create_stainless_steel_material_data(MaterialData<number> &);
+
+  /**
+   * Sets the liquid's and solid's material parameters to Ti-6Al-4V values:
+   *
+   * liquid capacity            = 1130  J / (kg K)
+   * liquid conductivity        = 28.63  W / (m K)
+   * liquid density             = 4087  kg / m³
+   * liquid viscosity           = 0.0035  kg / (m s)
+   * solid capacity             = 1130  J / (kg K)
+   * solid conductivity         = 28.63  W / (m K)
+   * solid density              = 4087  kg / m³
+   * solidus temperature        = 1933  K
+   * melting point              = 1933  K
+   * boiling temperature        = 3133  K
+   * latent heat of evaporation = 8.84e6  J / kg
+   * molar mass                 = 4.78e-2  kg / mol
+   * sticking constant          = 1
+   * specific enthalpy reference temperature = 538  K
+   */
+  template <typename number>
+  void
+  create_Ti64_material_data(MaterialData<number> &);
 } // namespace MeltPoolDG

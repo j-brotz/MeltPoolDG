@@ -6,12 +6,10 @@ namespace MeltPoolDG
   void
   MaterialData<number>::add_parameters(ParameterHandler &prm)
   {
-    prm.add_parameter(
-      "default material",
-      default_material,
-      "If this parameter is initialized, the liquid and solid material parameters "
-      "will be overwritten by the default material parameters of the specified material.",
-      Patterns::Selection("not_initialized|stainless_steel|Ti64"));
+    prm.add_parameter("default material",
+                      default_material,
+                      "If this parameter is initialized, the liquid and solid material parameters "
+                      "will be set to the default material parameters of the specified material.");
     prm.add_parameter(
       "material first capacity",
       first.capacity,
@@ -64,54 +62,68 @@ namespace MeltPoolDG
                       "Latent heat of evaporation (J/kg).");
     prm.add_parameter("material molar mass", molar_mass, "Molar mass (mol/kg).");
     prm.add_parameter("material sticking constant", sticking_constant, "Sticking constant.");
+    // set default material values if specified
+    prm.add_action("default material", [this](const auto value) {
+      if (value == "not_initialized")
+        return;
+      else if (value == "stainless_steel")
+        create_stainless_steel_material_data(*this);
+      else if (value == "Ti64")
+        create_Ti64_material_data(*this);
+      else
+        Assert(false, ExcNotImplemented());
+    });
   }
+
+
 
   template <typename number>
   void
-  MaterialData<number>::set_default_material_parameters()
+  create_stainless_steel_material_data(MaterialData<number> &data)
   {
-    switch (default_material)
-      {
-          case DefaultMaterial::not_initialized: {
-            return;
-          }
-          case DefaultMaterial::stainless_steel: {
-            // clang-format off
-            second.capacity     = solid.capacity     = 965.0;  //  J / (kg K)
-            second.conductivity = solid.conductivity = 35.95;  //  W / (m K)
-            second.density      = solid.density      = 7430.0; //  kg / m³
-            second.viscosity                         = 6.0e-3; //  kg / (m s)
-            solidus_temperature = melting_point      = 1700.0; //  K
-            // clang-format on
-            boiling_temperature                     = 3000.0;  //  K
-            latent_heat_of_evaporation              = 6.0e6;   //  J / kg
-            molar_mass                              = 5.22e-2; //  kg / mol
-            sticking_constant                       = 1.0;
-            specific_enthalpy_reference_temperature = 663.731; //  K
+    // clang-format off
+    data.second.capacity     = data.solid.capacity     = 965.0;  //  J / (kg K)
+    data.second.conductivity = data.solid.conductivity = 35.95;  //  W / (m K)
+    data.second.density      = data.solid.density      = 7430.0; //  kg / m³
+    data.second.viscosity                              = 6.0e-3; //  kg / (m s)
+    data.solidus_temperature = data.melting_point      = 1700.0; //  K
+    // clang-format on
+    data.boiling_temperature                     = 3000.0;  //  K
+    data.latent_heat_of_evaporation              = 6.0e6;   //  J / kg
+    data.molar_mass                              = 5.22e-2; //  kg / mol
+    data.sticking_constant                       = 1.0;
+    data.specific_enthalpy_reference_temperature = 663.731; //  K
 
-            // TODO set surface tension to 1.8 N/m here, too
-            return;
-          }
-          case DefaultMaterial::Ti64: {
-            // clang-format off
-            second.capacity     = solid.capacity     = 1130.0; //  J / (kg K)
-            second.conductivity = solid.conductivity = 28.63;  //  W / (m K)
-            second.density      = solid.density      = 4087.0; //  kg / m³
-            second.viscosity                         = 0.0035; //  kg / (m s)
-            solidus_temperature = melting_point      = 1933;   //  K
-            // clang-format on
-            boiling_temperature                     = 3133.0;  //  K
-            latent_heat_of_evaporation              = 8.84e6;  //  J / kg
-            molar_mass                              = 4.78e-2; //  kg / mol
-            sticking_constant                       = 1.0;
-            specific_enthalpy_reference_temperature = 538.0; //  K
-
-            // TODO set surface tension to 1.493 N/m here, too
-            return;
-          }
-      }
-    Assert(false, ExcNotImplemented());
+    // TODO set surface tension to 1.8 N/m here, too
   }
 
+
+
+  template <typename number>
+  void
+  create_Ti64_material_data(MaterialData<number> &data)
+  {
+    // clang-format off
+    data.second.capacity     = data.solid.capacity     = 1130.0; //  J / (kg K)
+    data.second.conductivity = data.solid.conductivity = 28.63;  //  W / (m K)
+    data.second.density      = data.solid.density      = 4087.0; //  kg / m³
+    data.second.viscosity                              = 0.0035; //  kg / (m s)
+    data.solidus_temperature = data.melting_point      = 1933;   //  K
+    // clang-format on
+    data.boiling_temperature                     = 3133.0;  //  K
+    data.latent_heat_of_evaporation              = 8.84e6;  //  J / kg
+    data.molar_mass                              = 4.78e-2; //  kg / mol
+    data.sticking_constant                       = 1.0;
+    data.specific_enthalpy_reference_temperature = 538.0; //  K
+
+    // TODO set surface tension to 1.493 N/m here, too
+  }
+
+
+
   template struct MaterialData<double>;
+  template void
+  create_stainless_steel_material_data<double>(MaterialData<double> &);
+  template void
+  create_Ti64_material_data<double>(MaterialData<double> &);
 } // namespace MeltPoolDG
