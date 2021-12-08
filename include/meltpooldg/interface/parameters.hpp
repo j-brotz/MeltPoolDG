@@ -296,16 +296,16 @@ namespace MeltPoolDG
     void
     print_parameters(std::ostream &pcout);
 
+  private:
     void
     check_for_file(const std::string &parameter_filename) const;
 
     void
-    add_parameters();
-
-    ParameterHandler prm;
+    add_parameters(ParameterHandler &prm);
 
     bool parameters_read = false;
 
+  public:
     BaseData<number>               base;
     TimeSteppingData<number>       time_stepping;
     AdaptiveMeshingData            amr;

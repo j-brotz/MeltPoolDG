@@ -10,6 +10,27 @@ namespace MeltPoolDG
                       default_material,
                       "If this parameter is initialized, the liquid and solid material parameters "
                       "will be set to the default material parameters of the specified material.");
+
+    if (default_material == DefaultMaterial::not_initialized)
+      prm.add_action("default material", [this](const std::string &value) {
+        switch (DefaultMaterial::_from_string(value.c_str()))
+          {
+            case DefaultMaterial::not_initialized:
+              // nothing to do
+              break;
+              case DefaultMaterial::stainless_steel: {
+                *this = create_stainless_steel_material_data();
+                break;
+              }
+              case DefaultMaterial::Ti64: {
+                *this = create_Ti64_material_data();
+                break;
+              }
+            default:
+              AssertThrow(false, ExcNotImplemented());
+          }
+      });
+
     prm.add_parameter(
       "material first capacity",
       first.capacity,
@@ -63,76 +84,17 @@ namespace MeltPoolDG
                       "Latent heat of evaporation (J/kg).");
     prm.add_parameter("material molar mass", molar_mass, "Molar mass (mol/kg).");
     prm.add_parameter("material sticking constant", sticking_constant, "Sticking constant.");
-
-    // set default material values if specified
-    prm.add_action("default material", [&prm](const std::string &value) {
-      DefaultMaterial value_enum = DefaultMaterial::not_initialized;
-      try
-        {
-          value_enum = DefaultMaterial::_from_string(value.c_str());
-        }
-      catch (const std::runtime_error &)
-        AssertThrow(false,
-                    ExcMessage("\"" + value + "\" doesn't name a default material! Abort..."));
-
-      switch (value_enum)
-        {
-          case DefaultMaterial::not_initialized:
-            // nothing to do
-            break;
-            case DefaultMaterial::stainless_steel: {
-              create_stainless_steel_material_data<number>().set_parameters(prm);
-              break;
-            }
-            case DefaultMaterial::Ti64: {
-              create_Ti64_material_data<number>().set_parameters(prm);
-              break;
-            }
-          default:
-            AssertThrow(false, ExcNotImplemented());
-        }
-    });
-  }
-
-
-
-  template <typename number>
-  void
-  MaterialData<number>::set_parameters(ParameterHandler &prm)
-  {
-    prm.set("default material", default_material);
-    prm.set("material first capacity", first.capacity);
-    prm.set("material first conductivity", first.conductivity);
-    prm.set("material first density", first.density);
-    prm.set("material first viscosity", first.viscosity);
-    prm.set("material second capacity", second.capacity);
-    prm.set("material second conductivity", second.conductivity);
-    prm.set("material second density", second.density);
-    prm.set("material second viscosity", second.viscosity);
-    prm.set("material solid capacity", solid.capacity);
-    prm.set("material solid conductivity", solid.conductivity);
-    prm.set("material solid density", solid.density);
-    prm.set("material solid viscosity", solid.viscosity);
-    prm.set("material melting point", melting_point);
-    prm.set("material solidus temperature", solidus_temperature);
-    prm.set("material liquidus temperature", liquidus_temperature);
-    prm.set("material specific enthalpy reference temperature",
-            specific_enthalpy_reference_temperature);
-    prm.set("material two phase properties transition type",
-            two_phase_properties_transition_type._to_string());
-    prm.set("material boiling temperature", boiling_temperature);
-    prm.set("material latent heat of evaporation", latent_heat_of_evaporation);
-    prm.set("material molar mass", molar_mass);
-    prm.set("material sticking constant", sticking_constant);
   }
 
 
 
   template <typename number>
   MaterialData<number>
-  create_stainless_steel_material_data()
+  MaterialData<number>::create_stainless_steel_material_data()
   {
     MaterialData<number> data;
+    data.default_material = DefaultMaterial::stainless_steel;
+
     data.first.capacity     = 10.0;   //  J / (kg K)
     data.first.conductivity = 0.026;  //  W / (m K)
     data.first.density      = 74.3;   //  kg / m³
@@ -156,9 +118,11 @@ namespace MeltPoolDG
 
   template <typename number>
   MaterialData<number>
-  create_Ti64_material_data()
+  MaterialData<number>::create_Ti64_material_data()
   {
     MaterialData<number> data;
+    data.default_material = DefaultMaterial::Ti64;
+
     data.first.capacity     = 11.3;    //  J / (kg K)
     data.first.conductivity = 0.02863; //  W / (m K)
     data.first.density      = 44.1;    //  kg / m³
@@ -181,8 +145,4 @@ namespace MeltPoolDG
 
 
   template struct MaterialData<double>;
-  template MaterialData<double>
-  create_stainless_steel_material_data<double>();
-  template MaterialData<double>
-  create_Ti64_material_data<double>();
 } // namespace MeltPoolDG

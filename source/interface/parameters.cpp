@@ -8,8 +8,10 @@ namespace MeltPoolDG
   void
   Parameters<number>::process_parameters_file(const std::string &parameter_filename)
   {
-    AssertThrow(!parameters_read, ExcMessage("The parameters are already read once."))
-      add_parameters();
+    AssertThrow(!parameters_read, ExcMessage("The parameters are already read once."));
+
+    ParameterHandler prm;
+    add_parameters(prm);
 
     check_for_file(parameter_filename);
 
@@ -155,7 +157,11 @@ namespace MeltPoolDG
   Parameters<number>::print_parameters(std::ostream &pcout)
   {
     if (base.do_print_parameters)
-      prm.print_parameters(pcout, ParameterHandler::OutputStyle::Text);
+      {
+        ParameterHandler prm;
+        add_parameters(prm);
+        prm.print_parameters(pcout, ParameterHandler::OutputStyle::Text);
+      }
   }
 
   template <typename number>
@@ -178,7 +184,7 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  Parameters<number>::add_parameters()
+  Parameters<number>::add_parameters(ParameterHandler &prm)
   {
     /*
      *    base

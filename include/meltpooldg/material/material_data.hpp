@@ -32,7 +32,8 @@ namespace MeltPoolDG
   struct MaterialData
   {
   private:
-    std::string default_material = "not_initialized"; // note: only needed if add_parameters is used
+    DefaultMaterial default_material =
+      DefaultMaterial::not_initialized; // note: only needed if add_parameters is used
 
   public:
     /**
@@ -88,59 +89,54 @@ namespace MeltPoolDG
     void
     add_parameters(ParameterHandler &prm);
 
-    void
-    set_parameters(ParameterHandler &prm);
+    /**
+     * Sets the material parameters to stainless steel values:
+     *
+     * gas capacity               = 10.0  J / (kg K)
+     * gas conductivity           = 0.026  W / (m K)
+     * gas density                = 74.3  kg / m³
+     * gas viscosity              = 6.0e-4  kg / (m s)
+     * liquid capacity            = 965  J / (kg K)
+     * liquid conductivity        = 35.95  W / (m K)
+     * liquid density             = 7430  kg / m³
+     * liquid viscosity           = 6.0e-3  kg / (m s)
+     * solid capacity             = 965  J / (kg K)
+     * solid conductivity         = 35.95  W / (m K)
+     * solid density              = 7430  kg / m³
+     * solidus temperature        = 1700  K
+     * melting point              = 1700  K
+     * boiling temperature        = 3000  K
+     * latent heat of evaporation = 6.0e6  J / kg
+     * molar mass                 = 5.22e-2  kg / mol
+     * sticking constant          = 1
+     * specific enthalpy reference temperature = 663.731  K
+     */
+    static MaterialData<number>
+    create_stainless_steel_material_data();
+
+    /**
+     * Sets the material parameters to Ti-6Al-4V values:
+     *
+     * gas capacity               = 11.3  J / (kg K)
+     * gas conductivity           = 0.02863  W / (m K)
+     * gas density                = 44.1  kg / m³
+     * gas viscosity              = 0.00035  kg / (m s)
+     * liquid capacity            = 1130  J / (kg K)
+     * liquid conductivity        = 28.63  W / (m K)
+     * liquid density             = 4087  kg / m³
+     * liquid viscosity           = 0.0035  kg / (m s)
+     * solid capacity             = 1130  J / (kg K)
+     * solid conductivity         = 28.63  W / (m K)
+     * solid density              = 4087  kg / m³
+     * solidus temperature        = 1933  K
+     * melting point              = 1933  K
+     * boiling temperature        = 3133  K
+     * latent heat of evaporation = 8.84e6  J / kg
+     * molar mass                 = 4.78e-2  kg / mol
+     * sticking constant          = 1
+     * specific enthalpy reference temperature = 538  K
+     */
+    static MaterialData<number>
+    create_Ti64_material_data();
   };
-
-  /**
-   * Sets the material parameters to stainless steel values:
-   *
-   * gas capacity               = 10.0  J / (kg K)
-   * gas conductivity           = 0.026  W / (m K)
-   * gas density                = 74.3  kg / m³
-   * gas viscosity              = 6.0e-4  kg / (m s)
-   * liquid capacity            = 965  J / (kg K)
-   * liquid conductivity        = 35.95  W / (m K)
-   * liquid density             = 7430  kg / m³
-   * liquid viscosity           = 6.0e-3  kg / (m s)
-   * solid capacity             = 965  J / (kg K)
-   * solid conductivity         = 35.95  W / (m K)
-   * solid density              = 7430  kg / m³
-   * solidus temperature        = 1700  K
-   * melting point              = 1700  K
-   * boiling temperature        = 3000  K
-   * latent heat of evaporation = 6.0e6  J / kg
-   * molar mass                 = 5.22e-2  kg / mol
-   * sticking constant          = 1
-   * specific enthalpy reference temperature = 663.731  K
-   */
-  template <typename number>
-  MaterialData<number>
-  create_stainless_steel_material_data();
-
-  /**
-   * Sets the material parameters to Ti-6Al-4V values:
-   *
-   * gas capacity               = 11.3  J / (kg K)
-   * gas conductivity           = 0.02863  W / (m K)
-   * gas density                = 44.1  kg / m³
-   * gas viscosity              = 0.00035  kg / (m s)
-   * liquid capacity            = 1130  J / (kg K)
-   * liquid conductivity        = 28.63  W / (m K)
-   * liquid density             = 4087  kg / m³
-   * liquid viscosity           = 0.0035  kg / (m s)
-   * solid capacity             = 1130  J / (kg K)
-   * solid conductivity         = 28.63  W / (m K)
-   * solid density              = 4087  kg / m³
-   * solidus temperature        = 1933  K
-   * melting point              = 1933  K
-   * boiling temperature        = 3133  K
-   * latent heat of evaporation = 8.84e6  J / kg
-   * molar mass                 = 4.78e-2  kg / mol
-   * sticking constant          = 1
-   * specific enthalpy reference temperature = 538  K
-   */
-  template <typename number>
-  MaterialData<number>
-  create_Ti64_material_data();
 } // namespace MeltPoolDG
