@@ -49,7 +49,7 @@
   },
   "material": {
     "material first capacity": "0",
-    "default material": "stainless steel"
+    "default material": "stainless_steel"
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",

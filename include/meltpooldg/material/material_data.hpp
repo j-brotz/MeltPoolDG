@@ -4,6 +4,13 @@
 
 namespace MeltPoolDG
 {
+  BETTER_ENUM(
+    DefaultMaterial,
+    char,
+    not_initialized, // all material parameters must be specified
+    stainless_steel, // melt and solid material parameters will be set to stainless steel values
+    Ti64             // melt and solid material parameters will be set to Ti-6Al-4V values
+  )
   BETTER_ENUM(SolidLiquidPropertiesTransitionType,
               char,
               not_initialized,
@@ -24,7 +31,10 @@ namespace MeltPoolDG
   template <typename number = double>
   struct MaterialData
   {
-    std::string default_material = "not initialized";
+  private:
+    std::string default_material = "not_initialized"; // note: only needed if add_parameters is used
+
+  public:
     /**
      * Default material. In case of two-phase flow; heaviside(level set) == 0
      */

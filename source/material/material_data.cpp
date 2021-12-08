@@ -9,8 +9,7 @@ namespace MeltPoolDG
     prm.add_parameter("default material",
                       default_material,
                       "If this parameter is initialized, the liquid and solid material parameters "
-                      "will be set to the default material parameters of the specified material.",
-                      Patterns::Selection("not initialized|stainless steel|Ti64"));
+                      "will be set to the default material parameters of the specified material.");
     prm.add_parameter(
       "material first capacity",
       first.capacity,
@@ -65,15 +64,32 @@ namespace MeltPoolDG
     prm.add_parameter("material sticking constant", sticking_constant, "Sticking constant.");
 
     // set default material values if specified
-    prm.add_action("default material", [this](const auto value) {
-      if (value == "not initialized")
-        return;
-      else if (value == "stainless steel")
-        set_stainless_steel_parameters<number>(*this);
-      else if (value == "Ti64")
-        set_Ti64_parameters<number>(*this);
-      else
-        Assert(false, ExcNotImplemented());
+    prm.add_action("default material", [this](const std::string &value) {
+      DefaultMaterial value_enum = DefaultMaterial::not_initialized;
+      try
+        {
+          value_enum = DefaultMaterial::_from_string(value.c_str());
+        }
+      catch (const std::runtime_error &)
+        AssertThrow(false,
+                    ExcMessage("\"" + value + "\" doesn't name a default material! Abort..."));
+
+      switch (value_enum)
+        {
+          case DefaultMaterial::not_initialized:
+            // nothing to do
+            break;
+            case DefaultMaterial::stainless_steel: {
+              set_stainless_steel_parameters(*this);
+              break;
+            }
+            case DefaultMaterial::Ti64: {
+              set_Ti64_parameters(*this);
+              break;
+            }
+          default:
+            AssertThrow(false, ExcNotImplemented());
+        }
     });
   }
 
