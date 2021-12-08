@@ -16,6 +16,7 @@
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 

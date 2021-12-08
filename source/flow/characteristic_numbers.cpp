@@ -1,4 +1,5 @@
 #include <meltpooldg/flow/characteristic_numbers.hpp>
+#include <meltpooldg/material/material.templates.hpp>
 
 namespace MeltPoolDG::Flow
 {

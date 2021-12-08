@@ -5,6 +5,7 @@
 
 #include <deal.II/matrix_free/tools.h>
 
+#include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
