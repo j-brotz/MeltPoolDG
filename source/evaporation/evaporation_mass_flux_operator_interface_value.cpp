@@ -4,6 +4,7 @@
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -49,15 +50,16 @@ namespace MeltPoolDG::Evaporation
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, true /*unique mapping*/);
 
-    const auto [evaluation_points, dof_indices] =
-      UtilityFunctions::compute_projected_points_at_interface<dim>(scratch_data.get_mapping(),
-                                                                   scratch_data.get_dof_handler(
-                                                                     ls_dof_idx),
-                                                                   level_set_as_heaviside,
-                                                                   distance,
-                                                                   normal_vector,
-                                                                   n_iterations,
-                                                                   remote_point_evaluation);
+    const auto [dof_indices, evaluation_points] =
+      LevelSet::Tools::compute_projected_points_at_interface<dim>(
+        scratch_data.get_mapping(),
+        scratch_data.get_dof_handler(ls_dof_idx),
+        scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+        level_set_as_heaviside,
+        distance,
+        normal_vector,
+        remote_point_evaluation,
+        n_iterations);
     /*
      * get temperature values at projected interface points
      */
