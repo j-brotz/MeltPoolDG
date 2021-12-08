@@ -35,7 +35,7 @@ namespace MeltPoolDG::LevelSet::Tools
   {
     AssertThrow(n_components == 1, ExcNotImplemented());
 
-    const auto [evaluation_points, dof_indices] =
+    const auto [dof_indices, evaluation_points] =
       compute_projected_points_at_interface<dim>(mapping,
                                                  dof_handler_ls,
                                                  dof_handler_req,
@@ -74,7 +74,7 @@ namespace MeltPoolDG::LevelSet::Tools
    * dof_handler_requested.
    */
   template <int dim>
-  std::pair<std::vector<Point<dim>>, std::vector<types::global_dof_index>>
+  std::pair<std::vector<types::global_dof_index>, std::vector<Point<dim>>>
   compute_projected_points_at_interface(
     const Mapping<dim> &                             mapping,
     const DoFHandler<dim> &                          dof_handler_ls,
@@ -174,8 +174,8 @@ namespace MeltPoolDG::LevelSet::Tools
     std::vector<unsigned int> processed_points_idx(processed_points.size());
     std::iota(processed_points_idx.begin(), processed_points_idx.end(), 0);
 
-    double max_distance       = 1e12;
-    int    n_processed_points = 0;
+    int                 n_processed_points = 0;
+    std::vector<double> evaluation_values_distance;
 
     for (unsigned int j = 0; j < max_iterations; ++j)
       {
@@ -183,7 +183,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                        dof_handler_req.get_triangulation(),
                                        mapping);
 
-        const auto evaluation_values_distance =
+        evaluation_values_distance =
           dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler_ls, distance);
 
         std::array<std::vector<double>, dim> evaluation_values_normal;
@@ -194,7 +194,8 @@ namespace MeltPoolDG::LevelSet::Tools
                                                  dof_handler_ls,
                                                  normal_vector.block(comp));
 
-        std::vector<unsigned int> skip_points;
+        std::vector<Point<dim>>   processed_points_new;
+        std::vector<unsigned int> processed_points_idx_new;
 
         for (unsigned int counter = 0; counter < processed_points.size(); ++counter)
           {
@@ -202,10 +203,7 @@ namespace MeltPoolDG::LevelSet::Tools
              * skip point where the distance to the interface is already close enough
              */
             if (std::abs(evaluation_values_distance[counter]) <= tol_distance)
-              {
-                skip_points.emplace_back(counter);
-                continue;
-              }
+              continue;
             /*
              * compute unit normal vector
              */
@@ -234,42 +232,35 @@ namespace MeltPoolDG::LevelSet::Tools
 
             projected_points_at_interface[processed_points_idx[counter]] =
               processed_points[counter];
+            processed_points_new.emplace_back(processed_points[counter]);
+            processed_points_idx_new.emplace_back(processed_points_idx[counter]);
           }
+
         /*
-         * skip points that are already at the interface
+         * remove points from processing that are already at the interface
          */
-        std::vector<Point<dim>>   t_point;
-        std::vector<unsigned int> t_idx;
-
-        for (unsigned int s = 0; s < processed_points.size(); ++s)
-          {
-            // point that should not be skipped and still needs to be processed
-            if (std::find(skip_points.begin(), skip_points.end(), s) == skip_points.end())
-              {
-                t_point.emplace_back(processed_points[s]);
-                t_idx.emplace_back(processed_points_idx[s]);
-              }
-          }
-
-        processed_points     = t_point;
-        processed_points_idx = t_idx;
-
-        n_processed_points = processed_points.size();
-        n_processed_points = Utilities::MPI::sum(n_processed_points, mpi_comm);
+        processed_points     = processed_points_new;
+        processed_points_idx = processed_points_idx_new;
 
         /*
          * If every point is close enough to the interface, we are finished.
          */
+        n_processed_points = processed_points.size();
+        n_processed_points = Utilities::MPI::sum(n_processed_points, mpi_comm);
+
         if (n_processed_points == 0)
           break;
-
-        max_distance =
-          evaluation_values_distance.size() == 0 ?
-            0.0 :
-            *std::max_element(evaluation_values_distance.begin(), evaluation_values_distance.end());
-
-        max_distance = Utilities::MPI::max(max_distance, mpi_comm);
       }
+
+    /*
+     * compute maximum distance of projected points to the level set 0 isosurface
+     */
+    double max_distance =
+      evaluation_values_distance.size() == 0 ?
+        0.0 :
+        *std::max_element(evaluation_values_distance.begin(), evaluation_values_distance.end());
+
+    max_distance = Utilities::MPI::max(max_distance, mpi_comm);
 
     if (n_processed_points > 0 && max_distance > tol_distance)
       {
@@ -308,7 +299,7 @@ namespace MeltPoolDG::LevelSet::Tools
         myfile.close();
       }
 
-    return {projected_points_at_interface, dof_indices};
+    return {dof_indices, projected_points_at_interface};
   }
 
 } // namespace MeltPoolDG::LevelSet::Tools

@@ -50,7 +50,7 @@ namespace MeltPoolDG::Evaporation
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, true /*unique mapping*/);
 
-    const auto [evaluation_points, dof_indices] =
+    const auto [dof_indices, evaluation_points] =
       LevelSet::Tools::compute_projected_points_at_interface<dim>(
         scratch_data.get_mapping(),
         scratch_data.get_dof_handler(ls_dof_idx),
