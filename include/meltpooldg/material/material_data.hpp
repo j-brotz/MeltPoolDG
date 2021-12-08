@@ -87,6 +87,9 @@ namespace MeltPoolDG
 
     void
     add_parameters(ParameterHandler &prm);
+
+    void
+    set_parameters(ParameterHandler &prm);
   };
 
   /**

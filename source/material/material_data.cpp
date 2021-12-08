@@ -44,6 +44,7 @@ namespace MeltPoolDG
                       "conductivity of the solid phase");
     prm.add_parameter("material solid density", solid.density, "density of the solid phase");
     prm.add_parameter("material solid viscosity", solid.viscosity, "viscosity of the solid phase");
+    prm.add_parameter("material melting point", melting_point, "Melting point (K)");
     prm.add_parameter("material solidus temperature", solidus_temperature, "Solidus temperature");
     prm.add_parameter("material liquidus temperature",
                       liquidus_temperature,
@@ -64,7 +65,7 @@ namespace MeltPoolDG
     prm.add_parameter("material sticking constant", sticking_constant, "Sticking constant.");
 
     // set default material values if specified
-    prm.add_action("default material", [this](const std::string &value) {
+    prm.add_action("default material", [&prm](const std::string &value) {
       DefaultMaterial value_enum = DefaultMaterial::not_initialized;
       try
         {
@@ -80,17 +81,49 @@ namespace MeltPoolDG
             // nothing to do
             break;
             case DefaultMaterial::stainless_steel: {
-              *this = create_stainless_steel_material_data<number>();
+              create_stainless_steel_material_data<number>().set_parameters(prm);
               break;
             }
             case DefaultMaterial::Ti64: {
-              *this = create_Ti64_material_data<number>();
+              create_Ti64_material_data<number>().set_parameters(prm);
               break;
             }
           default:
             AssertThrow(false, ExcNotImplemented());
         }
     });
+  }
+
+
+
+  template <typename number>
+  void
+  MaterialData<number>::set_parameters(ParameterHandler &prm)
+  {
+    prm.set("default material", default_material);
+    prm.set("material first capacity", first.capacity);
+    prm.set("material first conductivity", first.conductivity);
+    prm.set("material first density", first.density);
+    prm.set("material first viscosity", first.viscosity);
+    prm.set("material second capacity", second.capacity);
+    prm.set("material second conductivity", second.conductivity);
+    prm.set("material second density", second.density);
+    prm.set("material second viscosity", second.viscosity);
+    prm.set("material solid capacity", solid.capacity);
+    prm.set("material solid conductivity", solid.conductivity);
+    prm.set("material solid density", solid.density);
+    prm.set("material solid viscosity", solid.viscosity);
+    prm.set("material melting point", melting_point);
+    prm.set("material solidus temperature", solidus_temperature);
+    prm.set("material liquidus temperature", liquidus_temperature);
+    prm.set("material specific enthalpy reference temperature",
+            specific_enthalpy_reference_temperature);
+    prm.set("material two phase properties transition type",
+            two_phase_properties_transition_type._to_string());
+    prm.set("material boiling temperature", boiling_temperature);
+    prm.set("material latent heat of evaporation", latent_heat_of_evaporation);
+    prm.set("material molar mass", molar_mass);
+    prm.set("material sticking constant", sticking_constant);
   }
 
 

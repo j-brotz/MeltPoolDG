@@ -48,8 +48,8 @@
     "reference temperature": "1700"
   },
   "material": {
-    "material first capacity": "0",
-    "default material": "stainless_steel"
+    "default material": "stainless_steel",
+    "material first capacity": "0"
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",
