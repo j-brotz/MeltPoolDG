@@ -112,8 +112,8 @@ namespace MeltPoolDG
    * specific enthalpy reference temperature = 663.731  K
    */
   template <typename number>
-  void
-  set_stainless_steel_parameters(MaterialData<number> &);
+  MaterialData<number>
+  create_stainless_steel_material_data();
 
   /**
    * Sets the material parameters to Ti-6Al-4V values:
@@ -138,6 +138,6 @@ namespace MeltPoolDG
    * specific enthalpy reference temperature = 538  K
    */
   template <typename number>
-  void
-  set_Ti64_parameters(MaterialData<number> &);
+  MaterialData<number>
+  create_Ti64_material_data();
 } // namespace MeltPoolDG

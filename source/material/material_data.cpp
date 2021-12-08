@@ -80,11 +80,11 @@ namespace MeltPoolDG
             // nothing to do
             break;
             case DefaultMaterial::stainless_steel: {
-              set_stainless_steel_parameters(*this);
+              *this = create_stainless_steel_material_data<number>();
               break;
             }
             case DefaultMaterial::Ti64: {
-              set_Ti64_parameters(*this);
+              *this = create_Ti64_material_data<number>();
               break;
             }
           default:
@@ -96,9 +96,10 @@ namespace MeltPoolDG
 
 
   template <typename number>
-  void
-  set_stainless_steel_parameters(MaterialData<number> &data)
+  MaterialData<number>
+  create_stainless_steel_material_data()
   {
+    MaterialData<number> data;
     data.first.capacity     = 10.0;   //  J / (kg K)
     data.first.conductivity = 0.026;  //  W / (m K)
     data.first.density      = 74.3;   //  kg / m³
@@ -115,14 +116,16 @@ namespace MeltPoolDG
     data.molar_mass                              = 5.22e-2; //  kg / mol
     data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 663.731; //  K
+    return data;
   }
 
 
 
   template <typename number>
-  void
-  set_Ti64_parameters(MaterialData<number> &data)
+  MaterialData<number>
+  create_Ti64_material_data()
   {
+    MaterialData<number> data;
     data.first.capacity     = 11.3;    //  J / (kg K)
     data.first.conductivity = 0.02863; //  W / (m K)
     data.first.density      = 44.1;    //  kg / m³
@@ -139,13 +142,14 @@ namespace MeltPoolDG
     data.molar_mass                              = 4.78e-2; //  kg / mol
     data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 538.0;   //  K
+    return data;
   }
 
 
 
   template struct MaterialData<double>;
-  template void
-  set_stainless_steel_parameters<double>(MaterialData<double> &);
-  template void
-  set_Ti64_parameters<double>(MaterialData<double> &);
+  template MaterialData<double>
+  create_stainless_steel_material_data<double>();
+  template MaterialData<double>
+  create_Ti64_material_data<double>();
 } // namespace MeltPoolDG
