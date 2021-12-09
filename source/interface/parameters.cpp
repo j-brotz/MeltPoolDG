@@ -160,7 +160,9 @@ namespace MeltPoolDG
       {
         ParameterHandler prm;
         add_parameters(prm);
-        prm.print_parameters(pcout, ParameterHandler::OutputStyle::Text);
+        prm.print_parameters(pcout,
+                             ParameterHandler::OutputStyle::Text |
+                               ParameterHandler::OutputStyle::KeepDeclarationOrder);
       }
   }
 
