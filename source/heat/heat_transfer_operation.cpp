@@ -83,6 +83,7 @@ namespace MeltPoolDG::Heat
     scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
     scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
     scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(temperature_interface, temp_dof_idx);
     /*
      * setup sparsity pattern of system matrix only if the latter is
      * needed for computing the preconditioner
@@ -193,6 +194,15 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
+  HeatTransferOperation<dim>::compute_interface_temperature(const VectorType &     distance,
+                                                            const BlockVectorType &normal_vector)
+  {
+    Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
+      1e-6 /*tolerance*/, true /*unique mapping*/);
+  }
+
+  template <int dim>
+  void
   HeatTransferOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
@@ -251,6 +261,20 @@ namespace MeltPoolDG::Heat
   HeatTransferOperation<dim>::get_temperature()
   {
     return temperature;
+  }
+
+  template <int dim>
+  const VectorType &
+  HeatTransferOperation<dim>::get_temperature_interface() const
+  {
+    return temperature_interface;
+  }
+
+  template <int dim>
+  VectorType &
+  HeatTransferOperation<dim>::get_temperature_interface()
+  {
+    return temperature_interface;
   }
 
   template <int dim>
