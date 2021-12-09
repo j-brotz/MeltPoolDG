@@ -6,6 +6,7 @@
 
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
+#include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 

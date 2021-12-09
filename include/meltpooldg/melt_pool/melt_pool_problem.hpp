@@ -30,6 +30,7 @@
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_operation.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
