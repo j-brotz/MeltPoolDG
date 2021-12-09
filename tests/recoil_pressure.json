@@ -48,7 +48,7 @@
     "reference temperature": "1700"
   },
   "material": {
-    "default material": "stainless_steel",
+    "material template": "stainless_steel",
     "material first capacity": "0"
   },
   "levelset": {

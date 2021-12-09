@@ -5,9 +5,9 @@
 namespace MeltPoolDG
 {
   BETTER_ENUM(
-    DefaultMaterial,
+    MaterialTemplate,
     char,
-    not_initialized, // all material parameters must be specified
+    none,            // all material parameters must be specified
     stainless_steel, // melt and solid material parameters will be set to stainless steel values
     Ti64             // melt and solid material parameters will be set to Ti-6Al-4V values
   )
@@ -28,12 +28,18 @@ namespace MeltPoolDG
                                 // evaporation formulation
   )
 
+  /**
+   * Parameters of the Material class.
+   *
+   * @warning If you want to use a predefined material as template (by specifying
+   * <material template>) but also modify individual properties, you need to
+   * specify it in the first place in the <material> section.
+   */
   template <typename number = double>
   struct MaterialData
   {
   private:
-    DefaultMaterial default_material =
-      DefaultMaterial::not_initialized; // note: only needed if add_parameters is used
+    MaterialTemplate material_template = MaterialTemplate::none;
 
   public:
     /**

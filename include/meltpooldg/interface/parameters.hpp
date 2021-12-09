@@ -287,6 +287,15 @@ namespace MeltPoolDG
     std::string filename_volume_output   = "my_volumes.txt";
   };
 
+  /**
+   * Collection of all parameters of MeltPoolDG.
+   *
+   * @warning Parameters are read in order they are specified in the parameter
+   * files. We exploit this behavior, e.g, in MaterialData, to allow to set
+   * default parameters based on the user input and to override individual
+   * entries subsequently. Please don't sort your input files and if you do be
+   * aware that you might change the behavior!
+   */
   template <typename number = double>
   struct Parameters
   {

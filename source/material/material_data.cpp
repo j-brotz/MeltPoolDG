@@ -6,23 +6,26 @@ namespace MeltPoolDG
   void
   MaterialData<number>::add_parameters(ParameterHandler &prm)
   {
-    prm.add_parameter("default material",
-                      default_material,
-                      "If this parameter is initialized, the liquid and solid material parameters "
-                      "will be set to the default material parameters of the specified material.");
+    prm.add_parameter("material template",
+                      material_template,
+                      "If this parameter is initialized, the material parameters "
+                      "of the specified material will be used as template. Individual "
+                      "properties can be modified. However, be aware to put "
+                      "<material template> in the first place of the <material> "
+                      "section in these cases.");
 
-    if (default_material == DefaultMaterial::not_initialized)
-      prm.add_action("default material", [this](const std::string &value) {
-        switch (DefaultMaterial::_from_string(value.c_str()))
+    if (material_template == MaterialTemplate::none)
+      prm.add_action("material template", [this](const std::string &value) {
+        switch (MaterialTemplate::_from_string(value.c_str()))
           {
-            case DefaultMaterial::not_initialized:
+            case MaterialTemplate::none:
               // nothing to do
               break;
-              case DefaultMaterial::stainless_steel: {
+              case MaterialTemplate::stainless_steel: {
                 *this = create_stainless_steel_material_data();
                 break;
               }
-              case DefaultMaterial::Ti64: {
+              case MaterialTemplate::Ti64: {
                 *this = create_Ti64_material_data();
                 break;
               }
@@ -93,7 +96,7 @@ namespace MeltPoolDG
   MaterialData<number>::create_stainless_steel_material_data()
   {
     MaterialData<number> data;
-    data.default_material = DefaultMaterial::stainless_steel;
+    data.material_template = MaterialTemplate::stainless_steel;
 
     data.first.capacity     = 10.0;   //  J / (kg K)
     data.first.conductivity = 0.026;  //  W / (m K)
@@ -121,7 +124,7 @@ namespace MeltPoolDG
   MaterialData<number>::create_Ti64_material_data()
   {
     MaterialData<number> data;
-    data.default_material = DefaultMaterial::Ti64;
+    data.material_template = MaterialTemplate::Ti64;
 
     data.first.capacity     = 11.3;    //  J / (kg K)
     data.first.conductivity = 0.02863; //  W / (m K)
