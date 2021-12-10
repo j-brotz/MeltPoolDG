@@ -96,7 +96,7 @@ namespace MeltPoolDG
     add_parameters(ParameterHandler &prm);
 
     /**
-     * Sets the material parameters to stainless steel values:
+     * Creates MaterialData with all parameters set to the values of stainless steel:
      *
      * gas capacity               = 10.0  J / (kg K)
      * gas conductivity           = 0.026  W / (m K)
@@ -109,19 +109,26 @@ namespace MeltPoolDG
      * solid capacity             = 965  J / (kg K)
      * solid conductivity         = 35.95  W / (m K)
      * solid density              = 7430  kg / m³
+     * solid viscosity            = 0.6  kg / (m s)
      * solidus temperature        = 1700  K
+     * liquidus temperature       = 2100  K
      * melting point              = 1700  K
      * boiling temperature        = 3000  K
      * latent heat of evaporation = 6.0e6  J / kg
      * molar mass                 = 5.22e-2  kg / mol
      * sticking constant          = 1
      * specific enthalpy reference temperature = 663.731  K
+     *
+     * @note This function also sets these computational parameters as follows:
+     *
+     * solidification type                  = mushy zone
+     * two phase properties transition type = smooth
      */
     static MaterialData<number>
     create_stainless_steel_material_data();
 
     /**
-     * Sets the material parameters to Ti-6Al-4V values:
+     * Creates MaterialData with all parameters set to the values of Ti-6Al-4V:
      *
      * gas capacity               = 11.3  J / (kg K)
      * gas conductivity           = 0.02863  W / (m K)
@@ -134,13 +141,20 @@ namespace MeltPoolDG
      * solid capacity             = 1130  J / (kg K)
      * solid conductivity         = 28.63  W / (m K)
      * solid density              = 4087  kg / m³
+     * solid viscosity            = 0.35  kg / (m s)
      * solidus temperature        = 1933  K
+     * liquidus temperature       = 2200  K
      * melting point              = 1933  K
      * boiling temperature        = 3133  K
      * latent heat of evaporation = 8.84e6  J / kg
      * molar mass                 = 4.78e-2  kg / mol
      * sticking constant          = 1
      * specific enthalpy reference temperature = 538  K
+     *
+     * @note This function also sets these computational parameters as follows:
+     *
+     * solidification type                  = mushy zone
+     * two phase properties transition type = smooth
      */
     static MaterialData<number>
     create_Ti64_material_data();

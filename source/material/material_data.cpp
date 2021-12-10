@@ -107,13 +107,18 @@ namespace MeltPoolDG
     data.second.conductivity = data.solid.conductivity = 35.95;  //  W / (m K)
     data.second.density      = data.solid.density      = 7430.0; //  kg / m³
     data.second.viscosity                              = 6.0e-3; //  kg / (m s)
+    data.solid.viscosity                               = 0.6;    //  kg / (m s)
     data.solidus_temperature = data.melting_point      = 1700.0; //  K
     // clang-format on
+    data.liquidus_temperature                    = 2100.0;  //  K
     data.boiling_temperature                     = 3000.0;  //  K
     data.latent_heat_of_evaporation              = 6.0e6;   //  J / kg
     data.molar_mass                              = 5.22e-2; //  kg / mol
     data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 663.731; //  K
+
+    data.solidification_type                  = SolidLiquidPropertiesTransitionType::mushy_zone;
+    data.two_phase_properties_transition_type = TwoPhaseFluidPropertiesTransitionType::smooth;
     return data;
   }
 
@@ -135,13 +140,18 @@ namespace MeltPoolDG
     data.second.conductivity = data.solid.conductivity = 28.63;  //  W / (m K)
     data.second.density      = data.solid.density      = 4087.0; //  kg / m³
     data.second.viscosity                              = 0.0035; //  kg / (m s)
+    data.solid.viscosity                               = 0.35;   //  kg / (m s)
     data.solidus_temperature = data.melting_point      = 1933;   //  K
     // clang-format on
+    data.liquidus_temperature                    = 2200.0;  //  K
     data.boiling_temperature                     = 3133.0;  //  K
     data.latent_heat_of_evaporation              = 8.84e6;  //  J / kg
     data.molar_mass                              = 4.78e-2; //  kg / mol
     data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 538.0;   //  K
+
+    data.solidification_type                  = SolidLiquidPropertiesTransitionType::mushy_zone;
+    data.two_phase_properties_transition_type = TwoPhaseFluidPropertiesTransitionType::smooth;
     return data;
   }
 

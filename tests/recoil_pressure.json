@@ -49,7 +49,8 @@
   },
   "material": {
     "material template": "stainless_steel",
-    "material first capacity": "0"
+    "material first capacity": "0",
+    "material two phase properties transition type": "sharp"
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",
