@@ -16,7 +16,7 @@ namespace MeltPoolDG::Heat
     const std::shared_ptr<BoundaryConditions<dim>> &bc,
     const ScratchData<dim> &                        scratch_data_in,
     const HeatData<number> &                        data_in,
-    const Material<double> &                        material,
+    const Material<number> &                        material,
     const unsigned int                              temp_dof_idx_in,
     const unsigned int                              temp_quad_idx_in,
     const unsigned int                              temp_hanging_nodes_dof_idx_in,
@@ -44,6 +44,7 @@ namespace MeltPoolDG::Heat
     AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside),
                 ExcMessage("Two-phase flow must come with a velocity! Abort..."));
 
+    // TODO move these asserts to a more central place
     const auto &material_data = material.get_data();
     AssertThrow((material_data.first.conductivity > 0.0 && material_data.first.density > 0.0) ||
                   data.solidification,
@@ -513,9 +514,6 @@ namespace MeltPoolDG::Heat
     auto &ls_vals_used =
       do_level_set_temperature_gradient_interpolation ? ls_interpolated_vals : ls_vals;
 
-    VectorizedArray<number> rho_cp;
-    VectorizedArray<number> conductivity;
-
     q_vapor.resize(scratch_data.get_matrix_free().n_cell_batches(),
                    std::vector<VectorizedArray<double>>(temp_vals.n_q_points));
 
@@ -573,13 +571,8 @@ namespace MeltPoolDG::Heat
 
         for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
           {
-            get_material_parameters(rho_cp,
-                                    conductivity,
-                                    data.solidification,
-                                    level_set_as_heaviside,
-                                    temp_vals,
-                                    ls_vals_used,
-                                    q_index);
+            const auto [rho_cp, conductivity] =
+              get_material_parameters(temp_vals, ls_vals_used, q_index);
 
             conductivity_at_q[cell][q_index] = conductivity;
 
@@ -838,11 +831,6 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number> &  evapor_vals,
     const bool                          do_reinit_cells) const
   {
-    VectorizedArray<number> rho_cp;
-    VectorizedArray<number> conductivity;
-    VectorizedArray<number> d_rho_cp_dT;
-    VectorizedArray<number> d_conductivity_dT;
-
     auto &ls_vals_used =
       do_level_set_temperature_gradient_interpolation ? ls_interpolated_vals : ls_vals;
 
@@ -901,15 +889,8 @@ namespace MeltPoolDG::Heat
 
     for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
       {
-        get_material_parameters_and_derivatives(rho_cp,
-                                                conductivity,
-                                                d_rho_cp_dT,
-                                                d_conductivity_dT,
-                                                data.solidification,
-                                                level_set_as_heaviside,
-                                                temp_lin_vals,
-                                                ls_vals_used,
-                                                q_index);
+        const auto [rho_cp, conductivity, d_rho_cp_dT, d_conductivity_dT] =
+          get_material_parameters_and_derivatives(temp_lin_vals, ls_vals_used, q_index);
 
         auto val = this->d_tau_inv * rho_cp * temp_vals.get_value(q_index);
 
@@ -1010,70 +991,84 @@ namespace MeltPoolDG::Heat
     dQ_dT.integrate(EvaluationFlags::values);
   }
 
+
+
   template <int dim, typename number>
-  void
+  std::tuple<VectorizedArray<number>, VectorizedArray<number>>
   HeatTransferOperator<dim, number>::get_material_parameters(
-    VectorizedArray<number> &               rho_cp,
-    VectorizedArray<number> &               conductivity,
-    const bool                              with_solidification,
-    const bool                              with_two_phase,
     const FECellIntegrator<dim, 1, number> &temp_lin_val,
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    const auto flags = MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
-                       MaterialUpdateFlags::density;
-    MaterialParameterValues<VectorizedArray<number>> material_values;
-    if (with_solidification && with_two_phase)
-      material_values = material.compute_parameters(ls_heaviside_val.get_value(q_index),
-                                                    temp_lin_val.get_value(q_index),
-                                                    flags);
-    else if (with_solidification)
-      material_values = material.compute_parameters(temp_lin_val.get_value(q_index), flags);
-    else if (with_two_phase)
-      material_values = material.compute_parameters(ls_heaviside_val.get_value(q_index), flags);
-    else
-      material_values = material.compute_parameters<VectorizedArray<number>>(flags);
-
-    conductivity = material_values.conductivity;
-    rho_cp       = material_values.capacity * material_values.density;
+    const auto material_values =
+      evaluate_material(temp_lin_val,
+                        ls_heaviside_val,
+                        MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
+                          MaterialUpdateFlags::density,
+                        q_index);
+    return std::make_tuple(/* rho cp */
+                           material_values.capacity * material_values.density,
+                           /* conductivity */ material_values.conductivity);
   }
+
+
 
   template <int dim, typename number>
-  void
+  std::tuple<VectorizedArray<number>,
+             VectorizedArray<number>,
+             VectorizedArray<number>,
+             VectorizedArray<number>>
   HeatTransferOperator<dim, number>::get_material_parameters_and_derivatives(
-    VectorizedArray<number> &               rho_cp,
-    VectorizedArray<number> &               conductivity,
-    VectorizedArray<number> &               d_rho_cp_dT,
-    VectorizedArray<number> &               d_conductivity_dT,
-    const bool                              with_solidification,
-    const bool                              with_two_phase,
     const FECellIntegrator<dim, 1, number> &temp_lin_val,
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    const auto flags = MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
-                       MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_d_T |
-                       MaterialUpdateFlags::d_conductivity_d_T | MaterialUpdateFlags::d_density_d_T;
-    MaterialParameterValues<VectorizedArray<number>> material_values;
-    if (with_solidification && with_two_phase)
-      material_values = material.compute_parameters(ls_heaviside_val.get_value(q_index),
-                                                    temp_lin_val.get_value(q_index),
-                                                    flags);
-    else if (with_solidification)
-      material_values = material.compute_parameters(temp_lin_val.get_value(q_index), flags);
-    else if (with_two_phase)
-      material_values = material.compute_parameters(ls_heaviside_val.get_value(q_index), flags);
-    else
-      material_values = material.compute_parameters<VectorizedArray<number>>(flags);
-
-    conductivity      = material_values.conductivity;
-    d_conductivity_dT = material_values.d_conductivity_d_T;
-
-    rho_cp      = material_values.capacity * material_values.density;
-    d_rho_cp_dT = material_values.d_capacity_d_T * material_values.density +
-                  material_values.d_density_d_T * material_values.capacity;
+    const auto material_values =
+      evaluate_material(temp_lin_val,
+                        ls_heaviside_val,
+                        MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
+                          MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_d_T |
+                          MaterialUpdateFlags::d_conductivity_d_T |
+                          MaterialUpdateFlags::d_density_d_T,
+                        q_index);
+    return std::make_tuple(/* rho cp */ material_values.capacity * material_values.density,
+                           /* conductivity */ material_values.conductivity,
+                           /* d_rho_cp_dT */ material_values.d_capacity_d_T *
+                               material_values.density +
+                             material_values.d_density_d_T * material_values.capacity,
+                           /* d_conductivity_dT */ material_values.d_conductivity_d_T);
   }
+
+
+
+  template <int dim, typename number>
+  MaterialParameterValues<VectorizedArray<number>>
+  HeatTransferOperator<dim, number>::evaluate_material(
+    const FECellIntegrator<dim, 1, number> & temp_lin_val,
+    const FECellIntegrator<dim, 1, number> & ls_heaviside_val,
+    MaterialUpdateFlags::MaterialUpdateFlags flags,
+    const unsigned int                       q_index) const
+  {
+    switch (material.material_type)
+      {
+        case MaterialTypes::gas_liquid_solid:
+        case MaterialTypes::gas_liquid_solid_consistent_with_evaporation:
+          return material.compute_parameters(ls_heaviside_val.get_value(q_index),
+                                             temp_lin_val.get_value(q_index),
+                                             flags);
+        case MaterialTypes::liquid_solid:
+          return material.compute_parameters(temp_lin_val.get_value(q_index), flags);
+        case MaterialTypes::gas_liquid:
+        case MaterialTypes::gas_liquid_consistent_with_evaporation:
+          return material.compute_parameters(ls_heaviside_val.get_value(q_index), flags);
+        case MaterialTypes::single_phase:
+          return material.template compute_parameters<VectorizedArray<number>>(flags);
+      }
+    Assert(false, ExcNotImplemented());
+    return MaterialParameterValues<VectorizedArray<number>>();
+  }
+
+
 
   template class HeatTransferOperator<1, double>;
   template class HeatTransferOperator<2, double>;

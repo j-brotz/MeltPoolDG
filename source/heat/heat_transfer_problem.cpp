@@ -156,24 +156,13 @@ namespace MeltPoolDG::Heat
     /*
      * initialize material
      */
-    // todo: clean up
-    MaterialTypes material_type;
-    const bool    evapor = base_in->parameters.material.two_phase_properties_transition_type ==
-                        TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation;
-
-    if (base_in->parameters.heat.two_phase && base_in->parameters.heat.solidification && evapor)
-      material_type = MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
-    else if (base_in->parameters.heat.two_phase && base_in->parameters.heat.solidification)
-      material_type = MaterialTypes::gas_liquid_solid;
-    else if (base_in->parameters.heat.two_phase && evapor)
-      material_type = MaterialTypes::gas_liquid_consistent_with_evaporation;
-    else if (base_in->parameters.heat.two_phase)
-      material_type = MaterialTypes::gas_liquid;
-    else if (base_in->parameters.heat.solidification)
-      material_type = MaterialTypes::liquid_solid;
-    else
-      material_type = MaterialTypes::single_phase;
-
+    // TODO: Introduce problem specific parameters
+    const bool do_two_phase      = base_in->parameters.heat.two_phase;
+    const bool do_solidification = base_in->parameters.heat.solidification;
+    const bool do_evaporation = base_in->parameters.material.two_phase_properties_transition_type ==
+                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation;
+    const auto material_type =
+      determine_material_type(do_two_phase, do_solidification, do_evaporation);
     material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
 
     /*

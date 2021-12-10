@@ -5,6 +5,8 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
+#include <tuple>
+
 // MeltPoolDG
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
@@ -105,7 +107,7 @@ namespace MeltPoolDG::Heat
 
     const ScratchData<dim> &scratch_data;
     const HeatData<number> &data;
-    const Material<double> &material;
+    const Material<number> &material;
     const unsigned int      temp_dof_idx;
     const unsigned int      temp_quad_idx;
     const unsigned int      temp_hanging_nodes_dof_idx;
@@ -154,7 +156,7 @@ namespace MeltPoolDG::Heat
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
                          const ScratchData<dim> &                        scratch_data_in,
                          const HeatData<number> &                        data_in,
-                         const Material<double> &                        material,
+                         const Material<number> &                        material,
                          const unsigned int                              temp_dof_idx_in,
                          const unsigned int                              temp_quad_idx_in,
                          const unsigned int                              temp_hanging_nodes_dof_idx,
@@ -271,12 +273,8 @@ namespace MeltPoolDG::Heat
      * initially. This function only modifies their values if necessary. I.e. in case of no
      * two-phase flow and no solidification this function does nothing.
      */
-    void
-    get_material_parameters(VectorizedArray<number> &               rho_cp,
-                            VectorizedArray<number> &               conductivity,
-                            bool                                    with_solidification,
-                            bool                                    with_two_phase,
-                            const FECellIntegrator<dim, 1, number> &temp_lin_val,
+    std::tuple<VectorizedArray<number>, VectorizedArray<number>>
+    get_material_parameters(const FECellIntegrator<dim, 1, number> &temp_lin_val,
                             const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
                             unsigned int                            q_index) const;
 
@@ -292,16 +290,22 @@ namespace MeltPoolDG::Heat
      * @note The derivatives @p d_rho_cp_dT and @p d_conductivity_dT are only non-zero in the case of solidification
      * and if the temperature is between the solidus- and liquidus temperature.
      */
-    void
+    std::tuple<VectorizedArray<number>,
+               VectorizedArray<number>,
+               VectorizedArray<number>,
+               VectorizedArray<number>>
     get_material_parameters_and_derivatives(
-      VectorizedArray<number> &               rho_cp,
-      VectorizedArray<number> &               conductivity,
-      VectorizedArray<number> &               d_rho_cp_dT,
-      VectorizedArray<number> &               d_conductivity_dT,
-      bool                                    with_solidification,
-      bool                                    with_two_phase,
       const FECellIntegrator<dim, 1, number> &temp_lin_val,
       const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
       unsigned int                            q_index) const;
+
+    /**
+     * Evaluate the material using the provided @p flags.
+     */
+    MaterialParameterValues<VectorizedArray<number>>
+    evaluate_material(const FECellIntegrator<dim, 1, number> & temp_lin_val,
+                      const FECellIntegrator<dim, 1, number> & ls_heaviside_val,
+                      MaterialUpdateFlags::MaterialUpdateFlags flags,
+                      const unsigned int                       q_index) const;
   };
 } // namespace MeltPoolDG::Heat

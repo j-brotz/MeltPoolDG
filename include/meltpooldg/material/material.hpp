@@ -7,7 +7,7 @@
 // for parallelization
 #include <deal.II/base/vectorization.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/material/material_data.hpp>
 
 namespace MeltPoolDG
 {
@@ -52,6 +52,11 @@ namespace MeltPoolDG
     gas_liquid_solid_consistent_with_evaporation
   };
 
+  MaterialTypes
+  determine_material_type(const bool do_two_phase,
+                          const bool do_solidification,
+                          const bool do_evaporation);
+
   namespace MaterialUpdateFlags
   {
     enum MaterialUpdateFlags
@@ -90,6 +95,9 @@ namespace MeltPoolDG
 
     /**
      * Return a reference to the material MaterialData.
+     *
+     * @note This function does not compute multiphase material parameters. Only use this
+     * function if you need access to the raw MaterialData struct.
      */
     const MaterialData<number> &
     get_data() const;
@@ -387,6 +395,7 @@ namespace MeltPoolDG
     MaterialParameterValuesContainer liquid;
     MaterialParameterValuesContainer solid;
 
+  public:
     const MaterialTypes material_type;
   };
 } // namespace MeltPoolDG
