@@ -4,7 +4,6 @@
 
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
-#include <meltpooldg/level_set/distributed_interface_flux_type.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
