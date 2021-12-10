@@ -25,7 +25,8 @@ namespace MeltPoolDG::Heat
   class HeatTransferOperation
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType      = LinearAlgebra::distributed::Vector<double>;
+    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
     const ScratchData<dim> &scratch_data;
     /**
@@ -45,6 +46,7 @@ namespace MeltPoolDG::Heat
     VectorType temperature;
     VectorType temperature_old;
     VectorType heat_source;
+    VectorType temperature_interface;
 
     // optional flow velocity for internal convection
     const unsigned int vel_dof_idx;
@@ -88,6 +90,9 @@ namespace MeltPoolDG::Heat
     solve(double dt);
 
     void
+    compute_interface_temperature(const VectorType &distance, const BlockVectorType &normal_vector);
+
+    void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
 
     void
@@ -101,6 +106,12 @@ namespace MeltPoolDG::Heat
 
     VectorType &
     get_temperature();
+
+    const VectorType &
+    get_temperature_interface() const;
+
+    VectorType &
+    get_temperature_interface();
 
     const VectorType &
     get_heat_source() const;

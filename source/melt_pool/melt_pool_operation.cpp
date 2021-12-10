@@ -205,6 +205,7 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolOperation<dim>::compute_force_flow_rhs(VectorType &      vel_force_rhs,
                                                  const VectorType &level_set_as_heaviside,
+                                                 const VectorType &temperature_interface,
                                                  const bool        zero_out) const
   {
     // compute recoil pressure force
@@ -212,7 +213,7 @@ namespace MeltPoolDG::MeltPool
       recoil_pressure_operation->compute_recoil_pressure_force(
         vel_force_rhs,
         level_set_as_heaviside,
-        *temperature,
+        temperature_interface,
         zero_out /*false means add to force vector*/);
   }
 

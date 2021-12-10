@@ -122,8 +122,28 @@ namespace MeltPoolDG::Flow
 
         // ... e) recoil pressure forces
         if (melt_pool_operation)
-          melt_pool_operation->compute_force_flow_rhs(
-            vel_force_rhs, level_set_operation.get_level_set_as_heaviside(), false);
+          {
+            if (base_in->parameters.recoil.interface_distributed_flux_type ==
+                InterfaceDistributedFluxType::interface_value)
+              {
+                heat_operation->compute_interface_temperature(
+                  level_set_operation.get_distance_to_level_set(),
+                  level_set_operation.get_normal_vector());
+                melt_pool_operation->compute_force_flow_rhs(
+                  vel_force_rhs,
+                  level_set_operation.get_level_set_as_heaviside(),
+                  heat_operation->get_temperature_interface(),
+                  false);
+              }
+            else
+              {
+                melt_pool_operation->compute_force_flow_rhs(
+                  vel_force_rhs,
+                  level_set_operation.get_level_set_as_heaviside(),
+                  heat_operation->get_temperature(),
+                  false);
+              }
+          }
 
         // ... f) explicit Darcy damping force
         if (darcy_operation &&
