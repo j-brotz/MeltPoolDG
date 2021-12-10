@@ -96,6 +96,7 @@ namespace MeltPoolDG
       void
       compute_force_flow_rhs(VectorType &      vel_force_rhs,
                              const VectorType &level_set_as_heaviside,
+                             const VectorType &temperature_interface,
                              const bool        zero_out = false) const;
 
       void

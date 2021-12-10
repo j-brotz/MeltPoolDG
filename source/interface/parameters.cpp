@@ -597,6 +597,10 @@ namespace MeltPoolDG
       prm.add_parameter("recoil temperature constant",
                         recoil.temperature_constant,
                         "Temperature constant for the recoil pressure model.");
+      prm.add_parameter("interface distributed flux type",
+                        recoil.interface_distributed_flux_type,
+                        "Type that determines how the recoil pressure force is computed in the "
+                        "interfacial zone.");
       recoil.delta_approximation_phase_weighted.add_parameters(prm);
     }
     prm.leave_subsection();

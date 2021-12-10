@@ -1,6 +1,5 @@
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
-//
-
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
@@ -199,6 +198,17 @@ namespace MeltPoolDG::Heat
   {
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, true /*unique mapping*/);
+
+    LevelSet::Tools::broadcast_interface_value_to_vector<dim>(
+      scratch_data.get_mapping(),
+      scratch_data.get_dof_handler(ls_dof_idx),
+      scratch_data.get_dof_handler(temp_dof_idx),
+      *level_set_as_heaviside,
+      distance,
+      normal_vector,
+      temperature,
+      temperature_interface,
+      remote_point_evaluation);
   }
 
   template <int dim>
@@ -247,6 +257,12 @@ namespace MeltPoolDG::Heat
      *  evaporative heat source/sink
      */
     heat_operator->attach_output_vectors(data_out);
+    /**
+     *  temperature interface
+     */
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                             temperature_interface,
+                             "temperature_interface");
   }
 
   template <int dim>

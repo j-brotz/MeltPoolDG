@@ -51,6 +51,14 @@ namespace MeltPoolDG
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
     Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
   )
+  BETTER_ENUM(InterfaceDistributedFluxType,
+              char,
+              // The flux distributed in the interfacial zone is computed based on local values
+              // evaluated at the quadrature points.
+              continuous,
+              // The flux distributed in the interfacial zone is computed based on values evaluated
+              // at the projected quadrature points to the level set = 0 isosurface.
+              interface_value)
 
   template <typename number = double>
   struct SolverData
@@ -219,7 +227,8 @@ namespace MeltPoolDG
   {
     number                       pressure_constant    = 0.0;
     number                       temperature_constant = 0.0;
-    DistributedInterfaceFluxType interface_flux_type  = DistributedInterfaceFluxType::continuous;
+    InterfaceDistributedFluxType interface_distributed_flux_type =
+      InterfaceDistributedFluxType::continuous;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 
