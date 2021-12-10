@@ -23,19 +23,17 @@ namespace MeltPoolDG
   {
     namespace RecoilPressure
     {
-      const double T_initial = 500.;
-
       using namespace dealii;
 
       template <int dim>
-      class InitialValuesLS : public Function<dim>
+      class InitialConditionLevelSet : public Function<dim>
       {
       public:
-        InitialValuesLS(const double x_min,
-                        const double x_max,
-                        const double y_min,
-                        const double y_interface,
-                        const double eps)
+        InitialConditionLevelSet(const double x_min,
+                                 const double x_max,
+                                 const double y_min,
+                                 const double y_interface,
+                                 const double eps)
           : Function<dim>()
           , x_min(x_min)
           , x_max(x_max)
@@ -62,9 +60,36 @@ namespace MeltPoolDG
         double x_min, x_max, y_min, y_interface, eps;
       };
 
-      /*
-       *      This class collects all relevant input data for the level set simulation
-       */
+      template <int dim>
+      class InitialConditionTemperature : public Function<dim>
+      {
+      public:
+        InitialConditionTemperature(const double T_initial_bottom,
+                                    const double T_initial_top,
+                                    const double y_min,
+                                    const double y_max)
+          : Function<dim>()
+          , T_initial_bottom(T_initial_bottom)
+          , T_initial_top(T_initial_top)
+          , y_min(y_min)
+          , grad_T((T_initial_top - T_initial_bottom) / (y_max - y_min))
+        {}
+
+        double
+        value(const Point<dim> &p, const unsigned int /*component*/) const
+        {
+          if (T_initial_top == T_initial_bottom)
+            return T_initial_top;
+          else
+
+            return T_initial_bottom + grad_T * (p[dim - 1] - y_min);
+        }
+
+        const double T_initial_bottom;
+        const double T_initial_top;
+        const double y_min;
+        const double grad_T;
+      };
 
       template <int dim>
       class SimulationRecoilPressure : public SimulationBase<dim>
@@ -77,6 +102,8 @@ namespace MeltPoolDG
         bool         periodic_boundary              = false;
         bool         evaporation_boundary           = false;
         unsigned int n_local_refinement             = 0;
+        double       T_initial_top                  = 500;
+        double       T_initial_bottom               = T_initial_top;
         std::string  local_refinement_1_bottom_left = "";
         std::string  local_refinement_1_top_right   = "";
         std::string  local_refinement_2_bottom_left = "";
@@ -128,6 +155,16 @@ namespace MeltPoolDG
               evaporation_boundary,
               "Set this Parameter to true if the upper boundary of the domain should be open "
               "to enable an outward mass flow.");
+            prm.enter_subsection("initial temperature");
+            {
+              prm.add_parameter("top",
+                                T_initial_top,
+                                "Set the initial temperature on the top boundary.");
+              prm.add_parameter("bottom",
+                                T_initial_bottom,
+                                "Set the initial temperature on the bottom boundary.");
+            }
+            prm.leave_subsection();
           }
           prm.leave_subsection();
         }
@@ -213,7 +250,7 @@ namespace MeltPoolDG
            * evaporation boundary    = false
            * periodic boundary = false
            *                     |   temperature  | velocity |    pressure    | level set
-           * left_bc, right_bc   |  T = T_initial | no-slip  |       -        |     -
+           * left_bc, right_bc   |  adiabatic     | no-slip  |       -        |     -
            * lower_bc            |  T = T_initial | no-slip  | fixed constant |     -
            * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
@@ -227,7 +264,7 @@ namespace MeltPoolDG
            * evaporation boundary    = true
            * periodic boundary = false
            *                     |   temperature  | velocity |    pressure    | level set
-           * left_bc, right_bc   |  T = T_initial | symmetry |       -        |     -
+           * left_bc, right_bc   |  adiabatic     | symmetry |       -        |     -
            * lower_bc            |  T = T_initial |   open   |       -        |     -
            * upper_bc            |  T = T_initial | no-slip  |       -        |  ls = -1
            * -----------------------------------------------------------------------------
@@ -308,23 +345,12 @@ namespace MeltPoolDG
             {
               this->attach_dirichlet_boundary_condition(
                 lower_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                std::make_shared<Functions::ConstantFunction<dim>>(T_initial_bottom),
                 "heat_transfer");
               this->attach_dirichlet_boundary_condition(
                 upper_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
+                std::make_shared<Functions::ConstantFunction<dim>>(T_initial_top),
                 "heat_transfer");
-              if (!periodic_boundary)
-                {
-                  this->attach_dirichlet_boundary_condition(
-                    left_bc,
-                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                    "heat_transfer");
-                  this->attach_dirichlet_boundary_condition(
-                    right_bc,
-                    std::make_shared<Functions::ConstantFunction<dim>>(T_initial),
-                    "heat_transfer");
-                }
             }
 
           if (!this->parameters.base.do_simplex)
@@ -406,7 +432,7 @@ namespace MeltPoolDG
           double eps =
             UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
           this->attach_initial_condition(
-            std::make_shared<InitialValuesLS<dim>>(
+            std::make_shared<InitialConditionLevelSet<dim>>(
               domain_x_min, domain_x_max, domain_y_min, laser_center[dim - 1], eps),
             "level_set");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
@@ -414,7 +440,9 @@ namespace MeltPoolDG
                                          "navier_stokes_u");
           if (this->parameters.laser.heat_source_model != LaserHeatSourceModel::Analytical)
             this->attach_initial_condition(
-              std::make_shared<Functions::ConstantFunction<dim>>(T_initial), "heat_transfer");
+              std::make_shared<InitialConditionTemperature<dim>>(
+                T_initial_bottom, T_initial_top, domain_y_min, domain_y_max),
+              "heat_transfer");
         }
       };
 
