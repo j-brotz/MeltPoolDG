@@ -1061,9 +1061,10 @@ namespace MeltPoolDG::Heat
           return material.compute_parameters(ls_heaviside_val.get_value(q_index), flags);
         case MaterialTypes::single_phase:
           return material.template compute_parameters<VectorizedArray<number>>(flags);
+        default:
+          Assert(false, ExcNotImplemented());
+          return MaterialParameterValues<VectorizedArray<number>>();
       }
-    Assert(false, ExcNotImplemented());
-    return MaterialParameterValues<VectorizedArray<number>>();
   }
 
 
