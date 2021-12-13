@@ -138,7 +138,7 @@ namespace MeltPoolDG::Curvature
             if (do_narrow_band)
               {
                 level_set.reinit(cell);
-                level_set.read_dof_values(*solution_level_set);
+                level_set.read_dof_values_plain(*solution_level_set);
                 level_set.evaluate(EvaluationFlags::values);
               }
 

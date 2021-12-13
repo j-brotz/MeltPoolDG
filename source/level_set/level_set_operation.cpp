@@ -378,9 +378,19 @@ namespace MeltPoolDG::LevelSet
             Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
             reinit_operation->solve(d_tau);
             /*
-             *  reset the solution of the level set field to the reinitialized solution
+             *  reset the solution of the level set field to the reinitialized solution ...
              */
             advec_diff_operation->get_advected_field() = reinit_operation->get_level_set();
+            /*
+             *  @todo
+             *
+             *  ... and distribute the constraints;
+             *
+             *  Should constraints between advec diff operation
+             *  and reinitialization operation be synched?
+             */
+            // scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
+
 
             // If it is the first reinitialization cycle, the normal vector
             // field might not be computed very accurately from the initial level set
