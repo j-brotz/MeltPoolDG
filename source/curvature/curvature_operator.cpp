@@ -132,13 +132,13 @@ namespace MeltPoolDG::Curvature
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             curvature.reinit(cell);
-            curvature.read_dof_values_plain(src);
+            curvature.read_dof_values(src);
             curvature.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             if (do_narrow_band)
               {
                 level_set.reinit(cell);
-                level_set.read_dof_values_plain(*solution_level_set);
+                level_set.read_dof_values(*solution_level_set);
                 level_set.evaluate(EvaluationFlags::values);
               }
 
