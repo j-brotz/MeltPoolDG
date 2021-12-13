@@ -398,4 +398,71 @@ namespace MeltPoolDG
   public:
     const MaterialTypes material_type;
   };
+
+
+  /*----------------- Template constructors -----------------*/
+
+
+  template <typename value_type>
+  MaterialParameterValues<value_type>::MaterialParameterValues(const double capacity,
+                                                               const double conductivity,
+                                                               const double density,
+                                                               const double viscosity,
+                                                               const double d_capacity_d_T,
+                                                               const double d_conductivity_d_T,
+                                                               const double d_density_d_T,
+                                                               const double gas_fraction,
+                                                               const double liquid_fraction,
+                                                               const double solid_fraction)
+    : capacity(capacity)
+    , conductivity(conductivity)
+    , density(density)
+    , viscosity(viscosity)
+    , d_capacity_d_T(d_capacity_d_T)
+    , d_conductivity_d_T(d_conductivity_d_T)
+    , d_density_d_T(d_density_d_T)
+    , gas_fraction(gas_fraction)
+    , liquid_fraction(liquid_fraction)
+    , solid_fraction(solid_fraction)
+  {}
+
+
+
+  template <typename value_type>
+  template <typename material_phase_data_struct>
+  MaterialParameterValues<value_type>::MaterialParameterValues(
+    const material_phase_data_struct &data)
+    : capacity(data.capacity)
+    , conductivity(data.conductivity)
+    , density(data.density)
+    , viscosity(data.viscosity)
+    , d_capacity_d_T(0.0)
+    , d_conductivity_d_T(0.0)
+    , d_density_d_T(0.0)
+    , gas_fraction(1.0)
+    , liquid_fraction(0.0)
+    , solid_fraction(0.0)
+  {}
+
+
+
+  template <typename number>
+  Material<number>::Material(const MaterialData<number> &material_data,
+                             const MaterialTypes         material_type)
+    : data(material_data)
+    , gas(data.first)
+    , liquid(data.second)
+    , solid(data.solid)
+    , material_type(material_type)
+  {}
+
+
+
+  template <typename number>
+  template <typename material_phase_data_struct>
+  Material<number>::MaterialParameterValuesContainer::MaterialParameterValuesContainer(
+    const material_phase_data_struct data)
+    : scalar_parameters(data)
+    , vectorized_parameters(data)
+  {}
 } // namespace MeltPoolDG

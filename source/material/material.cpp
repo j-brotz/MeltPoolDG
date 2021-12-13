@@ -21,4 +21,17 @@ namespace MeltPoolDG
     else
       return MaterialTypes::single_phase;
   }
+
+
+
+  template <typename number>
+  const MaterialData<number> &
+  Material<number>::get_data() const
+  {
+    return data;
+  }
+
+
+
+  template class Material<double>;
 } // namespace MeltPoolDG

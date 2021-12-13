@@ -1006,9 +1006,8 @@ namespace MeltPoolDG::Heat
                         MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
                           MaterialUpdateFlags::density,
                         q_index);
-    return std::make_tuple(/* rho cp */
-                           material_values.capacity * material_values.density,
-                           /* conductivity */ material_values.conductivity);
+    return {/* rho cp */ material_values.capacity * material_values.density,
+            /* conductivity */ material_values.conductivity};
   }
 
 
@@ -1031,12 +1030,11 @@ namespace MeltPoolDG::Heat
                           MaterialUpdateFlags::d_conductivity_d_T |
                           MaterialUpdateFlags::d_density_d_T,
                         q_index);
-    return std::make_tuple(/* rho cp */ material_values.capacity * material_values.density,
-                           /* conductivity */ material_values.conductivity,
-                           /* d_rho_cp_dT */ material_values.d_capacity_d_T *
-                               material_values.density +
-                             material_values.d_density_d_T * material_values.capacity,
-                           /* d_conductivity_dT */ material_values.d_conductivity_d_T);
+    return {/* rho cp */ material_values.capacity * material_values.density,
+            /* conductivity */ material_values.conductivity,
+            /* d_rho_cp_dT */ material_values.d_capacity_d_T * material_values.density +
+              material_values.d_density_d_T * material_values.capacity,
+            /* d_conductivity_dT */ material_values.d_conductivity_d_T};
   }
 
 

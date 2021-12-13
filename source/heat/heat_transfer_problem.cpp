@@ -10,7 +10,7 @@
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
-#include <meltpooldg/material/material.templates.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/journal.hpp>

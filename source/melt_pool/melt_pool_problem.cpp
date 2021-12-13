@@ -6,7 +6,7 @@
 
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
-#include <meltpooldg/material/material.templates.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -337,19 +337,11 @@ namespace MeltPoolDG::Flow
     /*
      * initialize material
      */
-    // todo: clean up
-    MaterialTypes material_type;
-    if (base_in->parameters.heat.solidification &&
-        base_in->parameters.material.two_phase_properties_transition_type ==
-          TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
-      material_type = MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
-    else if (base_in->parameters.heat.solidification)
-      material_type = MaterialTypes::gas_liquid_solid;
-    else if (base_in->parameters.material.two_phase_properties_transition_type ==
-             TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
-      material_type = MaterialTypes::gas_liquid_consistent_with_evaporation;
-    else
-      material_type = MaterialTypes::gas_liquid;
+    const auto material_type =
+      determine_material_type(true,
+                              base_in->parameters.heat.solidification,
+                              base_in->parameters.material.two_phase_properties_transition_type ==
+                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
 
     material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
 
