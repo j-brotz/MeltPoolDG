@@ -1000,12 +1000,12 @@ namespace MeltPoolDG::Heat
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    const auto material_values =
-      evaluate_material(temp_lin_val,
-                        ls_heaviside_val,
-                        MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
-                          MaterialUpdateFlags::density,
-                        q_index);
+    const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
+      ls_heaviside_val,
+      temp_lin_val,
+      MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
+        MaterialUpdateFlags::density,
+      q_index);
     return {/* rho cp */ material_values.capacity * material_values.density,
             /* conductivity */ material_values.conductivity};
   }
@@ -1022,49 +1022,18 @@ namespace MeltPoolDG::Heat
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    const auto material_values =
-      evaluate_material(temp_lin_val,
-                        ls_heaviside_val,
-                        MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
-                          MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_d_T |
-                          MaterialUpdateFlags::d_conductivity_d_T |
-                          MaterialUpdateFlags::d_density_d_T,
-                        q_index);
+    const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
+      ls_heaviside_val,
+      temp_lin_val,
+      MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
+        MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_d_T |
+        MaterialUpdateFlags::d_conductivity_d_T | MaterialUpdateFlags::d_density_d_T,
+      q_index);
     return {/* rho cp */ material_values.capacity * material_values.density,
             /* conductivity */ material_values.conductivity,
             /* d_rho_cp_dT */ material_values.d_capacity_d_T * material_values.density +
               material_values.d_density_d_T * material_values.capacity,
             /* d_conductivity_dT */ material_values.d_conductivity_d_T};
-  }
-
-
-
-  template <int dim, typename number>
-  MaterialParameterValues<VectorizedArray<number>>
-  HeatTransferOperator<dim, number>::evaluate_material(
-    const FECellIntegrator<dim, 1, number> & temp_lin_val,
-    const FECellIntegrator<dim, 1, number> & ls_heaviside_val,
-    MaterialUpdateFlags::MaterialUpdateFlags flags,
-    const unsigned int                       q_index) const
-  {
-    switch (material.material_type)
-      {
-        case MaterialTypes::gas_liquid_solid:
-        case MaterialTypes::gas_liquid_solid_consistent_with_evaporation:
-          return material.compute_parameters(ls_heaviside_val.get_value(q_index),
-                                             temp_lin_val.get_value(q_index),
-                                             flags);
-        case MaterialTypes::liquid_solid:
-          return material.compute_parameters(temp_lin_val.get_value(q_index), flags);
-        case MaterialTypes::gas_liquid:
-        case MaterialTypes::gas_liquid_consistent_with_evaporation:
-          return material.compute_parameters(ls_heaviside_val.get_value(q_index), flags);
-        case MaterialTypes::single_phase:
-          return material.template compute_parameters<VectorizedArray<number>>(flags);
-        default:
-          Assert(false, ExcNotImplemented());
-          return MaterialParameterValues<VectorizedArray<number>>();
-      }
   }
 
 

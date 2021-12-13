@@ -298,14 +298,5 @@ namespace MeltPoolDG::Heat
       const FECellIntegrator<dim, 1, number> &temp_lin_val,
       const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
       unsigned int                            q_index) const;
-
-    /**
-     * Evaluate the material using the provided @p flags.
-     */
-    MaterialParameterValues<VectorizedArray<number>>
-    evaluate_material(const FECellIntegrator<dim, 1, number> & temp_lin_val,
-                      const FECellIntegrator<dim, 1, number> & ls_heaviside_val,
-                      MaterialUpdateFlags::MaterialUpdateFlags flags,
-                      const unsigned int                       q_index) const;
   };
 } // namespace MeltPoolDG::Heat

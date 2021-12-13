@@ -8,6 +8,7 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
 
 namespace MeltPoolDG
 {
@@ -131,6 +132,34 @@ namespace MeltPoolDG
     compute_parameters(const value_type &                              level_set_heaviside,
                        const value_type &                              temperature,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const;
+
+    /**
+     * This overload of compute_parameters() can be used for any material_type.
+     *
+     * The @p level_set_heaviside_val and @p temperature_val FECellIntegrators are evaluated only if
+     * the respective values are required for the current material_type. I.e. for
+     *
+     * - MaterialTypes::single_phase,
+     *     neither are evaluated.
+     * - MaterialTypes::gas_liquid and
+     *   MaterialTypes::gas_liquid_consistent_with_evaporation
+     *     only @p level_set_heaviside_val is evaluated.
+     * - MaterialTypes::liquid_solid
+     *     only @p temperature_val
+     * - MaterialTypes::gas_liquid_solid and
+     *   MaterialTypes::gas_liquid_solid_consistent_with_evaporation
+     *     both are evaluated.
+     *
+     * Before the evaluation of the respective FECellIntegrator's, the values must be set via
+     * FEEvaluation::evaluate() with EvaluationFlags::values, or via
+     * FEEvaluationBase::submit_value(). The values are evaluated at the quadrature point number @p q_index.
+     */
+    template <typename value_type, int dim>
+    inline MaterialParameterValues<value_type>
+    compute_parameters(const FECellIntegrator<dim, 1, number> &        level_set_heaviside_val,
+                       const FECellIntegrator<dim, 1, number> &        temperature_val,
+                       const MaterialUpdateFlags::MaterialUpdateFlags &flags,
+                       const unsigned int                              q_index) const;
 
   private:
     /**
@@ -395,7 +424,6 @@ namespace MeltPoolDG
     MaterialParameterValuesContainer liquid;
     MaterialParameterValuesContainer solid;
 
-  public:
     const MaterialTypes material_type;
   };
 

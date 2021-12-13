@@ -107,6 +107,43 @@ namespace MeltPoolDG
 
 
   template <typename number>
+  template <typename value_type, int dim>
+  inline MaterialParameterValues<value_type>
+  Material<number>::compute_parameters(
+    const FECellIntegrator<dim, 1, number> &        level_set_heaviside_val,
+    const FECellIntegrator<dim, 1, number> &        temperature_val,
+    const MaterialUpdateFlags::MaterialUpdateFlags &flags,
+    const unsigned int                              q_index) const
+  {
+    switch (material_type)
+      {
+        case MaterialTypes::gas_liquid_solid:
+        case MaterialTypes::gas_liquid_solid_consistent_with_evaporation:
+          return compute_parameters_internal(level_set_heaviside_val.get_value(q_index),
+                                             temperature_val.get_value(q_index),
+                                             flags);
+        case MaterialTypes::gas_liquid:
+        case MaterialTypes::gas_liquid_consistent_with_evaporation:
+          return compute_parameters_internal(level_set_heaviside_val.get_value(q_index),
+                                             value_type(0.0),
+                                             flags);
+        case MaterialTypes::liquid_solid:
+          return compute_parameters_internal(temperature_val.get_value(q_index),
+                                             value_type(0.0),
+                                             flags);
+        case MaterialTypes::single_phase:
+          return compute_parameters<VectorizedArray<number>>(value_type(0.0),
+                                                             value_type(0.0),
+                                                             flags);
+        default:
+          Assert(false, ExcNotImplemented());
+          return MaterialParameterValues<VectorizedArray<number>>();
+      }
+  }
+
+
+
+  template <typename number>
   template <typename value_type>
   inline MaterialParameterValues<value_type>
   Material<number>::compute_parameters_internal(
