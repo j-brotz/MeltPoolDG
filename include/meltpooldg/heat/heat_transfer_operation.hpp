@@ -11,7 +11,7 @@
 #include <deal.II/numerics/data_out.h>
 
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
-#include <meltpooldg/heat/heat_transfer_preconditioner.hpp>
+#include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/linear_solve.hpp>
@@ -59,7 +59,7 @@ namespace MeltPoolDG::Heat
 
     std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
 
-    HeatTransferPreconditioner<dim> heat_transfer_preconditioner;
+    std::shared_ptr<HeatTransferPreconditionerMatrixfree<dim>> heat_transfer_preconditioner;
 
   public:
     HeatTransferOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,

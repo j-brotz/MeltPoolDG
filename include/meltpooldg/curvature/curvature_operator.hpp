@@ -78,5 +78,18 @@ namespace MeltPoolDG::Curvature
 
     void
     create_rhs(VectorType &dst, const BlockVectorType &src) const override;
+
+    void
+    compute_system_matrix_from_matrixfree(
+      TrilinosWrappers::SparseMatrix &system_matrix) const final;
+
+    void
+    compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
+
+  private:
+    void
+    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &curv_vals,
+                                 FECellIntegrator<dim, 1, number> &level_set_vals,
+                                 const bool                        do_reinit_cells) const;
   };
 } // namespace MeltPoolDG::Curvature

@@ -1,3 +1,4 @@
+#include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -129,8 +130,8 @@ namespace MeltPoolDG::Reinitialization
         if (reinit_data.solver.solver_type == SolverType::CG)
           {
             auto preconditioner =
-              LinearSolve::setup_preconditioner(reinit_operator->system_matrix,
-                                                reinit_data.solver.preconditioner_type);
+              Preconditioner::get_preconditioner_trilinos(reinit_operator->system_matrix,
+                                                          reinit_data.solver.preconditioner_type);
             iter = LinearSolve::solve<VectorType,
                                       SolverCG<VectorType>,
                                       SparseMatrixType,
@@ -145,8 +146,8 @@ namespace MeltPoolDG::Reinitialization
         else if (reinit_data.solver.solver_type == SolverType::GMRES)
           {
             auto preconditioner =
-              LinearSolve::setup_preconditioner(reinit_operator->system_matrix,
-                                                reinit_data.solver.preconditioner_type);
+              Preconditioner::get_preconditioner_trilinos(reinit_operator->system_matrix,
+                                                          reinit_data.solver.preconditioner_type);
             iter = LinearSolve::solve<VectorType,
                                       SolverGMRES<VectorType>,
                                       SparseMatrixType,

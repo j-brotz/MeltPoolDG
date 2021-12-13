@@ -200,11 +200,15 @@ namespace MeltPoolDG::Heat
                           std::pair<unsigned int, unsigned int> face_range) const;
 
     void
-    compute_inverse_diagonal(VectorType &diagonal) const;
+    compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
 
     void
-    compute_system_matrix(TrilinosWrappers::SparseMatrix &system_matrix,
-                          bool                            include_boundary_terms = false) const;
+    compute_system_matrix_from_matrixfree_reduced(
+      TrilinosWrappers::SparseMatrix &system_matrix) const;
+
+    void
+    compute_system_matrix_from_matrixfree(
+      TrilinosWrappers::SparseMatrix &system_matrix) const override;
 
     void
     rhs_cell_loop(const MatrixFree<dim, number> &       matrix_free,

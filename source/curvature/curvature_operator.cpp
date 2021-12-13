@@ -1,6 +1,4 @@
 #include <meltpooldg/curvature/curvature_operator.hpp>
-//
-
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -125,43 +123,18 @@ namespace MeltPoolDG::Curvature
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, 1, number> curvature(matrix_free, curv_dof_idx, curv_quad_idx);
-        FECellIntegrator<dim, 1, number> level_set(scratch_data.get_matrix_free(),
-                                                   ls_dof_idx,
-                                                   curv_quad_idx);
+        FECellIntegrator<dim, 1, number> curv_vals(matrix_free, curv_dof_idx, curv_quad_idx);
+        FECellIntegrator<dim, 1, number> level_set_vals(scratch_data.get_matrix_free(),
+                                                        ls_dof_idx,
+                                                        curv_quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
-            curvature.reinit(cell);
-            curvature.read_dof_values(src);
-            curvature.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+            curv_vals.reinit(cell);
+            curv_vals.read_dof_values(src);
 
-            if (do_narrow_band)
-              {
-                level_set.reinit(cell);
-                level_set.read_dof_values_plain(*solution_level_set);
-                level_set.evaluate(EvaluationFlags::values);
-              }
+            tangent_local_cell_operation(curv_vals, level_set_vals, true);
 
-            //@todo: do only once in create_rhs
-            const VectorizedArray<double> damping =
-              NormalVector::compute_cell_size_dependent_filter_parameter_mf<dim>(
-                scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
-
-            for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
-              {
-                const VectorizedArray<number> narrow_band_mask =
-                  (do_narrow_band) ?
-                    VectorTools::compute_mask_narrow_band<dim>(level_set.get_value(q_index),
-                                                               narrow_band_threshold) :
-                    1.0;
-
-                curvature.submit_value(narrow_band_mask * curvature.get_value(q_index), q_index);
-                curvature.submit_gradient(narrow_band_mask * damping *
-                                            curvature.get_gradient(q_index),
-                                          q_index);
-              }
-
-            curvature.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
+            curv_vals.distribute_local_to_global(dst);
           }
       },
       dst,
@@ -177,6 +150,9 @@ namespace MeltPoolDG::Curvature
   CurvatureOperator<dim, number>::create_rhs(VectorType &                              dst,
                                              const CurvatureOperator::BlockVectorType &src) const
   {
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+
     if (solution_level_set)
       solution_level_set->update_ghost_values();
 
@@ -228,6 +204,129 @@ namespace MeltPoolDG::Curvature
     if (solution_level_set)
       solution_level_set->zero_out_ghost_values();
   }
+
+  template <int dim, typename number>
+  void
+  CurvatureOperator<dim, number>::compute_system_matrix_from_matrixfree(
+    TrilinosWrappers::SparseMatrix &system_matrix) const
+  {
+    system_matrix = 0.0;
+
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+
+    // note: not thread safe!!!
+    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number> curv_vals(matrix_free, curv_dof_idx, curv_quad_idx);
+    FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    // compute matrix (only cell contributions)
+    MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+      matrix_free,
+      scratch_data.get_constraint(curv_dof_idx),
+      system_matrix,
+      [&](auto &curv_vals) {
+        const unsigned int current_cell_index = curv_vals.get_current_cell_index();
+
+        tangent_local_cell_operation(curv_vals,
+                                     level_set_vals,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      curv_dof_idx,
+      this->quad_idx);
+
+    system_matrix.compress(VectorOperation::add);
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+  }
+
+  template <int dim, typename number>
+  void
+  CurvatureOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(
+    VectorType &diagonal) const
+  {
+    scratch_data.initialize_dof_vector(diagonal, curv_dof_idx);
+    // note: not thread safe!!!
+    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number> curv_vals(matrix_free, curv_dof_idx, curv_quad_idx);
+    FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+
+    // compute diagonal ...
+    MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
+      matrix_free,
+      diagonal,
+      [&](auto &curv_vals) {
+        const unsigned int current_cell_index = curv_vals.get_current_cell_index();
+
+        tangent_local_cell_operation(curv_vals,
+                                     level_set_vals,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      curv_dof_idx,
+      this->quad_idx);
+
+    if (solution_level_set)
+      solution_level_set->zero_out_ghost_values();
+
+    // ... and invert it
+    for (auto &i : diagonal)
+      i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+  }
+
+  template <int dim, typename number>
+  void
+  CurvatureOperator<dim, number>::tangent_local_cell_operation(
+    FECellIntegrator<dim, 1, number> &curv_vals,
+    FECellIntegrator<dim, 1, number> &level_set_vals,
+    const bool                        do_reinit_cells) const
+  {
+    curv_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+    if (do_reinit_cells)
+      {
+        if (do_narrow_band)
+          {
+            level_set_vals.reinit(curv_vals.get_current_cell_index());
+            level_set_vals.read_dof_values_plain(*solution_level_set);
+            level_set_vals.evaluate(EvaluationFlags::values);
+          }
+      }
+
+    //@todo: do only once in create_rhs
+    const VectorizedArray<double> damping =
+      NormalVector::compute_cell_size_dependent_filter_parameter_mf<dim>(
+        scratch_data,
+        curv_dof_idx,
+        curv_vals.get_current_cell_index(),
+        curvature_data.damping_scale_factor);
+
+    for (unsigned int q_index = 0; q_index < curv_vals.n_q_points; ++q_index)
+      {
+        const VectorizedArray<number> narrow_band_mask =
+          (do_narrow_band) ?
+            VectorTools::compute_mask_narrow_band<dim>(level_set_vals.get_value(q_index),
+                                                       narrow_band_threshold) :
+            1.0;
+
+        curv_vals.submit_value(narrow_band_mask * curv_vals.get_value(q_index), q_index);
+        curv_vals.submit_gradient(narrow_band_mask * damping * curv_vals.get_gradient(q_index),
+                                  q_index);
+      }
+
+    curv_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+  }
+
 
   template class CurvatureOperator<1, double>;
   template class CurvatureOperator<2, double>;

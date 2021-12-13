@@ -373,8 +373,7 @@ namespace MeltPoolDG
                         "Set this parameter for choosing a solver type.");
       prm.add_parameter("reinit preconditioner type",
                         reinit.solver.preconditioner_type,
-                        "Set this parameter for choosing a preconditioner type",
-                        Patterns::Selection("AMG|Identity|ILU"));
+                        "Set this parameter for choosing a preconditioner type");
       prm.add_parameter(
         "reinit max iterations",
         reinit.solver.max_iterations,
@@ -443,6 +442,29 @@ namespace MeltPoolDG
         "curv do narrow band",
         curv.do_narrow_band,
         "Set this parameter to true to compute the curvature only in the interfacial region.");
+      //@todo: move to own parameter handler for linear solver
+      prm.enter_subsection("linear solver");
+      {
+        prm.add_parameter(
+          "solver type",
+          curv.solver.solver_type,
+          "Set this parameter for choosing a solver type. At the moment GMRES or CG solvers "
+          "are supported");
+        // set default value
+        curv.solver.preconditioner_type = PreconditionerType::Diagonal;
+        prm.add_parameter("preconditioner type",
+                          curv.solver.preconditioner_type,
+                          "Set this parameter for choosing a preconditioner type");
+        prm.add_parameter(
+          "max iterations",
+          curv.solver.max_iterations,
+          "Set the maximum number of iterations for solving the linear system of equations.");
+        prm.add_parameter(
+          "solver rel tolerance",
+          curv.solver.rel_tolerance,
+          "Set the relative tolerance for a successful solution of the linear system of equations.");
+      }
+      prm.leave_subsection();
     }
     prm.leave_subsection();
     /*
@@ -470,9 +492,7 @@ namespace MeltPoolDG
         " are supported");
       prm.add_parameter("heat solver preconditioner type",
                         heat.solver.preconditioner_type,
-                        "Set this parameter for choosing a preconditioner type",
-                        Patterns::Selection(
-                          "Identity|AMG|AMGReduced|ILU|ILUReduced|Diagonal|DiagonalReduced"));
+                        "Set this parameter for choosing a preconditioner type");
       prm.add_parameter(
         "heat solver max iterations",
         heat.solver.max_iterations,
