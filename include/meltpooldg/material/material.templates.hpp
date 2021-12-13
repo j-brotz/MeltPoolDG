@@ -132,9 +132,7 @@ namespace MeltPoolDG
                                              value_type(0.0),
                                              flags);
         case MaterialTypes::single_phase:
-          return compute_parameters<VectorizedArray<number>>(value_type(0.0),
-                                                             value_type(0.0),
-                                                             flags);
+          return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
         default:
           Assert(false, ExcNotImplemented());
           return MaterialParameterValues<VectorizedArray<number>>();
