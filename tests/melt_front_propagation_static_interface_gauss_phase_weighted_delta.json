@@ -55,7 +55,8 @@
     "material solid capacity": "700.0",
     "material solid density": "7850.0",
     "material solidus temperature": "1966.0",
-    "material liquidus temperature": "1974.0"
+    "material liquidus temperature": "1974.0",
+    "material solidification type": "mushy_zone"
   },
   "paraview": {
     "paraview do output": "false"

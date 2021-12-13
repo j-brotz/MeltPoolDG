@@ -1,0 +1,544 @@
+/* ---------------------------------------------------------------------
+ *
+ * Author: Nils Much, Peter Munch, TUM, September 2021
+ *
+ * ---------------------------------------------------------------------*/
+#pragma once
+#include <meltpooldg/material/material.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
+
+namespace MeltPoolDG
+{
+  using namespace dealii;
+
+
+  /*----------------- Inline and template methods -----------------*/
+
+
+  namespace MaterialUpdateFlags
+  {
+    inline MaterialUpdateFlags
+    operator|(const MaterialUpdateFlags f1, const MaterialUpdateFlags f2)
+    {
+      return static_cast<MaterialUpdateFlags>(static_cast<unsigned int>(f1) |
+                                              static_cast<unsigned int>(f2));
+    }
+
+
+
+    inline MaterialUpdateFlags &
+    operator|=(MaterialUpdateFlags &f1, const MaterialUpdateFlags f2)
+    {
+      f1 = f1 | f2;
+      return f1;
+    }
+
+
+
+    inline MaterialUpdateFlags
+    operator&(const MaterialUpdateFlags f1, const MaterialUpdateFlags f2)
+    {
+      return static_cast<MaterialUpdateFlags>(static_cast<unsigned int>(f1) &
+                                              static_cast<unsigned int>(f2));
+    }
+
+
+
+    inline MaterialUpdateFlags &
+    operator&=(MaterialUpdateFlags &f1, const MaterialUpdateFlags f2)
+    {
+      f1 = f1 & f2;
+      return f1;
+    }
+
+  } // namespace MaterialUpdateFlags
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline MaterialParameterValues<value_type>
+  Material<number>::compute_parameters(const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
+  {
+    Assert(
+      material_type == MaterialTypes::single_phase,
+      ExcMessage(
+        "This compute_parameters() implementation should not be called for the current material type! Abort..."));
+
+    return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline MaterialParameterValues<value_type>
+  Material<number>::compute_parameters(const value_type &                              v,
+                                       const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
+  {
+    Assert(
+      material_type == MaterialTypes::gas_liquid ||
+        material_type == MaterialTypes::gas_liquid_consistent_with_evaporation ||
+        material_type == MaterialTypes::liquid_solid,
+      ExcMessage(
+        "This compute_parameters() implementation should not be called for the current material type! Abort..."));
+
+    return compute_parameters_internal(v, value_type(0.0), flags);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline MaterialParameterValues<value_type>
+  Material<number>::compute_parameters(const value_type &level_set_heaviside,
+                                       const value_type &temperature,
+                                       const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
+  {
+    Assert(
+      material_type == MaterialTypes::gas_liquid_solid ||
+        material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation,
+      ExcMessage(
+        "This compute_parameters() implementation should not be called for the current material type! Abort..."));
+
+    return compute_parameters_internal(level_set_heaviside, temperature, flags);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type, int dim>
+  inline MaterialParameterValues<value_type>
+  Material<number>::compute_parameters(
+    const FECellIntegrator<dim, 1, number> &        level_set_heaviside_val,
+    const FECellIntegrator<dim, 1, number> &        temperature_val,
+    const MaterialUpdateFlags::MaterialUpdateFlags &flags,
+    const unsigned int                              q_index) const
+  {
+    switch (material_type)
+      {
+        case MaterialTypes::gas_liquid_solid:
+        case MaterialTypes::gas_liquid_solid_consistent_with_evaporation:
+          return compute_parameters_internal(level_set_heaviside_val.get_value(q_index),
+                                             temperature_val.get_value(q_index),
+                                             flags);
+        case MaterialTypes::gas_liquid:
+        case MaterialTypes::gas_liquid_consistent_with_evaporation:
+          return compute_parameters_internal(level_set_heaviside_val.get_value(q_index),
+                                             value_type(0.0),
+                                             flags);
+        case MaterialTypes::liquid_solid:
+          return compute_parameters_internal(temperature_val.get_value(q_index),
+                                             value_type(0.0),
+                                             flags);
+        case MaterialTypes::single_phase:
+          return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
+        default:
+          Assert(false, ExcNotImplemented());
+          return MaterialParameterValues<VectorizedArray<number>>();
+      }
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline MaterialParameterValues<value_type>
+  Material<number>::compute_parameters_internal(
+    const value_type &                              v1,
+    const value_type &                              v2,
+    const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
+  {
+    MaterialParameterValues<value_type> t;
+    switch (material_type)
+      {
+          case MaterialTypes::single_phase: {
+            return gas;
+          }
+        case MaterialTypes::gas_liquid:
+          case MaterialTypes::gas_liquid_consistent_with_evaporation: {
+            const MaterialParameterValues<value_type> &g = gas;
+            const MaterialParameterValues<value_type> &l = liquid;
+
+            const auto &level_set_heaviside = v1;
+
+            if (flags & MaterialUpdateFlags::capacity)
+              t.capacity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                                        g.capacity,
+                                                                        l.capacity);
+            if (flags & MaterialUpdateFlags::conductivity)
+              t.conductivity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                                            g.conductivity,
+                                                                            l.conductivity);
+            if (flags & MaterialUpdateFlags::density)
+              {
+                if (material_type == MaterialTypes::gas_liquid_consistent_with_evaporation)
+                  t.density =
+                    compute_two_phase_fluid_density_consistent_with_evaporation<value_type>(
+                      level_set_heaviside, g.density, l.density);
+                else
+                  t.density = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                                           g.density,
+                                                                           l.density);
+              }
+            if (flags & MaterialUpdateFlags::viscosity)
+              t.viscosity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                                         g.viscosity,
+                                                                         l.viscosity);
+            // note: For the gas-liquid phase case, the derivatives with respect to temperature
+            // are zero.
+            if (flags & MaterialUpdateFlags::phase_fractions)
+              {
+                t.gas_fraction    = 1. - level_set_heaviside;
+                t.liquid_fraction = level_set_heaviside;
+              }
+            break;
+          }
+          case MaterialTypes::liquid_solid: {
+            const MaterialParameterValues<value_type> &l = liquid;
+            const MaterialParameterValues<value_type> &s = solid;
+
+            const auto &temperature = v1;
+            const auto  temperature_dependent_solid_fraction =
+              compute_temperature_dependent_solid_fraction(temperature);
+
+            if (flags & MaterialUpdateFlags::capacity)
+              t.capacity = compute_solid_liquid_phases_property<value_type>(
+                temperature_dependent_solid_fraction, l.capacity, s.capacity);
+            if (flags & MaterialUpdateFlags::conductivity)
+              t.conductivity = compute_solid_liquid_phases_property<value_type>(
+                temperature_dependent_solid_fraction, l.conductivity, s.conductivity);
+            if (flags & MaterialUpdateFlags::density)
+              t.density = compute_solid_liquid_phases_property<value_type>(
+                temperature_dependent_solid_fraction, l.density, s.density);
+            if (flags & MaterialUpdateFlags::viscosity)
+              t.viscosity = compute_solid_liquid_phases_property<value_type>(
+                temperature_dependent_solid_fraction, l.viscosity, s.viscosity);
+            if (flags & MaterialUpdateFlags::d_capacity_d_T)
+              t.d_capacity_d_T =
+                compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
+                  temperature_dependent_solid_fraction, l.capacity, s.capacity);
+            if (flags & MaterialUpdateFlags::d_conductivity_d_T)
+              t.d_conductivity_d_T =
+                compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
+                  temperature_dependent_solid_fraction, l.conductivity, s.conductivity);
+            if (flags & MaterialUpdateFlags::d_density_d_T)
+              t.d_density_d_T =
+                compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
+                  temperature_dependent_solid_fraction, l.density, s.density);
+            if (flags & MaterialUpdateFlags::phase_fractions)
+              {
+                t.liquid_fraction = 1. - temperature_dependent_solid_fraction;
+                t.solid_fraction  = temperature_dependent_solid_fraction;
+                // @note: gas_fraction = 0
+              }
+            break;
+          }
+        case MaterialTypes::gas_liquid_solid:
+          case MaterialTypes::gas_liquid_solid_consistent_with_evaporation: {
+            const MaterialParameterValues<value_type> &g = gas;
+            const MaterialParameterValues<value_type> &l = liquid;
+            const MaterialParameterValues<value_type> &s = solid;
+
+            const auto &level_set_heaviside = v1;
+            const auto &temperature         = v2;
+            const auto  temperature_dependent_solid_fraction =
+              compute_temperature_dependent_solid_fraction(temperature);
+
+            if (flags & MaterialUpdateFlags::capacity)
+              t.capacity = compute_solid_liquid_gas_phases_property<value_type>(
+                level_set_heaviside,
+                temperature_dependent_solid_fraction,
+                g.capacity,
+                l.capacity,
+                s.capacity);
+            if (flags & MaterialUpdateFlags::conductivity)
+              t.conductivity = compute_solid_liquid_gas_phases_property<value_type>(
+                level_set_heaviside,
+                temperature_dependent_solid_fraction,
+                g.conductivity,
+                l.conductivity,
+                s.conductivity);
+            if (flags & MaterialUpdateFlags::density)
+              {
+                if (material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation)
+                  t.density =
+                    compute_solid_liquid_gas_phases_density_consistent_with_evaporation<value_type>(
+                      level_set_heaviside,
+                      temperature_dependent_solid_fraction,
+                      g.density,
+                      l.density,
+                      s.density);
+                else
+                  t.density = compute_solid_liquid_gas_phases_property<value_type>(
+                    level_set_heaviside,
+                    temperature_dependent_solid_fraction,
+                    g.density,
+                    l.density,
+                    s.density);
+              }
+            if (flags & MaterialUpdateFlags::viscosity)
+              t.viscosity = compute_solid_liquid_gas_phases_property<value_type>(
+                level_set_heaviside,
+                temperature_dependent_solid_fraction,
+                g.viscosity,
+                l.viscosity,
+                s.viscosity);
+            if (flags & MaterialUpdateFlags::d_capacity_d_T)
+              t.d_capacity_d_T =
+                compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
+                  level_set_heaviside,
+                  temperature_dependent_solid_fraction,
+                  l.capacity,
+                  s.capacity);
+            if (flags & MaterialUpdateFlags::d_conductivity_d_T)
+              t.d_conductivity_d_T =
+                compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
+                  level_set_heaviside,
+                  temperature_dependent_solid_fraction,
+                  l.conductivity,
+                  s.conductivity);
+            if (flags & MaterialUpdateFlags::d_density_d_T)
+              {
+                if (material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation)
+                  t.d_density_d_T =
+                    compute_temperature_derivative_of_solid_liquid_gas_density_consistent_with_evaporation<
+                      value_type>(level_set_heaviside,
+                                  temperature_dependent_solid_fraction,
+                                  g.density,
+                                  l.density,
+                                  s.density);
+                else
+                  t.d_density_d_T =
+                    compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
+                      level_set_heaviside,
+                      temperature_dependent_solid_fraction,
+                      l.density,
+                      s.density);
+              }
+            if (flags & MaterialUpdateFlags::phase_fractions)
+              {
+                t.gas_fraction = 1. - level_set_heaviside;
+                t.liquid_fraction =
+                  (1. - temperature_dependent_solid_fraction) * level_set_heaviside;
+                t.solid_fraction = temperature_dependent_solid_fraction * level_set_heaviside;
+              }
+            break;
+          }
+          default: {
+            Assert(false, ExcNotImplemented());
+          }
+      }
+
+    return t;
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_two_phase_fluid_property(const value_type &level_set_heaviside,
+                                                     const value_type &gas_value,
+                                                     const value_type &liquid_solid_value) const
+  {
+    const value_type weight =
+      (data.two_phase_properties_transition_type != TwoPhaseFluidPropertiesTransitionType::sharp) ?
+        level_set_heaviside :
+        UtilityFunctions::heaviside(level_set_heaviside, 0.5);
+    return UtilityFunctions::interpolate(weight, gas_value, liquid_solid_value);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_two_phase_fluid_density_consistent_with_evaporation(
+    const value_type &level_set_heaviside,
+    const value_type &gas_density,
+    const value_type &liquid_solid_density) const
+  {
+    // clang-format off
+      return 1.
+             / // -------------------------------------------------------------------------------------
+             (level_set_heaviside / liquid_solid_density + (1. - level_set_heaviside) / gas_density);
+    // clang-format on
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_solid_liquid_phases_property(
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    if (temperature_dependent_solid_fraction == value_type(0.0))
+      return liquid_value;
+    if (temperature_dependent_solid_fraction == value_type(1.0))
+      return solid_value;
+    return UtilityFunctions::interpolate_cubic(temperature_dependent_solid_fraction,
+                                               liquid_value,
+                                               solid_value);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_temperature_derivative_of_solid_liquid_phases_property(
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    if (temperature_dependent_solid_fraction == value_type(0.0) ||
+        temperature_dependent_solid_fraction == value_type(1.0))
+      return value_type(0.0);
+    return -1.0 * data.inv_mushy_interval *
+           UtilityFunctions::interpolate_cubic_derivative(temperature_dependent_solid_fraction,
+                                                          liquid_value,
+                                                          solid_value);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_solid_liquid_gas_phases_property(
+    const value_type &level_set_heaviside,
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &gas_value,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    const auto liquid_solid_value =
+      compute_solid_liquid_phases_property(temperature_dependent_solid_fraction,
+                                           liquid_value,
+                                           solid_value);
+    return compute_two_phase_fluid_property(level_set_heaviside, gas_value, liquid_solid_value);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_solid_liquid_gas_phases_density_consistent_with_evaporation(
+    const value_type &level_set_heaviside,
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &gas_value,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    const auto liquid_solid_value =
+      compute_solid_liquid_phases_property(temperature_dependent_solid_fraction,
+                                           liquid_value,
+                                           solid_value);
+    return compute_two_phase_fluid_density_consistent_with_evaporation(level_set_heaviside,
+                                                                       gas_value,
+                                                                       liquid_solid_value);
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::compute_temperature_derivative_of_solid_liquid_gas_property(
+    const value_type &level_set_heaviside,
+    const value_type &temperature_dependent_solid_fraction,
+    const value_type &liquid_value,
+    const value_type &solid_value) const
+  {
+    const auto temp = compute_temperature_derivative_of_solid_liquid_phases_property(
+      temperature_dependent_solid_fraction, liquid_value, solid_value);
+    const auto weight =
+      (data.two_phase_properties_transition_type != TwoPhaseFluidPropertiesTransitionType::sharp) ?
+        level_set_heaviside :
+        UtilityFunctions::heaviside(level_set_heaviside, 0.5);
+    return temp * weight;
+  }
+
+
+
+  template <typename number>
+  template <typename value_type>
+  inline value_type
+  Material<number>::
+    compute_temperature_derivative_of_solid_liquid_gas_density_consistent_with_evaporation(
+      const value_type &level_set_heaviside,
+      const value_type &temperature_dependent_solid_fraction,
+      const value_type &gas_value,
+      const value_type &liquid_value,
+      const value_type &solid_value) const
+  {
+    const auto liquid_solid_value =
+      compute_solid_liquid_phases_property(temperature_dependent_solid_fraction,
+                                           liquid_value,
+                                           solid_value);
+    const auto liquid_solid_derivative =
+      compute_temperature_derivative_of_solid_liquid_phases_property(
+        temperature_dependent_solid_fraction, liquid_value, solid_value);
+    const auto temp =
+      liquid_solid_value * (1. + level_set_heaviside * (gas_value / liquid_solid_value - 1.));
+    return level_set_heaviside * gas_value * gas_value * liquid_solid_derivative / (temp * temp);
+  }
+
+
+
+  template <typename number>
+  inline number
+  Material<number>::compute_temperature_dependent_solid_fraction(const number temperature) const
+  {
+    if (data.solidification_type == SolidLiquidPropertiesTransitionType::mushy_zone)
+      return UtilityFunctions::limit_to_bounds(
+        (data.liquidus_temperature - temperature) * data.inv_mushy_interval, 0.0, 1.0);
+    else if (data.solidification_type == SolidLiquidPropertiesTransitionType::sharp)
+      return temperature < data.melting_point ? 1.0 : 0.0;
+    Assert(false, ExcNotImplemented());
+    return 0.0;
+  }
+
+
+
+  template <typename number>
+  inline VectorizedArray<number>
+  Material<number>::compute_temperature_dependent_solid_fraction(
+    const VectorizedArray<number> &temperature) const
+  {
+    if (data.solidification_type == SolidLiquidPropertiesTransitionType::mushy_zone)
+      return UtilityFunctions::limit_to_bounds(
+        (data.liquidus_temperature - temperature) * data.inv_mushy_interval, 0.0, 1.0);
+    else if (data.solidification_type == SolidLiquidPropertiesTransitionType::sharp)
+      return compare_and_apply_mask<SIMDComparison::less_than>(temperature,
+                                                               data.melting_point,
+                                                               1.0,
+                                                               0.0);
+    Assert(false, ExcNotImplemented());
+    return VectorizedArray<number>(0.0);
+  }
+
+
+
+  template <typename number>
+  constexpr Material<number>::MaterialParameterValuesContainer::
+  operator const MaterialParameterValues<number> &() const
+  {
+    return scalar_parameters;
+  }
+
+
+
+  template <typename number>
+  constexpr Material<number>::MaterialParameterValuesContainer::
+  operator const MaterialParameterValues<VectorizedArray<number>> &() const
+  {
+    return vectorized_parameters;
+  }
+
+} // namespace MeltPoolDG

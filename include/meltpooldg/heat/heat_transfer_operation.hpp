@@ -12,6 +12,7 @@
 
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/heat/heat_transfer_preconditioner.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
@@ -58,15 +59,13 @@ namespace MeltPoolDG::Heat
 
     std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
 
-    const MaterialData<double> &material_data;
-
     HeatTransferPreconditioner<dim> heat_transfer_preconditioner;
 
   public:
     HeatTransferOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
                           const ScratchData<dim> &                        scratch_data_in,
                           const HeatData<double> &                        heat_data_in,
-                          const MaterialData<double> &                    material_data,
+                          const Material<double> &                        material,
                           unsigned int                                    temp_dof_idx_in,
                           unsigned int temp_hanging_nodes_dof_idx_in,
                           unsigned int temp_quad_idx_in,

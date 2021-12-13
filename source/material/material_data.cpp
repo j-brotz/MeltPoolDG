@@ -76,6 +76,10 @@ namespace MeltPoolDG
     prm.add_parameter("material specific enthalpy reference temperature",
                       specific_enthalpy_reference_temperature,
                       "Reference temperature of the specific enthalpy");
+    prm.add_parameter(
+      "material solidification type",
+      solidification_type,
+      "Choose how to interpolate the properties over between the liquid and the solid phase.");
     prm.add_parameter("material two phase properties transition type",
                       two_phase_properties_transition_type,
                       "Choose how to interpolate the properties over the interface.");

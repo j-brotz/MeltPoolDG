@@ -78,7 +78,8 @@
     "material solid density": "1100.0",
     "material solid viscosity": "1e-1",
     "material solidus temperature": "100.0",
-    "material liquidus temperature": "200.0"
+    "material liquidus temperature": "200.0",
+    "material solidification type": "mushy_zone"
   },
   "levelset": {
     "ls do reinitialization": "true",

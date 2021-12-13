@@ -16,6 +16,7 @@
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
@@ -51,6 +52,7 @@ namespace MeltPoolDG::Heat
 
     std::shared_ptr<ScratchData<dim>>           scratch_data;
     std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
+    std::shared_ptr<Material<double>>           material;
     std::shared_ptr<Postprocessor<dim>>         post_processor;
 
     std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;

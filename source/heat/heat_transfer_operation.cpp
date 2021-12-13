@@ -10,7 +10,7 @@ namespace MeltPoolDG::Heat
     const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
     const ScratchData<dim> &                        scratch_data_in,
     const HeatData<double> &                        heat_data_in,
-    const MaterialData<double> &                    material_data,
+    const Material<double> &                        material,
     const unsigned int                              temp_dof_idx_in,
     const unsigned int                              temp_hanging_nodes_dof_idx_in,
     const unsigned int                              temp_quad_idx_in,
@@ -27,13 +27,12 @@ namespace MeltPoolDG::Heat
     , velocity(velocity_in)
     , ls_dof_idx(ls_dof_idx_in)
     , level_set_as_heaviside(level_set_as_heaviside_in)
-    , material_data(material_data)
     , heat_transfer_preconditioner(scratch_data, temp_dof_idx)
   {
     heat_operator = std::make_shared<HeatTransferOperator<dim>>(bc_data,
                                                                 scratch_data,
                                                                 heat_data,
-                                                                material_data,
+                                                                material,
                                                                 temp_dof_idx,
                                                                 temp_quad_idx,
                                                                 temp_hanging_nodes_dof_idx,

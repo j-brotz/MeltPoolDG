@@ -10,6 +10,7 @@
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -151,6 +152,19 @@ namespace MeltPoolDG::Heat
       }
 
     setup_dof_system(base_in, false);
+
+    /*
+     * initialize material
+     */
+    // TODO: Introduce problem specific parameters
+    const bool do_two_phase      = base_in->parameters.heat.two_phase;
+    const bool do_solidification = base_in->parameters.heat.solidification;
+    const bool do_evaporation = base_in->parameters.material.two_phase_properties_transition_type ==
+                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation;
+    const auto material_type =
+      determine_material_type(do_two_phase, do_solidification, do_evaporation);
+    material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
+
     /*
      *  initialize the time stepping scheme
      */
@@ -218,7 +232,7 @@ namespace MeltPoolDG::Heat
     heat_operation = std::make_shared<HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
                                                                   *scratch_data,
                                                                   base_in->parameters.heat,
-                                                                  base_in->parameters.material,
+                                                                  *material,
                                                                   temp_dof_idx,
                                                                   temp_hanging_nodes_dof_idx,
                                                                   temp_quad_idx,
