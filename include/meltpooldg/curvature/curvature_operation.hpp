@@ -96,10 +96,17 @@ namespace MeltPoolDG::Curvature
      */
     VectorType solution_curvature;
     /*
-     * Preconditioner for the curvatore operator
+     * Preconditioner for the matrix-free curvatore operator
      */
-    std::shared_ptr<
-      Preconditioner::PreconditionerMatrixfreeGeneric<dim, std::shared_ptr<CurvatureOperator<dim>>>>
+    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, CurvatureOperator<dim>>>
       curvature_preconditioner;
+    /*
+     * Cache for diagonal preconditioner matrix-free
+     */
+    DiagonalMatrix<VectorType> diag_preconditioner_matrixfree;
+    /*
+     * Cache for trilinos preconditioner matrix-free
+     */
+    std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
   };
 } // namespace MeltPoolDG::Curvature

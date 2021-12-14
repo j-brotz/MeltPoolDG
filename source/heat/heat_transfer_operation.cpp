@@ -47,7 +47,7 @@ namespace MeltPoolDG::Heat
     /*
      * setup preconditioner for matrix-free computation
      */
-    heat_transfer_preconditioner = std::make_shared<HeatTransferPreconditionerMatrixfree<dim>>(
+    heat_transfer_preconditioner = std::make_shared<HeatTransferPreconditionerMatrixFree<dim>>(
       scratch_data, temp_dof_idx, heat_data.solver.preconditioner_type, heat_operator);
 
     reinit();

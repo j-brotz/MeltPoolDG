@@ -5,7 +5,7 @@
 namespace MeltPoolDG::Preconditioner
 {
   template <int dim, typename OperatorType>
-  PreconditionerMatrixfreeGeneric<dim, OperatorType>::PreconditionerMatrixfreeGeneric(
+  PreconditionerMatrixFreeGeneric<dim, OperatorType>::PreconditionerMatrixFreeGeneric(
     const ScratchData<dim> &  scratch_data_in,
     const unsigned int        curv_dof_idx_in,
     const PreconditionerType &preconditioner_type_in,
@@ -27,7 +27,7 @@ namespace MeltPoolDG::Preconditioner
 
   template <int dim, typename OperatorType>
   void
-  PreconditionerMatrixfreeGeneric<dim, OperatorType>::reinit()
+  PreconditionerMatrixFreeGeneric<dim, OperatorType>::reinit()
   {
     if (preconditioner_type == PreconditionerType::AMG ||
         preconditioner_type == PreconditionerType::ILU)
@@ -55,11 +55,11 @@ namespace MeltPoolDG::Preconditioner
 
   template <int dim, typename OperatorType>
   std::shared_ptr<TrilinosWrappers::PreconditionBase>
-  PreconditionerMatrixfreeGeneric<dim, OperatorType>::compute_trilinos_preconditioner()
+  PreconditionerMatrixFreeGeneric<dim, OperatorType>::compute_trilinos_preconditioner()
   {
     if (preconditioner_type == PreconditionerType::AMG ||
         preconditioner_type == PreconditionerType::ILU)
-      operator_base->compute_system_matrix_from_matrixfree(preconditioner_system_matrix);
+      operator_base.compute_system_matrix_from_matrixfree(preconditioner_system_matrix);
 
     return Preconditioner::get_preconditioner_trilinos(preconditioner_system_matrix,
                                                        preconditioner_type);
@@ -67,37 +67,34 @@ namespace MeltPoolDG::Preconditioner
 
   template <int dim, typename OperatorType>
   const TrilinosWrappers::SparseMatrix &
-  PreconditionerMatrixfreeGeneric<dim, OperatorType>::get_system_matrix() const
+  PreconditionerMatrixFreeGeneric<dim, OperatorType>::get_system_matrix() const
   {
     return preconditioner_system_matrix;
   }
 
   template <int dim, typename OperatorType>
   TrilinosWrappers::SparseMatrix &
-  PreconditionerMatrixfreeGeneric<dim, OperatorType>::get_system_matrix()
+  PreconditionerMatrixFreeGeneric<dim, OperatorType>::get_system_matrix()
   {
     return preconditioner_system_matrix;
   }
 
   template <int dim, typename OperatorType>
   DiagonalMatrix<VectorType>
-  PreconditionerMatrixfreeGeneric<dim, OperatorType>::compute_diagonal_preconditioner()
+  PreconditionerMatrixFreeGeneric<dim, OperatorType>::compute_diagonal_preconditioner()
   {
     using Preconditioner = DiagonalMatrix<VectorType>;
 
     VectorType diag;
 
-    operator_base->compute_inverse_diagonal_from_matrixfree(diag);
+    operator_base.compute_inverse_diagonal_from_matrixfree(diag);
 
     return DiagonalMatrix<VectorType>(diag);
   }
 
   //@todo: where should we instantiate this part?
-  template class PreconditionerMatrixfreeGeneric<1,
-                                                 std::shared_ptr<Curvature::CurvatureOperator<1>>>;
-  template class PreconditionerMatrixfreeGeneric<2,
-                                                 std::shared_ptr<Curvature::CurvatureOperator<2>>>;
-  template class PreconditionerMatrixfreeGeneric<3,
-                                                 std::shared_ptr<Curvature::CurvatureOperator<3>>>;
+  template class PreconditionerMatrixFreeGeneric<1, Curvature::CurvatureOperator<1>>;
+  template class PreconditionerMatrixFreeGeneric<2, Curvature::CurvatureOperator<2>>;
+  template class PreconditionerMatrixFreeGeneric<3, Curvature::CurvatureOperator<3>>;
 
 } // namespace MeltPoolDG::Preconditioner

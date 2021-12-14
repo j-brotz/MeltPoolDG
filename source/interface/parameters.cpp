@@ -373,7 +373,7 @@ namespace MeltPoolDG
                         "Set this parameter for choosing a solver type.");
       prm.add_parameter("reinit preconditioner type",
                         reinit.solver.preconditioner_type,
-                        "Set this parameter for choosing a preconditioner type");
+                        "Set this parameter for choosing a preconditioner type.");
       prm.add_parameter(
         "reinit max iterations",
         reinit.solver.max_iterations,
@@ -454,7 +454,7 @@ namespace MeltPoolDG
         curv.solver.preconditioner_type = PreconditionerType::Diagonal;
         prm.add_parameter("preconditioner type",
                           curv.solver.preconditioner_type,
-                          "Set this parameter for choosing a preconditioner type");
+                          "Set this parameter for choosing a preconditioner type.");
         prm.add_parameter(
           "max iterations",
           curv.solver.max_iterations,
@@ -492,7 +492,7 @@ namespace MeltPoolDG
         " are supported");
       prm.add_parameter("heat solver preconditioner type",
                         heat.solver.preconditioner_type,
-                        "Set this parameter for choosing a preconditioner type");
+                        "Set this parameter for choosing a preconditioner type.");
       prm.add_parameter(
         "heat solver max iterations",
         heat.solver.max_iterations,

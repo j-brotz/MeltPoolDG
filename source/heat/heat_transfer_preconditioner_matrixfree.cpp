@@ -4,7 +4,7 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim>
-  HeatTransferPreconditionerMatrixfree<dim>::HeatTransferPreconditionerMatrixfree(
+  HeatTransferPreconditionerMatrixFree<dim>::HeatTransferPreconditionerMatrixFree(
     const ScratchData<dim> &  scratch_data_in,
     const unsigned int        temp_dof_idx_in,
     const PreconditionerType &preconditioner_type_in,
@@ -38,7 +38,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferPreconditionerMatrixfree<dim>::reinit()
+  HeatTransferPreconditionerMatrixFree<dim>::reinit()
   {
     if (preconditioner_type != PreconditionerType::DiagonalReduced &&
         preconditioner_type != PreconditionerType::Identity)
@@ -66,21 +66,21 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   const TrilinosWrappers::SparseMatrix &
-  HeatTransferPreconditionerMatrixfree<dim>::get_system_matrix() const
+  HeatTransferPreconditionerMatrixFree<dim>::get_system_matrix() const
   {
     return preconditioner_system_matrix;
   }
 
   template <int dim>
   TrilinosWrappers::SparseMatrix &
-  HeatTransferPreconditionerMatrixfree<dim>::get_system_matrix()
+  HeatTransferPreconditionerMatrixFree<dim>::get_system_matrix()
   {
     return preconditioner_system_matrix;
   }
 
   template <int dim>
   DiagonalMatrix<VectorType>
-  HeatTransferPreconditionerMatrixfree<dim>::compute_diagonal_preconditioner()
+  HeatTransferPreconditionerMatrixFree<dim>::compute_diagonal_preconditioner()
   {
     if (preconditioner_type == PreconditionerType::Diagonal)
       {
@@ -113,7 +113,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   std::shared_ptr<TrilinosWrappers::PreconditionBase>
-  HeatTransferPreconditionerMatrixfree<dim>::compute_trilinos_preconditioner()
+  HeatTransferPreconditionerMatrixFree<dim>::compute_trilinos_preconditioner()
   {
     if (preconditioner_type == preconditioner_base_name)
       heat_operator->compute_system_matrix_from_matrixfree(preconditioner_system_matrix);
@@ -124,7 +124,7 @@ namespace MeltPoolDG::Heat
                                                        preconditioner_base_name);
   }
 
-  template class HeatTransferPreconditionerMatrixfree<1>;
-  template class HeatTransferPreconditionerMatrixfree<2>;
-  template class HeatTransferPreconditionerMatrixfree<3>;
+  template class HeatTransferPreconditionerMatrixFree<1>;
+  template class HeatTransferPreconditionerMatrixFree<2>;
+  template class HeatTransferPreconditionerMatrixFree<3>;
 } // namespace MeltPoolDG::Heat

@@ -15,7 +15,7 @@ namespace MeltPoolDG::Preconditioner
   using namespace dealii;
 
   template <int dim, typename OperatorType>
-  class PreconditionerMatrixfreeGeneric : public PreconditionerMatrixfreeBase<dim>
+  class PreconditionerMatrixFreeGeneric : public PreconditionerMatrixFreeBase<dim>
   {
   private:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<double>;
@@ -47,7 +47,7 @@ namespace MeltPoolDG::Preconditioner
     TrilinosWrappers::SparseMatrix preconditioner_system_matrix;
 
   public:
-    PreconditionerMatrixfreeGeneric(const ScratchData<dim> &  scratch_data_in,
+    PreconditionerMatrixFreeGeneric(const ScratchData<dim> &  scratch_data_in,
                                     const unsigned int        curv_dof_idx_in,
                                     const PreconditionerType &preconditioner_type_in,
                                     const OperatorType &      operator_base_in);

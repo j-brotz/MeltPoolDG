@@ -59,7 +59,7 @@ namespace MeltPoolDG::Heat
 
     std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
 
-    std::shared_ptr<HeatTransferPreconditionerMatrixfree<dim>> heat_transfer_preconditioner;
+    std::shared_ptr<HeatTransferPreconditionerMatrixFree<dim>> heat_transfer_preconditioner;
 
   public:
     HeatTransferOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,

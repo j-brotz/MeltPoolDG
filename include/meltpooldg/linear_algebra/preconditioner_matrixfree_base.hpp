@@ -12,7 +12,7 @@ namespace MeltPoolDG::Preconditioner
   using namespace dealii;
 
   template <int dim>
-  class PreconditionerMatrixfreeBase
+  class PreconditionerMatrixFreeBase
   {
   private:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<double>;
