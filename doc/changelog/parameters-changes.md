@@ -5,7 +5,7 @@ The formatting should follow [Keep a Changelog](https://keepachangelog.com/en/1.
 
 ## 2021-12-10
 - Add new parameter to distinguish how interfacial forces are calculated: 
-```
+```json
 "recoil pressure" : 
 {"interface distributed flux type": "continuous|interface value"}
 ```
