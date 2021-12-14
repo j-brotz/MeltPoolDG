@@ -29,6 +29,10 @@ namespace MeltPoolDG::Curvature
 
   {
     this->reset_indices(curv_dof_idx_in, curv_quad_idx_in);
+
+    AssertThrow(!do_narrow_band || solution_level_set,
+                ExcMessage(
+                  "Level set solution vector must not be nullptr for a narrow band computation."));
   }
 
   template <int dim, typename number>
@@ -116,6 +120,9 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number> curvature(matrix_free, curv_dof_idx, curv_quad_idx);
@@ -125,7 +132,7 @@ namespace MeltPoolDG::Curvature
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             curvature.reinit(cell);
-            curvature.read_dof_values_plain(src);
+            curvature.read_dof_values(src);
             curvature.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             if (do_narrow_band)
@@ -160,6 +167,9 @@ namespace MeltPoolDG::Curvature
       dst,
       src,
       true /*zero out dst*/);
+
+    if (solution_level_set)
+      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -167,9 +177,8 @@ namespace MeltPoolDG::Curvature
   CurvatureOperator<dim, number>::create_rhs(VectorType &                              dst,
                                              const CurvatureOperator::BlockVectorType &src) const
   {
-    AssertThrow(!do_narrow_band || solution_level_set,
-                ExcMessage(
-                  "Level set solution vector must not be nullptr for a narrow band computation."));
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, BlockVectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
@@ -215,6 +224,9 @@ namespace MeltPoolDG::Curvature
       dst,
       src,
       true /*zero out dst*/);
+
+    if (solution_level_set)
+      solution_level_set->zero_out_ghost_values();
   }
 
   template class CurvatureOperator<1, double>;
