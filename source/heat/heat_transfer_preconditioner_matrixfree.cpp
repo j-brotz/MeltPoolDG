@@ -115,11 +115,14 @@ namespace MeltPoolDG::Heat
   std::shared_ptr<TrilinosWrappers::PreconditionBase>
   HeatTransferPreconditionerMatrixFree<dim>::compute_trilinos_preconditioner()
   {
-    if (preconditioner_type == preconditioner_base_name)
-      heat_operator->compute_system_matrix_from_matrixfree(preconditioner_system_matrix);
-    else
-      heat_operator->compute_system_matrix_from_matrixfree_reduced(preconditioner_system_matrix);
-
+    if (preconditioner_type != PreconditionerType::Identity)
+      {
+        if (preconditioner_type == preconditioner_base_name)
+          heat_operator->compute_system_matrix_from_matrixfree(preconditioner_system_matrix);
+        else
+          heat_operator->compute_system_matrix_from_matrixfree_reduced(
+            preconditioner_system_matrix);
+      }
     return Preconditioner::get_preconditioner_trilinos(preconditioner_system_matrix,
                                                        preconditioner_base_name);
   }

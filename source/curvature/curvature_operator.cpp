@@ -153,9 +153,6 @@ namespace MeltPoolDG::Curvature
     if (solution_level_set)
       solution_level_set->update_ghost_values();
 
-    if (solution_level_set)
-      solution_level_set->update_ghost_values();
-
     scratch_data.get_matrix_free().template cell_loop<VectorType, BlockVectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
         FECellIntegrator<dim, 1, number>   curvature(matrix_free, curv_dof_idx, curv_quad_idx);
@@ -240,8 +237,9 @@ namespace MeltPoolDG::Curvature
       this->quad_idx);
 
     system_matrix.compress(VectorOperation::add);
+
     if (solution_level_set)
-      solution_level_set->update_ghost_values();
+      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>
