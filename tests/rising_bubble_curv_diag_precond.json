@@ -29,7 +29,7 @@
     "ls do matrix free": "true"
   },
   "reinitialization": {
-    "reinit max n steps": "1",
+    "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
     "reinit scale factor epsilon": "1.5"
@@ -39,7 +39,7 @@
     "normal vec do matrix free": "true"
   },
   "curvature": {
-    "curv dcamping scale factor": "4",
+    "curv damping scale factor": "4",
     "curv do matrix free": "true",
     "linear solver": {
       "preconditioner type": "Diagonal"

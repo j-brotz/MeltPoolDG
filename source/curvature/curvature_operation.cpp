@@ -22,6 +22,9 @@ namespace MeltPoolDG::Curvature
      *  initialize curvature data
      */
     curvature_data = data_in.curv;
+
+    AssertThrow(curvature_data.solver.solver_type == SolverType::CG,
+                ExcMessage("The curvature operation only supports the CG solver type."));
     /*
      *    initialize normal_vector_operation for computing the normal vector to the given
      *    scalar function for which the curvature should be calculated.

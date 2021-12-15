@@ -445,11 +445,11 @@ namespace MeltPoolDG
       //@todo: move to own parameter handler for linear solver
       prm.enter_subsection("linear solver");
       {
-        prm.add_parameter(
-          "solver type",
-          curv.solver.solver_type,
-          "Set this parameter for choosing a solver type. At the moment GMRES or CG solvers "
-          "are supported");
+        // set default value
+        curv.solver.solver_type = SolverType::CG;
+        prm.add_parameter("solver type",
+                          curv.solver.solver_type,
+                          "Set this parameter for choosing a iterative linear solver type.");
         // set default value
         curv.solver.preconditioner_type = PreconditionerType::Diagonal;
         prm.add_parameter("preconditioner type",
