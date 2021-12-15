@@ -69,17 +69,17 @@ namespace MeltPoolDG::Curvature
     void
     assemble_matrixbased(const BlockVectorType &solution_normal_vector_in,
                          SparseMatrixType &     matrix,
-                         VectorType &           rhs) const override;
+                         VectorType &           rhs) const final;
 
     /*
      *  matrix-free utility
      */
 
     void
-    vmult(VectorType &dst, const VectorType &src) const override;
+    vmult(VectorType &dst, const VectorType &src) const final;
 
     void
-    create_rhs(VectorType &dst, const BlockVectorType &src) const override;
+    create_rhs(VectorType &dst, const BlockVectorType &src) const final;
 
     void
     compute_system_matrix_from_matrixfree(

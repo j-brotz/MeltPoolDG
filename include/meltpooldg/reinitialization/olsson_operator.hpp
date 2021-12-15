@@ -55,7 +55,7 @@ namespace MeltPoolDG
       void
       assemble_matrixbased(const VectorType &levelset_old,
                            SparseMatrixType &matrix,
-                           VectorType &      rhs) const override;
+                           VectorType &      rhs) const final;
 
       /*
        *    matrix-free implementation
@@ -63,10 +63,10 @@ namespace MeltPoolDG
        */
 
       void
-      vmult(VectorType &dst, const VectorType &src) const override;
+      vmult(VectorType &dst, const VectorType &src) const final;
 
       void
-      create_rhs(VectorType &dst, const VectorType &src) const override;
+      create_rhs(VectorType &dst, const VectorType &src) const final;
 
       void
       set_normal_vector_field(const BlockVectorType &normal_vector);
