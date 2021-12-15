@@ -19,13 +19,13 @@ namespace MeltPoolDG
                                // δ = ||∇ϕ|| ( w_g (1-ϕ) + w_h ϕ )² 3 / ( w_g² + w_g w_h + w_h² )
                                // with the weight of the gas phase w_g and the weight of the heavy
                                // phase w_h
-    double_phase_weighted_delta // approximate the Dirac delta function with
-                                //      6 ||∇ϕ|| ( w_1g (1-ϕ) + w_1h ϕ )( w_2g (1-ϕ) + w_2h ϕ )
-                                // δ = ---------------------------------------------------------
-                                //         2 w_1g w_2g + w_1g w_2h + w_1h w_2g + 2 w_1h w_2h
-                                // with the weights of the gas phase w_1g and w_2g and the weights
-                                // of the heavy phase w_1h and w_2h
-  )
+    double_phase_weighted_delta, // approximate the Dirac delta function with
+                                 //      6 ||∇ϕ|| ( w_1g (1-ϕ) + w_1h ϕ )( w_2g (1-ϕ) + w_2h ϕ )
+                                 // δ = ---------------------------------------------------------
+                                 //         2 w_1g w_2g + w_1g w_2h + w_1h w_2g + 2 w_1h w_2h
+                                 // with the weights of the gas phase w_1g and w_2g and the weights
+                                 // of the heavy phase w_1h and w_2h
+    delta_weighted_consistent_with_evaporation)
 
   template <typename number = double>
   struct DeltaApproximationPhaseWeightedData
