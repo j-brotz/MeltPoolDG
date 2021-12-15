@@ -120,6 +120,9 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperator<dim, number>::vmult(BlockVectorType &dst, const BlockVectorType &src) const
   {
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+
     AssertThrow(!do_narrow_band || solution_level_set,
                 ExcMessage(
                   "Level set solution vector must not be nullptr for a narrow band computation."));
@@ -168,6 +171,9 @@ namespace MeltPoolDG::NormalVector
       dst,
       src,
       true);
+
+    if (solution_level_set)
+      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>

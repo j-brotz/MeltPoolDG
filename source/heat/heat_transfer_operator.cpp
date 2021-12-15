@@ -224,7 +224,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::compute_inverse_diagonal(VectorType &diagonal) const
+  HeatTransferOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(
+    VectorType &diagonal) const
   {
     scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
 
@@ -289,9 +290,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::compute_system_matrix(
-    TrilinosWrappers::SparseMatrix &system_matrix,
-    bool                            include_boundary_terms) const
+  HeatTransferOperator<dim, number>::compute_system_matrix_from_matrixfree_reduced(
+    TrilinosWrappers::SparseMatrix &system_matrix) const
   {
     system_matrix = 0.0;
 
@@ -304,178 +304,199 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
     if (evaporative_mass_flux)
       MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
-    if (!include_boundary_terms)
-      {
-        // note: not thread safe!!!
-        const auto &                       matrix_free = scratch_data.get_matrix_free();
-        FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
-        FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
-        FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
-                                                              temp_dof_idx,
-                                                              this->quad_idx);
-        FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
-        FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
-        FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
-                                                     evapor_mass_flux_dof_idx,
-                                                     this->quad_idx);
 
-        unsigned int old_cell_index = numbers::invalid_unsigned_int;
+    // note: not thread safe!!!
+    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
+                                                          temp_dof_idx,
+                                                          this->quad_idx);
+    FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
+    FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
+                                                 evapor_mass_flux_dof_idx,
+                                                 this->quad_idx);
 
-        // compute matrix (only cell contributions)
-        MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
-          matrix_free,
-          scratch_data.get_constraint(temp_dof_idx),
-          system_matrix,
-          [&](auto &temp_vals) {
-            const unsigned int current_cell_index = temp_vals.get_current_cell_index();
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
-            tangent_local_cell_operation(temp_vals,
-                                         temp_lin_vals,
-                                         temp_old_vals,
-                                         velocity_vals,
-                                         ls_vals,
-                                         ls_interpolated_vals,
-                                         evapor_vals,
-                                         old_cell_index != current_cell_index);
+    // compute matrix (only cell contributions)
+    MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+      matrix_free,
+      scratch_data.get_constraint(temp_dof_idx),
+      system_matrix,
+      [&](auto &temp_vals) {
+        const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
-            old_cell_index = current_cell_index;
-          },
-          temp_dof_idx,
-          this->quad_idx);
-      }
-    else
-      {
+        tangent_local_cell_operation(temp_vals,
+                                     temp_lin_vals,
+                                     temp_old_vals,
+                                     velocity_vals,
+                                     ls_vals,
+                                     ls_interpolated_vals,
+                                     evapor_vals,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      temp_dof_idx,
+      this->quad_idx);
+
+    system_matrix.compress(VectorOperation::add);
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
+    if (velocity)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
+    if (level_set_as_heaviside)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::compute_system_matrix_from_matrixfree(
+    TrilinosWrappers::SparseMatrix &system_matrix) const
+  {
+    system_matrix = 0.0;
+
+    MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
+    if (velocity)
+      MeltPoolDG::VectorTools::update_ghost_values(*velocity);
+    if (level_set_as_heaviside)
+      MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
+    {
+      const auto &                          matrix_free = scratch_data.get_matrix_free();
+      std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
+
+      FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
+                                                            temp_dof_idx,
+                                                            this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
+      FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
+                                                   evapor_mass_flux_dof_idx,
+                                                   this->quad_idx);
+
+      const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
+
+      // cell integral
+      for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
-          const auto &                          matrix_free = scratch_data.get_matrix_free();
-          std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
+          const unsigned int n_filled_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
 
-          FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, this->quad_idx);
-          FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
-                                                           vel_dof_idx,
-                                                           this->quad_idx);
-          FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, this->quad_idx);
-          FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
-                                                                temp_dof_idx,
-                                                                this->quad_idx);
-          FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, this->quad_idx);
-          FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, this->quad_idx);
-          FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
-                                                       evapor_mass_flux_dof_idx,
-                                                       this->quad_idx);
+          FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
+          std::fill_n(matrices,
+                      VectorizedArray<number>::size(),
+                      FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
 
-          const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
+          temp_vals.reinit(cell);
 
-          // cell integral
-          for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+          for (unsigned int j = 0; j < dofs_per_cell; ++j)
             {
-              const unsigned int n_filled_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
+              for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
 
-              FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
-              std::fill_n(matrices,
-                          VectorizedArray<number>::size(),
-                          FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+              tangent_local_cell_operation(temp_vals,
+                                           temp_lin_vals,
+                                           temp_old_vals,
+                                           velocity_vals,
+                                           ls_vals,
+                                           ls_interpolated_vals,
+                                           evapor_vals,
+                                           j == 0 /*do_reinit_cell*/);
 
-              temp_vals.reinit(cell);
+              for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                for (unsigned int v = 0; v < n_filled_lanes; ++v)
+                  matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
+            }
 
-              for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                {
-                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                    temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
+          for (unsigned int v = 0; v < n_filled_lanes; ++v)
+            {
+              auto cell_v = matrix_free.get_cell_iterator(cell, v, temp_dof_idx);
 
-                  tangent_local_cell_operation(temp_vals,
-                                               temp_lin_vals,
-                                               temp_old_vals,
-                                               velocity_vals,
-                                               ls_vals,
-                                               ls_interpolated_vals,
-                                               evapor_vals,
-                                               j == 0 /*do_reinit_cell*/);
+              std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+              cell_v->get_dof_indices(dof_indices);
 
-                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                    for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                      matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
-                }
+              auto temp = dof_indices;
+              for (unsigned int j = 0; j < dof_indices.size(); ++j)
+                dof_indices[j] = temp[temp_vals.get_shape_info().lexicographic_numbering[j]];
 
-              for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                {
-                  auto cell_v = matrix_free.get_cell_iterator(cell, v, temp_dof_idx);
-
-                  std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
-                  cell_v->get_dof_indices(dof_indices);
-
-                  auto temp = dof_indices;
-                  for (unsigned int j = 0; j < dof_indices.size(); ++j)
-                    dof_indices[j] = temp[temp_vals.get_shape_info().lexicographic_numbering[j]];
-
-                  scratch_data.get_constraint(temp_dof_idx)
-                    .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
-                }
+              scratch_data.get_constraint(temp_dof_idx)
+                .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
             }
         }
-        // boundary_integral
-        {
-          const auto &                          matrix_free = scratch_data.get_matrix_free();
-          std::pair<unsigned int, unsigned int> face_range  = {
-            matrix_free.n_inner_face_batches(),
-            matrix_free.n_inner_face_batches() + matrix_free.n_boundary_face_batches()};
+    }
+    // boundary_integral
+    {
+      const auto &                          matrix_free = scratch_data.get_matrix_free();
+      std::pair<unsigned int, unsigned int> face_range  = {matrix_free.n_inner_face_batches(),
+                                                          matrix_free.n_inner_face_batches() +
+                                                            matrix_free.n_boundary_face_batches()};
 
-          FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
+      FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
+                                             true /*is_interior_face*/,
+                                             temp_dof_idx,
+                                             this->quad_idx);
+      FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
                                                  true /*is_interior_face*/,
                                                  temp_dof_idx,
                                                  this->quad_idx);
-          FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
-                                                     true /*is_interior_face*/,
-                                                     temp_dof_idx,
-                                                     this->quad_idx);
 
-          const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
+      const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
 
-          for (unsigned int face = face_range.first; face < face_range.second; ++face)
+      for (unsigned int face = face_range.first; face < face_range.second; ++face)
+        {
+          dQ_dT.reinit(face);
+
+          const unsigned int n_filled_lanes = matrix_free.n_active_entries_per_face_batch(face);
+
+          FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
+          std::fill_n(matrices,
+                      VectorizedArray<number>::size(),
+                      FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+
+          for (unsigned int j = 0; j < dofs_per_cell; ++j)
             {
-              dQ_dT.reinit(face);
+              for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
 
-              const unsigned int n_filled_lanes = matrix_free.n_active_entries_per_face_batch(face);
+              tangent_local_boundary_operation(dQ_dT, temp_vals, j == 0 /*do_reinit_face*/);
 
-              FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
-              std::fill_n(matrices,
-                          VectorizedArray<number>::size(),
-                          FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
+              for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                for (unsigned int v = 0; v < n_filled_lanes; ++v)
+                  matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
+            }
 
-              for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                {
-                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                    dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
+          for (unsigned int v = 0; v < n_filled_lanes; ++v)
+            {
+              unsigned int const cell_number = matrix_free.get_face_info(face).cells_interior[v];
 
-                  tangent_local_boundary_operation(dQ_dT, temp_vals, j == 0 /*do_reinit_face*/);
+              auto cell_v =
+                matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
+                                              cell_number % VectorizedArray<number>::size(),
+                                              temp_dof_idx);
 
-                  for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                    for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                      matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
-                }
+              std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
+              cell_v->get_dof_indices(dof_indices);
 
-              for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                {
-                  unsigned int const cell_number =
-                    matrix_free.get_face_info(face).cells_interior[v];
+              auto temp = dof_indices;
+              for (unsigned int j = 0; j < dof_indices.size(); ++j)
+                dof_indices[j] = temp[dQ_dT.get_shape_info().lexicographic_numbering[j]];
 
-                  auto cell_v =
-                    matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
-                                                  cell_number % VectorizedArray<number>::size(),
-                                                  temp_dof_idx);
-
-                  std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
-                  cell_v->get_dof_indices(dof_indices);
-
-                  auto temp = dof_indices;
-                  for (unsigned int j = 0; j < dof_indices.size(); ++j)
-                    dof_indices[j] = temp[dQ_dT.get_shape_info().lexicographic_numbering[j]];
-
-                  scratch_data.get_constraint(temp_dof_idx)
-                    .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
-                }
+              scratch_data.get_constraint(temp_dof_idx)
+                .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
             }
         }
-      }
+    }
 
     system_matrix.compress(VectorOperation::add);
     MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);

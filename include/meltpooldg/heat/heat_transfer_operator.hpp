@@ -176,13 +176,13 @@ namespace MeltPoolDG::Heat
     void
     assemble_matrixbased(const VectorType &advected_field_old,
                          SparseMatrixType &matrix,
-                         VectorType &      rhs) const override;
+                         VectorType &      rhs) const final;
 
     /*
      *    matrix-free implementation
      */
     void
-    vmult(VectorType &dst, const VectorType &src /*solution_update*/) const override;
+    vmult(VectorType &dst, const VectorType &src /*solution_update*/) const final;
 
     void
     tangent_cell_loop(const MatrixFree<dim, number> &       matrix_free,
@@ -200,11 +200,15 @@ namespace MeltPoolDG::Heat
                           std::pair<unsigned int, unsigned int> face_range) const;
 
     void
-    compute_inverse_diagonal(VectorType &diagonal) const;
+    compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
 
     void
-    compute_system_matrix(TrilinosWrappers::SparseMatrix &system_matrix,
-                          bool                            include_boundary_terms = false) const;
+    compute_system_matrix_from_matrixfree_reduced(
+      TrilinosWrappers::SparseMatrix &system_matrix) const;
+
+    void
+    compute_system_matrix_from_matrixfree(
+      TrilinosWrappers::SparseMatrix &system_matrix) const final;
 
     void
     rhs_cell_loop(const MatrixFree<dim, number> &       matrix_free,
@@ -228,7 +232,7 @@ namespace MeltPoolDG::Heat
      * -R(T)
      */
     void
-    create_rhs(VectorType &dst, const VectorType &src /*temperature_old*/) const override;
+    create_rhs(VectorType &dst, const VectorType &src /*temperature_old*/) const final;
 
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;

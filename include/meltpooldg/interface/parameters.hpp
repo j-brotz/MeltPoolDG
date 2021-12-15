@@ -44,14 +44,34 @@ namespace MeltPoolDG
               // at the projected quadrature points to the level set = 0 isosurface.
               interface_value)
 
+  BETTER_ENUM(PreconditionerType,
+              char,
+              // No preconditioner.
+              Identity,
+              // Algebraic multigrid preconditioner from the Trilinos package ...
+              AMG,
+              // ... potentially with reduced effort in computing the system matrix, e.g., by
+              // neglecting face integrals.
+              AMGReduced,
+              // Incomplete LU factorization preconditioner from the Trilinos package ...
+              ILU,
+              // ... potentially with reduced effort in computing the system matrix, e.g., by
+              // neglecting face integrals.
+              ILUReduced,
+              // Use the inverse diagonal of the system matrix as preconditioner ...
+              Diagonal,
+              // ... potentially with reduced effort in computing the system matrix, e.g., by
+              // neglecting face integrals.
+              DiagonalReduced)
+
   template <typename number = double>
   struct SolverData
   {
-    bool         do_matrix_free      = true;
-    std::string  preconditioner_type = "Identity";
-    SolverType   solver_type         = SolverType::GMRES;
-    unsigned int max_iterations      = 10000;
-    number       rel_tolerance       = 1e-12;
+    bool               do_matrix_free      = true;
+    PreconditionerType preconditioner_type = PreconditionerType::Identity;
+    SolverType         solver_type         = SolverType::GMRES;
+    unsigned int       max_iterations      = 10000;
+    number             rel_tolerance       = 1e-12;
   };
 
   template <typename number = double>
@@ -148,11 +168,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct CurvatureData
   {
-    number       damping_scale_factor = 0.0;
-    bool         do_matrix_free       = true;
-    std::string  implementation       = "meltpooldg";
-    unsigned int verbosity_level      = 0;
-    bool         do_narrow_band       = false;
+    number             damping_scale_factor = 0.0;
+    bool               do_matrix_free       = true;
+    std::string        implementation       = "meltpooldg";
+    unsigned int       verbosity_level      = 0;
+    bool               do_narrow_band       = false;
+    SolverData<number> solver;
   };
 
   template <typename number = double>

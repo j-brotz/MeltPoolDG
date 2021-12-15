@@ -13,6 +13,7 @@
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/mpi.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 
 using namespace dealii;
 
@@ -41,32 +42,6 @@ namespace MeltPoolDG
 
       solution.update_ghost_values();
       return solver_control.last_step();
-    }
-
-    static std::shared_ptr<TrilinosWrappers::PreconditionBase>
-    setup_preconditioner(const TrilinosWrappers::SparseMatrix &matrix,
-                         std::string                           preconditioner_type = "Identity")
-    {
-      if (preconditioner_type == "Identity")
-        {
-          return std::make_shared<TrilinosWrappers::PreconditionIdentity>();
-        }
-      else if (preconditioner_type == "AMG")
-        {
-          auto preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
-          TrilinosWrappers::PreconditionAMG::AdditionalData data;
-          preconditioner->initialize(matrix, data);
-          return preconditioner;
-        }
-      else if (preconditioner_type == "ILU")
-        {
-          auto preconditioner = std::make_shared<TrilinosWrappers::PreconditionILU>();
-          TrilinosWrappers::PreconditionILU::AdditionalData data;
-          preconditioner->initialize(matrix, data);
-          return preconditioner;
-        }
-      else
-        AssertThrow(false, ExcMessage("The requested preconditioner type is not implemented."))
     }
   };
 } // namespace MeltPoolDG

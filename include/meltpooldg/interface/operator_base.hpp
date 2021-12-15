@@ -5,10 +5,13 @@
 // MeltPoolDG
 #include <meltpooldg/interface/scratch_data.hpp>
 
+
 namespace MeltPoolDG
 {
   using namespace dealii;
 
+  //@todo: eliminate template parameters DoFVectorType and SrcRhsVectorType
+  // by providing differente override functions
   template <int dim,
             typename number           = double,
             typename DoFVectorType    = LinearAlgebra::distributed::Vector<number>,
@@ -18,6 +21,8 @@ namespace MeltPoolDG
   private:
     using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
     using SparsityPatternType = TrilinosWrappers::SparsityPattern;
+    using VectorType          = LinearAlgebra::distributed::Vector<number>;
+    using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
 
   public:
     virtual ~OperatorBase() = default;
@@ -47,12 +52,31 @@ namespace MeltPoolDG
     {
       (void)dst;
       (void)src;
-      AssertThrow(false, ExcMessage("vmult for the requested operator not implemented"));
+      AssertThrow(false, ExcMessage(">>> vmult <<< for the requested operator not implemented"));
     }
 
     virtual void
     print_me() const
     {}
+
+    virtual void
+    compute_system_matrix_from_matrixfree(TrilinosWrappers::SparseMatrix &) const
+    {
+      AssertThrow(
+        false,
+        ExcMessage(
+          ">>> compute_system_matrix_from_matrixfree <<< for the requested operator not implemented"));
+    }
+
+    virtual void
+    compute_inverse_diagonal_from_matrixfree(VectorType &src) const
+    {
+      (void)src;
+      AssertThrow(
+        false,
+        ExcMessage(
+          ">>> compute_inverse_diagonal_from_matrixfree <<< for the requested operator not implemented"));
+    }
 
     void
     set_time_increment(const double dt);

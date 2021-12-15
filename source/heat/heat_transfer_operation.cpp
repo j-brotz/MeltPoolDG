@@ -27,7 +27,6 @@ namespace MeltPoolDG::Heat
     , velocity(velocity_in)
     , ls_dof_idx(ls_dof_idx_in)
     , level_set_as_heaviside(level_set_as_heaviside_in)
-    , heat_transfer_preconditioner(scratch_data, temp_dof_idx)
   {
     heat_operator = std::make_shared<HeatTransferOperator<dim>>(bc_data,
                                                                 scratch_data,
@@ -43,6 +42,13 @@ namespace MeltPoolDG::Heat
                                                                 velocity,
                                                                 ls_dof_idx,
                                                                 level_set_as_heaviside);
+
+
+    /*
+     * setup preconditioner for matrix-free computation
+     */
+    heat_transfer_preconditioner = std::make_shared<HeatTransferPreconditionerMatrixFree<dim>>(
+      scratch_data, temp_dof_idx, heat_data.solver.preconditioner_type, heat_operator);
 
     reinit();
   }
@@ -86,12 +92,7 @@ namespace MeltPoolDG::Heat
      * setup sparsity pattern of system matrix only if the latter is
      * needed for computing the preconditioner
      */
-    if (heat_data.solver.preconditioner_type == "Diagonal" ||
-        heat_data.solver.preconditioner_type == "AMG" ||
-        heat_data.solver.preconditioner_type == "AMGReduced" ||
-        heat_data.solver.preconditioner_type == "ILU" ||
-        heat_data.solver.preconditioner_type == "ILUReduced")
-      heat_transfer_preconditioner.reinit();
+    heat_transfer_preconditioner->reinit();
   }
 
   template <int dim>
@@ -123,58 +124,42 @@ namespace MeltPoolDG::Heat
 
     const auto solve_linear_system = [&](VectorType &      solution_update,
                                          const VectorType &rhs) -> int {
-      if (heat_data.solver.preconditioner_type == "Identity")
+      switch (heat_data.solver.preconditioner_type)
         {
-          return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
-            *heat_operator,
-            solution_update,
-            rhs,
-            heat_data.solver.rel_tolerance,
-            heat_data.solver.max_iterations);
-        }
-      else if (heat_data.solver.preconditioner_type == "Diagonal" ||
-               heat_data.solver.preconditioner_type == "DiagonalReduced")
+          case PreconditionerType::Diagonal:
+            case PreconditionerType::DiagonalReduced: {
+              auto preconditioner = heat_transfer_preconditioner->compute_diagonal_preconditioner();
 
-        {
-          auto preconditioner = heat_transfer_preconditioner.get_diagonal_preconditioner(
-            heat_data.solver.preconditioner_type, heat_operator);
+              return LinearSolve::solve<VectorType,
+                                        SolverGMRES<VectorType>,
+                                        OperatorBase<dim, double>>(*heat_operator,
+                                                                   solution_update,
+                                                                   rhs,
+                                                                   heat_data.solver.rel_tolerance,
+                                                                   heat_data.solver.max_iterations,
+                                                                   preconditioner);
+            }
+          case PreconditionerType::Identity:
+          case PreconditionerType::AMG:
+          case PreconditionerType::AMGReduced:
+          case PreconditionerType::ILU:
+            case PreconditionerType::ILUReduced: {
+              // take the first three letters as relevant preconditioner type
+              auto preconditioner = heat_transfer_preconditioner->compute_trilinos_preconditioner();
 
-          return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
-            *heat_operator,
-            solution_update,
-            rhs,
-            heat_data.solver.rel_tolerance,
-            heat_data.solver.max_iterations,
-            preconditioner);
-        }
-      else if (heat_data.solver.preconditioner_type == "AMG" ||
-               heat_data.solver.preconditioner_type == "AMGReduced" ||
-               heat_data.solver.preconditioner_type == "ILU" ||
-               heat_data.solver.preconditioner_type == "ILUReduced")
-        {
-          const std::string precondition_base_type =
-            heat_data.solver.preconditioner_type.find("AMG") != std::string::npos ? "AMG" : "ILU";
-          heat_operator->compute_system_matrix(heat_transfer_preconditioner.get_system_matrix(),
-                                               heat_data.solver.preconditioner_type ==
-                                                 precondition_base_type);
-
-          // take the first three letters as relevant preconditioner type
-          auto preconditioner =
-            LinearSolve::setup_preconditioner(heat_transfer_preconditioner.get_system_matrix(),
-                                              precondition_base_type);
-
-          return LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
-            *heat_operator,
-            solution_update,
-            rhs,
-            heat_data.solver.rel_tolerance,
-            heat_data.solver.max_iterations,
-            *preconditioner);
-        }
-      else
-        {
-          AssertThrow(false, ExcNotImplemented());
-          return 0;
+              return LinearSolve::solve<VectorType,
+                                        SolverGMRES<VectorType>,
+                                        OperatorBase<dim, double>>(*heat_operator,
+                                                                   solution_update,
+                                                                   rhs,
+                                                                   heat_data.solver.rel_tolerance,
+                                                                   heat_data.solver.max_iterations,
+                                                                   *preconditioner);
+            }
+            default: {
+              AssertThrow(false, ExcNotImplemented());
+              return 0;
+            }
         }
     };
 
