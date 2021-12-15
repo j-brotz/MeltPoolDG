@@ -17,37 +17,23 @@
   "surface tension": {
     "surface tension coefficient": "1.8",
     "dirac delta function approximation": {
-      "type": "phase_weighted_delta",
-      "gas phase weight": "74.30",
-      "heavy phase weight": "7074.3"
+      "type": "delta_weighted_consistent_with_evaporation",
+      "gas phase weight": "44.1",
+      "heavy phase weight": "4087"
     }
   },
   "material": {
-    "material first capacity": "0",
-    "material first conductivity": "10",
-    "material first density": "74.30",
-    "material first viscosity": "0.0006",
-    "material second capacity": "965",
-    "material second conductivity": "35.95",
-    "material second density": "7074.3",
-    "material second viscosity": "0.006",
-    "material solid conductivity": "35.95",
-    "material solid capacity": "965",
-    "material solid density": "7430.0",
-    "material solid viscosity": "0.06",
-    "material solidus temperature": "1000",
-    "material liquidus temperature": "1700.0",
-    "material two phase properties transition type": "smooth",
-    "material solidification type": "mushy_zone",
-    "material boiling temperature": "2000.",
-    "material latent heat of evaporation": "1.e6",
-    "material sticking constant": "1",
-    "material molar mass": "0.05224130936",
-    "material specific enthalpy reference temperature": "663.731"
+    "material template": "Ti64",
+    "material two phase properties transition type": "consistent_with_evaporation"
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000."
+    "recoil temperature constant": "10000.",
+    "dirac delta function approximation": {
+      "type": "delta_weighted_consistent_with_evaporation",
+      "gas phase weight": "44.1",
+      "heavy phase weight": "4087"
+    }
   },
   "evaporation": {
     "evapor evaporation model": "recoil pressure"
@@ -63,9 +49,9 @@
     "laser gauss absorptivity gas": "0.25",
     "laser gauss absorptivity liquid": "0.25",
     "dirac delta function approximation": {
-      "type": "quad_phase_weighted_delta",
-      "gas phase weight": "0",
-      "heavy phase weight": "1"
+      "type": "delta_weighted_consistent_with_evaporation",
+      "gas phase weight": "44.1",
+      "heavy phase weight": "4087"
     }
   },
   "melt pool": {
@@ -111,9 +97,9 @@
     "heat nlsolve max nonlinear iterations": "20",
     "heat nlsolve field correction tolerance": "1e-5",
     "dirac delta function approximation": {
-      "type": "phase_weighted_delta",
-      "gas phase weight": "0",
-      "heavy phase weight": "1"
+      "type": "delta_weighted_consistent_with_evaporation",
+      "gas phase weight": "44.1",
+      "heavy phase weight": "4087"
     }
   },
   "Navier-Stokes": {
