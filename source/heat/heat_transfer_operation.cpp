@@ -102,7 +102,7 @@ namespace MeltPoolDG::Heat
     if (!heat_data.do_matrix_free)
       AssertThrow(false, ExcNotImplemented());
 
-    heat_operator->set_time_increment(dt);
+    heat_operator->reset_time_increment(dt);
 
     VectorType temperature_extrapolated;
     scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);

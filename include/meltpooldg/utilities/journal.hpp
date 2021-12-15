@@ -52,8 +52,8 @@ namespace MeltPoolDG::Journal
   {
     std::ostringstream str;
     str << "#dofs: " << scratch_data.get_dof_handler(dof_idx).n_dofs();
-    auto vec =
-      Utilities::MPI::gather(MPI_COMM_WORLD, scratch_data.get_triangulation().n_active_cells());
+    auto vec = dealii::Utilities::MPI::gather(MPI_COMM_WORLD,
+                                              scratch_data.get_triangulation().n_active_cells());
 
     int sum_cells = 0;
     for (auto &i : vec)

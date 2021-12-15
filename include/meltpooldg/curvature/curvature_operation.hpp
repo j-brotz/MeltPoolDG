@@ -98,7 +98,7 @@ namespace MeltPoolDG::Curvature
     /*
      * Preconditioner for the matrix-free curvatore operator
      */
-    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, CurvatureOperator<dim>>>
+    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
       curvature_preconditioner;
     /*
      * Cache for diagonal preconditioner matrix-free

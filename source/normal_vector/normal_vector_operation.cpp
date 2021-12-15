@@ -50,10 +50,9 @@ namespace MeltPoolDG::NormalVector
     if (normal_vector_data.do_matrix_free)
       {
         normal_vector_operator->create_rhs(rhs, solution_levelset_in);
-        iter = LinearSolve::solve<BlockVectorType,
-                                  SolverCG<BlockVectorType>,
-                                  OperatorBase<dim, double, BlockVectorType, VectorType>>(
-          *normal_vector_operator, solution_normal_vector, rhs);
+        iter =
+          LinearSolve::solve<BlockVectorType, SolverCG<BlockVectorType>, OperatorBase<dim, double>>(
+            *normal_vector_operator, solution_normal_vector, rhs);
       }
     else
       {
@@ -63,12 +62,14 @@ namespace MeltPoolDG::NormalVector
             "The computation of the normal vector in a narrow band is only implemented matrix-free."));
 
         normal_vector_operator->assemble_matrixbased(solution_levelset_in,
-                                                     normal_vector_operator->system_matrix,
+                                                     normal_vector_operator->get_system_matrix(),
                                                      rhs);
 
         for (unsigned int d = 0; d < dim; ++d)
           iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, SparseMatrixType>(
-            normal_vector_operator->system_matrix, solution_normal_vector.block(d), rhs.block(d));
+            normal_vector_operator->get_system_matrix(),
+            solution_normal_vector.block(d),
+            rhs.block(d));
       }
     for (unsigned int d = 0; d < dim; ++d)
       scratch_data->get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));

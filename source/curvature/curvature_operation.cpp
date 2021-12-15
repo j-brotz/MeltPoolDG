@@ -68,9 +68,7 @@ namespace MeltPoolDG::Curvature
           }
         else
           {
-            iter = LinearSolve::solve<VectorType,
-                                      SolverCG<VectorType>,
-                                      OperatorBase<dim, double, VectorType, BlockVectorType>>(
+            iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
               *curvature_operator,
               solution_curvature,
               rhs,
@@ -87,11 +85,11 @@ namespace MeltPoolDG::Curvature
             "The computation of the curvature in a narrow band is only implemented matrix-free."));
         curvature_operator->assemble_matrixbased(
           normal_vector_operation.get_solution_normal_vector(),
-          curvature_operator->system_matrix,
+          curvature_operator->get_system_matrix(),
           rhs);
 
         iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, SparseMatrixType>(
-          curvature_operator->system_matrix, solution_curvature, rhs);
+          curvature_operator->get_system_matrix(), solution_curvature, rhs);
       }
 
     scratch_data->get_constraint(curv_dof_idx).distribute(solution_curvature);
@@ -196,7 +194,7 @@ namespace MeltPoolDG::Curvature
     if (curvature_data.do_matrix_free)
       {
         curvature_preconditioner = std::make_shared<
-          Preconditioner::PreconditionerMatrixFreeGeneric<dim, CurvatureOperator<dim>>>(
+          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
           *scratch_data,
           curv_dof_idx,
           curvature_data.solver.preconditioner_type,

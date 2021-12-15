@@ -92,9 +92,8 @@ namespace MeltPoolDG::Preconditioner
     return DiagonalMatrix<VectorType>(diag);
   }
 
-  //@todo: where should we instantiate this part?
-  template class PreconditionerMatrixFreeGeneric<1, Curvature::CurvatureOperator<1>>;
-  template class PreconditionerMatrixFreeGeneric<2, Curvature::CurvatureOperator<2>>;
-  template class PreconditionerMatrixFreeGeneric<3, Curvature::CurvatureOperator<3>>;
+  template class PreconditionerMatrixFreeGeneric<1, OperatorBase<1, double>>;
+  template class PreconditionerMatrixFreeGeneric<2, OperatorBase<2, double>>;
+  template class PreconditionerMatrixFreeGeneric<3, OperatorBase<3, double>>;
 
 } // namespace MeltPoolDG::Preconditioner

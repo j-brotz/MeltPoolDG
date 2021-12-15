@@ -18,10 +18,11 @@ namespace MeltPoolDG::Reinitialization
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
+    , reinit_quad_idx(quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
   {
-    this->reset_indices(dof_idx_in, quad_idx_in);
+    this->reset_dof_index(dof_idx_in);
   }
 
   template <int dim, typename number>
@@ -34,7 +35,7 @@ namespace MeltPoolDG::Reinitialization
 
     FEValues<dim>      fe_values(scratch_data.get_mapping(),
                             scratch_data.get_dof_handler(this->dof_idx).get_fe(),
-                            scratch_data.get_quadrature(this->quad_idx),
+                            scratch_data.get_quadrature(reinit_quad_idx),
                             update_values | update_gradients | update_quadrature_points |
                               update_JxW_values);
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell();
@@ -92,7 +93,8 @@ namespace MeltPoolDG::Reinitialization
                       //clang-format off
                       cell_matrix(i, j) +=
                         (fe_values.shape_value(i, q_index) * fe_values.shape_value(j, q_index) +
-                         this->d_tau * epsilon_cell * nTimesGradient_i * nTimesGradient_j) *
+                         this->time_increment * epsilon_cell * nTimesGradient_i *
+                           nTimesGradient_j) *
                         fe_values.JxW(q_index);
                       //clang-format on
                     }
@@ -105,7 +107,7 @@ namespace MeltPoolDG::Reinitialization
                     return 0.5 * (1. - psi * psi);
                   };
                   cell_rhs(i) += (compressive_flux(psi_at_q[q_index]) - diffRhs) *
-                                 nTimesGradient_i * this->d_tau * fe_values.JxW(q_index);
+                                 nTimesGradient_i * this->time_increment * fe_values.JxW(q_index);
                   //clang-format on
                 }
             } // end loop over gauss points
@@ -126,7 +128,8 @@ namespace MeltPoolDG::Reinitialization
   void
   OlssonOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
-    AssertThrow(this->d_tau > 0.0, ExcMessage("reinitialization operator: d_tau must be set"));
+    AssertThrow(this->time_increment > 0.0,
+                ExcMessage("reinitialization operator: d_tau must be set"));
 
     const double eps_ =
       eps > 0 ?
@@ -142,10 +145,10 @@ namespace MeltPoolDG::Reinitialization
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number>   delta_psi(scratch_data.get_matrix_free(),
                                                    this->dof_idx,
-                                                   this->quad_idx);
+                                                   reinit_quad_idx);
         FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
                                                          normal_dof_idx,
-                                                         this->quad_idx);
+                                                         reinit_quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             delta_psi.reinit(cell);
@@ -162,7 +165,7 @@ namespace MeltPoolDG::Reinitialization
                                                           tolerance_normal_vector);
 
                 delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
-                delta_psi.submit_gradient(this->d_tau * eps_ *
+                delta_psi.submit_gradient(this->time_increment * eps_ *
                                             scalar_product(delta_psi.get_gradient(q_index), n_phi) *
                                             n_phi,
                                           q_index);
@@ -184,7 +187,7 @@ namespace MeltPoolDG::Reinitialization
   {
     this->normal_vec.update_ghost_values();
 
-    AssertThrow(this->d_tau > 0.0,
+    AssertThrow(this->time_increment > 0.0,
                 ExcMessage("reinitialization matrix-free operator: d_tau must be set"));
     const double eps_ =
       eps > 0 ?
@@ -203,13 +206,13 @@ namespace MeltPoolDG::Reinitialization
       [&](const auto &, auto &dst, const auto &src, auto macro_cells) {
         FECellIntegrator<dim, 1, number>   rhs(scratch_data.get_matrix_free(),
                                              this->dof_idx,
-                                             this->quad_idx);
+                                             reinit_quad_idx);
         FECellIntegrator<dim, 1, number>   psi_old(scratch_data.get_matrix_free(),
                                                  ls_dof_idx,
-                                                 this->quad_idx);
+                                                 reinit_quad_idx);
         FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
                                                          normal_dof_idx,
-                                                         this->quad_idx);
+                                                         reinit_quad_idx);
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             rhs.reinit(cell);
@@ -229,8 +232,8 @@ namespace MeltPoolDG::Reinitialization
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
 
-                rhs.submit_gradient(this->d_tau * compressive_flux(val) * n_phi -
-                                      this->d_tau * eps_ *
+                rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
+                                      this->time_increment * eps_ *
                                         scalar_product(psi_old.get_gradient(q_index), n_phi) *
                                         n_phi,
                                     q_index);

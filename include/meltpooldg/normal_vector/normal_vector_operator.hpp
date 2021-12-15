@@ -22,12 +22,13 @@ namespace MeltPoolDG
   namespace NormalVector
   {
     template <int dim, typename number = double>
-    class NormalVectorOperator
-      : public OperatorBase<dim,
-                            number,
-                            LinearAlgebra::distributed::BlockVector<number>,
-                            LinearAlgebra::distributed::Vector<number>>
+    class NormalVectorOperator : public OperatorBase<dim, number>
     {
+      //@todo: to avoid compiler warnings regarding hidden overriden functions
+      using OperatorBase<dim, number>::vmult;
+      using OperatorBase<dim, number>::assemble_matrixbased;
+      using OperatorBase<dim, number>::create_rhs;
+
     public:
       using VectorType          = LinearAlgebra::distributed::Vector<number>;
       using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
@@ -45,17 +46,17 @@ namespace MeltPoolDG
       void
       assemble_matrixbased(const VectorType &level_set_in,
                            SparseMatrixType &matrix,
-                           BlockVectorType & rhs) const override;
+                           BlockVectorType & rhs) const final;
 
       /*
        *  matrix-free utility
        */
 
       void
-      vmult(BlockVectorType &dst, const BlockVectorType &src) const override;
+      vmult(BlockVectorType &dst, const BlockVectorType &src) const final;
 
       void
-      create_rhs(BlockVectorType &dst, const VectorType &src) const override;
+      create_rhs(BlockVectorType &dst, const VectorType &src) const final;
 
       static void
       get_unit_normals_at_quadrature(const FEValues<dim> &        fe_values,

@@ -4,18 +4,14 @@
 #include <deal.II/lac/la_parallel_vector.h>
 // MeltPoolDG
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
 
 
 namespace MeltPoolDG
 {
   using namespace dealii;
 
-  //@todo: eliminate template parameters DoFVectorType and SrcRhsVectorType
-  // by providing differente override functions
-  template <int dim,
-            typename number           = double,
-            typename DoFVectorType    = LinearAlgebra::distributed::Vector<number>,
-            typename SrcRhsVectorType = DoFVectorType>
+  template <int dim, typename number = double>
   class OperatorBase
   {
   private:
@@ -27,98 +23,128 @@ namespace MeltPoolDG
   public:
     virtual ~OperatorBase() = default;
 
+    /* ---------------------------------------------------------------------
+     *
+     * Matrix-based
+     *
+     * ---------------------------------------------------------------------*/
     virtual void
-    assemble_matrixbased(const SrcRhsVectorType &src,
-                         SparseMatrixType &      matrix,
-                         DoFVectorType &         rhs) const
+    assemble_matrixbased(const VectorType &, SparseMatrixType &, VectorType &) const
     {
-      (void)src;
-      (void)matrix;
-      (void)rhs;
-      AssertThrow(false,
-                  ExcMessage("assemble_matrixbased for the requested operator not implemented"));
+      AssertThrow(false, ExcNotImplemented());
     }
 
     virtual void
-    create_rhs(DoFVectorType &dst, const SrcRhsVectorType &src) const
+    assemble_matrixbased(const BlockVectorType &, SparseMatrixType &, VectorType &) const
     {
-      (void)dst;
-      (void)src;
-      AssertThrow(false, ExcMessage("create_rhs for the requested operator not implemented"));
+      AssertThrow(false, ExcNotImplemented());
     }
 
     virtual void
-    vmult(DoFVectorType &dst, const DoFVectorType &src) const
+    assemble_matrixbased(const VectorType &, SparseMatrixType &, BlockVectorType &) const
     {
-      (void)dst;
-      (void)src;
-      AssertThrow(false, ExcMessage(">>> vmult <<< for the requested operator not implemented"));
+      AssertThrow(false, ExcNotImplemented());
     }
-
-    virtual void
-    print_me() const
-    {}
-
-    virtual void
-    compute_system_matrix_from_matrixfree(TrilinosWrappers::SparseMatrix &) const
-    {
-      AssertThrow(
-        false,
-        ExcMessage(
-          ">>> compute_system_matrix_from_matrixfree <<< for the requested operator not implemented"));
-    }
-
-    virtual void
-    compute_inverse_diagonal_from_matrixfree(VectorType &src) const
-    {
-      (void)src;
-      AssertThrow(
-        false,
-        ExcMessage(
-          ">>> compute_inverse_diagonal_from_matrixfree <<< for the requested operator not implemented"));
-    }
-
-    void
-    set_time_increment(const double dt);
-
-    void
-    reset_indices(const unsigned int dof_idx_in, const unsigned int quad_idx_in);
 
     void
     initialize_matrix_based(const ScratchData<dim> &scratch_data);
 
-    /**
-     * Compute the modified right-handside for (inhomogeneous) dirichlet boundary conditions G
-     *
-     * A * x = B
-     *
-     * We actually solve
-     *
-     * A * x_0 = b - A * G
-     *
-     * with zero Dirichlet boundary conditions.
-     */
-    void
-    create_rhs_and_apply_dirichlet_mf(DoFVectorType &         rhs,
-                                      const SrcRhsVectorType &src,
-                                      const ScratchData<dim> &scratch_data,
-                                      const unsigned int      dof_idx,
-                                      const unsigned int      dof_no_bc_idx);
-
     const SparseMatrixType &
-    get_system_matrix() const;
+    get_system_matrix() const
+    {
+      return this->system_matrix;
+    }
 
-    double              d_tau     = 0.0;
-    double              d_tau_inv = 0.0;
-    SparseMatrixType    system_matrix;
-    SparsityPatternType dsp;
+    SparseMatrixType &
+    get_system_matrix()
+    {
+      return this->system_matrix;
+    }
+
+    /* ---------------------------------------------------------------------
+     *
+     * Matrix-free
+     *
+     * ---------------------------------------------------------------------*/
+    virtual void
+    create_rhs(VectorType &, const VectorType &) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
+    virtual void
+    create_rhs(BlockVectorType &, const VectorType &) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
+    virtual void
+    create_rhs(VectorType &, const BlockVectorType &) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
+    virtual void
+    vmult(VectorType &, const VectorType &) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
+    virtual void
+    vmult(BlockVectorType &, const BlockVectorType &) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
+    virtual void
+    compute_system_matrix_from_matrixfree(TrilinosWrappers::SparseMatrix &) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
+    virtual void
+    compute_inverse_diagonal_from_matrixfree(VectorType &) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
+    /* ---------------------------------------------------------------------
+     *
+     * General
+     *
+     * ---------------------------------------------------------------------*/
+
+    inline void
+    reset_dof_index(const unsigned int dof_idx_in)
+    {
+      this->dof_idx = dof_idx_in;
+    }
+
+    inline void
+    reset_time_increment(const double dt)
+    {
+      time_increment     = dt;
+      time_increment_inv = 1. / time_increment;
+    }
 
   protected:
+    /*
+     * matrix-based system matrix and sparsity pattern
+     */
+    SparseMatrixType    system_matrix;
+    SparsityPatternType dsp;
     /*
      * dof_idx/quad_idx can be overwritten from the derived operator class by calling the
      * reset_indices function
      * */
-    unsigned int dof_idx  = 0;
-    unsigned int quad_idx = 0;
+    unsigned int dof_idx = numbers::invalid_unsigned_int;
+    /*
+     * time increment
+     */
+    double time_increment = 0.0;
+    /*
+     * reciprocal value of the time increment
+     */
+    double time_increment_inv = 0.0;
   };
 } // namespace MeltPoolDG

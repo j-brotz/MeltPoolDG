@@ -3,6 +3,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -78,7 +79,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     scratch_data->initialize_dof_vector(src, advec_diff_dof_idx);
     scratch_data->initialize_dof_vector(rhs, advec_diff_dof_idx);
 
-    advec_diff_operator->set_time_increment(dt);
+    advec_diff_operator->reset_time_increment(dt);
 
     int iter = 0;
 
@@ -89,11 +90,13 @@ namespace MeltPoolDG::AdvectionDiffusion
         /*
          * apply dirichlet boundary values
          */
-        advec_diff_operator->create_rhs_and_apply_dirichlet_mf(rhs,
-                                                               solution_advected_field,
-                                                               *scratch_data,
-                                                               advec_diff_dof_idx,
-                                                               advec_diff_hanging_nodes_dof_idx);
+        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
+          *advec_diff_operator,
+          rhs,
+          solution_advected_field,
+          *scratch_data,
+          advec_diff_dof_idx,
+          advec_diff_hanging_nodes_dof_idx);
 
         iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
           *advec_diff_operator, src, rhs);
@@ -106,10 +109,10 @@ namespace MeltPoolDG::AdvectionDiffusion
 
         // preconditioner.initialize(system_matrix, data);
         advec_diff_operator->assemble_matrixbased(solution_advected_field,
-                                                  advec_diff_operator->system_matrix,
+                                                  advec_diff_operator->get_system_matrix(),
                                                   rhs);
         iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, SparseMatrixType>(
-          advec_diff_operator->system_matrix, src, rhs);
+          advec_diff_operator->get_system_matrix(), src, rhs);
       }
 
     scratch_data->get_constraint(advec_diff_dof_idx).distribute(src);
@@ -118,7 +121,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     solution_advected_field.update_ghost_values();
 
     Journal::print_formatted_norm(scratch_data->get_pcout(2),
-                                  advec_diff_operator->system_matrix.frobenius_norm(),
+                                  advec_diff_operator->get_system_matrix().frobenius_norm(),
                                   "matrix",
                                   "advection_diffusion",
                                   6 /*precision*/,

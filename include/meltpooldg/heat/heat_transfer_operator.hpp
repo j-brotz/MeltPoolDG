@@ -96,11 +96,13 @@ namespace MeltPoolDG::Heat
    */
 
   template <int dim, typename number = double>
-  class HeatTransferOperator : public OperatorBase<dim,
-                                                   number,
-                                                   LinearAlgebra::distributed::Vector<number>,
-                                                   LinearAlgebra::distributed::Vector<number>>
+  class HeatTransferOperator : public OperatorBase<dim, number>
   {
+    //@todo: to avoid compiler warnings regarding hidden overriden functions
+    using OperatorBase<dim, number>::vmult;
+    using OperatorBase<dim, number>::assemble_matrixbased;
+    using OperatorBase<dim, number>::create_rhs;
+
   private:
     using VectorType       = LinearAlgebra::distributed::Vector<number>;
     using SparseMatrixType = TrilinosWrappers::SparseMatrix;
