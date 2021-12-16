@@ -21,7 +21,7 @@ namespace MeltPoolDG::NormalVector
     , do_narrow_band(do_narrow_band_in)
     , solution_level_set(solution_level_set_in)
   {
-    this->reset_indices(normal_dof_idx_in, normal_quad_idx_in);
+    this->reset_dof_index(normal_dof_idx_in);
   }
 
   template <int dim, typename number>

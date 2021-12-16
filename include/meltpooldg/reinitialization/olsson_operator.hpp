@@ -22,11 +22,13 @@ namespace MeltPoolDG
     using namespace dealii;
 
     template <int dim, typename number = double>
-    class OlssonOperator : public OperatorBase<dim,
-                                               number,
-                                               LinearAlgebra::distributed::Vector<number>,
-                                               LinearAlgebra::distributed::Vector<number>>
+    class OlssonOperator : public OperatorBase<dim, number>
     {
+      //@todo: to avoid compiler warnings regarding hidden overriden functions
+      using OperatorBase<dim, number>::vmult;
+      using OperatorBase<dim, number>::assemble_matrixbased;
+      using OperatorBase<dim, number>::create_rhs;
+
     private:
       using VectorType          = LinearAlgebra::distributed::Vector<number>;
       using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
@@ -53,7 +55,7 @@ namespace MeltPoolDG
       void
       assemble_matrixbased(const VectorType &levelset_old,
                            SparseMatrixType &matrix,
-                           VectorType &      rhs) const override;
+                           VectorType &      rhs) const final;
 
       /*
        *    matrix-free implementation
@@ -61,10 +63,10 @@ namespace MeltPoolDG
        */
 
       void
-      vmult(VectorType &dst, const VectorType &src) const override;
+      vmult(VectorType &dst, const VectorType &src) const final;
 
       void
-      create_rhs(VectorType &dst, const VectorType &src) const override;
+      create_rhs(VectorType &dst, const VectorType &src) const final;
 
       void
       set_normal_vector_field(const BlockVectorType &normal_vector);
@@ -76,6 +78,7 @@ namespace MeltPoolDG
       double             eps_scale_factor;
       BlockVectorType &  normal_vec;
       const double       tolerance_normal_vector;
+      const unsigned int reinit_quad_idx;
       const unsigned int ls_dof_idx;
       const unsigned int normal_dof_idx;
     };

@@ -24,11 +24,13 @@ namespace MeltPoolDG::AdvectionDiffusion
   using namespace dealii;
 
   template <int dim, typename number = double>
-  class AdvectionDiffusionOperator : public OperatorBase<dim,
-                                                         number,
-                                                         LinearAlgebra::distributed::Vector<number>,
-                                                         LinearAlgebra::distributed::Vector<number>>
+  class AdvectionDiffusionOperator : public OperatorBase<dim, number>
   {
+    //@todo: to avoid compiler warnings regarding hidden overriden functions
+    using OperatorBase<dim, number>::vmult;
+    using OperatorBase<dim, number>::assemble_matrixbased;
+    using OperatorBase<dim, number>::create_rhs;
+
   private:
     using VectorType          = LinearAlgebra::distributed::Vector<number>;
     using BlockVectorType     = LinearAlgebra::distributed::BlockVector<number>;
@@ -53,22 +55,23 @@ namespace MeltPoolDG::AdvectionDiffusion
     void
     assemble_matrixbased(const VectorType &advected_field_old,
                          SparseMatrixType &matrix,
-                         VectorType &      rhs) const override;
+                         VectorType &      rhs) const final;
 
     /*
      *    matrix-free implementation
      */
     void
-    vmult(VectorType &dst, const VectorType &src) const override;
+    vmult(VectorType &dst, const VectorType &src) const final;
 
     void
-    create_rhs(VectorType &dst, const VectorType &src) const override;
+    create_rhs(VectorType &dst, const VectorType &src) const final;
 
   private:
     const ScratchData<dim> &              scratch_data;
     const VectorType &                    advection_velocity;
     const AdvectionDiffusionData<number> &data;
     const unsigned int                    velocity_dof_idx;
+    const unsigned int                    advec_diff_quad_idx;
     double                                theta;
   };
 } // namespace MeltPoolDG::AdvectionDiffusion

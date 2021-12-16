@@ -110,7 +110,7 @@ namespace MeltPoolDG::Reinitialization
     scratch_data->initialize_dof_vector(src, reinit_dof_idx);
     scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
 
-    reinit_operator->set_time_increment(d_tau);
+    reinit_operator->reset_time_increment(d_tau);
 
     int iter = 0;
 
@@ -122,21 +122,21 @@ namespace MeltPoolDG::Reinitialization
       }
     else
       {
-        reinit_operator->system_matrix.reinit(reinit_operator->dsp);
+        reinit_operator->get_system_matrix() = 0;
         reinit_operator->assemble_matrixbased(solution_level_set,
-                                              reinit_operator->system_matrix,
+                                              reinit_operator->get_system_matrix(),
                                               rhs);
 
         if (reinit_data.solver.solver_type == SolverType::CG)
           {
             auto preconditioner =
-              Preconditioner::get_preconditioner_trilinos(reinit_operator->system_matrix,
+              Preconditioner::get_preconditioner_trilinos(reinit_operator->get_system_matrix(),
                                                           reinit_data.solver.preconditioner_type);
             iter = LinearSolve::solve<VectorType,
                                       SolverCG<VectorType>,
                                       SparseMatrixType,
                                       TrilinosWrappers::PreconditionBase>(
-              reinit_operator->system_matrix,
+              reinit_operator->get_system_matrix(),
               src,
               rhs,
               reinit_data.solver.rel_tolerance,
@@ -146,13 +146,13 @@ namespace MeltPoolDG::Reinitialization
         else if (reinit_data.solver.solver_type == SolverType::GMRES)
           {
             auto preconditioner =
-              Preconditioner::get_preconditioner_trilinos(reinit_operator->system_matrix,
+              Preconditioner::get_preconditioner_trilinos(reinit_operator->get_system_matrix(),
                                                           reinit_data.solver.preconditioner_type);
             iter = LinearSolve::solve<VectorType,
                                       SolverGMRES<VectorType>,
                                       SparseMatrixType,
                                       TrilinosWrappers::PreconditionBase>(
-              reinit_operator->system_matrix,
+              reinit_operator->get_system_matrix(),
               src,
               rhs,
               reinit_data.solver.rel_tolerance,
@@ -161,7 +161,7 @@ namespace MeltPoolDG::Reinitialization
           }
 
         Journal::print_formatted_norm(scratch_data->get_pcout(0),
-                                      reinit_operator->system_matrix.frobenius_norm(),
+                                      reinit_operator->get_system_matrix().frobenius_norm(),
                                       "matrix",
                                       "reinitialization",
                                       15 /*precision*/,

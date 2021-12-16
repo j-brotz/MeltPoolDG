@@ -26,7 +26,7 @@ namespace MeltPoolDG::Curvature
     , solution_level_set(solution_level_set_in)
 
   {
-    this->reset_indices(curv_dof_idx_in, curv_quad_idx_in);
+    this->reset_dof_index(curv_dof_idx_in);
 
     AssertThrow(!do_narrow_band || solution_level_set,
                 ExcMessage(
@@ -234,7 +234,7 @@ namespace MeltPoolDG::Curvature
         old_cell_index = current_cell_index;
       },
       curv_dof_idx,
-      this->quad_idx);
+      curv_quad_idx);
 
     system_matrix.compress(VectorOperation::add);
 
@@ -272,7 +272,7 @@ namespace MeltPoolDG::Curvature
         old_cell_index = current_cell_index;
       },
       curv_dof_idx,
-      this->quad_idx);
+      curv_quad_idx);
 
     if (solution_level_set)
       solution_level_set->zero_out_ghost_values();
