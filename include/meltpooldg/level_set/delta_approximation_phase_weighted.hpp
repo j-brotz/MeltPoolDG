@@ -296,9 +296,7 @@ namespace MeltPoolDG
    * where w_g is the weight of the gaseous phase (at level set = -1) and w_h is the weight of the
    * heavy phase (at level set = 1). The weights can be chosen arbitrarily, as long as
    *
-   * w_g != w_h
-   * and
-   * w_g² <= w_g w_h  or  w_h² <= w_g w_h.
+   * w_g > 0  and  w_h > 0  and  w_g != w_h
    *
    * @note If the density is determined consistent with mass flux due to evaporation, this Dirac
    *       delta approximation can be used to scale interface quantities with the density
@@ -315,12 +313,15 @@ namespace MeltPoolDG
       , w_h(data.heavy_phase_weight)
       , correction_factor((w_g - w_h) / (w_g * w_h * std::log(w_g / w_h)))
     {
+      AssertThrow(w_g > 0.0,
+                  ExcMessage("When using the Dirac delta function approximation weighted"
+                             "consistent with evaporation use positive weights! Abort..."));
+      AssertThrow(w_h > 0.0,
+                  ExcMessage("When using the Dirac delta function approximation weighted"
+                             "consistent with evaporation use positive weights! Abort..."));
       AssertThrow(std::abs(w_g - w_h) > std::numeric_limits<number>::epsilon(),
                   ExcMessage("When using the Dirac delta function approximation weighted consistent"
                              "with evaporation the phase weights must differ! Abort..."));
-      AssertThrow(w_g * w_g <= w_g * w_h || w_h * w_h <= w_g * w_h,
-                  ExcMessage("When using the Dirac delta function approximation weighted consistent"
-                             "with evaporation use weights that fulfill this condition! Abort..."));
     }
 
     inline number
