@@ -10,3 +10,13 @@ All notable changes of the input parameters will be documented in this file.
   }
 }
 ```
+
+## 2021-12-16
+- Add new option for Dirac delta approximation type
+```json
+{
+  "dirac delta function approximation": {
+    "type": "delta_weighted_consistent_with_evaporation"
+  }
+}
+```
