@@ -49,10 +49,11 @@ namespace MeltPoolDG
    *
    */
   template <typename number>
-  class DeltaApproximationPhaseWeighted : public DeltaApproximationBase<number>
+  class DeltaApproximationHeavisidePhaseWeighted : public DeltaApproximationBase<number>
   {
   public:
-    DeltaApproximationPhaseWeighted(const DeltaApproximationPhaseWeightedData<number> &data)
+    DeltaApproximationHeavisidePhaseWeighted(
+      const DeltaApproximationPhaseWeightedData<number> &data)
       : w_g(data.gas_phase_weight)
       , w_h(data.heavy_phase_weight)
       , correction_factor(2. / (w_g + w_h))
@@ -129,10 +130,11 @@ namespace MeltPoolDG
    *
    */
   template <typename number>
-  class DeltaApproximationQuadPhaseWeighted : public DeltaApproximationBase<number>
+  class DeltaApproximationQuadHeavisidePhaseWeighted : public DeltaApproximationBase<number>
   {
   public:
-    DeltaApproximationQuadPhaseWeighted(const DeltaApproximationPhaseWeightedData<number> &data)
+    DeltaApproximationQuadHeavisidePhaseWeighted(
+      const DeltaApproximationPhaseWeightedData<number> &data)
       : w_g(data.gas_phase_weight)
       , w_h(data.heavy_phase_weight)
       , correction_factor(3. / (w_g * w_g + w_g * w_h + w_h * w_h))
@@ -211,10 +213,12 @@ namespace MeltPoolDG
    *
    */
   template <typename number>
-  class DeltaApproximationDoublePhaseWeighted : public DeltaApproximationBase<number>
+  class DeltaApproximationHeavisideTimesHeavisidePhaseWeighted
+    : public DeltaApproximationBase<number>
   {
   public:
-    DeltaApproximationDoublePhaseWeighted(const DeltaApproximationPhaseWeightedData<number> &data)
+    DeltaApproximationHeavisideTimesHeavisidePhaseWeighted(
+      const DeltaApproximationPhaseWeightedData<number> &data)
       : w_1g(data.gas_phase_weight)
       , w_1h(data.heavy_phase_weight)
       , w_2g(data.gas_phase_weight_2)
@@ -303,11 +307,10 @@ namespace MeltPoolDG
    *       distribution by choosing the phases' weights equal to their densities.
    */
   template <typename number>
-  class DeltaApproximationPhaseWeightedConsistentWithEvaporation
-    : public DeltaApproximationBase<number>
+  class DeltaApproximationReciprocalPhaseWeighted : public DeltaApproximationBase<number>
   {
   public:
-    DeltaApproximationPhaseWeightedConsistentWithEvaporation(
+    DeltaApproximationReciprocalPhaseWeighted(
       const DeltaApproximationPhaseWeightedData<number> &data)
       : w_g(data.gas_phase_weight)
       , w_h(data.heavy_phase_weight)
@@ -377,15 +380,15 @@ namespace MeltPoolDG
       {
         case DiracDeltaFunctionApproximationType::norm_of_indicator_gradient:
           return nullptr;
-        case DiracDeltaFunctionApproximationType::phase_weighted_delta:
-          return std::make_unique<DeltaApproximationPhaseWeighted<number>>(data);
-        case DiracDeltaFunctionApproximationType::quad_phase_weighted_delta:
-          return std::make_unique<DeltaApproximationQuadPhaseWeighted<number>>(data);
-        case DiracDeltaFunctionApproximationType::double_phase_weighted_delta:
-          return std::make_unique<DeltaApproximationDoublePhaseWeighted<number>>(data);
-        case DiracDeltaFunctionApproximationType::delta_weighted_consistent_with_evaporation:
-          return std::make_unique<DeltaApproximationPhaseWeightedConsistentWithEvaporation<number>>(
+        case DiracDeltaFunctionApproximationType::heaviside_phase_weighted:
+          return std::make_unique<DeltaApproximationHeavisidePhaseWeighted<number>>(data);
+        case DiracDeltaFunctionApproximationType::quad_heaviside_phase_weighted:
+          return std::make_unique<DeltaApproximationQuadHeavisidePhaseWeighted<number>>(data);
+        case DiracDeltaFunctionApproximationType::heaviside_times_heaviside_phase_weighted:
+          return std::make_unique<DeltaApproximationHeavisideTimesHeavisidePhaseWeighted<number>>(
             data);
+        case DiracDeltaFunctionApproximationType::reciprocal_phase_weighted:
+          return std::make_unique<DeltaApproximationReciprocalPhaseWeighted<number>>(data);
         default:
           Assert(false, ExcNotImplemented());
       }

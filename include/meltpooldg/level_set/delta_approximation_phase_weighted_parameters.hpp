@@ -10,11 +10,11 @@ namespace MeltPoolDG
     char,
     norm_of_indicator_gradient, // use δ = ||∇ϕ|| as approximation for the Dirac delta function
     // with the heaviside representation of the level set ϕ
-    phase_weighted_delta,        // see DeltaApproximationPhaseWeighted
-    quad_phase_weighted_delta,   // see DeltaApproximationQuadPhaseWeighted
-    double_phase_weighted_delta, // see DeltaApproximationDoublePhaseWeighted
-    delta_weighted_consistent_with_evaporation
-    // see DeltaApproximationPhaseWeightedConsistentWithEvaporation
+    heaviside_phase_weighted,      // see DeltaApproximationHeavisidePhaseWeighted
+    quad_heaviside_phase_weighted, // see DeltaApproximationQuadHeavisidePhaseWeighted
+    heaviside_times_heaviside_phase_weighted,
+    // see DeltaApproximationHeavisideTimesHeavisidePhaseWeighted
+    reciprocal_phase_weighted // see DeltaApproximationReciprocalPhaseWeighted
   )
 
   template <typename number = double>
@@ -36,22 +36,22 @@ namespace MeltPoolDG
         prm.add_parameter(
           "gas phase weight",
           gas_phase_weight,
-          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the gas phase (level set = -1).");
+          "If >>> dirac delta function approximation type <<< is set to any phase weighted option"
+          "this parameter controls the (first) weight of the gas phase (level set = -1).");
         prm.add_parameter(
           "heavy phase weight",
           heavy_phase_weight,
-          "If >>> dirac delta function approximation type <<< is set to >>> phase_weighted_delta <<< "
-          "this parameter controls the weight of the heavy liquid/solid phase (level set = 1).");
+          "If >>> dirac delta function approximation type <<< is set to any phase weighted option"
+          "this parameter controls the (first) weight of the heavy phase (level set = 1).");
         prm.add_parameter(
           "gas phase weight 2",
           gas_phase_weight_2,
-          "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
+          "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< "
           "this parameter controls the second weight of the gas phase (level set = -1).");
         prm.add_parameter(
           "heavy phase weight 2",
           heavy_phase_weight_2,
-          "If >>> dirac delta function approximation type <<< is set to >>> double_phase_weighted_delta <<< "
+          "If >>> dirac delta function approximation type <<< is set to >>> heaviside_times_heaviside_phase_weighted <<< "
           "this parameter controls the second weight of the heavy liquid/solid phase (level set = 1).");
       }
       prm.leave_subsection();
