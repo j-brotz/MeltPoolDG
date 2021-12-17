@@ -12,11 +12,11 @@ All notable changes of the input parameters will be documented in this file.
 ```
 
 ## 2021-12-16
-- Add new option for Dirac delta approximation type
+- Change names for the Dirac delta approximation types and add a new option "reciprocal_phase_weighted"
 ```json
 {
   "dirac delta function approximation": {
-    "type": "delta_weighted_consistent_with_evaporation"
+    "type": "heaviside_phase_weighted|quad_heaviside_phase_weighted|heaviside_times_heaviside_phase_weighted|reciprocal_phase_weighted",
   }
 }
 ```

@@ -17,7 +17,7 @@
   "surface tension": {
     "surface tension coefficient": "1.8",
     "dirac delta function approximation": {
-      "type": "delta_weighted_consistent_with_evaporation",
+      "type": "reciprocal_phase_weighted",
       "gas phase weight": "44.1",
       "heavy phase weight": "4087"
     }
@@ -30,7 +30,7 @@
     "recoil pressure constant": "10000.",
     "recoil temperature constant": "10000.",
     "dirac delta function approximation": {
-      "type": "delta_weighted_consistent_with_evaporation",
+      "type": "reciprocal_phase_weighted",
       "gas phase weight": "44.1",
       "heavy phase weight": "4087"
     }
@@ -49,7 +49,7 @@
     "laser gauss absorptivity gas": "0.25",
     "laser gauss absorptivity liquid": "0.25",
     "dirac delta function approximation": {
-      "type": "delta_weighted_consistent_with_evaporation",
+      "type": "reciprocal_phase_weighted",
       "gas phase weight": "44.1",
       "heavy phase weight": "4087"
     }
@@ -97,7 +97,7 @@
     "heat nlsolve max nonlinear iterations": "20",
     "heat nlsolve field correction tolerance": "1e-5",
     "dirac delta function approximation": {
-      "type": "delta_weighted_consistent_with_evaporation",
+      "type": "reciprocal_phase_weighted",
       "gas phase weight": "44.1",
       "heavy phase weight": "4087"
     }

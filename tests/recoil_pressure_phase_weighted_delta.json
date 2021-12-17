@@ -33,7 +33,7 @@
     "recoil pressure constant": "10000.",
     "recoil temperature constant": "10000.",
     "dirac delta function approximation": {
-      "type": "phase_weighted_delta",
+      "type": "heaviside_phase_weighted",
       "gas phase weight": "74.30",
       "heavy phase weight": "7074.3"
     }
