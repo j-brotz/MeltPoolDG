@@ -39,7 +39,7 @@
     "laser gauss absorptivity gas": "0.5",
     "laser gauss absorptivity liquid": "0.5",
     "dirac delta function approximation": {
-      "type": "double_phase_weighted_delta",
+      "type": "heaviside_times_heaviside_phase_weighted",
       "gas phase weight": "10",
       "heavy phase weight": "460.0",
       "gas phase weight 2": "74.30",

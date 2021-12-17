@@ -49,10 +49,11 @@ namespace MeltPoolDG
    *
    */
   template <typename number>
-  class DeltaApproximationPhaseWeighted : public DeltaApproximationBase<number>
+  class DeltaApproximationHeavisidePhaseWeighted : public DeltaApproximationBase<number>
   {
   public:
-    DeltaApproximationPhaseWeighted(const DeltaApproximationPhaseWeightedData<number> &data)
+    DeltaApproximationHeavisidePhaseWeighted(
+      const DeltaApproximationPhaseWeightedData<number> &data)
       : w_g(data.gas_phase_weight)
       , w_h(data.heavy_phase_weight)
       , correction_factor(2. / (w_g + w_h))
@@ -129,10 +130,11 @@ namespace MeltPoolDG
    *
    */
   template <typename number>
-  class DeltaApproximationQuadPhaseWeighted : public DeltaApproximationBase<number>
+  class DeltaApproximationQuadHeavisidePhaseWeighted : public DeltaApproximationBase<number>
   {
   public:
-    DeltaApproximationQuadPhaseWeighted(const DeltaApproximationPhaseWeightedData<number> &data)
+    DeltaApproximationQuadHeavisidePhaseWeighted(
+      const DeltaApproximationPhaseWeightedData<number> &data)
       : w_g(data.gas_phase_weight)
       , w_h(data.heavy_phase_weight)
       , correction_factor(3. / (w_g * w_g + w_g * w_h + w_h * w_h))
@@ -211,10 +213,12 @@ namespace MeltPoolDG
    *
    */
   template <typename number>
-  class DeltaApproximationDoublePhaseWeighted : public DeltaApproximationBase<number>
+  class DeltaApproximationHeavisideTimesHeavisidePhaseWeighted
+    : public DeltaApproximationBase<number>
   {
   public:
-    DeltaApproximationDoublePhaseWeighted(const DeltaApproximationPhaseWeightedData<number> &data)
+    DeltaApproximationHeavisideTimesHeavisidePhaseWeighted(
+      const DeltaApproximationPhaseWeightedData<number> &data)
       : w_1g(data.gas_phase_weight)
       , w_1h(data.heavy_phase_weight)
       , w_2g(data.gas_phase_weight_2)
@@ -272,6 +276,102 @@ namespace MeltPoolDG
     const number correction_factor;
   };
 
+  /**
+   * Asymmetric, Dirac delta approximation function, phase weighted with the density distribution
+   * consistent with the mass flux due to evaporation
+   *
+   * This function can be used to approximate the Dirac delta function for diffuse interfaces. The
+   * approximation is asymmetric and you can weigh the two phases individually. The function is
+   * defined as
+   *
+   * δ_w(φ) = δ(φ) * W(φ).
+   *
+   * The function is dependent only on the heaviside representation of the level set φ (=indicator)
+   * The symmetric delta function δ(φ) is defined as the norm of the indicator gradient ∇φ:
+   *
+   * δ = ||∇φ||
+   *
+   * The weight function W(φ) is defined as
+   *
+   *                    1                       w_g - w_h
+   * W(φ) = ------------------------- * -------------------------
+   *         φ / w_h + (1 - φ) / w_g     w_g w_h ln( w_g / w_h )
+   *
+   * where w_g is the weight of the gaseous phase (at level set = -1) and w_h is the weight of the
+   * heavy phase (at level set = 1). The weights can be chosen arbitrarily, as long as
+   *
+   * w_g > 0  and  w_h > 0  and  w_g != w_h
+   *
+   * @note If the density is determined consistent with mass flux due to evaporation, this Dirac
+   *       delta approximation can be used to scale interface quantities with the density
+   *       distribution by choosing the phases' weights equal to their densities.
+   */
+  template <typename number>
+  class DeltaApproximationReciprocalPhaseWeighted : public DeltaApproximationBase<number>
+  {
+  public:
+    DeltaApproximationReciprocalPhaseWeighted(
+      const DeltaApproximationPhaseWeightedData<number> &data)
+      : w_g(data.gas_phase_weight)
+      , w_h(data.heavy_phase_weight)
+      , correction_factor((w_g - w_h) / (w_g * w_h * std::log(w_g / w_h)))
+    {
+      AssertThrow(w_g > 0.0,
+                  ExcMessage("When using the Dirac delta function approximation weighted"
+                             "consistent with evaporation use positive weights! Abort..."));
+      AssertThrow(w_h > 0.0,
+                  ExcMessage("When using the Dirac delta function approximation weighted"
+                             "consistent with evaporation use positive weights! Abort..."));
+      AssertThrow(std::abs(w_g - w_h) > std::numeric_limits<number>::epsilon(),
+                  ExcMessage("When using the Dirac delta function approximation weighted consistent"
+                             "with evaporation the phase weights must differ! Abort..."));
+    }
+
+    inline number
+    compute_weight(const number level_set_heaviside) const override
+    {
+      return compute_weight_internal(level_set_heaviside);
+    }
+
+    inline VectorizedArray<number>
+    compute_weight(const VectorizedArray<number> &level_set_heaviside) const override
+    {
+      return compute_weight_internal(level_set_heaviside);
+    }
+
+  private:
+    /**
+     * This function calculates the asymmetric
+     *
+     *                    1                       w_g - w_h
+     * W(φ) = ------------------------- * -------------------------
+     *         φ / w_h + (1 - φ) / w_g     w_g w_h ln( w_g / w_h )
+     *
+     */
+    template <typename value_type>
+    inline value_type
+    compute_weight_internal(const value_type &level_set_heaviside) const
+    {
+      // clang-format off
+      return correction_factor
+             / // ----------------------------------------------------------
+             (level_set_heaviside / w_h + (1. - level_set_heaviside) / w_g);
+      // clang-format on
+    }
+
+    const number w_g;
+    const number w_h;
+
+    /*
+     * correction factor
+     *
+     *         w_g - w_h
+     * -------------------------
+     *  w_g w_h ln( w_g / w_h )
+     */
+    const number correction_factor;
+  };
+
   template <typename number>
   std::unique_ptr<DeltaApproximationBase<number>>
   create_phase_weighted_delta_approximation(const DeltaApproximationPhaseWeightedData<number> &data)
@@ -280,12 +380,15 @@ namespace MeltPoolDG
       {
         case DiracDeltaFunctionApproximationType::norm_of_indicator_gradient:
           return nullptr;
-        case DiracDeltaFunctionApproximationType::phase_weighted_delta:
-          return std::make_unique<DeltaApproximationPhaseWeighted<number>>(data);
-        case DiracDeltaFunctionApproximationType::quad_phase_weighted_delta:
-          return std::make_unique<DeltaApproximationQuadPhaseWeighted<number>>(data);
-        case DiracDeltaFunctionApproximationType::double_phase_weighted_delta:
-          return std::make_unique<DeltaApproximationDoublePhaseWeighted<number>>(data);
+        case DiracDeltaFunctionApproximationType::heaviside_phase_weighted:
+          return std::make_unique<DeltaApproximationHeavisidePhaseWeighted<number>>(data);
+        case DiracDeltaFunctionApproximationType::quad_heaviside_phase_weighted:
+          return std::make_unique<DeltaApproximationQuadHeavisidePhaseWeighted<number>>(data);
+        case DiracDeltaFunctionApproximationType::heaviside_times_heaviside_phase_weighted:
+          return std::make_unique<DeltaApproximationHeavisideTimesHeavisidePhaseWeighted<number>>(
+            data);
+        case DiracDeltaFunctionApproximationType::reciprocal_phase_weighted:
+          return std::make_unique<DeltaApproximationReciprocalPhaseWeighted<number>>(data);
         default:
           Assert(false, ExcNotImplemented());
       }

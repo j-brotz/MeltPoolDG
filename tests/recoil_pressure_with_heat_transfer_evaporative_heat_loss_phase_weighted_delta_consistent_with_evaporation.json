@@ -2,7 +2,7 @@
   "base": {
     "problem name": "melt_pool",
     "application name": "recoil_pressure",
-    "global refinements": "6",
+    "global refinements": "5",
     "dimension": "2",
     "degree": "1",
     "gravity": "0.0",
@@ -11,48 +11,59 @@
   "time stepping": {
     "start time": "0.0",
     "end time": "0.0006",
-    "time step size": "1e-7",
-    "max n steps": "1"
+    "time step size": "0.000001",
+    "max n steps": "30"
+  },
+  "surface tension": {
+    "surface tension coefficient": "1.8",
+    "dirac delta function approximation": {
+      "type": "reciprocal_phase_weighted",
+      "gas phase weight": "44.1",
+      "heavy phase weight": "4087"
+    }
   },
   "material": {
-    "material first capacity": "1000",
-    "material first conductivity": "10",
-    "material first density": "74.30",
-    "material first viscosity": "0.0006",
-    "material second capacity": "1000",
-    "material second conductivity": "35.95",
-    "material second density": "7074.3",
-    "material second viscosity": "0.006",
-    "material two phase properties transition type": "smooth",
-    "material boiling temperature": "400.",
-    "material latent heat of evaporation": "1.e6",
-    "material molar mass": "0.05224130936",
-    "material specific enthalpy reference temperature": "663.731"
+    "material template": "Ti64",
+    "material two phase properties transition type": "consistent_with_evaporation"
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",
     "recoil temperature constant": "10000.",
     "dirac delta function approximation": {
-      "type": "heaviside_phase_weighted",
-      "gas phase weight": "74.30",
-      "heavy phase weight": "7074.3"
+      "type": "reciprocal_phase_weighted",
+      "gas phase weight": "44.1",
+      "heavy phase weight": "4087"
     }
   },
   "evaporation": {
     "evapor evaporation model": "recoil pressure"
   },
+  "laser": {
+    "laser power": "156.",
+    "laser center": "0.0,0.00000",
+    "laser scan speed": "0.003",
+    "laser do move": "false",
+    "laser heat source model": "Gauss",
+    "laser impact type": "interface",
+    "laser gauss laser beam radius": "70.e-6",
+    "laser gauss absorptivity gas": "0.25",
+    "laser gauss absorptivity liquid": "0.25",
+    "dirac delta function approximation": {
+      "type": "reciprocal_phase_weighted",
+      "gas phase weight": "44.1",
+      "heavy phase weight": "4087"
+    }
+  },
   "melt pool": {
     "mp do not reinitialize in solid": "false",
-    "mp set velocity to zero in solid": "false"
+    "mp set velocity to zero in solid": "true"
   },
   "simulation specific domain": {
     "domain x min": "-0.0002",
     "domain x max": "0.0002",
     "domain y min": "-0.0001",
-    "domain y max": "0.0002"
-  },
-  "laser": {
-    "laser heat source model": "Gusarov"
+    "domain y max": "0.0002",
+    "evaporation boundary": "true"
   },
   "levelset": {
     "ls do reinitialization": "true",
@@ -61,29 +72,35 @@
     "ls do matrix free": "true"
   },
   "reinitialization": {
-    "reinit max n steps": "1",
+    "reinit max n steps": "10",
     "reinit modeltype": "olsson2007",
     "reinit do matrix free": "true",
-    "reinit scale factor epsilon": "1.5"
+    "reinit scale factor epsilon": "0.7107"
   },
   "normal vector": {
-    "normal vec damping scale factor": "4",
+    "normal vec damping scale factor": "0.5",
     "normal vec do matrix free": "true"
   },
   "curvature": {
     "curv do matrix free": "true",
-    "curv damping scale factor": "2"
+    "curv damping scale factor": "0.5"
   },
   "paraview": {
     "paraview do output": "false"
   },
   "heat": {
     "heat two phase": "true",
+    "heat solidification": "true",
     "heat solver rel tolerance": "1e-4",
     "heat solver preconditioner type": "DiagonalReduced",
     "heat nlsolve residual tolerance": "1e-7",
     "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve field correction tolerance": "1e-5"
+    "heat nlsolve field correction tolerance": "1e-5",
+    "dirac delta function approximation": {
+      "type": "reciprocal_phase_weighted",
+      "gas phase weight": "44.1",
+      "heavy phase weight": "4087"
+    }
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -96,7 +113,7 @@
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
           "NL max iterations": "10",
-          "NL tolerance": "1.e-10",
+          "NL tolerance": "1.e-9",
           "lin max iterations": "30",
           "lin tolerance": "1.e-4",
           "lin relative tolerance": "1",
@@ -115,7 +132,8 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
+    "do evaporation": "true",
+    "do evaporative heat flux": "true",
     "do evaporative mass flux": "false",
     "do melt pool": "true",
     "do recoil pressure": "true",
