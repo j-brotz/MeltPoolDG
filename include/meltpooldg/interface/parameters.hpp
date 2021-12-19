@@ -306,7 +306,7 @@ namespace MeltPoolDG
     bool        output_subdomains    = false;
     int         n_digits_timestep    = 4;
     int         n_groups             = 1;
-    int         n_patches            = 1;
+    int         n_patches            = 0;
   };
 
   template <typename number = double>
