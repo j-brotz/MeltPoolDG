@@ -38,7 +38,7 @@
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::MeltPool
 {
   using namespace dealii;
 
@@ -154,7 +154,7 @@ namespace MeltPoolDG::Flow
 
     std::shared_ptr<ScratchData<dim>>                       scratch_data;
     std::shared_ptr<Material<double>>                       material;
-    std::shared_ptr<FlowBase<dim>>                          flow_operation;
+    std::shared_ptr<Flow::FlowBase<dim>>                    flow_operation;
     LevelSet::LevelSetOperation<dim>                        level_set_operation;
     std::shared_ptr<MeltPool::MeltPoolOperation<dim>>       melt_pool_operation;
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation = nullptr;
@@ -163,4 +163,4 @@ namespace MeltPoolDG::Flow
     std::shared_ptr<Flow::SurfaceTensionOperation<dim>>     surface_tension_operation;
     std::shared_ptr<Postprocessor<dim>>                     post_processor;
   };
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::MeltPool
