@@ -154,47 +154,32 @@ namespace MeltPoolDG::AdvectionDiffusion
     AssertThrow(this->time_increment > 0.0,
                 ExcMessage("advection diffusion operator: d_tau must be set"));
 
+    advection_velocity.update_ghost_values();
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, 1, number>   advected_field(matrix_free,
-                                                        this->dof_idx,
-                                                        advec_diff_quad_idx);
-        FECellIntegrator<dim, dim, number> velocity(matrix_free,
-                                                    velocity_dof_idx,
-                                                    advec_diff_quad_idx);
+        FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
+                                                             this->dof_idx,
+                                                             advec_diff_quad_idx);
+        FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
+                                                         velocity_dof_idx,
+                                                         advec_diff_quad_idx);
 
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
-            advected_field.reinit(cell);
-            advected_field.gather_evaluate(src,
-                                           EvaluationFlags::values | EvaluationFlags::gradients);
+            advected_field_vals.reinit(cell);
+            advected_field_vals.read_dof_values(src);
 
-            velocity.reinit(cell);
-            velocity.read_dof_values_plain(advection_velocity);
-            velocity.evaluate(EvaluationFlags::values);
+            tangent_local_cell_operation(advected_field_vals, velocity_vals, true);
 
-            for (unsigned int q_index = 0; q_index < advected_field.n_q_points; ++q_index)
-              {
-                const scalar phi      = advected_field.get_value(q_index);
-                const vector grad_phi = advected_field.get_gradient(q_index);
-
-                const scalar velocity_grad_phi =
-                  scalar_product(velocity.get_value(q_index), grad_phi);
-
-                advected_field.submit_value(phi + this->time_increment * theta * velocity_grad_phi,
-                                            q_index);
-                advected_field.submit_gradient(this->time_increment * theta * data.diffusivity *
-                                                 grad_phi,
-                                               q_index);
-              }
-            advected_field.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients,
-                                             dst);
+            advected_field_vals.distribute_local_to_global(dst);
           }
       },
       dst,
       src,
       true);
+
+    advection_velocity.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -211,46 +196,165 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
-        FECellIntegrator<dim, 1, number, VectorizedArrayType> advected_field(matrix_free,
-                                                                             this->dof_idx,
-                                                                             advec_diff_quad_idx);
-        FECellIntegrator<dim, dim, number>                    velocity(matrix_free,
-                                                    velocity_dof_idx,
-                                                    advec_diff_quad_idx);
+        FECellIntegrator<dim, 1, number, VectorizedArrayType> advected_field_vals(
+          matrix_free, this->dof_idx, advec_diff_quad_idx);
+        FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
+                                                         velocity_dof_idx,
+                                                         advec_diff_quad_idx);
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
-            advected_field.reinit(cell);
-            advected_field.gather_evaluate(src,
-                                           EvaluationFlags::values | EvaluationFlags::gradients);
+            advected_field_vals.reinit(cell);
+            advected_field_vals.gather_evaluate(
+              src,
+              EvaluationFlags::values | EvaluationFlags::gradients); // @todo: read_dof_values_plain
 
-            velocity.reinit(cell);
-            velocity.read_dof_values_plain(advection_velocity);
-            velocity.evaluate(EvaluationFlags::values);
+            velocity_vals.reinit(cell);
+            velocity_vals.read_dof_values_plain(advection_velocity);
+            velocity_vals.evaluate(EvaluationFlags::values);
 
-            for (unsigned int q_index = 0; q_index < advected_field.n_q_points; ++q_index)
+            for (unsigned int q_index = 0; q_index < advected_field_vals.n_q_points; ++q_index)
               {
-                scalar       phi      = advected_field.get_value(q_index);
-                const vector grad_phi = advected_field.get_gradient(q_index);
+                scalar       phi      = advected_field_vals.get_value(q_index);
+                const vector grad_phi = advected_field_vals.get_gradient(q_index);
 
                 const scalar velocity_grad_phi =
-                  scalar_product(velocity.get_value(q_index), grad_phi);
-                advected_field.submit_value(phi - this->time_increment * (1. - theta) *
-                                                    velocity_grad_phi,
-                                            q_index);
+                  scalar_product(velocity_vals.get_value(q_index), grad_phi);
+                advected_field_vals.submit_value(phi - this->time_increment * (1. - theta) *
+                                                         velocity_grad_phi,
+                                                 q_index);
 
-                advected_field.submit_gradient(-this->time_increment * (1. - theta) *
-                                                 data.diffusivity * grad_phi,
-                                               q_index);
+                advected_field_vals.submit_gradient(-this->time_increment * (1. - theta) *
+                                                      data.diffusivity * grad_phi,
+                                                    q_index);
               }
 
-            advected_field.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients,
-                                             dst);
+            advected_field_vals.integrate_scatter(EvaluationFlags::values |
+                                                    EvaluationFlags::gradients,
+                                                  dst);
           }
       },
       dst,
       src,
       false); // rhs should not be zeroed out in order to consider inhomogeneous dirichlet BC
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::compute_system_matrix_from_matrixfree(
+    TrilinosWrappers::SparseMatrix &system_matrix) const
+  {
+    system_matrix = 0.0;
+
+    advection_velocity.update_ghost_values();
+
+    // note: not thread safe!!!
+    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
+                                                         this->dof_idx,
+                                                         advec_diff_quad_idx);
+    FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
+                                                     velocity_dof_idx,
+                                                     advec_diff_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    // compute matrix (only cell contributions)
+    MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+      matrix_free,
+      scratch_data.get_constraint(this->dof_idx),
+      system_matrix,
+      [&](auto &advected_field_vals) {
+        const unsigned int current_cell_index = advected_field_vals.get_current_cell_index();
+
+        tangent_local_cell_operation(advected_field_vals,
+                                     velocity_vals,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      this->dof_idx,
+      advec_diff_quad_idx);
+
+    system_matrix.compress(VectorOperation::add);
+
+    advection_velocity.zero_out_ghost_values();
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(
+    VectorType &diagonal) const
+  {
+    scratch_data.initialize_dof_vector(diagonal, this->dof_idx);
+
+    advection_velocity.update_ghost_values();
+
+    // note: not thread safe!!!
+    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
+                                                         this->dof_idx,
+                                                         advec_diff_quad_idx);
+    FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
+                                                     velocity_dof_idx,
+                                                     advec_diff_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    // compute diagonal ...
+    MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
+      matrix_free,
+      diagonal,
+      [&](auto &advected_field_vals) {
+        const unsigned int current_cell_index = advected_field_vals.get_current_cell_index();
+
+        tangent_local_cell_operation(advected_field_vals,
+                                     velocity_vals,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      this->dof_idx,
+      advec_diff_quad_idx);
+
+    advection_velocity.zero_out_ghost_values();
+
+    // ... and invert it
+    for (auto &i : diagonal)
+      i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+  }
+
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::tangent_local_cell_operation(
+    FECellIntegrator<dim, 1, number> &  advected_field_vals,
+    FECellIntegrator<dim, dim, number> &velocity_vals,
+    const bool                          do_reinit_cells) const
+  {
+    advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+    if (do_reinit_cells)
+      {
+        velocity_vals.reinit(advected_field_vals.get_current_cell_index());
+        velocity_vals.read_dof_values_plain(advection_velocity);
+        velocity_vals.evaluate(EvaluationFlags::values);
+      }
+
+    for (unsigned int q_index = 0; q_index < advected_field_vals.n_q_points; ++q_index)
+      {
+        const scalar phi      = advected_field_vals.get_value(q_index);
+        const vector grad_phi = advected_field_vals.get_gradient(q_index);
+
+        const scalar velocity_grad_phi = scalar_product(velocity_vals.get_value(q_index), grad_phi);
+
+        advected_field_vals.submit_value(phi + this->time_increment * theta * velocity_grad_phi,
+                                         q_index);
+        advected_field_vals.submit_gradient(this->time_increment * theta * data.diffusivity *
+                                              grad_phi,
+                                            q_index);
+      }
+    advected_field_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
   }
 
   template class AdvectionDiffusionOperator<1, double>;

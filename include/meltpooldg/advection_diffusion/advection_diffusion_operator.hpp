@@ -66,7 +66,19 @@ namespace MeltPoolDG::AdvectionDiffusion
     void
     create_rhs(VectorType &dst, const VectorType &src) const final;
 
+    void
+    compute_system_matrix_from_matrixfree(
+      TrilinosWrappers::SparseMatrix &system_matrix) const final;
+
+    void
+    compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
+
   private:
+    void
+    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  advected_field,
+                                 FECellIntegrator<dim, dim, number> &velocity_vals,
+                                 const bool                          do_reinit_cells) const;
+
     const ScratchData<dim> &              scratch_data;
     const VectorType &                    advection_velocity;
     const AdvectionDiffusionData<number> &data;
