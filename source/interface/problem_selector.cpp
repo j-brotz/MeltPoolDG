@@ -24,7 +24,7 @@ namespace MeltPoolDG
       return std::make_shared<AdvectionDiffusion::AdvectionDiffusionProblem<dim>>();
 
     else if (problem_name == ProblemType::melt_pool)
-      return std::make_shared<Flow::MeltPoolProblem<dim>>();
+      return std::make_shared<MeltPool::MeltPoolProblem<dim>>();
 
     else if (problem_name == ProblemType::heat_transfer)
       return std::make_shared<Heat::HeatTransferProblem<dim>>();

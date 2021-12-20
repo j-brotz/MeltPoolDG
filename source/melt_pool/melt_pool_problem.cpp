@@ -10,7 +10,7 @@
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
-namespace MeltPoolDG::Flow
+namespace MeltPoolDG::MeltPool
 {
   template <int dim>
   void
@@ -93,7 +93,7 @@ namespace MeltPoolDG::Flow
                   base_in->parameters.mp.solid.do_not_reinitialize)
                 {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-                  dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+                  dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
 #else
                   AssertThrow(false, ExcNotImplemented());
 #endif
@@ -375,10 +375,8 @@ namespace MeltPoolDG::Flow
     material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    flow_operation =
-      std::make_shared<AdafloWrapper<dim>>(*scratch_data,
-                                           base_in,
-                                           problem_specific_parameters.do_evaporative_mass_flux);
+    flow_operation = std::make_shared<Flow::AdafloWrapper<dim>>(
+      *scratch_data, base_in, problem_specific_parameters.do_evaporative_mass_flux);
     flow_vel_no_solid_dof_idx =
       scratch_data->attach_constraint_matrix(flow_velocity_constraints_no_solid);
     scratch_data->attach_dof_handler(flow_operation->get_dof_handler_velocity());
@@ -591,7 +589,7 @@ namespace MeltPoolDG::Flow
      *  set initial condition of the velocity field
      */
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())
+    dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())
       ->set_initial_condition(*base_in->get_initial_condition("navier_stokes_u"));
 #else
     AssertThrow(false, ExcNotImplemented());
@@ -622,7 +620,7 @@ namespace MeltPoolDG::Flow
         if (base_in->parameters.mp.solid.set_velocity_to_zero ||
             base_in->parameters.mp.solid.do_not_reinitialize)
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-          dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+          dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
 #else
           AssertThrow(false, ExcNotImplemented());
 #endif
@@ -653,7 +651,7 @@ namespace MeltPoolDG::Flow
        *    initialize the flow operation class
        */
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_1();
+    dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_1();
     flow_velocity_constraints_no_solid.copy_from(flow_operation->get_constraints_velocity());
 #else
     AssertThrow(false, ExcNotImplemented());
@@ -775,7 +773,7 @@ namespace MeltPoolDG::Flow
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    dynamic_cast<AdafloWrapper<dim> *>(flow_operation.get())->reinit_2();
+    dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_2();
 #else
     AssertThrow(false, ExcNotImplemented());
 #endif
@@ -1153,4 +1151,4 @@ namespace MeltPoolDG::Flow
   }
 
   template class MeltPoolProblem<MELT_POOL_DG_DIM>;
-} // namespace MeltPoolDG::Flow
+} // namespace MeltPoolDG::MeltPool
