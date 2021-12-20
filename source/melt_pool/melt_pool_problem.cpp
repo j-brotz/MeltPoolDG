@@ -922,10 +922,8 @@ namespace MeltPoolDG::MeltPool
 
                 if (material.two_phase_properties_transition_type ==
                     TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
-                  {
-                    flow_operation->get_density(cell, q) =
-                      rho_g / (1. + (rho_g / rho_l - 1.) * indicator);
-                  }
+                  flow_operation->get_density(cell, q) =
+                    UtilityFunctions::interpolate_reciprocal(indicator, rho_g, rho_l);
                 else
                   flow_operation->get_density(cell, q) =
                     UtilityFunctions::interpolate(indicator, rho_g, rho_l);

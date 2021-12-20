@@ -359,11 +359,9 @@ namespace MeltPoolDG
     const value_type &gas_density,
     const value_type &liquid_solid_density) const
   {
-    // clang-format off
-      return 1.
-             / // -------------------------------------------------------------------------------------
-             (level_set_heaviside / liquid_solid_density + (1. - level_set_heaviside) / gas_density);
-    // clang-format on
+    return UtilityFunctions::interpolate_reciprocal(level_set_heaviside,
+                                                    gas_density,
+                                                    liquid_solid_density);
   }
 
 

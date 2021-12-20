@@ -352,11 +352,8 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      // clang-format off
-      return correction_factor
-             / // ----------------------------------------------------------
-             (level_set_heaviside / w_h + (1. - level_set_heaviside) / w_g);
-      // clang-format on
+      return UtilityFunctions::interpolate_reciprocal(level_set_heaviside, w_g, w_h) *
+             correction_factor;
     }
 
     const number w_g;

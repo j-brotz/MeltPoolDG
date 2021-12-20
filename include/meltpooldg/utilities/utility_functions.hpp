@@ -305,6 +305,22 @@ namespace MeltPoolDG
       return (1. - ls) * val1 + ls * val2;
     }
 
+    /**
+     * Interpolate between @p val1 and @p val2 with the reciprocal function
+     *
+     *             1
+     * x = ---------------------
+     *       (1 - ls)      ls
+     *      ---------- + ------
+     *         val1       val2
+     */
+    template <typename value_type1, typename value_type2, typename value_type3>
+    inline value_type1
+    interpolate_reciprocal(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
+    {
+      return val1 / (1. + (val1 / val2 - 1.) * ls);
+    }
+
     template <typename value_type1, typename value_type2, typename value_type3>
     inline value_type1
     interpolate_cubic(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
