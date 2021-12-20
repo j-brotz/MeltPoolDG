@@ -15,9 +15,11 @@ namespace MeltPoolDG
 
     for (unsigned int i = 0; i <= 10; ++i)
       this->pcout.push_back(
-        ConditionalOStream(std::cout,
-                           (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 &&
-                             (i <= max_verbosity_level)));
+        dealii::ConditionalOStream(std::cout,
+                                   (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 &&
+                                     (i <= max_verbosity_level)));
+
+    timer = std::make_shared<TimerOutput>(pcout[1], TimerOutput::never, TimerOutput::wall_times);
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
@@ -466,6 +468,13 @@ namespace MeltPoolDG
     const unsigned int dof_idx) const
   {
     return dynamic_cast<const FE_Q_iso_Q1<dim> *>(&this->get_fe(dof_idx)) != nullptr;
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  TimerOutput &
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_timer() const
+  {
+    return *timer;
   }
 
   template class ScratchData<1>;

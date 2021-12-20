@@ -2,6 +2,10 @@
 
 namespace MeltPoolDG
 {
+  ConditionalOStream::ConditionalOStream(const dealii::ConditionalOStream &other)
+    : ConditionalOStream(other.get_stream(), other.is_active())
+  {}
+
   ConditionalOStream::ConditionalOStream(std::ostream &stream, const bool active)
     : dealii::ConditionalOStream(stream, active)
     , output_stream(stream)

@@ -222,11 +222,17 @@ namespace MeltPoolDG::LevelSet
     /*
      *  1) solve the advection step of the level set function
      */
-    advect_level_set(dt, advection_velocity);
+    {
+      TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::advect");
+      advect_level_set(dt, advection_velocity);
+    }
     /*
      *  2) solve the reinitialization problem of the level set equation
      */
-    do_reinitialization();
+    {
+      TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::reinit");
+      do_reinitialization();
+    }
     /*
      *  3) compute the smoothened heaviside function ...
      */
@@ -234,7 +240,10 @@ namespace MeltPoolDG::LevelSet
     /*
      *    ... the curvature
      */
-    curvature_operation->solve(advec_diff_operation->get_advected_field());
+    {
+      TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::curvature");
+      curvature_operation->solve(advec_diff_operation->get_advected_field());
+    }
     /*
      *    ... and correct the curvature value far away from the zero level set
      */

@@ -8,6 +8,7 @@
 // for parallelization
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/partitioner.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
@@ -181,9 +182,12 @@ namespace MeltPoolDG
     bool
     is_FE_Q_iso_Q_1(const unsigned int dof_idx = 0) const;
 
+    TimerOutput &
+    get_timer() const;
+
   private:
     bool                                                      do_matrix_free;
-    std::vector<ConditionalOStream>                           pcout;
+    std::vector<dealii::ConditionalOStream>                   pcout;
     std::shared_ptr<Mapping<dim, spacedim>>                   mapping;
     std::vector<const DoFHandler<dim, spacedim> *>            dof_handler;
     std::vector<const AffineConstraints<number> *>            constraint;
@@ -195,6 +199,8 @@ namespace MeltPoolDG
     std::vector<IndexSet>                                     locally_owned_dofs;
     std::vector<IndexSet>                                     locally_relevant_dofs;
     std::vector<std::shared_ptr<Utilities::MPI::Partitioner>> partitioner;
+
+    mutable std::shared_ptr<TimerOutput> timer;
 
     MatrixFree<dim, number, VectorizedArrayType> matrix_free;
   };
