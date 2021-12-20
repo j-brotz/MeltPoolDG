@@ -314,11 +314,11 @@ namespace MeltPoolDG::Reinitialization
       this->dof_idx,
       reinit_quad_idx);
 
-    this->normal_vec.zero_out_ghost_values();
-
     // ... and invert it
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+
+    this->normal_vec.zero_out_ghost_values();
   }
 
 

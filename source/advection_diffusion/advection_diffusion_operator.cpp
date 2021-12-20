@@ -321,11 +321,11 @@ namespace MeltPoolDG::AdvectionDiffusion
       this->dof_idx,
       advec_diff_quad_idx);
 
-    advection_velocity.zero_out_ghost_values();
-
     // ... and invert it
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+
+    advection_velocity.zero_out_ghost_values();
   }
 
 

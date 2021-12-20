@@ -271,12 +271,12 @@ namespace MeltPoolDG::NormalVector
       normal_dof_idx,
       normal_quad_idx);
 
-    if (solution_level_set)
-      solution_level_set->zero_out_ghost_values();
-
     // ... and invert it
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+
+    if (solution_level_set)
+      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>
