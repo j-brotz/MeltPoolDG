@@ -91,28 +91,35 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit scale factor epsilon": "1.0"
+    "reinit scale factor epsilon": "1.0",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
     "normal vec damping scale factor": "0.5",
-    "normal vec do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true",
-    "curv damping scale factor": "0.5"
+    "curv damping scale factor": "0.5",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "heat": {
     "heat solidification": "true",
-    "heat solver rel tolerance": "1e-12",
-    "heat solver preconditioner type": "ILU",
-    "heat nlsolve residual tolerance": "1e-8"
+    "heat nlsolve residual tolerance": "1e-8",
+    "linear solver": {
+      "rel tolerance": "1e-12",
+      "preconditioner type": "ILU"
+    }
   },
   "paraview": {
     "paraview do output": "true",
@@ -123,5 +130,10 @@
     "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

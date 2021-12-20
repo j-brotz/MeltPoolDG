@@ -20,13 +20,16 @@ namespace MeltPoolDG::NormalVector
      *  initialize normal vector data
      */
     normal_vector_data = data_in.normal_vec;
+
+    AssertThrow(normal_vector_data.linear_solver.solver_type == LinearSolverType::CG,
+                ExcMessage("The normal vector operation only supports the CG solver type."));
   }
 
   template <int dim>
   void
   NormalVectorOperation<dim>::reinit()
   {
-    if (!normal_vector_data.do_matrix_free)
+    if (!normal_vector_data.linear_solver.do_matrix_free)
       normal_vector_operator->initialize_matrix_based(*scratch_data);
   }
 
@@ -47,7 +50,7 @@ namespace MeltPoolDG::NormalVector
 
     int iter = 0;
 
-    if (normal_vector_data.do_matrix_free)
+    if (normal_vector_data.linear_solver.do_matrix_free)
       {
         normal_vector_operator->create_rhs(rhs, solution_levelset_in);
         iter =
@@ -123,7 +126,7 @@ namespace MeltPoolDG::NormalVector
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
-    if (!normal_vector_data.do_matrix_free)
+    if (!normal_vector_data.linear_solver.do_matrix_free)
       normal_vector_operator->initialize_matrix_based(*scratch_data);
   }
 

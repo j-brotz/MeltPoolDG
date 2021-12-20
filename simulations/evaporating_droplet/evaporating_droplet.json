@@ -25,21 +25,26 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "reinitialization": {
     "reinit max n steps": "10",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit scale factor epsilon": "1.707"
+    "reinit scale factor epsilon": "1.707",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
-    "normal vec do matrix free": "true",
-    "normal vec implementation": "adaflo"
+    "normal vec implementation": "adaflo",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview do output": "true"
@@ -81,5 +86,10 @@
     "do evaporative mass flux": "true",
     "do evaporation": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

@@ -34,31 +34,39 @@
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true",
     "ls implementation": "meltpooldg",
     "ls do curvature correction": "true"
   },
   "advection diffusion": {
-    "advec diff implementation": "meltpooldg"
+    "advec diff implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit preconditioner type": "AMG",
     "reinit scale factor epsilon": "1.5",
-    "reinit implementation": "meltpooldg"
+    "reinit implementation": "meltpooldg",
+    "linear solver": {
+      "preconditioner type": "AMG",
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
-    "normal vec do matrix free": "true",
-    "normal vec implementation": "meltpooldg"
+    "normal vec implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true",
     "curv damping scale factor": "3.2",
     "curv implementation": "meltpooldg",
-    "curv verbosity level": "0"
+    "curv verbosity level": "0",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "adaptive meshing": {
     "do amr": "false",

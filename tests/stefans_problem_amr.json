@@ -16,7 +16,6 @@
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true",
     "ls implementation": "meltpooldg"
   },
   "adaptive meshing": {
@@ -31,18 +30,24 @@
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
     "reinit implementation": "meltpooldg",
-    "reinit constant epsilon": "0.01"
+    "reinit constant epsilon": "0.01",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
-    "normal vec do matrix free": "true",
     "normal vec damping scale factor": "8",
-    "normal vec implementation": "meltpooldg"
+    "normal vec implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "evaporation": {
     "evapor evaporative mass flux": "1.0e-4",
@@ -55,5 +60,10 @@
   },
   "paraview": {
     "paraview do output": "false"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

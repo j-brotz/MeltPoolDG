@@ -51,22 +51,27 @@
   },
   "levelset": {
     "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit constant epsilon": "0.02"
+    "reinit constant epsilon": "0.02",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
-    "normal vec do matrix free": "true",
-    "normal vec implementation": "meltpooldg"
+    "normal vec implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "evaporation": {
     "evapor evaporative mass flux": "1.e-2"
@@ -80,5 +85,10 @@
     "do evaporative mass flux": "true",
     "do evaporation": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

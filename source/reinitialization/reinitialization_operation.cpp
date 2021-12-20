@@ -28,7 +28,8 @@ namespace MeltPoolDG::Reinitialization
     /*
      *    initialize normal_vector_field
      */
-    AssertThrow(data_in.normal_vec.do_matrix_free == data_in.reinit.solver.do_matrix_free,
+    AssertThrow(data_in.normal_vec.linear_solver.do_matrix_free ==
+                  data_in.reinit.linear_solver.do_matrix_free,
                 ExcMessage("For the reinitialization problem both the "
                            " normal vector and the reinitialization operation have to be "
                            " computed either matrix-based or matrix-free."));
@@ -43,7 +44,7 @@ namespace MeltPoolDG::Reinitialization
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (data_in.normal_vec.implementation == "adaflo")
       {
-        AssertThrow(data_in.normal_vec.do_matrix_free, ExcNotImplemented());
+        AssertThrow(data_in.normal_vec.linear_solver.do_matrix_free, ExcNotImplemented());
 
         normal_vector_operation =
           std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(*scratch_data_in,
@@ -114,7 +115,7 @@ namespace MeltPoolDG::Reinitialization
 
     int iter = 0;
 
-    if (reinit_data.solver.do_matrix_free)
+    if (reinit_data.linear_solver.do_matrix_free)
       {
         reinit_operator->create_rhs(rhs, solution_level_set);
         iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
@@ -127,11 +128,10 @@ namespace MeltPoolDG::Reinitialization
                                               reinit_operator->get_system_matrix(),
                                               rhs);
 
-        if (reinit_data.solver.solver_type == SolverType::CG)
+        if (reinit_data.linear_solver.solver_type == LinearSolverType::CG)
           {
-            auto preconditioner =
-              Preconditioner::get_preconditioner_trilinos(reinit_operator->get_system_matrix(),
-                                                          reinit_data.solver.preconditioner_type);
+            auto preconditioner = Preconditioner::get_preconditioner_trilinos(
+              reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
             iter = LinearSolve::solve<VectorType,
                                       SolverCG<VectorType>,
                                       SparseMatrixType,
@@ -139,15 +139,14 @@ namespace MeltPoolDG::Reinitialization
               reinit_operator->get_system_matrix(),
               src,
               rhs,
-              reinit_data.solver.rel_tolerance,
-              reinit_data.solver.max_iterations,
+              reinit_data.linear_solver.rel_tolerance,
+              reinit_data.linear_solver.max_iterations,
               *preconditioner);
           }
-        else if (reinit_data.solver.solver_type == SolverType::GMRES)
+        else if (reinit_data.linear_solver.solver_type == LinearSolverType::GMRES)
           {
-            auto preconditioner =
-              Preconditioner::get_preconditioner_trilinos(reinit_operator->get_system_matrix(),
-                                                          reinit_data.solver.preconditioner_type);
+            auto preconditioner = Preconditioner::get_preconditioner_trilinos(
+              reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
             iter = LinearSolve::solve<VectorType,
                                       SolverGMRES<VectorType>,
                                       SparseMatrixType,
@@ -155,8 +154,8 @@ namespace MeltPoolDG::Reinitialization
               reinit_operator->get_system_matrix(),
               src,
               rhs,
-              reinit_data.solver.rel_tolerance,
-              reinit_data.solver.max_iterations,
+              reinit_data.linear_solver.rel_tolerance,
+              reinit_data.linear_solver.max_iterations,
               *preconditioner);
           }
 
@@ -297,7 +296,7 @@ namespace MeltPoolDG::Reinitialization
          *  apply it to the system matrix. This functionality is part of the OperatorBase class.
          */
 
-        if (!reinit_data.solver.do_matrix_free)
+        if (!reinit_data.linear_solver.do_matrix_free)
           reinit_operator->initialize_matrix_based(*scratch_data);
   }
 
@@ -305,7 +304,7 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::update_operator()
   {
-    if (!reinit_data.solver.do_matrix_free)
+    if (!reinit_data.linear_solver.do_matrix_free)
       reinit_operator->initialize_matrix_based(*scratch_data);
   }
 

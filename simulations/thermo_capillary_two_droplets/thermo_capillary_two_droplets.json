@@ -12,7 +12,9 @@
   },
   "heat": {
     "heat two phase": "true",
-    "heat solver preconditioner type": "AMG"
+    "linear solver": {
+      "preconditioner type": "AMG"
+    }
   },
   "material": {
     "material first capacity": "1e-4",
@@ -65,23 +67,28 @@
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true",
     "ls implementation": "meltpooldg"
   },
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
     "reinit implementation": "meltpooldg",
-    "reinit scale factor epsilon": "1"
+    "reinit scale factor epsilon": "1",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
-    "normal vec do matrix free": "true",
-    "normal vec implementation": "meltpooldg"
+    "normal vec implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview directory": "output_thermo_capillary/",
@@ -89,5 +96,10 @@
   },
   "problem specific": {
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

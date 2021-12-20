@@ -103,7 +103,7 @@ namespace MeltPoolDG::LevelSet
     else if ((base_in->parameters.reinit.implementation == "adaflo") ||
              (base_in->parameters.ls.implementation == "adaflo"))
       {
-        AssertThrow(base_in->parameters.reinit.solver.do_matrix_free, ExcNotImplemented());
+        AssertThrow(base_in->parameters.reinit.linear_solver.do_matrix_free, ExcNotImplemented());
         reinit_operation = std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
           *scratch_data,
           reinit_hanging_nodes_dof_idx_in,
@@ -133,7 +133,7 @@ namespace MeltPoolDG::LevelSet
     else if ((base_in->parameters.curv.implementation == "adaflo") ||
              (base_in->parameters.ls.implementation == "adaflo"))
       {
-        AssertThrow(base_in->parameters.curv.do_matrix_free, ExcNotImplemented());
+        AssertThrow(base_in->parameters.curv.linear_solver.do_matrix_free, ExcNotImplemented());
         curvature_operation = std::make_shared<Curvature::CurvatureOperationAdaflo<dim>>(
           *scratch_data_in,
           ls_dof_idx_in,
@@ -503,7 +503,6 @@ namespace MeltPoolDG::LevelSet
     advec_diff_operation->advec_diff_data.diffusivity = data_in.ls.artificial_diffusivity;
     advec_diff_operation->advec_diff_data.time_integration_scheme =
       data_in.ls.time_integration_scheme;
-    advec_diff_operation->advec_diff_data.do_matrix_free = data_in.ls.do_matrix_free;
     /*
      *  setup the time iterator for the reinitialization problem
      */

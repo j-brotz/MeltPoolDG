@@ -20,8 +20,10 @@
     "heat temperature infinity": "300.0",
     "heat velocity": "0.01",
     "heat two phase": "true",
-    "heat solver rel tolerance": "1e-12",
-    "heat nlsolve residual tolerance": "1e-6"
+    "heat nlsolve residual tolerance": "1e-6",
+    "linear solver": {
+      "rel tolerance": "1e-12"
+    }
   },
   "material": {
     "material first capacity": "230",

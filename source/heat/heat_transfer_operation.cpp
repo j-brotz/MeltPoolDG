@@ -48,7 +48,7 @@ namespace MeltPoolDG::Heat
      * setup preconditioner for matrix-free computation
      */
     heat_transfer_preconditioner = std::make_shared<HeatTransferPreconditionerMatrixFree<dim>>(
-      scratch_data, temp_dof_idx, heat_data.solver.preconditioner_type, heat_operator);
+      scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, heat_operator);
 
     reinit();
   }
@@ -99,7 +99,7 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperation<dim>::solve(const double dt)
   {
-    if (!heat_data.do_matrix_free)
+    if (!heat_data.linear_solver.do_matrix_free)
       AssertThrow(false, ExcNotImplemented());
 
     heat_operator->reset_time_increment(dt);
@@ -124,20 +124,20 @@ namespace MeltPoolDG::Heat
 
     const auto solve_linear_system = [&](VectorType &      solution_update,
                                          const VectorType &rhs) -> int {
-      switch (heat_data.solver.preconditioner_type)
+      switch (heat_data.linear_solver.preconditioner_type)
         {
           case PreconditionerType::Diagonal:
             case PreconditionerType::DiagonalReduced: {
               auto preconditioner = heat_transfer_preconditioner->compute_diagonal_preconditioner();
 
-              return LinearSolve::solve<VectorType,
-                                        SolverGMRES<VectorType>,
-                                        OperatorBase<dim, double>>(*heat_operator,
-                                                                   solution_update,
-                                                                   rhs,
-                                                                   heat_data.solver.rel_tolerance,
-                                                                   heat_data.solver.max_iterations,
-                                                                   preconditioner);
+              return LinearSolve::
+                solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
+                  *heat_operator,
+                  solution_update,
+                  rhs,
+                  heat_data.linear_solver.rel_tolerance,
+                  heat_data.linear_solver.max_iterations,
+                  preconditioner);
             }
           case PreconditionerType::Identity:
           case PreconditionerType::AMG:
@@ -147,14 +147,14 @@ namespace MeltPoolDG::Heat
               // take the first three letters as relevant preconditioner type
               auto preconditioner = heat_transfer_preconditioner->compute_trilinos_preconditioner();
 
-              return LinearSolve::solve<VectorType,
-                                        SolverGMRES<VectorType>,
-                                        OperatorBase<dim, double>>(*heat_operator,
-                                                                   solution_update,
-                                                                   rhs,
-                                                                   heat_data.solver.rel_tolerance,
-                                                                   heat_data.solver.max_iterations,
-                                                                   *preconditioner);
+              return LinearSolve::
+                solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
+                  *heat_operator,
+                  solution_update,
+                  rhs,
+                  heat_data.linear_solver.rel_tolerance,
+                  heat_data.linear_solver.max_iterations,
+                  *preconditioner);
             }
             default: {
               AssertThrow(false, ExcNotImplemented());

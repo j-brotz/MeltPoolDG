@@ -37,7 +37,9 @@
   },
   "curvature": {
     "curv damping scale factor": "4",
-    "curv do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "time stepping": {
     "end time": "0.000005",
@@ -61,7 +63,6 @@
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",
-    "ls do matrix free": "true",
     "ls do reinitialization": "true",
     "ls theta": "0.5"
   },
@@ -96,20 +97,29 @@
   },
   "normal vector": {
     "normal vec damping scale factor": "4.",
-    "normal vec do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview do output": "false"
   },
   "reinitialization": {
-    "reinit do matrix free": "true",
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "0.7107"
+    "reinit scale factor epsilon": "0.7107",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "problem specific": {
     "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }
