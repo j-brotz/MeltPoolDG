@@ -71,11 +71,25 @@ namespace MeltPoolDG
       void
       set_normal_vector_field(const BlockVectorType &normal_vector);
 
+      void
+      compute_system_matrix_from_matrixfree(
+        TrilinosWrappers::SparseMatrix &system_matrix) const final;
+
+      void
+      compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
+
+    private:
+      void
+      tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  delta_psi,
+                                   FECellIntegrator<dim, dim, number> &normal_vector,
+                                   const bool                          do_reinit_cells) const;
+
     private:
       const ScratchData<dim> &scratch_data;
 
       double             eps = -1.0;
       double             eps_scale_factor;
+      double             epsilon_used;
       BlockVectorType &  normal_vec;
       const double       tolerance_normal_vector;
       const unsigned int reinit_quad_idx;
