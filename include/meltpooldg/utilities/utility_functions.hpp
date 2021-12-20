@@ -298,49 +298,6 @@ namespace MeltPoolDG
       return eps;
     }
 
-    template <typename value_type1, typename value_type2, typename value_type3>
-    inline value_type1
-    interpolate(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
-    {
-      return (1. - ls) * val1 + ls * val2;
-    }
-
-    /**
-     * Interpolate between @p val1 and @p val2 with the reciprocal function
-     *
-     *             1
-     * x = ---------------------
-     *       (1 - ls)      ls
-     *      ---------- + ------
-     *         val1       val2
-     */
-    template <typename value_type1, typename value_type2, typename value_type3>
-    inline value_type1
-    interpolate_reciprocal(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
-    {
-      // clang-format off
-      return                    1.
-             / // --------------------------------
-                   ((1. - ls) / val1 + ls / val2);
-      // clang-format on
-    }
-
-    template <typename value_type1, typename value_type2, typename value_type3>
-    inline value_type1
-    interpolate_cubic(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
-    {
-      return val1 + (val2 - val1) * (-2. * ls * ls * ls + 3. * ls * ls);
-    }
-
-    template <typename value_type1, typename value_type2, typename value_type3>
-    inline value_type1
-    interpolate_cubic_derivative(const value_type1 &ls,
-                                 const value_type2 &val1,
-                                 const value_type3 &val2)
-    {
-      return (val2 - val1) * (-6. * ls * ls + 6. * ls);
-    }
-
     template <typename number>
     inline VectorizedArray<number>
     limit_to_bounds(const VectorizedArray<number> &in,

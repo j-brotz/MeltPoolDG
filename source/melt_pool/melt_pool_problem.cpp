@@ -6,6 +6,7 @@
 
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -886,14 +887,14 @@ namespace MeltPoolDG::MeltPool
                     const auto solid_fraction =
                       melt_pool_operation->compute_solid_fraction(temp_values.get_value(q));
 
-                    rho_l = UtilityFunctions::interpolate_cubic(solid_fraction,
-                                                                material.second.density,
-                                                                material.solid.density);
+                    rho_l = LevelSet::Tools::interpolate_cubic(solid_fraction,
+                                                               material.second.density,
+                                                               material.solid.density);
 
 
-                    viscosity_l = UtilityFunctions::interpolate_cubic(solid_fraction,
-                                                                      material.second.viscosity,
-                                                                      material.solid.viscosity);
+                    viscosity_l = LevelSet::Tools::interpolate_cubic(solid_fraction,
+                                                                     material.second.viscosity,
+                                                                     material.solid.viscosity);
 
                     if (darcy_operation)
                       {
@@ -923,13 +924,13 @@ namespace MeltPoolDG::MeltPool
                 if (material.two_phase_properties_transition_type ==
                     TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
                   flow_operation->get_density(cell, q) =
-                    UtilityFunctions::interpolate_reciprocal(indicator, rho_g, rho_l);
+                    LevelSet::Tools::interpolate_reciprocal(indicator, rho_g, rho_l);
                 else
                   flow_operation->get_density(cell, q) =
-                    UtilityFunctions::interpolate(indicator, rho_g, rho_l);
+                    LevelSet::Tools::interpolate(indicator, rho_g, rho_l);
 
                 flow_operation->get_viscosity(cell, q) =
-                  UtilityFunctions::interpolate(indicator, viscosity_g, viscosity_l);
+                  LevelSet::Tools::interpolate(indicator, viscosity_g, viscosity_l);
 #if 0
                 // check if no spurious densities or viscosities are computed
                 for (auto dens : flow_operation->get_density(cell, q))

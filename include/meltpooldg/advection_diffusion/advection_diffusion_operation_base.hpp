@@ -11,6 +11,7 @@
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
 {

@@ -1,4 +1,5 @@
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Reinitialization
 {

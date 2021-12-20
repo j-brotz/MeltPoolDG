@@ -9,6 +9,7 @@
 
 // MeltPoolDG
 #include <meltpooldg/interface/operator_base.hpp>
+#include <meltpooldg/interface/parameters.hpp>
 
 using namespace dealii;
 
