@@ -318,7 +318,11 @@ namespace MeltPoolDG
     inline value_type1
     interpolate_reciprocal(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
     {
-      return val1 / (1. + (val1 / val2 - 1.) * ls);
+      // clang-format off
+      return                    1.
+             / // --------------------------------
+                   ((1. - ls) / val1 + ls / val2);
+      // clang-format on
     }
 
     template <typename value_type1, typename value_type2, typename value_type3>

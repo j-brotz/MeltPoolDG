@@ -81,7 +81,13 @@ namespace MeltPoolDG::Heat
       UtilityFunctions::interpolate(weight, material.first.capacity, material.second.capacity);
 
     const double density =
-      material.first.density + weight * (material.second.density - material.first.density);
+      material.two_phase_properties_transition_type ==
+          TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation ?
+        UtilityFunctions::interpolate_reciprocal(weight,
+                                                 material.first.density,
+                                                 material.second.density) :
+        UtilityFunctions::interpolate(weight, material.first.density, material.second.density);
+
     const double thermal_diffusivity = conductivity / (density * capacity);
 
     // modify temperature profile to be anisotropic
