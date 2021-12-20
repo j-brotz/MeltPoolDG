@@ -194,6 +194,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     AssertThrow(this->time_increment > 0.0,
                 ExcMessage("advection diffusion operator: d_tau must be set"));
 
+    advection_velocity.update_ghost_values();
+
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
         FECellIntegrator<dim, 1, number, VectorizedArrayType> advected_field_vals(
@@ -237,6 +239,8 @@ namespace MeltPoolDG::AdvectionDiffusion
       dst,
       src,
       false); // rhs should not be zeroed out in order to consider inhomogeneous dirichlet BC
+
+    advection_velocity.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
