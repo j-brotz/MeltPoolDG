@@ -58,11 +58,24 @@ namespace MeltPoolDG
       void
       create_rhs(BlockVectorType &dst, const VectorType &src) const final;
 
+      void
+      compute_system_matrix_from_matrixfree(
+        TrilinosWrappers::SparseMatrix &system_matrix) const final;
+
+      void
+      compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
+
       static void
       get_unit_normals_at_quadrature(const FEValues<dim> &        fe_values,
                                      const BlockVectorType &      normal_vector_field_in,
                                      std::vector<Tensor<1, dim>> &unit_normal_at_quadrature,
                                      const double                 zero = 1e-16);
+
+    private:
+      void
+      tangent_local_cell_operation(FECellIntegrator<dim, dim, number> &normal_vals,
+                                   FECellIntegrator<dim, 1, number> &  level_set_vals,
+                                   const bool                          do_reinit_cells) const;
 
     private:
       const ScratchData<dim> &        scratch_data;
