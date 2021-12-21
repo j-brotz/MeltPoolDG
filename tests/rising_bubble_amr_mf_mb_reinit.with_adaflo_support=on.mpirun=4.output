@@ -7,7 +7,7 @@
 | || normal_0 ||L2 = 3.15494474100e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.15428518372e+00                                               normal_vector |
 |  τ = 0.025                                                                      reinitialization |
-| || matrix ||F = 3.787720092240847e-02                                           reinitialization |
+| || matrix ||F = 3.787720092240843e-02                                           reinitialization |
 | || delta phi ||L2 = 4.169700826204151e-04                                       reinitialization |
 | || normal_0 ||L2 = 3.15657094955e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.15591661630e+00                                               normal_vector |
@@ -44,10 +44,10 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.02 (dt = 0.02).
 | || normal_1 ||L2 = 3.49549645555e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.0125                                                                     reinitialization |
-| || matrix ||F = 4.228706550216305e-02                                           reinitialization |
+| || matrix ||F = 4.228706550216307e-02                                           reinitialization |
 | || delta phi ||L2 = 1.758660632111918e-03                                       reinitialization |
 |  τ = 0.025                                                                      reinitialization |
-| || matrix ||F = 4.228706550216305e-02                                           reinitialization |
+| || matrix ||F = 4.228706550216307e-02                                           reinitialization |
 | || delta phi ||L2 = 5.488064466129183e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.50457360708e+00                                               normal_vector |
@@ -65,10 +65,10 @@ Time step #2, advancing from t_n-1 = 0.02 to t = 0.04 (dt = 0.02).
 | || normal_1 ||L2 = 3.54721199301e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.0125                                                                     reinitialization |
-| || matrix ||F = 4.778899542547174e-02                                           reinitialization |
+| || matrix ||F = 4.778899542547172e-02                                           reinitialization |
 | || delta phi ||L2 = 4.358183177999393e-04                                       reinitialization |
 |  τ = 0.025                                                                      reinitialization |
-| || matrix ||F = 4.778899542547174e-02                                           reinitialization |
+| || matrix ||F = 4.778899542547172e-02                                           reinitialization |
 | || delta phi ||L2 = 2.727404583510937e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.55299714375e+00                                               normal_vector |
@@ -86,10 +86,10 @@ Time step #3, advancing from t_n-1 = 0.04 to t = 0.06 (dt = 0.02).
 | || normal_1 ||L2 = 3.75151345144e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.0125                                                                     reinitialization |
-| || matrix ||F = 5.357879126631875e-02                                           reinitialization |
+| || matrix ||F = 5.357879126631878e-02                                           reinitialization |
 | || delta phi ||L2 = 9.060628153707913e-04                                       reinitialization |
 |  τ = 0.025                                                                      reinitialization |
-| || matrix ||F = 5.357879126631875e-02                                           reinitialization |
+| || matrix ||F = 5.357879126631878e-02                                           reinitialization |
 | || delta phi ||L2 = 3.161169246087606e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.75746849076e+00                                               normal_vector |
@@ -107,10 +107,10 @@ Time step #4, advancing from t_n-1 = 0.06 to t = 0.08 (dt = 0.02).
 | || normal_1 ||L2 = 3.82563154347e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.0125                                                                     reinitialization |
-| || matrix ||F = 5.555726353545036e-02                                           reinitialization |
+| || matrix ||F = 5.555726353545021e-02                                           reinitialization |
 | || delta phi ||L2 = 6.424858572008317e-04                                       reinitialization |
 |  τ = 0.025                                                                      reinitialization |
-| || matrix ||F = 5.555726353545036e-02                                           reinitialization |
+| || matrix ||F = 5.555726353545021e-02                                           reinitialization |
 | || delta phi ||L2 = 2.837054321836779e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.82826618995e+00                                               normal_vector |

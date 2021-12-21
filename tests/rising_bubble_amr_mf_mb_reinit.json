@@ -44,7 +44,8 @@
     "reinit modeltype": "olsson2007",
     "reinit constant epsilon": "0.03",
     "linear solver": {
-      "do matrix free": "false"
+      "do matrix free": "false",
+      "preconditioner type": "AMG"
     }
   },
   "normal vector": {

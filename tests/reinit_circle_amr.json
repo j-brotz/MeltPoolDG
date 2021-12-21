@@ -19,7 +19,8 @@
     "reinit dtau": "0.005",
     "reinit constant epsilon": "0.05",
     "linear solver": {
-      "do matrix free": "false"
+      "do matrix free": "false",
+      "preconditioner type": "AMG"
     }
   },
   "normal vector": {

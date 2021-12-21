@@ -33,7 +33,8 @@
     "reinit modeltype": "olsson2007",
     "reinit scale factor epsilon": "0.7107",
     "linear solver": {
-      "do matrix free": "false"
+      "do matrix free": "false",
+      "preconditioner type": "AMG"
     }
   },
   "normal vector": {
