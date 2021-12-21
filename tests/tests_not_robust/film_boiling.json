@@ -17,7 +17,6 @@
     "end time": "0.01",
     "time step size": "0.002"
   },
-  "melt pool": {},
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -47,8 +46,7 @@
   },
   "levelset": {
     "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "adaptive meshing": {
     "do amr": "false",
@@ -62,17 +60,23 @@
   "reinitialization": {
     "reinit max n steps": "3",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit constant epsilon": "0.001"
+    "reinit constant epsilon": "0.001",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
-    "normal vec do matrix free": "true",
-    "normal vec implementation": "meltpooldg"
+    "normal vec implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
     "curv damping scale factor": "4",
-    "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "evaporation": {
     "evapor evaporation model": "Hardt Wondra",
@@ -81,10 +85,12 @@
   },
   "heat": {
     "heat two phase": "true",
-    "heat solver rel tolerance": "1e-10",
-    "heat solver preconditioner type": "AMGReduced",
     "heat nlsolve residual tolerance": "1e-6",
-    "heat nlsolve field correction tolerance": "1e-9"
+    "heat nlsolve field correction tolerance": "1e-9",
+    "linear solver": {
+      "rel tolerance": "1e-10",
+      "preconditioner type": "AMGReduced"
+    }
   },
   "paraview": {
     "paraview do output": "false"
@@ -106,5 +112,10 @@
   "problem specific": {
     "do evaporation": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

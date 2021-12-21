@@ -19,9 +19,11 @@
     "heat emissivity": "0.98",
     "heat convection coefficient": "25",
     "heat temperature infinity": "300.0",
-    "heat solver rel tolerance": "1e-12",
-    "heat solver preconditioner type": "DiagonalReduced",
-    "heat nlsolve residual tolerance": "1e-8"
+    "heat nlsolve residual tolerance": "1e-8",
+    "linear solver": {
+      "rel tolerance": "1e-12",
+      "preconditioner type": "DiagonalReduced"
+    }
   },
   "material": {
     "material first conductivity": "55.563",

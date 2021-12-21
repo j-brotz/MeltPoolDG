@@ -54,33 +54,40 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "reinitialization": {
     "reinit max n steps": "1",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit scale factor epsilon": "1.5"
+    "reinit scale factor epsilon": "1.5",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
-    "normal vec do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true",
-    "curv damping scale factor": "2"
+    "curv damping scale factor": "2",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview do output": "false"
   },
   "heat": {
     "heat two phase": "true",
-    "heat solver rel tolerance": "1e-4",
-    "heat solver preconditioner type": "DiagonalReduced",
     "heat nlsolve residual tolerance": "1e-7",
     "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve field correction tolerance": "1e-5"
+    "heat nlsolve field correction tolerance": "1e-5",
+    "linear solver": {
+      "rel tolerance": "1e-4",
+      "preconditioner type": "DiagonalReduced"
+    }
   },
   "laser": {
     "laser heat source model": "Gusarov"
@@ -120,5 +127,10 @@
     "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

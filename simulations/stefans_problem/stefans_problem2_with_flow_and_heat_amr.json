@@ -57,8 +57,7 @@
   },
   "levelset": {
     "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "adaptive meshing": {
     "do amr": "true",
@@ -72,15 +71,21 @@
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
-    "normal vec do matrix free": "true",
-    "normal vec implementation": "meltpooldg"
+    "normal vec implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "evaporation": {
     "evapor evaporation model": "Hardt Wondra",
@@ -89,9 +94,11 @@
   },
   "heat": {
     "heat two phase": "true",
-    "heat solver preconditioner type": "AMG",
-    "heat solver rel tolerance": "1e-12",
-    "heat nlsolve residual tolerance": "0.5"
+    "heat nlsolve residual tolerance": "0.5",
+    "linear solver": {
+      "rel tolerance": "1e-12",
+      "preconditioner type": "AMG"
+    }
   },
   "paraview": {
     "paraview directory": "output_stefan_with_heat",
@@ -100,5 +107,10 @@
   "problem specific": {
     "do evaporation": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

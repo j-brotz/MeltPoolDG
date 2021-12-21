@@ -17,8 +17,10 @@
   "heat": {
     "heat emissivity": "0.0",
     "heat temperature infinity": "300.0",
-    "heat solver rel tolerance": "1e-12",
-    "heat nlsolve residual tolerance": "5e-9"
+    "heat nlsolve residual tolerance": "5e-9",
+    "linear solver": {
+      "rel tolerance": "1e-12"
+    }
   },
   "material": {
     "material first conductivity": "1.0",

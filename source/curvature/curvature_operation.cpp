@@ -23,7 +23,7 @@ namespace MeltPoolDG::Curvature
      */
     curvature_data = data_in.curv;
 
-    AssertThrow(curvature_data.solver.solver_type == SolverType::CG,
+    AssertThrow(curvature_data.linear_solver.solver_type == LinearSolverType::CG,
                 ExcMessage("The curvature operation only supports the CG solver type."));
     /*
      *    initialize normal_vector_operation for computing the normal vector to the given
@@ -50,20 +50,20 @@ namespace MeltPoolDG::Curvature
     scratch_data->initialize_dof_vector(solution_curvature, curv_dof_idx);
     int iter = 0;
 
-    if (curvature_data.do_matrix_free)
+    if (curvature_data.linear_solver.do_matrix_free)
       {
-        AssertThrow(curvature_preconditioner, ExcNotImplemented());
+        AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
 
         curvature_operator->create_rhs(rhs, normal_vector_operation.get_solution_normal_vector());
 
-        if (curvature_data.solver.preconditioner_type == PreconditionerType::Diagonal)
+        if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
             iter = LinearSolve::solve<VectorType, SolverCG<VectorType>>(
               *curvature_operator,
               solution_curvature,
               rhs,
-              curvature_data.solver.rel_tolerance,
-              curvature_data.solver.max_iterations,
+              curvature_data.linear_solver.rel_tolerance,
+              curvature_data.linear_solver.max_iterations,
               diag_preconditioner_matrixfree);
           }
         else
@@ -72,8 +72,8 @@ namespace MeltPoolDG::Curvature
               *curvature_operator,
               solution_curvature,
               rhs,
-              curvature_data.solver.rel_tolerance,
-              curvature_data.solver.max_iterations,
+              curvature_data.linear_solver.rel_tolerance,
+              curvature_data.linear_solver.max_iterations,
               *trilinos_preconditioner_matrixfree);
           }
       }
@@ -144,25 +144,25 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::reinit()
   {
-    if (!curvature_data.do_matrix_free)
+    if (!curvature_data.linear_solver.do_matrix_free)
       curvature_operator->initialize_matrix_based(*scratch_data);
 
-    if (curvature_data.do_matrix_free)
+    if (curvature_data.linear_solver.do_matrix_free)
       {
         /*
          * setup sparsity pattern of system matrix only if the latter is
          * needed for computing the preconditioner
          */
-        curvature_preconditioner->reinit();
+        preconditioner_matrixfree->reinit();
         /*
          * precompute system matrix
          */
-        if (curvature_data.solver.preconditioner_type == PreconditionerType::Diagonal)
+        if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           diag_preconditioner_matrixfree =
-            curvature_preconditioner->compute_diagonal_preconditioner();
+            preconditioner_matrixfree->compute_diagonal_preconditioner();
         else
           trilinos_preconditioner_matrixfree =
-            curvature_preconditioner->compute_trilinos_preconditioner();
+            preconditioner_matrixfree->compute_trilinos_preconditioner();
       }
 
     normal_vector_operation.reinit();
@@ -184,30 +184,30 @@ namespace MeltPoolDG::Curvature
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
-    if (!curvature_data.do_matrix_free)
+    if (!curvature_data.linear_solver.do_matrix_free)
       {
         curvature_operator->initialize_matrix_based(*scratch_data);
       }
     /*
      * initialize preconditioner matrix-free
      */
-    if (curvature_data.do_matrix_free)
+    if (curvature_data.linear_solver.do_matrix_free)
       {
-        curvature_preconditioner = std::make_shared<
+        preconditioner_matrixfree = std::make_shared<
           Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
           *scratch_data,
           curv_dof_idx,
-          curvature_data.solver.preconditioner_type,
+          curvature_data.linear_solver.preconditioner_type,
           *curvature_operator);
         /*
          * precompute system matrix
          */
-        if (curvature_data.solver.preconditioner_type == PreconditionerType::Diagonal)
+        if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           diag_preconditioner_matrixfree =
-            curvature_preconditioner->compute_diagonal_preconditioner();
+            preconditioner_matrixfree->compute_diagonal_preconditioner();
         else
           trilinos_preconditioner_matrixfree =
-            curvature_preconditioner->compute_trilinos_preconditioner();
+            preconditioner_matrixfree->compute_trilinos_preconditioner();
       }
   }
 

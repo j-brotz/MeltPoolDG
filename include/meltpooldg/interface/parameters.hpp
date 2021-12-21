@@ -4,6 +4,7 @@
 
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
@@ -17,7 +18,6 @@ namespace MeltPoolDG
 {
   using namespace dealii;
 
-  BETTER_ENUM(SolverType, char, CG, GMRES)
   BETTER_ENUM(ProblemType,
               char,
               advection_diffusion,
@@ -44,35 +44,6 @@ namespace MeltPoolDG
               // at the projected quadrature points to the level set = 0 isosurface.
               interface_value)
 
-  BETTER_ENUM(PreconditionerType,
-              char,
-              // No preconditioner.
-              Identity,
-              // Algebraic multigrid preconditioner from the Trilinos package ...
-              AMG,
-              // ... potentially with reduced effort in computing the system matrix, e.g., by
-              // neglecting face integrals.
-              AMGReduced,
-              // Incomplete LU factorization preconditioner from the Trilinos package ...
-              ILU,
-              // ... potentially with reduced effort in computing the system matrix, e.g., by
-              // neglecting face integrals.
-              ILUReduced,
-              // Use the inverse diagonal of the system matrix as preconditioner ...
-              Diagonal,
-              // ... potentially with reduced effort in computing the system matrix, e.g., by
-              // neglecting face integrals.
-              DiagonalReduced)
-
-  template <typename number = double>
-  struct SolverData
-  {
-    bool               do_matrix_free      = true;
-    PreconditionerType preconditioner_type = PreconditionerType::Identity;
-    SolverType         solver_type         = SolverType::GMRES;
-    unsigned int       max_iterations      = 10000;
-    number             rel_tolerance       = 1e-12;
-  };
 
   template <typename number = double>
   struct NonlinearSolverData
@@ -129,7 +100,6 @@ namespace MeltPoolDG
     number      artificial_diffusivity  = 0.0;
     std::string time_integration_scheme = "crank_nicolson";
     bool        do_curvature_correction = false;
-    bool        do_matrix_free          = true;
     int         n_subdivisions          = 1;
     std::string implementation          = "meltpooldg";
   };
@@ -137,43 +107,42 @@ namespace MeltPoolDG
   template <typename number = double>
   struct ReinitializationData
   {
-    unsigned int       max_n_steps          = 5;
-    number             constant_epsilon     = -1.0;
-    number             scale_factor_epsilon = 0.5;
-    number             dtau                 = -1.0;
-    std::string        modeltype            = "olsson2007";
-    std::string        implementation       = "meltpooldg";
-    SolverData<number> solver;
+    unsigned int             max_n_steps          = 5;
+    number                   constant_epsilon     = -1.0;
+    number                   scale_factor_epsilon = 0.5;
+    number                   dtau                 = -1.0;
+    std::string              modeltype            = "olsson2007";
+    std::string              implementation       = "meltpooldg";
+    LinearSolverData<number> linear_solver;
   };
 
   template <typename number = double>
   struct AdvectionDiffusionData
   {
-    number      diffusivity             = 0.0;
-    std::string time_integration_scheme = "crank_nicolson";
-    bool        do_matrix_free          = true;
-    std::string implementation          = "meltpooldg";
+    number                   diffusivity             = 0.0;
+    std::string              time_integration_scheme = "crank_nicolson";
+    std::string              implementation          = "meltpooldg";
+    LinearSolverData<number> linear_solver;
   };
 
   template <typename number = double>
   struct NormalVectorData
   {
-    number       damping_scale_factor = 0.5;
-    bool         do_matrix_free       = true;
-    std::string  implementation       = "meltpooldg";
-    unsigned int verbosity_level      = 0;
-    bool         do_narrow_band       = false;
+    number                   damping_scale_factor = 0.5;
+    std::string              implementation       = "meltpooldg";
+    unsigned int             verbosity_level      = 0;
+    bool                     do_narrow_band       = false;
+    LinearSolverData<number> linear_solver;
   };
 
   template <typename number = double>
   struct CurvatureData
   {
-    number             damping_scale_factor = 0.0;
-    bool               do_matrix_free       = true;
-    std::string        implementation       = "meltpooldg";
-    unsigned int       verbosity_level      = 0;
-    bool               do_narrow_band       = false;
-    SolverData<number> solver;
+    number                   damping_scale_factor = 0.0;
+    std::string              implementation       = "meltpooldg";
+    unsigned int             verbosity_level      = 0;
+    bool                     do_narrow_band       = false;
+    LinearSolverData<number> linear_solver;
   };
 
   template <typename number = double>
@@ -182,12 +151,11 @@ namespace MeltPoolDG
     number                                      emissivity             = 0.0;
     number                                      convection_coefficient = 0.0;
     number                                      temperature_infinity   = 0.0;
-    bool                                        do_matrix_free         = true;
     number                                      velocity               = 0.0;
     bool                                        two_phase              = false;
     bool                                        solidification         = false;
     NonlinearSolverData<number>                 nlsolve;
-    SolverData<number>                          solver;
+    LinearSolverData<number>                    linear_solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 

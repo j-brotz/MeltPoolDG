@@ -18,9 +18,11 @@
   "heat": {
     "heat velocity": "0.005",
     "heat solidification": "true",
-    "heat solver rel tolerance": "1e-12",
-    "heat solver preconditioner type": "ILU",
-    "heat nlsolve residual tolerance": "1e-7"
+    "heat nlsolve residual tolerance": "1e-7",
+    "linear solver": {
+      "rel tolerance": "1e-12",
+      "preconditioner type": "ILU"
+    }
   },
   "material": {
     "material second conductivity": "55.563",

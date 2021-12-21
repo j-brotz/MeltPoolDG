@@ -50,7 +50,9 @@
   "curvature": {
     "curv implementation": "adaflo",
     "curv damping scale factor": "0.1",
-    "curv do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "surface tension": {
     "surface tension coefficient": "1.8",
@@ -69,7 +71,6 @@
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",
-    "ls do matrix free": "true",
     "ls do reinitialization": "true",
     "ls time integration scheme": "crank_nicolson"
   },
@@ -100,20 +101,29 @@
   },
   "normal vector": {
     "normal vec damping scale factor": "4.",
-    "normal vec do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview do output": "false"
   },
   "reinitialization": {
-    "reinit do matrix free": "true",
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.000005"
+    "reinit constant epsilon": "0.000005",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "problem specific": {
     "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

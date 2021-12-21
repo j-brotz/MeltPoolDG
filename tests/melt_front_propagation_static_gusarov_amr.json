@@ -23,9 +23,11 @@
   },
   "heat": {
     "heat solidification": "true",
-    "heat solver rel tolerance": "1e-12",
-    "heat solver preconditioner type": "ILU",
-    "heat nlsolve residual tolerance": "1e-8"
+    "heat nlsolve residual tolerance": "1e-8",
+    "linear solver": {
+      "rel tolerance": "1e-12",
+      "preconditioner type": "ILU"
+    }
   },
   "laser": {
     "laser power": "30.",

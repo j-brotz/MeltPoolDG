@@ -40,9 +40,11 @@
   },
   "curvature": {
     "curv damping scale factor": "16",
-    "curv do matrix free": "true",
     "curv do narrow band": "false",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "darcy damping": {
     "avoid div zero constant": "1e-3",
@@ -62,9 +64,11 @@
     "heat nlsolve max nonlinear iterations": "20",
     "heat nlsolve residual tolerance": "1e-7",
     "heat solidification": "true",
-    "heat solver preconditioner type": "AMG",
-    "heat solver rel tolerance": "1e-4",
-    "heat two phase": "true"
+    "heat two phase": "true",
+    "linear solver": {
+      "rel tolerance": "1e-4",
+      "preconditioner type": "AMG"
+    }
   },
   "laser": {
     "laser center": "0.0,0.00000",
@@ -80,7 +84,6 @@
   "levelset": {
     "ls artificial diffusivity": "0.0",
     "ls do curvature correction": "false",
-    "ls do matrix free": "true",
     "ls do reinitialization": "true",
     "ls n initial reinit steps": "1",
     "ls time integration scheme": "crank_nicolson",
@@ -113,8 +116,10 @@
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
-    "normal vec do matrix free": "true",
-    "normal vec do narrow band": "false"
+    "normal vec do narrow band": "false",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview directory": "recoil_pressure_lssubdivisions",
@@ -127,11 +132,13 @@
     "recoil temperature constant": "5.e4"
   },
   "reinitialization": {
-    "reinit do matrix free": "true",
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
-    "reinit preconditioner type": "AMG",
-    "reinit scale factor epsilon": "2"
+    "reinit scale factor epsilon": "2",
+    "linear solver": {
+      "preconditioner type": "AMG",
+      "do matrix free": "true"
+    }
   },
   "simulation specific domain": {
     "domain x max": "400e-6",
@@ -152,5 +159,10 @@
     "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

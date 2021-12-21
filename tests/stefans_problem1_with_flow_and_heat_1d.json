@@ -58,8 +58,7 @@
   },
   "levelset": {
     "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "adaptive meshing": {
     "do amr": "false",
@@ -73,17 +72,23 @@
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit constant epsilon": "4e-6"
+    "reinit constant epsilon": "4e-6",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
-    "normal vec do matrix free": "true",
     "normal vec implementation": "meltpooldg",
-    "normal vec damping scale factor": "10"
+    "normal vec damping scale factor": "10",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true",
-    "curv implementation": "meltpooldg"
+    "curv implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "evaporation": {
     "evapor evaporation model": "Hardt Wondra",
@@ -91,9 +96,11 @@
   },
   "heat": {
     "heat two phase": "true",
-    "heat solver preconditioner type": "AMG",
-    "heat solver rel tolerance": "1e-20",
-    "heat nlsolve residual tolerance": "1e-7"
+    "heat nlsolve residual tolerance": "1e-7",
+    "linear solver": {
+      "rel tolerance": "1e-20",
+      "preconditioner type": "AMG"
+    }
   },
   "paraview": {
     "paraview do output": "false"
@@ -101,5 +108,10 @@
   "problem specific": {
     "do evaporation": "true",
     "do heat transfer": "true"
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
+    }
   }
 }

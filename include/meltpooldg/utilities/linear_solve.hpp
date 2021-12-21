@@ -23,7 +23,7 @@ namespace MeltPoolDG
   {
   public:
     template <typename VectorType,
-              typename SolverType         = SolverGMRES<VectorType>,
+              typename LinearSolverType   = SolverGMRES<VectorType>,
               typename OperatorType       = TrilinosWrappers::SparseMatrix,
               typename PreconditionerType = PreconditionIdentity>
     static int
@@ -36,7 +36,7 @@ namespace MeltPoolDG
     {
       ReductionControl solver_control(max_iterations, 1e-50, rel_tolerance);
 
-      SolverType solver(solver_control);
+      LinearSolverType solver(solver_control);
 
       solver.solve(system_matrix, solution, rhs, preconditioner);
 

@@ -30,26 +30,33 @@
     "material second viscosity": "0.001"
   },
   "advection diffusion": {
-    "advec diff do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "reinitialization": {
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit constant epsilon": "0.03"
+    "reinit constant epsilon": "0.03",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
-    "normal vec do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview do output": "false"

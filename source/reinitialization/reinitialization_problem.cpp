@@ -44,7 +44,7 @@ namespace MeltPoolDG::Reinitialization
       scratch_data =
         std::make_shared<ScratchData<dim>>(base_in->mpi_communicator,
                                            base_in->parameters.base.verbosity_level,
-                                           base_in->parameters.reinit.solver.do_matrix_free);
+                                           base_in->parameters.reinit.linear_solver.do_matrix_free);
       /*
        *  setup mapping
        */
@@ -113,7 +113,7 @@ namespace MeltPoolDG::Reinitialization
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.reinit.implementation == "adaflo")
       {
-        AssertThrow(base_in->parameters.reinit.solver.do_matrix_free, ExcNotImplemented());
+        AssertThrow(base_in->parameters.reinit.linear_solver.do_matrix_free, ExcNotImplemented());
 
         reinit_operation =
           std::make_shared<ReinitializationOperationAdaflo<dim>>(*scratch_data,

@@ -24,21 +24,26 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit scale factor epsilon": "1.707"
+    "reinit scale factor epsilon": "1.707",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
     "normal vec damping scale factor": "4",
-    "normal vec do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
-    "curv do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview do output": "true"
@@ -67,6 +72,11 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    }
+  },
+  "advection diffusion": {
+    "linear solver": {
+      "do matrix free": "true"
     }
   }
 }

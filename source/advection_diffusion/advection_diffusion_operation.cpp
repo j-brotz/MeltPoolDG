@@ -85,7 +85,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     solution_advected_field.update_ghost_values();
 
-    if (this->advec_diff_data.do_matrix_free)
+    if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
         /*
          * apply dirichlet boundary values
@@ -223,7 +223,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
-    if (!this->advec_diff_data.do_matrix_free)
+    if (!this->advec_diff_data.linear_solver.do_matrix_free)
       advec_diff_operator->initialize_matrix_based(*scratch_data);
   }
 

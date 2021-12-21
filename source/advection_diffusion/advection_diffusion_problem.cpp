@@ -155,10 +155,10 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  setup scratch data
      */
     {
-      scratch_data =
-        std::make_shared<ScratchData<dim>>(base_in->mpi_communicator,
-                                           base_in->parameters.base.verbosity_level,
-                                           base_in->parameters.advec_diff.do_matrix_free);
+      scratch_data = std::make_shared<ScratchData<dim>>(
+        base_in->mpi_communicator,
+        base_in->parameters.base.verbosity_level,
+        base_in->parameters.advec_diff.linear_solver.do_matrix_free);
       /*
        *  setup mapping
        */
@@ -215,7 +215,8 @@ namespace MeltPoolDG::AdvectionDiffusion
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.advec_diff.implementation == "adaflo")
       {
-        AssertThrow(base_in->parameters.advec_diff.do_matrix_free, ExcNotImplemented());
+        AssertThrow(base_in->parameters.advec_diff.linear_solver.do_matrix_free,
+                    ExcNotImplemented());
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperationAdaflo<dim>>(*scratch_data,
                                                                    advec_diff_adaflo_dof_idx,

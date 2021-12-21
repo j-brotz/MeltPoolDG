@@ -15,30 +15,38 @@
   "levelset": {
     "ls do reinitialization": "true",
     "ls artificial diffusivity": "0.0",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do matrix free": "true"
+    "ls time integration scheme": "crank_nicolson"
   },
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit do matrix free": "true",
-    "reinit preconditioner type": "Identity",
-    "reinit solver type": "CG",
     "reinit eps scale factor": "0.5",
-    "reinit implementation": "adaflo"
+    "reinit implementation": "adaflo",
+    "linear solver": {
+      "solver type": "CG",
+      "preconditioner type": "Identity",
+      "do matrix free": "true"
+    }
   },
   "advection diffusion": {
-    "advec diff implementation": "adaflo"
+    "advec diff implementation": "adaflo",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "normal vector": {
     "normal vec damping scale factor": "0.5",
-    "normal vec do matrix free": "true",
-    "normal vec implementation": "adaflo"
+    "normal vec implementation": "adaflo",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "curvature": {
     "curv damping scale factor": "0.5",
-    "curv do matrix free": "true",
-    "curv implementation": "adaflo"
+    "curv implementation": "adaflo",
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview do output": "false",

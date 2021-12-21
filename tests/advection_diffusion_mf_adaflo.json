@@ -16,7 +16,9 @@
     "advec diff diffusivity": "0.000000",
     "advec diff implementation": "adaflo",
     "advec diff integration scheme": "crank_nicolson",
-    "advec diff do matrix free": "true"
+    "linear solver": {
+      "do matrix free": "true"
+    }
   },
   "paraview": {
     "paraview do output": "false"

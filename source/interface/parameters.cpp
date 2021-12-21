@@ -286,10 +286,6 @@ namespace MeltPoolDG
                         "Determines the time integration scheme.",
                         Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson|bdf_2"));
       prm.add_parameter(
-        "advec diff do matrix free",
-        advec_diff.do_matrix_free,
-        "Set this parameter if a matrix free solution procedure should be performed.");
-      prm.add_parameter(
         "advec diff implementation",
         advec_diff.implementation,
         "Choose the corresponding implementation of the advection diffusion operation.",
@@ -317,10 +313,6 @@ namespace MeltPoolDG
                         ls.time_integration_scheme,
                         "Determines the time integration scheme.",
                         Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson"));
-      prm.add_parameter(
-        "ls do matrix free",
-        ls.do_matrix_free,
-        "Set this parameter if a matrix free solution procedure should be performed.");
       prm.add_parameter(
         "ls do curvature correction",
         ls.do_curvature_correction,
@@ -365,28 +357,11 @@ namespace MeltPoolDG
                         reinit.modeltype,
                         "Sets the type of reinitialization model that should be used.");
       prm.add_parameter(
-        "reinit do matrix free",
-        reinit.solver.do_matrix_free,
-        "Set this parameter if a matrix free solution procedure should be performed.");
-      prm.add_parameter("reinit solver type",
-                        reinit.solver.solver_type,
-                        "Set this parameter for choosing a solver type.");
-      prm.add_parameter("reinit preconditioner type",
-                        reinit.solver.preconditioner_type,
-                        "Set this parameter for choosing a preconditioner type.");
-      prm.add_parameter(
-        "reinit max iterations",
-        reinit.solver.max_iterations,
-        "Set the maximum number of iterations for solving the linear system of equations.");
-      prm.add_parameter(
-        "reinit rel tolerance",
-        reinit.solver.rel_tolerance,
-        "Set the relative tolerance for a successful solution of the linear system of equations.");
-      prm.add_parameter(
         "reinit implementation",
         reinit.implementation,
         "Choose the corresponding implementation of the reinitialization operation.",
         Patterns::Selection("meltpooldg|adaflo"));
+      reinit.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
     /*
@@ -398,10 +373,6 @@ namespace MeltPoolDG
         "normal vec damping scale factor",
         normal_vec.damping_scale_factor,
         "normal vector computation: damping = cell_size * normal_vec_damping_scale_factor");
-      prm.add_parameter(
-        "normal vec do matrix free",
-        normal_vec.do_matrix_free,
-        "Set this parameter if a matrix free solution procedure should be performed.");
       prm.add_parameter("normal vec implementation",
                         normal_vec.implementation,
                         "Choose the corresponding implementation of the normal vector operation.",
@@ -415,6 +386,9 @@ namespace MeltPoolDG
         "normal vec do narrow band",
         normal_vec.do_narrow_band,
         "Set this parameter to true to compute the normal vector only in the interfacial region.");
+      // default parameter
+      normal_vec.linear_solver.solver_type = LinearSolverType::CG;
+      normal_vec.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
     /*
@@ -425,10 +399,6 @@ namespace MeltPoolDG
       prm.add_parameter("curv damping scale factor",
                         curv.damping_scale_factor,
                         "curvature computation: damping = cell_size * curv_damping_scale_factor");
-      prm.add_parameter(
-        "curv do matrix free",
-        curv.do_matrix_free,
-        "Set this parameter if a matrix free solution procedure should be performed.");
       prm.add_parameter("curv implementation",
                         curv.implementation,
                         "Choose the corresponding implementation of the curvature operation.",
@@ -442,29 +412,10 @@ namespace MeltPoolDG
         "curv do narrow band",
         curv.do_narrow_band,
         "Set this parameter to true to compute the curvature only in the interfacial region.");
-      //@todo: move to own parameter handler for linear solver
-      prm.enter_subsection("linear solver");
-      {
-        // set default value
-        curv.solver.solver_type = SolverType::CG;
-        prm.add_parameter("solver type",
-                          curv.solver.solver_type,
-                          "Set this parameter for choosing a iterative linear solver type.");
-        // set default value
-        curv.solver.preconditioner_type = PreconditionerType::Diagonal;
-        prm.add_parameter("preconditioner type",
-                          curv.solver.preconditioner_type,
-                          "Set this parameter for choosing a preconditioner type.");
-        prm.add_parameter(
-          "max iterations",
-          curv.solver.max_iterations,
-          "Set the maximum number of iterations for solving the linear system of equations.");
-        prm.add_parameter(
-          "solver rel tolerance",
-          curv.solver.rel_tolerance,
-          "Set the relative tolerance for a successful solution of the linear system of equations.");
-      }
-      prm.leave_subsection();
+      // default parameter
+      curv.linear_solver.solver_type         = LinearSolverType::CG;
+      curv.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
+      curv.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
     /*
@@ -481,26 +432,6 @@ namespace MeltPoolDG
       prm.add_parameter("heat temperature infinity",
                         heat.temperature_infinity,
                         "Infinity temperature for the conductive and radiative boundary condition");
-      prm.add_parameter(
-        "heat do matrix free",
-        heat.do_matrix_free,
-        "Set this parameter if a matrix free solution procedure should be performed.");
-      prm.add_parameter(
-        "heat solver type",
-        heat.solver.solver_type,
-        "Set this parameter for choosing a solver type. At the moment GMRES or CG solvers "
-        " are supported");
-      prm.add_parameter("heat solver preconditioner type",
-                        heat.solver.preconditioner_type,
-                        "Set this parameter for choosing a preconditioner type.");
-      prm.add_parameter(
-        "heat solver max iterations",
-        heat.solver.max_iterations,
-        "Set the maximum number of iterations for solving the linear system of equations.");
-      prm.add_parameter(
-        "heat solver rel tolerance",
-        heat.solver.rel_tolerance,
-        "Set the relative tolerance for a successful solution of the linear system of equations.");
       prm.add_parameter("heat nlsolve max nonlinear iterations",
                         heat.nlsolve.max_nonlinear_iterations,
                         "Set the number of maximum nonlinear iterations with standard tolerances.");
@@ -530,6 +461,7 @@ namespace MeltPoolDG
                         heat.solidification,
                         "Set this parameter to true to consider solidification.");
       heat.delta_approximation_phase_weighted.add_parameters(prm);
+      heat.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
     /*
