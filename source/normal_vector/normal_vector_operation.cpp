@@ -53,9 +53,10 @@ namespace MeltPoolDG::NormalVector
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
         normal_vector_operator->create_rhs(rhs, solution_levelset_in);
-        iter =
-          LinearSolve::solve<BlockVectorType, SolverCG<BlockVectorType>, OperatorBase<dim, double>>(
-            *normal_vector_operator, solution_normal_vector, rhs);
+        iter = LinearSolve::solve<BlockVectorType>(*normal_vector_operator,
+                                                   solution_normal_vector,
+                                                   rhs,
+                                                   normal_vector_data.linear_solver.solver_type);
       }
     else
       {
@@ -69,10 +70,10 @@ namespace MeltPoolDG::NormalVector
                                                      rhs);
 
         for (unsigned int d = 0; d < dim; ++d)
-          iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, SparseMatrixType>(
-            normal_vector_operator->get_system_matrix(),
-            solution_normal_vector.block(d),
-            rhs.block(d));
+          iter = LinearSolve::solve<VectorType>(normal_vector_operator->get_system_matrix(),
+                                                solution_normal_vector.block(d),
+                                                rhs.block(d),
+                                                normal_vector_data.linear_solver.solver_type);
       }
     for (unsigned int d = 0; d < dim; ++d)
       scratch_data->get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));

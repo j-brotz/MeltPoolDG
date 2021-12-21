@@ -290,6 +290,11 @@ namespace MeltPoolDG
         advec_diff.implementation,
         "Choose the corresponding implementation of the advection diffusion operation.",
         Patterns::Selection("meltpooldg|adaflo"));
+      // default value
+      advec_diff.linear_solver.solver_type = LinearSolverType::GMRES;
+      advec_diff.linear_solver.preconditioner_type =
+        PreconditionerType::AMG; //@todo: currently not supported
+      advec_diff.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
 
@@ -464,6 +469,8 @@ namespace MeltPoolDG
                         heat.solidification,
                         "Set this parameter to true to consider solidification.");
       heat.delta_approximation_phase_weighted.add_parameters(prm);
+      heat.linear_solver.solver_type         = LinearSolverType::GMRES;
+      heat.linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
       heat.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
