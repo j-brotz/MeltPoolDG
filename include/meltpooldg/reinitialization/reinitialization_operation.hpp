@@ -14,7 +14,6 @@
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
-#include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
@@ -128,7 +127,7 @@ namespace MeltPoolDG
       unsigned int ls_dof_idx;
       unsigned int normal_dof_idx;
       /*
-       * Preconditioner for the matrix-free curvature operator
+       * Preconditioner for the matrix-free reinitialization operator
        */
       std::shared_ptr<
         Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
@@ -141,6 +140,10 @@ namespace MeltPoolDG
        * Cache for trilinos preconditioner matrix-free
        */
       std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
+      /*
+       * Flag, if preconditioner matrices should be updated
+       */
+      bool update_preconditioner_matrixfree = true;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG
