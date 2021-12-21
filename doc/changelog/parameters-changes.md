@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2021-12-21
+- Add new option for Dirac delta approximation type
+```json
+{
+  "dirac delta function approximation": {
+    "type": "reciprocal_times_heaviside_phase_weighted"
+  }
+}
+```
+
 ## 2021-12-20
 - Delete ambiguous parameter 
 ```json
