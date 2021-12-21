@@ -27,7 +27,8 @@ namespace MeltPoolDG::Reinitialization
     set_reinitialization_parameters(data_in);
     AssertThrow(reinit_data.linear_solver.solver_type == LinearSolverType::CG ||
                   reinit_data.linear_solver.do_matrix_free == false,
-                ExcMessage("The reinitialization_ operation only supports the CG solver type."));
+                ExcMessage(
+                  "The matrix-free reinitialization_operation only supports the CG solver type."));
     /*
      *    initialize normal_vector_field
      */
