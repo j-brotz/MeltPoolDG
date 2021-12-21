@@ -205,9 +205,8 @@ namespace MeltPoolDG::NormalVector
       solution_level_set->update_ghost_values();
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> normal_vals(matrix_free, normal_dof_idx, normal_quad_idx);
-    FECellIntegrator<dim, 1, number>   level_set_vals(matrix_free, ls_dof_idx, normal_quad_idx);
+    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, normal_quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -245,11 +244,8 @@ namespace MeltPoolDG::NormalVector
       solution_level_set->update_ghost_values();
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> normal_vals(scratch_data.get_matrix_free(),
-                                                   normal_dof_idx,
-                                                   normal_quad_idx);
-    FECellIntegrator<dim, 1, number>   level_set_vals(scratch_data.get_matrix_free(),
+    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number> level_set_vals(scratch_data.get_matrix_free(),
                                                     ls_dof_idx,
                                                     normal_quad_idx);
 

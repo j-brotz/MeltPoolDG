@@ -254,9 +254,6 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
-                                                         this->dof_idx,
-                                                         advec_diff_quad_idx);
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
                                                      velocity_dof_idx,
                                                      advec_diff_quad_idx);
@@ -296,9 +293,6 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
-                                                         this->dof_idx,
-                                                         advec_diff_quad_idx);
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
                                                      velocity_dof_idx,
                                                      advec_diff_quad_idx);

@@ -248,9 +248,6 @@ namespace MeltPoolDG::Reinitialization
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, 1, number>   delta_psi(scratch_data.get_matrix_free(),
-                                               this->dof_idx,
-                                               reinit_quad_idx);
     FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
                                                      normal_dof_idx,
                                                      reinit_quad_idx);
@@ -289,9 +286,6 @@ namespace MeltPoolDG::Reinitialization
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, 1, number>   delta_psi(scratch_data.get_matrix_free(),
-                                               this->dof_idx,
-                                               reinit_quad_idx);
     FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
                                                      normal_dof_idx,
                                                      reinit_quad_idx);
