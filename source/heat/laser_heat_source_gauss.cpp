@@ -1,4 +1,5 @@
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 
 namespace MeltPoolDG::Heat
@@ -60,7 +61,7 @@ namespace MeltPoolDG::Heat
         ((heaviside > 0.5) ? 1.0 : 0.0);
 
     const double absorptivity =
-      UtilityFunctions::interpolate(weight, data.absorptivity_gas, data.absorptivity_liquid);
+      LevelSet::Tools::interpolate(weight, data.absorptivity_gas, data.absorptivity_liquid);
 
     return absorptivity * projection_factor * delta_value *
            power_density_interfacial(distance, power);

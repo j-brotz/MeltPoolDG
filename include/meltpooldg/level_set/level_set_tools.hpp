@@ -17,6 +17,64 @@ namespace MeltPoolDG::LevelSet::Tools
 {
   using namespace dealii;
 
+  /**
+   * Interpolate between @p val1 and @p val2 with the following function
+   *
+   * x = (1 - ls) val1 + ls val2
+   */
+  template <typename value_type1, typename value_type2, typename value_type3>
+  inline value_type1
+  interpolate(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
+  {
+    return (1. - ls) * val1 + ls * val2;
+  }
+
+  /**
+   * Interpolate between @p val1 and @p val2 with the reciprocal function
+   *
+   *             1
+   * x = ---------------------
+   *       (1 - ls)      ls
+   *      ---------- + ------
+   *         val1       val2
+   */
+  template <typename value_type1, typename value_type2, typename value_type3>
+  inline value_type1
+  interpolate_reciprocal(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
+  {
+    // clang-format off
+      return                    1.
+             / // --------------------------------
+                   ((1. - ls) / val1 + ls / val2);
+    // clang-format on
+  }
+
+  /**
+   * Interpolate between @p val1 and @p val2 with the cubic function
+   *
+   * x = val1 + ( val2 - val1 ) ( -2 ls³ + 3 ls² )
+   */
+  template <typename value_type1, typename value_type2, typename value_type3>
+  inline value_type1
+  interpolate_cubic(const value_type1 &ls, const value_type2 &val1, const value_type3 &val2)
+  {
+    return val1 + (val2 - val1) * (-2. * ls * ls * ls + 3. * ls * ls);
+  }
+
+  /**
+   * Derivative of interpolate_cubic() with respect to @ls. Returns
+   *
+   * ( val2 - val1 ) (-6 ls² + 6 ls)
+   */
+  template <typename value_type1, typename value_type2, typename value_type3>
+  inline value_type1
+  interpolate_cubic_derivative(const value_type1 &ls,
+                               const value_type2 &val1,
+                               const value_type3 &val2)
+  {
+    return (val2 - val1) * (-6. * ls * ls + 6. * ls);
+  }
+
   template <int dim, int n_components = 1>
   void
   broadcast_interface_value_to_vector(

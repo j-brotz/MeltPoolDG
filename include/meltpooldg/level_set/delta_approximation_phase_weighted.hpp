@@ -2,7 +2,7 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 
 namespace MeltPoolDG
 {
@@ -88,7 +88,7 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      return UtilityFunctions::interpolate(level_set_heaviside, w_g, w_h) * correction_factor;
+      return LevelSet::Tools::interpolate(level_set_heaviside, w_g, w_h) * correction_factor;
     }
 
     const number w_g;
@@ -170,7 +170,7 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      const auto temp = UtilityFunctions::interpolate(level_set_heaviside, w_g, w_h);
+      const auto temp = LevelSet::Tools::interpolate(level_set_heaviside, w_g, w_h);
       return temp * temp * correction_factor;
     }
 
@@ -256,8 +256,8 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      const auto w_1 = UtilityFunctions::interpolate(level_set_heaviside, w_1g, w_1h);
-      const auto w_2 = UtilityFunctions::interpolate(level_set_heaviside, w_2g, w_2h);
+      const auto w_1 = LevelSet::Tools::interpolate(level_set_heaviside, w_1g, w_1h);
+      const auto w_2 = LevelSet::Tools::interpolate(level_set_heaviside, w_2g, w_2h);
       return w_1 * w_2 * correction_factor;
     }
 
@@ -352,11 +352,8 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      // clang-format off
-      return correction_factor
-             / // ----------------------------------------------------------
-             (level_set_heaviside / w_h + (1. - level_set_heaviside) / w_g);
-      // clang-format on
+      return LevelSet::Tools::interpolate_reciprocal(level_set_heaviside, w_g, w_h) *
+             correction_factor;
     }
 
     const number w_g;

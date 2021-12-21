@@ -4,6 +4,7 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -346,7 +347,7 @@ namespace MeltPoolDG
       (data.two_phase_properties_transition_type != TwoPhaseFluidPropertiesTransitionType::sharp) ?
         level_set_heaviside :
         UtilityFunctions::heaviside(level_set_heaviside, 0.5);
-    return UtilityFunctions::interpolate(weight, gas_value, liquid_solid_value);
+    return LevelSet::Tools::interpolate(weight, gas_value, liquid_solid_value);
   }
 
 
@@ -359,11 +360,9 @@ namespace MeltPoolDG
     const value_type &gas_density,
     const value_type &liquid_solid_density) const
   {
-    // clang-format off
-      return 1.
-             / // -------------------------------------------------------------------------------------
-             (level_set_heaviside / liquid_solid_density + (1. - level_set_heaviside) / gas_density);
-    // clang-format on
+    return LevelSet::Tools::interpolate_reciprocal(level_set_heaviside,
+                                                   gas_density,
+                                                   liquid_solid_density);
   }
 
 
@@ -380,9 +379,9 @@ namespace MeltPoolDG
       return liquid_value;
     if (temperature_dependent_solid_fraction == value_type(1.0))
       return solid_value;
-    return UtilityFunctions::interpolate_cubic(temperature_dependent_solid_fraction,
-                                               liquid_value,
-                                               solid_value);
+    return LevelSet::Tools::interpolate_cubic(temperature_dependent_solid_fraction,
+                                              liquid_value,
+                                              solid_value);
   }
 
 
@@ -399,9 +398,9 @@ namespace MeltPoolDG
         temperature_dependent_solid_fraction == value_type(1.0))
       return value_type(0.0);
     return -1.0 * data.inv_mushy_interval *
-           UtilityFunctions::interpolate_cubic_derivative(temperature_dependent_solid_fraction,
-                                                          liquid_value,
-                                                          solid_value);
+           LevelSet::Tools::interpolate_cubic_derivative(temperature_dependent_solid_fraction,
+                                                         liquid_value,
+                                                         solid_value);
   }
 
 

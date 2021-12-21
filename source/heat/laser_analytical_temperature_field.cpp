@@ -1,4 +1,5 @@
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -70,18 +71,24 @@ namespace MeltPoolDG::Heat
                             heaviside :
                             ((heaviside > 0.5) ? 1.0 : 0.0);
 
-    const double absorptivity = UtilityFunctions::interpolate(weight,
-                                                              laser_data.absorptivity_gas,
-                                                              laser_data.absorptivity_liquid);
+    const double absorptivity = LevelSet::Tools::interpolate(weight,
+                                                             laser_data.absorptivity_gas,
+                                                             laser_data.absorptivity_liquid);
 
-    const double conductivity = UtilityFunctions::interpolate(weight,
-                                                              material.first.conductivity,
-                                                              material.second.conductivity);
+    const double conductivity = LevelSet::Tools::interpolate(weight,
+                                                             material.first.conductivity,
+                                                             material.second.conductivity);
     const double capacity =
-      UtilityFunctions::interpolate(weight, material.first.capacity, material.second.capacity);
+      LevelSet::Tools::interpolate(weight, material.first.capacity, material.second.capacity);
 
     const double density =
-      material.first.density + weight * (material.second.density - material.first.density);
+      material.two_phase_properties_transition_type ==
+          TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation ?
+        LevelSet::Tools::interpolate_reciprocal(weight,
+                                                material.first.density,
+                                                material.second.density) :
+        LevelSet::Tools::interpolate(weight, material.first.density, material.second.density);
+
     const double thermal_diffusivity = conductivity / (density * capacity);
 
     // modify temperature profile to be anisotropic

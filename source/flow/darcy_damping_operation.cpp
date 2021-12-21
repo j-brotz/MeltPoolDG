@@ -1,4 +1,5 @@
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Flow
 {

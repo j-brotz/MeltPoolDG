@@ -1,6 +1,7 @@
 #include <meltpooldg/curvature/curvature_operator.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Preconditioner
 {

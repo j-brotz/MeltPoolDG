@@ -25,7 +25,6 @@
 
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 
 namespace MeltPoolDG

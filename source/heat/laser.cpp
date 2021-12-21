@@ -1,5 +1,6 @@
 #include <meltpooldg/heat/laser.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -21,8 +22,7 @@ namespace MeltPoolDG::Heat
     : scratch_data(scratch_data_in)
     , laser_data(laser_data_in)
     , material(material_data_in)
-    , laser_position(
-        MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(laser_data.center))
+    , laser_position(UtilityFunctions::convert_string_coords_to_point<dim>(laser_data.center))
     , impact_type(impact_type_to_emun(laser_data.impact_type))
   {}
 

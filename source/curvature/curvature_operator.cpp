@@ -1,5 +1,6 @@
 #include <meltpooldg/curvature/curvature_operator.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Curvature

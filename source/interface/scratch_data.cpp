@@ -1,3 +1,5 @@
+#include <deal.II/fe/fe_q_iso_q1.h>
+
 #include <deal.II/matrix_free/util.h>
 
 #include <meltpooldg/interface/scratch_data.hpp>
