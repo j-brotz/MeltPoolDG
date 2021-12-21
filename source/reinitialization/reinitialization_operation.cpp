@@ -25,6 +25,10 @@ namespace MeltPoolDG::Reinitialization
      *    from the global user-defined parameters
      */
     set_reinitialization_parameters(data_in);
+    AssertThrow(reinit_data.linear_solver.solver_type == LinearSolverType::CG ||
+                  reinit_data.linear_solver.do_matrix_free == false,
+                ExcMessage(
+                  "The matrix-free reinitialization_operation only supports the CG solver type."));
     /*
      *    initialize normal_vector_field
      */
@@ -71,6 +75,15 @@ namespace MeltPoolDG::Reinitialization
     scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
     update_operator();
     normal_vector_operation->reinit();
+
+    if (reinit_data.linear_solver.do_matrix_free)
+      {
+        /*
+         * setup sparsity pattern of system matrix only if the latter is
+         * needed for computing the preconditioner
+         */
+        preconditioner_matrixfree->reinit();
+      }
   }
 
   template <int dim>
@@ -89,6 +102,11 @@ namespace MeltPoolDG::Reinitialization
      *    operator class
      */
     normal_vector_operation->solve(solution_level_set);
+    /*
+     * precompute preconditioner system matrix
+     */
+    if (reinit_data.linear_solver.do_matrix_free)
+      update_preconditioner_matrixfree = true;
   }
 
   template <int dim>
@@ -117,9 +135,44 @@ namespace MeltPoolDG::Reinitialization
 
     if (reinit_data.linear_solver.do_matrix_free)
       {
+        AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
+
         reinit_operator->create_rhs(rhs, solution_level_set);
-        iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
-          *reinit_operator, src, rhs);
+
+        if (reinit_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
+          {
+            if (update_preconditioner_matrixfree)
+              {
+                diag_preconditioner_matrixfree =
+                  preconditioner_matrixfree->compute_diagonal_preconditioner();
+                update_preconditioner_matrixfree = false;
+              }
+
+            iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
+              *reinit_operator,
+              src,
+              rhs,
+              reinit_data.linear_solver.rel_tolerance,
+              reinit_data.linear_solver.max_iterations,
+              diag_preconditioner_matrixfree);
+          }
+        else
+          {
+            if (update_preconditioner_matrixfree)
+              {
+                trilinos_preconditioner_matrixfree =
+                  preconditioner_matrixfree->compute_trilinos_preconditioner();
+                update_preconditioner_matrixfree = false;
+              }
+
+            iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
+              *reinit_operator,
+              src,
+              rhs,
+              reinit_data.linear_solver.rel_tolerance,
+              reinit_data.linear_solver.max_iterations,
+              *trilinos_preconditioner_matrixfree);
+          }
       }
     else
       {
@@ -291,6 +344,7 @@ namespace MeltPoolDG::Reinitialization
      */
     else
       AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."))
+
         /*
          *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
          *  apply it to the system matrix. This functionality is part of the OperatorBase class.
@@ -298,6 +352,21 @@ namespace MeltPoolDG::Reinitialization
 
         if (!reinit_data.linear_solver.do_matrix_free)
           reinit_operator->initialize_matrix_based(*scratch_data);
+
+    if (reinit_data.linear_solver.do_matrix_free)
+      {
+        preconditioner_matrixfree = std::make_shared<
+          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+          *scratch_data,
+          reinit_dof_idx,
+          reinit_data.linear_solver.preconditioner_type,
+          *reinit_operator);
+        /*
+         * setup sparsity pattern of system matrix only if the latter is
+         * needed for computing the preconditioner
+         */
+        preconditioner_matrixfree->reinit();
+      }
   }
 
   template <int dim>

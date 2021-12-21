@@ -361,6 +361,9 @@ namespace MeltPoolDG
         reinit.implementation,
         "Choose the corresponding implementation of the reinitialization operation.",
         Patterns::Selection("meltpooldg|adaflo"));
+      // default value
+      reinit.linear_solver.solver_type         = LinearSolverType::CG;
+      reinit.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       reinit.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();

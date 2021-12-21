@@ -24,7 +24,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.32785367966e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.32785356045e+00                                               normal_vector |
-| || curvature ||L2 = 2.65844993591e+01                                                  curvature |
+| || curvature ||L2 = 2.65844974518e+01                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -45,7 +45,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33747220039e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33747231960e+00                                               normal_vector |
-| || curvature ||L2 = 2.65549550056e+01                                                  curvature |
+| || curvature ||L2 = 2.65549545288e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005). 
@@ -71,7 +71,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33894122035e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33894145552e+00                                               normal_vector |
-| || curvature ||L2 = 2.65510602010e+01                                                  curvature |
+| || curvature ||L2 = 2.65510597242e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 
 Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005). 
@@ -97,7 +97,7 @@ Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33914330591e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33914423231e+00                                               normal_vector |
-| || curvature ||L2 = 2.65493044984e+01                                                  curvature |
+| || curvature ||L2 = 2.65493035447e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 
 Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005). 
