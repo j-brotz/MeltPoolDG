@@ -46,8 +46,7 @@ namespace MeltPoolDG
 
 
     AssertThrow((ls.n_subdivisions == 1 ||
-                 (evapor.formulation_evaporative_mass_flux_over_interface != "interface value" &&
-                  evapor.formulation_evaporative_mass_flux_over_interface != "line integral")),
+                 evapor.formulation_evaporative_mass_flux_over_interface != "line integral"),
                 ExcMessage(
                   "If you use the formulation of the evaporative mass flux over the interface "
                   "using the value at the interface or a line integral, n_subdivisions for the "

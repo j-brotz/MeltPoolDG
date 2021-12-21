@@ -33,12 +33,7 @@ namespace MeltPoolDG::Evaporation
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
-  {
-    AssertThrow(scratch_data.get_degree(temp_hanging_nodes_dof_idx) ==
-                  scratch_data.get_degree(ls_dof_idx),
-                ExcMessage("This algorithm is currently only supported for the same degree "
-                           "between the heat transfer and the level set."));
-  }
+  {}
 
 
   template <int dim>
