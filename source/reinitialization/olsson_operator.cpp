@@ -14,6 +14,10 @@ namespace MeltPoolDG::Reinitialization
     : scratch_data(scratch_data_in)
     , eps(constant_epsilon)
     , eps_scale_factor(eps_scale_factor)
+    , epsilon_used(constant_epsilon > 0 ?
+                     constant_epsilon :
+                     eps_scale_factor *
+                       scratch_data.get_min_cell_size()) // @ todo: check how cell size can be
     , normal_vec(n_in)
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
@@ -23,6 +27,8 @@ namespace MeltPoolDG::Reinitialization
     , normal_dof_idx(normal_dof_idx_in)
   {
     this->reset_dof_index(dof_idx_in);
+
+    Assert(epsilon_used > 0.0, ExcMessage("reinitialization operator: epsilon must be set"));
   }
 
   template <int dim, typename number>
@@ -131,14 +137,6 @@ namespace MeltPoolDG::Reinitialization
     AssertThrow(this->time_increment > 0.0,
                 ExcMessage("reinitialization operator: d_tau must be set"));
 
-    const double eps_ =
-      eps > 0 ?
-        eps :
-        eps_scale_factor * scratch_data.get_min_cell_size(); // @ todo: check how cell size can be
-                                                             // extracted from matrix free class
-
-    Assert(eps_ > 0.0, ExcMessage("reinitialization operator: epsilon must be set"));
-
     this->normal_vec.update_ghost_values();
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
@@ -152,26 +150,11 @@ namespace MeltPoolDG::Reinitialization
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             delta_psi.reinit(cell);
-            delta_psi.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
+            delta_psi.read_dof_values(src);
 
-            normal_vector.reinit(cell);
-            normal_vector.read_dof_values(this->normal_vec);
-            normal_vector.evaluate(EvaluationFlags::values);
+            tangent_local_cell_operation(delta_psi, normal_vector, true);
 
-            for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
-              {
-                const auto n_phi =
-                  MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
-                                                          tolerance_normal_vector);
-
-                delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
-                delta_psi.submit_gradient(this->time_increment * eps_ *
-                                            scalar_product(delta_psi.get_gradient(q_index), n_phi) *
-                                            n_phi,
-                                          q_index);
-              }
-
-            delta_psi.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
+            delta_psi.distribute_local_to_global(dst);
           }
       },
       dst,
@@ -189,14 +172,6 @@ namespace MeltPoolDG::Reinitialization
 
     AssertThrow(this->time_increment > 0.0,
                 ExcMessage("reinitialization matrix-free operator: d_tau must be set"));
-    const double eps_ =
-      eps > 0 ?
-        eps :
-        eps_scale_factor * scratch_data.get_min_cell_size(); // @ todo: check how cell size can be
-                                                             // extracted from matrix free class
-
-    AssertThrow(eps_ > 0.0,
-                ExcMessage("reinitialization matrix-free operator: epsilon must be set"));
 
     const auto compressive_flux = [&](const auto &phi) {
       return 0.5 * (make_vectorized_array<number>(1.) - phi * phi);
@@ -233,7 +208,7 @@ namespace MeltPoolDG::Reinitialization
                                                           tolerance_normal_vector);
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
-                                      this->time_increment * eps_ *
+                                      this->time_increment * epsilon_used *
                                         scalar_product(psi_old.get_gradient(q_index), n_phi) *
                                         n_phi,
                                     q_index);
@@ -261,6 +236,117 @@ namespace MeltPoolDG::Reinitialization
       }
     normal_vec.update_ghost_values();
   }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::compute_system_matrix_from_matrixfree(
+    TrilinosWrappers::SparseMatrix &system_matrix) const
+  {
+    system_matrix = 0.0;
+
+    this->normal_vec.update_ghost_values();
+
+    // note: not thread safe!!!
+    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
+                                                     normal_dof_idx,
+                                                     reinit_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    // compute matrix (only cell contributions)
+    MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+      matrix_free,
+      scratch_data.get_constraint(this->dof_idx),
+      system_matrix,
+      [&](auto &delta_psi) {
+        const unsigned int current_cell_index = delta_psi.get_current_cell_index();
+
+        tangent_local_cell_operation(delta_psi,
+                                     normal_vector,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      this->dof_idx,
+      reinit_quad_idx);
+
+    system_matrix.compress(VectorOperation::add);
+
+    this->normal_vec.zero_out_ghost_values();
+  }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
+  {
+    scratch_data.initialize_dof_vector(diagonal, this->dof_idx);
+
+    this->normal_vec.update_ghost_values();
+
+    // note: not thread safe!!!
+    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
+                                                     normal_dof_idx,
+                                                     reinit_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    // compute diagonal ...
+    MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
+      matrix_free,
+      diagonal,
+      [&](auto &delta_psi) {
+        const unsigned int current_cell_index = delta_psi.get_current_cell_index();
+
+        tangent_local_cell_operation(delta_psi,
+                                     normal_vector,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      this->dof_idx,
+      reinit_quad_idx);
+
+    // ... and invert it
+    for (auto &i : diagonal)
+      i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+
+    this->normal_vec.zero_out_ghost_values();
+  }
+
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::tangent_local_cell_operation(
+    FECellIntegrator<dim, 1, number> &  delta_psi,
+    FECellIntegrator<dim, dim, number> &normal_vector,
+    const bool                          do_reinit_cells) const
+  {
+    delta_psi.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+    if (do_reinit_cells)
+      {
+        normal_vector.reinit(delta_psi.get_current_cell_index());
+        normal_vector.read_dof_values(this->normal_vec);
+        normal_vector.evaluate(EvaluationFlags::values);
+      }
+
+    for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
+      {
+        const auto n_phi = MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
+                                                                   tolerance_normal_vector);
+
+        delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
+        delta_psi.submit_gradient(this->time_increment * epsilon_used *
+                                    scalar_product(delta_psi.get_gradient(q_index), n_phi) * n_phi,
+                                  q_index);
+      }
+
+    delta_psi.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+  }
+
+
 
   template class OlssonOperator<1, double>;
   template class OlssonOperator<2, double>;

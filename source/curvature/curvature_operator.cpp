@@ -214,7 +214,6 @@ namespace MeltPoolDG::Curvature
 
     // note: not thread safe!!!
     const auto &                     matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, 1, number> curv_vals(matrix_free, curv_dof_idx, curv_quad_idx);
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
@@ -250,7 +249,6 @@ namespace MeltPoolDG::Curvature
     scratch_data.initialize_dof_vector(diagonal, curv_dof_idx);
     // note: not thread safe!!!
     const auto &                     matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, 1, number> curv_vals(matrix_free, curv_dof_idx, curv_quad_idx);
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;

@@ -138,34 +138,11 @@ namespace MeltPoolDG::NormalVector
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             normal.reinit(cell);
-            normal.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
+            normal.read_dof_values(src);
 
-            if (do_narrow_band)
-              {
-                level_set.reinit(cell);
-                level_set.read_dof_values_plain(*solution_level_set);
-                level_set.evaluate(EvaluationFlags::values);
-              }
+            tangent_local_cell_operation(normal, level_set, true);
 
-            const VectorizedArray<double> damping =
-              compute_cell_size_dependent_filter_parameter_mf<dim>(
-                scratch_data, normal_dof_idx, cell, normal_vector_data.damping_scale_factor);
-
-            for (unsigned int q_index = 0; q_index < normal.n_q_points; ++q_index)
-              {
-                const auto grad_val = damping * normal.get_gradient(q_index);
-
-                const VectorizedArray<number> narrow_band_mask =
-                  (do_narrow_band) ?
-                    VectorTools::compute_mask_narrow_band<dim>(level_set.get_value(q_index),
-                                                               narrow_band_threshold) :
-                    1.0;
-
-                normal.submit_value(narrow_band_mask * normal.get_value(q_index), q_index);
-                normal.submit_gradient(narrow_band_mask * grad_val, q_index);
-              }
-
-            normal.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
+            normal.distribute_local_to_global(dst);
           }
       },
       dst,
@@ -215,6 +192,127 @@ namespace MeltPoolDG::NormalVector
       dst,
       src,
       true);
+  }
+
+  template <int dim, typename number>
+  void
+  NormalVectorOperator<dim, number>::compute_system_matrix_from_matrixfree(
+    TrilinosWrappers::SparseMatrix &system_matrix) const
+  {
+    system_matrix = 0.0;
+
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+
+    // note: not thread safe!!!
+    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, normal_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    // compute matrix (only cell contributions)
+    MatrixFreeTools::template compute_matrix<dim, -1, 0, dim, number, VectorizedArray<number>>(
+      matrix_free,
+      scratch_data.get_constraint(normal_dof_idx),
+      system_matrix,
+      [&](auto &normal_vals) {
+        const unsigned int current_cell_index = normal_vals.get_current_cell_index();
+
+        tangent_local_cell_operation(normal_vals,
+                                     level_set_vals,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      normal_dof_idx,
+      normal_quad_idx);
+
+    system_matrix.compress(VectorOperation::add);
+
+    if (solution_level_set)
+      solution_level_set->zero_out_ghost_values();
+  }
+
+  template <int dim, typename number>
+  void
+  NormalVectorOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(
+    VectorType &diagonal) const
+  {
+    scratch_data.initialize_dof_vector(diagonal, normal_dof_idx);
+
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+
+    // note: not thread safe!!!
+    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number> level_set_vals(scratch_data.get_matrix_free(),
+                                                    ls_dof_idx,
+                                                    normal_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    // compute diagonal ...
+    MatrixFreeTools::template compute_diagonal<dim, -1, 0, dim, number, VectorizedArray<number>>(
+      matrix_free,
+      diagonal,
+      [&](auto &normal_vals) {
+        const unsigned int current_cell_index = normal_vals.get_current_cell_index();
+
+        tangent_local_cell_operation(normal_vals,
+                                     level_set_vals,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      normal_dof_idx,
+      normal_quad_idx);
+
+    // ... and invert it
+    for (auto &i : diagonal)
+      i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+
+    if (solution_level_set)
+      solution_level_set->zero_out_ghost_values();
+  }
+
+  template <int dim, typename number>
+  void
+  NormalVectorOperator<dim, number>::tangent_local_cell_operation(
+    FECellIntegrator<dim, dim, number> &normal_vector_vals,
+    FECellIntegrator<dim, 1, number> &  level_set_vals,
+    const bool                          do_reinit_cells) const
+  {
+    normal_vector_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+    if (do_reinit_cells && do_narrow_band)
+      {
+        level_set_vals.reinit(normal_vector_vals.get_current_cell_index());
+        level_set_vals.read_dof_values_plain(*solution_level_set);
+        level_set_vals.evaluate(EvaluationFlags::values);
+      }
+
+    const VectorizedArray<double> damping = compute_cell_size_dependent_filter_parameter_mf<dim>(
+      scratch_data,
+      normal_dof_idx,
+      normal_vector_vals.get_current_cell_index(),
+      normal_vector_data.damping_scale_factor);
+
+    for (unsigned int q_index = 0; q_index < normal_vector_vals.n_q_points; ++q_index)
+      {
+        const auto grad_val = damping * normal_vector_vals.get_gradient(q_index);
+
+        const VectorizedArray<number> narrow_band_mask =
+          (do_narrow_band) ?
+            VectorTools::compute_mask_narrow_band<dim>(level_set_vals.get_value(q_index),
+                                                       narrow_band_threshold) :
+            1.0;
+
+        normal_vector_vals.submit_value(narrow_band_mask * normal_vector_vals.get_value(q_index),
+                                        q_index);
+        normal_vector_vals.submit_gradient(narrow_band_mask * grad_val, q_index);
+      }
+
+    normal_vector_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
   }
 
   template <int dim, typename number>
