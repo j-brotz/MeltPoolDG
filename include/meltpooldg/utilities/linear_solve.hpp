@@ -6,6 +6,7 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 // solvers
+#include <deal.II/lac/solver_bicgstab.h>
 #include <deal.II/lac/solver_cg.h> // only for symmetric matrices
 #include <deal.II/lac/solver_gmres.h>
 
