@@ -25,6 +25,9 @@ namespace MeltPoolDG::Reinitialization
      *    from the global user-defined parameters
      */
     set_reinitialization_parameters(data_in);
+    AssertThrow(reinit_data.linear_solver.solver_type == LinearSolverType::CG ||
+                  reinit_data.linear_solver.do_matrix_free == false,
+                ExcMessage("The reinitialization_ operation only supports the CG solver type."));
     /*
      *    initialize normal_vector_field
      */
@@ -98,6 +101,18 @@ namespace MeltPoolDG::Reinitialization
      *    operator class
      */
     normal_vector_operation->solve(solution_level_set);
+    /*
+     * precompute system matrix
+     */
+    if (reinit_data.linear_solver.do_matrix_free)
+      {
+        if (reinit_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
+          diag_preconditioner_matrixfree =
+            preconditioner_matrixfree->compute_diagonal_preconditioner();
+        else
+          trilinos_preconditioner_matrixfree =
+            preconditioner_matrixfree->compute_trilinos_preconditioner();
+      }
   }
 
   template <int dim>
@@ -132,9 +147,6 @@ namespace MeltPoolDG::Reinitialization
 
         if (reinit_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
-            diag_preconditioner_matrixfree =
-              preconditioner_matrixfree->compute_diagonal_preconditioner();
-
             iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
               *reinit_operator,
               src,
@@ -145,9 +157,6 @@ namespace MeltPoolDG::Reinitialization
           }
         else
           {
-            trilinos_preconditioner_matrixfree =
-              preconditioner_matrixfree->compute_trilinos_preconditioner();
-
             iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
               *reinit_operator,
               src,
