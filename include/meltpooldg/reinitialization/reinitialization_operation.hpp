@@ -13,13 +13,13 @@
 // MeltPoolDG
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/linear_algebra/linear_solve.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
-#include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG

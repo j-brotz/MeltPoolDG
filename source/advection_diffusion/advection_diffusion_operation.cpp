@@ -3,9 +3,9 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/linear_algebra/linear_solve.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion

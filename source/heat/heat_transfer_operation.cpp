@@ -1,6 +1,6 @@
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/utilities/linear_solve.hpp>
+#include <meltpooldg/linear_algebra/linear_solve.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
 namespace MeltPoolDG::Heat

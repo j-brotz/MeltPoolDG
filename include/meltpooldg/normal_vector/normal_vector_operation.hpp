@@ -9,9 +9,9 @@
 
 // MeltPoolDG
 #include <meltpooldg/interface/operator_base.hpp>
+#include <meltpooldg/linear_algebra/linear_solve.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
-#include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
