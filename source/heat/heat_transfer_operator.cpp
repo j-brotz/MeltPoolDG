@@ -948,9 +948,16 @@ namespace MeltPoolDG::Heat
              * For the details regarding h(t)/c_p, see the documentation in
              * rhs_cell_loop().
              */
+
+            VectorizedArray<double> weight(1.0);
+            if (delta_phase_weighted)
+              weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
+
             const auto &material_data = material.get_data();
+
             val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
-                   material_data.second.capacity * ls_vals_used.get_gradient(q_index).norm();
+                   material_data.second.capacity * ls_vals_used.get_gradient(q_index).norm() *
+                   weight;
           }
 
 
