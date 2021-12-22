@@ -411,7 +411,8 @@ namespace MeltPoolDG
    *
    * @note If the density is determined consistent with mass flux due to evaporation, this Dirac
    *       delta approximation can be used to scale interface quantities with the density
-   *       distribution by choosing the phases' weights equal to their densities.
+   *       distribution by choosing the first set of weights (w_1g and w_1h) equal to their
+   *       densities. The second set of weights (w_2g and w_2h) can be chosen independently.
    */
   template <typename number>
   class DeltaApproximationReciprocalTimesHeavisidePhaseWeighted
