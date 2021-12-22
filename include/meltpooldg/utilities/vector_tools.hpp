@@ -1,4 +1,8 @@
 #pragma once
+#include <deal.II/lac/solver_cg.h>
+
+#include <deal.II/matrix_free/operators.h>
+
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/interface/scratch_data.hpp>
@@ -270,5 +274,45 @@ namespace MeltPoolDG
                                               scratch_data.get_dof_handler(dof_idx),
                                               scratch_data.get_quadrature(quad_idx));
     }
+
+    template <int n_components, int dim, typename VectorType>
+    void
+    project_vector(const Mapping<dim> &                                      mapping,
+                   const DoFHandler<dim> &                                   dof,
+                   const AffineConstraints<typename VectorType::value_type> &constraints,
+                   const Quadrature<dim> &                                   quadrature,
+                   const VectorType &                                        vec_in,
+                   VectorType &                                              vec_out)
+    {
+      using Number = typename VectorType::value_type;
+
+      typename MatrixFree<dim, Number>::AdditionalData additional_data;
+      additional_data.tasks_parallel_scheme =
+        MatrixFree<dim, Number>::AdditionalData::partition_color;
+      additional_data.mapping_update_flags = (update_values | update_JxW_values);
+
+      const auto matrix_free = std::make_shared<MatrixFree<dim, Number>>();
+      matrix_free->reinit(mapping, dof, constraints, quadrature, additional_data);
+
+      using MatrixType = MatrixFreeOperators::MassOperator<dim, -1, 0, n_components, VectorType>;
+      MatrixType mass_matrix;
+      mass_matrix.initialize(matrix_free);
+
+      mass_matrix.compute_diagonal();
+
+      ReductionControl                  control(6 * vec_in.size(), 0., 1e-12, false, false);
+      SolverCG<VectorType>              cg(control);
+      const DiagonalMatrix<VectorType> &preconditioner = *mass_matrix.get_matrix_diagonal_inverse();
+
+      VectorType vec_in_copy, vec_out_copy;
+
+      matrix_free->initialize_dof_vector(vec_in_copy);
+      matrix_free->initialize_dof_vector(vec_out_copy);
+
+      vec_in_copy.copy_locally_owned_data_from(vec_in);
+      cg.solve(mass_matrix, vec_out_copy, vec_in_copy, preconditioner);
+      vec_out.copy_locally_owned_data_from(vec_out_copy);
+    }
+
   } // namespace VectorTools
 } // namespace MeltPoolDG
