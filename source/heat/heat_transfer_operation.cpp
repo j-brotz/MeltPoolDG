@@ -1,6 +1,6 @@
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/utilities/linear_solve.hpp>
+#include <meltpooldg/linear_algebra/linear_solve.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
 namespace MeltPoolDG::Heat
@@ -130,14 +130,14 @@ namespace MeltPoolDG::Heat
             case PreconditionerType::DiagonalReduced: {
               auto preconditioner = heat_transfer_preconditioner->compute_diagonal_preconditioner();
 
-              return LinearSolve::
-                solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
-                  *heat_operator,
-                  solution_update,
-                  rhs,
-                  heat_data.linear_solver.rel_tolerance,
-                  heat_data.linear_solver.max_iterations,
-                  preconditioner);
+              return LinearSolve::solve<VectorType, OperatorBase<dim, double>>(
+                *heat_operator,
+                solution_update,
+                rhs,
+                heat_data.linear_solver.solver_type,
+                heat_data.linear_solver.rel_tolerance,
+                heat_data.linear_solver.max_iterations,
+                preconditioner);
             }
           case PreconditionerType::Identity:
           case PreconditionerType::AMG:
@@ -147,14 +147,14 @@ namespace MeltPoolDG::Heat
               // take the first three letters as relevant preconditioner type
               auto preconditioner = heat_transfer_preconditioner->compute_trilinos_preconditioner();
 
-              return LinearSolve::
-                solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
-                  *heat_operator,
-                  solution_update,
-                  rhs,
-                  heat_data.linear_solver.rel_tolerance,
-                  heat_data.linear_solver.max_iterations,
-                  *preconditioner);
+              return LinearSolve::solve<VectorType, OperatorBase<dim, double>>(
+                *heat_operator,
+                solution_update,
+                rhs,
+                heat_data.linear_solver.solver_type,
+                heat_data.linear_solver.rel_tolerance,
+                heat_data.linear_solver.max_iterations,
+                *preconditioner);
             }
             default: {
               AssertThrow(false, ExcNotImplemented());

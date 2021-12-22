@@ -148,13 +148,13 @@ namespace MeltPoolDG::Reinitialization
                 update_preconditioner_matrixfree = false;
               }
 
-            iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
-              *reinit_operator,
-              src,
-              rhs,
-              reinit_data.linear_solver.rel_tolerance,
-              reinit_data.linear_solver.max_iterations,
-              diag_preconditioner_matrixfree);
+            iter = LinearSolve::solve<VectorType>(*reinit_operator,
+                                                  src,
+                                                  rhs,
+                                                  reinit_data.linear_solver.solver_type,
+                                                  reinit_data.linear_solver.rel_tolerance,
+                                                  reinit_data.linear_solver.max_iterations,
+                                                  diag_preconditioner_matrixfree);
           }
         else
           {
@@ -165,13 +165,13 @@ namespace MeltPoolDG::Reinitialization
                 update_preconditioner_matrixfree = false;
               }
 
-            iter = LinearSolve::solve<VectorType, SolverCG<VectorType>, OperatorBase<dim, double>>(
-              *reinit_operator,
-              src,
-              rhs,
-              reinit_data.linear_solver.rel_tolerance,
-              reinit_data.linear_solver.max_iterations,
-              *trilinos_preconditioner_matrixfree);
+            iter = LinearSolve::solve<VectorType>(*reinit_operator,
+                                                  src,
+                                                  rhs,
+                                                  reinit_data.linear_solver.solver_type,
+                                                  reinit_data.linear_solver.rel_tolerance,
+                                                  reinit_data.linear_solver.max_iterations,
+                                                  *trilinos_preconditioner_matrixfree);
           }
       }
     else
@@ -181,36 +181,15 @@ namespace MeltPoolDG::Reinitialization
                                               reinit_operator->get_system_matrix(),
                                               rhs);
 
-        if (reinit_data.linear_solver.solver_type == LinearSolverType::CG)
-          {
-            auto preconditioner = Preconditioner::get_preconditioner_trilinos(
-              reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
-            iter = LinearSolve::solve<VectorType,
-                                      SolverCG<VectorType>,
-                                      SparseMatrixType,
-                                      TrilinosWrappers::PreconditionBase>(
-              reinit_operator->get_system_matrix(),
-              src,
-              rhs,
-              reinit_data.linear_solver.rel_tolerance,
-              reinit_data.linear_solver.max_iterations,
-              *preconditioner);
-          }
-        else if (reinit_data.linear_solver.solver_type == LinearSolverType::GMRES)
-          {
-            auto preconditioner = Preconditioner::get_preconditioner_trilinos(
-              reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
-            iter = LinearSolve::solve<VectorType,
-                                      SolverGMRES<VectorType>,
-                                      SparseMatrixType,
-                                      TrilinosWrappers::PreconditionBase>(
-              reinit_operator->get_system_matrix(),
-              src,
-              rhs,
-              reinit_data.linear_solver.rel_tolerance,
-              reinit_data.linear_solver.max_iterations,
-              *preconditioner);
-          }
+        auto preconditioner = Preconditioner::get_preconditioner_trilinos(
+          reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
+        iter = LinearSolve::solve<VectorType>(reinit_operator->get_system_matrix(),
+                                              src,
+                                              rhs,
+                                              reinit_data.linear_solver.solver_type,
+                                              reinit_data.linear_solver.rel_tolerance,
+                                              reinit_data.linear_solver.max_iterations,
+                                              *preconditioner);
 
         Journal::print_formatted_norm(scratch_data->get_pcout(0),
                                       reinit_operator->get_system_matrix().frobenius_norm(),

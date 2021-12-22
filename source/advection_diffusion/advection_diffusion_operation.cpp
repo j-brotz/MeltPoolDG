@@ -3,9 +3,9 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/linear_algebra/linear_solve.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/linear_solve.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion
@@ -98,8 +98,10 @@ namespace MeltPoolDG::AdvectionDiffusion
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx);
 
-        iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, OperatorBase<dim, double>>(
-          *advec_diff_operator, src, rhs);
+        iter = LinearSolve::solve<VectorType>(*advec_diff_operator,
+                                              src,
+                                              rhs,
+                                              this->advec_diff_data.linear_solver.solver_type);
       }
     else
       {
@@ -111,8 +113,10 @@ namespace MeltPoolDG::AdvectionDiffusion
         advec_diff_operator->assemble_matrixbased(solution_advected_field,
                                                   advec_diff_operator->get_system_matrix(),
                                                   rhs);
-        iter = LinearSolve::solve<VectorType, SolverGMRES<VectorType>, SparseMatrixType>(
-          advec_diff_operator->get_system_matrix(), src, rhs);
+        iter = LinearSolve::solve<VectorType>(advec_diff_operator->get_system_matrix(),
+                                              src,
+                                              rhs,
+                                              this->advec_diff_data.linear_solver.solver_type);
       }
 
     scratch_data->get_constraint(advec_diff_dof_idx).distribute(src);
