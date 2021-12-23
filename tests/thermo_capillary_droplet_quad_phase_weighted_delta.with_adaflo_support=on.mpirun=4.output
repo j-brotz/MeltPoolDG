@@ -45,7 +45,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33747220039e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33747231960e+00                                               normal_vector |
-| || curvature ||L2 = 2.65549545288e+01                                                  curvature |
+| || curvature ||L2 = 2.65553970337e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005). 
@@ -71,7 +71,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33894122035e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33894145552e+00                                               normal_vector |
-| || curvature ||L2 = 2.65510597242e+01                                                  curvature |
+| || curvature ||L2 = 2.65518617643e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 
 Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005). 
@@ -87,17 +87,17 @@ Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005).
 |  τ = 9e-05                                                                      reinitialization |
 | || delta phi ||L2 = 1.396056464998854e-07                                       reinitialization |
 |  τ = 0.00018                                                                    reinitialization |
-| || delta phi ||L2 = 9.622583179155311e-08                                       reinitialization |
+| || delta phi ||L2 = 9.622583317946008e-08                                       reinitialization |
 |  τ = 0.00027                                                                    reinitialization |
 | || delta phi ||L2 = 6.796329936961133e-08                                       reinitialization |
 |  τ = 0.00036                                                                    reinitialization |
-| || delta phi ||L2 = 4.940686598018131e-08                                       reinitialization |
+| || delta phi ||L2 = 4.940686671764807e-08                                       reinitialization |
 |  τ = 0.00045                                                                    reinitialization |
 | || delta phi ||L2 = 3.780373067970484e-08                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33914330591e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33914423231e+00                                               normal_vector |
-| || curvature ||L2 = 2.65493035447e+01                                                  curvature |
+| || curvature ||L2 = 2.65503845345e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 
 Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005). 
@@ -123,7 +123,7 @@ Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.33917318542e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.33917546756e+00                                               normal_vector |
-| || curvature ||L2 = 2.65511780327e+01                                                  curvature |
+| || curvature ||L2 = 2.65493832176e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
 
 Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005). 

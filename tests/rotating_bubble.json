@@ -40,6 +40,7 @@
   },
   "advection diffusion": {
     "linear solver": {
+      "preconditioner type": "ILU",
       "do matrix free": "false"
     }
   }

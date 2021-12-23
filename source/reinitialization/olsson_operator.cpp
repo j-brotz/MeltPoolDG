@@ -310,8 +310,9 @@ namespace MeltPoolDG::Reinitialization
       reinit_quad_idx);
 
     // ... and invert it
+    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
-      i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+      i = (std::abs(i) > 1.0e-16 * linfty_norm) ? (1.0 / i) : 1.0;
 
     this->normal_vec.zero_out_ghost_values();
   }

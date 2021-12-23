@@ -290,9 +290,8 @@ namespace MeltPoolDG
         "Choose the corresponding implementation of the advection diffusion operation.",
         Patterns::Selection("meltpooldg|adaflo"));
       // default value
-      advec_diff.linear_solver.solver_type = LinearSolverType::GMRES;
-      advec_diff.linear_solver.preconditioner_type =
-        PreconditionerType::AMG; //@todo: currently not supported
+      advec_diff.linear_solver.solver_type         = LinearSolverType::GMRES;
+      advec_diff.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       advec_diff.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();

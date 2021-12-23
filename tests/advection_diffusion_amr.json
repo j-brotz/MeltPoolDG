@@ -23,6 +23,7 @@
     "advec diff implementation": "meltpooldg",
     "advec diff integration scheme": "crank_nicolson",
     "linear solver": {
+      "preconditioner type": "ILU",
       "do matrix free": "false"
     }
   },
