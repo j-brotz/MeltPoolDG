@@ -12,7 +12,7 @@
 
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
-#include <meltpooldg/linear_algebra/linear_solve.hpp>
+#include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>

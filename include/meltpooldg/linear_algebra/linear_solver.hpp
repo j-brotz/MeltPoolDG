@@ -21,7 +21,7 @@ using namespace dealii;
 
 namespace MeltPoolDG
 {
-  class LinearSolve
+  class LinearSolver
   {
   public:
     template <typename VectorType,

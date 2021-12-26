@@ -13,7 +13,7 @@
 // MeltPoolDG
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/linear_algebra/linear_solve.hpp>
+#include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>

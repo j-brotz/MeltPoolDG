@@ -58,23 +58,23 @@ namespace MeltPoolDG::Curvature
 
         if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
-            iter = LinearSolve::solve<VectorType>(*curvature_operator,
-                                                  solution_curvature,
-                                                  rhs,
-                                                  curvature_data.linear_solver.solver_type,
-                                                  curvature_data.linear_solver.rel_tolerance,
-                                                  curvature_data.linear_solver.max_iterations,
-                                                  diag_preconditioner_matrixfree);
+            iter = LinearSolver::solve<VectorType>(*curvature_operator,
+                                                   solution_curvature,
+                                                   rhs,
+                                                   curvature_data.linear_solver.solver_type,
+                                                   curvature_data.linear_solver.rel_tolerance,
+                                                   curvature_data.linear_solver.max_iterations,
+                                                   diag_preconditioner_matrixfree);
           }
         else
           {
-            iter = LinearSolve::solve<VectorType>(*curvature_operator,
-                                                  solution_curvature,
-                                                  rhs,
-                                                  curvature_data.linear_solver.solver_type,
-                                                  curvature_data.linear_solver.rel_tolerance,
-                                                  curvature_data.linear_solver.max_iterations,
-                                                  *trilinos_preconditioner_matrixfree);
+            iter = LinearSolver::solve<VectorType>(*curvature_operator,
+                                                   solution_curvature,
+                                                   rhs,
+                                                   curvature_data.linear_solver.solver_type,
+                                                   curvature_data.linear_solver.rel_tolerance,
+                                                   curvature_data.linear_solver.max_iterations,
+                                                   *trilinos_preconditioner_matrixfree);
           }
       }
     else
@@ -88,10 +88,10 @@ namespace MeltPoolDG::Curvature
           curvature_operator->get_system_matrix(),
           rhs);
 
-        iter = LinearSolve::solve<VectorType>(curvature_operator->get_system_matrix(),
-                                              solution_curvature,
-                                              rhs,
-                                              curvature_data.linear_solver.solver_type);
+        iter = LinearSolver::solve<VectorType>(curvature_operator->get_system_matrix(),
+                                               solution_curvature,
+                                               rhs,
+                                               curvature_data.linear_solver.solver_type);
       }
 
     scratch_data->get_constraint(curv_dof_idx).distribute(solution_curvature);
