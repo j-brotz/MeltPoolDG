@@ -537,6 +537,7 @@ namespace MeltPoolDG::Flow
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
                                       DataComponentInterpretation::component_is_part_of_vector);
+
     /**
      *  velocity
      */
@@ -544,26 +545,47 @@ namespace MeltPoolDG::Flow
                              get_velocity(),
                              std::vector<std::string>(dim, "velocity"),
                              vector_component_interpretation);
+
     /**
      *  pressure
      */
     data_out.add_data_vector(get_dof_handler_pressure(), get_pressure(), "pressure");
+
     /**
-     *  force rhs
+     *  force
      */
+    VectorType force;
+    scratch_data.initialize_dof_vector(force, dof_index_u);
+    VectorTools::project_vector<dim>(scratch_data.get_mapping(),
+                                     get_dof_handler_velocity(),
+                                     scratch_data.get_constraint(dof_index_u),
+                                     scratch_data.get_quadrature(quad_index_u),
+                                     navier_stokes->user_rhs.block(0),
+                                     force);
     data_out.add_data_vector(get_dof_handler_velocity(),
-                             navier_stokes->user_rhs.block(0),
+                             force,
                              std::vector<std::string>(dim, "force_rhs_velocity"),
                              vector_component_interpretation);
+
     /**
-     *  mass balance rhs
+     *  mass balance source term
      */
+    VectorType mass_balance_soure_term;
+    scratch_data.initialize_dof_vector(mass_balance_soure_term, dof_index_p);
+    VectorTools::project_vector<1>(scratch_data.get_mapping(),
+                                   get_dof_handler_pressure(),
+                                   scratch_data.get_constraint(dof_index_p),
+                                   scratch_data.get_quadrature(quad_index_p),
+                                   navier_stokes->user_rhs.block(1),
+                                   mass_balance_soure_term);
     data_out.add_data_vector(get_dof_handler_pressure(),
-                             navier_stokes->user_rhs.block(1),
-                             "force_rhs_pressure");
+                             mass_balance_soure_term,
+                             "mass_balance_soure_term");
+
     /**
      *  density
      */
+    VectorType density;
     scratch_data.initialize_dof_vector(density, dof_index_parameters);
 
     if (scratch_data.is_hex_mesh())
@@ -578,9 +600,11 @@ namespace MeltPoolDG::Flow
 
     density.update_ghost_values();
     data_out.add_data_vector(dof_handler_parameters, density, "density");
+
     /**
      *  viscosity
      */
+    VectorType viscosity;
     scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
     if (scratch_data.is_hex_mesh())
       UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
