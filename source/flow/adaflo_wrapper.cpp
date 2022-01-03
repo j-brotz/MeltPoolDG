@@ -552,35 +552,50 @@ namespace MeltPoolDG::Flow
     data_out.add_data_vector(get_dof_handler_pressure(), get_pressure(), "pressure");
 
     /**
-     *  force
+     *  force (raw)
      */
-    VectorType force;
-    scratch_data.initialize_dof_vector(force, dof_index_u);
+    data_out.add_data_vector(get_dof_handler_velocity(),
+                             navier_stokes->user_rhs.block(0),
+                             std::vector<std::string>(dim, "force_rhs_velocity"),
+                             vector_component_interpretation);
+
+    /**
+     *  force (projected)
+     */
+    VectorType force_rhs_velocity_projected;
+    scratch_data.initialize_dof_vector(force_rhs_velocity_projected, dof_index_u);
     VectorTools::project_vector<dim>(scratch_data.get_mapping(),
                                      get_dof_handler_velocity(),
                                      scratch_data.get_constraint(dof_index_u),
                                      scratch_data.get_quadrature(quad_index_u),
                                      navier_stokes->user_rhs.block(0),
-                                     force);
+                                     force_rhs_velocity_projected);
     data_out.add_data_vector(get_dof_handler_velocity(),
-                             force,
-                             std::vector<std::string>(dim, "force_rhs_velocity"),
+                             force_rhs_velocity_projected,
+                             std::vector<std::string>(dim, "force_rhs_velocity_projected"),
                              vector_component_interpretation);
 
     /**
-     *  mass balance source term
+     *  mass balance source term (raw)
      */
-    VectorType mass_balance_soure_term;
-    scratch_data.initialize_dof_vector(mass_balance_soure_term, dof_index_p);
+    data_out.add_data_vector(get_dof_handler_pressure(),
+                             navier_stokes->user_rhs.block(1),
+                             "mass_balance_soure_term");
+
+    /**
+     *  mass balance source term (projected)
+     */
+    VectorType mass_balance_soure_term_projected;
+    scratch_data.initialize_dof_vector(mass_balance_soure_term_projected, dof_index_p);
     VectorTools::project_vector<1>(scratch_data.get_mapping(),
                                    get_dof_handler_pressure(),
                                    scratch_data.get_constraint(dof_index_p),
                                    scratch_data.get_quadrature(quad_index_p),
                                    navier_stokes->user_rhs.block(1),
-                                   mass_balance_soure_term);
+                                   mass_balance_soure_term_projected);
     data_out.add_data_vector(get_dof_handler_pressure(),
-                             mass_balance_soure_term,
-                             "mass_balance_soure_term");
+                             mass_balance_soure_term_projected,
+                             "mass_balance_soure_term_projected");
 
     /**
      *  density
