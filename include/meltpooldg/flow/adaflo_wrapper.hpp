@@ -181,11 +181,6 @@ namespace MeltPoolDG::Flow
 
     unsigned int quad_index_u;
     unsigned int quad_index_p;
-    /**
-     * density and viscosity mainly for output purposes
-     */
-    VectorType density;
-    VectorType viscosity;
 
     DoFHandler<dim>           dof_handler_parameters;
     AffineConstraints<double> constraints_parameters;
