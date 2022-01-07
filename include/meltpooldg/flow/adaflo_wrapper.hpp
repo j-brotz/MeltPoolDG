@@ -184,6 +184,12 @@ namespace MeltPoolDG::Flow
 
     DoFHandler<dim>           dof_handler_parameters;
     AffineConstraints<double> constraints_parameters;
+
+    // temporal vectors for output
+    VectorType force_rhs_velocity_projected;
+    VectorType mass_balance_soure_term_projected;
+    VectorType density;
+    VectorType viscosity;
   };
 } // namespace MeltPoolDG::Flow
 #endif

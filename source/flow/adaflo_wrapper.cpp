@@ -562,7 +562,6 @@ namespace MeltPoolDG::Flow
     /**
      *  force (projected)
      */
-    VectorType force_rhs_velocity_projected;
     scratch_data.initialize_dof_vector(force_rhs_velocity_projected, dof_index_u);
     VectorTools::project_vector<dim>(scratch_data.get_mapping(),
                                      get_dof_handler_velocity(),
@@ -585,7 +584,6 @@ namespace MeltPoolDG::Flow
     /**
      *  mass balance source term (projected)
      */
-    VectorType mass_balance_soure_term_projected;
     scratch_data.initialize_dof_vector(mass_balance_soure_term_projected, dof_index_p);
     VectorTools::project_vector<1>(scratch_data.get_mapping(),
                                    get_dof_handler_pressure(),
@@ -600,7 +598,6 @@ namespace MeltPoolDG::Flow
     /**
      *  density
      */
-    VectorType density;
     scratch_data.initialize_dof_vector(density, dof_index_parameters);
 
     if (scratch_data.is_hex_mesh())
@@ -619,7 +616,6 @@ namespace MeltPoolDG::Flow
     /**
      *  viscosity
      */
-    VectorType viscosity;
     scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
     if (scratch_data.is_hex_mesh())
       UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
