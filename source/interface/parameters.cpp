@@ -393,6 +393,12 @@ namespace MeltPoolDG
         "normal vec do narrow band",
         normal_vec.do_narrow_band,
         "Set this parameter to true to compute the normal vector only in the interfacial region.");
+      prm.add_parameter(
+        "narrow band threshold",
+        normal_vec.narrow_band_threshold,
+        "If >> normal vec do narrow band << is set to true this parameter determines the level set "
+        "treshold for the narrow band.");
+
       // default parameter
       normal_vec.linear_solver.solver_type = LinearSolverType::CG;
       normal_vec.linear_solver.add_parameters(prm);
@@ -419,6 +425,11 @@ namespace MeltPoolDG
         "curv do narrow band",
         curv.do_narrow_band,
         "Set this parameter to true to compute the curvature only in the interfacial region.");
+      prm.add_parameter(
+        "narrow band threshold",
+        curv.narrow_band_threshold,
+        "If >> curv do narrow band << is set to true this parameter determines the level set "
+        "treshold for the narrow band.");
       // default parameter
       curv.linear_solver.solver_type         = LinearSolverType::CG;
       curv.linear_solver.preconditioner_type = PreconditionerType::Diagonal;

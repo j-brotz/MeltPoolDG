@@ -1,6 +1,19 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-01-07
+- Add parameter for narrow band threshold for normal vector and curvature
+```json
+{
+  "normal vector": {
+    "narrow band threshold": ""
+  },
+  "curvature": {
+    "narrow band threshold": ""
+  }
+}
+```
+
 ## 2021-12-21
 - Add new option for Dirac delta approximation type
 ```json

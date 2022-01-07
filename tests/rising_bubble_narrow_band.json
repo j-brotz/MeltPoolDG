@@ -38,6 +38,7 @@
   "normal vector": {
     "normal vec damping scale factor": "4",
     "normal vec do narrow band": "true",
+    "narrow band threshold": "0.9999999",
     "linear solver": {
       "do matrix free": "true"
     }
@@ -45,6 +46,7 @@
   "curvature": {
     "curv damping scale factor": "2",
     "curv do narrow band": "true",
+    "narrow band threshold": "0.9999999",
     "linear solver": {
       "do matrix free": "true"
     }

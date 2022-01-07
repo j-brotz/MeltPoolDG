@@ -24,6 +24,9 @@ namespace MeltPoolDG::NormalVector
     , solution_level_set(solution_level_set_in)
   {
     this->reset_dof_index(normal_dof_idx_in);
+    AssertThrow(!do_narrow_band || normal_vector_data.narrow_band_threshold > 0.0,
+                ExcMessage(
+                  "The level set threshold for narrow band width must be positive! Abort..."));
   }
 
   template <int dim, typename number>
@@ -180,8 +183,8 @@ namespace MeltPoolDG::NormalVector
               {
                 const VectorizedArray<number> narrow_band_mask =
                   (do_narrow_band) ?
-                    VectorTools::compute_mask_narrow_band<dim>(level_set.get_value(q_index),
-                                                               narrow_band_threshold) :
+                    VectorTools::compute_mask_narrow_band<dim>(
+                      level_set.get_value(q_index), normal_vector_data.narrow_band_threshold) :
                     1.0;
 
                 normal_vector.submit_value(narrow_band_mask * level_set.get_gradient(q_index),
@@ -306,7 +309,7 @@ namespace MeltPoolDG::NormalVector
         const VectorizedArray<number> narrow_band_mask =
           (do_narrow_band) ?
             VectorTools::compute_mask_narrow_band<dim>(level_set_vals.get_value(q_index),
-                                                       narrow_band_threshold) :
+                                                       normal_vector_data.narrow_band_threshold) :
             1.0;
 
         normal_vector_vals.submit_value(narrow_band_mask * normal_vector_vals.get_value(q_index),

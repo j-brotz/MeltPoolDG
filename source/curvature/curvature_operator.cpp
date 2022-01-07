@@ -32,6 +32,9 @@ namespace MeltPoolDG::Curvature
     AssertThrow(!do_narrow_band || solution_level_set,
                 ExcMessage(
                   "Level set solution vector must not be nullptr for a narrow band computation."));
+    AssertThrow(!do_narrow_band || curvature_data.narrow_band_threshold > 0.0,
+                ExcMessage(
+                  "The level set threshold for narrow band width must be positive! Abort..."));
   }
 
   template <int dim, typename number>
@@ -183,8 +186,8 @@ namespace MeltPoolDG::Curvature
               {
                 const VectorizedArray<number> narrow_band_mask =
                   (do_narrow_band) ?
-                    VectorTools::compute_mask_narrow_band<dim>(level_set.get_value(q_index),
-                                                               narrow_band_threshold) :
+                    VectorTools::compute_mask_narrow_band<dim>(
+                      level_set.get_value(q_index), curvature_data.narrow_band_threshold) :
                     1.0;
                 const auto n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
@@ -313,7 +316,7 @@ namespace MeltPoolDG::Curvature
         const VectorizedArray<number> narrow_band_mask =
           (do_narrow_band) ?
             VectorTools::compute_mask_narrow_band<dim>(level_set_vals.get_value(q_index),
-                                                       narrow_band_threshold) :
+                                                       curvature_data.narrow_band_threshold) :
             1.0;
 
         curv_vals.submit_value(narrow_band_mask * curv_vals.get_value(q_index), q_index);

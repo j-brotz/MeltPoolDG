@@ -56,7 +56,6 @@ namespace MeltPoolDG::Curvature
     const bool         do_narrow_band;
     const unsigned int ls_dof_idx;
     const VectorType * solution_level_set;
-    const double       narrow_band_threshold = 0.9999999;
 
   public:
     CurvatureOperator(const ScratchData<dim> &     scratch_data_in,

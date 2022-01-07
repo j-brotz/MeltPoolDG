@@ -89,8 +89,6 @@ namespace MeltPoolDG
       // optional parameters for narrow band
       const bool        do_narrow_band;
       const VectorType *solution_level_set;
-
-      const double narrow_band_threshold = 0.9999999;
     };
 
     /**

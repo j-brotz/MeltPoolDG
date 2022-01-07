@@ -133,6 +133,7 @@ namespace MeltPoolDG
     unsigned int             verbosity_level      = 0;
     bool                     do_narrow_band       = false;
     LinearSolverData<number> linear_solver;
+    number                   narrow_band_threshold = 0.0;
   };
 
   template <typename number = double>
@@ -143,6 +144,7 @@ namespace MeltPoolDG
     unsigned int             verbosity_level      = 0;
     bool                     do_narrow_band       = false;
     LinearSolverData<number> linear_solver;
+    number                   narrow_band_threshold = 0.0;
   };
 
   template <typename number = double>
