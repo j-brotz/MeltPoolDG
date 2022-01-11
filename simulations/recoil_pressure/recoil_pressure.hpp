@@ -275,33 +275,56 @@ namespace MeltPoolDG
            * lower_bc            |  T = T_initial |   open   |       -        |     -
            * upper_bc            |  T = T_initial | no-slip  |       -        |  ls = -1
            * -----------------------------------------------------------------------------
+           *
+           * note: In the 3D recoil pressure simulation, the front and back boundaries are treated
+           * the same as the left and right boundaries.
            */
           const types::boundary_id lower_bc = 1;
           const types::boundary_id upper_bc = 2;
           const types::boundary_id left_bc  = 3;
           const types::boundary_id right_bc = 4;
+          const types::boundary_id front_bc = 5;
+          const types::boundary_id back_bc  = 6;
 
-          if constexpr (dim == 2)
+          if ((dim == 2) || (dim == 3))
             {
               for (const auto &cell : this->triangulation->cell_iterators())
                 for (const auto &face : cell->face_iterators())
                   if ((face->at_boundary()))
                     {
-                      if (face->center()[1] == domain_y_min)
-                        face->set_boundary_id(lower_bc);
-                      else if (face->center()[1] == domain_y_max)
-                        face->set_boundary_id(upper_bc);
-                      else if (face->center()[0] == domain_x_min)
+                      if (face->center()[0] == domain_x_min)
                         face->set_boundary_id(left_bc);
                       else if (face->center()[0] == domain_x_max)
                         face->set_boundary_id(right_bc);
+                      else if (dim == 2)
+                        {
+                          if (face->center()[1] == domain_y_min)
+                            face->set_boundary_id(lower_bc);
+                          else if (face->center()[1] == domain_y_max)
+                            face->set_boundary_id(upper_bc);
+                        }
+                      else // dim == 3
+                        {
+                          if (face->center()[1] == domain_x_min)
+                            face->set_boundary_id(back_bc);
+                          else if (face->center()[1] == domain_x_max)
+                            face->set_boundary_id(front_bc);
+                          else if (face->center()[2] == domain_y_min)
+                            face->set_boundary_id(lower_bc);
+                          else if (face->center()[2] == domain_y_max)
+                            face->set_boundary_id(upper_bc);
+                        }
                     }
             }
           else
             AssertThrow(false, ExcNotImplemented());
 
           if (periodic_boundary)
-            this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+            {
+              this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+              if (dim == 3)
+                this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
+            }
 
           /*
            * BC for two-phase flow
@@ -316,6 +339,11 @@ namespace MeltPoolDG
                     {
                       this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
                       this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+                      if (dim == 3)
+                        {
+                          this->attach_symmetry_boundary_condition(front_bc, "navier_stokes_u");
+                          this->attach_symmetry_boundary_condition(back_bc, "navier_stokes_u");
+                        }
                     }
                   this->attach_dirichlet_boundary_condition(
                     upper_bc,
@@ -332,6 +360,11 @@ namespace MeltPoolDG
                     {
                       this->attach_no_slip_boundary_condition(left_bc, "navier_stokes_u");
                       this->attach_no_slip_boundary_condition(right_bc, "navier_stokes_u");
+                      if (dim == 3)
+                        {
+                          this->attach_no_slip_boundary_condition(front_bc, "navier_stokes_u");
+                          this->attach_no_slip_boundary_condition(back_bc, "navier_stokes_u");
+                        }
                     }
                 }
             }
@@ -420,6 +453,8 @@ namespace MeltPoolDG
                       this->triangulation->execute_coarsening_and_refinement();
                     }
                 }
+              else
+                AssertThrow(false, ExcNotImplemented());
             }
         }
 
