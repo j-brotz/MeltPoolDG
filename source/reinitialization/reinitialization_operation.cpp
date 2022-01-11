@@ -124,9 +124,9 @@ namespace MeltPoolDG::Reinitialization
     /**
      * update the distributed sparsity pattern for matrix-based amr
      */
-    VectorType src, rhs;
+    VectorType delta_psi_vec, rhs;
 
-    scratch_data->initialize_dof_vector(src, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
     scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
 
     reinit_operator->reset_time_increment(d_tau);
@@ -149,7 +149,7 @@ namespace MeltPoolDG::Reinitialization
               }
 
             iter = LinearSolver::solve<VectorType>(*reinit_operator,
-                                                   src,
+                                                   delta_psi_vec,
                                                    rhs,
                                                    reinit_data.linear_solver.solver_type,
                                                    reinit_data.linear_solver.rel_tolerance,
@@ -166,7 +166,7 @@ namespace MeltPoolDG::Reinitialization
               }
 
             iter = LinearSolver::solve<VectorType>(*reinit_operator,
-                                                   src,
+                                                   delta_psi_vec,
                                                    rhs,
                                                    reinit_data.linear_solver.solver_type,
                                                    reinit_data.linear_solver.rel_tolerance,
@@ -184,7 +184,7 @@ namespace MeltPoolDG::Reinitialization
         auto preconditioner = Preconditioner::get_preconditioner_trilinos(
           reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
         iter = LinearSolver::solve<VectorType>(reinit_operator->get_system_matrix(),
-                                               src,
+                                               delta_psi_vec,
                                                rhs,
                                                reinit_data.linear_solver.solver_type,
                                                reinit_data.linear_solver.rel_tolerance,
@@ -198,12 +198,12 @@ namespace MeltPoolDG::Reinitialization
                                       15 /*precision*/,
                                       "F");
       }
-    scratch_data->get_constraint(reinit_dof_idx).distribute(src);
+    scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
     solution_level_set.zero_out_ghost_values();
 
-    solution_level_set += src;
+    solution_level_set += delta_psi_vec;
 
-    solution_level_set.update_ghost_values();
+    solution_level_set.update_ghost_values(); //@todo: delete
 
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   MeltPoolDG::VectorTools::compute_L2_norm<dim>(
@@ -212,15 +212,15 @@ namespace MeltPoolDG::Reinitialization
                                   "reinitialization",
                                   15 /*precision*/
     );
-    Journal::print_formatted_norm(
-      scratch_data->get_pcout(0),
-      VectorTools::compute_L2_norm<dim>(src, *scratch_data, reinit_dof_idx, reinit_quad_idx),
-      "delta phi",
-      "reinitialization",
-      15 /*precision*/
+    Journal::print_formatted_norm(scratch_data->get_pcout(0),
+                                  VectorTools::compute_L2_norm<dim>(
+                                    delta_psi_vec, *scratch_data, reinit_dof_idx, reinit_quad_idx),
+                                  "delta phi",
+                                  "reinitialization",
+                                  15 /*precision*/
     );
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
-                                  src.linfty_norm(),
+                                  delta_psi_vec.linfty_norm(),
                                   "delta phi",
                                   "reinitialization",
                                   15 /*precision*/,
