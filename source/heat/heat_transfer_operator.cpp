@@ -168,7 +168,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, temp_quad_idx);
+    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx);
     FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
                                                  evapor_mass_flux_dof_idx,
                                                  temp_quad_idx);
@@ -241,7 +243,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, temp_quad_idx);
+    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx);
     FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
                                                  evapor_mass_flux_dof_idx,
                                                  temp_quad_idx);
@@ -306,7 +310,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, temp_quad_idx);
+    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx);
     FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
                                                  evapor_mass_flux_dof_idx,
                                                  temp_quad_idx);
@@ -514,7 +520,9 @@ namespace MeltPoolDG::Heat
     std::pair<unsigned int, unsigned int> cell_range) const
   {
     FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number>   temp_vals_old(matrix_free, temp_dof_idx, temp_quad_idx);
+    FECellIntegrator<dim, 1, number>   temp_vals_old(matrix_free,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx);
     FECellIntegrator<dim, 1, number>   heat_source_vals(matrix_free,
                                                       temp_hanging_nodes_dof_idx,
                                                       temp_quad_idx);
