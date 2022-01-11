@@ -13,7 +13,7 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1371950019e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1371953289e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
 | || delta phi ||L2 = 8.126935426844284e-06                                       reinitialization |
@@ -22,7 +22,7 @@
 |  τ = 1.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 3.293876034149434e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.704142161746859e-06                                       reinitialization |
+| || delta phi ||L2 = 2.704142389120534e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 2.336273610126227e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
@@ -37,16 +37,16 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-04 to 1.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1374851933e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1374855202e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 2.410625711490866e-06                                       reinitialization |
+| || delta phi ||L2 = 2.410625938864541e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
 | || delta phi ||L2 = 1.905678914226883e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 1.657018287914980e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.510176048213907e-06                                       reinitialization |
+| || delta phi ||L2 = 1.510175934527069e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 1.422514969817712e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
@@ -61,7 +61,7 @@ Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-03 to 1.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1376806755e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1376810480e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
 | || delta phi ||L2 = 2.183472815886489e-06                                       reinitialization |
@@ -85,7 +85,7 @@ Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-03 to 2.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1378279503e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1378283228e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
 | || delta phi ||L2 = 2.549554437791812e-06                                       reinitialization |
@@ -109,16 +109,16 @@ Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.0000e-03 to 2.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1379384323e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1379387592e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 2.948977225969429e-06                                       reinitialization |
+| || delta phi ||L2 = 2.948977453343105e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
 | || delta phi ||L2 = 2.612352091091452e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 2.419646079943050e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.275913402627339e-06                                       reinitialization |
+| || delta phi ||L2 = 2.275913175253663e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
 | || delta phi ||L2 = 2.159265250156750e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
@@ -133,10 +133,10 @@ Time step #5, advancing from t_n-1 = 0.002 to t = 0.0025 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 2.5000e-03 to 3.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1380205387e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1380208656e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 3.248912889830535e-06                                       reinitialization |
+| || delta phi ||L2 = 3.248912662456860e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
 | || delta phi ||L2 = 2.898782668125932e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
@@ -157,7 +157,7 @@ Time step #6, advancing from t_n-1 = 0.0025 to t = 0.003 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.0000e-03 to 3.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1380810521e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1380813790e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
 | || delta phi ||L2 = 3.455610794844688e-06                                       reinitialization |
@@ -181,7 +181,7 @@ Time step #7, advancing from t_n-1 = 0.003 to t = 0.0035 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 3.5000e-03 to 4.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1381253458e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1381256728e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
 | || delta phi ||L2 = 3.594614781832206e-06                                       reinitialization |
@@ -205,7 +205,7 @@ Time step #8, advancing from t_n-1 = 0.0035 to t = 0.004 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.0000e-03 to 4.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1381575193e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1381578918e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
 | || delta phi ||L2 = 3.685888486870681e-06                                       reinitialization |
@@ -216,7 +216,7 @@ Time step #8, advancing from t_n-1 = 0.0035 to t = 0.004 (dt = 0.0005).
 |  τ = 2e-06                                                                      reinitialization |
 | || delta phi ||L2 = 2.873721541618579e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.706124632823048e-06                                       reinitialization |
+| || delta phi ||L2 = 2.706124405449373e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.20206e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
@@ -229,7 +229,7 @@ Time step #9, advancing from t_n-1 = 0.004 to t = 0.0045 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 4.5000e-03 to 5.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1381805791e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1381809060e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
 | || delta phi ||L2 = 3.741834461834515e-06                                       reinitialization |
