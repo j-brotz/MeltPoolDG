@@ -1,30 +1,30 @@
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 6.438634954974987e-06                                       reinitialization |
+| || delta phi ||L2 = 6.055945050320588e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.007134414976463e-06                                       reinitialization |
+| || delta phi ||L2 = 1.432414819646510e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 5.282739152789873e-07                                       reinitialization |
+| || delta phi ||L2 = 7.596059958814294e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 3.623250393047783e-07                                       reinitialization |
+| || delta phi ||L2 = 5.088177204015665e-07                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.714027402817010e-07                                       reinitialization |
+| || delta phi ||L2 = 3.791625147187005e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1372203157e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1371950019e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.842571226821747e-06                                       reinitialization |
+| || delta phi ||L2 = 8.126935426844284e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.494292291681631e-06                                       reinitialization |
+| || delta phi ||L2 = 4.443715624802280e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 1.041165660353727e-06                                       reinitialization |
+| || delta phi ||L2 = 3.293876034149434e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.558915283174429e-07                                       reinitialization |
+| || delta phi ||L2 = 2.704142161746859e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 7.459424864464381e-07                                       reinitialization |
+| || delta phi ||L2 = 2.336273610126227e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.18044e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
@@ -37,18 +37,18 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-04 to 1.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1373488524e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1374851933e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.636741661874112e-06                                       reinitialization |
+| || delta phi ||L2 = 2.410625711490866e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.855951495599584e-06                                       reinitialization |
+| || delta phi ||L2 = 1.905678914226883e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 1.474287046221434e-06                                       reinitialization |
+| || delta phi ||L2 = 1.657018287914980e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.294978915211686e-06                                       reinitialization |
+| || delta phi ||L2 = 1.510176048213907e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 1.175012130261166e-06                                       reinitialization |
+| || delta phi ||L2 = 1.422514969817712e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.16215e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
@@ -61,18 +61,18 @@ Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-03 to 1.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1374512201e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1376806755e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.546377906284761e-06                                       reinitialization |
+| || delta phi ||L2 = 2.183472815886489e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.165346586480155e-06                                       reinitialization |
+| || delta phi ||L2 = 1.811695483411313e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 1.816935764509253e-06                                       reinitialization |
+| || delta phi ||L2 = 1.654733864597802e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.634429054320208e-06                                       reinitialization |
+| || delta phi ||L2 = 1.568752850289457e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 1.502948293818918e-06                                       reinitialization |
+| || delta phi ||L2 = 1.516772499599028e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.15177e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
@@ -85,18 +85,18 @@ Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-03 to 2.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1375321018e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1378279503e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.508382400876144e-06                                       reinitialization |
+| || delta phi ||L2 = 2.549554437791812e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.413157972114277e-06                                       reinitialization |
+| || delta phi ||L2 = 2.220234591732151e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.080066224152688e-06                                       reinitialization |
+| || delta phi ||L2 = 2.056361381619354e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.891722149593988e-06                                       reinitialization |
+| || delta phi ||L2 = 1.945150415849639e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 1.750066871863964e-06                                       reinitialization |
+| || delta phi ||L2 = 1.860640509221412e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.14787e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
@@ -109,18 +109,18 @@ Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.0000e-03 to 2.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1375955458e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1379384323e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.491317551786778e-06                                       reinitialization |
+| || delta phi ||L2 = 2.948977225969429e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.603548409751966e-06                                       reinitialization |
+| || delta phi ||L2 = 2.612352091091452e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.278279907841352e-06                                       reinitialization |
+| || delta phi ||L2 = 2.419646079943050e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.084571860905271e-06                                       reinitialization |
+| || delta phi ||L2 = 2.275913402627339e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 1.935022055477020e-06                                       reinitialization |
+| || delta phi ||L2 = 2.159265250156750e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.14961e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
@@ -133,20 +133,20 @@ Time step #5, advancing from t_n-1 = 0.002 to t = 0.0025 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 2.5000e-03 to 3.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1376451469e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1380205387e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.480291747517185e-06                                       reinitialization |
+| || delta phi ||L2 = 3.248912889830535e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.746739937720122e-06                                       reinitialization |
+| || delta phi ||L2 = 2.898782668125932e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.426182845738367e-06                                       reinitialization |
+| || delta phi ||L2 = 2.683323373275925e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.228357288913685e-06                                       reinitialization |
+| || delta phi ||L2 = 2.516379481676267e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.073027189908316e-06                                       reinitialization |
+| || delta phi ||L2 = 2.377625605731737e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.15635e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.15636e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -157,18 +157,18 @@ Time step #6, advancing from t_n-1 = 0.0025 to t = 0.003 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.0000e-03 to 3.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1376837729e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1380810521e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.468883955472847e-06                                       reinitialization |
+| || delta phi ||L2 = 3.455610794844688e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.853190380847082e-06                                       reinitialization |
+| || delta phi ||L2 = 3.095334250247106e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.536014335419168e-06                                       reinitialization |
+| || delta phi ||L2 = 2.865035185095621e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.335284989385400e-06                                       reinitialization |
+| || delta phi ||L2 = 2.683181492102449e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.175849431296228e-06                                       reinitialization |
+| || delta phi ||L2 = 2.530221991037251e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.16761e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
@@ -181,18 +181,18 @@ Time step #7, advancing from t_n-1 = 0.003 to t = 0.0035 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 3.5000e-03 to 4.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1377137910e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1381253458e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.454727670439752e-06                                       reinitialization |
+| || delta phi ||L2 = 3.594614781832206e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.931760946012218e-06                                       reinitialization |
+| || delta phi ||L2 = 3.227667320970795e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.617369773361133e-06                                       reinitialization |
+| || delta phi ||L2 = 2.988161440953263e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.414712298559607e-06                                       reinitialization |
+| || delta phi ||L2 = 2.796980197672383e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.252416834380710e-06                                       reinitialization |
+| || delta phi ||L2 = 2.635027612996055e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.18297e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
@@ -205,20 +205,20 @@ Time step #8, advancing from t_n-1 = 0.0035 to t = 0.004 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.0000e-03 to 4.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1377370683e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1381575193e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.437316303869011e-06                                       reinitialization |
+| || delta phi ||L2 = 3.685888486870681e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.989494987559738e-06                                       reinitialization |
+| || delta phi ||L2 = 3.315595904496149e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.677597194633563e-06                                       reinitialization |
+| || delta phi ||L2 = 3.070630100410199e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.473732592989109e-06                                       reinitialization |
+| || delta phi ||L2 = 2.873721541618579e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.309471028638654e-06                                       reinitialization |
+| || delta phi ||L2 = 2.706124632823048e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.20205e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 6.20206e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
@@ -229,18 +229,18 @@ Time step #9, advancing from t_n-1 = 0.004 to t = 0.0045 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 4.5000e-03 to 5.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1377551529e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1381805791e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5e-07                                                                      reinitialization |
-| || delta phi ||L2 = 5.416964540927438e-06                                       reinitialization |
+| || delta phi ||L2 = 3.741834461834515e-06                                       reinitialization |
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 3.031860842384049e-06                                       reinitialization |
+| || delta phi ||L2 = 3.372519813638064e-06                                       reinitialization |
 |  τ = 1.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.722284534684150e-06                                       reinitialization |
+| || delta phi ||L2 = 3.124790737274452e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 2.517715074645821e-06                                       reinitialization |
+| || delta phi ||L2 = 2.924562068074010e-06                                       reinitialization |
 |  τ = 2.5e-06                                                                    reinitialization |
-| || delta phi ||L2 = 2.352109049752471e-06                                       reinitialization |
+| || delta phi ||L2 = 2.753522949205944e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.22454e+00                newton_raphson_solver |
 |  total mass = 0.001                                                            melt_pool_problem |

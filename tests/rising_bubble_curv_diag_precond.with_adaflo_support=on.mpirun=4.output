@@ -21,17 +21,17 @@
 | || normal_1 ||L2 = 2.98683865355e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.0375                                                                     reinitialization |
-| || delta phi ||L2 = 4.987295130928677e-04                                       reinitialization |
+| || delta phi ||L2 = 5.374374978374744e-04                                       reinitialization |
 |  τ = 0.075                                                                      reinitialization |
-| || delta phi ||L2 = 3.609517384823610e-04                                       reinitialization |
+| || delta phi ||L2 = 4.172602130117554e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.99129219298e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.98994202707e+00                                               normal_vector |
-| || curvature ||L2 = 6.40975856625e+00                                                  curvature |
+| || normal_0 ||L2 = 2.99201918137e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.99024875909e+00                                               normal_vector |
+| || curvature ||L2 = 6.42274017161e+00                                                  curvature |
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.02 (dt = 0.02). 
-| || velocity ||L2 = 7.535195187835834e-03                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.324995595097473e+00                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.535004350115905e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.325000425463324e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
