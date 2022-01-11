@@ -94,6 +94,9 @@ namespace MeltPoolDG::LevelSet
     void
     reinit();
 
+    void
+    distribute_constraints();
+
     /**
      *  this function may be called to recompute the normal vector with the
      *  current level set.

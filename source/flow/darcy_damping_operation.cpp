@@ -146,14 +146,18 @@ namespace MeltPoolDG::Flow
     scratch_data.initialize_dof_vector(damping, solid_dof_idx);
 
     if (!damping_at_q.empty() && scratch_data.is_hex_mesh())
-      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
-        damping,
-        scratch_data.get_matrix_free(),
-        solid_dof_idx,
-        flow_quad_idx,
-        [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-          return damping_at_q[cell][quad];
-        });
+      {
+        UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+          damping,
+          scratch_data.get_matrix_free(),
+          solid_dof_idx,
+          flow_quad_idx,
+          [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
+            return damping_at_q[cell][quad];
+          });
+
+        scratch_data.get_constraint(solid_dof_idx).distribute(damping);
+      }
 
     data_out.add_data_vector(scratch_data.get_dof_handler(solid_dof_idx), damping, "Darcy_damping");
   }

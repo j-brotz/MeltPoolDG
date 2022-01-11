@@ -193,6 +193,8 @@ namespace MeltPoolDG::Heat
       temperature,
       temperature_interface,
       remote_point_evaluation);
+
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature_interface);
   }
 
   template <int dim>
@@ -204,6 +206,8 @@ namespace MeltPoolDG::Heat
     vectors.push_back(&temperature);
     temperature_old.update_ghost_values();
     vectors.push_back(&temperature_old);
+    temperature_interface.update_ghost_values();
+    vectors.push_back(&temperature_interface);
   }
 
   template <int dim>
@@ -212,7 +216,7 @@ namespace MeltPoolDG::Heat
   {
     scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature_old);
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(heat_source);
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature_interface);
   }
 
   template <int dim>

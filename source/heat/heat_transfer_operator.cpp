@@ -886,19 +886,21 @@ namespace MeltPoolDG::Heat
         if (data.solidification)
           {
             temp_old_vals.reinit(temp_vals.get_current_cell_index());
-            temp_old_vals.gather_evaluate(temperature_old, EvaluationFlags::values);
+            temp_old_vals.read_dof_values_plain(temperature_old);
+            temp_old_vals.evaluate(EvaluationFlags::values);
           }
 
         if (data.solidification)
           {
             temp_lin_vals.reinit(temp_vals.get_current_cell_index());
-            temp_lin_vals.gather_evaluate(temperature,
-                                          EvaluationFlags::values | EvaluationFlags::gradients);
+            temp_lin_vals.read_dof_values_plain(temperature);
+            temp_lin_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
           }
         if (evaporative_mass_flux)
           {
             evapor_vals.reinit(temp_vals.get_current_cell_index());
-            evapor_vals.gather_evaluate(*evaporative_mass_flux, EvaluationFlags::values);
+            evapor_vals.read_dof_values_plain(*evaporative_mass_flux);
+            evapor_vals.evaluate(EvaluationFlags::values);
           }
       }
 
