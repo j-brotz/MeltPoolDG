@@ -853,13 +853,14 @@ namespace MeltPoolDG::Heat
         if (velocity)
           {
             velocity_vals.reinit(temp_vals.get_current_cell_index());
-            velocity_vals.gather_evaluate(*velocity, EvaluationFlags::values);
+            velocity_vals.read_dof_values_plain(*velocity);
+            velocity_vals.evaluate(EvaluationFlags::values);
           }
 
         if (level_set_as_heaviside)
           {
             ls_vals.reinit(temp_vals.get_current_cell_index());
-            ls_vals.read_dof_values(*level_set_as_heaviside);
+            ls_vals.read_dof_values_plain(*level_set_as_heaviside);
 
             if (evaporative_mass_flux)
               {

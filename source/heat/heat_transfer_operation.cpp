@@ -211,7 +211,7 @@ namespace MeltPoolDG::Heat
   HeatTransferOperation<dim>::distribute_constraints()
   {
     scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
-    scratch_data.get_constraint(temp_dof_idx).distribute(temperature_old);
+    scratch_data.get_constraint(temp_dof_idx).distribute(temperature_old); //@todo hanging nodes
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(heat_source);
   }
 
