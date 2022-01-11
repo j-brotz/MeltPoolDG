@@ -374,7 +374,9 @@ namespace MeltPoolDG::Heat
                                                             temp_dof_idx,
                                                             temp_quad_idx);
       FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-      FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, temp_quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free,
+                                                     temp_hanging_nodes_dof_idx,
+                                                     temp_quad_idx);
       FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
                                                    evapor_mass_flux_dof_idx,
                                                    temp_quad_idx);

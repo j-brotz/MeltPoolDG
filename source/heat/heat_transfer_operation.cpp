@@ -85,9 +85,9 @@ namespace MeltPoolDG::Heat
   HeatTransferOperation<dim>::reinit()
   {
     scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
-    scratch_data.initialize_dof_vector(temperature_old, temp_dof_idx);
+    scratch_data.initialize_dof_vector(temperature_old, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
-    scratch_data.initialize_dof_vector(temperature_interface, temp_dof_idx);
+    scratch_data.initialize_dof_vector(temperature_interface, temp_hanging_nodes_dof_idx);
     /*
      * setup sparsity pattern of system matrix only if the latter is
      * needed for computing the preconditioner
@@ -113,8 +113,8 @@ namespace MeltPoolDG::Heat
                                                dt,
                                                dt); // @todo adapt for adaptive time stepping
 
-    temperature_old = temperature;
-    temperature     = temperature_extrapolated;
+    temperature_old.copy_locally_owned_data_from(temperature);
+    temperature = temperature_extrapolated;
 
     const auto create_rhs = [&](VectorType &rhs) {
       // solely homogeneous dirichlet bc are distributed for the
@@ -211,7 +211,7 @@ namespace MeltPoolDG::Heat
   HeatTransferOperation<dim>::distribute_constraints()
   {
     scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
-    scratch_data.get_constraint(temp_dof_idx).distribute(temperature_old); //@todo hanging nodes
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature_old);
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(heat_source);
   }
 
@@ -228,7 +228,7 @@ namespace MeltPoolDG::Heat
     /**
      *  temperature old
      */
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              temperature_old,
                              "temperature_old");
     /**
@@ -244,7 +244,7 @@ namespace MeltPoolDG::Heat
     /**
      *  temperature interface
      */
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              temperature_interface,
                              "temperature_interface");
   }
