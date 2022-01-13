@@ -192,6 +192,16 @@ namespace MeltPoolDG::Flow
 
     // fill constraints_u and constraints_p
     navier_stokes->initialize_data_structures();
+
+    // only for output purposes
+    constraints_parameters.clear();
+    IndexSet locally_relevant_dofs_temp;
+    DoFTools::extract_locally_relevant_dofs(dof_handler_parameters, locally_relevant_dofs_temp);
+
+    constraints_parameters.reinit(locally_relevant_dofs_temp);
+    DoFTools::make_hanging_node_constraints(dof_handler_parameters, constraints_parameters);
+    constraints_parameters.close();
+    UtilityFunctions::check_constraints(dof_handler_parameters, constraints_parameters);
   }
 
   template <int dim>
@@ -200,13 +210,6 @@ namespace MeltPoolDG::Flow
   {
     navier_stokes->initialize_matrix_free(
       &scratch_data.get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
-
-    // only for output purposes
-    constraints_parameters.clear();
-    constraints_parameters.reinit(scratch_data.get_locally_relevant_dofs(dof_index_parameters));
-    DoFTools::make_hanging_node_constraints(dof_handler_parameters, constraints_parameters);
-    constraints_parameters.close();
-    UtilityFunctions::check_constraints(dof_handler_parameters, constraints_parameters);
   }
 
   template <int dim>
