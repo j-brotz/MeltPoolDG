@@ -801,21 +801,22 @@ namespace MeltPoolDG::Heat
     /**
      * write conductivity vector to dof vector
      */
-    scratch_data.initialize_dof_vector(conductivity_vec, temp_dof_idx);
+    scratch_data.initialize_dof_vector(conductivity_vec, temp_hanging_nodes_dof_idx);
 
     if (!q_vapor.empty() && scratch_data.is_hex_mesh())
       UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
         conductivity_vec,
         scratch_data.get_matrix_free(),
-        temp_dof_idx,
+        temp_hanging_nodes_dof_idx,
         temp_quad_idx,
         [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
           return conductivity_at_q[cell][quad];
         });
 
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(conductivity_vec);
     conductivity_vec.update_ghost_values();
 
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              conductivity_vec,
                              "conductivity");
 
@@ -824,18 +825,20 @@ namespace MeltPoolDG::Heat
      */
     if (evaporative_mass_flux)
       {
-        scratch_data.initialize_dof_vector(evapor_heat_source, temp_dof_idx);
+        scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
         if (!q_vapor.empty() && scratch_data.is_hex_mesh())
           UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
             evapor_heat_source,
             scratch_data.get_matrix_free(),
-            temp_dof_idx,
+            temp_hanging_nodes_dof_idx,
             temp_quad_idx,
             [&](const unsigned int cell, const unsigned int quad)
               -> const VectorizedArray<double> & { return q_vapor[cell][quad]; });
+
+        scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(evapor_heat_source);
         evapor_heat_source.update_ghost_values();
 
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                                  evapor_heat_source,
                                  "evporative_heat_source");
       }

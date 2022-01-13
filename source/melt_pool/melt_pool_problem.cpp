@@ -528,7 +528,7 @@ namespace MeltPoolDG::MeltPool
             *scratch_data,
             flow_operation->get_dof_handler_idx_velocity(),
             flow_operation->get_quad_idx_velocity(),
-            temp_dof_idx);
+            temp_hanging_nodes_dof_idx);
       }
 
     if (base_in->parameters.heat.solidification)

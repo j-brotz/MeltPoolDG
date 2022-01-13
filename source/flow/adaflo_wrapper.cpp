@@ -78,6 +78,7 @@ namespace MeltPoolDG::Flow
         scratch_data.attach_quadrature(QGauss<dim>(adaflo_params.velocity_degree));
 
     // dof handler for output of densities and viscosities
+    // @todo: introduce only if paraview output == true
     dof_handler_parameters.reinit(*base_in->triangulation);
     dof_index_parameters = scratch_data.attach_dof_handler(dof_handler_parameters);
     scratch_data.attach_constraint_matrix(constraints_parameters);
@@ -139,19 +140,11 @@ namespace MeltPoolDG::Flow
       {
         // adaflo assumes the parameter density to be the one of heaviside == 0
         parameters.adaflo_params.params.density = parameters.material.first.density;
-        parameters.adaflo_params.params.density_diff =
-          (parameters.material.second.density > 0.0) ?
-            parameters.material.first.density - parameters.material.second.density :
-            0.0;
       }
     if (parameters.material.first.viscosity > 0.0)
       {
         // adaflo assumes the parameter viscosity to be the one of heaviside == 0
         parameters.adaflo_params.params.viscosity = parameters.material.first.viscosity;
-        parameters.adaflo_params.params.viscosity_diff =
-          (parameters.material.second.viscosity > 0.0) ?
-            parameters.material.first.viscosity - parameters.material.second.viscosity :
-            0.0;
       }
 
     /// synchronize time stepping schemes
@@ -207,6 +200,13 @@ namespace MeltPoolDG::Flow
   {
     navier_stokes->initialize_matrix_free(
       &scratch_data.get_matrix_free(), dof_index_u, dof_index_p, quad_index_u, quad_index_p);
+
+    // only for output purposes
+    constraints_parameters.clear();
+    constraints_parameters.reinit(scratch_data.get_locally_relevant_dofs(dof_index_parameters));
+    DoFTools::make_hanging_node_constraints(dof_handler_parameters, constraints_parameters);
+    constraints_parameters.close();
+    UtilityFunctions::check_constraints(dof_handler_parameters, constraints_parameters);
   }
 
   template <int dim>
@@ -601,14 +601,18 @@ namespace MeltPoolDG::Flow
     scratch_data.initialize_dof_vector(density, dof_index_parameters);
 
     if (scratch_data.is_hex_mesh())
-      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
-        density,
-        scratch_data.get_matrix_free(),
-        dof_index_parameters,
-        quad_index_u,
-        [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-          return get_density(cell, quad);
-        });
+      {
+        UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+          density,
+          scratch_data.get_matrix_free(),
+          dof_index_parameters,
+          quad_index_u,
+          [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
+            return get_density(cell, quad);
+          });
+        scratch_data.get_constraint(dof_index_parameters).distribute(density);
+      }
+
 
     density.update_ghost_values();
     data_out.add_data_vector(dof_handler_parameters, density, "density");
@@ -618,14 +622,18 @@ namespace MeltPoolDG::Flow
      */
     scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
     if (scratch_data.is_hex_mesh())
-      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
-        viscosity,
-        scratch_data.get_matrix_free(),
-        dof_index_parameters,
-        quad_index_u,
-        [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-          return get_viscosity(cell, quad);
-        });
+      {
+        UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+          viscosity,
+          scratch_data.get_matrix_free(),
+          dof_index_parameters,
+          quad_index_u,
+          [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
+            return get_viscosity(cell, quad);
+          });
+        scratch_data.get_constraint(dof_index_parameters).distribute(viscosity);
+      }
+
     viscosity.update_ghost_values();
     data_out.add_data_vector(dof_handler_parameters, viscosity, "viscosity");
   }
