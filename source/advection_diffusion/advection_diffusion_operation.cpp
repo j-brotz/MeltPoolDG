@@ -122,7 +122,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     scratch_data->get_constraint(advec_diff_dof_idx).distribute(src);
 
     solution_advected_field.copy_locally_owned_data_from(src);
-    solution_advected_field.update_ghost_values();
+    solution_advected_field.update_ghost_values(); //@todo: delete
 
     Journal::print_formatted_norm(scratch_data->get_pcout(2),
                                   advec_diff_operator->get_system_matrix().frobenius_norm(),

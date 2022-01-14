@@ -185,7 +185,9 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
+  AdvectionDiffusionOperator<dim, number>::create_rhs(
+    VectorType &      dst,
+    const VectorType &src /* old advected field*/) const
   {
     /*
      * This function creates the rhs of the advection-diffusion problem. When inhomogeneous
@@ -208,9 +210,8 @@ namespace MeltPoolDG::AdvectionDiffusion
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             advected_field_vals.reinit(cell);
-            advected_field_vals.gather_evaluate(
-              src,
-              EvaluationFlags::values | EvaluationFlags::gradients); // @todo: read_dof_values_plain
+            advected_field_vals.read_dof_values_plain(src);
+            advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             velocity_vals.reinit(cell);
             velocity_vals.read_dof_values_plain(advection_velocity);

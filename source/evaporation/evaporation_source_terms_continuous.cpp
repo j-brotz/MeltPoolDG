@@ -78,15 +78,15 @@ namespace MeltPoolDG::Evaporation
         Tensor<1, dim, VectorizedArray<double>> *evapor_vel = begin_evaporation_velocity(cell);
 
         ls.reinit(cell);
-        ls.read_dof_values(level_set_as_heaviside);
+        ls.read_dof_values_plain(level_set_as_heaviside);
         ls.evaluate(EvaluationFlags::values);
 
         normal_vec.reinit(cell);
-        normal_vec.read_dof_values(normal_vector);
+        normal_vec.read_dof_values_plain(normal_vector);
         normal_vec.evaluate(EvaluationFlags::values);
 
         evap_flux.reinit(cell);
-        evap_flux.read_dof_values(evaporative_mass_flux);
+        evap_flux.read_dof_values_plain(evaporative_mass_flux);
         evap_flux.evaluate(EvaluationFlags::values);
 
         for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)

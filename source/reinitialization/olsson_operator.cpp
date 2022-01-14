@@ -329,7 +329,7 @@ namespace MeltPoolDG::Reinitialization
     if (do_reinit_cells)
       {
         normal_vector.reinit(delta_psi.get_current_cell_index());
-        normal_vector.read_dof_values(this->normal_vec);
+        normal_vector.read_dof_values_plain(this->normal_vec);
         normal_vector.evaluate(EvaluationFlags::values);
       }
 

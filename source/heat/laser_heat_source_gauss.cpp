@@ -297,6 +297,8 @@ namespace MeltPoolDG::Heat
       if (heat_source_vector_multiplicity.local_element(i) > 1.0)
         heat_source_vector.local_element(i) /= heat_source_vector_multiplicity.local_element(i);
 
+    scratch_data.get_constraint(temp_dof_idx).distribute(heat_source_vector);
+
     heat_source_vector.zero_out_ghost_values();
     level_set_heaviside.zero_out_ghost_values();
     if (normal_vector)

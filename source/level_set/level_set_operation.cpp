@@ -201,9 +201,24 @@ namespace MeltPoolDG::LevelSet
     advec_diff_operation->reinit();
     reinit_operation->reinit();
     curvature_operation->reinit();
+
     scratch_data->initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
+    scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
   }
 
+  template <int dim>
+  void
+  LevelSetOperation<dim>::distribute_constraints()
+  {
+    //@todo:
+    // advec_diff_operation->distribute_constraints();
+    // reinit_operation->distribute_constraints();
+    // curvature_operation->distribute_constraintst();
+
+    scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
+    scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
+    scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
+  }
   /**
    *  this function may be called to recompute the normal vector with the
    *  current level set.
@@ -328,8 +343,12 @@ namespace MeltPoolDG::LevelSet
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
     advec_diff_operation->attach_vectors(vectors);
+
     level_set_as_heaviside.update_ghost_values();
     vectors.push_back(&level_set_as_heaviside);
+
+    distance_to_level_set.update_ghost_values();
+    vectors.push_back(&distance_to_level_set);
   }
 
   template <int dim>
@@ -359,13 +378,13 @@ namespace MeltPoolDG::LevelSet
     /*
      *  output heaviside
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+    data_out.add_data_vector(scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
                              level_set_as_heaviside,
                              "heaviside");
     /*
      *  output distance function
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+    data_out.add_data_vector(scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
                              distance_to_level_set,
                              "distance");
   }
@@ -472,7 +491,7 @@ namespace MeltPoolDG::LevelSet
 
     LevelSet::Tools::broadcast_interface_value_to_vector<dim>(
       scratch_data->get_mapping(),
-      scratch_data->get_dof_handler(ls_dof_idx),
+      scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
       scratch_data->get_dof_handler(curv_dof_idx),
       level_set_as_heaviside,
       distance_to_level_set,

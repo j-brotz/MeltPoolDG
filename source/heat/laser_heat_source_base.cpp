@@ -8,26 +8,27 @@ namespace MeltPoolDG::Heat
   void
   LaserHeatSourceBase<dim>::compute_volumetric_heat_source(VectorType &heat_source_vector,
                                                            const ScratchData<dim> &scratch_data,
-                                                           const unsigned int      temp_dof_idx,
-                                                           const double            laser_power,
-                                                           const Point<dim> &      laser_position,
-                                                           const bool              zero_out) const
+                                                           const unsigned int heat_source_dof_idx,
+                                                           const double       laser_power,
+                                                           const Point<dim> & laser_position,
+                                                           const bool         zero_out) const
   {
     if (zero_out)
-      scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);
+      scratch_data.initialize_dof_vector(heat_source_vector, heat_source_dof_idx);
 
     FEValues<dim> heat_source_eval(
       scratch_data.get_mapping(),
-      scratch_data.get_dof_handler(temp_dof_idx).get_fe(),
+      scratch_data.get_dof_handler(heat_source_dof_idx).get_fe(),
       Quadrature<dim>(
-        scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
+        scratch_data.get_dof_handler(heat_source_dof_idx).get_fe().get_unit_support_points()),
       update_quadrature_points);
 
     const unsigned int dofs_per_cell =
-      scratch_data.get_dof_handler(temp_dof_idx).get_fe().n_dofs_per_cell();
+      scratch_data.get_dof_handler(heat_source_dof_idx).get_fe().n_dofs_per_cell();
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    for (const auto &cell : scratch_data.get_dof_handler(temp_dof_idx).active_cell_iterators())
+    for (const auto &cell :
+         scratch_data.get_dof_handler(heat_source_dof_idx).active_cell_iterators())
       {
         if (cell->is_locally_owned())
           {
@@ -42,6 +43,8 @@ namespace MeltPoolDG::Heat
                                                      laser_power);
           }
       }
+
+    scratch_data.get_constraint(heat_source_dof_idx).distribute(heat_source_vector);
   }
 
   template class LaserHeatSourceBase<1>;

@@ -168,7 +168,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, temp_quad_idx);
+    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx);
     FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
                                                  evapor_mass_flux_dof_idx,
                                                  temp_quad_idx);
@@ -241,7 +243,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, temp_quad_idx);
+    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx);
     FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
                                                  evapor_mass_flux_dof_idx,
                                                  temp_quad_idx);
@@ -306,7 +310,9 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free, temp_dof_idx, temp_quad_idx);
+    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx);
     FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
                                                  evapor_mass_flux_dof_idx,
                                                  temp_quad_idx);
@@ -374,7 +380,9 @@ namespace MeltPoolDG::Heat
                                                             temp_dof_idx,
                                                             temp_quad_idx);
       FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-      FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free, temp_dof_idx, temp_quad_idx);
+      FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free,
+                                                     temp_hanging_nodes_dof_idx,
+                                                     temp_quad_idx);
       FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
                                                    evapor_mass_flux_dof_idx,
                                                    temp_quad_idx);
@@ -512,7 +520,9 @@ namespace MeltPoolDG::Heat
     std::pair<unsigned int, unsigned int> cell_range) const
   {
     FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number>   temp_vals_old(matrix_free, temp_dof_idx, temp_quad_idx);
+    FECellIntegrator<dim, 1, number>   temp_vals_old(matrix_free,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx);
     FECellIntegrator<dim, 1, number>   heat_source_vals(matrix_free,
                                                       temp_hanging_nodes_dof_idx,
                                                       temp_quad_idx);
@@ -791,21 +801,22 @@ namespace MeltPoolDG::Heat
     /**
      * write conductivity vector to dof vector
      */
-    scratch_data.initialize_dof_vector(conductivity_vec, temp_dof_idx);
+    scratch_data.initialize_dof_vector(conductivity_vec, temp_hanging_nodes_dof_idx);
 
     if (!q_vapor.empty() && scratch_data.is_hex_mesh())
       UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
         conductivity_vec,
         scratch_data.get_matrix_free(),
-        temp_dof_idx,
+        temp_hanging_nodes_dof_idx,
         temp_quad_idx,
         [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
           return conductivity_at_q[cell][quad];
         });
 
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(conductivity_vec);
     conductivity_vec.update_ghost_values();
 
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              conductivity_vec,
                              "conductivity");
 
@@ -814,18 +825,20 @@ namespace MeltPoolDG::Heat
      */
     if (evaporative_mass_flux)
       {
-        scratch_data.initialize_dof_vector(evapor_heat_source, temp_dof_idx);
+        scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
         if (!q_vapor.empty() && scratch_data.is_hex_mesh())
           UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
             evapor_heat_source,
             scratch_data.get_matrix_free(),
-            temp_dof_idx,
+            temp_hanging_nodes_dof_idx,
             temp_quad_idx,
             [&](const unsigned int cell, const unsigned int quad)
               -> const VectorizedArray<double> & { return q_vapor[cell][quad]; });
+
+        scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(evapor_heat_source);
         evapor_heat_source.update_ghost_values();
 
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                                  evapor_heat_source,
                                  "evporative_heat_source");
       }
@@ -853,13 +866,14 @@ namespace MeltPoolDG::Heat
         if (velocity)
           {
             velocity_vals.reinit(temp_vals.get_current_cell_index());
-            velocity_vals.gather_evaluate(*velocity, EvaluationFlags::values);
+            velocity_vals.read_dof_values_plain(*velocity);
+            velocity_vals.evaluate(EvaluationFlags::values);
           }
 
         if (level_set_as_heaviside)
           {
             ls_vals.reinit(temp_vals.get_current_cell_index());
-            ls_vals.read_dof_values(*level_set_as_heaviside);
+            ls_vals.read_dof_values_plain(*level_set_as_heaviside);
 
             if (evaporative_mass_flux)
               {
@@ -883,19 +897,21 @@ namespace MeltPoolDG::Heat
         if (data.solidification)
           {
             temp_old_vals.reinit(temp_vals.get_current_cell_index());
-            temp_old_vals.gather_evaluate(temperature_old, EvaluationFlags::values);
+            temp_old_vals.read_dof_values_plain(temperature_old);
+            temp_old_vals.evaluate(EvaluationFlags::values);
           }
 
         if (data.solidification)
           {
             temp_lin_vals.reinit(temp_vals.get_current_cell_index());
-            temp_lin_vals.gather_evaluate(temperature,
-                                          EvaluationFlags::values | EvaluationFlags::gradients);
+            temp_lin_vals.read_dof_values_plain(temperature);
+            temp_lin_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
           }
         if (evaporative_mass_flux)
           {
             evapor_vals.reinit(temp_vals.get_current_cell_index());
-            evapor_vals.gather_evaluate(*evaporative_mass_flux, EvaluationFlags::values);
+            evapor_vals.read_dof_values_plain(*evaporative_mass_flux);
+            evapor_vals.evaluate(EvaluationFlags::values);
           }
       }
 
