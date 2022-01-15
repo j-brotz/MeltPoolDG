@@ -280,8 +280,9 @@ namespace MeltPoolDG::Curvature
       solution_level_set->zero_out_ghost_values();
 
     // ... and invert it
+    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
-      i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
+      i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
   }
 
   template <int dim, typename number>
