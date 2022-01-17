@@ -362,6 +362,9 @@ namespace MeltPoolDG::MeltPool
     liquid.compress(VectorOperation::insert);
     solid.compress(VectorOperation::insert);
 
+    scratch_data->get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
+    scratch_data->get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
+
     temperature->zero_out_ghost_values();
     level_set_as_heaviside.zero_out_ghost_values();
   }
