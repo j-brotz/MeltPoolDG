@@ -119,6 +119,7 @@ namespace MeltPoolDG::Heat
     const auto create_rhs = [&](VectorType &rhs) {
       // solely homogeneous dirichlet bc are distributed for the
       // corrected temperature field in the newton solver
+      heat_operator->update_ghost_values();
       heat_operator->create_rhs(rhs, temperature_old);
     };
 
@@ -161,6 +162,7 @@ namespace MeltPoolDG::Heat
               return 0;
             }
         }
+      heat_operator->zero_out_ghost_values();
     };
 
     auto newton = NewtonRaphsonSolver<dim>(scratch_data,
