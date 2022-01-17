@@ -266,14 +266,14 @@ namespace MeltPoolDG
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |  adiabatic     | symmetry |       -        |     -
            * lower_bc            |  T = T_initial |   open   |       -        |     -
-           * upper_bc            |  T = T_initial | no-slip  |       -        |  ls = -1
+           * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
            * evaporation boundary    = true
            * periodic boundary = true
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
            * lower_bc            |  T = T_initial |   open   |       -        |     -
-           * upper_bc            |  T = T_initial | no-slip  |       -        |  ls = -1
+           * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
            *
            * note: In the 3D recoil pressure simulation, the front and back boundaries are treated
@@ -345,10 +345,6 @@ namespace MeltPoolDG
                           this->attach_symmetry_boundary_condition(back_bc, "navier_stokes_u");
                         }
                     }
-                  this->attach_dirichlet_boundary_condition(
-                    upper_bc,
-                    std::make_shared<Functions::ConstantFunction<dim>>(-1.0),
-                    "level_set");
                 }
               else // no evaporation
                 {
