@@ -181,6 +181,11 @@ namespace MeltPoolDG::Heat
                          SparseMatrixType &matrix,
                          VectorType &      rhs) const final;
 
+    void
+    update_ghost_values() const;
+
+    void
+    zero_out_ghost_values() const;
     /*
      *    matrix-free implementation
      */

@@ -111,14 +111,10 @@ namespace MeltPoolDG::Heat
   {
     AssertThrow(false, ExcNotImplemented());
   }
-
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
+  HeatTransferOperator<dim, number>::update_ghost_values() const
   {
-    AssertThrow(this->time_increment > 0.0,
-                ExcMessage("advection diffusion operator: d_tau must be set"));
-
     MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
     if (velocity)
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
@@ -128,6 +124,29 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
     if (evaporative_mass_flux)
       MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::zero_out_ghost_values() const
+  {
+    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
+    if (velocity)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
+    if (level_set_as_heaviside)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
+    if (data.solidification)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
+    if (evaporative_mass_flux)
+      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
+  {
+    AssertThrow(this->time_increment > 0.0,
+                ExcMessage("advection diffusion operator: d_tau must be set"));
 
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -143,16 +162,6 @@ namespace MeltPoolDG::Heat
       dst,
       src,
       true /*zero dst vector*/);
-
-    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -228,15 +237,6 @@ namespace MeltPoolDG::Heat
   {
     scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
 
-    MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::update_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
-      MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, temp_quad_idx);
@@ -276,15 +276,6 @@ namespace MeltPoolDG::Heat
     // ... and invert it
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-10) ? (1.0 / i) : 1.0;
-    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -293,16 +284,6 @@ namespace MeltPoolDG::Heat
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
     system_matrix = 0.0;
-
-    MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::update_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
-      MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
@@ -342,15 +323,6 @@ namespace MeltPoolDG::Heat
       temp_quad_idx);
 
     system_matrix.compress(VectorOperation::add);
-    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -360,15 +332,6 @@ namespace MeltPoolDG::Heat
   {
     system_matrix = 0.0;
 
-    MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::update_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
-      MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
     {
       const auto &                          matrix_free = scratch_data.get_matrix_free();
       std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
@@ -500,15 +463,6 @@ namespace MeltPoolDG::Heat
     }
 
     system_matrix.compress(VectorOperation::add);
-    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 
   template <int dim, typename number>
@@ -760,14 +714,6 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
   {
-    MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::update_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
-
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         rhs_cell_loop(matrix_free, dst, src, cell_range);
@@ -782,16 +728,6 @@ namespace MeltPoolDG::Heat
       dst,
       src,
       false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
-
-    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
-    if (velocity)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
-    if (level_set_as_heaviside)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
-    if (evaporative_mass_flux)
-      MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
-
-    MeltPoolDG::VectorTools::zero_out_ghost_values(heat_source);
   }
 
   template <int dim, typename number>
@@ -814,7 +750,6 @@ namespace MeltPoolDG::Heat
         });
 
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(conductivity_vec);
-    conductivity_vec.update_ghost_values();
 
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              conductivity_vec,
@@ -836,7 +771,6 @@ namespace MeltPoolDG::Heat
               -> const VectorizedArray<double> & { return q_vapor[cell][quad]; });
 
         scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(evapor_heat_source);
-        evapor_heat_source.update_ghost_values();
 
         data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                                  evapor_heat_source,
