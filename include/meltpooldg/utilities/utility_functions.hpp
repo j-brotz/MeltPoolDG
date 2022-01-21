@@ -24,6 +24,9 @@
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/operators.h>
 
+#include <deal.II/non_matching/fe_values.h>
+#include <deal.II/non_matching/mesh_classifier.h>
+
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/interface/parameters.hpp>
@@ -371,11 +374,37 @@ namespace MeltPoolDG
     {
       AssertThrow(dim > 1, ExcNotImplemented());
 
+      const bool use_mca = true; // TODO: make parameter
+
+      // data structures for marching-cube algorithm
+      const QGauss<dim - 1> surface_quad(dof_handler.get_fe().degree + 1);
+
       GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(mapping,
                                                            dof_handler.get_fe(), // todo
                                                            n_subdivisions);
 
-      const QGauss<dim - 1> surface_quad(dof_handler.get_fe().degree + 1);
+      // data structures for NonMatching::FEValues
+      const hp::QCollection<1>         quad(QGauss<dim>(dof_handler.get_fe().degree + 1));
+      const hp::QCollection<1>         surface_quad_1D(QGauss<1>(dof_handler.get_fe().degree + 1));
+      const hp::MappingCollection<dim> mapping_collection(mapping);
+      const hp::FECollection<dim>      fe_collection(dof_handler.get_fe());
+
+      NonMatching::MeshClassifier<dim> mesh_classifier(dof_handler, level_set_vector);
+
+      if (use_mca == false)
+        mesh_classifier.reclassify(); // this is an expensive step; execute only if needed
+
+      NonMatching::RegionUpdateFlags region_update_flags;
+      region_update_flags.surface = update_quadrature_points;
+
+      NonMatching::FEValues<dim> non_matching_fe_values(mapping_collection,
+                                                        fe_collection,
+                                                        quad,
+                                                        surface_quad_1D,
+                                                        region_update_flags,
+                                                        mesh_classifier,
+                                                        dof_handler,
+                                                        level_set_vector);
 
       for (const auto &cell : dof_handler.active_cell_iterators())
         {
@@ -383,10 +412,9 @@ namespace MeltPoolDG
             {
               // determine if cell is cut by the interface and if yes, determine the quadrature
               // point location (at the reference cell) and weight
-              const auto [points_real, points, weights] =
-                [&]() -> std::tuple<std::vector<Point<dim>>,
-                                    std::vector<Point<dim>>,
-                                    std::vector<double>> {
+              const auto fu_mca = [&]() -> std::tuple<std::vector<Point<dim>>,
+                                                      std::vector<Point<dim>>,
+                                                      std::vector<double>> {
                 // determine points and cells of aux surface triangulation
                 std::vector<Point<dim>>        surface_vertices;
                 std::vector<CellData<dim - 1>> surface_cells;
@@ -427,8 +455,30 @@ namespace MeltPoolDG
                       }
                   }
                 return {points_real, points, weights};
-              }();
+              };
 
+              const auto fu_non_matching = [&]() -> std::tuple<std::vector<Point<dim>>,
+                                                               std::vector<Point<dim>>,
+                                                               std::vector<double>> {
+                non_matching_fe_values.reinit(cell);
+
+                const std_cxx17::optional<NonMatching::FEImmersedSurfaceValues<dim>>
+                  &surface_fe_values = non_matching_fe_values.get_surface_fe_values();
+
+                if (surface_fe_values.has_value() == false)
+                  return {};
+
+                std::vector<Point<dim>> points;
+
+                for (const auto q : surface_fe_values->get_quadrature_points())
+                  points.emplace_back(mapping.transform_real_to_unit_cell(cell, q));
+
+                return {surface_fe_values->get_quadrature_points(),
+                        points,
+                        surface_fe_values->get_JxW_values()};
+              };
+
+              const auto [points_real, points, weights] = use_mca ? fu_mca() : fu_non_matching();
 
               if (points_real.size() == 0)
                 continue; // cell is not cut but the interface -> nothing to do
