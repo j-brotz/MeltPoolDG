@@ -7,6 +7,8 @@
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/vectorization.h>
 
+#include <deal.II/dofs/dof_tools.h>
+
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_q_dg0.h>
@@ -389,10 +391,23 @@ namespace MeltPoolDG
       const hp::MappingCollection<dim> mapping_collection(mapping);
       const hp::FECollection<dim>      fe_collection(dof_handler.get_fe());
 
-      NonMatching::MeshClassifier<dim> mesh_classifier(dof_handler, level_set_vector);
+      VectorType locally_relevant_level_set_vector;
 
-      if (use_mca == false)
-        mesh_classifier.reclassify(); // this is an expensive step; execute only if needed
+      NonMatching::MeshClassifier<dim> mesh_classifier(dof_handler,
+                                                       locally_relevant_level_set_vector);
+
+      if (use_mca == false) // this is an expensive step; execute only if needed
+        {
+          IndexSet locally_relevant_dofs;
+          DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
+
+          locally_relevant_level_set_vector.reinit(dof_handler.locally_owned_dofs(),
+                                                   locally_relevant_dofs,
+                                                   level_set_vector.get_mpi_communicator());
+          locally_relevant_level_set_vector.copy_locally_owned_data_from(level_set_vector);
+          locally_relevant_level_set_vector.update_ghost_values();
+          mesh_classifier.reclassify();
+        }
 
       NonMatching::RegionUpdateFlags region_update_flags;
       region_update_flags.surface = update_quadrature_points;
@@ -404,7 +419,7 @@ namespace MeltPoolDG
                                                         region_update_flags,
                                                         mesh_classifier,
                                                         dof_handler,
-                                                        level_set_vector);
+                                                        locally_relevant_level_set_vector);
 
       for (const auto &cell : dof_handler.active_cell_iterators())
         {
