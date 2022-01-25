@@ -372,11 +372,10 @@ namespace MeltPoolDG
                                const std::vector<Point<dim>> &,
                                const std::vector<double> &)> &evaluate_at_interface_points,
       const double                                            contour_value  = 0.0,
-      const unsigned int                                      n_subdivisions = 1)
+      const unsigned int                                      n_subdivisions = 1,
+      const bool                                              use_mca        = true)
     {
       AssertThrow(dim > 1, ExcNotImplemented());
-
-      const bool use_mca = true; // TODO: make parameter
 
       // data structures for marching-cube algorithm
       const QGauss<dim - 1> surface_quad(dof_handler.get_fe().degree + 1);
@@ -386,40 +385,42 @@ namespace MeltPoolDG
                                                            n_subdivisions);
 
       // data structures for NonMatching::FEValues
-      const hp::QCollection<1>         quad(QGauss<dim>(dof_handler.get_fe().degree + 1));
-      const hp::QCollection<1>         surface_quad_1D(QGauss<1>(dof_handler.get_fe().degree + 1));
-      const hp::MappingCollection<dim> mapping_collection(mapping);
-      const hp::FECollection<dim>      fe_collection(dof_handler.get_fe());
+      const unsigned int nm_n_q_points_1D =
+        std::max<unsigned int>(dof_handler.get_fe().degree, n_subdivisions + 1);
+      const hp::QCollection<dim>       nm_quad(QGauss<dim>{nm_n_q_points_1D});
+      const hp::QCollection<1>         nm_surface_quad_1D(QGauss<1>{nm_n_q_points_1D});
+      const hp::MappingCollection<dim> nm_mapping_collection(mapping);
+      const hp::FECollection<dim>      nm_fe_collection(dof_handler.get_fe());
 
-      VectorType locally_relevant_level_set_vector;
+      VectorType nm_locally_relevant_level_set_vector;
 
-      NonMatching::MeshClassifier<dim> mesh_classifier(dof_handler,
-                                                       locally_relevant_level_set_vector);
+      NonMatching::MeshClassifier<dim> nm_mesh_classifier(dof_handler,
+                                                          nm_locally_relevant_level_set_vector);
 
       if (use_mca == false) // this is an expensive step; execute only if needed
         {
           IndexSet locally_relevant_dofs;
           DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
 
-          locally_relevant_level_set_vector.reinit(dof_handler.locally_owned_dofs(),
-                                                   locally_relevant_dofs,
-                                                   level_set_vector.get_mpi_communicator());
-          locally_relevant_level_set_vector.copy_locally_owned_data_from(level_set_vector);
-          locally_relevant_level_set_vector.update_ghost_values();
-          mesh_classifier.reclassify();
+          nm_locally_relevant_level_set_vector.reinit(dof_handler.locally_owned_dofs(),
+                                                      locally_relevant_dofs,
+                                                      level_set_vector.get_mpi_communicator());
+          nm_locally_relevant_level_set_vector.copy_locally_owned_data_from(level_set_vector);
+          nm_locally_relevant_level_set_vector.update_ghost_values();
+          nm_mesh_classifier.reclassify();
         }
 
-      NonMatching::RegionUpdateFlags region_update_flags;
-      region_update_flags.surface = update_quadrature_points;
+      NonMatching::RegionUpdateFlags nm_region_update_flags;
+      nm_region_update_flags.surface = update_quadrature_points | update_JxW_values;
 
-      NonMatching::FEValues<dim> non_matching_fe_values(mapping_collection,
-                                                        fe_collection,
-                                                        quad,
-                                                        surface_quad_1D,
-                                                        region_update_flags,
-                                                        mesh_classifier,
-                                                        dof_handler,
-                                                        locally_relevant_level_set_vector);
+      NonMatching::FEValues<dim> nm_non_matching_fe_values(nm_mapping_collection,
+                                                           nm_fe_collection,
+                                                           nm_quad,
+                                                           nm_surface_quad_1D,
+                                                           nm_region_update_flags,
+                                                           nm_mesh_classifier,
+                                                           dof_handler,
+                                                           nm_locally_relevant_level_set_vector);
 
       for (const auto &cell : dof_handler.active_cell_iterators())
         {
@@ -475,10 +476,10 @@ namespace MeltPoolDG
               const auto fu_non_matching = [&]() -> std::tuple<std::vector<Point<dim>>,
                                                                std::vector<Point<dim>>,
                                                                std::vector<double>> {
-                non_matching_fe_values.reinit(cell);
+                nm_non_matching_fe_values.reinit(cell);
 
                 const std_cxx17::optional<NonMatching::FEImmersedSurfaceValues<dim>>
-                  &surface_fe_values = non_matching_fe_values.get_surface_fe_values();
+                  &surface_fe_values = nm_non_matching_fe_values.get_surface_fe_values();
 
                 if (surface_fe_values.has_value() == false)
                   return {};
