@@ -394,11 +394,14 @@ namespace MeltPoolDG
 
       VectorType nm_locally_relevant_level_set_vector;
 
-      NonMatching::MeshClassifier<dim> nm_mesh_classifier(dof_handler,
-                                                          nm_locally_relevant_level_set_vector);
+      std::unique_ptr<NonMatching::MeshClassifier<dim>> nm_mesh_classifier;
+      std::unique_ptr<NonMatching::FEValues<dim>>       nm_non_matching_fe_values;
 
       if (use_mca == false) // this is an expensive step; execute only if needed
         {
+          nm_mesh_classifier = std::make_unique<NonMatching::MeshClassifier<dim>>(
+            dof_handler, nm_locally_relevant_level_set_vector);
+
           IndexSet locally_relevant_dofs;
           DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
 
@@ -407,20 +410,21 @@ namespace MeltPoolDG
                                                       level_set_vector.get_mpi_communicator());
           nm_locally_relevant_level_set_vector.copy_locally_owned_data_from(level_set_vector);
           nm_locally_relevant_level_set_vector.update_ghost_values();
-          nm_mesh_classifier.reclassify();
+          nm_mesh_classifier->reclassify();
+
+          NonMatching::RegionUpdateFlags nm_region_update_flags;
+          nm_region_update_flags.surface = update_quadrature_points | update_JxW_values;
+
+          nm_non_matching_fe_values =
+            std::make_unique<NonMatching::FEValues<dim>>(nm_mapping_collection,
+                                                         nm_fe_collection,
+                                                         nm_quad,
+                                                         nm_surface_quad_1D,
+                                                         nm_region_update_flags,
+                                                         *nm_mesh_classifier,
+                                                         dof_handler,
+                                                         nm_locally_relevant_level_set_vector);
         }
-
-      NonMatching::RegionUpdateFlags nm_region_update_flags;
-      nm_region_update_flags.surface = update_quadrature_points | update_JxW_values;
-
-      NonMatching::FEValues<dim> nm_non_matching_fe_values(nm_mapping_collection,
-                                                           nm_fe_collection,
-                                                           nm_quad,
-                                                           nm_surface_quad_1D,
-                                                           nm_region_update_flags,
-                                                           nm_mesh_classifier,
-                                                           dof_handler,
-                                                           nm_locally_relevant_level_set_vector);
 
       for (const auto &cell : dof_handler.active_cell_iterators())
         {
@@ -462,7 +466,7 @@ namespace MeltPoolDG
                     fe_eval.reinit(sub_cell);
 
                     // ... and collect quadrature points and weights
-                    for (const auto q : fe_eval.quadrature_point_indices())
+                    for (const auto &q : fe_eval.quadrature_point_indices())
                       {
                         points_real.emplace_back(fe_eval.quadrature_point(q));
                         points.emplace_back(
@@ -476,17 +480,17 @@ namespace MeltPoolDG
               const auto fu_non_matching = [&]() -> std::tuple<std::vector<Point<dim>>,
                                                                std::vector<Point<dim>>,
                                                                std::vector<double>> {
-                nm_non_matching_fe_values.reinit(cell);
+                nm_non_matching_fe_values->reinit(cell);
 
                 const std_cxx17::optional<NonMatching::FEImmersedSurfaceValues<dim>>
-                  &surface_fe_values = nm_non_matching_fe_values.get_surface_fe_values();
+                  &surface_fe_values = nm_non_matching_fe_values->get_surface_fe_values();
 
                 if (surface_fe_values.has_value() == false)
                   return {};
 
                 std::vector<Point<dim>> points;
 
-                for (const auto q : surface_fe_values->get_quadrature_points())
+                for (const auto &q : surface_fe_values->get_quadrature_points())
                   points.emplace_back(mapping.transform_real_to_unit_cell(cell, q));
 
                 return {surface_fe_values->get_quadrature_points(),
