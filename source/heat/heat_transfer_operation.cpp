@@ -116,6 +116,29 @@ namespace MeltPoolDG::Heat
     temperature_old.copy_locally_owned_data_from(temperature);
     temperature = temperature_extrapolated;
 
+    // setup preconditioner
+    heat_operator->update_ghost_values();
+    switch (heat_data.linear_solver.preconditioner_type)
+      {
+        case PreconditionerType::Diagonal:
+          case PreconditionerType::DiagonalReduced: {
+            diag_preconditioner = heat_transfer_preconditioner->compute_diagonal_preconditioner();
+            break;
+          }
+        case PreconditionerType::Identity:
+        case PreconditionerType::AMG:
+        case PreconditionerType::AMGReduced:
+        case PreconditionerType::ILU:
+          case PreconditionerType::ILUReduced: {
+            trilinos_preconditioner =
+              heat_transfer_preconditioner->compute_trilinos_preconditioner();
+            break;
+          }
+          default: {
+            AssertThrow(false, ExcNotImplemented());
+          }
+      }
+
     const auto create_rhs = [&](VectorType &rhs) {
       // solely homogeneous dirichlet bc are distributed for the
       // corrected temperature field in the newton solver
@@ -123,45 +146,30 @@ namespace MeltPoolDG::Heat
       heat_operator->create_rhs(rhs, temperature_old);
     };
 
+
     const auto solve_linear_system = [&](VectorType &      solution_update,
                                          const VectorType &rhs) -> int {
-      switch (heat_data.linear_solver.preconditioner_type)
-        {
-          case PreconditionerType::Diagonal:
-            case PreconditionerType::DiagonalReduced: {
-              auto preconditioner = heat_transfer_preconditioner->compute_diagonal_preconditioner();
+      if (diag_preconditioner)
+        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
+          *heat_operator,
+          solution_update,
+          rhs,
+          heat_data.linear_solver.solver_type,
+          heat_data.linear_solver.rel_tolerance,
+          heat_data.linear_solver.max_iterations,
+          *diag_preconditioner);
+      else if (trilinos_preconditioner)
+        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
+          *heat_operator,
+          solution_update,
+          rhs,
+          heat_data.linear_solver.solver_type,
+          heat_data.linear_solver.rel_tolerance,
+          heat_data.linear_solver.max_iterations,
+          *trilinos_preconditioner);
+      else
+        AssertThrow(false, ExcNotImplemented());
 
-              return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-                *heat_operator,
-                solution_update,
-                rhs,
-                heat_data.linear_solver.solver_type,
-                heat_data.linear_solver.rel_tolerance,
-                heat_data.linear_solver.max_iterations,
-                preconditioner);
-            }
-          case PreconditionerType::Identity:
-          case PreconditionerType::AMG:
-          case PreconditionerType::AMGReduced:
-          case PreconditionerType::ILU:
-            case PreconditionerType::ILUReduced: {
-              // take the first three letters as relevant preconditioner type
-              auto preconditioner = heat_transfer_preconditioner->compute_trilinos_preconditioner();
-
-              return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-                *heat_operator,
-                solution_update,
-                rhs,
-                heat_data.linear_solver.solver_type,
-                heat_data.linear_solver.rel_tolerance,
-                heat_data.linear_solver.max_iterations,
-                *preconditioner);
-            }
-            default: {
-              AssertThrow(false, ExcNotImplemented());
-              return 0;
-            }
-        }
       heat_operator->zero_out_ghost_values();
     };
 

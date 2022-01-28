@@ -81,16 +81,14 @@ namespace MeltPoolDG::Preconditioner
   }
 
   template <int dim, typename OperatorType>
-  DiagonalMatrix<VectorType>
+  std::shared_ptr<DiagonalMatrix<VectorType>>
   PreconditionerMatrixFreeGeneric<dim, OperatorType>::compute_diagonal_preconditioner()
   {
-    using Preconditioner = DiagonalMatrix<VectorType>;
-
     VectorType diag;
 
     operator_base.compute_inverse_diagonal_from_matrixfree(diag);
 
-    return DiagonalMatrix<VectorType>(diag);
+    return std::make_shared<DiagonalMatrix<VectorType>>(diag);
   }
 
   template class PreconditionerMatrixFreeGeneric<1, OperatorBase<1, double>>;

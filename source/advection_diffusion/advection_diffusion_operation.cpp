@@ -138,7 +138,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                               this->advec_diff_data.linear_solver.solver_type,
                                               this->advec_diff_data.linear_solver.rel_tolerance,
                                               this->advec_diff_data.linear_solver.max_iterations,
-                                              diag_preconditioner_matrixfree);
+                                              *diag_preconditioner_matrixfree);
           }
         else
           {

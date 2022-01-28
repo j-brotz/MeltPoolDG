@@ -79,7 +79,7 @@ namespace MeltPoolDG::Heat
   }
 
   template <int dim>
-  DiagonalMatrix<VectorType>
+  std::shared_ptr<DiagonalMatrix<VectorType>>
   HeatTransferPreconditionerMatrixFree<dim>::compute_diagonal_preconditioner()
   {
     if (preconditioner_type == PreconditionerType::Diagonal)
@@ -96,16 +96,14 @@ namespace MeltPoolDG::Heat
 
         diag.update_ghost_values();
 
-        return DiagonalMatrix<VectorType>(diag);
+        return std::make_shared<DiagonalMatrix<VectorType>>(diag);
       }
     else if (preconditioner_type == PreconditionerType::DiagonalReduced)
       {
-        using Preconditioner = DiagonalMatrix<VectorType>;
-
         VectorType diag;
         heat_operator->compute_inverse_diagonal_from_matrixfree(diag);
 
-        return DiagonalMatrix<VectorType>(diag);
+        return std::make_shared<DiagonalMatrix<VectorType>>(diag);
       }
     else
       AssertThrow(false, ExcNotImplemented());

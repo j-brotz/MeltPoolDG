@@ -27,7 +27,7 @@ namespace MeltPoolDG::Preconditioner
     virtual TrilinosWrappers::SparseMatrix &
     get_system_matrix() = 0;
 
-    virtual DiagonalMatrix<VectorType>
+    virtual std::shared_ptr<DiagonalMatrix<VectorType>>
     compute_diagonal_preconditioner() = 0;
 
     virtual std::shared_ptr<TrilinosWrappers::PreconditionBase>
