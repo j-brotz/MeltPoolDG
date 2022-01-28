@@ -67,7 +67,7 @@ namespace MeltPoolDG::Preconditioner
     /*
      * compute a diagonal preconditioner
      */
-    DiagonalMatrix<VectorType>
+    std::shared_ptr<DiagonalMatrix<VectorType>>
     compute_diagonal_preconditioner() override;
 
 

@@ -64,7 +64,7 @@ namespace MeltPoolDG::Curvature
                                                    curvature_data.linear_solver.solver_type,
                                                    curvature_data.linear_solver.rel_tolerance,
                                                    curvature_data.linear_solver.max_iterations,
-                                                   diag_preconditioner_matrixfree);
+                                                   *diag_preconditioner_matrixfree);
           }
         else
           {

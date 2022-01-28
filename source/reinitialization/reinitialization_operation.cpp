@@ -154,7 +154,7 @@ namespace MeltPoolDG::Reinitialization
                                                    reinit_data.linear_solver.solver_type,
                                                    reinit_data.linear_solver.rel_tolerance,
                                                    reinit_data.linear_solver.max_iterations,
-                                                   diag_preconditioner_matrixfree);
+                                                   *diag_preconditioner_matrixfree);
           }
         else
           {

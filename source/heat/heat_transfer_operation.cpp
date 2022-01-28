@@ -116,20 +116,13 @@ namespace MeltPoolDG::Heat
     temperature_old.copy_locally_owned_data_from(temperature);
     temperature = temperature_extrapolated;
 
-    const auto create_rhs = [&](VectorType &rhs) {
-      // solely homogeneous dirichlet bc are distributed for the
-      // corrected temperature field in the newton solver
-      heat_operator->update_ghost_values();
-      heat_operator->create_rhs(rhs, temperature_old);
-    };
-
     // setup preconditioner
+    heat_operator->update_ghost_values();
     switch (heat_data.linear_solver.preconditioner_type)
       {
         case PreconditionerType::Diagonal:
           case PreconditionerType::DiagonalReduced: {
-            diag_preconditioner = std::make_shared<DiagonalMatrix<VectorType>>(
-              heat_transfer_preconditioner->compute_diagonal_preconditioner());
+            diag_preconditioner = heat_transfer_preconditioner->compute_diagonal_preconditioner();
             break;
           }
         case PreconditionerType::Identity:
@@ -145,6 +138,14 @@ namespace MeltPoolDG::Heat
             AssertThrow(false, ExcNotImplemented());
           }
       }
+
+    const auto create_rhs = [&](VectorType &rhs) {
+      // solely homogeneous dirichlet bc are distributed for the
+      // corrected temperature field in the newton solver
+      heat_operator->update_ghost_values();
+      heat_operator->create_rhs(rhs, temperature_old);
+    };
+
 
     const auto solve_linear_system = [&](VectorType &      solution_update,
                                          const VectorType &rhs) -> int {

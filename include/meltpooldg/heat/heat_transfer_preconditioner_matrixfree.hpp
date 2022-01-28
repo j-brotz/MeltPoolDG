@@ -69,7 +69,7 @@ namespace MeltPoolDG::Heat
     TrilinosWrappers::SparseMatrix &
     get_system_matrix() override;
 
-    DiagonalMatrix<VectorType>
+    std::shared_ptr<DiagonalMatrix<VectorType>>
     compute_diagonal_preconditioner() override;
 
     std::shared_ptr<TrilinosWrappers::PreconditionBase>
