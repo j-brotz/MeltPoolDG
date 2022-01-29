@@ -41,7 +41,7 @@ public:
   {
     (void)component;
 
-    return LevelSet::Tools::CharacteristicFunctions::sgn(
+    return UtilityFunctions::CharacteristicFunctions::sgn(
       DistanceFunctions::spherical_manifold<dim>(p, center, radius));
   }
 
