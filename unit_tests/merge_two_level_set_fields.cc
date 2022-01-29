@@ -15,6 +15,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -40,7 +41,7 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::sgn(
+    return LevelSet::Tools::CharacteristicFunctions::sgn(
       DistanceFunctions::spherical_manifold<dim>(p, center, radius));
   }
 
@@ -193,25 +194,25 @@ main(int argc, char *argv[])
     level_set_2.update_ghost_values();
 
     auto merged_level_set_union =
-      UtilityFunctions::merge_two_indicator_fields(level_set_1,
-                                                   level_set_2,
-                                                   BooleanType::Union,
-                                                   level_set_interior_value,
-                                                   level_set_exterior_value);
+      LevelSet::Tools::merge_two_indicator_fields(level_set_1,
+                                                  level_set_2,
+                                                  BooleanType::Union,
+                                                  level_set_interior_value,
+                                                  level_set_exterior_value);
 
     auto merged_level_set_intersect =
-      UtilityFunctions::merge_two_indicator_fields(level_set_1,
-                                                   level_set_2,
-                                                   BooleanType::Intersection,
-                                                   level_set_interior_value,
-                                                   level_set_exterior_value);
+      LevelSet::Tools::merge_two_indicator_fields(level_set_1,
+                                                  level_set_2,
+                                                  BooleanType::Intersection,
+                                                  level_set_interior_value,
+                                                  level_set_exterior_value);
 
     auto merged_level_set_subtract =
-      UtilityFunctions::merge_two_indicator_fields(level_set_1,
-                                                   level_set_2,
-                                                   BooleanType::Subtraction,
-                                                   level_set_interior_value,
-                                                   level_set_exterior_value);
+      LevelSet::Tools::merge_two_indicator_fields(level_set_1,
+                                                  level_set_2,
+                                                  BooleanType::Subtraction,
+                                                  level_set_interior_value,
+                                                  level_set_exterior_value);
 
     merged_level_set_union.update_ghost_values();
     merged_level_set_intersect.update_ghost_values();
