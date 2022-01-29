@@ -47,16 +47,6 @@ namespace MeltPoolDG
     Subtraction
   };
 
-  namespace TypeDefs
-  {
-    enum class VerbosityType
-    {
-      silent,
-      major,
-      detailed
-    };
-  } // namespace TypeDefs
-
   namespace UtilityFunctions
   {
     /**

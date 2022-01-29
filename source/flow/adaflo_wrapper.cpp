@@ -605,7 +605,7 @@ namespace MeltPoolDG::Flow
 
     if (scratch_data.is_hex_mesh())
       {
-        UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+        MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
           density,
           scratch_data.get_matrix_free(),
           dof_index_parameters,
@@ -626,7 +626,7 @@ namespace MeltPoolDG::Flow
     scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
     if (scratch_data.is_hex_mesh())
       {
-        UtilityFunctions::fill_dof_vector_from_cell_operation<dim, 1>(
+        MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
           viscosity,
           scratch_data.get_matrix_free(),
           dof_index_parameters,
