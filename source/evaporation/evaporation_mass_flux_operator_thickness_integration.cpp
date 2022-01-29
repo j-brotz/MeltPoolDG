@@ -7,6 +7,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_thickness_integration.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -69,7 +70,7 @@ namespace MeltPoolDG::Evaporation
         Assert(thickness_integration_band > 0.0,
                ExcMessage("Thickness for interface integration not set."));
 
-        UtilityFunctions::generate_points_along_normal<dim>(
+        LevelSet::Tools::generate_points_along_normal<dim>(
           global_points_normal_to_interface,
           global_points_normal_to_interface_pointer,
           scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),

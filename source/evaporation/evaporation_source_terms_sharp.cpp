@@ -3,6 +3,7 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 
 #include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -108,7 +109,7 @@ namespace MeltPoolDG::Evaporation
      * write interface velocity to dof vector
      */
     if (scratch_data.is_hex_mesh())
-      UtilityFunctions::fill_dof_vector_from_cell_operation<dim, dim>(
+      MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, dim>(
         evaporation_velocity,
         scratch_data.get_matrix_free(),
         evapor_vel_dof_idx,
@@ -160,7 +161,7 @@ namespace MeltPoolDG::Evaporation
         std::vector<double>                  buffer;
         std::vector<types::global_dof_index> local_dof_indices;
 
-        UtilityFunctions::evaluate_at_interface<dim>(
+        LevelSet::Tools::evaluate_at_interface<dim>(
           scratch_data.get_dof_handler(pressure_dof_idx),
           scratch_data.get_mapping(),
           level_set_as_heaviside,

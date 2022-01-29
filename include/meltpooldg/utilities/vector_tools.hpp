@@ -314,5 +314,60 @@ namespace MeltPoolDG
       vec_out.copy_locally_owned_data_from(vec_out_copy);
     }
 
+    /**
+     * For a given @p matrix_free object, execute scalar- or vector-valued @p cell_operation
+     * on each quadrature point  defined by @p quad_idx and fill them into a
+     * DoF-vector @p vec defined by @p dof_idx.
+     */
+    template <int dim, int n_components, typename T, typename VectorType>
+    void
+    fill_dof_vector_from_cell_operation(
+      VectorType &                                            vec,
+      const MatrixFree<dim, double, VectorizedArray<double>> &matrix_free,
+      unsigned int                                            dof_idx,
+      unsigned int                                            quad_idx,
+      const T &                                               cell_operation)
+    {
+      FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
+
+      MatrixFreeOperators::
+        CellwiseInverseMassMatrix<dim, -1, n_components, double, VectorizedArray<double>>
+          inverse_mass_matrix(fe_eval);
+
+      for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
+        {
+          fe_eval.reinit(cell);
+
+          for (unsigned int q = 0; q < fe_eval.n_q_points; ++q)
+            {
+              const auto temp = cell_operation(cell, q);
+              for (int c = 0; c < n_components; ++c)
+                if constexpr (std::is_same<typename std::remove_const<decltype(temp)>::type,
+                                           VectorizedArray<double>>::value)
+                  {
+                    static_assert(n_components == 1,
+                                  "The path should be only accessed for a single component.");
+                    fe_eval.begin_values()[q] = temp;
+                  }
+                else if constexpr (std::is_same<
+                                     typename std::remove_const<decltype(temp)>::type,
+                                     Tensor<1, n_components, VectorizedArray<double>>>::value)
+                  {
+                    fe_eval.begin_values()[c * fe_eval.n_q_points + q] = temp[c];
+                  }
+                else
+                  {
+                    Assert(false, ExcNotImplemented());
+                  }
+            }
+          inverse_mass_matrix.transform_from_q_points_to_basis(n_components,
+                                                               fe_eval.begin_values(),
+                                                               fe_eval.begin_dof_values());
+
+          // write values back into global vector
+          fe_eval.set_dof_values(vec);
+        }
+    }
+
   } // namespace VectorTools
 } // namespace MeltPoolDG

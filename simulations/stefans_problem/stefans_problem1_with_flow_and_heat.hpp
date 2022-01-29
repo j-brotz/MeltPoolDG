@@ -19,6 +19,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -330,7 +331,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
               std::vector<double>                  buffer;
               std::vector<types::global_dof_index> local_dof_indices;
 
-              UtilityFunctions::evaluate_at_interface<dim>(
+              LevelSet::Tools::evaluate_at_interface<dim>(
                 generic_data_out.get_dof_handler("level_set"),
                 generic_data_out.get_mapping(),
                 generic_data_out.get_vector("level_set"),
