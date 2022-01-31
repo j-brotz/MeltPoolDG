@@ -31,6 +31,21 @@ namespace MeltPoolDG::NormalVector
   {
     if (!normal_vector_data.linear_solver.do_matrix_free)
       normal_vector_operator->initialize_matrix_based(*scratch_data);
+
+    if (normal_vector_data.linear_solver.do_matrix_free)
+      {
+        /*
+         * setup sparsity pattern of system matrix only if the latter is
+         * needed for computing the preconditioner
+         */
+        preconditioner_matrixfree->reinit();
+        /*
+         * precompute preconditioner
+         */
+        if (normal_vector_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
+          diag_preconditioner_matrixfree =
+            preconditioner_matrixfree->compute_block_diagonal_preconditioner();
+      }
   }
 
   template <int dim>
@@ -52,11 +67,30 @@ namespace MeltPoolDG::NormalVector
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
+        AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
+
         normal_vector_operator->create_rhs(rhs, solution_levelset_in);
-        iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
-                                                    solution_normal_vector,
-                                                    rhs,
-                                                    normal_vector_data.linear_solver.solver_type);
+
+        if (diag_preconditioner_matrixfree)
+          iter =
+            LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
+                                                 solution_normal_vector,
+                                                 rhs,
+                                                 normal_vector_data.linear_solver.solver_type,
+                                                 normal_vector_data.linear_solver.rel_tolerance,
+                                                 normal_vector_data.linear_solver.max_iterations,
+                                                 *diag_preconditioner_matrixfree);
+        else if (normal_vector_data.linear_solver.preconditioner_type ==
+                 PreconditionerType::Identity)
+          iter =
+            LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
+                                                 solution_normal_vector,
+                                                 rhs,
+                                                 normal_vector_data.linear_solver.solver_type,
+                                                 normal_vector_data.linear_solver.rel_tolerance,
+                                                 normal_vector_data.linear_solver.max_iterations);
+        else
+          AssertThrow(false, ExcNotImplemented());
       }
     else
       {
@@ -129,6 +163,24 @@ namespace MeltPoolDG::NormalVector
      */
     if (!normal_vector_data.linear_solver.do_matrix_free)
       normal_vector_operator->initialize_matrix_based(*scratch_data);
+    /*
+     * initialize preconditioner matrix-free
+     */
+    if (normal_vector_data.linear_solver.do_matrix_free)
+      {
+        preconditioner_matrixfree = std::make_shared<
+          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+          *scratch_data,
+          normal_dof_idx,
+          normal_vector_data.linear_solver.preconditioner_type,
+          *normal_vector_operator);
+        /*
+         * precompute system matrix
+         */
+        if (normal_vector_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
+          diag_preconditioner_matrixfree =
+            preconditioner_matrixfree->compute_block_diagonal_preconditioner();
+      }
   }
 
 

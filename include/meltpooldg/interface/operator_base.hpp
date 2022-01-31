@@ -108,6 +108,12 @@ namespace MeltPoolDG
       AssertThrow(false, ExcNotImplemented());
     }
 
+    virtual void
+    compute_inverse_diagonal_from_matrixfree(BlockVectorType &) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
     /* ---------------------------------------------------------------------
      *
      * General

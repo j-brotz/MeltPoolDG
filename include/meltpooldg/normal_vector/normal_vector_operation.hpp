@@ -10,6 +10,7 @@
 // MeltPoolDG
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -97,6 +98,16 @@ namespace MeltPoolDG
       unsigned int normal_dof_idx;
       unsigned int normal_quad_idx;
       unsigned int ls_dof_idx;
+      /*
+       * Preconditioner for the matrix-free curvature operator
+       */
+      std::shared_ptr<
+        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+        preconditioner_matrixfree;
+      /*
+       * Cache for diagonal preconditioner matrix-free
+       */
+      std::shared_ptr<DiagonalMatrix<BlockVectorType>> diag_preconditioner_matrixfree;
     };
   } // namespace NormalVector
 } // namespace MeltPoolDG

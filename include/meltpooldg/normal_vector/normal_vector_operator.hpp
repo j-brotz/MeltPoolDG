@@ -29,6 +29,7 @@ namespace MeltPoolDG
       using OperatorBase<dim, number>::vmult;
       using OperatorBase<dim, number>::assemble_matrixbased;
       using OperatorBase<dim, number>::create_rhs;
+      using OperatorBase<dim, number>::compute_inverse_diagonal_from_matrixfree;
 
     public:
       using VectorType          = LinearAlgebra::distributed::Vector<number>;
@@ -64,7 +65,7 @@ namespace MeltPoolDG
         TrilinosWrappers::SparseMatrix &system_matrix) const final;
 
       void
-      compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
+      compute_inverse_diagonal_from_matrixfree(BlockVectorType &diagonal) const final;
 
       static void
       get_unit_normals_at_quadrature(const FEValues<dim> &        fe_values,

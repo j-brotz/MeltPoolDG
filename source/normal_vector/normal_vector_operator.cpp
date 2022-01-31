@@ -241,7 +241,7 @@ namespace MeltPoolDG::NormalVector
   template <int dim, typename number>
   void
   NormalVectorOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(
-    VectorType &diagonal) const
+    BlockVectorType &diagonal) const
   {
     scratch_data.initialize_dof_vector(diagonal, normal_dof_idx);
 
@@ -257,27 +257,32 @@ namespace MeltPoolDG::NormalVector
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
     // compute diagonal ...
-    MatrixFreeTools::template compute_diagonal<dim, -1, 0, dim, number, VectorizedArray<number>>(
-      matrix_free,
-      diagonal,
-      [&](auto &normal_vals) {
-        const unsigned int current_cell_index = normal_vals.get_current_cell_index();
+    MatrixFreeTools::
+      template compute_diagonal<dim, -1, 0, dim, number, VectorizedArray<number>, BlockVectorType>(
+        matrix_free,
+        diagonal,
+        [&](auto &normal_vals) {
+          const unsigned int current_cell_index = normal_vals.get_current_cell_index();
 
-        tangent_local_cell_operation(normal_vals,
-                                     level_set_vals,
-                                     old_cell_index != current_cell_index);
+          tangent_local_cell_operation(normal_vals,
+                                       level_set_vals,
+                                       old_cell_index != current_cell_index);
 
-        old_cell_index = current_cell_index;
-      },
-      normal_dof_idx,
-      normal_quad_idx);
+          old_cell_index = current_cell_index;
+        },
+        normal_dof_idx,
+        normal_quad_idx);
 
-    // ... and invert it
-    for (auto &i : diagonal)
-      i = (std::abs(i) > 1.0e-16) ? (1.0 / i) : 1.0;
 
     if (solution_level_set)
       solution_level_set->zero_out_ghost_values();
+
+    // ... and invert it
+    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
+
+    for (unsigned int d = 0; d < dim; ++d)
+      for (auto &i : diagonal.block(d))
+        i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
   }
 
   template <int dim, typename number>

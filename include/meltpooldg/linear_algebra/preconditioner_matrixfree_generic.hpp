@@ -18,7 +18,8 @@ namespace MeltPoolDG::Preconditioner
   class PreconditionerMatrixFreeGeneric : public PreconditionerMatrixFreeBase<dim>
   {
   private:
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<double>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<double>;
 
     const ScratchData<dim> &scratch_data;
     /*
@@ -70,9 +71,13 @@ namespace MeltPoolDG::Preconditioner
     std::shared_ptr<DiagonalMatrix<VectorType>>
     compute_diagonal_preconditioner() override;
 
+    /*
+     * compute a diagonal preconditioner for a block vector
+     */
+    std::shared_ptr<DiagonalMatrix<BlockVectorType>>
+    compute_block_diagonal_preconditioner() override;
 
     /*----------------- Getter Functions -----------------*/
-
 
     const TrilinosWrappers::SparseMatrix &
     get_system_matrix() const override;
