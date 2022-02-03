@@ -35,11 +35,6 @@ namespace MeltPoolDG::NormalVector
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
         /*
-         * setup sparsity pattern of system matrix only if the latter is
-         * needed for computing the preconditioner
-         */
-        preconditioner_matrixfree->reinit();
-        /*
          * precompute preconditioner
          */
         if (normal_vector_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
