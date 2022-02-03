@@ -554,7 +554,7 @@ namespace MeltPoolDG::LevelSet
             reinit_data.constant_epsilon > 0.0 ?
               reinit_data.constant_epsilon :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                cell, reinit_data.scale_factor_epsilon / level_set_data.n_subdivisions);
+                cell, reinit_data.scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
