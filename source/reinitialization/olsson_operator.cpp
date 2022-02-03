@@ -185,7 +185,7 @@ namespace MeltPoolDG::Reinitialization
             normal_vector.read_dof_values_plain(this->normal_vec);
             normal_vector.evaluate(EvaluationFlags::values);
 
-            VectorizedArray<number> thickness_parameter =
+            const VectorizedArray<number> thickness_parameter =
               reinit_data.constant_epsilon > 0 ?
                 make_vectorized_array<number>(reinit_data.constant_epsilon) :
                 scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
@@ -300,7 +300,7 @@ namespace MeltPoolDG::Reinitialization
         normal_vector.evaluate(EvaluationFlags::values);
       }
 
-    VectorizedArray<number> thickness_parameter =
+    const VectorizedArray<number> thickness_parameter =
       reinit_data.constant_epsilon > 0 ?
         make_vectorized_array<number>(reinit_data.constant_epsilon) :
         scratch_data.get_cell_sizes()[delta_psi.get_current_cell_index()] * thickness_scale_factor;
