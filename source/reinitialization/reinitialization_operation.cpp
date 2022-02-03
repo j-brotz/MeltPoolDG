@@ -24,7 +24,7 @@ namespace MeltPoolDG::Reinitialization
      *    initialize the (local) parameters of the reinitialization
      *    from the global user-defined parameters
      */
-    set_reinitialization_parameters(data_in);
+    reinit_data = data_in.reinit;
     AssertThrow(reinit_data.linear_solver.solver_type == LinearSolverType::CG ||
                   reinit_data.linear_solver.do_matrix_free == false,
                 ExcMessage(
@@ -121,6 +121,8 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::solve(const double d_tau)
   {
+    get_normal_vector().update_ghost_values();
+    solution_level_set.update_ghost_values();
     /**
      * update the distributed sparsity pattern for matrix-based amr
      */
@@ -200,6 +202,7 @@ namespace MeltPoolDG::Reinitialization
       }
     scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
     solution_level_set.zero_out_ghost_values();
+    get_normal_vector().zero_out_ghost_values();
 
     solution_level_set += delta_psi_vec;
 
@@ -293,23 +296,14 @@ namespace MeltPoolDG::Reinitialization
 
   template <int dim>
   void
-  ReinitializationOperation<dim>::set_reinitialization_parameters(const Parameters<double> &data_in)
-  {
-    reinit_data = data_in.reinit;
-    reinit_data.scale_factor_epsilon /= data_in.ls.n_subdivisions;
-  }
-
-  template <int dim>
-  void
   ReinitializationOperation<dim>::create_operator()
   {
     if (reinit_data.modeltype == "olsson2007")
       {
         reinit_operator = std::make_unique<OlssonOperator<dim, double>>(
           *scratch_data,
+          reinit_data,
           normal_vector_operation->get_solution_normal_vector(),
-          reinit_data.constant_epsilon,
-          reinit_data.scale_factor_epsilon,
           reinit_dof_idx,
           reinit_quad_idx,
           ls_dof_idx,

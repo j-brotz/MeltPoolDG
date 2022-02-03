@@ -98,9 +98,6 @@ namespace MeltPoolDG
 
     private:
       void
-      set_reinitialization_parameters(const Parameters<double> &data_in);
-
-      void
       create_operator();
 
       void
