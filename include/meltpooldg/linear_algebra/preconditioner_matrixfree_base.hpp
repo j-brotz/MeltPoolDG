@@ -35,6 +35,7 @@ namespace MeltPoolDG::Preconditioner
     compute_block_diagonal_preconditioner()
     {
       AssertThrow(false, ExcNotImplemented());
+      return nullptr;
     }
 
     virtual std::shared_ptr<TrilinosWrappers::PreconditionBase>
