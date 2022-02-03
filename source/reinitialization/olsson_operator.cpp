@@ -17,22 +17,13 @@ namespace MeltPoolDG::Reinitialization
     , reinit_quad_idx(reinit_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , thickness_scale_factor(
-        reinit_data_in.scale_factor_epsilon /
-        (scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in) ? scratch_data.get_degree(ls_dof_idx_in) : 1))
-    , epsilon_used(reinit_data.constant_epsilon > 0 ?
-                     reinit_data.constant_epsilon :
-                     reinit_data.scale_factor_epsilon * scratch_data.get_min_cell_size() /
-                       (scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in) ?
-                          scratch_data.get_degree(ls_dof_idx_in) :
-                          1)) // @todo: remove
+    , thickness_scale_factor(reinit_data_in.scale_factor_epsilon /
+                             scratch_data.get_degree(ls_dof_idx_in))
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
   {
     this->reset_dof_index(reinit_dof_idx_in);
-
-    Assert(epsilon_used > 0.0, ExcMessage("reinitialization operator: epsilon must be set"));
   }
 
   template <int dim, typename number>
@@ -74,6 +65,7 @@ namespace MeltPoolDG::Reinitialization
               reinit_data.constant_epsilon :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
                 cell, thickness_scale_factor);
+
           Assert(
             epsilon_cell > 0.0,
             ExcMessage(
@@ -180,6 +172,7 @@ namespace MeltPoolDG::Reinitialization
         FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
                                                          normal_dof_idx,
                                                          reinit_quad_idx);
+
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             rhs.reinit(cell);
@@ -192,6 +185,11 @@ namespace MeltPoolDG::Reinitialization
             normal_vector.read_dof_values_plain(this->normal_vec);
             normal_vector.evaluate(EvaluationFlags::values);
 
+            VectorizedArray<number> thickness_parameter =
+              reinit_data.constant_epsilon > 0 ?
+                make_vectorized_array<number>(reinit_data.constant_epsilon) :
+                scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
+
             for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
               {
                 const scalar val = psi_old.get_value(q_index);
@@ -200,7 +198,7 @@ namespace MeltPoolDG::Reinitialization
                                                           tolerance_normal_vector);
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
-                                      this->time_increment * epsilon_used *
+                                      this->time_increment * thickness_parameter *
                                         scalar_product(psi_old.get_gradient(q_index), n_phi) *
                                         n_phi,
                                     q_index);
@@ -302,13 +300,18 @@ namespace MeltPoolDG::Reinitialization
         normal_vector.evaluate(EvaluationFlags::values);
       }
 
+    VectorizedArray<number> thickness_parameter =
+      reinit_data.constant_epsilon > 0 ?
+        make_vectorized_array<number>(reinit_data.constant_epsilon) :
+        scratch_data.get_cell_sizes()[delta_psi.get_current_cell_index()] * thickness_scale_factor;
+
     for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
       {
         const auto n_phi = MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                                    tolerance_normal_vector);
 
         delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
-        delta_psi.submit_gradient(this->time_increment * epsilon_used *
+        delta_psi.submit_gradient(this->time_increment * thickness_parameter *
                                     scalar_product(delta_psi.get_gradient(q_index), n_phi) * n_phi,
                                   q_index);
       }

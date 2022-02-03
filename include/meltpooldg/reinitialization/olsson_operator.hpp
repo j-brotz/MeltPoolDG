@@ -90,7 +90,6 @@ namespace MeltPoolDG
       const unsigned int                  ls_dof_idx;
 
       const double thickness_scale_factor;
-      const double epsilon_used;
       const double tolerance_normal_vector;
     };
   } // namespace Reinitialization
