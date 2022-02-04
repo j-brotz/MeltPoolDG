@@ -15,7 +15,8 @@ namespace MeltPoolDG::Preconditioner
   class PreconditionerMatrixFreeBase
   {
   private:
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<double>;
+    using VectorType      = dealii::LinearAlgebra::distributed::Vector<double>;
+    using BlockVectorType = dealii::LinearAlgebra::distributed::BlockVector<double>;
 
   public:
     virtual void
@@ -29,6 +30,13 @@ namespace MeltPoolDG::Preconditioner
 
     virtual std::shared_ptr<DiagonalMatrix<VectorType>>
     compute_diagonal_preconditioner() = 0;
+
+    virtual std::shared_ptr<DiagonalMatrix<BlockVectorType>>
+    compute_block_diagonal_preconditioner()
+    {
+      AssertThrow(false, ExcNotImplemented());
+      return nullptr;
+    }
 
     virtual std::shared_ptr<TrilinosWrappers::PreconditionBase>
     compute_trilinos_preconditioner() = 0;

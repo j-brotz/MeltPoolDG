@@ -399,7 +399,8 @@ namespace MeltPoolDG
         "treshold for the narrow band.");
 
       // default parameter
-      normal_vec.linear_solver.solver_type = LinearSolverType::CG;
+      normal_vec.linear_solver.solver_type         = LinearSolverType::CG;
+      normal_vec.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       normal_vec.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
