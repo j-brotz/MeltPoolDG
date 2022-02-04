@@ -4,32 +4,26 @@
 namespace MeltPoolDG::Reinitialization
 {
   template <int dim, typename number>
-  OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim> &scratch_data_in,
-                                              BlockVectorType &       n_in,
-                                              const double &          constant_epsilon,
-                                              const double &          eps_scale_factor,
-                                              const unsigned int      dof_idx_in,
-                                              const unsigned int      quad_idx_in,
-                                              const unsigned int      ls_dof_idx_in,
-                                              const unsigned int      normal_dof_idx_in)
+  OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim> &            scratch_data_in,
+                                              const ReinitializationData<number> &reinit_data_in,
+                                              const BlockVectorType &             n_in,
+                                              const unsigned int                  reinit_dof_idx_in,
+                                              const unsigned int reinit_quad_idx_in,
+                                              const unsigned int ls_dof_idx_in,
+                                              const unsigned int normal_dof_idx_in)
     : scratch_data(scratch_data_in)
-    , eps(constant_epsilon)
-    , eps_scale_factor(eps_scale_factor)
-    , epsilon_used(constant_epsilon > 0 ?
-                     constant_epsilon :
-                     eps_scale_factor *
-                       scratch_data.get_min_cell_size()) // @ todo: check how cell size can be
+    , reinit_data(reinit_data_in)
     , normal_vec(n_in)
+    , reinit_quad_idx(reinit_quad_idx_in)
+    , normal_dof_idx(normal_dof_idx_in)
+    , ls_dof_idx(ls_dof_idx_in)
+    , thickness_scale_factor(reinit_data_in.scale_factor_epsilon /
+                             scratch_data.get_degree(ls_dof_idx_in))
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
-    , reinit_quad_idx(quad_idx_in)
-    , ls_dof_idx(ls_dof_idx_in)
-    , normal_dof_idx(normal_dof_idx_in)
   {
-    this->reset_dof_index(dof_idx_in);
-
-    Assert(epsilon_used > 0.0, ExcMessage("reinitialization operator: epsilon must be set"));
+    this->reset_dof_index(reinit_dof_idx_in);
   }
 
   template <int dim, typename number>
@@ -38,8 +32,6 @@ namespace MeltPoolDG::Reinitialization
                                                     SparseMatrixType &matrix,
                                                     VectorType &      rhs) const
   {
-    levelset_old.update_ghost_values();
-
     FEValues<dim>      fe_values(scratch_data.get_mapping(),
                             scratch_data.get_dof_handler(this->dof_idx).get_fe(),
                             scratch_data.get_quadrature(reinit_quad_idx),
@@ -61,8 +53,6 @@ namespace MeltPoolDG::Reinitialization
     rhs    = 0.0;
     matrix = 0.0;
 
-    this->normal_vec.update_ghost_values();
-
     for (const auto &cell : scratch_data.get_dof_handler(this->dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
         {
@@ -71,10 +61,12 @@ namespace MeltPoolDG::Reinitialization
           fe_values.reinit(cell);
 
           const double epsilon_cell =
-            eps > 0.0 ? eps :
-                        UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                          cell, eps_scale_factor);
-          AssertThrow(
+            reinit_data.constant_epsilon > 0.0 ?
+              reinit_data.constant_epsilon :
+              UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
+                cell, thickness_scale_factor);
+
+          Assert(
             epsilon_cell > 0.0,
             ExcMessage(
               "Reinitialization: the value of epsilon for the reinitialization function must be larger than zero!"));
@@ -127,8 +119,6 @@ namespace MeltPoolDG::Reinitialization
 
     matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
-
-    this->normal_vec.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -137,9 +127,6 @@ namespace MeltPoolDG::Reinitialization
   {
     AssertThrow(this->time_increment > 0.0,
                 ExcMessage("reinitialization operator: d_tau must be set"));
-
-    this->normal_vec.update_ghost_values();
-
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number>   delta_psi(scratch_data.get_matrix_free(),
@@ -161,16 +148,12 @@ namespace MeltPoolDG::Reinitialization
       dst,
       src,
       true);
-
-    this->normal_vec.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
   void
   OlssonOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
   {
-    this->normal_vec.update_ghost_values();
-
     AssertThrow(this->time_increment > 0.0,
                 ExcMessage("reinitialization matrix-free operator: d_tau must be set"));
 
@@ -189,6 +172,7 @@ namespace MeltPoolDG::Reinitialization
         FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
                                                          normal_dof_idx,
                                                          reinit_quad_idx);
+
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             rhs.reinit(cell);
@@ -201,6 +185,11 @@ namespace MeltPoolDG::Reinitialization
             normal_vector.read_dof_values_plain(this->normal_vec);
             normal_vector.evaluate(EvaluationFlags::values);
 
+            const VectorizedArray<number> thickness_parameter =
+              reinit_data.constant_epsilon > 0 ?
+                make_vectorized_array<number>(reinit_data.constant_epsilon) :
+                scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
+
             for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
               {
                 const scalar val = psi_old.get_value(q_index);
@@ -209,7 +198,7 @@ namespace MeltPoolDG::Reinitialization
                                                           tolerance_normal_vector);
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
-                                      this->time_increment * epsilon_used *
+                                      this->time_increment * thickness_parameter *
                                         scalar_product(psi_old.get_gradient(q_index), n_phi) *
                                         n_phi,
                                     q_index);
@@ -221,21 +210,6 @@ namespace MeltPoolDG::Reinitialization
       dst,
       src,
       true);
-
-    this->normal_vec.zero_out_ghost_values();
-  }
-
-  template <int dim, typename number>
-  void
-  OlssonOperator<dim, number>::set_normal_vector_field(const BlockVectorType &normal_vector)
-  {
-    normal_vec.reinit(dim);
-    for (unsigned int d = 0; d < dim; ++d)
-      {
-        scratch_data.initialize_dof_vector(this->normal_vec.block(d), this->dof_idx);
-        normal_vec.block(d).copy_locally_owned_data_from(normal_vector.block(d));
-      }
-    normal_vec.update_ghost_values();
   }
 
   template <int dim, typename number>
@@ -244,8 +218,6 @@ namespace MeltPoolDG::Reinitialization
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
     system_matrix = 0.0;
-
-    this->normal_vec.update_ghost_values();
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
@@ -273,8 +245,6 @@ namespace MeltPoolDG::Reinitialization
       reinit_quad_idx);
 
     system_matrix.compress(VectorOperation::add);
-
-    this->normal_vec.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -282,8 +252,6 @@ namespace MeltPoolDG::Reinitialization
   OlssonOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
     scratch_data.initialize_dof_vector(diagonal, this->dof_idx);
-
-    this->normal_vec.update_ghost_values();
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
@@ -313,8 +281,6 @@ namespace MeltPoolDG::Reinitialization
     const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
-
-    this->normal_vec.zero_out_ghost_values();
   }
 
 
@@ -334,13 +300,18 @@ namespace MeltPoolDG::Reinitialization
         normal_vector.evaluate(EvaluationFlags::values);
       }
 
+    const VectorizedArray<number> thickness_parameter =
+      reinit_data.constant_epsilon > 0 ?
+        make_vectorized_array<number>(reinit_data.constant_epsilon) :
+        scratch_data.get_cell_sizes()[delta_psi.get_current_cell_index()] * thickness_scale_factor;
+
     for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
       {
         const auto n_phi = MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                                    tolerance_normal_vector);
 
         delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
-        delta_psi.submit_gradient(this->time_increment * epsilon_used *
+        delta_psi.submit_gradient(this->time_increment * thickness_parameter *
                                     scalar_product(delta_psi.get_gradient(q_index), n_phi) * n_phi,
                                   q_index);
       }

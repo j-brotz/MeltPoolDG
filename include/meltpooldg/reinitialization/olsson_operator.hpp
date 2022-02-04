@@ -39,14 +39,13 @@ namespace MeltPoolDG
       using scalar              = VectorizedArray<number>;
 
     public:
-      OlssonOperator(const ScratchData<dim> &scratch_data_in,
-                     BlockVectorType &       n_in,
-                     const double &          constant_epsilon,
-                     const double &          eps_scale_factor,
-                     const unsigned int      dof_idx_in,
-                     const unsigned int      quad_idx_in,
-                     const unsigned int      ls_dof_idx_in,
-                     const unsigned int      normal_dof_idx_in);
+      OlssonOperator(const ScratchData<dim> &            scratch_data_in,
+                     const ReinitializationData<number> &reinit_data_in,
+                     const BlockVectorType &             n_in,
+                     const unsigned int                  reinit_dof_idx_in,
+                     const unsigned int                  reinit_quad_idx_in,
+                     const unsigned int                  ls_dof_idx_in,
+                     const unsigned int                  normal_dof_idx_in);
 
       /*
        *    this is the matrix-based implementation of the rhs and the system_matrix
@@ -70,9 +69,6 @@ namespace MeltPoolDG
       create_rhs(VectorType &dst, const VectorType &src) const final;
 
       void
-      set_normal_vector_field(const BlockVectorType &normal_vector);
-
-      void
       compute_system_matrix_from_matrixfree(
         TrilinosWrappers::SparseMatrix &system_matrix) const final;
 
@@ -86,16 +82,15 @@ namespace MeltPoolDG
                                    const bool                          do_reinit_cells) const;
 
     private:
-      const ScratchData<dim> &scratch_data;
+      const ScratchData<dim> &            scratch_data;
+      const ReinitializationData<number> &reinit_data;
+      const BlockVectorType &             normal_vec;
+      const unsigned int                  reinit_quad_idx;
+      const unsigned int                  normal_dof_idx;
+      const unsigned int                  ls_dof_idx;
 
-      double             eps = -1.0;
-      double             eps_scale_factor;
-      double             epsilon_used;
-      BlockVectorType &  normal_vec;
-      const double       tolerance_normal_vector;
-      const unsigned int reinit_quad_idx;
-      const unsigned int ls_dof_idx;
-      const unsigned int normal_dof_idx;
+      const double thickness_scale_factor;
+      const double tolerance_normal_vector;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG
