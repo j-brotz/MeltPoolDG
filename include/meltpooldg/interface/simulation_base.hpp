@@ -330,7 +330,7 @@ namespace MeltPoolDG
     /**
      * Getter functions for field conditions
      */
-    const std::shared_ptr<Function<dim>> &
+    std::shared_ptr<Function<dim>>
     get_initial_condition(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
@@ -338,7 +338,10 @@ namespace MeltPoolDG
       AssertThrow(is_optional || (field_conditions && field_conditions->initial_field),
                   ExcFieldNotAttached("set_initial_condition", operation_name));
 
-      return field_conditions->initial_field;
+      if (field_conditions && field_conditions->initial_field)
+        return field_conditions->initial_field;
+      else // is_optional = true
+        return nullptr;
     }
 
     const std::shared_ptr<Function<dim>> &
