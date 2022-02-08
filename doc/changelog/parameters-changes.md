@@ -1,6 +1,23 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-02-09
+- Add problem-specific parameter for AMR in the melt pool problem
+```json
+{
+  "base": {
+    "problem name": "melt_pool"
+  },
+  "problem specific": {
+    "amr" : {
+      "strategy": "generic|adaflo|KellyErrorEstimator",
+      "do auto detect frequency": "true|false"
+    }
+  }
+}
+
+```
+
 ## 2022-01-07
 - Add parameter for narrow band threshold for normal vector and curvature
 ```json
