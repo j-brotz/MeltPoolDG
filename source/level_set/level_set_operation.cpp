@@ -156,7 +156,7 @@ namespace MeltPoolDG::LevelSet
     const Function<dim> &initial_field_function,
     const VectorType &   initial_velocity_in,
     const bool is_signed_distance_initial_field_function) //@todo: provide separate function for
-                                                          //this argument
+                                                          // this argument
   {
     advec_diff_operation->set_initial_condition(initial_field_function, initial_velocity_in);
 
