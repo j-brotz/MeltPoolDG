@@ -155,12 +155,15 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim>::set_initial_condition(
     const Function<dim> &initial_field_function,
     const VectorType &   initial_velocity_in,
-    const bool           is_signed_distance_initial_field_function)
+    const bool is_signed_distance_initial_field_function) //@todo: provide separate function for
+                                                          //this argument
   {
     advec_diff_operation->set_initial_condition(initial_field_function, initial_velocity_in);
 
     // optional: if the provided function is a signed distance compute a corresponding
     // level set field
+    //
+    // @todo: create separate function
     if (is_signed_distance_initial_field_function)
       {
         // setup DoF vector holding distances
@@ -499,15 +502,15 @@ namespace MeltPoolDG::LevelSet
 
             for (const auto q : distance_eval.quadrature_point_indices())
               {
-                get_level_set()[local_dof_indices[q]] =
+                get_level_set()(local_dof_indices[q]) =
                   UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
                     distance_at_q[q], epsilon_cell);
               }
           }
       }
     get_level_set().compress(VectorOperation::insert);
-
     scratch_data->get_constraint(ls_dof_idx).distribute(get_level_set());
+
     distance_to_level_set.zero_out_ghost_values();
   }
 
