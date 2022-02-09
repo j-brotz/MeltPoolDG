@@ -508,7 +508,7 @@ namespace MeltPoolDG::LevelSet
               }
           }
       }
-    get_level_set().compress(VectorOperation::insert);
+    get_level_set().compress(VectorOperation::max);
     scratch_data->get_constraint(ls_dof_idx).distribute(get_level_set());
 
     distance_to_level_set.zero_out_ghost_values();
