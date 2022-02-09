@@ -89,7 +89,8 @@ namespace MeltPoolDG::LevelSet
      */
     void
     set_initial_condition(const Function<dim> &initial_field_function_level_set,
-                          const VectorType &   initial_velocity_in);
+                          const VectorType &   initial_velocity_in,
+                          const bool           is_signed_distance_initial_field_function = false);
 
     void
     reinit();
@@ -190,6 +191,13 @@ namespace MeltPoolDG::LevelSet
             0.0625 * std::asin(std::sqrt(2.) * (x + 0.5)) + 15. * 0.03125 - numbers::PI / 64.);
         }
     }
+
+    /**
+     * From the distance_to_level_set DoF vector, the level set DoF vector with values within
+     * [-1,1] is computed.
+     */
+    void
+    transform_distance_to_level_set();
 
     void
     transform_level_set_to_smooth_heaviside();

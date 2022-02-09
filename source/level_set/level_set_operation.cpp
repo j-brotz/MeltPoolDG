@@ -153,11 +153,32 @@ namespace MeltPoolDG::LevelSet
   template <int dim>
   void
   LevelSetOperation<dim>::set_initial_condition(
-    const Function<dim> &initial_field_function_level_set,
-    const VectorType &   initial_velocity_in)
+    const Function<dim> &initial_field_function,
+    const VectorType &   initial_velocity_in,
+    const bool is_signed_distance_initial_field_function) //@todo: provide separate function for
+                                                          // this argument
   {
-    advec_diff_operation->set_initial_condition(initial_field_function_level_set,
-                                                initial_velocity_in);
+    advec_diff_operation->set_initial_condition(initial_field_function, initial_velocity_in);
+
+    // optional: if the provided function is a signed distance compute a corresponding
+    // level set field
+    //
+    // @todo: create separate function
+    if (is_signed_distance_initial_field_function)
+      {
+        // setup DoF vector holding distances
+        scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
+        dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                         scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
+                                         initial_field_function,
+                                         distance_to_level_set);
+
+        // transform distance to level set function
+        transform_distance_to_level_set();
+
+        // set the values in the advection operation
+        advec_diff_operation->get_advected_field() = get_level_set();
+      }
     /*
      * 1) The initial solution of the level set equation will be reinitialized first WITHOUT
      *    dirichlet constraints of the reinitialization.
@@ -439,6 +460,75 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim>::advect_level_set(const double dt, const VectorType &advection_velocity)
   {
     advec_diff_operation->solve(dt, advection_velocity);
+  }
+
+  template <int dim>
+  void
+  LevelSetOperation<dim>::transform_distance_to_level_set()
+  {
+    distance_to_level_set.update_ghost_values();
+    scratch_data->initialize_dof_vector(get_level_set(), ls_dof_idx);
+
+    VectorType multiplicity;
+    scratch_data->initialize_dof_vector(multiplicity, ls_hanging_nodes_dof_idx);
+
+    const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(ls_hanging_nodes_dof_idx);
+
+    FEValues<dim> distance_eval(
+      scratch_data->get_mapping(),
+      scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).get_fe(),
+      Quadrature<dim>(
+        scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).get_fe().get_unit_support_points()),
+      update_values);
+
+    std::vector<double> distance_at_q(distance_eval.n_quadrature_points);
+
+    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+    for (const auto &cell :
+         scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
+      {
+        if (cell->is_locally_owned())
+          {
+            cell->get_dof_indices(local_dof_indices);
+
+            distance_eval.reinit(cell);
+            distance_eval.get_function_values(distance_to_level_set, distance_at_q);
+
+            const double epsilon_cell =
+              reinit_constant_epsilon > 0.0 ?
+                reinit_constant_epsilon :
+                UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
+                  cell, reinit_scale_factor_epsilon / level_set_data.n_subdivisions);
+
+            Vector<double> level_set_local(dofs_per_cell);
+            Vector<double> multiplicity_local(dofs_per_cell);
+
+            for (const auto q : distance_eval.quadrature_point_indices())
+              {
+                multiplicity_local[q] = 1;
+                level_set_local[q] =
+                  UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+                    distance_at_q[q], epsilon_cell);
+              }
+            scratch_data->get_constraint(ls_dof_idx)
+              .distribute_local_to_global(level_set_local, local_dof_indices, get_level_set());
+            scratch_data->get_constraint(ls_dof_idx)
+              .distribute_local_to_global(multiplicity_local, local_dof_indices, multiplicity);
+          }
+      }
+
+    multiplicity.compress(VectorOperation::add);
+    get_level_set().compress(VectorOperation::add);
+    /*
+     * average the nodally assembled values
+     */
+    for (unsigned int i = 0; i < multiplicity.locally_owned_size(); ++i)
+      if (multiplicity.local_element(i) > 1.0)
+        get_level_set().local_element(i) /= multiplicity.local_element(i);
+
+    scratch_data->get_constraint(ls_dof_idx).distribute(get_level_set());
+    distance_to_level_set.zero_out_ghost_values();
   }
 
   template <int dim>

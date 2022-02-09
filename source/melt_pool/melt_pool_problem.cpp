@@ -596,10 +596,27 @@ namespace MeltPoolDG::MeltPool
     AssertThrow(false, ExcNotImplemented());
 #endif
     /*
-     *  set initial conditions of the level set field
+     *  set initial conditions of the level set field ...
      */
-    level_set_operation.set_initial_condition(*base_in->get_initial_condition("level_set"),
-                                              flow_operation->get_velocity());
+    if (const auto initial_field =
+          base_in->get_initial_condition("level_set", true /*is optional*/))
+      {
+        // ... via a given level set field
+        level_set_operation.set_initial_condition(*initial_field, flow_operation->get_velocity());
+      }
+    else if (const auto initial_field =
+               base_in->get_initial_condition("signed_distance", true /*is optional*/))
+      {
+        // ... or a given signed distance field.
+        level_set_operation.set_initial_condition(*initial_field,
+                                                  flow_operation->get_velocity(),
+                                                  true /*is signed distance function*/);
+      }
+    else
+      AssertThrow(
+        false,
+        ExcMessage("For the level set operation either a function for the initial level set or the "
+                   "signed distance field must be provided. Abort ..."));
     /*
      *  set initial conditions of the temperature field
      *

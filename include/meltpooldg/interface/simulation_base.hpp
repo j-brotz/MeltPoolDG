@@ -330,7 +330,7 @@ namespace MeltPoolDG
     /**
      * Getter functions for field conditions
      */
-    const std::shared_ptr<Function<dim>> &
+    std::shared_ptr<Function<dim>>
     get_initial_condition(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
@@ -338,10 +338,13 @@ namespace MeltPoolDG
       AssertThrow(is_optional || (field_conditions && field_conditions->initial_field),
                   ExcFieldNotAttached("set_initial_condition", operation_name));
 
-      return field_conditions->initial_field;
+      if (field_conditions && field_conditions->initial_field)
+        return field_conditions->initial_field;
+      else // is_optional = true
+        return nullptr;
     }
 
-    const std::shared_ptr<Function<dim>> &
+    std::shared_ptr<Function<dim>>
     get_source_field(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
@@ -349,10 +352,13 @@ namespace MeltPoolDG
       AssertThrow(is_optional || (field_conditions && field_conditions->source_field),
                   ExcFieldNotAttached("set_source_field", operation_name));
 
-      return field_conditions->source_field;
+      if (field_conditions && field_conditions->source_field)
+        return field_conditions->source_field;
+      else // is_optional = true
+        return nullptr;
     }
 
-    const std::shared_ptr<Function<dim>> &
+    std::shared_ptr<Function<dim>>
     get_advection_field(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
@@ -360,10 +366,13 @@ namespace MeltPoolDG
       AssertThrow(is_optional || (field_conditions && field_conditions->advection_field),
                   ExcFieldNotAttached("set_advection_field", operation_name));
 
-      return field_conditions->advection_field;
+      if (field_conditions && field_conditions->advection_field)
+        return field_conditions->advection_field;
+      else // is_optional = true
+        return nullptr;
     }
 
-    const std::shared_ptr<Function<dim>> &
+    std::shared_ptr<Function<dim>>
     get_velocity_field(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
@@ -371,10 +380,13 @@ namespace MeltPoolDG
       AssertThrow(is_optional || (field_conditions && field_conditions->velocity_field),
                   ExcFieldNotAttached("set_velocity_field", operation_name));
 
-      return field_conditions->velocity_field;
+      if (field_conditions && field_conditions->velocity_field)
+        return field_conditions->velocity_field;
+      else // is_optional = true
+        return nullptr;
     }
 
-    const std::shared_ptr<Function<dim>> &
+    std::shared_ptr<Function<dim>>
     get_exact_solution(const std::string operation_name, const bool is_optional = false)
     {
       auto field_conditions = field_conditions_map[operation_name];
@@ -382,7 +394,10 @@ namespace MeltPoolDG
       AssertThrow(is_optional || (field_conditions && field_conditions->exact_solution_field),
                   ExcFieldNotAttached("set_exact_solution", operation_name));
 
-      return field_conditions->exact_solution_field;
+      if (field_conditions && field_conditions->exact_solution_field)
+        return field_conditions->exact_solution_field;
+      else // is_optional = true
+        return nullptr;
     }
 
     /**
