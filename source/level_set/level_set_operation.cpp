@@ -502,25 +502,32 @@ namespace MeltPoolDG::LevelSet
                   cell, reinit_scale_factor_epsilon / level_set_data.n_subdivisions);
 
             Vector<double> level_set_local(dofs_per_cell);
+            Vector<double> multiplicity_local(dofs_per_cell);
 
             for (const auto q : distance_eval.quadrature_point_indices())
               {
-                multiplicity(local_dof_indices[q]) += 1;
-                get_level_set()(local_dof_indices[q]) =
-                  multiplicity(local_dof_indices[q]) > 1 ?
-                    std::max(
-                      get_level_set()(local_dof_indices[q]),
-                      UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-                        distance_at_q[q], epsilon_cell)) :
-                    UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-                      distance_at_q[q], epsilon_cell);
+                multiplicity_local[q] = 1;
+                level_set_local[q] =
+                  UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+                    distance_at_q[q], epsilon_cell);
               }
+            scratch_data->get_constraint(ls_dof_idx)
+              .distribute_local_to_global(level_set_local, local_dof_indices, get_level_set());
+            scratch_data->get_constraint(ls_dof_idx)
+              .distribute_local_to_global(multiplicity_local, local_dof_indices, multiplicity);
           }
       }
 
-    get_level_set().compress(VectorOperation::max);
-    scratch_data->get_constraint(ls_dof_idx).distribute(get_level_set());
+    multiplicity.compress(VectorOperation::add);
+    get_level_set().compress(VectorOperation::add);
+    /*
+     * average the nodally assembled values
+     */
+    for (unsigned int i = 0; i < multiplicity.locally_owned_size(); ++i)
+      if (multiplicity.local_element(i) > 1.0)
+        get_level_set().local_element(i) /= multiplicity.local_element(i);
 
+    scratch_data->get_constraint(ls_dof_idx).distribute(get_level_set());
     distance_to_level_set.zero_out_ghost_values();
   }
 
