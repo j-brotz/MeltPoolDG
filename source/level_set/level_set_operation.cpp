@@ -469,6 +469,9 @@ namespace MeltPoolDG::LevelSet
     distance_to_level_set.update_ghost_values();
     scratch_data->initialize_dof_vector(get_level_set(), ls_dof_idx);
 
+    VectorType multiplicity;
+    scratch_data->initialize_dof_vector(multiplicity, ls_hanging_nodes_dof_idx);
+
     const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(ls_hanging_nodes_dof_idx);
 
     FEValues<dim> distance_eval(
@@ -502,12 +505,19 @@ namespace MeltPoolDG::LevelSet
 
             for (const auto q : distance_eval.quadrature_point_indices())
               {
+                multiplicity(local_dof_indices[q]) += 1;
                 get_level_set()(local_dof_indices[q]) =
-                  UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-                    distance_at_q[q], epsilon_cell);
+                  multiplicity(local_dof_indices[q]) > 1 ?
+                    std::max(
+                      get_level_set()(local_dof_indices[q]),
+                      UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+                        distance_at_q[q], epsilon_cell)) :
+                    UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+                      distance_at_q[q], epsilon_cell);
               }
           }
       }
+
     get_level_set().compress(VectorOperation::max);
     scratch_data->get_constraint(ls_dof_idx).distribute(get_level_set());
 
