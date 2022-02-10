@@ -496,10 +496,10 @@ namespace MeltPoolDG::LevelSet
             distance_eval.get_function_values(distance_to_level_set, distance_at_q);
 
             const double epsilon_cell =
-              reinit_constant_epsilon > 0.0 ?
-                reinit_constant_epsilon :
+              reinit_data.constant_epsilon > 0.0 ?
+                reinit_data.constant_epsilon :
                 UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                  cell, reinit_scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
+                  cell, reinit_data.scale_factor_epsilon / scratch_data->get_degree(ls_dof_idx));
 
             Vector<double> level_set_local(dofs_per_cell);
             Vector<double> multiplicity_local(dofs_per_cell);
@@ -554,7 +554,7 @@ namespace MeltPoolDG::LevelSet
             reinit_data.constant_epsilon > 0.0 ?
               reinit_data.constant_epsilon :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                cell, reinit_data.scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
+                cell, reinit_data.scale_factor_epsilon / scratch_data->get_degree(ls_dof_idx));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
