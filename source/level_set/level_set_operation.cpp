@@ -89,6 +89,7 @@ namespace MeltPoolDG::LevelSet
     if ((base_in->parameters.reinit.implementation ==
          "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
       {
+        (void)reinit_hanging_nodes_dof_idx_in;
         reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>();
         reinit_operation->initialize(scratch_data,
                                      base_in->parameters,
