@@ -21,6 +21,8 @@
 #include <deal.II/grid/grid_out.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
+
+#include <deal.II/numerics/error_estimator.h>
 // MeltPoolDG
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
@@ -41,6 +43,10 @@
 namespace MeltPoolDG::MeltPool
 {
   using namespace dealii;
+
+  BETTER_ENUM(AMRStrategy, char, generic, adaflo, KellyErrorEstimator)
+  BETTER_ENUM(AutomaticGridRefinementType, char, fixed_fraction, fixed_number)
+
 
   template <int dim>
   class MeltPoolProblem : public ProblemBase<dim>
@@ -74,6 +80,15 @@ namespace MeltPoolDG::MeltPool
       bool do_evaporative_mass_flux = false;
       bool do_melt_pool             = false;
       bool do_recoil_pressure       = false;
+      struct
+      {
+        AMRStrategy                 strategy = AMRStrategy::generic;
+        AutomaticGridRefinementType automatic_grid_refinement_type =
+          AutomaticGridRefinementType::fixed_number;
+        bool do_auto_detect_frequency      = false;
+        bool do_refine_all_interface_cells = false;
+      } amr;
+
     } problem_specific_parameters;
 
     /*
