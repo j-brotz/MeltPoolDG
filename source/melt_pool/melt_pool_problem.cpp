@@ -252,7 +252,16 @@ namespace MeltPoolDG::MeltPool
           "do auto detect frequency",
           problem_specific_parameters.amr.do_auto_detect_frequency,
           "Automatically determine the frequency of remeshing. If this parameter is set, the parameter "
-          "`amr: every n step` becomes obsolete.");
+          "`amr: every n step` is ignored.");
+        prm.add_parameter(
+          "automatic grid refinement type",
+          problem_specific_parameters.amr.automatic_grid_refinement_type,
+          "If the cells are refined automatically (strategy generic/KellyErrorEstimator), choose between "
+          "refine_and_coarsen_fixed_number and refine_and_coarsen_fixed_fraction.");
+        prm.add_parameter(
+          "do refine all interface cells",
+          problem_specific_parameters.amr.do_refine_all_interface_cells,
+          "Enforce all cells with level set values between -0.95 and 0.95 to be refined.");
       }
       prm.leave_subsection();
     }
@@ -1086,12 +1095,18 @@ namespace MeltPoolDG::MeltPool
       [&](parallel::distributed::Triangulation<dim> &tria) -> bool {
       if (problem_specific_parameters.amr.do_auto_detect_frequency)
         {
-          /*
-           *  check whether the interface changed that much such that refinement is needed
-           */
-          // look towards the end of the elements to find extrema in the error
-          // indicator (= level set gradient)
+          // Check whether the interface changed that much such that refinement is needed.
+          //
+          // To this end, it is proved, if a cell K located within 3.5 cell layers around
+          // the interface determined by
+          //
+          //          -log(max |∇Φ|ε) < 3.5
+          //               K
+          //
+          // is at the maximum refinement level or not.
           std::vector<Point<1>> point(2);
+          // For the level set gradient, look towards the end of the elements to find extrema in the
+          // error indicator (= level set gradient).
           point[0][0] = 0.05;
           point[1][0] = 0.95;
           Quadrature<1>   quadrature_1d(point);
@@ -1125,21 +1140,21 @@ namespace MeltPoolDG::MeltPool
                   for (unsigned int d = 0; d < dim; ++d)
                     ls_values.get_function_values(level_set_operation.get_normal_vector().block(d),
                                                   ls_gradients[d]);
-                  double distance = 0;
+                  double distance_in_cells = 0;
                   for (unsigned int q = 0; q < quadrature.size(); ++q)
                     {
                       Tensor<1, dim> ls_gradient;
                       for (unsigned int d = 0; d < dim; ++d)
                         ls_gradient[d] = ls_gradients[d][q];
-                      distance = std::max(distance, ls_gradient.norm());
+                      distance_in_cells = std::max(distance_in_cells, ls_gradient.norm());
                     }
 
-                  distance = std::log(distance * diffusion_length);
+                  distance_in_cells = -std::log(distance_in_cells * diffusion_length);
 
-                  if ((cell->level() < (int)amr_data.max_grid_refinement_level &&
-                       distance > -3.5) ||
+                  if ((cell->level() < static_cast<int>(amr_data.max_grid_refinement_level) &&
+                       distance_in_cells < 3.5) ||
                       (time_iterator.get_current_time_step_number() == 0 &&
-                       cell->level() > amr_data.min_grid_refinement_level && distance < -8))
+                       cell->level() > amr_data.min_grid_refinement_level && distance_in_cells > 8))
                     {
                       needs_refinement_or_coarsening = true;
                       break;
@@ -1161,8 +1176,7 @@ namespace MeltPoolDG::MeltPool
 
       switch (problem_specific_parameters.amr.strategy)
         {
-            // generic strategy based on the difference of the level set field from the constant
-            // values -1, 1
+            // Compute the error based on (1-level_set^2).
             case AMRStrategy::generic: {
               Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
 
@@ -1188,11 +1202,28 @@ namespace MeltPoolDG::MeltPool
                                                         scratch_data->get_quadrature(ls_quad_idx),
                                                         dealii::VectorTools::L2_norm);
 
-              parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-                tria,
-                estimated_error_per_cell,
-                amr_data.upper_perc_to_refine,
-                amr_data.lower_perc_to_coarsen);
+              switch (problem_specific_parameters.amr.automatic_grid_refinement_type)
+                {
+                  default: // this is the default case, since it was determined to be robust for CI
+                           // testing
+                    case AutomaticGridRefinementType::fixed_number: {
+                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+                        tria,
+                        estimated_error_per_cell,
+                        amr_data.upper_perc_to_refine,
+                        amr_data.lower_perc_to_coarsen);
+                      break;
+                    }
+                    case AutomaticGridRefinementType::fixed_fraction: {
+                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+                        tria,
+                        estimated_error_per_cell,
+                        amr_data.upper_perc_to_refine,
+                        amr_data.lower_perc_to_coarsen);
+                      break;
+                    }
+                }
+
               break;
             }
             case AMRStrategy::KellyErrorEstimator: {
@@ -1247,17 +1278,46 @@ namespace MeltPoolDG::MeltPool
                 }
 
               // 4) mark cells for refinement/coarsening
-              parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
-                tria,
-                estimated_error_per_cell,
-                amr_data.upper_perc_to_refine,
-                amr_data.lower_perc_to_coarsen);
+              switch (problem_specific_parameters.amr.automatic_grid_refinement_type)
+                {
+                  default: // this is the default case, since it was determined to be robust for CI
+                           // testing
+                    case AutomaticGridRefinementType::fixed_number: {
+                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+                        tria,
+                        estimated_error_per_cell,
+                        amr_data.upper_perc_to_refine,
+                        amr_data.lower_perc_to_coarsen);
+                      break;
+                    }
+                    case AutomaticGridRefinementType::fixed_fraction: {
+                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+                        tria,
+                        estimated_error_per_cell,
+                        amr_data.upper_perc_to_refine,
+                        amr_data.lower_perc_to_coarsen);
+                      break;
+                    }
+                }
               break;
             }
           case AMRStrategy::adaflo:
-            // alternative refinement strategy; derived from adaflo
+            // AMR strategy adopted from adaflo.
             //
-            // @todo: description, incorporate solid
+            // Refine cell K if it is within four cell layers around the interface
+            //
+            //          -log(max |∇Φ|ε) < 4
+            //                K
+            //
+            // or biased towards the flow direction
+            //
+            //                                 u*∇Φ
+            //          -log(max |∇Φ|ε) - 4Δt ------  < 7
+            //                K                |∇Φ|ε
+            //
+            // resulting in additional three cell layers, to reduce the re-meshing frequency.
+            //
+            // @todo: incorporate solid
             {
               std::vector<Point<1>> point(2);
               point[0][0] = 0.05;
@@ -1300,19 +1360,17 @@ namespace MeltPoolDG::MeltPool
                         ls_values.get_function_values(
                           level_set_operation.get_normal_vector().block(d), ls_gradients[d]);
 
-                      double         distance = 0;
-                      double         min_ls   = 1000;
+                      double         distance_in_cells = 0;
                       Tensor<1, dim> ls_gradient;
 
                       for (unsigned int q = 0; q < quadrature.size(); ++q)
                         {
                           for (unsigned int d = 0; d < dim; ++d)
                             ls_gradient[d] = ls_gradients[d][q];
-                          distance = std::max(distance, ls_gradient.norm());
-                          min_ls   = std::min(min_ls, std::abs(ls_vals[q]));
+                          distance_in_cells = std::max(distance_in_cells, ls_gradient.norm());
                         }
 
-                      distance = std::log(distance * diffusion_length);
+                      distance_in_cells = -std::log(distance_in_cells * diffusion_length);
 
 
                       vel_values[velocity].get_function_values(flow_operation->get_velocity(),
@@ -1322,22 +1380,51 @@ namespace MeltPoolDG::MeltPool
                       const double direction = 4. * time_iterator.get_current_time_increment() *
                                                (ls_gradient * vel_vals[0]) / ls_gradient.norm() /
                                                diffusion_length;
-                      const double mod_distance = distance + direction * ls_vals[0];
+                      const double advected_distance_in_cells =
+                        distance_in_cells - direction * ls_vals[0];
 
                       bool refine_cell =
-                        ((cell->level() < (int)amr_data.max_grid_refinement_level) &&
-                         (mod_distance > -7 || distance > -4) && min_ls <= 0.999);
+                        ((cell->level() < static_cast<int>(amr_data.max_grid_refinement_level)) &&
+                         (advected_distance_in_cells < 7 || distance_in_cells < 4));
 
                       if (refine_cell == true)
                         cell->set_refine_flag();
                       else if ((cell->level() > amr_data.min_grid_refinement_level) &&
-                               (mod_distance < -8 || distance < -5))
+                               (advected_distance_in_cells > 8 || distance_in_cells > 5))
                         cell->set_coarsen_flag();
                     }
                   vel_cell++;
                 }
               break;
             }
+        }
+
+
+      if (problem_specific_parameters.amr.do_refine_all_interface_cells)
+        {
+          // make sure that cells close to the interfaces are refined
+          level_set_operation.get_level_set().update_ghost_values();
+          Vector<double> ls_vals(scratch_data->get_fe(ls_dof_idx).n_dofs_per_cell());
+          for (const auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
+            {
+              if (cell->is_locally_owned() == false)
+                continue;
+
+              cell->get_dof_values(level_set_operation.get_level_set(), ls_vals);
+
+              for (unsigned int i = 0; i < ls_vals.size(); ++i)
+                if (-0.95 <= ls_vals[i] &&
+                    ls_vals[i] <= 0.95) //@todo: couple values to diffusion length
+                  {
+                    cell->clear_coarsen_flag();
+                    cell->set_refine_flag();
+
+                    break;
+                  }
+              //@todo: incorporate solid
+            }
+
+          level_set_operation.get_level_set().zero_out_ghost_values();
         }
 
       return true;

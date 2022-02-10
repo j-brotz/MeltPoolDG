@@ -45,6 +45,7 @@ namespace MeltPoolDG::MeltPool
   using namespace dealii;
 
   BETTER_ENUM(AMRStrategy, char, generic, adaflo, KellyErrorEstimator)
+  BETTER_ENUM(AutomaticGridRefinementType, char, fixed_fraction, fixed_number)
 
 
   template <int dim>
@@ -81,8 +82,11 @@ namespace MeltPoolDG::MeltPool
       bool do_recoil_pressure       = false;
       struct
       {
-        AMRStrategy strategy                 = AMRStrategy::generic;
-        bool        do_auto_detect_frequency = false;
+        AMRStrategy                 strategy = AMRStrategy::generic;
+        AutomaticGridRefinementType automatic_grid_refinement_type =
+          AutomaticGridRefinementType::fixed_number;
+        bool do_auto_detect_frequency      = false;
+        bool do_refine_all_interface_cells = false;
       } amr;
 
     } problem_specific_parameters;

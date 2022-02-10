@@ -12,6 +12,8 @@ All notable changes of the input parameters will be documented in this file.
     "amr" : {
       "strategy": "generic|adaflo|KellyErrorEstimator",
       "do auto detect frequency": "true|false"
+      "do refine all interface cells": "true|false"
+      "automatic grid refinement type": "fixed_number|fixed_fraction"
     }
   }
 }
