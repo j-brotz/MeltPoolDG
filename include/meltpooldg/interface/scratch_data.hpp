@@ -155,7 +155,10 @@ namespace MeltPoolDG
     get_min_cell_size() const;
 
     const double &
-    get_diameter() const;
+    get_max_cell_size() const;
+
+    const double &
+    get_min_diameter() const;
 
     const AlignedVector<VectorizedArray<double>> &
     get_cell_sizes() const;
@@ -185,18 +188,19 @@ namespace MeltPoolDG
     get_timer() const;
 
   private:
-    bool                                                      do_matrix_free;
-    std::vector<dealii::ConditionalOStream>                   pcout;
-    std::shared_ptr<Mapping<dim, spacedim>>                   mapping;
-    std::vector<const DoFHandler<dim, spacedim> *>            dof_handler;
-    std::vector<const AffineConstraints<number> *>            constraint;
-    std::vector<Quadrature<dim>>                              quad;
-    std::vector<Quadrature<dim - 1>>                          face_quad;
-    double                                                    min_cell_size;
-    double                                                    diameter;
-    AlignedVector<VectorizedArray<double>>                    cell_sizes;
-    std::vector<IndexSet>                                     locally_owned_dofs;
-    std::vector<IndexSet>                                     locally_relevant_dofs;
+    bool                                           do_matrix_free;
+    std::vector<dealii::ConditionalOStream>        pcout;
+    std::shared_ptr<Mapping<dim, spacedim>>        mapping;
+    std::vector<const DoFHandler<dim, spacedim> *> dof_handler;
+    std::vector<const AffineConstraints<number> *> constraint;
+    std::vector<Quadrature<dim>>                   quad;
+    std::vector<Quadrature<dim - 1>>               face_quad;
+    double                                         min_cell_size;
+    double                                 max_cell_size; // only computed in case of matrixfree
+    double                                 min_diameter;
+    AlignedVector<VectorizedArray<double>> cell_sizes;
+    std::vector<IndexSet>                  locally_owned_dofs;
+    std::vector<IndexSet>                  locally_relevant_dofs;
     std::vector<std::shared_ptr<Utilities::MPI::Partitioner>> partitioner;
 
     mutable std::shared_ptr<TimerOutput> timer;

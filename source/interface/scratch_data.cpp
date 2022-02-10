@@ -134,13 +134,15 @@ namespace MeltPoolDG
     this->partitioner.clear();
 
     /*
-     *  create minimum cell sizes
+     *  compute minimum cell size; this corresponds to the edge length in case of cubic elements
      */
     this->min_cell_size = GridTools::minimal_cell_diameter(get_triangulation()) / std::sqrt(dim);
+    this->max_cell_size = GridTools::maximal_cell_diameter(get_triangulation()) / std::sqrt(dim);
+
     /*
      *  create diameter of the object
      */
-    this->diameter = GridTools::minimal_cell_diameter(get_triangulation());
+    this->min_diameter = GridTools::minimal_cell_diameter(get_triangulation());
 
     int dof_idx = 0;
     for (const auto &dof : dof_handler)
@@ -199,7 +201,8 @@ namespace MeltPoolDG
             VectorizedArray<double> cell_size = VectorizedArray<double>();
             for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
               {
-                // the diameter is subdivided by 2 to get the edge length for quadratic elements
+                // the diameter is subdivided by sqrt(dim) to get the edge length for quadratic
+                // elements
                 cell_size[v] =
                   this->matrix_free.get_cell_iterator(cell, v, 0 /*dof_idx*/)->diameter() /
                   sqrt(dim);
@@ -268,7 +271,7 @@ namespace MeltPoolDG
     this->dof_handler.clear();
     this->mapping.reset();
     this->min_cell_size = 0.0;
-    this->diameter      = 0.0;
+    this->min_diameter  = 0.0;
     this->cell_sizes.clear();
     this->locally_owned_dofs.clear();
     this->locally_relevant_dofs.clear();
@@ -404,9 +407,16 @@ namespace MeltPoolDG
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   const double &
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_diameter() const
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_max_cell_size() const
   {
-    return this->diameter;
+    return this->max_cell_size;
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  const double &
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_min_diameter() const
+  {
+    return this->min_diameter;
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>

@@ -844,6 +844,10 @@ namespace MeltPoolDG::MeltPool
      *    initialize the velocity for advecting the level set interface
      */
     scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
+    /*
+     * print mesh information
+     */
+    Journal::print_mesh_information<dim>(*scratch_data, 1);
   }
 
   // todo: clean-up

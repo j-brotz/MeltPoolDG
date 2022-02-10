@@ -40,10 +40,6 @@ namespace MeltPoolDG::AdvectionDiffusion
         if (base_in->parameters.amr.do_amr)
           {
             refine_mesh(base_in);
-            Journal::print_mesh_information<dim>(scratch_data->get_pcout(1),
-                                                 *scratch_data,
-                                                 velocity_dof_idx,
-                                                 "advection_diffusion");
           }
       }
     Journal::print_end(scratch_data->get_pcout());
@@ -126,6 +122,11 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (advec_diff_operation) // TODO: better place
       advec_diff_operation->reinit();
+
+    /*
+     * print mesh information
+     */
+    Journal::print_mesh_information<dim>(*scratch_data, 1);
   }
 
   template <int dim>

@@ -45,23 +45,21 @@ namespace MeltPoolDG::Journal
 
   template <int dim>
   void
-  print_mesh_information(const ConditionalOStream &pcout,
-                         const ScratchData<dim> &  scratch_data,
-                         const unsigned int        dof_idx        = 0,
-                         const std::string &       operation_name = "")
+  print_mesh_information(const ScratchData<dim> &scratch_data,
+                         const unsigned int      verbosity_level = 1)
   {
-    std::ostringstream str;
-    str << "#dofs: " << scratch_data.get_dof_handler(dof_idx).n_dofs();
-    auto vec = dealii::Utilities::MPI::gather(MPI_COMM_WORLD,
-                                              scratch_data.get_triangulation().n_active_cells());
-
-    int sum_cells = 0;
-    for (auto &i : vec)
-      sum_cells += i;
-
-    str << "     #cells: " << sum_cells;
-
-    print_line(pcout, str.str(), operation_name);
+    print_decoration_line(scratch_data.get_pcout(verbosity_level));
+    print_line(scratch_data.get_pcout(verbosity_level), "Mesh data:", "ScratchData");
+    print_line(scratch_data.get_pcout(verbosity_level),
+               "  * total number of cells: " +
+                 std::to_string(scratch_data.get_triangulation().n_global_active_cells()),
+               "ScratchData");
+    print_line(scratch_data.get_pcout(verbosity_level),
+               "  * minimum cell size: " + std::to_string(scratch_data.get_min_cell_size()),
+               "ScratchData");
+    print_line(scratch_data.get_pcout(verbosity_level),
+               "  * maximum cell size: " + std::to_string(scratch_data.get_max_cell_size()),
+               "ScratchData");
+    print_decoration_line(scratch_data.get_pcout(verbosity_level));
   }
-
 } // namespace MeltPoolDG::Journal
