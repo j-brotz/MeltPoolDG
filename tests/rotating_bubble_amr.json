@@ -40,6 +40,7 @@
     }
   },
   "curvature": {
+    "curv damping scale factor": "4",
     "linear solver": {
       "do matrix free": "false"
     }
