@@ -28,7 +28,6 @@ namespace MeltPoolDG::LevelSet
                                      const unsigned int ls_hanging_nodes_dof_idx_in,
                                      const unsigned int ls_quad_idx_in,
                                      const unsigned int reinit_dof_idx_in,
-                                     const unsigned int reinit_hanging_nodes_dof_idx_in,
                                      const unsigned int curv_dof_idx_in,
                                      const unsigned int normal_dof_idx_in,
                                      const unsigned int vel_dof_idx,
@@ -89,7 +88,6 @@ namespace MeltPoolDG::LevelSet
     if ((base_in->parameters.reinit.implementation ==
          "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
       {
-        (void)reinit_hanging_nodes_dof_idx_in;
         reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>();
         reinit_operation->initialize(scratch_data,
                                      base_in->parameters,
@@ -104,11 +102,7 @@ namespace MeltPoolDG::LevelSet
       {
         AssertThrow(base_in->parameters.reinit.linear_solver.do_matrix_free, ExcNotImplemented());
         reinit_operation = std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
-          *scratch_data,
-          reinit_hanging_nodes_dof_idx_in,
-          ls_quad_idx_in,
-          normal_dof_idx_in,
-          base_in->parameters);
+          *scratch_data, reinit_dof_idx_in, ls_quad_idx_in, normal_dof_idx_in, base_in->parameters);
       }
 #endif
     else

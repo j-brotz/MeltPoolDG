@@ -76,7 +76,6 @@ namespace MeltPoolDG::LevelSet
                const unsigned int                             ls_hanging_nodes_dof_idx_in,
                const unsigned int                             ls_quad_idx_in,
                const unsigned int                             reinit_dof_idx_in,
-               const unsigned int                             reinit_hanging_nodes_dof_idx_in,
                const unsigned int                             curv_dof_idx_in,
                const unsigned int                             normal_dof_idx_in,
                const unsigned int                             vel_dof_idx,
