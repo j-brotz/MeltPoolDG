@@ -114,7 +114,10 @@ namespace MeltPoolDG::Heat
                                                dt); // @todo adapt for adaptive time stepping
 
     temperature_old.copy_locally_owned_data_from(temperature);
-    temperature = temperature_extrapolated;
+    temperature.copy_locally_owned_data_from(temperature_extrapolated);
+
+    // apply hanging node constraints to predictor
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature);
 
     // setup preconditioner
     heat_operator->update_ghost_values();
