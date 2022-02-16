@@ -1,3 +1,5 @@
+#include <deal.II/numerics/data_out.h>
+
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
@@ -70,6 +72,24 @@ namespace MeltPoolDG
         i++;
       }
     // @todo: make exception
+    //
+    if (!is_converged())
+      {
+        DataOutBase::VtkFlags flags;
+        flags.write_higher_order_cells = true;
+
+        DataOut<dim> data_out;
+        data_out.set_flags(flags);
+
+        data_out.add_data_vector(scratch_data.get_dof_handler(dof_idx), solution, "solution");
+        data_out.add_data_vector(scratch_data.get_dof_handler(dof_idx),
+                                 solution_update,
+                                 "solution_update");
+        data_out.add_data_vector(scratch_data.get_dof_handler(dof_idx), rhs, "rhs");
+        data_out.build_patches(scratch_data.get_mapping());
+        data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
+      }
+
     AssertThrow(is_converged(), ExcMessage("Newton Raphson solver did not converge!"));
   }
 
