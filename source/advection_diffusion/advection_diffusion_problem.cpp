@@ -207,7 +207,7 @@ namespace MeltPoolDG::AdvectionDiffusion
         advec_diff_operation = std::make_shared<AdvectionDiffusionOperation<dim>>();
 
         advec_diff_operation->initialize(scratch_data,
-                                         base_in->parameters,
+                                         base_in->parameters.advec_diff,
                                          advec_diff_dof_idx,
                                          advec_diff_hanging_nodes_dof_idx,
                                          advec_diff_quad_idx,

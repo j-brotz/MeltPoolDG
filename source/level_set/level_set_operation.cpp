@@ -28,7 +28,6 @@ namespace MeltPoolDG::LevelSet
                                      const unsigned int ls_hanging_nodes_dof_idx_in,
                                      const unsigned int ls_quad_idx_in,
                                      const unsigned int reinit_dof_idx_in,
-                                     const unsigned int reinit_hanging_nodes_dof_idx_in,
                                      const unsigned int curv_dof_idx_in,
                                      const unsigned int normal_dof_idx_in,
                                      const unsigned int vel_dof_idx,
@@ -40,15 +39,9 @@ namespace MeltPoolDG::LevelSet
     ls_quad_idx              = ls_quad_idx_in;
     curv_dof_idx             = curv_dof_idx_in;
     reinit_dof_idx           = reinit_dof_idx_in;
-    max_reinit_steps         = base_in->parameters.reinit.max_n_steps;
     /*
-     *  set the level set data
+     *    initialize the advection diffusion operation
      */
-    level_set_data = base_in->parameters.ls;
-    /*
-     *    initialize the advection diffusion operation and the reinitialization operation class
-     */
-
     if ((base_in->parameters.advec_diff.implementation ==
          "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
       {
@@ -56,7 +49,7 @@ namespace MeltPoolDG::LevelSet
         advec_diff_operation =
           std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperation<dim>>();
         advec_diff_operation->initialize(scratch_data,
-                                         base_in->parameters,
+                                         base_in->parameters.advec_diff,
                                          ls_dof_idx,
                                          ls_hanging_nodes_dof_idx_in,
                                          ls_quad_idx_in,
@@ -81,20 +74,24 @@ namespace MeltPoolDG::LevelSet
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
-
     /*
-     *  set the parameters for the levelset problem; already determined parameters
-     *  from the initialize call of advec_diff_operation are overwritten.
+     *  Set the parameters for the levelset problem.
+     *
+     *  Already determined parameters from the initialize call of advec_diff_operation
+     *  are overwritten.
      */
     set_level_set_parameters(base_in->parameters);
 
+    /*
+     *    initialize the reinit operation
+     */
     if ((base_in->parameters.reinit.implementation ==
          "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
       {
         reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>();
         reinit_operation->initialize(scratch_data,
                                      base_in->parameters,
-                                     reinit_hanging_nodes_dof_idx_in,
+                                     reinit_dof_idx_in,
                                      ls_quad_idx_in,
                                      ls_dof_idx,
                                      normal_dof_idx_in);
@@ -105,11 +102,7 @@ namespace MeltPoolDG::LevelSet
       {
         AssertThrow(base_in->parameters.reinit.linear_solver.do_matrix_free, ExcNotImplemented());
         reinit_operation = std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
-          *scratch_data,
-          reinit_hanging_nodes_dof_idx_in,
-          ls_quad_idx_in,
-          normal_dof_idx_in,
-          base_in->parameters);
+          *scratch_data, reinit_dof_idx_in, ls_quad_idx_in, normal_dof_idx_in, base_in->parameters);
       }
 #endif
     else
@@ -146,6 +139,19 @@ namespace MeltPoolDG::LevelSet
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
+
+    /*
+     * initialize the time iterator for the reinitialization
+     */
+    reinit_time_iterator.initialize(
+      TimeIteratorData<double>{0.0,
+                               100000.,
+                               reinit_data.dtau > 0.0 ? reinit_data.dtau :
+                                                        scratch_data->get_min_cell_size() *
+                                                          reinit_data.scale_factor_epsilon /
+                                                          scratch_data->get_degree(ls_dof_idx),
+                               (unsigned int)level_set_data.n_initial_reinit_steps,
+                               false});
   }
   /**
    * set initial condition
@@ -179,29 +185,12 @@ namespace MeltPoolDG::LevelSet
         // set the values in the advection operation
         advec_diff_operation->get_advected_field() = get_level_set();
       }
-    /*
-     * 1) The initial solution of the level set equation will be reinitialized first WITHOUT
-     *    dirichlet constraints of the reinitialization.
-     */
+    // do reinitialization of the initial field if requested
+    reinit_time_iterator.reset_max_n_time_steps(level_set_data.n_initial_reinit_steps);
     do_reinitialization();
-    reinit_time_iterator.reset_max_n_time_steps(max_reinit_steps);
+    reinit_time_iterator.reset_max_n_time_steps(reinit_data.max_n_steps);
     /*
-     * 2) From now on, the initial solution of the level set equation will be reinitialized
-     *    with dirichlet constraints of the reinitialization.
-     *
-     * MS:
-     * This is needed when the initial level set field should be reinitializated WITHOUT
-     * dirichlet constraints and subsequently certain (constrained) dofs of the level set
-     * should not change anymore due to reinitialization. This is needed in the
-     * MeltPoolOperation, where the level set values in the solid domain should not change
-     * anymore after initial reinitialization. This is up to now the only case where dirichlet
-     * constraints for reinitialization are set.
-     *
-     *    @todo: check if this really needed for the melt pool simulations
-     */
-    reinit_operation->update_dof_idx(reinit_dof_idx);
-    /*
-     *    compute the smoothened function
+     *    compute the localized heaviside function
      */
     transform_level_set_to_smooth_heaviside();
     /*
@@ -225,6 +214,12 @@ namespace MeltPoolDG::LevelSet
 
     scratch_data->initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
     scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
+
+    reinit_time_iterator.set_current_time_increment(reinit_data.dtau > 0.0 ?
+                                                      reinit_data.dtau :
+                                                      scratch_data->get_min_cell_size() *
+                                                        reinit_data.scale_factor_epsilon /
+                                                        scratch_data->get_degree(ls_dof_idx));
   }
 
   template <int dim>
@@ -496,10 +491,10 @@ namespace MeltPoolDG::LevelSet
             distance_eval.get_function_values(distance_to_level_set, distance_at_q);
 
             const double epsilon_cell =
-              reinit_constant_epsilon > 0.0 ?
-                reinit_constant_epsilon :
+              reinit_data.constant_epsilon > 0.0 ?
+                reinit_data.constant_epsilon :
                 UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                  cell, reinit_scale_factor_epsilon / level_set_data.n_subdivisions);
+                  cell, reinit_data.scale_factor_epsilon / scratch_data->get_degree(ls_dof_idx));
 
             Vector<double> level_set_local(dofs_per_cell);
             Vector<double> multiplicity_local(dofs_per_cell);
@@ -551,10 +546,10 @@ namespace MeltPoolDG::LevelSet
           cell->get_dof_indices(local_dof_indices);
 
           const double epsilon_cell =
-            reinit_constant_epsilon > 0.0 ?
-              reinit_constant_epsilon :
+            reinit_data.constant_epsilon > 0.0 ?
+              reinit_data.constant_epsilon :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                cell, reinit_scale_factor_epsilon / level_set_data.n_subdivisions);
+                cell, reinit_data.scale_factor_epsilon / scratch_data->get_degree(ls_dof_idx));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -608,25 +603,13 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::set_level_set_parameters(const Parameters<double> &data_in)
   {
-    level_set_data.do_reinitialization                = data_in.ls.do_reinitialization;
-    advec_diff_operation->advec_diff_data.diffusivity = data_in.ls.artificial_diffusivity;
-    advec_diff_operation->advec_diff_data.time_integration_scheme =
-      data_in.ls.time_integration_scheme;
-    /*
-     *  setup the time iterator for the reinitialization problem
-     */
-    reinit_time_iterator.initialize(
-      TimeIteratorData<double>{0.0,
-                               100000.,
-                               data_in.reinit.dtau > 0.0 ?
-                                 data_in.reinit.dtau :
-                                 scratch_data->get_min_cell_size() *
-                                   data_in.reinit.scale_factor_epsilon / data_in.ls.n_subdivisions,
-                               (unsigned int)data_in.ls.n_initial_reinit_steps,
-                               false});
+    level_set_data = data_in.ls;
+    reinit_data    = data_in.reinit;
 
-    reinit_constant_epsilon     = data_in.reinit.constant_epsilon;     //@todo: better solution
-    reinit_scale_factor_epsilon = data_in.reinit.scale_factor_epsilon; //@todo: better solution
+    advec_diff_operation->advec_diff_data.diffusivity =
+      data_in.ls.artificial_diffusivity; // @todo: remove level set parameter
+    advec_diff_operation->advec_diff_data.time_integration_scheme =
+      data_in.ls.time_integration_scheme; // @todo: remove level set parameter
   }
 
   template class LevelSetOperation<1>;

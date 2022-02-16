@@ -151,7 +151,6 @@ namespace MeltPoolDG::LevelSet
                                    ls_hanging_nodes_dof_idx,
                                    ls_quad_idx,
                                    reinit_dof_idx,
-                                   reinit_dof_idx,
                                    curv_dof_idx,
                                    normal_dof_idx,
                                    vel_dof_idx,

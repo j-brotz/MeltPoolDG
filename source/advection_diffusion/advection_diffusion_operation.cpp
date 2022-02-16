@@ -15,7 +15,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperation<dim>::initialize(
     const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const Parameters<double> &                     data_in,
+    const AdvectionDiffusionData<double> &         advec_diff_data_in,
     const unsigned int                             advec_diff_dof_idx_in,
     const unsigned int                             advec_diff_hanging_nodes_dof_idx_in,
     const unsigned int                             advec_diff_quad_idx_in,
@@ -29,11 +29,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     /*
      *  set the advection diffusion data
      */
-    this->advec_diff_data = data_in.advec_diff;
-    /*
-     *  set the parameters for the advection_diffusion problem
-     */
-    set_advection_diffusion_parameters(data_in);
+    this->advec_diff_data = advec_diff_data_in;
+
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
         preconditioner_matrixfree = std::make_shared<
@@ -256,14 +253,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     data_out.add_data_vector(scratch_data->get_dof_handler(advec_diff_dof_idx),
                              solution_advected_field,
                              "advected_field");
-  }
-
-  template <int dim>
-  void
-  AdvectionDiffusionOperation<dim>::set_advection_diffusion_parameters(
-    const Parameters<double> &data_in)
-  {
-    this->advec_diff_data = data_in.advec_diff; //@todo is this really needed?
   }
 
   template <int dim>

@@ -37,11 +37,11 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     void
     initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-               const Parameters<double> &                     data_in,
-               unsigned int                                   advec_diff_dof_idx_in,
-               unsigned int                                   advec_diff_hanging_nodes_dof_idx_in,
-               unsigned int                                   advec_diff_quad_idx_in,
-               unsigned int                                   velocity_dof_idx_in) override;
+               const AdvectionDiffusionData<double> &         advec_diff_data_in,
+               const unsigned int                             advec_diff_dof_idx_in,
+               const unsigned int                             advec_diff_hanging_nodes_dof_idx_in,
+               const unsigned int                             advec_diff_quad_idx_in,
+               const unsigned int                             velocity_dof_idx_in) override;
 
     /**
      * Provide a field function for the initial solution of the advected field
@@ -75,9 +75,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
   private:
-    void
-    set_advection_diffusion_parameters(const Parameters<double> &data_in);
-
     void
     create_operator(const VectorType &advection_velocity);
 

@@ -53,6 +53,13 @@ namespace MeltPoolDG
 
   template <typename number>
   void
+  TimeIterator<number>::set_current_time_increment(const number value)
+  {
+    current_time_increment = value;
+  }
+
+  template <typename number>
+  void
   TimeIterator<number>::reset_max_n_time_steps(const int time_steps_in)
   {
     time_data.max_n_time_steps = time_steps_in;

@@ -161,11 +161,10 @@ namespace MeltPoolDG::MeltPool
     unsigned int temp_hanging_nodes_dof_idx;
     unsigned int temp_quad_idx;
 
-    const unsigned int &reinit_hanging_nodes_dof_idx = ls_hanging_nodes_dof_idx;
-    const unsigned int &curv_dof_idx                 = ls_hanging_nodes_dof_idx;
-    const unsigned int &normal_dof_idx               = ls_hanging_nodes_dof_idx;
-    const unsigned int &evapor_vel_dof_idx           = vel_dof_idx;
-    const unsigned int &evapor_mass_flux_dof_idx     = temp_hanging_nodes_dof_idx;
+    const unsigned int &curv_dof_idx             = ls_hanging_nodes_dof_idx;
+    const unsigned int &normal_dof_idx           = ls_hanging_nodes_dof_idx;
+    const unsigned int &evapor_vel_dof_idx       = vel_dof_idx;
+    const unsigned int &evapor_mass_flux_dof_idx = temp_hanging_nodes_dof_idx;
 
     std::shared_ptr<ScratchData<dim>>                       scratch_data;
     std::shared_ptr<Material<double>>                       material;

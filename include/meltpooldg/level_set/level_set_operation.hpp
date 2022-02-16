@@ -45,9 +45,10 @@ namespace MeltPoolDG::LevelSet
      */
     TimeIterator<double> reinit_time_iterator;
     /*
-     *  All the necessary parameters are stored in this vector.
+     *  necessary parameters
      */
-    LevelSetData<double> level_set_data;
+    LevelSetData<double>         level_set_data;
+    ReinitializationData<double> reinit_data;
     /*
      * select the relevant DoFHandler
      */
@@ -56,10 +57,6 @@ namespace MeltPoolDG::LevelSet
     unsigned int ls_quad_idx;
     unsigned int curv_dof_idx;
     unsigned int reinit_dof_idx;
-
-    double reinit_constant_epsilon     = 0; //@todo: better solution
-    double reinit_scale_factor_epsilon = 0; //@todo: better solution
-    int    max_reinit_steps            = 0;
 
     bool very_first_step = true;
     /*
@@ -79,7 +76,6 @@ namespace MeltPoolDG::LevelSet
                const unsigned int                             ls_hanging_nodes_dof_idx_in,
                const unsigned int                             ls_quad_idx_in,
                const unsigned int                             reinit_dof_idx_in,
-               const unsigned int                             reinit_hanging_nodes_dof_idx_in,
                const unsigned int                             curv_dof_idx_in,
                const unsigned int                             normal_dof_idx_in,
                const unsigned int                             vel_dof_idx,

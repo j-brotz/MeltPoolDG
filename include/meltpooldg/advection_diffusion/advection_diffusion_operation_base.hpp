@@ -30,7 +30,7 @@ namespace MeltPoolDG
 
       virtual void
       initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const Parameters<double> &                     data_in,
+                 const AdvectionDiffusionData<double> &         data_in,
                  const unsigned int                             advec_diff_dof_idx_in,
                  const unsigned int                             advec_diff_hanging_nodes_idx_in,
                  const unsigned int                             advec_diff_quad_idx_in,
