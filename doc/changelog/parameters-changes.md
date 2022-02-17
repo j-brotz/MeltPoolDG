@@ -2,11 +2,11 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-02-17
-- <span style="color:red">Delete</span> ambiguous parameter
-```json
+- Delete ambiguous parameter
+```diff
 {
   "melt pool": {
-    "mp liquid melting point": ""
+-    "mp liquid melting point": ""
   }
 }
 
