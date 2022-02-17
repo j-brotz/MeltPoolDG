@@ -59,7 +59,8 @@
     "material second conductivity": "35.95",
     "material second density": "7430.0",
     "material boiling temperature": "3000.",
-    "material second viscosity": "0.006"
+    "material second viscosity": "0.006",
+    "material melting point": "1700"
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",
@@ -85,7 +86,6 @@
     "laser analytical temperature x to y ratio": "3."
   },
   "melt pool": {
-    "mp liquid melting point": "1700",
     "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "true",
     "mp solid fraction lower limit": "0.77"

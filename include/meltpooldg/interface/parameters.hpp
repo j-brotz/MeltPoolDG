@@ -222,7 +222,6 @@ namespace MeltPoolDG
     {
       number melt_pool_radius = 0.0;
       number melt_pool_depth  = 0.0;
-      number melting_point    = 0.0; // TODO move to MaterialData
     } liquid;
   };
 

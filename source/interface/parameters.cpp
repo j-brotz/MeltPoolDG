@@ -615,9 +615,6 @@ namespace MeltPoolDG
       prm.add_parameter("mp liquid melt pool depth",
                         mp.liquid.melt_pool_depth,
                         "Set the depth of the liquid parts of the melt pool ellipse");
-      prm.add_parameter("mp liquid melting point",
-                        mp.liquid.melting_point,
-                        "Melting point of the liquid part of domain");
     }
     prm.leave_subsection();
     /*

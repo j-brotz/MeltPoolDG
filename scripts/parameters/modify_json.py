@@ -109,7 +109,7 @@ def modify_json(json_f, appendix=""):
             # delete potentially empty items
             datastore = remove_empty_nested_items(datastore)
             
-        with open(j.split(".")[0]+"_"+appendix+".json", 'w') as f:
+        with open(j.split(".json")[0]+appendix+".json", 'w') as f:
             json.dump(datastore, f, indent=2, separators=(',', ': '))
 
 if __name__ == "__main__":
