@@ -95,7 +95,6 @@ namespace MeltPoolDG::Reinitialization
      */
     scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
     solution_level_set.copy_locally_owned_data_from(solution_level_set_in);
-    solution_level_set.update_ghost_values();
     /*
      *    update the normal vector field corresponding to the given solution of the
      *    level set; the normal vector field is called by reference within the
@@ -123,9 +122,7 @@ namespace MeltPoolDG::Reinitialization
   {
     get_normal_vector().update_ghost_values();
     solution_level_set.update_ghost_values();
-    /**
-     * update the distributed sparsity pattern for matrix-based amr
-     */
+
     VectorType delta_psi_vec, rhs;
 
     scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
@@ -204,9 +201,13 @@ namespace MeltPoolDG::Reinitialization
     solution_level_set.zero_out_ghost_values();
     get_normal_vector().zero_out_ghost_values();
 
-    solution_level_set += delta_psi_vec;
 
-    solution_level_set.update_ghost_values(); //@todo: delete
+    // copy the delta_psi to the DoFHandler of the level set
+    VectorType delta_level_set;
+    scratch_data->initialize_dof_vector(delta_level_set, ls_dof_idx);
+    delta_level_set.copy_locally_owned_data_from(delta_psi_vec);
+
+    solution_level_set += delta_level_set;
 
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   MeltPoolDG::VectorTools::compute_L2_norm<dim>(
@@ -286,8 +287,6 @@ namespace MeltPoolDG::Reinitialization
   {
     data_out.add_data_vector(scratch_data->get_dof_handler(reinit_dof_idx), get_level_set(), "psi");
 
-    //@todo: attach_output_vectors from normal_vector_operation
-    get_normal_vector().update_ghost_values();
     for (unsigned int d = 0; d < dim; ++d)
       data_out.add_data_vector(scratch_data->get_dof_handler(reinit_dof_idx),
                                get_normal_vector().block(d),
