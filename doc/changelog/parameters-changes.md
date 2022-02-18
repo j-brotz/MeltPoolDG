@@ -1,6 +1,21 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-02-17
+- Add problem-specific parameter for AMR in the melt pool problem
+```json
+{
+  "base": {
+    "problem name": "melt_pool"
+  },
+  "problem specific": {
+    "amr" : {
+      "fraction of melting point refined in solid": "0.0<x<1.0"
+    }
+  }
+}
+```
+
 ## 2022-02-09
 - Add problem-specific parameter for AMR in the melt pool problem
 ```json
@@ -51,6 +66,7 @@ All notable changes of the input parameters will be documented in this file.
      "ls do matrix free": ""
   }
 }
+```
 - Change names for the linear solver data from
 ```json
 {

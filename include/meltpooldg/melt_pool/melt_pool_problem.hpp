@@ -85,8 +85,9 @@ namespace MeltPoolDG::MeltPool
         AMRStrategy                 strategy = AMRStrategy::generic;
         AutomaticGridRefinementType automatic_grid_refinement_type =
           AutomaticGridRefinementType::fixed_number;
-        bool do_auto_detect_frequency      = false;
-        bool do_refine_all_interface_cells = false;
+        bool   do_auto_detect_frequency                   = false;
+        bool   do_refine_all_interface_cells              = false;
+        double fraction_of_melting_point_refined_in_solid = 1.0;
       } amr;
 
     } problem_specific_parameters;

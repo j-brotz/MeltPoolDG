@@ -261,7 +261,12 @@ namespace MeltPoolDG::MeltPool
         prm.add_parameter(
           "do refine all interface cells",
           problem_specific_parameters.amr.do_refine_all_interface_cells,
-          "Enforce all cells with level set values between -0.95 and 0.95 to be refined.");
+          "Enforce all cells with level set values between -0.975 and 0.975 to be refined.");
+        prm.add_parameter(
+          "fraction of melting point refined in solid",
+          problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid,
+          "Define a fraction of the melting point. Cells in the solid with a higher temperature are enforced "
+          "to be refined.");
       }
       prm.leave_subsection();
     }
@@ -302,6 +307,11 @@ namespace MeltPoolDG::MeltPool
       AssertThrow(false,
                   ExcMessage("In case of do melt pool both flag >>> do melt pool <<< "
                              "and >>> do heat transfer <<< have to be set to true."));
+
+    AssertThrow(problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid <= 1 &&
+                  problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid >= 0,
+                ExcMessage(
+                  ">>>fraction of melting point refined in solid<<< must be between 0 and 1."));
   }
 
   template <int dim>
@@ -1402,6 +1412,51 @@ namespace MeltPoolDG::MeltPool
             }
         }
 
+      if (melt_pool_operation)
+        {
+          melt_pool_operation->get_liquid().update_ghost_values();
+          melt_pool_operation->get_solid().update_ghost_values();
+          heat_operation->get_temperature().update_ghost_values();
+          Vector<double> liq_vals(
+            scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
+          Vector<double> solid_vals(
+            scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
+          Vector<double> temp_vals(
+            scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
+
+          for (const auto &cell :
+               scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
+            {
+              if (cell->is_locally_owned() == false)
+                continue;
+
+              cell->get_dof_values(melt_pool_operation->get_liquid(), liq_vals);
+              cell->get_dof_values(melt_pool_operation->get_solid(), solid_vals);
+              cell->get_dof_values(heat_operation->get_temperature(), temp_vals);
+
+              for (unsigned int i = 0; i < liq_vals.size(); ++i)
+                // ensure that the entire liquid region is refined
+                if (liq_vals[i] > 0.0 && liq_vals[i] <= 1.0)
+                  {
+                    cell->clear_coarsen_flag();
+                    cell->set_refine_flag();
+
+                    break;
+                  }
+                // ensure that solid regions at high temperatures are refined
+                else if (solid_vals[i] > 0.0 &&
+                         temp_vals[i] >= problem_specific_parameters.amr
+                                             .fraction_of_melting_point_refined_in_solid *
+                                           base_in->parameters.material.melting_point)
+                  {
+                    cell->clear_coarsen_flag();
+                    cell->set_refine_flag();
+                    break;
+                  }
+            }
+          melt_pool_operation->get_liquid().zero_out_ghost_values();
+        }
+
 
       if (problem_specific_parameters.amr.do_refine_all_interface_cells)
         {
@@ -1416,15 +1471,15 @@ namespace MeltPoolDG::MeltPool
               cell->get_dof_values(level_set_operation.get_level_set(), ls_vals);
 
               for (unsigned int i = 0; i < ls_vals.size(); ++i)
-                if (-0.95 <= ls_vals[i] &&
-                    ls_vals[i] <= 0.95) //@todo: couple values to diffusion length
+                // Ensure that values at -0.975<=phi<=0.975 are refined.
+                // This includes cells in a maximum distance of ~4*epsilon to the interface.
+                if (-0.975 <= ls_vals[i] && ls_vals[i] <= 0.975)
                   {
                     cell->clear_coarsen_flag();
                     cell->set_refine_flag();
 
                     break;
                   }
-              //@todo: incorporate solid
             }
 
           level_set_operation.get_level_set().zero_out_ghost_values();
