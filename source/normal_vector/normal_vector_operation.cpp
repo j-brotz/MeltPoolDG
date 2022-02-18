@@ -47,6 +47,7 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::solve(const VectorType &solution_levelset_in)
   {
+    solution_levelset_in.update_ghost_values();
     /*
      *  initialize normal vector operator
      */
@@ -124,6 +125,8 @@ namespace MeltPoolDG::NormalVector
     Journal::print_line(scratch_data->get_pcout(1),
                         "     * CG: i = " + std::to_string(iter),
                         "normal_vector");
+
+    solution_levelset_in.zero_out_ghost_values();
   }
 
   template <int dim>
