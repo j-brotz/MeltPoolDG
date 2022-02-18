@@ -522,7 +522,7 @@ namespace MeltPoolDG::MeltPool
       return UtilityFunctions::limit_to_bounds(
         (material.liquidus_temperature - T) * material.inv_mushy_interval, 0.0, 1.0);
     else
-      return T < mp_data.liquid.melting_point ? 1.0 : 0.0;
+      return T < material.melting_point ? 1.0 : 0.0;
   }
 
   template <int dim>

@@ -52,7 +52,8 @@
   "material": {
     "material template": "stainless_steel",
     "material first capacity": "0",
-    "material two phase properties transition type": "sharp"
+    "material two phase properties transition type": "sharp",
+    "material melting point": "1700"
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",
@@ -74,9 +75,6 @@
     "laser analytical max temperature": "3500.",
     "laser analytical absorptivity gas": "0",
     "laser analytical absorptivity liquid": "0.5"
-  },
-  "melt pool": {
-    "mp liquid melting point": "1700"
   },
   "simulation specific domain": {
     "domain x min": "-0.0002",

@@ -66,7 +66,8 @@
     "material solid density": "7430.0",
     "material boiling temperature": "3000.",
     "material solid viscosity": "0.6",
-    "material solidification type": "mushy_zone"
+    "material solidification type": "mushy_zone",
+    "material melting point": "1700"
   },
   "levelset": {
     "ls artificial diffusivity": "0.0",
@@ -92,7 +93,6 @@
     "laser analytical temperature x to y ratio": "3."
   },
   "melt pool": {
-    "mp liquid melting point": "1700",
     "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "true"
   },

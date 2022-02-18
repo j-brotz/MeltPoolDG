@@ -2,6 +2,16 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-02-17
+- Delete ambiguous parameter
+```diff
+{
+  "melt pool": {
+-    "mp liquid melting point": ""
+  }
+}
+
+```
+## 2022-02-17
 - Add problem-specific parameter for AMR in the melt pool problem
 ```json
 {
