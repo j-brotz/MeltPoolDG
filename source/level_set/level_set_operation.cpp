@@ -449,8 +449,7 @@ namespace MeltPoolDG::LevelSet
           }
         reinit_time_iterator.reset();
 
-        very_first_step     = false;
-        get_normal_vector() = reinit_operation->get_normal_vector();
+        very_first_step = false;
       }
     Journal::print_decoration_line(scratch_data->get_pcout());
   }
