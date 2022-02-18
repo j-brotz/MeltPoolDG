@@ -234,6 +234,10 @@ namespace MeltPoolDG::LevelSet
     scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
     scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
     scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
+
+    for (unsigned int d = 0; d < dim; ++d)
+      scratch_data->get_constraint(ls_hanging_nodes_dof_idx)
+        .distribute(get_normal_vector().block(d));
   }
   /**
    *  this function may be called to recompute the normal vector with the
@@ -300,20 +304,14 @@ namespace MeltPoolDG::LevelSet
   const LinearAlgebra::distributed::BlockVector<double> &
   LevelSetOperation<dim>::get_normal_vector() const
   {
-    if (level_set_data.do_reinitialization)
-      return reinit_operation->get_normal_vector();
-    else
-      return curvature_operation->get_normal_vector();
+    return curvature_operation->get_normal_vector();
   }
 
   template <int dim>
   LinearAlgebra::distributed::BlockVector<double> &
   LevelSetOperation<dim>::get_normal_vector()
   {
-    if (level_set_data.do_reinitialization)
-      return reinit_operation->get_normal_vector();
-    else
-      return curvature_operation->get_normal_vector();
+    return curvature_operation->get_normal_vector();
   }
 
   template <int dim>
@@ -360,11 +358,16 @@ namespace MeltPoolDG::LevelSet
   {
     advec_diff_operation->attach_vectors(vectors);
 
+    // needed for evaporation
     level_set_as_heaviside.update_ghost_values();
     vectors.push_back(&level_set_as_heaviside);
 
     distance_to_level_set.update_ghost_values();
     vectors.push_back(&distance_to_level_set);
+
+    get_normal_vector().update_ghost_values();
+    for (unsigned int d = 0; d < dim; ++d)
+      vectors.push_back(&get_normal_vector().block(d));
   }
 
   template <int dim>
@@ -424,7 +427,8 @@ namespace MeltPoolDG::LevelSet
             /*
              *  reset the solution of the level set field to the reinitialized solution ...
              */
-            advec_diff_operation->get_advected_field() = reinit_operation->get_level_set();
+            advec_diff_operation->get_advected_field().copy_locally_owned_data_from(
+              reinit_operation->get_level_set());
             /*
              *  @todo
              *
@@ -445,7 +449,8 @@ namespace MeltPoolDG::LevelSet
           }
         reinit_time_iterator.reset();
 
-        very_first_step = false;
+        very_first_step     = false;
+        get_normal_vector() = reinit_operation->get_normal_vector();
       }
     Journal::print_decoration_line(scratch_data->get_pcout());
   }
