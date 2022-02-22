@@ -2,7 +2,6 @@
 
 import numpy as np
 import os
-from string import digits
 import argparse
 import glob
 
