@@ -368,13 +368,19 @@ namespace MeltPoolDG
            */
           if (this->parameters.laser.heat_source_model != LaserHeatSourceModel::Analytical)
             {
+              if (evaporation_boundary && this->parameters.heat.convection_coefficient > 0)
+                {
+                  this->attach_convection_boundary_condition(upper_bc, "heat_transfer");
+                }
+              else
+                this->attach_dirichlet_boundary_condition(
+                  upper_bc,
+                  std::make_shared<Functions::ConstantFunction<dim>>(T_initial_top),
+                  "heat_transfer");
+
               this->attach_dirichlet_boundary_condition(
                 lower_bc,
                 std::make_shared<Functions::ConstantFunction<dim>>(T_initial_bottom),
-                "heat_transfer");
-              this->attach_dirichlet_boundary_condition(
-                upper_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(T_initial_top),
                 "heat_transfer");
             }
 
