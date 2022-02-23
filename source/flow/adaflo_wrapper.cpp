@@ -286,10 +286,10 @@ namespace MeltPoolDG::Flow
                                  "pressure_user_rhs");
 
         data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
-                                 navier_stokes->get_rhs().block(0),
+                                 navier_stokes->get_system_rhs().block(0),
                                  "res_velocity");
         data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
-                                 navier_stokes->get_rhs().block(1),
+                                 navier_stokes->get_system_rhs().block(1),
                                  "res_pressure");
 
         data_out.build_patches(scratch_data.get_mapping(),
