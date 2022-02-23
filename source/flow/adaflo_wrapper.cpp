@@ -292,7 +292,8 @@ namespace MeltPoolDG::Flow
                                  navier_stokes->get_rhs().block(1),
                                  "res_pressure");
 
-        data_out.build_patches(scratch_data.get_mapping());
+        data_out.build_patches(scratch_data.get_mapping(),
+                               navier_stokes->get_dof_handler_u().get_fe().tensor_degree());
         data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
       }
 
