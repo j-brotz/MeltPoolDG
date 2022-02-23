@@ -256,6 +256,47 @@ namespace MeltPoolDG::Flow
     navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
 
     const auto n_newton_steps = navier_stokes->advance_time_step();
+
+    if (n_newton_steps >= adaflo_params.max_nl_iteration)
+      {
+        DataOutBase::VtkFlags flags;
+        flags.write_higher_order_cells = true;
+
+        DataOut<dim> data_out;
+        data_out.set_flags(flags);
+
+        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
+                                 get_velocity(),
+                                 "velocity");
+        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
+                                 navier_stokes->solution_update.block(0),
+                                 "velocity_update");
+        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
+                                 navier_stokes->user_rhs.block(0),
+                                 "velocity_user_rhs");
+
+        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
+                                 get_pressure(),
+                                 "pressure");
+        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
+                                 navier_stokes->solution_update.block(1),
+                                 "pressure_update");
+        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
+                                 navier_stokes->user_rhs.block(1),
+                                 "pressure_user_rhs");
+
+        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
+                                 navier_stokes->get_rhs().block(0),
+                                 "res_velocity");
+        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
+                                 navier_stokes->get_rhs().block(1),
+                                 "res_pressure");
+
+        data_out.build_patches(scratch_data.get_mapping());
+        data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
+      }
+
+
     AssertThrow(n_newton_steps < adaflo_params.max_nl_iteration,
                 ExcMessage(
                   "Newton Raphson solver for the Navier-Stokes equations did not converge."));
