@@ -43,6 +43,10 @@ namespace MeltPoolDG::Evaporation
     const double                                density_vapor;
     const double                                density_liquid;
     const TwoPhaseFluidPropertiesTransitionType two_phase_properties_transition_type;
+
+    // interpolate the level set gradient to pressure space
+    const bool         do_level_set_pressure_gradient_interpolation;
+    FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
     /**
      * evaporation velocity at quadrature points
      */
