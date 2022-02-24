@@ -48,6 +48,8 @@ namespace MeltPoolDG::Evaporation
     , density_vapor(density_vapor)
     , density_liquid(density_liquid)
     , two_phase_properties_transition_type(two_phase_properties_transition_type)
+    , do_level_set_pressure_gradient_interpolation(
+        scratch_data.is_FE_Q_iso_Q_1(ls_hanging_nodes_dof_idx))
   {}
 
   template <int dim>
@@ -165,6 +167,14 @@ namespace MeltPoolDG::Evaporation
     const unsigned int pressure_quad_idx,
     bool               zero_out)
   {
+    if (do_level_set_pressure_gradient_interpolation &&
+        ls_to_pressure_grad_interpolation_matrix.m() == 0) // do only once
+      ls_to_pressure_grad_interpolation_matrix =
+        UtilityFunctions::create_dof_interpolation_matrix<dim>(
+          scratch_data.get_dof_handler(pressure_dof_idx),
+          scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
+          true /*do sort lexicographic (matrix-free)*/);
+
     evaporative_mass_flux.update_ghost_values();
 
     double mass = 0.0;
@@ -186,11 +196,29 @@ namespace MeltPoolDG::Evaporation
                                                    evapor_mass_flux_dof_idx,
                                                    pressure_quad_idx);
 
+        FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(
+          matrix_free, pressure_dof_idx, pressure_quad_idx);
+
+        auto &used_level_set = do_level_set_pressure_gradient_interpolation ?
+                                 interpolated_level_set_to_pressure_space :
+                                 heaviside;
+
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             heaviside.reinit(cell);
             heaviside.read_dof_values_plain(level_set_as_heaviside);
-            heaviside.evaluate(EvaluationFlags::gradients);
+
+            if (do_level_set_pressure_gradient_interpolation)
+              {
+                interpolated_level_set_to_pressure_space.reinit(cell);
+
+                UtilityFunctions::compute_gradient_at_interpolated_dof_values<dim>(
+                  heaviside,
+                  interpolated_level_set_to_pressure_space,
+                  ls_to_pressure_grad_interpolation_matrix);
+              }
+
+            used_level_set.evaluate(EvaluationFlags::gradients);
 
             mass_flux.reinit(cell);
 
@@ -201,7 +229,7 @@ namespace MeltPoolDG::Evaporation
             for (unsigned int q_index = 0; q_index < mass_flux.n_q_points; ++q_index)
               {
                 mass_flux.submit_value((1. / density_liquid - 1. / density_vapor) *
-                                         heaviside.get_gradient(q_index).norm() *
+                                         used_level_set.get_gradient(q_index).norm() *
                                          evap_flux.get_value(q_index),
                                        q_index);
                 // compute overall rhs
@@ -210,7 +238,7 @@ namespace MeltPoolDG::Evaporation
                      ++v)
                   {
                     mass += (1. / density_liquid - 1. / density_vapor) *
-                            heaviside.get_gradient(q_index).norm()[v] *
+                            used_level_set.get_gradient(q_index).norm()[v] *
                             evap_flux.get_value(q_index)[v] * mass_flux.JxW(q_index)[v];
                   }
               }
