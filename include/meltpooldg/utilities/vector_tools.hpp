@@ -334,6 +334,21 @@ namespace MeltPoolDG
         CellwiseInverseMassMatrix<dim, -1, n_components, double, VectorizedArray<double>>
           inverse_mass_matrix(fe_eval);
 
+      const auto &lexicographic_numbering =
+        matrix_free.get_shape_info(dof_idx, quad_idx).lexicographic_numbering;
+
+      VectorType weights;
+      weights.reinit(vec);
+      std::vector<double> ones(fe_eval.dofs_per_cell, 1.0);
+
+      std::vector<types::global_dof_index> dof_indices(fe_eval.dofs_per_cell);
+      std::vector<types::global_dof_index> dof_indices_mf(fe_eval.dofs_per_cell);
+      std::vector<double>                  dof_values(fe_eval.dofs_per_cell);
+
+      AffineConstraints<double> dummy;
+
+      vec = 0.0;
+
       for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
         {
           fe_eval.reinit(cell);
@@ -364,9 +379,27 @@ namespace MeltPoolDG
                                                                fe_eval.begin_values(),
                                                                fe_eval.begin_dof_values());
 
-          // write values back into global vector
-          fe_eval.set_dof_values(vec);
+          for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
+            {
+              matrix_free.get_cell_iterator(cell, v, dof_idx)->get_dof_indices(dof_indices);
+
+              for (unsigned int j = 0; j < dof_indices.size(); ++j)
+                {
+                  dof_indices_mf[j] = dof_indices[lexicographic_numbering[j]];
+                  dof_values[j]     = fe_eval.begin_dof_values()[j][v];
+                }
+
+              dummy.distribute_local_to_global(dof_values, dof_indices_mf, vec);
+              dummy.distribute_local_to_global(ones, dof_indices_mf, weights);
+            }
         }
+
+      vec.compress(VectorOperation::add);
+      weights.compress(VectorOperation::add);
+
+      for (unsigned int i = 0; i < vec.locally_owned_size(); ++i)
+        if (weights.local_element(i) != 0.0)
+          vec.local_element(i) /= weights.local_element(i);
     }
 
   } // namespace VectorTools
