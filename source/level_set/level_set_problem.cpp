@@ -46,15 +46,10 @@ namespace MeltPoolDG::LevelSet
 
         if (evaporation_operation)
           {
-            /**
-             * If evaporative mass flux is considered the interface velocity will be modified.
-             * Note that the normal vector is used from the old step.
-             */
-            level_set_operation.update_normal_vector();
+            // compute velocity due to evaporative mass flux
             evaporation_operation->compute_evaporation_velocity();
-            /**
-             * compute advection velocity of the interface
-             */
+
+            // compute advection velocity of the interface
             advection_velocity += evaporation_operation->get_velocity();
           }
         level_set_operation.solve(dt, advection_velocity);

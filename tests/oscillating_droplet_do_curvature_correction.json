@@ -18,7 +18,7 @@
     "start time": "0.0",
     "end time": "0.6e-3",
     "time step size": "5e-8",
-    "max n steps": "3"
+    "max n steps": "2"
   },
   "material": {
     "material first density": "7430e-3",
@@ -61,7 +61,7 @@
     }
   },
   "curvature": {
-    "curv damping scale factor": "3.2",
+    "curv damping scale factor": "8",
     "curv implementation": "meltpooldg",
     "curv verbosity level": "0",
     "linear solver": {

@@ -37,15 +37,7 @@ namespace MeltPoolDG::MeltPool
           {
             TimerOutput::Scope scope(scratch_data->get_timer(), "Evaporation::mass_flux");
 
-            /*
-             * If evaporative mass flux is considered the interface velocity will be modified.
-             * Note that the normal vector is used from the old step.
-             */
-            level_set_operation.update_normal_vector();
-
-            /*
-             * compute the evaporative mass flux
-             */
+            // compute the evaporative mass flux
             evaporation_operation->compute_evaporative_mass_flux();
 
             if (problem_specific_parameters.do_evaporative_mass_flux)
@@ -505,7 +497,6 @@ namespace MeltPoolDG::MeltPool
           evapor_mass_flux_dof_idx,
           ls_hanging_nodes_dof_idx,
           ls_quad_idx);
-
         /*
          * register temperature field
          */
@@ -1142,6 +1133,8 @@ namespace MeltPoolDG::MeltPool
 
           bool needs_refinement_or_coarsening = false;
 
+          level_set_operation.get_normal_vector().update_ghost_values();
+
           for (auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
             {
               if (cell->is_locally_owned())
@@ -1175,6 +1168,8 @@ namespace MeltPoolDG::MeltPool
                     }
                 }
             }
+
+          level_set_operation.get_normal_vector().zero_out_ghost_values();
 
           const unsigned int do_refine =
             Utilities::MPI::max(static_cast<unsigned int>(needs_refinement_or_coarsening),
@@ -1456,6 +1451,8 @@ namespace MeltPoolDG::MeltPool
                   }
             }
           melt_pool_operation->get_liquid().zero_out_ghost_values();
+          melt_pool_operation->get_solid().zero_out_ghost_values();
+          heat_operation->get_temperature().zero_out_ghost_values();
         }
 
 

@@ -29,6 +29,8 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::reinit()
   {
+    scratch_data->initialize_dof_vector(solution_normal_vector, normal_dof_idx);
+
     if (!normal_vector_data.linear_solver.do_matrix_free)
       normal_vector_operator->initialize_matrix_based(*scratch_data);
 
