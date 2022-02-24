@@ -58,6 +58,7 @@ namespace MeltPoolDG::MeltPool
           }
 
         // ... solve level-set problem with the given advection field
+        scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
         level_set_operation.solve(dt, interface_velocity);
 
         /******************************************************************************************
