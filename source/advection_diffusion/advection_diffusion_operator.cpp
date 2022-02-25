@@ -46,8 +46,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     AssertThrow(data.diffusivity >= 0.0,
                 ExcMessage("Advection diffusion operator: diffusivity is smaller than zero!"));
 
-    advected_field_old.update_ghost_values();
-
     const FEValuesExtractors::Vector velocities(0);
 
     FEValues<dim> advec_diff_values(scratch_data.get_mapping(),
@@ -155,8 +153,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     AssertThrow(this->time_increment > 0.0,
                 ExcMessage("advection diffusion operator: d_tau must be set"));
 
-    advection_velocity.update_ghost_values();
-
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
@@ -179,8 +175,6 @@ namespace MeltPoolDG::AdvectionDiffusion
       dst,
       src,
       true);
-
-    advection_velocity.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -196,8 +190,6 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     AssertThrow(this->time_increment > 0.0,
                 ExcMessage("advection diffusion operator: d_tau must be set"));
-
-    advection_velocity.update_ghost_values();
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
@@ -241,8 +233,6 @@ namespace MeltPoolDG::AdvectionDiffusion
       dst,
       src,
       false); // rhs should not be zeroed out in order to consider inhomogeneous dirichlet BC
-
-    advection_velocity.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -251,8 +241,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
     system_matrix = 0.0;
-
-    advection_velocity.update_ghost_values();
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
@@ -280,8 +268,6 @@ namespace MeltPoolDG::AdvectionDiffusion
       advec_diff_quad_idx);
 
     system_matrix.compress(VectorOperation::add);
-
-    advection_velocity.zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -290,8 +276,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     VectorType &diagonal) const
   {
     scratch_data.initialize_dof_vector(diagonal, this->dof_idx);
-
-    advection_velocity.update_ghost_values();
 
     // note: not thread safe!!!
     const auto &                       matrix_free = scratch_data.get_matrix_free();
@@ -321,8 +305,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
-
-    advection_velocity.zero_out_ghost_values();
   }
 
 
