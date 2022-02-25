@@ -1,23 +1,18 @@
-
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
-//#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/fe_tools.h>
 
 #include <deal.II/grid/grid_generator.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
-#include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/matrix_free/fe_evaluation.h>
 
 #include <deal.II/numerics/data_out.h>
-#include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/utilities/vector_tools.hpp>
 
