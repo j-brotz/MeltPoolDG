@@ -80,6 +80,8 @@ test(const unsigned int fe_degree,
       DoFTools::make_hanging_node_constraints(dof_handler, constraints);
     }
 
+  constraints.close();
+
   typename MatrixFree<dim, double, VectorizedArray<double>>::AdditionalData additional_data;
   additional_data.mapping_update_flags = dealii::update_quadrature_points;
 
