@@ -139,9 +139,6 @@ namespace MeltPoolDG::Curvature
       dst,
       src,
       true /*zero out dst*/);
-
-    if (solution_level_set)
-      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -193,9 +190,6 @@ namespace MeltPoolDG::Curvature
       dst,
       src,
       true /*zero out dst*/);
-
-    if (solution_level_set)
-      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>
