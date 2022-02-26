@@ -171,7 +171,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     scratch_data->get_constraint(advec_diff_dof_idx).distribute(src);
 
-    solution_advected_field.zero_out_ghost_values(); //@todo: delete
+    solution_advected_field.zero_out_ghost_values();
     solution_advected_field.copy_locally_owned_data_from(src);
 
     Journal::print_formatted_norm(scratch_data->get_pcout(2),
