@@ -50,6 +50,9 @@ namespace MeltPoolDG::Curvature
     scratch_data->initialize_dof_vector(solution_curvature, curv_dof_idx);
     int iter = 0;
 
+    solution_levelset.update_ghost_values();
+    normal_vector_operation.get_solution_normal_vector().update_ghost_values();
+
     if (curvature_data.linear_solver.do_matrix_free)
       {
         AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
@@ -93,6 +96,9 @@ namespace MeltPoolDG::Curvature
                                                rhs,
                                                curvature_data.linear_solver.solver_type);
       }
+
+    solution_levelset.zero_out_ghost_values();
+    normal_vector_operation.get_solution_normal_vector().zero_out_ghost_values();
 
     scratch_data->get_constraint(curv_dof_idx).distribute(solution_curvature);
 

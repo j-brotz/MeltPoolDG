@@ -35,8 +35,6 @@ namespace MeltPoolDG::NormalVector
                                                           SparseMatrixType &matrix,
                                                           BlockVectorType & rhs) const
   {
-    level_set_in.update_ghost_values();
-
     FEValues<dim> normal_values(scratch_data.get_mapping(),
                                 scratch_data.get_dof_handler(normal_dof_idx).get_fe(),
                                 scratch_data.get_quadrature(normal_quad_idx),
@@ -125,9 +123,6 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperator<dim, number>::vmult(BlockVectorType &dst, const BlockVectorType &src) const
   {
-    if (solution_level_set)
-      solution_level_set->update_ghost_values();
-
     AssertThrow(!do_narrow_band || solution_level_set,
                 ExcMessage(
                   "Level set solution vector must not be nullptr for a narrow band computation."));
@@ -153,9 +148,6 @@ namespace MeltPoolDG::NormalVector
       dst,
       src,
       true);
-
-    if (solution_level_set)
-      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>

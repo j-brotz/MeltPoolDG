@@ -44,8 +44,6 @@ namespace MeltPoolDG::Curvature
     CurvatureOperator::SparseMatrixType &     matrix,
     VectorType &                              rhs) const
   {
-    solution_normal_vector_in.update_ghost_values();
-
     FEValues<dim> curv_values(scratch_data.get_mapping(),
                               scratch_data.get_dof_handler(curv_dof_idx).get_fe(),
                               scratch_data.get_quadrature(curv_quad_idx),
@@ -122,9 +120,6 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
-    if (solution_level_set)
-      solution_level_set->update_ghost_values();
-
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number> curv_vals(matrix_free, curv_dof_idx, curv_quad_idx);
@@ -154,9 +149,6 @@ namespace MeltPoolDG::Curvature
   CurvatureOperator<dim, number>::create_rhs(VectorType &                              dst,
                                              const CurvatureOperator::BlockVectorType &src) const
   {
-    if (solution_level_set)
-      solution_level_set->update_ghost_values();
-
     scratch_data.get_matrix_free().template cell_loop<VectorType, BlockVectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
         FECellIntegrator<dim, 1, number>   curvature(matrix_free, curv_dof_idx, curv_quad_idx);
