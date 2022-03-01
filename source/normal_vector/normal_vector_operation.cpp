@@ -49,7 +49,6 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::solve(const VectorType &solution_levelset_in)
   {
-    solution_levelset_in.update_ghost_values();
     /*
      *  initialize normal vector operator
      */
@@ -62,6 +61,8 @@ namespace MeltPoolDG::NormalVector
     scratch_data->initialize_dof_vector(solution_normal_vector, normal_dof_idx);
 
     int iter = 0;
+
+    solution_levelset_in.update_ghost_values();
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
@@ -107,6 +108,9 @@ namespace MeltPoolDG::NormalVector
                                                  rhs.block(d),
                                                  normal_vector_data.linear_solver.solver_type);
       }
+
+    solution_levelset_in.zero_out_ghost_values();
+
     for (unsigned int d = 0; d < dim; ++d)
       scratch_data->get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
 
@@ -127,8 +131,6 @@ namespace MeltPoolDG::NormalVector
     Journal::print_line(scratch_data->get_pcout(1),
                         "     * CG: i = " + std::to_string(iter),
                         "normal_vector");
-
-    solution_levelset_in.zero_out_ghost_values();
   }
 
   template <int dim>
