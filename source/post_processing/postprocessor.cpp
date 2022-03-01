@@ -50,14 +50,15 @@ namespace MeltPoolDG
   Postprocessor<dim>::process(const int                  n_time_step,
                               const GenericDataOut<dim> &data_out,
                               const double               time,
-                              const bool                 force_output)
+                              const bool                 force_output,
+                              const bool                 force_update_requested_output_variables)
   {
     if (not(is_output_timestep(n_time_step, time) || force_output))
       return;
 
     if (output_data.paraview.enable)
       {
-        write_paraview_files(n_time_step, time, data_out);
+        write_paraview_files(n_time_step, time, data_out, force_update_requested_output_variables);
 
         if (output_data.paraview.print_boundary_id)
           print_boundary_ids();
@@ -100,7 +101,8 @@ namespace MeltPoolDG
   void
   Postprocessor<dim>::write_paraview_files(const unsigned int         n_time_step,
                                            const double               time,
-                                           const GenericDataOut<dim> &generic_data_out)
+                                           const GenericDataOut<dim> &generic_data_out,
+                                           const bool force_update_requested_output_variables)
   {
     Journal::print_line(pcout, "write paraview files", "postprocessor");
 
@@ -108,7 +110,7 @@ namespace MeltPoolDG
     dealii::DataOut<dim> data_out;
 
     // do search algorithm only once
-    if (idx_req_vars.size() == 0)
+    if (idx_req_vars.size() == 0 || force_update_requested_output_variables)
       idx_req_vars = generic_data_out.get_indices_data_request(output_data.output_variables);
 
     for (const auto &i : idx_req_vars)

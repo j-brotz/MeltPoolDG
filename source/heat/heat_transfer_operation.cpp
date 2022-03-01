@@ -1,12 +1,10 @@
 #include <deal.II/base/exceptions.h>
 
-#include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
-#include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
@@ -41,6 +39,7 @@ namespace MeltPoolDG::Heat
     , velocity(velocity_in)
     , ls_dof_idx(ls_dof_idx_in)
     , level_set_as_heaviside(level_set_as_heaviside_in)
+    , newton(heat_data.nlsolve)
     , solution_history(std::max(heat_data.predictor.n_old_solution_vectors,
                                 2U /*TODO: include time integration scheme*/))
   {
@@ -68,10 +67,49 @@ namespace MeltPoolDG::Heat
     heat_transfer_preconditioner = std::make_shared<HeatTransferPreconditionerMatrixFree<dim>>(
       scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, heat_operator);
 
+    setup_newton();
+
     reinit();
   }
 
+  template <int dim>
+  void
+  HeatTransferOperation<dim>::setup_newton()
+  {
+    newton.residual = [&](const VectorType & /*evaluation_point*/, VectorType &rhs) {
+      // solely homogeneous dirichlet bc are distributed for the
+      // corrected temperature field in the newton solver
+      heat_operator->update_ghost_values();
+      rhs.copy_locally_owned_data_from(user_rhs);
+      heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
+    };
 
+    newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
+      if (diag_preconditioner)
+        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
+          *heat_operator, solution_update, rhs, heat_data.linear_solver, *diag_preconditioner);
+      else if (trilinos_preconditioner)
+        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
+          *heat_operator, solution_update, rhs, heat_data.linear_solver, *trilinos_preconditioner);
+      else
+        AssertThrow(false, ExcNotImplemented());
+    };
+
+    newton.reinit_vector = [&](VectorType &v) {
+      scratch_data.initialize_dof_vector(v, temp_dof_idx);
+    };
+
+    newton.distribute_constraints = [&](VectorType &v) {
+      scratch_data.get_constraint(temp_dof_idx).distribute(v);
+    };
+
+    newton.norm_of_solution_vector = [this]() -> double {
+      return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                                        scratch_data,
+                                                        temp_dof_idx,
+                                                        temp_quad_idx);
+    };
+  }
 
   template <int dim>
   void
@@ -228,65 +266,13 @@ namespace MeltPoolDG::Heat
           }
       }
 
-    // setup nonlinear solver
-    auto newton = NewtonRaphsonSolver<dim>(heat_data.nlsolve);
-
-    newton.residual = [&](const VectorType & /*evaluation_point*/, VectorType &rhs) {
-      // solely homogeneous dirichlet bc are distributed for the
-      // corrected temperature field in the newton solver
-      heat_operator->update_ghost_values();
-      rhs.copy_locally_owned_data_from(user_rhs);
-      heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
-    };
-
-    newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
-      if (diag_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-          *heat_operator, solution_update, rhs, heat_data.linear_solver, *diag_preconditioner);
-      else if (trilinos_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-          *heat_operator, solution_update, rhs, heat_data.linear_solver, *trilinos_preconditioner);
-      else
-        AssertThrow(false, ExcNotImplemented());
-    };
-
-    newton.reinit_vector = [&](VectorType &v) {
-      scratch_data.initialize_dof_vector(v, temp_dof_idx);
-    };
-
-    newton.distribute_constraints = [&](VectorType &v) {
-      scratch_data.get_constraint(temp_dof_idx).distribute(v);
-    };
-
-    newton.norm_of_solution_vector = [this]() -> double {
-      return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                        scratch_data,
-                                                        temp_dof_idx,
-                                                        temp_quad_idx);
-    };
-
     try
       {
         newton.solve(solution_history.get_current_solution());
       }
-    catch (const ExcNewtonDidNotConverge &e)
+    catch (const ExcNewtonDidNotConverge &)
       {
-        // TODO: move to problem
-        DataOut<dim> data_out;
-
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
-                                 solution_history.get_current_solution(),
-                                 "solution");
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
-                                 newton.get_solution_update(),
-                                 "solution_update");
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
-                                 newton.get_residual(),
-                                 "rhs");
-        data_out.build_patches(scratch_data.get_mapping());
-        data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
-
-        AssertThrow(false, ExcNewtonDidNotConverge());
+        AssertThrow(false, ExcHeatTransferNoConvergence());
       }
 
     if (do_finish_time_step)
@@ -404,6 +390,20 @@ namespace MeltPoolDG::Heat
   }
 
   template <int dim>
+  void
+  HeatTransferOperation<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
+  {
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                             newton.get_solution_update(),
+                             "temperature_newton_last_solution_update",
+                             true /* force output */);
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                             newton.get_residual(),
+                             "temperature_newton_failed_residual",
+                             true /* force output */);
+  }
+
+  template <int dim>
   const VectorType &
   HeatTransferOperation<dim>::get_temperature() const
   {
@@ -457,17 +457,6 @@ namespace MeltPoolDG::Heat
   HeatTransferOperation<dim>::get_user_rhs()
   {
     return user_rhs;
-  }
-
-  template <int dim>
-  const VectorType &
-  HeatTransferOperation<dim>::get_level_set_as_heaviside() const
-  {
-    Assert(
-      level_set_as_heaviside,
-      ExcMessage(
-        "You requested the level set vector from the heat operation, which is a nullptr. You must provide a valid level_set_as_heaviside pointer to the heat operation."));
-    return *level_set_as_heaviside;
   }
 
   template class HeatTransferOperation<1>;

@@ -59,8 +59,9 @@ namespace MeltPoolDG
     void
     process(const int                  n_time_step,
             const GenericDataOut<dim> &generic_data_out,
-            const double               time         = -1.0,
-            const bool                 force_output = false);
+            const double               time                                    = -1.0,
+            const bool                 force_output                            = false,
+            const bool                 force_update_requested_output_variables = false);
 
     /**
      *  This function collects and performs all relevant postprocessing steps.
@@ -100,7 +101,8 @@ namespace MeltPoolDG
     void
     write_paraview_files(const unsigned int         n_time_step,
                          const double               time,
-                         const GenericDataOut<dim> &generic_data_out);
+                         const GenericDataOut<dim> &generic_data_out,
+                         const bool force_update_requested_output_variables = false);
 
     void
     print_boundary_ids();

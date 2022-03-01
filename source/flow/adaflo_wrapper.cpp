@@ -1,9 +1,23 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
+
+#  include <deal.II/base/exceptions.h>
+#  include <deal.II/base/geometry_info.h>
+#  include <deal.II/base/index_set.h>
+#  include <deal.II/base/point.h>
+
+#  include <deal.II/dofs/dof_accessor.h>
+#  include <deal.II/dofs/dof_tools.h>
+
+#  include <deal.II/fe/fe_q.h>
 #  include <deal.II/fe/fe_simplex_p.h>
+#  include <deal.II/fe/fe_values.h>
 
 #  include <deal.II/grid/grid_generator.h>
+#  include <deal.II/grid/tria_iterator.h>
 
-#  include <meltpooldg/evaporation/evaporation_data.hpp>
+#  include <deal.II/numerics/data_component_interpretation.h>
+#  include <deal.II/numerics/vector_tools_interpolate.h>
+
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
 #  include <meltpooldg/material/material.templates.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
@@ -12,7 +26,6 @@
 #  include <meltpooldg/utilities/journal.hpp>
 #  include <meltpooldg/utilities/scoped_name.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
-
 
 namespace MeltPoolDG::Flow
 {
@@ -304,47 +317,6 @@ namespace MeltPoolDG::Flow
       ScopedName sc("linear_solve");
       IterationMonitor::add_linear_iterations(sc, iter.second);
     }
-
-    // TODO: remove
-    if (false)
-      {
-        DataOutBase::VtkFlags flags;
-        flags.write_higher_order_cells = true;
-
-        DataOut<dim> data_out;
-        data_out.set_flags(flags);
-
-        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
-                                 get_velocity(),
-                                 "velocity");
-        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
-                                 navier_stokes->solution_update.block(0),
-                                 "velocity_update");
-        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
-                                 navier_stokes->user_rhs.block(0),
-                                 "velocity_user_rhs");
-
-        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
-                                 get_pressure(),
-                                 "pressure");
-        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
-                                 navier_stokes->solution_update.block(1),
-                                 "pressure_update");
-        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
-                                 navier_stokes->user_rhs.block(1),
-                                 "pressure_user_rhs");
-
-        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
-                                 navier_stokes->get_system_rhs().block(0),
-                                 "res_velocity");
-        data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
-                                 navier_stokes->get_system_rhs().block(1),
-                                 "res_pressure");
-
-        data_out.build_patches(scratch_data.get_mapping(),
-                               navier_stokes->get_dof_handler_u().get_fe().tensor_degree());
-        data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
-      }
 
     distribute_constraints();
 
@@ -827,6 +799,35 @@ namespace MeltPoolDG::Flow
       }
   }
 
+
+
+  template <int dim>
+  void
+  AdafloWrapper<dim>::attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const
+  {
+    std::vector<DataComponentInterpretation::DataComponentInterpretation>
+      vector_component_interpretation(dim,
+                                      DataComponentInterpretation::component_is_part_of_vector);
+    data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
+                             navier_stokes->solution_update.block(0),
+                             std::vector<std::string>(dim, "velocity_last_solution_update"),
+                             vector_component_interpretation,
+                             true /* force output */);
+    data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
+                             navier_stokes->solution_update.block(1),
+                             "pressure_last_solution_update",
+                             true /* force output */);
+    data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_velocity()),
+                             navier_stokes->get_system_rhs().block(0),
+                             std::vector<std::string>(dim, "velocity_newton_failed_residual"),
+                             vector_component_interpretation,
+                             true /* force output */);
+    data_out.add_data_vector(scratch_data.get_dof_handler(get_dof_handler_idx_pressure()),
+                             navier_stokes->get_system_rhs().block(1),
+                             "pressure_newton_failed_residual",
+                             true /* force output */);
+  }
+
   template <int dim>
   void
   AdafloWrapper<dim>::set_face_average_density(
@@ -862,8 +863,7 @@ namespace MeltPoolDG::Flow
   {
     return std::abs(navier_stokes->time_stepping.step_size() -
                     time_iterator.get_current_time_increment()) < 1e-16 &&
-           std::abs(navier_stokes->time_stepping.step_no() -
-                    time_iterator.get_current_time_step_number()) < 1e-16 &&
+           navier_stokes->time_stepping.step_no() == time_iterator.get_current_time_step_number() &&
            std::abs(navier_stokes->time_stepping.old_step_size() -
                     time_iterator.get_old_time_increment()) < 1e-16 &&
            std::abs(navier_stokes->time_stepping.now() - time_iterator.get_current_time()) <

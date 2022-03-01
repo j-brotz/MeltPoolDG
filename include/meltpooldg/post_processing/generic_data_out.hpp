@@ -26,12 +26,14 @@ namespace MeltPoolDG
                     const std::vector<std::string> &names,
                     const std::vector<DataComponentInterpretation::DataComponentInterpretation>
                       &data_component_interpretation =
-                        std::vector<DataComponentInterpretation::DataComponentInterpretation>());
+                        std::vector<DataComponentInterpretation::DataComponentInterpretation>(),
+                    const bool force_output = false);
 
     void
     add_data_vector(const DoFHandler<dim> &dof_handler,
                     const VectorType      &data,
-                    const std::string     &name);
+                    const std::string     &name,
+                    const bool             force_output = false);
 
     std::vector<std::tuple<const DoFHandler<dim> *,
                            const VectorType *,

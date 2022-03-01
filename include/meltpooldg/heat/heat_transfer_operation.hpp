@@ -12,6 +12,8 @@
 
 #include <deal.II/lac/diagonal_matrix.h>
 #include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_precondition.h>
 
 #include <meltpooldg/evaporation/evaporation_data.hpp>
@@ -22,6 +24,7 @@
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
+#include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -78,6 +81,8 @@ namespace MeltPoolDG::Heat
     // optional level-set heaviside field for two phase flow
     const unsigned int ls_dof_idx;
     const VectorType  *level_set_as_heaviside;
+
+    NewtonRaphsonSolver<dim> newton;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
@@ -151,6 +156,9 @@ namespace MeltPoolDG::Heat
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
+    void
+    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const;
+
     const VectorType &
     get_temperature() const;
 
@@ -175,7 +183,8 @@ namespace MeltPoolDG::Heat
     VectorType &
     get_user_rhs();
 
-    const VectorType &
-    get_level_set_as_heaviside() const;
+  private:
+    void
+    setup_newton();
   };
 } // namespace MeltPoolDG::Heat

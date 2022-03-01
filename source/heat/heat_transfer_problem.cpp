@@ -26,63 +26,71 @@ namespace MeltPoolDG::Heat
   {
     initialize(base_in);
 
-    while (!time_iterator->is_finished())
+    try
       {
-        const auto dt = time_iterator->compute_next_time_increment();
-        const auto n  = time_iterator->get_current_time_step_number();
-
-        time_iterator->print_me(scratch_data->get_pcout());
-
-        if (velocity_field_function)
-          compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
-
-        if (heaviside_field_function)
-          compute_field_vector(level_set_as_heaviside,
-                               level_set_dof_idx,
-                               *heaviside_field_function);
-
-        // heat source
-        // zero out
-        heat_operation->get_heat_source() = 0;
-        // add custom source field if given
-        if (const auto source_field_function =
-              base_in->get_source_field("heat_transfer", true /*is_optional*/))
-          compute_field_vector(heat_operation->get_heat_source(),
-                               temp_dof_idx,
-                               *source_field_function);
-        // add laser heat source if given
-        if (laser_operation)
+        while (!time_iterator->is_finished())
           {
-            laser_operation->move_laser(dt);
-            laser_operation->compute_heat_source(heat_operation->get_heat_source(),
-                                                 heat_operation->get_user_rhs(),
-                                                 level_set_as_heaviside,
-                                                 level_set_dof_idx,
-                                                 temp_hanging_nodes_dof_idx,
+            const auto dt = time_iterator->compute_next_time_increment();
+
+            time_iterator->print_me(scratch_data->get_pcout());
+
+            if (velocity_field_function)
+              compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
+
+            if (heaviside_field_function)
+              compute_field_vector(level_set_as_heaviside,
+                                   level_set_dof_idx,
+                                   *heaviside_field_function);
+
+            // heat source
+            // zero out
+            heat_operation->get_heat_source() = 0;
+            // add custom source field if given
+            if (const auto source_field_function =
+                  base_in->get_source_field("heat_transfer", true /*is_optional*/))
+              compute_field_vector(heat_operation->get_heat_source(),
+                                   temp_dof_idx,
+                                   *source_field_function);
+            // add laser heat source if given
+            if (laser_operation)
+              {
+                laser_operation->move_laser(dt);
+                laser_operation->compute_heat_source(heat_operation->get_heat_source(),
+                                                     heat_operation->get_user_rhs(),
+                                                     level_set_as_heaviside,
+                                                     level_set_dof_idx,
+                                                     temp_hanging_nodes_dof_idx,
+                                                     temp_quad_idx,
+                                                     false /* zero_out */);
+              }
+
+            Journal::print_formatted_norm(
+              scratch_data->get_pcout(2),
+              [&]() -> double {
+                return VectorTools::compute_norm(heat_operation->get_heat_source(),
+                                                 *scratch_data,
+                                                 temp_dof_idx,
                                                  temp_quad_idx,
-                                                 false /* zero_out */);
+                                                 dealii::VectorTools::NormType::L1_norm);
+              },
+              "heat-source",
+              "laser",
+              11 /*precision*/,
+              "L1");
+
+            heat_operation->solve();
+
+            // ... and output the results to vtk files.
+            output_results(base_in, false);
+
+            if (base_in->parameters.amr.do_amr)
+              refine_mesh(base_in);
           }
-
-        Journal::print_formatted_norm(
-          scratch_data->get_pcout(2),
-          [&]() -> double {
-            return VectorTools::compute_norm(heat_operation->get_heat_source(),
-                                             *scratch_data,
-                                             temp_dof_idx,
-                                             temp_quad_idx,
-                                             dealii::VectorTools::NormType::L1_norm);
-          },
-          "heat-source",
-          "laser",
-          11 /*precision*/,
-          "L1");
-        heat_operation->solve();
-
-        // ... and output the results to vtk files.
-        output_results(n, time_iterator->get_current_time(), base_in);
-
-        if (base_in->parameters.amr.do_amr)
-          refine_mesh(base_in);
+      }
+    catch (const ExcHeatTransferNoConvergence &e)
+      {
+        output_results(base_in, true);
+        AssertThrow(false, e);
       }
     Journal::print_end(scratch_data->get_pcout());
   }
@@ -273,7 +281,7 @@ namespace MeltPoolDG::Heat
     /*
      *  output results of initialization
      */
-    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
+    output_results(base_in);
   }
 
   template <int dim>
@@ -357,55 +365,65 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::output_results(const unsigned int                   n_time_step,
-                                           const double                         time,
-                                           std::shared_ptr<SimulationBase<dim>> base_in)
+  HeatTransferProblem<dim>::output_results(std::shared_ptr<SimulationBase<dim>> base_in,
+                                           const bool output_not_converged)
   {
-    if (!post_processor->is_output_timestep(n_time_step, time) &&
+    const unsigned int n_time_step = time_iterator->get_current_time_step_number();
+    const double       time        = time_iterator->get_current_time();
+
+    if (!post_processor->is_output_timestep(n_time_step, time) && !output_not_converged &&
         !base_in->parameters.output.do_user_defined_postprocessing)
       return;
-    /**
-     * collect all relevant output data
-     */
-    const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
-      heat_operation->attach_output_vectors(data_out);
-
-      /**
-       *  prescribed velocity
-       */
-      if (velocity_field_function)
-        {
-          std::vector<DataComponentInterpretation::DataComponentInterpretation>
-            vector_component_interpretation(
-              dim, DataComponentInterpretation::component_is_part_of_vector);
-
-          data_out.add_data_vector(dof_handler_velocity,
-                                   velocity,
-                                   std::vector<std::string>(dim, "velocity"),
-                                   vector_component_interpretation);
-        }
-      /**
-       *  prescribed heaviside
-       */
-      if (heaviside_field_function)
-        data_out.add_data_vector(dof_handler_level_set, level_set_as_heaviside, "heaviside");
-
-
-      if (laser_operation)
-        laser_operation->attach_output_vectors(data_out);
-    };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
                                          time,
                                          base_in->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
+    if (output_not_converged)
+      heat_operation->attach_output_vectors_failed_step(generic_data_out);
+
     // user-defined postprocessing
     if (base_in->parameters.output.do_user_defined_postprocessing)
       base_in->do_postprocessing(generic_data_out);
 
     // postprocessing
-    post_processor->process(n_time_step, generic_data_out, time);
+    post_processor->process(n_time_step,
+                            generic_data_out,
+                            time,
+                            output_not_converged /* force_output */,
+                            output_not_converged /* force_update_requested_output_variables */);
+  }
+
+  template <int dim>
+  void
+  HeatTransferProblem<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  {
+    heat_operation->attach_output_vectors(data_out);
+
+    /**
+     *  prescribed velocity
+     */
+    if (velocity_field_function)
+      {
+        std::vector<DataComponentInterpretation::DataComponentInterpretation>
+          vector_component_interpretation(dim,
+                                          DataComponentInterpretation::component_is_part_of_vector);
+
+        data_out.add_data_vector(dof_handler_velocity,
+                                 velocity,
+                                 std::vector<std::string>(dim, "velocity"),
+                                 vector_component_interpretation);
+      }
+    /**
+     *  prescribed heaviside
+     */
+    if (heaviside_field_function)
+      data_out.add_data_vector(dof_handler_level_set, level_set_as_heaviside, "heaviside");
+
+
+    if (laser_operation)
+      laser_operation->attach_output_vectors(data_out);
   }
 
   template <int dim>

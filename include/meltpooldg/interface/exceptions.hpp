@@ -20,6 +20,6 @@ namespace MeltPoolDG
   DeclExceptionMsg(ExcZeroTimeIncrement,
                    "It seems that the time increment is zero. Make sure that "
                    "the time increment is larger than zero.");
-  DeclExceptionMsg(ExcNewtonDidNotConverge,
-                   "The Newton-Raphson solver did not converge. Abort ...");
+  DeclExceptionMsg(ExcNewtonDidNotConverge, "The Newton-Raphson solver did not converge.");
+  DeclExceptionMsg(ExcHeatTransferNoConvergence, "The heat transfer solver did not converge.");
 } // namespace MeltPoolDG

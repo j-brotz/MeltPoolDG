@@ -49,13 +49,13 @@ namespace MeltPoolDG
     solve(VectorType &solution);
 
     const VectorType &
-    get_residual()
+    get_residual() const
     {
       return rhs;
     }
 
     const VectorType &
-    get_solution_update()
+    get_solution_update() const
     {
       return solution_update;
     }

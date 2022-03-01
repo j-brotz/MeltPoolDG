@@ -6,25 +6,36 @@
 #pragma once
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
+
+#  include <deal.II/base/function.h>
+#  include <deal.II/base/quadrature.h>
+#  include <deal.II/base/tensor.h>
+#  include <deal.II/base/timer.h>
 #  include <deal.II/base/vectorization.h>
 
-#  include <deal.II/lac/generic_linear_algebra.h>
+#  include <deal.II/dofs/dof_handler.h>
 
-#  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
-#  include <meltpooldg/flow/darcy_damping_operation.hpp>
+#  include <deal.II/grid/tria.h>
+
+#  include <deal.II/lac/affine_constraints.h>
+#  include <deal.II/lac/generic_linear_algebra.h>
+#  include <deal.II/lac/la_parallel_vector.h>
+
 #  include <meltpooldg/flow/flow_base.hpp>
+#  include <meltpooldg/interface/parameters.hpp>
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulation_base.hpp>
 #  include <meltpooldg/material/material.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/utilities/time_iterator.hpp>
-#  include <meltpooldg/utilities/utility_functions.hpp>
-#  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/navier_stokes.h>
 #  include <adaflo/parameters.h>
 
+#  include <functional>
 #  include <memory>
+#  include <string>
+#  include <vector>
 
 namespace MeltPoolDG::Flow
 {
@@ -195,6 +206,9 @@ namespace MeltPoolDG::Flow
 
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const override;
+
+    void
+    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const override;
 
     void
     set_face_average_density(const typename Triangulation<dim>::cell_iterator &cell,
