@@ -283,7 +283,10 @@ namespace MeltPoolDG::LevelSet
      *    ... and correct the curvature value far away from the zero level set
      */
     if (level_set_data.do_curvature_correction)
-      correct_curvature_values();
+      {
+        TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::curvature_correction");
+        correct_curvature_values();
+      }
   }
 
   template <int dim>
