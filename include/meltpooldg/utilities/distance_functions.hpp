@@ -49,7 +49,7 @@ namespace MeltPoolDG::DistanceFunctions
   inline double
   infinite_line(const Point<dim> &p, const Point<dim> &fix_p1, const Point<dim> &fix_p2)
   {
-    Assert((fix_p2 - fix_p1).norm() >= std::numeric_limits<number>::epsilon(),
+    Assert((fix_p2 - fix_p1).norm() >= std::numeric_limits<double>::epsilon(),
            ExcMessage("The support points must not lie on top of each other! Abort.."));
     if (dim == 3)
       return cross_product_3d(fix_p2 - fix_p1, fix_p1 - p).norm() / (fix_p2 - fix_p1).norm();
@@ -60,6 +60,44 @@ namespace MeltPoolDG::DistanceFunctions
     else
       AssertThrow(false, ExcMessage("distance to infinite line: dim must be 1, 2 or 3."));
   }
+
+  /**
+   * Compute the minimal distance between a point @p p and an infinite plane described by a @p
+   * support_point and a @p normal_vector.
+   *
+   *      | (p - support) * normal |
+   * d = ----------------------------
+   *            || normal ||
+   */
+  template <int dim>
+  inline double
+  infinite_plane(const Point<dim> &p,
+                 const Point<dim> &support_point,
+                 const Point<dim> &normal_vector)
+  {
+    Assert(normal_vector.norm() >= std::numeric_limits<double>::epsilon(),
+           ExcMessage("The normal vector must not be a zero vector! Abort..."));
+    return std::abs((p - support_point) * normal_vector) / normal_vector.norm();
+  }
+
+
+  /**
+   * Compute the minimal distance between a point @p p and an infinite plane described by three
+   * support points @p A, @p B and @p C.
+   */
+  template <int dim>
+  inline double
+  infinite_plane(const Point<dim> &p, const Point<dim> &A, const Point<dim> &B, const Point<dim> &C)
+  {
+    Assert((A - B).norm() >= std::numeric_limits<double>::epsilon(),
+           ExcMessage("The support points of the plane must not coincide! Abort ..."));
+    Assert((B - C).norm() >= std::numeric_limits<double>::epsilon(),
+           ExcMessage("The support points of the plane must not coincide! Abort ..."));
+    Assert((C - A).norm() >= std::numeric_limits<double>::epsilon(),
+           ExcMessage("The support points of the plane must not coincide! Abort ..."));
+    return infinite_plane(p, A, Point<dim>(cross_product_3d(B - A, C - A)));
+  }
+
 
   //@todo: this function should be added to compute distance to slotted disc, not finished
   template <int dim>

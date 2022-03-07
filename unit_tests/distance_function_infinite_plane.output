@@ -1,0 +1,14 @@
+dim 1
+distance: 0.0
+distance: 1.0
+distance: 1.5
+dim 2
+distance: 0.0
+distance: 0.707107
+distance: 1.41421
+dim 3
+distance: 0.0
+distance: 0.57735
+distance: 1.73205
+distance: 1.0
+distance: 2.0
