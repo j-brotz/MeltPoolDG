@@ -97,13 +97,14 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      Point<dim> left  = dim == 1 ? Point<dim>(y_interface) :
-                         dim == 2 ? Point<dim>(x_min, y_interface) :
-                                    Point<dim>(x_min, x_min, y_interface);
-      Point<dim> right = dim == 1 ? Point<dim>(0) /* not relevant */ :
-                         dim == 2 ? Point<dim>(x_max, y_interface) :
-                                    Point<dim>(x_max, x_max, y_interface);
+      if (dim == 1)
+        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+          p[0] - y_interface, eps);
 
+      Point<dim> left =
+        dim == 2 ? Point<dim>(x_min, y_interface) : Point<dim>(x_min, x_min, y_interface);
+      Point<dim> right =
+        dim == 2 ? Point<dim>(x_max, y_interface) : Point<dim>(x_max, x_max, y_interface);
 
       if (p[dim - 1] >= y_interface)
         return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
