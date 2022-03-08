@@ -29,31 +29,27 @@ namespace MeltPoolDG
       class InitialSignedDistance : public Function<dim>
       {
       public:
-        InitialSignedDistance(const double x_min,
-                              const double x_max,
-                              const double y_min,
-                              const double y_interface)
+        InitialSignedDistance(const double y_interface)
           : Function<dim>()
-          , x_min(x_min)
-          , x_max(x_max)
-          , y_min(y_min)
           , y_interface(y_interface)
         {}
 
         double
         value(const Point<dim> &p, const unsigned int /*component*/) const
         {
-          Point<dim> upper_left =
-            dim == 2 ? Point<dim>(x_min, y_interface) : Point<dim>(x_min, x_min, y_interface);
-          Point<dim> upper_right =
-            dim == 2 ? Point<dim>(x_max, y_interface) : Point<dim>(x_max, x_max, y_interface);
+          const Point<dim> plane_support =
+            dim == 2 ? Point<dim>(0.0, y_interface) : Point<dim>(0.0, 0.0, y_interface);
+          const Point<dim> plane_normal =
+            dim == 2 ? Point<dim>(0.0, 1.0) : Point<dim>(0.0, 0.0, 1.0);
 
           if (p[dim - 1] >= y_interface)
-            return -DistanceFunctions::infinite_line<dim>(p, upper_left, upper_right);
+            return -DistanceFunctions::infinite_plane<dim>(p, plane_support, plane_normal);
           else
-            return DistanceFunctions::infinite_line<dim>(p, upper_left, upper_right);
+            return DistanceFunctions::infinite_plane<dim>(p, plane_support, plane_normal);
         }
-        double x_min, x_max, y_min, y_interface;
+
+      private:
+        const double y_interface;
       };
 
       template <int dim>
@@ -463,9 +459,7 @@ namespace MeltPoolDG
             this->parameters.laser.center);
 
           this->attach_initial_condition(
-            std::make_shared<InitialSignedDistance<dim>>(
-              domain_x_min, domain_x_max, domain_y_min, laser_center[dim - 1]),
-            "signed_distance");
+            std::make_shared<InitialSignedDistance<dim>>(laser_center[dim - 1]), "signed_distance");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
