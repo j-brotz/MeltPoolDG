@@ -72,7 +72,7 @@ namespace MeltPoolDG
 
     DataOutBase::VtkFlags flags;
     if ((do_simplex == false) && (dim > 1))
-      flags.write_higher_order_cells = true;
+      flags.write_higher_order_cells = pv_data.write_higher_order_cells;
     data_out.set_flags(flags);
 
     unsigned int n_patches = pv_data.n_patches;

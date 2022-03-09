@@ -750,6 +750,9 @@ namespace MeltPoolDG::MeltPool
                                                              reinit_constraints_dirichlet);
           }
       }
+    
+    reinit_constraints_dirichlet.close();
+    reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
     reinit_constraints_dirichlet.close();
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);

@@ -763,6 +763,12 @@ namespace MeltPoolDG
       prm.add_parameter("paraview n patches",
                         paraview.n_patches,
                         "Control number of patches to enable high-order output.");
+      prm.add_parameter(
+        "write higher order cells",
+        paraview.write_higher_order_cells,
+        "Set this parameter to false to write bi- or trilinear data only. "
+        "Set this parameter to true to write higher order cell data. Note: higher order "
+        "cell data can only be written for hexaeder meshes and 2 or 3 dimensions.");
     }
     prm.leave_subsection();
 
