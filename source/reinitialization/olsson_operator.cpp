@@ -1,3 +1,4 @@
+#include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -32,6 +33,8 @@ namespace MeltPoolDG::Reinitialization
                                                     SparseMatrixType &matrix,
                                                     VectorType &      rhs) const
   {
+    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
+
     FEValues<dim>      fe_values(scratch_data.get_mapping(),
                             scratch_data.get_dof_handler(this->dof_idx).get_fe(),
                             scratch_data.get_quadrature(reinit_quad_idx),
@@ -125,8 +128,6 @@ namespace MeltPoolDG::Reinitialization
   void
   OlssonOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
-    AssertThrow(this->time_increment > 0.0,
-                ExcMessage("reinitialization operator: d_tau must be set"));
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number>   delta_psi(scratch_data.get_matrix_free(),
@@ -154,8 +155,7 @@ namespace MeltPoolDG::Reinitialization
   void
   OlssonOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
   {
-    AssertThrow(this->time_increment > 0.0,
-                ExcMessage("reinitialization matrix-free operator: d_tau must be set"));
+    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
 
     const auto compressive_flux = [&](const auto &phi) {
       return 0.5 * (make_vectorized_array<number>(1.) - phi * phi);

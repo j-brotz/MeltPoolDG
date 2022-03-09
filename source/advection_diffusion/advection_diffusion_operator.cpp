@@ -4,6 +4,7 @@
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/tools.h>
 
+#include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -43,6 +44,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     AdvectionDiffusionOperator::SparseMatrixType &matrix,
     VectorType &                                  rhs) const
   {
+    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
+
     AssertThrow(data.diffusivity >= 0.0,
                 ExcMessage("Advection diffusion operator: diffusivity is smaller than zero!"));
 
@@ -107,8 +110,10 @@ namespace MeltPoolDG::AdvectionDiffusion
                 ( advec_diff_values.shape_value( i, q_index)
                   *
                   advec_diff_values.shape_value( j, q_index)
+                  * 
+                  this->time_increment_inv 
                   +
-                  theta * this->time_increment * ( data.diffusivity *
+                  theta * ( data.diffusivity *
                                           advec_diff_values.shape_grad( i, q_index) *
                                           advec_diff_values.shape_grad( j, q_index)
                                           +
@@ -120,9 +125,9 @@ namespace MeltPoolDG::AdvectionDiffusion
 
                     // clang-format off
             cell_rhs( i ) +=
-              (  advec_diff_values.shape_value( i, q_index) * phi_at_q[q_index]
+              (  advec_diff_values.shape_value( i, q_index) * phi_at_q[q_index] * this->time_increment_inv 
                  -
-                 ( 1. - theta ) * this->time_increment *
+                 ( 1. - theta ) *
                  (
                    data.diffusivity * advec_diff_values.shape_grad( i, q_index) * grad_phi_at_q[q_index]
                    +
@@ -150,9 +155,6 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
-    AssertThrow(this->time_increment > 0.0,
-                ExcMessage("advection diffusion operator: d_tau must be set"));
-
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
@@ -188,8 +190,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      * dirichlet BC are prescribed, the rhs vector is modified including BC terms. Thus the src
      * vector will NOT be zeroed during the cell_loop.
      */
-    AssertThrow(this->time_increment > 0.0,
-                ExcMessage("advection diffusion operator: d_tau must be set"));
+    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
@@ -216,12 +217,11 @@ namespace MeltPoolDG::AdvectionDiffusion
 
                 const scalar velocity_grad_phi =
                   scalar_product(velocity_vals.get_value(q_index), grad_phi);
-                advected_field_vals.submit_value(phi - this->time_increment * (1. - theta) *
-                                                         velocity_grad_phi,
+                advected_field_vals.submit_value(this->time_increment_inv * phi -
+                                                   (1. - theta) * velocity_grad_phi,
                                                  q_index);
 
-                advected_field_vals.submit_gradient(-this->time_increment * (1. - theta) *
-                                                      data.diffusivity * grad_phi,
+                advected_field_vals.submit_gradient(-(1. - theta) * data.diffusivity * grad_phi,
                                                     q_index);
               }
 
@@ -331,11 +331,9 @@ namespace MeltPoolDG::AdvectionDiffusion
 
         const scalar velocity_grad_phi = scalar_product(velocity_vals.get_value(q_index), grad_phi);
 
-        advected_field_vals.submit_value(phi + this->time_increment * theta * velocity_grad_phi,
+        advected_field_vals.submit_value(this->time_increment_inv * phi + theta * velocity_grad_phi,
                                          q_index);
-        advected_field_vals.submit_gradient(this->time_increment * theta * data.diffusivity *
-                                              grad_phi,
-                                            q_index);
+        advected_field_vals.submit_gradient(theta * data.diffusivity * grad_phi, q_index);
       }
     advected_field_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
   }

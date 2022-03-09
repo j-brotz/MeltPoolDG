@@ -37,7 +37,8 @@ namespace MeltPoolDG::Utilities::MatrixFree
                                             const SrcRhsVectorType &   src,
                                             const ScratchData<dim> &   scratch_data,
                                             const unsigned int         dof_idx,
-                                            const unsigned int         dof_no_bc_idx)
+                                            const unsigned int         dof_no_bc_idx,
+                                            const bool                 zero_out)
   {
     // The dof index that is used for the DoF Vector from the matrix-vector
     // product must be switched to the one without Dirichlet boundary
@@ -70,7 +71,10 @@ namespace MeltPoolDG::Utilities::MatrixFree
     /*
      * Zero-out constrained values
      */
-    rhs = temp_rhs;
+    if (zero_out)
+      rhs = 0;
+
+    rhs += temp_rhs;
     scratch_data.get_constraint(dof_idx).set_zero(rhs);
     operator_base.reset_dof_index(dof_idx);
   }

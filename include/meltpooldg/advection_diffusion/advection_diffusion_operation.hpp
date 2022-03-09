@@ -68,6 +68,12 @@ namespace MeltPoolDG::AdvectionDiffusion
     LinearAlgebra::distributed::Vector<double> &
     get_advected_field_old() override;
 
+    LinearAlgebra::distributed::Vector<double> &
+    get_user_rhs() override;
+
+    const LinearAlgebra::distributed::Vector<double> &
+    get_user_rhs() const override;
+
     void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 
@@ -102,5 +108,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
       preconditioner_matrixfree;
+
+    VectorType user_rhs;
   };
 } // namespace MeltPoolDG::AdvectionDiffusion

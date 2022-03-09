@@ -255,6 +255,13 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
+  LevelSetOperation<dim>::set_level_set_user_rhs(const VectorType &level_set_user_rhs)
+  {
+    advec_diff_operation->get_user_rhs() = level_set_user_rhs;
+  }
+
+  template <int dim>
+  void
   LevelSetOperation<dim>::solve(const double dt, const VectorType &advection_velocity)
   {
     /*
@@ -382,12 +389,14 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
     /*
-     *  output advected field
+     * output advected field
+     *
+     * @todo: advected_field duplicates level_set
      */
+    advec_diff_operation->attach_output_vectors(data_out);
     data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
                              get_level_set(),
                              "level_set");
-
     /*
      *  output normal vector field
      */
@@ -397,6 +406,8 @@ namespace MeltPoolDG::LevelSet
                                "normal_" + std::to_string(d));
     /*
      *  output curvature
+     *
+     *  @todo: move to operation
      */
     data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
                              get_curvature(),

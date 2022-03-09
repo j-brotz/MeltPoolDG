@@ -5,6 +5,7 @@
 
 #include <deal.II/matrix_free/tools.h>
 
+#include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
@@ -145,9 +146,6 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
-    AssertThrow(this->time_increment > 0.0,
-                ExcMessage("advection diffusion operator: d_tau must be set"));
-
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         tangent_cell_loop(matrix_free, dst, src, cell_range);
@@ -714,6 +712,8 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
   {
+    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
+
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         rhs_cell_loop(matrix_free, dst, src, cell_range);

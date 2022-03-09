@@ -16,4 +16,8 @@ namespace MeltPoolDG
                  << "It seems that you have not called SimulationBase::" << arg1
                  << "() for the operator \"" << arg2 << "\". You can do that, e.g., "
                  << "in your simulation by overriding SimulationBase::set_field_conditions().");
+
+  DeclExceptionMsg(ExcZeroTimeIncrement,
+                   "It seems that the time increment is zero. Make sure that "
+                   "the time increment is larger than zero.");
 } // namespace MeltPoolDG
