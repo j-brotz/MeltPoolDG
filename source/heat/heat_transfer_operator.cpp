@@ -712,7 +712,7 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
   {
-    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
+    AssertThrowZeroTimeIncrement(this->time_increment);
 
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {

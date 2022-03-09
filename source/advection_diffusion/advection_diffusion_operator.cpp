@@ -44,7 +44,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     AdvectionDiffusionOperator::SparseMatrixType &matrix,
     VectorType &                                  rhs) const
   {
-    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
+    AssertThrowZeroTimeIncrement(this->time_increment);
 
     AssertThrow(data.diffusivity >= 0.0,
                 ExcMessage("Advection diffusion operator: diffusivity is smaller than zero!"));
@@ -190,7 +190,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      * dirichlet BC are prescribed, the rhs vector is modified including BC terms. Thus the src
      * vector will NOT be zeroed during the cell_loop.
      */
-    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
+    AssertThrowZeroTimeIncrement(this->time_increment);
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {

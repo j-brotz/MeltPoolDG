@@ -33,7 +33,7 @@ namespace MeltPoolDG::Reinitialization
                                                     SparseMatrixType &matrix,
                                                     VectorType &      rhs) const
   {
-    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
+    AssertThrowZeroTimeIncrement(this->time_increment);
 
     FEValues<dim>      fe_values(scratch_data.get_mapping(),
                             scratch_data.get_dof_handler(this->dof_idx).get_fe(),
@@ -155,7 +155,7 @@ namespace MeltPoolDG::Reinitialization
   void
   OlssonOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
   {
-    AssertThrow(this->time_increment > 0.0, ExcZeroTimeIncrement());
+    AssertThrowZeroTimeIncrement(this->time_increment);
 
     const auto compressive_flux = [&](const auto &phi) {
       return 0.5 * (make_vectorized_array<number>(1.) - phi * phi);
