@@ -72,9 +72,10 @@ namespace MeltPoolDG::Utilities::MatrixFree
      * Zero-out constrained values
      */
     if (zero_out)
-      rhs = 0;
+      rhs = temp_rhs;
+    else
+      rhs += temp_rhs;
 
-    rhs += temp_rhs;
     scratch_data.get_constraint(dof_idx).set_zero(rhs);
     operator_base.reset_dof_index(dof_idx);
   }
