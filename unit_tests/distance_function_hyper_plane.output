@@ -4,11 +4,11 @@ distance: 1.0
 distance: 1.5
 dim 2
 distance: 0.0
-distance: 0.707107
-distance: 1.41421
+distance: 0.7071
+distance: 1.414
 dim 3
 distance: 0.0
-distance: 0.57735
-distance: 1.73205
+distance: 0.5774
+distance: 1.732
 distance: 1.0
 distance: 2.0

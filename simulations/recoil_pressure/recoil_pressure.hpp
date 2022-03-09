@@ -43,9 +43,9 @@ namespace MeltPoolDG
             dim == 2 ? Point<dim>(0.0, 1.0) : Point<dim>(0.0, 0.0, 1.0);
 
           if (p[dim - 1] >= y_interface)
-            return -DistanceFunctions::infinite_plane<dim>(p, plane_support, plane_normal);
+            return -DistanceFunctions::hyper_plane<dim>(p, plane_support, plane_normal);
           else
-            return DistanceFunctions::infinite_plane<dim>(p, plane_support, plane_normal);
+            return DistanceFunctions::hyper_plane<dim>(p, plane_support, plane_normal);
         }
 
       private:

@@ -88,32 +88,25 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
   class InitialValuesLS : public Function<dim>
   {
   public:
-    InitialValuesLS(const double x_max, const double eps)
+    InitialValuesLS(const double eps)
       : Function<dim>()
-      , x_max(x_max)
       , eps(eps)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      if (dim == 1)
-        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          p[0] - y_interface, eps);
-
-      Point<dim> left =
-        dim == 2 ? Point<dim>(x_min, y_interface) : Point<dim>(x_min, x_min, y_interface);
-      Point<dim> right =
-        dim == 2 ? Point<dim>(x_max, y_interface) : Point<dim>(x_max, x_max, y_interface);
-
+      const Point<dim> plane_support = Point<dim>::unit_vector(dim - 1) * y_interface;
+      const Point<dim> plane_normal  = Point<dim>::unit_vector(dim - 1);
+      const auto       dist = DistanceFunctions::hyper_plane(p, plane_support, plane_normal);
       if (p[dim - 1] >= y_interface)
-        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          DistanceFunctions::infinite_line<dim>(p, left, right), eps);
+        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(dist, eps);
       else
-        return -UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          DistanceFunctions::infinite_line<dim>(p, left, right), eps);
+        return -UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(dist, eps);
     }
-    double x_max, eps;
+
+  private:
+    const double eps;
   };
 
   template <int dim>
@@ -305,8 +298,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 
       AssertThrow(eps > 0, ExcNotImplemented());
 
-      this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(x_max, eps),
-                                     "level_set");
+      this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
       this->attach_initial_condition(
         std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
       // this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_sat),

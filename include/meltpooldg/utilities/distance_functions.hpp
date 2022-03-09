@@ -55,15 +55,13 @@ namespace MeltPoolDG::DistanceFunctions
       return cross_product_3d(fix_p2 - fix_p1, fix_p1 - p).norm() / (fix_p2 - fix_p1).norm();
     else if (dim == 2)
       return std::abs((fix_p2 - fix_p1) * cross_product_2d(fix_p1 - p)) / (fix_p2 - fix_p1).norm();
-    else if (dim == 1)
-      return 0.0;
     else
-      AssertThrow(false, ExcMessage("distance to infinite line: dim must be 1, 2 or 3."));
+      AssertThrow(false, ExcMessage("distance to infinite line: dim must be 2 or 3."));
   }
 
   /**
    * Compute the minimal distance between a point @p p and an infinite plane described by a @p
-   * support_point and a @p normal_vector.
+   * support_point and a @p normal_vector. The normal vector does not need to be normalized.
    *
    *      | (p - support) * normal |
    * d = ----------------------------
@@ -71,12 +69,10 @@ namespace MeltPoolDG::DistanceFunctions
    */
   template <int dim>
   inline double
-  infinite_plane(const Point<dim> &p,
-                 const Point<dim> &support_point,
-                 const Point<dim> &normal_vector)
+  hyper_plane(const Point<dim> &p, const Point<dim> &support_point, const Point<dim> &normal_vector)
   {
     Assert(normal_vector.norm() >= std::numeric_limits<double>::epsilon(),
-           ExcMessage("The normal vector must not be a zero vector! Abort..."));
+           ExcMessage("The normal vector must not have zero length! Abort..."));
     return std::abs((p - support_point) * normal_vector) / normal_vector.norm();
   }
 
@@ -87,15 +83,17 @@ namespace MeltPoolDG::DistanceFunctions
    */
   template <int dim>
   inline double
-  infinite_plane(const Point<dim> &p, const Point<dim> &A, const Point<dim> &B, const Point<dim> &C)
+  hyper_plane(const Point<dim> &p, const Point<dim> &A, const Point<dim> &B, const Point<dim> &C)
   {
+    Assert(dim == 3,
+           ExcMessage("A hyper plane defined by 3 points is only supported for dim = 3! Abort..."));
     Assert((A - B).norm() >= std::numeric_limits<double>::epsilon(),
-           ExcMessage("The support points of the plane must not coincide! Abort ..."));
+           ExcMessage("The support points of the plane must not coincide! Abort..."));
     Assert((B - C).norm() >= std::numeric_limits<double>::epsilon(),
-           ExcMessage("The support points of the plane must not coincide! Abort ..."));
+           ExcMessage("The support points of the plane must not coincide! Abort..."));
     Assert((C - A).norm() >= std::numeric_limits<double>::epsilon(),
-           ExcMessage("The support points of the plane must not coincide! Abort ..."));
-    return infinite_plane(p, A, Point<dim>(cross_product_3d(B - A, C - A)));
+           ExcMessage("The support points of the plane must not coincide! Abort..."));
+    return hyper_plane(p, A, Point<dim>(cross_product_3d(B - A, C - A)));
   }
 
 
