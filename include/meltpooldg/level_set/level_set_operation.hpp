@@ -135,12 +135,12 @@ namespace MeltPoolDG::LevelSet
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
-    void
-    do_reinitialization();
-
   private:
     void
     advect_level_set(const double dt, const VectorType &advection_velocity);
+
+    void
+    do_reinitialization();
 
     inline double
     approximate_distance_from_level_set(const double phi, const double eps, const double cutoff)
