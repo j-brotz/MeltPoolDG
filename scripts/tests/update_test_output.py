@@ -58,7 +58,7 @@ def create_output_path(name):
     return os.path.join(folder, output_file)
 
 
-def copy_test_output(log_file, test_root_dir, build_dir):
+def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
     # Record failed tests
     failed_tests = []
     failed_tests_path = []
@@ -101,7 +101,13 @@ def copy_test_output(log_file, test_root_dir, build_dir):
                 "ERROR: multiple outputs to the test >>> {:} <<< found. Abort ...".format(n))
             exit()
         else:
-            print("cp {:} {:}".format(o[0], test_found[0]))
+            if do_overwrite:
+                copy_command = "yes | cp -rf {:} {:}".format(
+                    o[0], test_found[0])
+            else:
+                copy_command = "cp {:} {:}".format(o[0], test_found[0])
+            print(copy_command)
+            os.system(copy_command)
             print("")
 
     print(70*"-")
@@ -121,4 +127,4 @@ if __name__ == '__main__':
     assert (log_file != "none")
 
     # copy test output
-    copy_test_output(log_file, a["test_root_dir"], a["build_dir"])
+    copy_test_output(log_file, a["test_root_dir"], a["build_dir"], a["y"])

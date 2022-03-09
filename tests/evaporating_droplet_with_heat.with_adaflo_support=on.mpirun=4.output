@@ -7,702 +7,702 @@
 | || normal_1 ||L2 = 2.90593210834e+00                                               normal_vector |
 |  τ = 0.00671571                                                                 reinitialization |
 | || delta phi ||L2 = 4.170050551450395e-05                                       reinitialization |
-| || normal_0 ||L2 = 2.90806454758e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90806464637e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.90806447461e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90806457911e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90806454758e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90806464637e+00                                               normal_vector |
-| || curvature ||L2 = 6.47764385843e+00                                                  curvature |
+| || normal_0 ||L2 = 2.90806447461e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90806457911e+00                                               normal_vector |
+| || curvature ||L2 = 6.47764375215e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7090537201e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90985277316e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90985270515e+00                                               normal_vector |
+| || advected field ||L2 = 6.7079033103e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90806447461e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90806457911e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 5.917604207710133e-05                                       reinitialization |
+| || delta phi ||L2 = 3.229809181451266e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 2.947549638727532e-05                                       reinitialization |
+| || delta phi ||L2 = 2.435382385921720e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91110377991e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91110379777e+00                                               normal_vector |
-| || curvature ||L2 = 6.47974744362e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91083938962e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91083932193e+00                                               normal_vector |
+| || curvature ||L2 = 6.47808538385e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.64868e-01                newton_raphson_solver |
-|  total mass = 0.14520938529                                                    melt_pool_problem |
+|  total mass = 0.14521077101                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #1, advancing from t_n-1 = 0 to t = 0.001 (dt = 0.001). 
-| || velocity ||L2 = 1.903673137767366e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.619311472703006e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.873489002664516e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.619311743164763e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-03 to 2.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7132084205e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91250739548e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91250745191e+00                                               normal_vector |
+| || advected field ||L2 = 6.7122713808e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91240637087e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91240633789e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 4.361648137337645e-05                                       reinitialization |
+| || delta phi ||L2 = 4.749961183979564e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 2.047254596019544e-05                                       reinitialization |
+| || delta phi ||L2 = 2.053811395469857e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91267395241e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91267383707e+00                                               normal_vector |
-| || curvature ||L2 = 6.48034449578e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91247570942e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91247576901e+00                                               normal_vector |
+| || curvature ||L2 = 6.47982775609e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.83144e-01                newton_raphson_solver |
-|  total mass = 0.14535715679                                                    melt_pool_problem |
+|  total mass = 0.14536604888                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #2, advancing from t_n-1 = 0.001 to t = 0.002 (dt = 0.001). 
-| || velocity ||L2 = 3.558310940962160e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.619683736837421e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 3.498985596949334e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.619613326160731e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-03 to 3.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7156362307e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91386674570e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91386672023e+00                                               normal_vector |
+| || advected field ||L2 = 6.7149306484e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91366822120e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91366820761e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 3.699758389750236e-05                                       reinitialization |
+| || delta phi ||L2 = 3.782210923262082e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 1.773290129660352e-05                                       reinitialization |
+| || delta phi ||L2 = 1.822054953329177e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91335059503e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91335054233e+00                                               normal_vector |
-| || curvature ||L2 = 6.48059470488e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91332784856e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91332785957e+00                                               normal_vector |
+| || curvature ||L2 = 6.48029794307e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.97962e-01                newton_raphson_solver |
-|  total mass = 0.14539630604                                                    melt_pool_problem |
+|  total mass = 0.14541780006                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #3, advancing from t_n-1 = 0.002 to t = 0.003 (dt = 0.001). 
-| || velocity ||L2 = 4.945711202219147e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.619933569666907e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 4.860290745788627e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.619847329358409e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-03 to 4.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7171478812e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91443147991e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91443158574e+00                                               normal_vector |
+| || advected field ||L2 = 6.7166858510e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91441247133e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91441247091e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 3.499205086711211e-05                                       reinitialization |
+| || delta phi ||L2 = 3.534443478118627e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 1.850677141308104e-05                                       reinitialization |
+| || delta phi ||L2 = 1.861921995348234e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91356287002e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91356286814e+00                                               normal_vector |
-| || curvature ||L2 = 6.48075740275e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91367722890e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91367724528e+00                                               normal_vector |
+| || curvature ||L2 = 6.48052114368e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.10308e-01                newton_raphson_solver |
-|  total mass = 0.14538415434                                                    melt_pool_problem |
+|  total mass = 0.14541683034                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #4, advancing from t_n-1 = 0.003 to t = 0.004 (dt = 0.001). 
-| || velocity ||L2 = 6.107615522571360e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.620114475258785e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 5.999731572183987e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.620040065896277e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-03 to 5.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7183046304e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91461728440e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91461736800e+00                                               normal_vector |
+| || advected field ||L2 = 6.7180012086e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91473436104e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91473433768e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 3.538520783148314e-05                                       reinitialization |
+| || delta phi ||L2 = 3.551153843965632e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 2.063536930466366e-05                                       reinitialization |
+| || delta phi ||L2 = 2.065428527065423e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91355901417e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91355904638e+00                                               normal_vector |
-| || curvature ||L2 = 6.48096154488e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91374663946e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91374657201e+00                                               normal_vector |
+| || curvature ||L2 = 6.48074392951e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.20900e-01                newton_raphson_solver |
-|  total mass = 0.14534385695                                                    melt_pool_problem |
+|  total mass = 0.14538335454                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #5, advancing from t_n-1 = 0.004 to t = 0.005 (dt = 0.001). 
-| || velocity ||L2 = 7.093244021147356e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.620264770054436e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.966306217815271e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.620202019373447e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 5.0000e-03 to 6.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7193034296e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91461001649e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91460999901e+00                                               normal_vector |
+| || advected field ||L2 = 6.7190805305e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91479979779e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91479974933e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 3.666888657536443e-05                                       reinitialization |
+| || delta phi ||L2 = 3.673673406045446e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 2.283591247098275e-05                                       reinitialization |
+| || delta phi ||L2 = 2.285229879033632e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91342535187e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91342538969e+00                                               normal_vector |
-| || curvature ||L2 = 6.48116999574e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91364602986e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91364613702e+00                                               normal_vector |
+| || curvature ||L2 = 6.48096153980e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.30205e-01                newton_raphson_solver |
-|  total mass = 0.1452856711                                                     melt_pool_problem |
+|  total mass = 0.14532850362                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #6, advancing from t_n-1 = 0.005 to t = 0.006 (dt = 0.001). 
-| || velocity ||L2 = 7.943848630074961e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.620407204142531e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.800867403620581e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.620350650097651e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 6.0000e-03 to 7.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7202151662e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91448403274e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91448413640e+00                                               normal_vector |
+| || advected field ||L2 = 6.7200280134e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91470676832e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91470682629e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 3.826616547915538e-05                                       reinitialization |
+| || delta phi ||L2 = 3.832213628635887e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 2.483802046545199e-05                                       reinitialization |
+| || delta phi ||L2 = 2.486362357459943e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91319430094e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91319419323e+00                                               normal_vector |
-| || curvature ||L2 = 6.48137220378e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91342862991e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91342856758e+00                                               normal_vector |
+| || curvature ||L2 = 6.48116982460e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.38526e-01                newton_raphson_solver |
-|  total mass = 0.14521425122                                                    melt_pool_problem |
+|  total mass = 0.14525849709                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #7, advancing from t_n-1 = 0.006 to t = 0.007 (dt = 0.001). 
-| || velocity ||L2 = 8.690964190352720e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.620548721798045e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.534561109401302e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.620494788973299e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 7.0000e-03 to 8.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7211906228e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91428952028e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91428945315e+00                                               normal_vector |
+| || advected field ||L2 = 6.7210195936e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91452596117e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91452594806e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 3.981987248963517e-05                                       reinitialization |
+| || delta phi ||L2 = 3.987588931647033e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 2.721339149469993e-05                                       reinitialization |
+| || delta phi ||L2 = 2.724765287059396e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91291772931e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91291789723e+00                                               normal_vector |
-| || curvature ||L2 = 6.48161773366e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91315773362e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91315776823e+00                                               normal_vector |
+| || curvature ||L2 = 6.48142047219e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.46072e-01                newton_raphson_solver |
-|  total mass = 0.14513155109                                                    melt_pool_problem |
+|  total mass = 0.14517631364                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #8, advancing from t_n-1 = 0.007 to t = 0.008 (dt = 0.001). 
-| || velocity ||L2 = 9.360610680810801e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.620698534208564e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 9.193058020788499e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.620645857292753e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 8.0000e-03 to 9.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7222282202e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91405173621e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91405156980e+00                                               normal_vector |
+| || advected field ||L2 = 6.7220639153e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91429340751e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91429352067e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 4.166445094812870e-05                                       reinitialization |
+| || delta phi ||L2 = 4.172222554159620e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 2.969460016621115e-05                                       reinitialization |
+| || delta phi ||L2 = 2.973444900020129e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91258760191e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91258758622e+00                                               normal_vector |
-| || curvature ||L2 = 6.48189342337e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91282917493e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91282917505e+00                                               normal_vector |
+| || curvature ||L2 = 6.48170147636e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.52989e-01                newton_raphson_solver |
-|  total mass = 0.14503766352                                                    melt_pool_problem |
+|  total mass = 0.14508255182                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #9, advancing from t_n-1 = 0.008 to t = 0.009 (dt = 0.001). 
-| || velocity ||L2 = 9.973419474402447e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.620861742919349e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 9.796683302013627e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.620809539915144e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 9.0000e-03 to 1.0000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7232891130e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91375608594e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91375607553e+00                                               normal_vector |
+| || advected field ||L2 = 6.7231284310e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91399990360e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91399974823e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 4.370402044368968e-05                                       reinitialization |
+| || delta phi ||L2 = 4.376392413665270e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 3.207828703421417e-05                                       reinitialization |
+| || delta phi ||L2 = 3.212200765337105e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91218749523e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91218735076e+00                                               normal_vector |
-| || curvature ||L2 = 6.48218782865e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 2.59386e-01                newton_raphson_solver |
-|  total mass = 0.1449322427                                                     melt_pool_problem |
+| || normal_0 ||L2 = 2.91242924905e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91242930927e+00                                               normal_vector |
+| || curvature ||L2 = 6.48200098947e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 2.59385e-01                newton_raphson_solver |
+|  total mass = 0.1449770881                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #10, advancing from t_n-1 = 0.009 to t = 0.01 (dt = 0.001). 
-| || velocity ||L2 = 1.054524035168709e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.621036129239994e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.036102430302710e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.620984216637066e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 11     t = 1.0000e-02 to 1.1000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7243471744e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91338714213e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91338729381e+00                                               normal_vector |
+| || advected field ||L2 = 6.7241887139e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91363136143e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91363129725e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 4.581329161883648e-05                                       reinitialization |
+| || delta phi ||L2 = 4.587538741350915e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 3.429850461628332e-05                                       reinitialization |
+| || delta phi ||L2 = 3.434510265391683e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91171281259e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91171291929e+00                                               normal_vector |
-| || curvature ||L2 = 6.48249409842e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91195456039e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91195453811e+00                                               normal_vector |
+| || curvature ||L2 = 6.48231257070e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.65342e-01                newton_raphson_solver |
-|  total mass = 0.14481544769                                                    melt_pool_problem |
+|  total mass = 0.14486017511                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 
 Time step #11, advancing from t_n-1 = 0.01 to t = 0.011 (dt = 0.001). 
-| || velocity ||L2 = 1.108809699427610e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.621218729181147e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.089788457229570e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.621167152177341e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 12     t = 1.1000e-02 to 1.2000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7253912949e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91294041395e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91294057484e+00                                               normal_vector |
+| || advected field ||L2 = 6.7252344091e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91318423547e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91318430767e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 4.790988138720773e-05                                       reinitialization |
+| || delta phi ||L2 = 4.797402679654914e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 3.633987994566802e-05                                       reinitialization |
+| || delta phi ||L2 = 3.638869546915260e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91116686272e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91116683157e+00                                               normal_vector |
-| || curvature ||L2 = 6.48280449831e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91140805989e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91140803111e+00                                               normal_vector |
+| || curvature ||L2 = 6.48262841244e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.70922e-01                newton_raphson_solver |
-|  total mass = 0.14468794904                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
+|  total mass = 0.14473252239                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -4.29759e-09       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 8.4662045516e-10            evaporation_source_terms_continuous |
 
 Time step #12, advancing from t_n-1 = 0.011 to t = 0.012 (dt = 0.001). 
-| || velocity ||L2 = 1.161102030009182e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.621407880908086e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.141611911099524e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.621356965353911e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 13     t = 1.2000e-02 to 1.3000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7265374933e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91246123169e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91246118253e+00                                               normal_vector |
+| || advected field ||L2 = 6.7263814926e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91270440730e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91270453110e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 5.001073493476110e-05                                       reinitialization |
+| || delta phi ||L2 = 5.007677625721749e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 3.873635034079585e-05                                       reinitialization |
+| || delta phi ||L2 = 3.878748069666082e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.91058451230e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91058452075e+00                                               normal_vector |
-| || curvature ||L2 = 6.48315647435e+00                                                  curvature |
+| || normal_0 ||L2 = 2.91082484349e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91082492337e+00                                               normal_vector |
+| || curvature ||L2 = 6.48298605572e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.76175e-01                newton_raphson_solver |
-|  total mass = 0.14454984834                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -3.04895e-09       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 6.0677631067e-10            evaporation_source_terms_continuous |
+|  total mass = 0.14459424667                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -7.50594e-09       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.4926125611e-09            evaporation_source_terms_continuous |
 
 Time step #13, advancing from t_n-1 = 0.012 to t = 0.013 (dt = 0.001). 
-| || velocity ||L2 = 1.212284561307590e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.621612914031295e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.192439186297464e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.621561576894249e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 14     t = 1.3000e-02 to 1.4000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7277756127e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91195101282e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91195109779e+00                                               normal_vector |
+| || advected field ||L2 = 6.7276209465e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91219384785e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91219385624e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 5.235074737740641e-05                                       reinitialization |
+| || delta phi ||L2 = 5.241874340489819e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 4.129756656050382e-05                                       reinitialization |
+| || delta phi ||L2 = 4.135091551036096e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90994956817e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90994960576e+00                                               normal_vector |
-| || curvature ||L2 = 6.48355112909e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 2.81140e-01                newton_raphson_solver |
-|  total mass = 0.14440016121                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -5.02103e-09       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.0118426834e-09            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.91018924339e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91018928944e+00                                               normal_vector |
+| || curvature ||L2 = 6.48338600578e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 2.81139e-01                newton_raphson_solver |
+|  total mass = 0.14444436882                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -8.39564e-09       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.6882692249e-09            evaporation_source_terms_continuous |
 
 Time step #14, advancing from t_n-1 = 0.013 to t = 0.014 (dt = 0.001). 
-| || velocity ||L2 = 1.263155903077726e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.621834789926196e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.243055642484981e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.621783816322271e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 15     t = 1.4000e-02 to 1.5000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7290612148e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91138361796e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91138363135e+00                                               normal_vector |
+| || advected field ||L2 = 6.7289076074e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91162573268e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91162562015e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 5.484301775682507e-05                                       reinitialization |
+| || delta phi ||L2 = 5.491296297162826e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 4.381844248457024e-05                                       reinitialization |
+| || delta phi ||L2 = 4.387376985543442e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90924349850e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90924353582e+00                                               normal_vector |
-| || curvature ||L2 = 6.48397813135e+00                                                  curvature |
+| || normal_0 ||L2 = 2.90948222079e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90948225015e+00                                               normal_vector |
+| || curvature ||L2 = 6.48381877221e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.85849e-01                newton_raphson_solver |
-|  total mass = 0.14423800825                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -5.27791e-09       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.0803499166e-09            evaporation_source_terms_continuous |
+|  total mass = 0.14428201167                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -7.71832e-09       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.5750484405e-09            evaporation_source_terms_continuous |
 
 Time step #15, advancing from t_n-1 = 0.014 to t = 0.015 (dt = 0.001). 
-| || velocity ||L2 = 1.314363373757881e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.622070807294785e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.294097933438499e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.622020335604400e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 16     t = 1.5000e-02 to 1.6000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7303664287e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91074037553e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91074043705e+00                                               normal_vector |
+| || advected field ||L2 = 6.7302141556e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91098164240e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91098161031e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 5.739100340112440e-05                                       reinitialization |
+| || delta phi ||L2 = 5.746281569213415e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 4.623389687714185e-05                                       reinitialization |
+| || delta phi ||L2 = 4.629093598106399e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90846039169e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90846047674e+00                                               normal_vector |
-| || curvature ||L2 = 6.48443064530e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 2.90330e-01                newton_raphson_solver |
-|  total mass = 0.14406327081                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -4.49754e-09       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 9.4024663294e-10            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.90869853969e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90869830683e+00                                               normal_vector |
+| || curvature ||L2 = 6.48427695477e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 2.90329e-01                newton_raphson_solver |
+|  total mass = 0.14410705838                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -6.17261e-09       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.2850102412e-09            evaporation_source_terms_continuous |
 
 Time step #16, advancing from t_n-1 = 0.015 to t = 0.016 (dt = 0.001). 
-| || velocity ||L2 = 1.366401771874461e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.622317878787205e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.346051751230408e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.622267792948985e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 17     t = 1.6000e-02 to 1.7000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7316792275e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.91001576880e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.91001578853e+00                                               normal_vector |
+| || advected field ||L2 = 6.7315280326e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.91025601012e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.91025609665e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 5.993343202018530e-05                                       reinitialization |
+| || delta phi ||L2 = 6.000695662471831e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 4.852168298295119e-05                                       reinitialization |
+| || delta phi ||L2 = 4.858017273746816e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90760113185e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90760131257e+00                                               normal_vector |
-| || curvature ||L2 = 6.48490229444e+00                                                  curvature |
+| || normal_0 ||L2 = 2.90783831340e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90783835872e+00                                               normal_vector |
+| || curvature ||L2 = 6.48475425975e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.94604e-01                newton_raphson_solver |
-|  total mass = 0.14387640141                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -3.26385e-09       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 7.0248393057e-10            evaporation_source_terms_continuous |
+|  total mass = 0.14391996297                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -4.34152e-09       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 9.2907849221e-10            evaporation_source_terms_continuous |
 
 Time step #17, advancing from t_n-1 = 0.016 to t = 0.017 (dt = 0.001). 
-| || velocity ||L2 = 1.419630106645072e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.622574098914387e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.399268623571420e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.622524388732215e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 18     t = 1.7000e-02 to 1.8000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7329962646e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90921112325e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90921114809e+00                                               normal_vector |
+| || advected field ||L2 = 6.7328461279e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90945046179e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90945055857e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 6.242920417648497e-05                                       reinitialization |
+| || delta phi ||L2 = 6.250424983133334e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 5.067526943402601e-05                                       reinitialization |
+| || delta phi ||L2 = 5.073495003516052e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90667051751e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90667047571e+00                                               normal_vector |
-| || curvature ||L2 = 6.48538478624e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 2.98691e-01                newton_raphson_solver |
-|  total mass = 0.14367810377                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -2.0198e-09        evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 4.5219178950e-10            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.90690656015e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90690649718e+00                                               normal_vector |
+| || curvature ||L2 = 6.48524216865e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 2.98690e-01                newton_raphson_solver |
+|  total mass = 0.14372143049                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -8.09581e-09       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.0722936113e-09            evaporation_source_terms_continuous |
 
 Time step #18, advancing from t_n-1 = 0.017 to t = 0.018 (dt = 0.001). 
-| || velocity ||L2 = 1.474286734491113e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.622838289906804e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.453980863600647e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.622789796060956e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 19     t = 1.8000e-02 to 1.9000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7343357683e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90833716574e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90833715228e+00                                               normal_vector |
+| || advected field ||L2 = 6.7341868833e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90857568565e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90857559369e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 6.485843923278325e-05                                       reinitialization |
+| || delta phi ||L2 = 6.493478385375027e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 5.273936426182585e-05                                       reinitialization |
+| || delta phi ||L2 = 5.279988498232761e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90567767043e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90567773533e+00                                               normal_vector |
-| || curvature ||L2 = 6.48586777826e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.02607e-01                newton_raphson_solver |
-|  total mass = 0.14346902568                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -6.06287e-09       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 8.6353693833e-10            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.90591261544e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90591265814e+00                                               normal_vector |
+| || curvature ||L2 = 6.48573082810e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.02606e-01                newton_raphson_solver |
+|  total mass = 0.14351210997                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -5.95915e-07       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 7.9770574239e-08            evaporation_source_terms_continuous |
 
 Time step #19, advancing from t_n-1 = 0.018 to t = 0.019 (dt = 0.001). 
-| || velocity ||L2 = 1.530475159116383e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.623112122663100e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.510374079381551e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.623156389951471e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 20     t = 1.9000e-02 to 2.0000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7357545184e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90742220793e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90742222158e+00                                               normal_vector |
+| || advected field ||L2 = 6.7356062252e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90765961937e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90765964093e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 6.727820603519246e-05                                       reinitialization |
+| || delta phi ||L2 = 6.735502486756853e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 5.493698060158149e-05                                       reinitialization |
+| || delta phi ||L2 = 5.499726174854388e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90463582933e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90463598966e+00                                               normal_vector |
-| || curvature ||L2 = 6.48636752598e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.06365e-01                newton_raphson_solver |
-|  total mass = 0.14324904042                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -5.67166e-07       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 7.6198871960e-08            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.90486976080e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90486977679e+00                                               normal_vector |
+| || curvature ||L2 = 6.48623611530e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.06364e-01                newton_raphson_solver |
+|  total mass = 0.14329187711                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -3.13689e-06       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 3.9229739166e-07            evaporation_source_terms_continuous |
 
 Time step #20, advancing from t_n-1 = 0.019 to t = 0.02 (dt = 0.001). 
-| || velocity ||L2 = 1.588341800909810e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.623488717376670e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.568932951904429e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.623735684121794e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 21     t = 2.0000e-02 to 2.1000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7372692643e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90647525758e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90647530307e+00                                               normal_vector |
+| || advected field ||L2 = 6.7371214973e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90671154464e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90671148181e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 6.978042505943856e-05                                       reinitialization |
+| || delta phi ||L2 = 6.985518555933748e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 5.735089049216469e-05                                       reinitialization |
+| || delta phi ||L2 = 5.740922282062263e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90353617756e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90353610741e+00                                               normal_vector |
-| || curvature ||L2 = 6.48690907159e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.09978e-01                newton_raphson_solver |
-|  total mass = 0.14301693985                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -2.99552e-06       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 3.7587923377e-07            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.90376878541e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90376890755e+00                                               normal_vector |
+| || curvature ||L2 = 6.48678298119e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.09977e-01                newton_raphson_solver |
+|  total mass = 0.14305952812                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -5.49795e-06       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 7.0914452927e-07            evaporation_source_terms_continuous |
 
 Time step #21, advancing from t_n-1 = 0.02 to t = 0.021 (dt = 0.001). 
-| || velocity ||L2 = 1.648506789592700e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.624073453221055e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.629539047031472e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.623904372758764e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 22     t = 2.1000e-02 to 2.2000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7388362879e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90546514878e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90546511661e+00                                               normal_vector |
+| || advected field ||L2 = 6.7386896083e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90569993938e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90570005308e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 7.234265928029708e-05                                       reinitialization |
+| || delta phi ||L2 = 7.241676585644706e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 5.973115851330652e-05                                       reinitialization |
+| || delta phi ||L2 = 5.978910927378324e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90236061198e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90236068011e+00                                               normal_vector |
-| || curvature ||L2 = 6.48747994152e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.13457e-01                newton_raphson_solver |
-|  total mass = 0.1427717406                                                     melt_pool_problem |
-| evaporation: jump in the velocity field = -5.23683e-06       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 6.7765824692e-07            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.90259244223e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90259239571e+00                                               normal_vector |
+| || curvature ||L2 = 6.48735950192e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.13455e-01                newton_raphson_solver |
+|  total mass = 0.14281408082                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -7.58507e-06       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 9.9280765219e-07            evaporation_source_terms_continuous |
 
 Time step #22, advancing from t_n-1 = 0.021 to t = 0.022 (dt = 0.001). 
-| || velocity ||L2 = 1.710858017410082e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.624259225406628e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.692327782873715e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.624188956395012e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 23     t = 2.2000e-02 to 2.3000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7404317810e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90437364191e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90437364895e+00                                               normal_vector |
+| || advected field ||L2 = 6.7402859852e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90460763391e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90460770048e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 7.490903271143662e-05                                       reinitialization |
+| || delta phi ||L2 = 7.498299295152345e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 6.202303742423392e-05                                       reinitialization |
+| || delta phi ||L2 = 6.208101409992151e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.90110534956e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90110538358e+00                                               normal_vector |
-| || curvature ||L2 = 6.48807045452e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.16809e-01                newton_raphson_solver |
-|  total mass = 0.14251335231                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -7.2094e-06        evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 9.4669381652e-07            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.90133611893e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90133590314e+00                                               normal_vector |
+| || curvature ||L2 = 6.48795534456e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.16807e-01                newton_raphson_solver |
+|  total mass = 0.14255544218                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -9.40593e-06       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.2425906416e-06            evaporation_source_terms_continuous |
 
 Time step #23, advancing from t_n-1 = 0.022 to t = 0.023 (dt = 0.001). 
-| || velocity ||L2 = 1.775470500436831e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.624555753325789e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.757378716516996e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.624490979115838e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 24     t = 2.3000e-02 to 2.4000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7420451626e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90319677539e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90319689714e+00                                               normal_vector |
+| || advected field ||L2 = 6.7419001684e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90342994131e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90343006761e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 7.744621298177500e-05                                       reinitialization |
+| || delta phi ||L2 = 7.752009984116611e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 6.421165861621734e-05                                       reinitialization |
+| || delta phi ||L2 = 6.426968595817808e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.89977135092e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89977140978e+00                                               normal_vector |
-| || curvature ||L2 = 6.48867575902e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.20045e-01                newton_raphson_solver |
-|  total mass = 0.14224222283                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -8.92235e-06       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.1825752317e-06            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.90000117382e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90000112120e+00                                               normal_vector |
+| || curvature ||L2 = 6.48856605977e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.20043e-01                newton_raphson_solver |
+|  total mass = 0.14228405916                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -1.09712e-05       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.4594143160e-06            evaporation_source_terms_continuous |
 
 Time step #24, advancing from t_n-1 = 0.023 to t = 0.024 (dt = 0.001). 
-| || velocity ||L2 = 1.842349429079420e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.624867688056740e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.824696530453388e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.624803999136201e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 25     t = 2.4000e-02 to 2.5000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7436730306e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90193699542e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90193692932e+00                                               normal_vector |
+| || advected field ||L2 = 6.7435294814e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90216908566e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90216903394e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 7.993052843063714e-05                                       reinitialization |
+| || delta phi ||L2 = 8.000433563867362e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 6.629214082269207e-05                                       reinitialization |
+| || delta phi ||L2 = 6.635016662920341e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.89836270538e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89836263680e+00                                               normal_vector |
-| || curvature ||L2 = 6.48928957053e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.23172e-01                newton_raphson_solver |
-|  total mass = 0.1419589857                                                     melt_pool_problem |
-| evaporation: jump in the velocity field = -1.03875e-05       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.3863891167e-06            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.89859107073e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89859128575e+00                                               normal_vector |
+| || curvature ||L2 = 6.48918485892e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.23169e-01                newton_raphson_solver |
+|  total mass = 0.14200056562                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -1.2294e-05        evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.6447175226e-06            evaporation_source_terms_continuous |
 
 Time step #25, advancing from t_n-1 = 0.024 to t = 0.025 (dt = 0.001). 
-| || velocity ||L2 = 1.911426521581794e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.625189670361421e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.894215270322383e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.625127116661270e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 26     t = 2.5000e-02 to 2.6000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7453191547e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.90059854537e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.90059849743e+00                                               normal_vector |
+| || advected field ||L2 = 6.7451763250e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.90082957574e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.90082961809e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 8.234655077296142e-05                                       reinitialization |
+| || delta phi ||L2 = 8.242022965291227e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 6.826882302768374e-05                                       reinitialization |
+| || delta phi ||L2 = 6.832675954394465e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.89688350715e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89688360225e+00                                               normal_vector |
-| || curvature ||L2 = 6.48990242875e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.26196e-01                newton_raphson_solver |
-|  total mass = 0.14166429023                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -1.16186e-05       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.5596784159e-06            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.89711109448e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89711116360e+00                                               normal_vector |
+| || curvature ||L2 = 6.48980293354e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.26192e-01                newton_raphson_solver |
+|  total mass = 0.14170561092                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -1.3391e-05        evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.8002077698e-06            evaporation_source_terms_continuous |
 
 Time step #26, advancing from t_n-1 = 0.025 to t = 0.026 (dt = 0.001). 
-| || velocity ||L2 = 1.982558235836090e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.625521538785560e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.965793351927498e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.625460540474487e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 27     t = 2.6000e-02 to 2.7000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7469905814e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.89918933935e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89918959075e+00                                               normal_vector |
+| || advected field ||L2 = 6.7468488291e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.89941954384e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89941950326e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 8.469093832095550e-05                                       reinitialization |
+| || delta phi ||L2 = 8.476442101808468e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 7.016156430499312e-05                                       reinitialization |
+| || delta phi ||L2 = 7.021928639092656e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.89533959287e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89533959696e+00                                               normal_vector |
-| || curvature ||L2 = 6.49050741721e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.29123e-01                newton_raphson_solver |
-|  total mass = 0.14135866416                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -1.26328e-05       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.7042189178e-06            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.89556615973e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89556620589e+00                                               normal_vector |
+| || curvature ||L2 = 6.49041266340e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.29119e-01                newton_raphson_solver |
+|  total mass = 0.14139972317                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -1.4337e-05        evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 1.9277877927e-06            evaporation_source_terms_continuous |
 
 Time step #27, advancing from t_n-1 = 0.026 to t = 0.027 (dt = 0.001). 
-| || velocity ||L2 = 2.055514573509949e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.625864000071542e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.039198912052679e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.625813974249044e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 28     t = 2.7000e-02 to 2.8000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7486946601e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.89771629560e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89771656156e+00                                               normal_vector |
+| || advected field ||L2 = 6.7485539650e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.89794551896e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89794553917e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 8.697166256268216e-05                                       reinitialization |
+| || delta phi ||L2 = 8.704482062867207e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 7.199500396235397e-05                                       reinitialization |
+| || delta phi ||L2 = 7.205237467216786e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.89373335709e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89373352543e+00                                               normal_vector |
-| || curvature ||L2 = 6.49110505765e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.31958e-01                newton_raphson_solver |
-|  total mass = 0.14104240092                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -1.35016e-05       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.8219494895e-06            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.89395899510e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89395899975e+00                                               normal_vector |
+| || curvature ||L2 = 6.49101518070e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.31954e-01                newton_raphson_solver |
+|  total mass = 0.14108319627                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -1.53417e-05       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.0304679039e-06            evaporation_source_terms_continuous |
 
 Time step #28, advancing from t_n-1 = 0.027 to t = 0.028 (dt = 0.001). 
-| || velocity ||L2 = 2.129993687487129e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.626226432637716e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.114134671814593e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.626208761033021e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 29     t = 2.8000e-02 to 2.9000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7504327525e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.89618171784e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89618186871e+00                                               normal_vector |
+| || advected field ||L2 = 6.7502925666e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.89640997150e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89640974284e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 8.919353840698124e-05                                       reinitialization |
+| || delta phi ||L2 = 8.926608706311850e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 7.377836228242281e-05                                       reinitialization |
+| || delta phi ||L2 = 7.383508356769148e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.89206456662e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89206475259e+00                                               normal_vector |
-| || curvature ||L2 = 6.49169490719e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.34708e-01                newton_raphson_solver |
-|  total mass = 0.14071560836                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -1.44282e-05       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.9158536348e-06            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.89228908225e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89228915750e+00                                               normal_vector |
+| || curvature ||L2 = 6.49160957328e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.34704e-01                newton_raphson_solver |
+|  total mass = 0.14075613892                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -1.64504e-05       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.1137444042e-06            evaporation_source_terms_continuous |
 
 Time step #29, advancing from t_n-1 = 0.028 to t = 0.029 (dt = 0.001). 
-| || velocity ||L2 = 2.205662621364145e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.626629447268923e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.190284621495611e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.626610178045940e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 30     t = 2.9000e-02 to 3.0000e-02 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 6.7522016459e-02                                    advection_diffusion |
-| || normal_0 ||L2 = 2.89458358778e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89458393840e+00                                               normal_vector |
+| || advected field ||L2 = 6.7520621431e-02                                    advection_diffusion |
+| || normal_0 ||L2 = 2.89481067842e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89481075869e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00335786                                                                 reinitialization |
-| || delta phi ||L2 = 9.135294880189896e-05                                       reinitialization |
+| || delta phi ||L2 = 9.142461356495494e-05                                       reinitialization |
 |  τ = 0.00671571                                                                 reinitialization |
-| || delta phi ||L2 = 7.550535004600191e-05                                       reinitialization |
+| || delta phi ||L2 = 7.556109602564283e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.89033263637e+00                                               normal_vector |
-| || normal_1 ||L2 = 2.89033279110e+00                                               normal_vector |
-| || curvature ||L2 = 6.49227207632e+00                                                  curvature |
-| Newton Raphson solver converged: ||solution|| = 3.37377e-01                newton_raphson_solver |
-|  total mass = 0.14037838431                                                    melt_pool_problem |
-| evaporation: jump in the velocity field = -1.54594e-05       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.9913434099e-06            evaporation_source_terms_continuous |
+| || normal_0 ||L2 = 2.89055616303e+00                                               normal_vector |
+| || normal_1 ||L2 = 2.89055620185e+00                                               normal_vector |
+| || curvature ||L2 = 6.49219139468e+00                                                  curvature |
+| Newton Raphson solver converged: ||solution|| = 3.37372e-01                newton_raphson_solver |
+|  total mass = 0.1404186506                                                     melt_pool_problem |
+| evaporation: jump in the velocity field = -1.77977e-05       evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 2.1877507069e-06            evaporation_source_terms_continuous |
 
 Time step #30, advancing from t_n-1 = 0.029 to t = 0.03 (dt = 0.001). 
-| || velocity ||L2 = 2.282188532033138e-04                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.627038986381439e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.267318881173020e-04                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.627041426607514e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
