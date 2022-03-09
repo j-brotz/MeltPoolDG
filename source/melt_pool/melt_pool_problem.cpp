@@ -750,6 +750,7 @@ namespace MeltPoolDG::MeltPool
                                                              reinit_constraints_dirichlet);
           }
       }
+    reinit_constraints_dirichlet.close();
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
 
@@ -796,7 +797,6 @@ namespace MeltPoolDG::MeltPool
 
     UtilityFunctions::check_constraints(dof_handler_ls, ls_constraints_dirichlet);
 
-    reinit_constraints_dirichlet.close();
     reinit_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
