@@ -148,6 +148,7 @@ namespace MeltPoolDG::MeltPool
 
     VectorType vel_force_rhs;
     VectorType mass_balance_rhs;
+    VectorType level_set_rhs;
     VectorType interface_velocity;
 
     unsigned int ls_dof_idx;

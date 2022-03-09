@@ -40,6 +40,16 @@ namespace MeltPoolDG::Evaporation
     , density_liquid(density_liquid)
   {}
 
+
+  template <int dim>
+  void
+  EvaporationSourceTermsSharp<dim>::compute_level_set_source_term(VectorType &,
+                                                                  const unsigned int,
+                                                                  const VectorType &)
+  {
+    AssertThrow(false, ExcNotImplemented());
+  }
+
   template <int dim>
   void
   EvaporationSourceTermsSharp<dim>::compute_evaporation_velocity(VectorType &evaporation_velocity)

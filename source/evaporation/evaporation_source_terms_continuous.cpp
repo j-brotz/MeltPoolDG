@@ -54,6 +54,69 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
+  EvaporationSourceTermsContinuous<dim>::compute_level_set_source_term(
+    VectorType &       level_set_source_term,
+    const unsigned int ls_dof_idx,
+    const VectorType & level_set)
+  {
+    level_set.update_ghost_values();
+    evaporative_mass_flux.update_ghost_values();
+
+    scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
+      [&](const auto &matrix_free,
+          auto &      level_set_source_term,
+          const auto &level_set_as_heaviside,
+          auto        macro_cells) {
+        FECellIntegrator<dim, 1, double> ls(matrix_free, ls_dof_idx, ls_quad_idx);
+
+        FECellIntegrator<dim, 1, double> hs(matrix_free, ls_hanging_nodes_dof_idx, ls_quad_idx);
+
+        FECellIntegrator<dim, 1, double> evap_flux(matrix_free,
+                                                   evapor_mass_flux_dof_idx,
+                                                   ls_quad_idx);
+
+        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
+          {
+            ls.reinit(cell);
+            ls.read_dof_values_plain(level_set);
+            ls.evaluate(EvaluationFlags::gradients);
+
+            hs.reinit(cell);
+            hs.read_dof_values_plain(level_set_as_heaviside);
+            hs.evaluate(EvaluationFlags::values);
+
+            evap_flux.reinit(cell);
+            evap_flux.read_dof_values_plain(evaporative_mass_flux);
+            evap_flux.evaluate(EvaluationFlags::values);
+
+            // The normal vector field is oriented such that the normal vector points from
+            // the negative level set value (= default for representing the gas phase) to the
+            // positive value (= default for representing the liquid phase). Thus, in case the
+            // gas phase corresponds to a level set value of 1, the sign of the normal vector
+            // has to be changed.
+            AssertThrow(evapor_data.ls_value_gas == -1.0, ExcNotImplemented());
+
+            for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
+              {
+                ls.submit_value(-evap_flux.get_value(q_index) * ls.get_gradient(q_index).norm() *
+                                  LevelSet::Tools::interpolate(hs.get_value(q_index),
+                                                               1. / density_vapor,
+                                                               1. / density_liquid),
+                                q_index);
+              }
+            ls.integrate_scatter(EvaluationFlags::values, level_set_source_term);
+          }
+      },
+      level_set_source_term,
+      level_set_as_heaviside,
+      true /*zero_out*/);
+
+    evaporative_mass_flux.zero_out_ghost_values();
+    level_set.zero_out_ghost_values();
+  }
+
+  template <int dim>
+  void
   EvaporationSourceTermsContinuous<dim>::compute_evaporation_velocity(
     VectorType &evaporation_velocity)
   {
