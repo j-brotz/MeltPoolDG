@@ -85,28 +85,37 @@ namespace MeltPoolDG::LevelSet
     /*
      *    initialize the reinit operation
      */
-    if ((base_in->parameters.reinit.implementation ==
-         "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
+    if (level_set_data.do_reinitialization)
       {
-        reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>();
-        reinit_operation->initialize(scratch_data,
-                                     base_in->parameters,
-                                     reinit_dof_idx_in,
-                                     ls_quad_idx_in,
-                                     ls_dof_idx,
-                                     normal_dof_idx_in);
-      }
+        if ((base_in->parameters.reinit.implementation ==
+             "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
+          {
+            reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>();
+            reinit_operation->initialize(scratch_data,
+                                         base_in->parameters,
+                                         reinit_dof_idx_in,
+                                         ls_quad_idx_in,
+                                         ls_dof_idx,
+                                         normal_dof_idx_in);
+          }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    else if ((base_in->parameters.reinit.implementation == "adaflo") ||
-             (base_in->parameters.ls.implementation == "adaflo"))
-      {
-        AssertThrow(base_in->parameters.reinit.linear_solver.do_matrix_free, ExcNotImplemented());
-        reinit_operation = std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
-          *scratch_data, reinit_dof_idx_in, ls_quad_idx_in, normal_dof_idx_in, base_in->parameters);
-      }
+        else if ((base_in->parameters.reinit.implementation == "adaflo") ||
+                 (base_in->parameters.ls.implementation == "adaflo"))
+          {
+            AssertThrow(base_in->parameters.reinit.linear_solver.do_matrix_free,
+                        ExcNotImplemented());
+            reinit_operation =
+              std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
+                *scratch_data,
+                reinit_dof_idx_in,
+                ls_quad_idx_in,
+                normal_dof_idx_in,
+                base_in->parameters);
+          }
 #endif
-    else
-      AssertThrow(false, ExcNotImplemented());
+        else
+          AssertThrow(false, ExcNotImplemented());
+      }
     /*
      *    initialize the curvature operation class
      */
@@ -186,9 +195,12 @@ namespace MeltPoolDG::LevelSet
         advec_diff_operation->get_advected_field() = get_level_set();
       }
     // do reinitialization of the initial field if requested
-    reinit_time_iterator.reset_max_n_time_steps(level_set_data.n_initial_reinit_steps);
-    do_reinitialization();
-    reinit_time_iterator.reset_max_n_time_steps(reinit_data.max_n_steps);
+    if (reinit_operation)
+      {
+        reinit_time_iterator.reset_max_n_time_steps(level_set_data.n_initial_reinit_steps);
+        do_reinitialization();
+        reinit_time_iterator.reset_max_n_time_steps(reinit_data.max_n_steps);
+      }
     /*
      *    compute the localized heaviside function
      */
@@ -209,7 +221,8 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim>::reinit()
   {
     advec_diff_operation->reinit();
-    reinit_operation->reinit();
+    if (reinit_operation)
+      reinit_operation->reinit();
     curvature_operation->reinit();
 
     scratch_data->initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
@@ -239,16 +252,6 @@ namespace MeltPoolDG::LevelSet
       scratch_data->get_constraint(ls_hanging_nodes_dof_idx)
         .distribute(get_normal_vector().block(d));
   }
-  /**
-   *  this function may be called to recompute the normal vector with the
-   *  current level set.
-   */
-  template <int dim>
-  void
-  LevelSetOperation<dim>::update_normal_vector()
-  {
-    reinit_operation->set_initial_condition(get_level_set());
-  }
 
   template <int dim>
   void
@@ -264,10 +267,11 @@ namespace MeltPoolDG::LevelSet
     /*
      *  2) solve the reinitialization problem of the level set equation
      */
-    {
-      TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::reinit");
-      do_reinitialization();
-    }
+    if (reinit_operation)
+      {
+        TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::reinit");
+        do_reinitialization();
+      }
     /*
      *  3) compute the smoothened heaviside function ...
      */
@@ -415,45 +419,43 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::do_reinitialization()
   {
-    if (level_set_data.do_reinitialization)
+    reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
+
+    Journal::print_decoration_line(scratch_data->get_pcout());
+    while (!reinit_time_iterator.is_finished())
       {
-        reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
-
-        Journal::print_decoration_line(scratch_data->get_pcout());
-        while (!reinit_time_iterator.is_finished())
-          {
-            const double       d_tau = reinit_time_iterator.get_next_time_increment();
-            std::ostringstream str;
-            str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
-            Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
-            reinit_operation->solve(d_tau);
-            /*
-             *  reset the solution of the level set field to the reinitialized solution ...
-             */
-            advec_diff_operation->get_advected_field().copy_locally_owned_data_from(
-              reinit_operation->get_level_set());
-            /*
-             *  @todo
-             *
-             *  ... and distribute the constraints;
-             *
-             *  Should constraints between advec diff operation
-             *  and reinitialization operation be synched?
-             */
-            // scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
+        const double       d_tau = reinit_time_iterator.get_next_time_increment();
+        std::ostringstream str;
+        str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
+        Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
+        reinit_operation->solve(d_tau);
+        /*
+         *  reset the solution of the level set field to the reinitialized solution ...
+         */
+        advec_diff_operation->get_advected_field().copy_locally_owned_data_from(
+          reinit_operation->get_level_set());
+        /*
+         *  @todo
+         *
+         *  ... and distribute the constraints;
+         *
+         *  Should constraints between advec diff operation
+         *  and reinitialization operation be synched?
+         */
+        // scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
 
 
-            // If it is the first reinitialization cycle, the normal vector
-            // field might not be computed very accurately from the initial level set
-            // field. Thus, in this case we update the normal vector in every reinitialization
-            // step.
-            if (very_first_step)
-              update_normal_vector();
-          }
-        reinit_time_iterator.reset();
-
-        very_first_step = false;
+        // If it is the first reinitialization cycle, the normal vector
+        // field might not be computed very accurately from the initial level set
+        // field. Thus, in this case we update the normal vector in every reinitialization
+        // step.
+        if (very_first_step)
+          reinit_operation->set_initial_condition(get_level_set());
       }
+    reinit_time_iterator.reset();
+
+    very_first_step = false;
+
     Journal::print_decoration_line(scratch_data->get_pcout());
   }
 

@@ -142,13 +142,6 @@ namespace MeltPoolDG::LevelSet
     void
     advect_level_set(const double dt, const VectorType &advection_velocity);
 
-    /**
-     *  this function may be called to recompute the normal vector with the
-     *  current level set.
-     */
-    void
-    update_normal_vector();
-
     inline double
     approximate_distance_from_level_set(const double phi, const double eps, const double cutoff)
     {
