@@ -152,14 +152,18 @@ namespace MeltPoolDG::AdvectionDiffusion
   const LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperationAdaflo<dim>::get_user_rhs() const
   {
+    static const LinearAlgebra::distributed::Vector<double> no_vector;
     AssertThrow(false, ExcNotImplemented());
+    return no_vector;
   }
 
   template <int dim>
   LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperationAdaflo<dim>::get_user_rhs()
   {
+    static LinearAlgebra::distributed::Vector<double> no_vector;
     AssertThrow(false, ExcNotImplemented());
+    return no_vector;
   }
 
 
