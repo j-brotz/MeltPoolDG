@@ -40,7 +40,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     InitialValuesLS(const double y_interface, const double eps)
       : Function<dim>()
       , signed_distance_plane(Point<dim>::unit_vector(dim - 1) * y_interface,
-                              Point<dim>::unit_vector(dim - 1))
+                              -Point<dim>::unit_vector(dim - 1))
       , eps(eps)
     {}
 
