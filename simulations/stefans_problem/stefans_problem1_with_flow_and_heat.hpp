@@ -1,6 +1,7 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/mpi.templates.h>
 #include <deal.II/base/point.h>
@@ -20,7 +21,6 @@
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 /**
@@ -90,23 +90,21 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
   public:
     InitialValuesLS(const double eps)
       : Function<dim>()
+      , signed_distance_plane(Point<dim>::unit_vector(dim - 1) * y_interface,
+                              Point<dim>::unit_vector(dim - 1))
       , eps(eps)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      const Point<dim> plane_support = Point<dim>::unit_vector(dim - 1) * y_interface;
-      const Point<dim> plane_normal  = Point<dim>::unit_vector(dim - 1);
-      const auto       dist = DistanceFunctions::hyper_plane(p, plane_support, plane_normal);
-      if (p[dim - 1] >= y_interface)
-        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(dist, eps);
-      else
-        return -UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(dist, eps);
+      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+        signed_distance_plane.value(p), eps);
     }
 
   private:
-    const double eps;
+    const Functions::SignedDistance::Plane<dim> signed_distance_plane;
+    const double                                eps;
   };
 
   template <int dim>

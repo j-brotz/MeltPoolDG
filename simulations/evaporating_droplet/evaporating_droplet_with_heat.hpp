@@ -2,6 +2,7 @@
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -14,7 +15,6 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -28,19 +28,20 @@ namespace MeltPoolDG
     public:
       InitialValuesLS(const double eps)
         : Function<dim>()
+        , distance_sphere(dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0), 0.02)
         , eps(eps)
       {}
 
       double
       value(const Point<dim> &p, const unsigned int /*component*/) const
       {
-        Point<dim>   center = dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0);
-        const double radius = 0.02;
         return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          DistanceFunctions::spherical_manifold<dim>(p, center, radius), eps);
+          -distance_sphere.value(p), eps);
       }
 
-      const double eps = 0.0;
+    private:
+      const Functions::SignedDistance::Sphere<dim> distance_sphere;
+      const double                                 eps;
     };
 
     /*

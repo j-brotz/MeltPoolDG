@@ -2,6 +2,7 @@
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -13,7 +14,6 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -29,18 +29,17 @@ namespace MeltPoolDG
       public:
         InitializePhi()
           : Function<dim>()
+          , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(1.3, 0.2), 0.1)
         {}
-        virtual double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+
+        double
+        value(const Point<dim> &p, const unsigned int) const
         {
-          (void)component;
-
-          Point<dim>   center = dim == 1 ? Point<dim>(0.0) : Point<dim>(1.3, 0.2);
-          const double radius = 0.1;
-
-          return UtilityFunctions::CharacteristicFunctions::sgn(
-            DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+          return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
         }
+
+      private:
+        const Functions::SignedDistance::Sphere<dim> distance_sphere;
       };
 
       template <int dim>

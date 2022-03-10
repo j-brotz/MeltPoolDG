@@ -2,6 +2,7 @@
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -15,7 +16,6 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -24,33 +24,6 @@ namespace MeltPoolDG
     namespace RecoilPressure
     {
       using namespace dealii;
-
-      template <int dim>
-      class InitialSignedDistance : public Function<dim>
-      {
-      public:
-        InitialSignedDistance(const double y_interface)
-          : Function<dim>()
-          , y_interface(y_interface)
-        {}
-
-        double
-        value(const Point<dim> &p, const unsigned int /*component*/) const
-        {
-          const Point<dim> plane_support =
-            dim == 2 ? Point<dim>(0.0, y_interface) : Point<dim>(0.0, 0.0, y_interface);
-          const Point<dim> plane_normal =
-            dim == 2 ? Point<dim>(0.0, 1.0) : Point<dim>(0.0, 0.0, 1.0);
-
-          if (p[dim - 1] >= y_interface)
-            return -DistanceFunctions::hyper_plane<dim>(p, plane_support, plane_normal);
-          else
-            return DistanceFunctions::hyper_plane<dim>(p, plane_support, plane_normal);
-        }
-
-      private:
-        const double y_interface;
-      };
 
       template <int dim>
       class InitialConditionTemperature : public Function<dim>
@@ -458,8 +431,10 @@ namespace MeltPoolDG
           auto laser_center = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
             this->parameters.laser.center);
 
-          this->attach_initial_condition(
-            std::make_shared<InitialSignedDistance<dim>>(laser_center[dim - 1]), "signed_distance");
+          this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
+                                           Point<dim>::unit_vector(dim - 1) * laser_center[dim - 1],
+                                           -Point<dim>::unit_vector(dim - 1)),
+                                         "signed_distance");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
