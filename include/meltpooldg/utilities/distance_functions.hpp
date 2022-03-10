@@ -59,44 +59,6 @@ namespace MeltPoolDG::DistanceFunctions
       AssertThrow(false, ExcMessage("distance to infinite line: dim must be 2 or 3."));
   }
 
-  /**
-   * Compute the minimal distance between a point @p p and an infinite plane described by a @p
-   * support_point and a @p normal_vector. The normal vector does not need to be normalized.
-   *
-   *      | (p - support) * normal |
-   * d = ----------------------------
-   *            || normal ||
-   */
-  template <int dim>
-  inline double
-  hyper_plane(const Point<dim> &p, const Point<dim> &support_point, const Point<dim> &normal_vector)
-  {
-    Assert(normal_vector.norm() >= std::numeric_limits<double>::epsilon(),
-           ExcMessage("The normal vector must not have zero length! Abort..."));
-    return std::abs((p - support_point) * normal_vector) / normal_vector.norm();
-  }
-
-
-  /**
-   * Compute the minimal distance between a point @p p and an infinite plane described by three
-   * support points @p A, @p B and @p C.
-   */
-  template <int dim>
-  inline double
-  hyper_plane(const Point<dim> &p, const Point<dim> &A, const Point<dim> &B, const Point<dim> &C)
-  {
-    Assert(dim == 3,
-           ExcMessage("A hyper plane defined by 3 points is only supported for dim = 3! Abort..."));
-    Assert((A - B).norm() >= std::numeric_limits<double>::epsilon(),
-           ExcMessage("The support points of the plane must not coincide! Abort..."));
-    Assert((B - C).norm() >= std::numeric_limits<double>::epsilon(),
-           ExcMessage("The support points of the plane must not coincide! Abort..."));
-    Assert((C - A).norm() >= std::numeric_limits<double>::epsilon(),
-           ExcMessage("The support points of the plane must not coincide! Abort..."));
-    return hyper_plane(p, A, Point<dim>(cross_product_3d(B - A, C - A)));
-  }
-
-
   //@todo: this function should be added to compute distance to slotted disc, not finished
   template <int dim>
   inline double
