@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-03-10
+- Add a parameter that controls whether higher order cells should be written to the vtu output.
+```json
+{
+  "paraview": {
+    "write higher order cells": "true|false"
+  }
+}
+```
+
 ## 2022-02-17
 - Delete ambiguous parameter
 ```diff
