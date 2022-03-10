@@ -61,6 +61,12 @@ namespace MeltPoolDG::AdvectionDiffusion
     LinearAlgebra::distributed::Vector<double> &
     get_advected_field() override;
 
+    LinearAlgebra::distributed::Vector<double> &
+    get_user_rhs() override;
+
+    const LinearAlgebra::distributed::Vector<double> &
+    get_user_rhs() const override;
+
     void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 

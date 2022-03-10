@@ -750,9 +750,12 @@ namespace MeltPoolDG::MeltPool
                                                              reinit_constraints_dirichlet);
           }
       }
+
     reinit_constraints_dirichlet.close();
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
+    reinit_constraints_dirichlet.close();
+    reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
     temp_constraints_dirichlet.clear();
     temp_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
@@ -794,12 +797,14 @@ namespace MeltPoolDG::MeltPool
     ls_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+    ls_constraints_dirichlet.close();
 
     UtilityFunctions::check_constraints(dof_handler_ls, ls_constraints_dirichlet);
 
     reinit_constraints_dirichlet.merge(
       ls_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+    reinit_constraints_dirichlet.close();
 
     UtilityFunctions::check_constraints(dof_handler_ls, reinit_constraints_dirichlet);
 
@@ -807,6 +812,7 @@ namespace MeltPoolDG::MeltPool
     temp_constraints_dirichlet.merge(
       temp_hanging_node_constraints,
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+    temp_constraints_dirichlet.close();
 
     UtilityFunctions::check_constraints(dof_handler_heat, temp_constraints_dirichlet);
 

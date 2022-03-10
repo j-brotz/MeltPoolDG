@@ -7,6 +7,7 @@
 ---------------------------------------------
 Accessible vectors:
  *       advected_field Max-norm:     1.5505 number of dofs: 1089
+ *  advec_diff_user_rhs Max-norm:          0 number of dofs: 1089
  *             velocity Max-norm:          4 number of dofs: 2178
 ---------------------------------------------
     End of user defined postprocessing
@@ -20,6 +21,7 @@ Accessible vectors:
 ---------------------------------------------
 Accessible vectors:
  *       advected_field Max-norm:     1.8212 number of dofs: 1089
+ *  advec_diff_user_rhs Max-norm:          0 number of dofs: 1089
  *             velocity Max-norm:          4 number of dofs: 2178
 ---------------------------------------------
     End of user defined postprocessing
@@ -27,12 +29,13 @@ Accessible vectors:
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-02 to 3.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.9794960307e+00                                    advection_diffusion |
+| || advected field ||L2 = 1.9794960604e+00                                    advection_diffusion |
 ---------------------------------------------
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
  *       advected_field Max-norm:     1.8541 number of dofs: 1089
+ *  advec_diff_user_rhs Max-norm:          0 number of dofs: 1089
  *             velocity Max-norm:          4 number of dofs: 2178
 ---------------------------------------------
     End of user defined postprocessing
@@ -46,6 +49,7 @@ Accessible vectors:
 ---------------------------------------------
 Accessible vectors:
  *       advected_field Max-norm:     1.9817 number of dofs: 1089
+ *  advec_diff_user_rhs Max-norm:          0 number of dofs: 1089
  *             velocity Max-norm:          4 number of dofs: 2178
 ---------------------------------------------
     End of user defined postprocessing
@@ -59,6 +63,7 @@ Accessible vectors:
 ---------------------------------------------
 Accessible vectors:
  *       advected_field Max-norm:      2.084 number of dofs: 1089
+ *  advec_diff_user_rhs Max-norm:          0 number of dofs: 1089
  *             velocity Max-norm:          4 number of dofs: 2178
 ---------------------------------------------
     End of user defined postprocessing

@@ -97,6 +97,9 @@ namespace MeltPoolDG::LevelSet
     void
     solve(const double dt, const VectorType &advection_velocity);
 
+    void
+    set_level_set_user_rhs(const VectorType &level_set_user_rhs);
+
     /*
      *  getter functions for solution vectors
      */

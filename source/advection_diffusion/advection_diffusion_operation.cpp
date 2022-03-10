@@ -58,6 +58,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                      solution_advected_field);
 
     scratch_data->get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
+    scratch_data->initialize_dof_vector(user_rhs, advec_diff_dof_idx);
   }
 
   template <int dim>
@@ -65,6 +66,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperation<dim>::reinit()
   {
     scratch_data->initialize_dof_vector(solution_advected_field, advec_diff_dof_idx);
+    scratch_data->initialize_dof_vector(user_rhs, advec_diff_dof_idx);
     /*
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
@@ -109,19 +111,21 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     int iter = 0;
 
-
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
         /*
          * apply dirichlet boundary values
          */
+        rhs = user_rhs;
+
         Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
           *advec_diff_operator,
           rhs,
           solution_advected_field,
           *scratch_data,
           advec_diff_dof_idx,
-          advec_diff_hanging_nodes_dof_idx);
+          advec_diff_hanging_nodes_dof_idx,
+          false /*zero_out rhs*/);
 
         if (this->advec_diff_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
@@ -157,6 +161,12 @@ namespace MeltPoolDG::AdvectionDiffusion
         advec_diff_operator->assemble_matrixbased(solution_advected_field,
                                                   advec_diff_operator->get_system_matrix(),
                                                   rhs);
+
+        rhs += user_rhs;
+        scratch_data->get_constraint(advec_diff_dof_idx)
+          .distribute(rhs); //@todo: this could be avoided by introducing a zero_out inside
+                            // assemble_matrixbased
+
         auto preconditioner = Preconditioner::get_preconditioner_trilinos(
           advec_diff_operator->get_system_matrix(),
           this->advec_diff_data.linear_solver.preconditioner_type);
@@ -239,6 +249,20 @@ namespace MeltPoolDG::AdvectionDiffusion
   }
 
   template <int dim>
+  LinearAlgebra::distributed::Vector<double> &
+  AdvectionDiffusionOperation<dim>::get_user_rhs()
+  {
+    return user_rhs;
+  }
+
+  template <int dim>
+  const LinearAlgebra::distributed::Vector<double> &
+  AdvectionDiffusionOperation<dim>::get_user_rhs() const
+  {
+    return user_rhs;
+  }
+
+  template <int dim>
   void
   AdvectionDiffusionOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
@@ -254,6 +278,9 @@ namespace MeltPoolDG::AdvectionDiffusion
     data_out.add_data_vector(scratch_data->get_dof_handler(advec_diff_dof_idx),
                              solution_advected_field,
                              "advected_field");
+    data_out.add_data_vector(scratch_data->get_dof_handler(advec_diff_dof_idx),
+                             user_rhs,
+                             "advec_diff_user_rhs");
   }
 
   template <int dim>

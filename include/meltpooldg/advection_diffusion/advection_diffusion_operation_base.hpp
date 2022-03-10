@@ -72,6 +72,12 @@ namespace MeltPoolDG
       virtual LinearAlgebra::distributed::Vector<double> &
       get_advected_field_old() = 0;
 
+      virtual LinearAlgebra::distributed::Vector<double> &
+      get_user_rhs() = 0;
+
+      virtual const LinearAlgebra::distributed::Vector<double> &
+      get_user_rhs() const = 0;
+
       virtual void
       attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
 

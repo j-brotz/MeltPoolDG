@@ -133,6 +133,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     Journal::print_line(scratch_data.get_pcout(), str.str(), "advection_diffusion_adaflo");
   }
 
+
   template <int dim>
   const LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperationAdaflo<dim>::get_advected_field() const
@@ -146,6 +147,25 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     return advected_field;
   }
+
+  template <int dim>
+  const LinearAlgebra::distributed::Vector<double> &
+  AdvectionDiffusionOperationAdaflo<dim>::get_user_rhs() const
+  {
+    static const LinearAlgebra::distributed::Vector<double> no_vector;
+    AssertThrow(false, ExcNotImplemented());
+    return no_vector;
+  }
+
+  template <int dim>
+  LinearAlgebra::distributed::Vector<double> &
+  AdvectionDiffusionOperationAdaflo<dim>::get_user_rhs()
+  {
+    static LinearAlgebra::distributed::Vector<double> no_vector;
+    AssertThrow(false, ExcNotImplemented());
+    return no_vector;
+  }
+
 
   template <int dim>
   void
