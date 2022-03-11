@@ -6,7 +6,7 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.00925010443e-01                                               normal_vector |
 |  τ = 9.76562e-07                                                                reinitialization |
-| || delta phi ||L2 = 4.832661826270623e-09                                       reinitialization |
+| || delta phi ||L2 = 4.832662270359833e-09                                       reinitialization |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.00958925486e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
@@ -15,7 +15,7 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1001324887e-05                                    advection_diffusion |
+| || advected field ||L2 = 3.1001328524e-05                                    advection_diffusion |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.00958925486e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
@@ -37,16 +37,16 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-04 to 1.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1003489571e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 7.64161520096e-16                                               normal_vector |
+| || advected field ||L2 = 3.1003493209e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 1.21193103516e-15                                               normal_vector |
 | || normal_1 ||L2 = 4.02338832617e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
-| || delta phi ||L2 = 2.645010432900108e-09                                       reinitialization |
+| || delta phi ||L2 = 2.645010210855503e-09                                       reinitialization |
 |  τ = 9.76562e-07                                                                reinitialization |
 | || delta phi ||L2 = 2.154071809812308e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.30791119715e-15                                               normal_vector |
+| || normal_0 ||L2 = 7.68354004960e-15                                               normal_vector |
 | || normal_1 ||L2 = 4.02390658855e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.08955e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
@@ -59,8 +59,8 @@ Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-03 to 1.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1005346732e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 1.97855461534e-15                                               normal_vector |
+| || advected field ||L2 = 3.1005349925e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 7.20700016050e-15                                               normal_vector |
 | || normal_1 ||L2 = 4.03650045395e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
@@ -68,7 +68,7 @@ Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005).
 |  τ = 9.76562e-07                                                                reinitialization |
 | || delta phi ||L2 = 1.884433498133831e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.69197440076e-14                                               normal_vector |
+| || normal_0 ||L2 = 7.16613387012e-14                                               normal_vector |
 | || normal_1 ||L2 = 4.03627753258e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.07928e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
@@ -81,16 +81,16 @@ Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-03 to 2.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1006984523e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 1.57713113267e-14                                               normal_vector |
+| || advected field ||L2 = 3.1006988161e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 7.02586589168e-14                                               normal_vector |
 | || normal_1 ||L2 = 4.04891669750e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
-| || delta phi ||L2 = 2.570321067096870e-09                                       reinitialization |
+| || delta phi ||L2 = 2.570321289141475e-09                                       reinitialization |
 |  τ = 9.76562e-07                                                                reinitialization |
 | || delta phi ||L2 = 2.066583348891982e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.83024480445e-13                                               normal_vector |
+| || normal_0 ||L2 = 8.48061204595e-13                                               normal_vector |
 | || normal_1 ||L2 = 4.04789209366e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.07542e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
@@ -103,16 +103,16 @@ Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.0000e-03 to 2.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1008437018e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 1.81829283076e-13                                               normal_vector |
+| || advected field ||L2 = 3.1008440212e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 8.40503610721e-13                                               normal_vector |
 | || normal_1 ||L2 = 4.06056016684e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
 | || delta phi ||L2 = 2.960236500371138e-09                                       reinitialization |
 |  τ = 9.76562e-07                                                                reinitialization |
-| || delta phi ||L2 = 2.490444739322584e-09                                       reinitialization |
+| || delta phi ||L2 = 2.490444961367189e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.36282044278e-12                                               normal_vector |
+| || normal_0 ||L2 = 1.10192601571e-11                                               normal_vector |
 | || normal_1 ||L2 = 4.05867278576e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.07713e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
@@ -125,8 +125,8 @@ Time step #5, advancing from t_n-1 = 0.002 to t = 0.0025 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 2.5000e-03 to 3.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1009725447e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 2.34426172051e-12                                               normal_vector |
+| || advected field ||L2 = 3.1009729084e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 1.09268869994e-11                                               normal_vector |
 | || normal_1 ||L2 = 4.07135695219e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
@@ -134,7 +134,7 @@ Time step #5, advancing from t_n-1 = 0.002 to t = 0.0025 (dt = 0.0005).
 |  τ = 9.76562e-07                                                                reinitialization |
 | || delta phi ||L2 = 2.984562819108305e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.19792560488e-11                                               normal_vector |
+| || normal_0 ||L2 = 1.49261658589e-10                                               normal_vector |
 | || normal_1 ||L2 = 4.06856864691e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.08379e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
@@ -147,8 +147,8 @@ Time step #6, advancing from t_n-1 = 0.0025 to t = 0.003 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.0000e-03 to 3.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1010867505e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 3.17120496529e-11                                               normal_vector |
+| || advected field ||L2 = 3.1010871143e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 1.48014794865e-10                                               normal_vector |
 | || normal_1 ||L2 = 4.08125966787e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
@@ -156,7 +156,7 @@ Time step #6, advancing from t_n-1 = 0.0025 to t = 0.003 (dt = 0.0005).
 |  τ = 9.76562e-07                                                                reinitialization |
 | || delta phi ||L2 = 3.466763098813885e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.43221598312e-10                                               normal_vector |
+| || normal_0 ||L2 = 2.06957095905e-09                                               normal_vector |
 | || normal_1 ||L2 = 4.07756507397e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.09492e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
@@ -169,8 +169,8 @@ Time step #7, advancing from t_n-1 = 0.003 to t = 0.0035 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 3.5000e-03 to 4.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1011880017e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 4.39541097963e-10                                               normal_vector |
+| || advected field ||L2 = 3.1011883211e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 2.05237715711e-09                                               normal_vector |
 | || normal_1 ||L2 = 4.09025937319e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
@@ -178,7 +178,7 @@ Time step #7, advancing from t_n-1 = 0.003 to t = 0.0035 (dt = 0.0005).
 |  τ = 9.76562e-07                                                                reinitialization |
 | || delta phi ||L2 = 3.905944900850500e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 6.23962170820e-09                                               normal_vector |
+| || normal_0 ||L2 = 2.91395991781e-08                                               normal_vector |
 | || normal_1 ||L2 = 4.08568233252e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.11009e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
@@ -191,8 +191,8 @@ Time step #8, advancing from t_n-1 = 0.0035 to t = 0.004 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.0000e-03 to 4.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1012775823e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 6.18811046849e-09                                               normal_vector |
+| || advected field ||L2 = 3.1012779017e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 2.88988886155e-08                                               normal_vector |
 | || normal_1 ||L2 = 4.09838020802e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
@@ -200,7 +200,7 @@ Time step #8, advancing from t_n-1 = 0.0035 to t = 0.004 (dt = 0.0005).
 |  τ = 9.76562e-07                                                                reinitialization |
 | || delta phi ||L2 = 4.293476685290898e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 8.88194193749e-08                                               normal_vector |
+| || normal_0 ||L2 = 4.14819055550e-07                                               normal_vector |
 | || normal_1 ||L2 = 4.09296452999e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.12895e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
@@ -213,8 +213,8 @@ Time step #9, advancing from t_n-1 = 0.004 to t = 0.0045 (dt = 0.0005).
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 4.5000e-03 to 5.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1013569549e-05                                    advection_diffusion |
-| || normal_0 ||L2 = 8.80700454786e-08                                               normal_vector |
+| || advected field ||L2 = 3.1013573187e-05                                    advection_diffusion |
+| || normal_0 ||L2 = 4.11255825838e-07                                               normal_vector |
 | || normal_1 ||L2 = 4.10567164421e-01                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.88281e-07                                                                reinitialization |
@@ -222,7 +222,7 @@ Time step #9, advancing from t_n-1 = 0.004 to t = 0.0045 (dt = 0.0005).
 |  τ = 9.76562e-07                                                                reinitialization |
 | || delta phi ||L2 = 4.630192229626573e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.27448913645e-06                                               normal_vector |
+| || normal_0 ||L2 = 5.95110714130e-06                                               normal_vector |
 | || normal_1 ||L2 = 4.09947365522e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.15117e-03                newton_raphson_solver |
 |  total mass = 9.765625e-10                                                     melt_pool_problem |
