@@ -1,6 +1,7 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -17,7 +18,6 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
@@ -37,30 +37,24 @@ namespace MeltPoolDG
       public:
         InitializePhi()
           : Function<dim>()
+          , distance_sphere(dim == 1 ? Point<dim>(0.5) : Point<dim>(0.5, 0.75), 0.15)
         {}
-        virtual double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+
+        double
+        value(const Point<dim> &p, const unsigned int) const
         {
-          (void)component;
-
-          Point<dim>   center = dim == 1 ? Point<dim>(0.5) : Point<dim>(0.5, 0.75);
-          const double radius = 0.15;
-
-          return UtilityFunctions::CharacteristicFunctions::sgn(
-            DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+          return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
 
           /*
            *  Alternatively, a tanh function could be used, corresponding to the
            *  analytic solution of the reinitialization problem
            */
           // return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          // DistanceFunctions::spherical_manifold<dim>( p, center, radius ),
-          // this->epsInterface
-          //);
+          // -distance_sphere(p), epsInterface);
         }
 
       private:
-        double epsInterface;
+        const Functions::SignedDistance::Sphere<dim> distance_sphere;
       };
 
       template <int dim>

@@ -1,6 +1,7 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -15,7 +16,6 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 /**
@@ -33,41 +33,29 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-
   template <int dim>
   class InitialValuesLS : public Function<dim>
   {
   public:
-    InitialValuesLS(const double x_min,
-                    const double x_max,
-                    const double y_interface,
-                    const double eps)
+    InitialValuesLS(const double y_interface, const double eps)
       : Function<dim>()
-      , x_min(x_min)
-      , x_max(x_max)
-      , y_interface(y_interface)
+      , signed_distance_plane(Point<dim>::unit_vector(dim - 1) * y_interface,
+                              -Point<dim>::unit_vector(dim - 1))
       , eps(eps)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      Point<dim> left  = dim == 1 ? Point<dim>(y_interface) :
-                         dim == 2 ? Point<dim>(x_min, y_interface) :
-                                    Point<dim>(x_min, x_min, y_interface);
-      Point<dim> right = dim == 1 ? Point<dim>(0) /* not relevant */ :
-                         dim == 2 ? Point<dim>(x_max, y_interface) :
-                                    Point<dim>(x_max, x_max, y_interface);
-
-      if (p[dim - 1] >= y_interface)
-        return -UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          DistanceFunctions::infinite_line<dim>(p, left, right), eps);
-      else
-        return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          DistanceFunctions::infinite_line<dim>(p, left, right), eps);
+      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+        signed_distance_plane.value(p), eps);
     }
-    double x_min, x_max, y_interface, eps;
+
+  private:
+    const Functions::SignedDistance::Plane<dim> signed_distance_plane;
+    const double                                eps;
   };
+
   /*
    *      This class collects all relevant input data for the level set simulation
    */
@@ -222,8 +210,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
         UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
 
       AssertThrow(eps > 0, ExcNotImplemented());
-      this->attach_initial_condition(
-        std::make_shared<InitialValuesLS<dim>>(x_min, x_max, y_interface, eps), "level_set");
+      this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(y_interface, eps),
+                                     "level_set");
       this->attach_initial_condition(
         std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
     }

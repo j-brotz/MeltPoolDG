@@ -1,6 +1,7 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 
 #include <deal.II/grid/grid_generator.h>
 
@@ -8,7 +9,6 @@
 #include <meltpooldg/flow/characteristic_numbers.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/material/material.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
@@ -77,18 +77,20 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
   public:
     InitialValuesLS(const double eps)
       : Function<dim>()
+      , distance_sphere(dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0), a)
       , eps(eps)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      Point<dim> center = dim == 2 ? Point<dim>(0, 0) : Point<dim>(0, 0, 0);
-
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        DistanceFunctions::spherical_manifold<dim>(p, center, a), eps);
+        -distance_sphere.value(p), eps);
     }
-    double eps;
+
+  private:
+    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const double                                 eps;
   };
 
 

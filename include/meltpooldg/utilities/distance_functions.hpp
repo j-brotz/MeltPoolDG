@@ -29,30 +29,34 @@ namespace MeltPoolDG::DistanceFunctions
     return -p.distance(center) + radius;
   }
 
+  /**
+   * Compute the minimal distance between a point @p p and an infinite line described by two support
+   * points @p fix_p1 and @p fix_p2.
+   *
+   *    f1  x
+   *        |
+   *        |    d
+   *        |--------- x
+   *        |            p
+   *        |
+   *    f2  x
+   *
+   *      || (f2 - f1) x (f1 - p) ||
+   * d = ---------------------------
+   *            || f2 - f1 ||
+   */
   template <int dim>
   inline double
   infinite_line(const Point<dim> &p, const Point<dim> &fix_p1, const Point<dim> &fix_p2)
   {
+    Assert((fix_p2 - fix_p1).norm() >= std::numeric_limits<double>::epsilon(),
+           ExcMessage("The support points must not lie on top of each other! Abort.."));
     if (dim == 3)
-      return std::sqrt(std::pow((fix_p2[1] - fix_p1[1]) * (fix_p1[2] - p[2]) -
-                                  (fix_p2[2] - fix_p1[2]) * (fix_p1[1] - p[1]),
-                                2) +
-                       std::pow((fix_p2[2] - fix_p1[2]) * (fix_p1[0] - p[0]) -
-                                  (fix_p2[0] - fix_p1[0]) * (fix_p1[2] - p[2]),
-                                2) +
-                       std::pow((fix_p2[0] - fix_p1[0]) * (fix_p1[1] - p[1]) -
-                                  (fix_p2[1] - fix_p1[1]) * (fix_p1[0] - p[0]),
-                                2)) /
-             std::sqrt(std::pow(fix_p2[0] - fix_p1[0], 2) + std::pow(fix_p2[1] - fix_p1[1], 2) +
-                       std::pow(fix_p2[2] - fix_p1[2], 2));
+      return cross_product_3d(fix_p2 - fix_p1, fix_p1 - p).norm() / (fix_p2 - fix_p1).norm();
     else if (dim == 2)
-      return std::abs((fix_p2[0] - fix_p1[0]) * (fix_p1[1] - p[1]) -
-                      (fix_p2[1] - fix_p1[1]) * (fix_p1[0] - p[0])) /
-             std::sqrt(std::pow(fix_p2[0] - fix_p1[0], 2) + std::pow(fix_p2[1] - fix_p1[1], 2));
-    else if (dim == 1)
-      return std::abs(fix_p1[0] - p[0]);
+      return std::abs((fix_p2 - fix_p1) * cross_product_2d(fix_p1 - p)) / (fix_p2 - fix_p1).norm();
     else
-      AssertThrow(false, ExcMessage("distance to infinite line: dim must be 1, 2 or 3."));
+      AssertThrow(false, ExcMessage("distance to infinite line: dim must be 2 or 3."));
   }
 
   //@todo: this function should be added to compute distance to slotted disc, not finished

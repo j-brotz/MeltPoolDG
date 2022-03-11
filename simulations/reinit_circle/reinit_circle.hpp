@@ -1,6 +1,7 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -18,7 +19,6 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
@@ -38,16 +38,17 @@ namespace MeltPoolDG
       public:
         InitializePhi()
           : Function<dim>()
+          , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5), 0.25)
         {}
-        virtual double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+
+        double
+        value(const Point<dim> &p, const unsigned int) const
         {
-          (void)component;
-          Point<dim>   center = dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5);
-          const double radius = 0.25;
-          return UtilityFunctions::CharacteristicFunctions::sgn(
-            DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+          return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
         }
+
+      private:
+        const Functions::SignedDistance::Sphere<dim> distance_sphere;
       };
 
       template <int dim>
@@ -56,21 +57,20 @@ namespace MeltPoolDG
       public:
         ExactSolution(const double eps)
           : Function<dim>()
+          , distance_sphere(Point<dim>(0.0, 0.5), 0.25)
           , eps_interface(eps)
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+        value(const Point<dim> &p, const unsigned int) const
         {
-          (void)component;
-          Point<dim>   center = Point<dim>(0.0, 0.5);
-          const double radius = 0.25;
           return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-            DistanceFunctions::spherical_manifold(p, center, radius), eps_interface);
+            -distance_sphere.value(p), eps_interface);
         }
 
       private:
-        double eps_interface;
+        const Functions::SignedDistance::Sphere<dim> distance_sphere;
+        const double                                 eps_interface;
       };
       /*
        *      This class collects all relevant input data for the level set simulation

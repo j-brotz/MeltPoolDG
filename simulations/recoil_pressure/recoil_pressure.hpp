@@ -2,6 +2,7 @@
 
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
 
@@ -15,7 +16,6 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -24,37 +24,6 @@ namespace MeltPoolDG
     namespace RecoilPressure
     {
       using namespace dealii;
-
-      template <int dim>
-      class InitialSignedDistance : public Function<dim>
-      {
-      public:
-        InitialSignedDistance(const double x_min,
-                              const double x_max,
-                              const double y_min,
-                              const double y_interface)
-          : Function<dim>()
-          , x_min(x_min)
-          , x_max(x_max)
-          , y_min(y_min)
-          , y_interface(y_interface)
-        {}
-
-        double
-        value(const Point<dim> &p, const unsigned int /*component*/) const
-        {
-          Point<dim> upper_left =
-            dim == 2 ? Point<dim>(x_min, y_interface) : Point<dim>(x_min, x_min, y_interface);
-          Point<dim> upper_right =
-            dim == 2 ? Point<dim>(x_max, y_interface) : Point<dim>(x_max, x_max, y_interface);
-
-          if (p[dim - 1] >= y_interface)
-            return -DistanceFunctions::infinite_line<dim>(p, upper_left, upper_right);
-          else
-            return DistanceFunctions::infinite_line<dim>(p, upper_left, upper_right);
-        }
-        double x_min, x_max, y_min, y_interface;
-      };
 
       template <int dim>
       class InitialConditionTemperature : public Function<dim>
@@ -462,10 +431,10 @@ namespace MeltPoolDG
           auto laser_center = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
             this->parameters.laser.center);
 
-          this->attach_initial_condition(
-            std::make_shared<InitialSignedDistance<dim>>(
-              domain_x_min, domain_x_max, domain_y_min, laser_center[dim - 1]),
-            "signed_distance");
+          this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
+                                           Point<dim>::unit_vector(dim - 1) * laser_center[dim - 1],
+                                           -Point<dim>::unit_vector(dim - 1)),
+                                         "signed_distance");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
