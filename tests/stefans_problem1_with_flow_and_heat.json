@@ -79,6 +79,7 @@
   },
   "normal vector": {
     "normal vec implementation": "meltpooldg",
+    "normal vec damping scale factor": "10",
     "linear solver": {
       "do matrix free": "true"
     }
