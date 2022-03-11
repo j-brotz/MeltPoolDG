@@ -1,15 +1,26 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-03-10
+- Add a parameter that controls whether higher order cells should be written to the vtu output.
+```json
+{
+  "paraview": {
+    "write higher order cells": "true|false"
+  }
+}
+```
+
 ## 2022-03-09
 - Add parameter to distinguish how to consider evaporative mass flux in the 
   level set equation
 ```json
 {
   "evaporation": {
-        "evapor level set source term type": "interface_velocity|rhs" 
++     "evapor level set source term type": "interface_velocity|rhs" 
   }
 }
+
 ```
 
 ## 2022-02-17
