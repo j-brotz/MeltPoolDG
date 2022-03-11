@@ -64,7 +64,8 @@ namespace MeltPoolDG::Evaporation
     void
     compute_level_set_source_term(VectorType &       level_set_source_term,
                                   const unsigned int ls_dof_idx,
-                                  const VectorType & level_set) final;
+                                  const VectorType & level_set,
+                                  const unsigned int pressure_dof_idx) final;
 
     void
     compute_mass_balance_source_term(VectorType &       mass_balance_source_term,

@@ -268,6 +268,7 @@ namespace MeltPoolDG
     unsigned int                      line_integral_n_subdivisions_MCA      = 1;
     EvaporationLevelSetSourceTermType level_set_source_term_type =
       EvaporationLevelSetSourceTermType::interface_velocity;
+    bool do_level_set_pressure_gradient_interpolation = false;
   };
 
   template <typename number = double>

@@ -718,6 +718,12 @@ namespace MeltPoolDG
                         evapor.level_set_source_term_type,
                         "Set the type how the evaporative mass flux should be considered "
                         "in the level set equation.");
+      prm.add_parameter("evapor do level set pressure gradient interpolation",
+                        evapor.do_level_set_pressure_gradient_interpolation,
+                        "Set if the level set gradient for computing the delta function within "
+                        "the evaporative mass flux source terms should be computed based on an "
+                        "interpolation to the pressure space. This is only implemented for "
+                        "evapor_level_set_source_term_type = rhs.");
     }
     prm.leave_subsection();
     /*

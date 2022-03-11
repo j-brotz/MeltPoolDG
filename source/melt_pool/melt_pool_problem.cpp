@@ -49,7 +49,7 @@ namespace MeltPoolDG::MeltPool
                   // Option 2: use source term as rhs in the level set equation
                   scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
                   evaporation_operation->compute_level_set_source_term(
-                    level_set_rhs, ls_dof_idx, level_set_operation.get_level_set());
+                    level_set_rhs, ls_dof_idx, level_set_operation.get_level_set(), pressure_dof_idx);
                   level_set_operation.set_level_set_user_rhs(level_set_rhs);
                   break;
               }
