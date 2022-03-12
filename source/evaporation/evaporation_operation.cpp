@@ -191,7 +191,10 @@ namespace MeltPoolDG::Evaporation
                                                            const VectorType & level_set,
                                                            const unsigned int pressure_dof_idx)
   {
-    evapor_source_terms_operator->compute_level_set_source_term(ls_rhs, ls_dof_idx, level_set, pressure_dof_idx);
+    evapor_source_terms_operator->compute_level_set_source_term(ls_rhs,
+                                                                ls_dof_idx,
+                                                                level_set,
+                                                                pressure_dof_idx);
   }
 
   template <int dim>

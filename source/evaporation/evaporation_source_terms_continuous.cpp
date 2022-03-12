@@ -81,9 +81,10 @@ namespace MeltPoolDG::Evaporation
         FECellIntegrator<dim, 1, double> evap_flux(matrix_free,
                                                    evapor_mass_flux_dof_idx,
                                                    ls_quad_idx);
-        
-        FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(
-          matrix_free, pressure_dof_idx, ls_quad_idx);
+
+        FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(matrix_free,
+                                                                                  pressure_dof_idx,
+                                                                                  ls_quad_idx);
 
         auto &used_level_set = evapor_data.do_level_set_pressure_gradient_interpolation ?
                                  interpolated_level_set_to_pressure_space :
@@ -123,7 +124,8 @@ namespace MeltPoolDG::Evaporation
 
             for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
               {
-                ls.submit_value(-evap_flux.get_value(q_index) * used_level_set.get_gradient(q_index).norm() *
+                ls.submit_value(-evap_flux.get_value(q_index) *
+                                  used_level_set.get_gradient(q_index).norm() *
                                   LevelSet::Tools::interpolate(hs.get_value(q_index),
                                                                1. / density_vapor,
                                                                1. / density_liquid),
