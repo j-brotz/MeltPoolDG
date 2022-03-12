@@ -186,6 +186,15 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
+  EvaporationOperation<dim>::compute_level_set_source_term(VectorType &       ls_rhs,
+                                                           const unsigned int ls_dof_idx,
+                                                           const VectorType & level_set)
+  {
+    evapor_source_terms_operator->compute_level_set_source_term(ls_rhs, ls_dof_idx, level_set);
+  }
+
+  template <int dim>
+  void
   EvaporationOperation<dim>::compute_mass_balance_source_term(VectorType &       mass_balance_rhs,
                                                               const unsigned int pressure_dof_idx,
                                                               const unsigned int pressure_quad_idx,

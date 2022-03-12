@@ -714,6 +714,10 @@ namespace MeltPoolDG
                         evapor.line_integral_n_subdivisions_MCA,
                         "Number of subdivisions for the marching cube algorithm within the "
                         "evaporative mass flux evaluation by means of the line integral.");
+      prm.add_parameter("evapor level set source term type",
+                        evapor.level_set_source_term_type,
+                        "Set the type how the evaporative mass flux should be considered "
+                        "in the level set equation.");
     }
     prm.leave_subsection();
     /*

@@ -43,6 +43,12 @@ namespace MeltPoolDG
               // The flux distributed in the interfacial zone is computed based on values evaluated
               // at the projected quadrature points to the level set = 0 isosurface.
               interface_value)
+  BETTER_ENUM(EvaporationLevelSetSourceTermType,
+              char,
+              // calculate a divergence-free interface velocity and use it to advect the level set
+              interface_velocity,
+              // use the source term due to evaporation as right hand-side term
+              rhs)
 
 
   template <typename number = double>
@@ -256,10 +262,12 @@ namespace MeltPoolDG
       "continuous"; // not needed if evaporation_model == "constant"
     std::string evaporation_model =
       "constant"; // @todo: instead of constant --> temperature-independent ?
-    number       coefficient                           = 0.0;
-    unsigned int interface_value_n_iterations          = 3;
-    unsigned int line_integral_n_subdivisions_per_side = 10;
-    unsigned int line_integral_n_subdivisions_MCA      = 1;
+    number                            coefficient                           = 0.0;
+    unsigned int                      interface_value_n_iterations          = 3;
+    unsigned int                      line_integral_n_subdivisions_per_side = 10;
+    unsigned int                      line_integral_n_subdivisions_MCA      = 1;
+    EvaporationLevelSetSourceTermType level_set_source_term_type =
+      EvaporationLevelSetSourceTermType::interface_velocity;
   };
 
   template <typename number = double>

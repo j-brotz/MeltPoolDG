@@ -11,6 +11,18 @@ All notable changes of the input parameters will be documented in this file.
 }
 ```
 
+## 2022-03-09
+- Add parameter to distinguish how to consider evaporative mass flux in the 
+  level set equation
+```json
+{
+  "evaporation": {
++     "evapor level set source term type": "interface_velocity|rhs" 
+  }
+}
+
+```
+
 ## 2022-02-17
 - Delete ambiguous parameter
 ```diff
@@ -21,6 +33,7 @@ All notable changes of the input parameters will be documented in this file.
 }
 
 ```
+
 ## 2022-02-17
 - Add problem-specific parameter for AMR in the melt pool problem
 ```json

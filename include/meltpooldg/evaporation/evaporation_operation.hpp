@@ -120,6 +120,11 @@ namespace MeltPoolDG::Evaporation
     compute_evaporation_velocity();
 
     void
+    compute_level_set_source_term(VectorType &       rhs,
+                                  const unsigned int ls_dof_idx,
+                                  const VectorType & level_set);
+
+    void
     compute_mass_balance_source_term(VectorType &       mass_balance_rhs,
                                      const unsigned int pressure_dof_idx,
                                      const unsigned int pressure_quad_idx,
