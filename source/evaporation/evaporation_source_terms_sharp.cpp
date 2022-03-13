@@ -45,7 +45,8 @@ namespace MeltPoolDG::Evaporation
   void
   EvaporationSourceTermsSharp<dim>::compute_level_set_source_term(VectorType &,
                                                                   const unsigned int,
-                                                                  const VectorType &)
+                                                                  const VectorType &,
+                                                                  const unsigned int)
   {
     AssertThrow(false, ExcNotImplemented());
   }

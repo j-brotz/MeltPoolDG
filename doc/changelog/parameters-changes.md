@@ -1,6 +1,17 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-03-11
+- Add parameter to enable interpolation of the level set field to the pressure 
+  space for computing the level set gradient in evaporative mass flux source terms.
+```json
+{
+  "evaporation": {
+    "evapor do level set pressure gradient interpolation": "true|false"
+  }
+}
+```
+
 ## 2022-03-10
 - Add a parameter that controls whether higher order cells should be written to the vtu output.
 ```json
@@ -17,7 +28,7 @@ All notable changes of the input parameters will be documented in this file.
 ```json
 {
   "evaporation": {
-+     "evapor level set source term type": "interface_velocity|rhs" 
++   "evapor level set source term type": "interface_velocity|rhs" 
   }
 }
 
@@ -28,7 +39,7 @@ All notable changes of the input parameters will be documented in this file.
 ```diff
 {
   "melt pool": {
--    "mp liquid melting point": ""
+-   "mp liquid melting point": ""
   }
 }
 
