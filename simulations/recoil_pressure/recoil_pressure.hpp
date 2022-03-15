@@ -163,7 +163,10 @@ namespace MeltPoolDG
           const double &x_max = domain_x_max;
           const double &y_min = domain_y_min;
           const double &y_max = domain_y_max;
+
           // create mesh
+          //
+          // Note: For 1d we consider the coordinates along the y-axis.
           const Point<dim> bottom_left = (dim == 1) ? Point<dim>(y_min) :
                                          (dim == 2) ? Point<dim>(x_min, y_min) :
                                                       Point<dim>(x_min, x_min, y_min);
@@ -173,7 +176,6 @@ namespace MeltPoolDG
 
           if (this->parameters.base.do_simplex)
             {
-              // create mesh
               std::vector<unsigned int> subdivisions(
                 dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
               subdivisions[dim - 1] *= 2;
@@ -235,8 +237,10 @@ namespace MeltPoolDG
            * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
            *
-           * note: In the 3D recoil pressure simulation, the front and back boundaries are treated
+           * Note: In the 3D recoil pressure simulation, the front and back boundaries are treated
            * the same as the left and right boundaries.
+           *
+           * Note: For 1d we consider the constraints along the y-axis, i.e. lower_bc and upper_bc.
            */
           const types::boundary_id lower_bc = 1;
           const types::boundary_id upper_bc = 2;
