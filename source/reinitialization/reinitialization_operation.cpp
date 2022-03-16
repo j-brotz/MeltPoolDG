@@ -150,9 +150,7 @@ namespace MeltPoolDG::Reinitialization
             iter = LinearSolver::solve<VectorType>(*reinit_operator,
                                                    delta_psi_vec,
                                                    rhs,
-                                                   reinit_data.linear_solver.solver_type,
-                                                   reinit_data.linear_solver.rel_tolerance,
-                                                   reinit_data.linear_solver.max_iterations,
+                                                   reinit_data.linear_solver,
                                                    *diag_preconditioner_matrixfree);
           }
         else
@@ -167,9 +165,7 @@ namespace MeltPoolDG::Reinitialization
             iter = LinearSolver::solve<VectorType>(*reinit_operator,
                                                    delta_psi_vec,
                                                    rhs,
-                                                   reinit_data.linear_solver.solver_type,
-                                                   reinit_data.linear_solver.rel_tolerance,
-                                                   reinit_data.linear_solver.max_iterations,
+                                                   reinit_data.linear_solver,
                                                    *trilinos_preconditioner_matrixfree);
           }
       }
@@ -185,9 +181,7 @@ namespace MeltPoolDG::Reinitialization
         iter = LinearSolver::solve<VectorType>(reinit_operator->get_system_matrix(),
                                                delta_psi_vec,
                                                rhs,
-                                               reinit_data.linear_solver.solver_type,
-                                               reinit_data.linear_solver.rel_tolerance,
-                                               reinit_data.linear_solver.max_iterations,
+                                               reinit_data.linear_solver,
                                                *preconditioner);
 
         Journal::print_formatted_norm(scratch_data->get_pcout(0),

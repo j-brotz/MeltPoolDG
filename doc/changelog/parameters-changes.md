@@ -1,6 +1,19 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-03-16
+- Add parameter for absolute tolerance of linear solvers.
+
+```json
+{
+  "heat|reinitialization|curvature|normal vector|advection diffusion": {
+    "linear solver": {
+      "abs tolerance": ""
+    }
+  }
+}
+```
+
 ## 2022-03-11
 - Add parameter to enable interpolation of the level set field to the pressure 
   space for computing the level set gradient in evaporative mass flux source terms.
