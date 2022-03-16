@@ -28,17 +28,15 @@ namespace MeltPoolDG
               typename OperatorType       = TrilinosWrappers::SparseMatrix,
               typename PreconditionerType = PreconditionIdentity>
     static int
-    solve(const OperatorType &      system_matrix,
-          VectorType &              solution,
-          const VectorType &        rhs,
-          const LinearSolverType &  solver_name,
-          const double              rel_tolerance  = 1e-12,
-          const unsigned int        max_iterations = 10000,
-          const PreconditionerType &preconditioner = PreconditionIdentity())
+    solve(const OperatorType &            system_matrix,
+          VectorType &                    solution,
+          const VectorType &              rhs,
+          const LinearSolverData<double> &data,
+          const PreconditionerType &      preconditioner = PreconditionIdentity())
     {
-      ReductionControl solver_control(max_iterations, 1e-50, rel_tolerance);
+      ReductionControl solver_control(data.max_iterations, data.abs_tolerance, data.rel_tolerance);
 
-      switch (solver_name)
+      switch (data.solver_type)
         {
             case (LinearSolverType::CG): {
               auto solver = SolverCG<VectorType>(solver_control);

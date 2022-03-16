@@ -154,22 +154,10 @@ namespace MeltPoolDG::Heat
                                          const VectorType &rhs) -> int {
       if (diag_preconditioner)
         return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-          *heat_operator,
-          solution_update,
-          rhs,
-          heat_data.linear_solver.solver_type,
-          heat_data.linear_solver.rel_tolerance,
-          heat_data.linear_solver.max_iterations,
-          *diag_preconditioner);
+          *heat_operator, solution_update, rhs, heat_data.linear_solver, *diag_preconditioner);
       else if (trilinos_preconditioner)
         return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-          *heat_operator,
-          solution_update,
-          rhs,
-          heat_data.linear_solver.solver_type,
-          heat_data.linear_solver.rel_tolerance,
-          heat_data.linear_solver.max_iterations,
-          *trilinos_preconditioner);
+          *heat_operator, solution_update, rhs, heat_data.linear_solver, *trilinos_preconditioner);
       else
         AssertThrow(false, ExcNotImplemented());
 

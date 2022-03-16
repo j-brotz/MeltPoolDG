@@ -71,23 +71,17 @@ namespace MeltPoolDG::NormalVector
         normal_vector_operator->create_rhs(rhs, solution_levelset_in);
 
         if (diag_preconditioner_matrixfree)
-          iter =
-            LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
-                                                 solution_normal_vector,
-                                                 rhs,
-                                                 normal_vector_data.linear_solver.solver_type,
-                                                 normal_vector_data.linear_solver.rel_tolerance,
-                                                 normal_vector_data.linear_solver.max_iterations,
-                                                 *diag_preconditioner_matrixfree);
+          iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
+                                                      solution_normal_vector,
+                                                      rhs,
+                                                      normal_vector_data.linear_solver,
+                                                      *diag_preconditioner_matrixfree);
         else if (normal_vector_data.linear_solver.preconditioner_type ==
                  PreconditionerType::Identity)
-          iter =
-            LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
-                                                 solution_normal_vector,
-                                                 rhs,
-                                                 normal_vector_data.linear_solver.solver_type,
-                                                 normal_vector_data.linear_solver.rel_tolerance,
-                                                 normal_vector_data.linear_solver.max_iterations);
+          iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
+                                                      solution_normal_vector,
+                                                      rhs,
+                                                      normal_vector_data.linear_solver);
         else
           AssertThrow(false, ExcNotImplemented());
       }
@@ -106,7 +100,7 @@ namespace MeltPoolDG::NormalVector
           iter = LinearSolver::solve<VectorType>(normal_vector_operator->get_system_matrix(),
                                                  solution_normal_vector.block(d),
                                                  rhs.block(d),
-                                                 normal_vector_data.linear_solver.solver_type);
+                                                 normal_vector_data.linear_solver);
       }
 
     solution_levelset_in.zero_out_ghost_values();

@@ -23,6 +23,10 @@ namespace MeltPoolDG
         this->rel_tolerance,
         "Set the relative tolerance for a successful solution of the linear system of equations.");
       prm.add_parameter(
+        "abs tolerance",
+        this->abs_tolerance,
+        "Set the absolute tolerance for a successful solution of the linear system of equations.");
+      prm.add_parameter(
         "do matrix free",
         this->do_matrix_free,
         "Set this parameter if a matrix free solution procedure should be performed.");

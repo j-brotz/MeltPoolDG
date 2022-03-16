@@ -132,28 +132,22 @@ namespace MeltPoolDG::AdvectionDiffusion
             auto diag_preconditioner_matrixfree =
               preconditioner_matrixfree->compute_diagonal_preconditioner();
 
-            iter =
-              LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                              src,
-                                              rhs,
-                                              this->advec_diff_data.linear_solver.solver_type,
-                                              this->advec_diff_data.linear_solver.rel_tolerance,
-                                              this->advec_diff_data.linear_solver.max_iterations,
-                                              *diag_preconditioner_matrixfree);
+            iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
+                                                   src,
+                                                   rhs,
+                                                   this->advec_diff_data.linear_solver,
+                                                   *diag_preconditioner_matrixfree);
           }
         else
           {
             auto trilinos_preconditioner_matrixfree =
               preconditioner_matrixfree->compute_trilinos_preconditioner();
 
-            iter =
-              LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                              src,
-                                              rhs,
-                                              this->advec_diff_data.linear_solver.solver_type,
-                                              this->advec_diff_data.linear_solver.rel_tolerance,
-                                              this->advec_diff_data.linear_solver.max_iterations,
-                                              *trilinos_preconditioner_matrixfree);
+            iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
+                                                   src,
+                                                   rhs,
+                                                   this->advec_diff_data.linear_solver,
+                                                   *trilinos_preconditioner_matrixfree);
           }
       }
     else
@@ -173,9 +167,7 @@ namespace MeltPoolDG::AdvectionDiffusion
         iter = LinearSolver::solve<VectorType>(advec_diff_operator->get_system_matrix(),
                                                src,
                                                rhs,
-                                               this->advec_diff_data.linear_solver.solver_type,
-                                               this->advec_diff_data.linear_solver.rel_tolerance,
-                                               this->advec_diff_data.linear_solver.max_iterations,
+                                               this->advec_diff_data.linear_solver,
                                                *preconditioner);
       }
 
