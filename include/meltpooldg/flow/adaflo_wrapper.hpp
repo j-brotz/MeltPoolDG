@@ -187,7 +187,7 @@ namespace MeltPoolDG::Flow
 
     // temporal vectors for output
     VectorType force_rhs_velocity_projected;
-    VectorType mass_balance_soure_term_projected;
+    VectorType mass_balance_source_term_projected;
     VectorType density;
     VectorType viscosity;
   };
