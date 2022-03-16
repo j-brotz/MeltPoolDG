@@ -137,7 +137,7 @@ namespace MeltPoolDG
         void
         create_spatial_discretization() override
         {
-          if (this->parameters.base.do_simplex)
+          if (this->parameters.base.do_simplex || dim == 1)
             {
 #ifdef DEAL_II_WITH_METIS
               this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -164,34 +164,30 @@ namespace MeltPoolDG
           const double &y_min = domain_y_min;
           const double &y_max = domain_y_max;
 
-          if constexpr ((dim == 2) || (dim == 3))
+          // create mesh
+          //
+          // Note: For 1d we consider the coordinates along the y-axis.
+          const Point<dim> bottom_left = (dim == 1) ? Point<dim>(y_min) :
+                                         (dim == 2) ? Point<dim>(x_min, y_min) :
+                                                      Point<dim>(x_min, x_min, y_min);
+          const Point<dim> top_right   = (dim == 1) ? Point<dim>(y_max) :
+                                         (dim == 2) ? Point<dim>(x_max, y_max) :
+                                                      Point<dim>(x_max, x_max, y_max);
+
+          if (this->parameters.base.do_simplex)
             {
-              // create mesh
-              const Point<dim> bottom_left =
-                (dim == 2) ? Point<dim>(x_min, y_min) : Point<dim>(x_min, x_min, y_min);
-              const Point<dim> top_right =
-                (dim == 2) ? Point<dim>(x_max, y_max) : Point<dim>(x_max, x_max, y_max);
+              std::vector<unsigned int> subdivisions(
+                dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+              subdivisions[dim - 1] *= 2;
 
-              if (this->parameters.base.do_simplex)
-                {
-                  // create mesh
-                  std::vector<unsigned int> subdivisions(
-                    dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
-                  subdivisions[dim - 1] *= 2;
-
-                  GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                           subdivisions,
-                                                                           bottom_left,
-                                                                           top_right);
-                }
-              else
-                {
-                  GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
-                }
+              GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                       subdivisions,
+                                                                       bottom_left,
+                                                                       top_right);
             }
           else
             {
-              AssertThrow(false, ExcNotImplemented());
+              GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
             }
         }
 
@@ -241,8 +237,10 @@ namespace MeltPoolDG
            * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
            *
-           * note: In the 3D recoil pressure simulation, the front and back boundaries are treated
+           * Note: In the 3D recoil pressure simulation, the front and back boundaries are treated
            * the same as the left and right boundaries.
+           *
+           * Note: For 1d we consider the constraints along the y-axis, i.e. lower_bc and upper_bc.
            */
           const types::boundary_id lower_bc = 1;
           const types::boundary_id upper_bc = 2;
@@ -251,7 +249,19 @@ namespace MeltPoolDG
           const types::boundary_id front_bc = 5;
           const types::boundary_id back_bc  = 6;
 
-          if ((dim == 2) || (dim == 3))
+          if (dim == 1)
+            {
+              for (const auto &cell : this->triangulation->cell_iterators())
+                for (const auto &face : cell->face_iterators())
+                  if ((face->at_boundary()))
+                    {
+                      if (face->center()[0] == domain_y_min)
+                        face->set_boundary_id(lower_bc);
+                      else if (face->center()[0] == domain_y_max)
+                        face->set_boundary_id(upper_bc);
+                    }
+            }
+          else if ((dim == 2) || (dim == 3))
             {
               for (const auto &cell : this->triangulation->cell_iterators())
                 for (const auto &face : cell->face_iterators())
@@ -286,7 +296,8 @@ namespace MeltPoolDG
 
           if (periodic_boundary)
             {
-              this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+              if (dim >= 2)
+                this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
               if (dim == 3)
                 this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
             }

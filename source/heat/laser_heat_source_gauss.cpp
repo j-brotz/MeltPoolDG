@@ -42,13 +42,15 @@ namespace MeltPoolDG::Heat
     const double                  delta_value,
     const double                  heaviside) const
   {
-    // only consider distance in x (2D) or x and y (3D) direction. Disregard distance in dim-1
-    // direction.
-    Point<dim - 1> distance_vector;
-    distance_vector[0] = position[0] - laser_position[0];
-    if constexpr (dim == 3)
-      distance_vector[1] = position[1] - laser_position[1];
-    const double distance = distance_vector.norm();
+    Point<dim> projected_position(position);
+
+    if (dim > 1)
+      {
+        // Calculate the projected distance in x (2D) or x and y (3D) direction.
+        // To this end, we calculate a projected point lying in the laser plane.
+        projected_position[dim - 1] = laser_position[dim - 1];
+      }
+    const double distance = laser_position.distance(projected_position);
 
     // assume laser direction coincides with the negative dim-1 direction
     double projection_factor = normal_vector * -Point<dim>::unit_vector(dim - 1);
