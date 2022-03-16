@@ -13,7 +13,7 @@
     "start time": "0.0",
     "end time": "0.0006",
     "time step size": "0.000001",
-    "max n steps": "30"
+    "max n steps": "10"
   },
   "surface tension": {
     "surface tension coefficient": "0.0"
