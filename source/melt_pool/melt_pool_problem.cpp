@@ -35,10 +35,8 @@ namespace MeltPoolDG::MeltPool
 
         if (evaporation_operation)
           {
-            TimerOutput::Scope scope(scratch_data->get_timer(), "Evaporation::mass_flux");
-
-            // compute the evaporative mass flux
-            evaporation_operation->compute_evaporative_mass_flux();
+            TimerOutput::Scope scope(scratch_data->get_timer(),
+                                     "Evaporation::level_set_source_term");
 
             if (problem_specific_parameters.do_evaporative_mass_flux)
               {
@@ -111,6 +109,13 @@ namespace MeltPoolDG::MeltPool
 
               scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
             }
+        }
+
+        {
+          TimerOutput::Scope scope(scratch_data->get_timer(), "Evaporation::mass_flux");
+          // compute the evaporative mass flux from the temperature field
+          if (evaporation_operation)
+            evaporation_operation->compute_evaporative_mass_flux();
         }
 
         /******************************************************************************************
@@ -665,6 +670,10 @@ namespace MeltPoolDG::MeltPool
         (melt_pool_operation &&
          !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
       heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+
+    // compute the evaporative mass flux from the initial temperature field
+    if (evaporation_operation)
+      evaporation_operation->compute_evaporative_mass_flux();
 
     /*
      * set initial condition of the melt pool class
