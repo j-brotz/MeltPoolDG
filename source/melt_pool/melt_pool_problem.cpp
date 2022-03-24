@@ -35,7 +35,9 @@ namespace MeltPoolDG::MeltPool
 
         if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
           {
-            TimerOutput::Scope scope(scratch_data->get_timer(), "Evaporation::mass_flux");
+            TimerOutput::Scope scope(scratch_data->get_timer(),
+                                     "Evaporation::level_set_source_term");
+
             switch (base_in->parameters.evapor.level_set_source_term_type)
               {
                 default:
@@ -106,6 +108,13 @@ namespace MeltPoolDG::MeltPool
             }
         }
 
+        // compute the evaporative mass flux from the temperature field
+        if (evaporation_operation)
+          {
+            TimerOutput::Scope scope(scratch_data->get_timer(), "Evaporation::mass_flux");
+            evaporation_operation->compute_evaporative_mass_flux();
+          }
+
         /******************************************************************************************
          * NAVIER - STOKES
          ******************************************************************************************/
@@ -127,9 +136,6 @@ namespace MeltPoolDG::MeltPool
           // .... d) evaporative mass fluxes
           if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
             {
-              // compute the evaporative mass flux
-              evaporation_operation->compute_evaporative_mass_flux();
-
               evaporation_operation->compute_mass_balance_source_term(
                 mass_balance_rhs,
                 flow_operation->get_dof_handler_idx_pressure(),
@@ -661,6 +667,10 @@ namespace MeltPoolDG::MeltPool
         (melt_pool_operation &&
          !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
       heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+
+    // compute the evaporative mass flux from the initial temperature field
+    if (evaporation_operation)
+      evaporation_operation->compute_evaporative_mass_flux();
 
     /*
      * set initial condition of the melt pool class
