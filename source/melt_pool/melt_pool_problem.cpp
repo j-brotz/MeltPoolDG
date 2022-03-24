@@ -108,12 +108,12 @@ namespace MeltPoolDG::MeltPool
             }
         }
 
-        {
-          TimerOutput::Scope scope(scratch_data->get_timer(), "Evaporation::mass_flux");
-          // compute the evaporative mass flux from the temperature field
-          if (evaporation_operation)
+        // compute the evaporative mass flux from the temperature field
+        if (evaporation_operation)
+          {
+            TimerOutput::Scope scope(scratch_data->get_timer(), "Evaporation::mass_flux");
             evaporation_operation->compute_evaporative_mass_flux();
-        }
+          }
 
         /******************************************************************************************
          * NAVIER - STOKES
