@@ -309,15 +309,15 @@ namespace MeltPoolDG::Reinitialization
      *    ....
      */
     else
-      AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."))
+      AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."));
 
-        /*
-         *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
-         *  apply it to the system matrix. This functionality is part of the OperatorBase class.
-         */
+    /*
+     *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
+     *  apply it to the system matrix. This functionality is part of the OperatorBase class.
+     */
 
-        if (!reinit_data.linear_solver.do_matrix_free)
-          reinit_operator->initialize_matrix_based(*scratch_data);
+    if (!reinit_data.linear_solver.do_matrix_free)
+      reinit_operator->initialize_matrix_based(*scratch_data);
 
     if (reinit_data.linear_solver.do_matrix_free)
       {
