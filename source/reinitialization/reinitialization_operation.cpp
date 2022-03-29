@@ -240,7 +240,7 @@ namespace MeltPoolDG::Reinitialization
   }
 
   template <int dim>
-  const ReinitializationOperation<dim>::BlockVectorType &
+  const typename ReinitializationOperation<dim>::BlockVectorType &
   ReinitializationOperation<dim>::get_normal_vector() const
   {
     return normal_vector_operation->get_solution_normal_vector();
@@ -261,7 +261,7 @@ namespace MeltPoolDG::Reinitialization
   }
 
   template <int dim>
-  ReinitializationOperation<dim>::BlockVectorType &
+  typename ReinitializationOperation<dim>::BlockVectorType &
   ReinitializationOperation<dim>::get_normal_vector()
   {
     return normal_vector_operation->get_solution_normal_vector();
