@@ -194,8 +194,6 @@ namespace MeltPoolDG
          */
         this->cell_sizes.resize(this->matrix_free.n_cell_batches());
 
-        FullMatrix<double> mat(dim, dim);
-
         for (unsigned int cell = 0; cell < this->matrix_free.n_cell_batches(); ++cell)
           {
             VectorizedArray<double> cell_size = VectorizedArray<double>();
