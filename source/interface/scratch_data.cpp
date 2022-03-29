@@ -134,15 +134,15 @@ namespace MeltPoolDG
     this->partitioner.clear();
 
     /*
-     *  compute minimum cell size; this corresponds to the edge length in case of cubic elements
-     */
-    this->min_cell_size = GridTools::minimal_cell_diameter(get_triangulation()) / std::sqrt(dim);
-    this->max_cell_size = GridTools::maximal_cell_diameter(get_triangulation()) / std::sqrt(dim);
-
-    /*
      *  create diameter of the object
      */
     this->min_diameter = GridTools::minimal_cell_diameter(get_triangulation());
+
+    /*
+     *  compute minimum cell size; this corresponds to the edge length in case of cubic elements
+     */
+    this->min_cell_size = this->min_diameter / std::sqrt(dim);
+    this->max_cell_size = GridTools::maximal_cell_diameter(get_triangulation()) / std::sqrt(dim);
 
     int dof_idx = 0;
     for (const auto &dof : dof_handler)
