@@ -128,14 +128,14 @@ namespace MeltPoolDG::NormalVector
   }
 
   template <int dim>
-  const NormalVectorOperation<dim>::BlockVectorType &
+  const typename NormalVectorOperation<dim>::BlockVectorType &
   NormalVectorOperation<dim>::get_solution_normal_vector() const
   {
     return solution_normal_vector;
   }
 
   template <int dim>
-  NormalVectorOperation<dim>::BlockVectorType &
+  typename NormalVectorOperation<dim>::BlockVectorType &
   NormalVectorOperation<dim>::get_solution_normal_vector()
   {
     return solution_normal_vector;

@@ -776,9 +776,6 @@ namespace MeltPoolDG::MeltPool
     reinit_constraints_dirichlet.close();
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
-    reinit_constraints_dirichlet.close();
-    reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
-
     temp_constraints_dirichlet.clear();
     temp_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
     if (base_in->get_bc("heat_transfer") && !base_in->get_dirichlet_bc("heat_transfer").empty())

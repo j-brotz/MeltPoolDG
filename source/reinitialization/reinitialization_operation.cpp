@@ -240,7 +240,7 @@ namespace MeltPoolDG::Reinitialization
   }
 
   template <int dim>
-  const ReinitializationOperation<dim>::BlockVectorType &
+  const typename ReinitializationOperation<dim>::BlockVectorType &
   ReinitializationOperation<dim>::get_normal_vector() const
   {
     return normal_vector_operation->get_solution_normal_vector();
@@ -261,7 +261,7 @@ namespace MeltPoolDG::Reinitialization
   }
 
   template <int dim>
-  ReinitializationOperation<dim>::BlockVectorType &
+  typename ReinitializationOperation<dim>::BlockVectorType &
   ReinitializationOperation<dim>::get_normal_vector()
   {
     return normal_vector_operation->get_solution_normal_vector();
@@ -309,15 +309,15 @@ namespace MeltPoolDG::Reinitialization
      *    ....
      */
     else
-      AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."))
+      AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."));
 
-        /*
-         *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
-         *  apply it to the system matrix. This functionality is part of the OperatorBase class.
-         */
+    /*
+     *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
+     *  apply it to the system matrix. This functionality is part of the OperatorBase class.
+     */
 
-        if (!reinit_data.linear_solver.do_matrix_free)
-          reinit_operator->initialize_matrix_based(*scratch_data);
+    if (!reinit_data.linear_solver.do_matrix_free)
+      reinit_operator->initialize_matrix_based(*scratch_data);
 
     if (reinit_data.linear_solver.do_matrix_free)
       {

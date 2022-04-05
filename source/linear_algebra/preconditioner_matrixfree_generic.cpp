@@ -21,9 +21,6 @@ namespace MeltPoolDG::Preconditioner
                   preconditioner_type == PreconditionerType::AMG ||
                   preconditioner_type == PreconditionerType::Identity,
                 ExcMessage("The supported preconditioner types are Diagonal|ILU|AMG|Identity."));
-
-    // setup sparsity pattern if needed
-    reinit();
   }
 
   template <int dim, typename OperatorType>
