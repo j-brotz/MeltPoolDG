@@ -39,6 +39,8 @@ namespace MeltPoolDG::AdvectionDiffusion
           advec_diff_dof_idx,
           this->advec_diff_data.linear_solver.preconditioner_type,
           *advec_diff_operator);
+
+        preconditioner_matrixfree->reinit();
       }
   }
 

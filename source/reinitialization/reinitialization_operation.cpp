@@ -320,12 +320,19 @@ namespace MeltPoolDG::Reinitialization
       reinit_operator->initialize_matrix_based(*scratch_data);
 
     if (reinit_data.linear_solver.do_matrix_free)
-      preconditioner_matrixfree = std::make_shared<
-        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
-        *scratch_data,
-        reinit_dof_idx,
-        reinit_data.linear_solver.preconditioner_type,
-        *reinit_operator);
+      {
+        preconditioner_matrixfree = std::make_shared<
+          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+          *scratch_data,
+          reinit_dof_idx,
+          reinit_data.linear_solver.preconditioner_type,
+          *reinit_operator);
+        /*
+         * setup sparsity pattern of system matrix only if the latter is
+         * needed for computing the preconditioner
+         */
+        preconditioner_matrixfree->reinit();
+      }
   }
 
   template <int dim>
