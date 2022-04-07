@@ -64,6 +64,7 @@ namespace MeltPoolDG
         double       domain_x_max                   = 0;
         double       domain_y_min                   = 0;
         double       domain_y_max                   = 0;
+        std::string  cell_repetitions               = "1,1,1";
         bool         periodic_boundary              = false;
         bool         evaporation_boundary           = false;
         unsigned int n_local_refinement             = 0;
@@ -96,6 +97,9 @@ namespace MeltPoolDG
             prm.add_parameter("domain y max",
                               domain_y_max,
                               "maximum y coordinate of simulation domain");
+            prm.add_parameter("cell repetitions",
+                              cell_repetitions,
+                              "cell repetitions per dim applied before global refinement or amr");
             prm.add_parameter("n local refinement",
                               n_local_refinement,
                               "number of (additional to the global) refinements for local region.");
@@ -163,7 +167,6 @@ namespace MeltPoolDG
           const double &x_max = domain_x_max;
           const double &y_min = domain_y_min;
           const double &y_max = domain_y_max;
-
           // create mesh
           //
           // Note: For 1d we consider the coordinates along the y-axis.
@@ -174,11 +177,16 @@ namespace MeltPoolDG
                                          (dim == 2) ? Point<dim>(x_max, y_max) :
                                                       Point<dim>(x_max, x_max, y_max);
 
+          auto repetitions = UtilityFunctions::convert_string_to_vector(cell_repetitions);
+          repetitions.resize(dim);
+
           if (this->parameters.base.do_simplex)
             {
               std::vector<unsigned int> subdivisions(
                 dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
               subdivisions[dim - 1] *= 2;
+              for (int d = 0; d < dim; d++)
+                subdivisions[d] *= repetitions[d];
 
               GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
                                                                        subdivisions,
@@ -187,7 +195,10 @@ namespace MeltPoolDG
             }
           else
             {
-              GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
+              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                        repetitions,
+                                                        bottom_left,
+                                                        top_right);
             }
         }
 

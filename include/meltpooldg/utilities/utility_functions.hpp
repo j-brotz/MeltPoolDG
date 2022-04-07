@@ -66,7 +66,7 @@ namespace MeltPoolDG
      * object.
      */
     template <int dim>
-    Point<dim>
+    inline Point<dim>
     convert_string_coords_to_point(const std::string s_in, const std::string delimiter = ",")
     {
       Point<dim>  p;
@@ -91,6 +91,29 @@ namespace MeltPoolDG
       if (d < dim)
         p[d] = std::stod(s);
       return p;
+    }
+
+    /**
+     * This function converts a string with @p delimiter separated integers to a std::vector<unsinged int>
+     * object.
+     */
+    inline std::vector<unsigned int>
+    convert_string_to_vector(const std::string s_in, const std::string delimiter = ",")
+    {
+      std::vector<unsigned int> vec;
+      size_t                    pos;
+      std::string               coord;
+      std::string               s = s_in;
+
+      // split parts between delimiters
+      while ((pos = s.find(delimiter)) != std::string::npos)
+        {
+          coord = s.substr(0, pos);
+          vec.push_back(std::stoul(coord));
+          s.erase(0, pos + delimiter.length());
+        }
+      vec.push_back(std::stoul(s));
+      return vec;
     }
 
     /**
