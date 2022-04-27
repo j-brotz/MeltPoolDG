@@ -1,6 +1,6 @@
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
-| || normal_0 ||L2 = 6.41286784323e-16                                               normal_vector |
+| || normal_0 ||L2 = 6.36929449330e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.23895256679e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 5.36714e-06                                                                reinitialization |
@@ -15,6 +15,7 @@
 | || normal_0 ||L2 = 1.08469272090e-02                                               normal_vector |
 | || normal_1 ||L2 = 5.24344078604e+00                                               normal_vector |
 | || curvature ||L2 = 5.15303232789e+00                                                  curvature |
+|  total mass = 0.00042115128378                                                 melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+

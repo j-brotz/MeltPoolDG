@@ -12,6 +12,7 @@
 |  τ = 2.22094e-05                                                                reinitialization |
 | || delta phi ||L2 = 2.232288767260622e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
+|  total mass = 0.00095091636                                                    melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -66,7 +67,7 @@ Time step #2, advancing from t_n-1 = 0.0001 to t = 0.0002 (dt = 0.0001).
 | || advected field ||L2 = 4.7889130205e-04                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
-| || delta phi ||L2 = 4.746865287742545e-09                                       reinitialization |
+| || delta phi ||L2 = 4.746865597238723e-09                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
 | || delta phi ||L2 = 3.157089307325895e-09                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
@@ -92,13 +93,13 @@ Time step #3, advancing from t_n-1 = 0.0002 to t = 0.0003 (dt = 0.0001).
 |  τ = 4.44187e-06                                                                reinitialization |
 | || delta phi ||L2 = 6.062593136467451e-10                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
-| || delta phi ||L2 = 4.007299670520694e-10                                       reinitialization |
+| || delta phi ||L2 = 4.007299807299971e-10                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
 | || delta phi ||L2 = 2.649296231157983e-10                                       reinitialization |
 |  τ = 1.77675e-05                                                                reinitialization |
 | || delta phi ||L2 = 1.752173804007520e-10                                       reinitialization |
 |  τ = 2.22094e-05                                                                reinitialization |
-| || delta phi ||L2 = 1.159403478529985e-10                                       reinitialization |
+| || delta phi ||L2 = 1.159403492693942e-10                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
@@ -114,15 +115,15 @@ Time step #4, advancing from t_n-1 = 0.0003 to t = 0.0004 (dt = 0.0001).
 | || advected field ||L2 = 4.7889399408e-04                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4.44187e-06                                                                reinitialization |
-| || delta phi ||L2 = 7.675629308456202e-11                                       reinitialization |
+| || delta phi ||L2 = 7.675631760762579e-11                                       reinitialization |
 |  τ = 8.88375e-06                                                                reinitialization |
-| || delta phi ||L2 = 5.083981023949823e-11                                       reinitialization |
+| || delta phi ||L2 = 5.083982250103012e-11                                       reinitialization |
 |  τ = 1.33256e-05                                                                reinitialization |
 | || delta phi ||L2 = 3.368814050553753e-11                                       reinitialization |
 |  τ = 1.77675e-05                                                                reinitialization |
-| || delta phi ||L2 = 2.233045460557835e-11                                       reinitialization |
+| || delta phi ||L2 = 2.233045239506585e-11                                       reinitialization |
 |  τ = 2.22094e-05                                                                reinitialization |
-| || delta phi ||L2 = 1.480562120825156e-11                                       reinitialization |
+| || delta phi ||L2 = 1.480562053043057e-11                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
