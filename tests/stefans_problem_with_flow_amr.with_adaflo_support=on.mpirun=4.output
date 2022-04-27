@@ -25,6 +25,7 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.90819835663e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
+|  total mass = 0.45254443048                                                    melt_pool_problem |
 | cycle: 0 n_dofs: 1089(ls) + 8450(vel) + 1089(p) T.size 1089                    melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.39454269409e+00                                               normal_vector |
@@ -43,6 +44,7 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.39244318008e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45851737576                                                    melt_pool_problem |
 | cycle: 1 n_dofs: 1509(ls) + 11794(vel) + 1509(p) T.size 1509                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.52941298485e+00                                               normal_vector |
@@ -61,6 +63,7 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.51964044571e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45847333042                                                    melt_pool_problem |
 | cycle: 2 n_dofs: 2345(ls) + 18466(vel) + 2345(p) T.size 2345                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.52941298485e+00                                               normal_vector |
@@ -79,6 +82,7 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.51964044571e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45847333042                                                    melt_pool_problem |
 | cycle: 3 n_dofs: 2345(ls) + 18466(vel) + 2345(p) T.size 2345                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.52941298485e+00                                               normal_vector |
@@ -97,6 +101,7 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.51964044571e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45847333042                                                    melt_pool_problem |
 | cycle: 4 n_dofs: 2345(ls) + 18466(vel) + 2345(p) T.size 2345                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.52941298485e+00                                               normal_vector |
@@ -115,6 +120,7 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.51964044571e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45847333042                                                    melt_pool_problem |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0 (analytical: 0.099)
 POSTPROCESSOR: max pressure: 0 (analytical: 9.9e-05)

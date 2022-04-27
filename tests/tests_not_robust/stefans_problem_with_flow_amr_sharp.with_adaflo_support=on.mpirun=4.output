@@ -24,6 +24,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.65893661976e+00                                               normal_vector |
+|  total mass = 0.505                                                            melt_pool_problem |
 | cycle: 0 n_dofs: 1089(ls) + 8450(vel) + 1089(p) T.size 1089                    melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.26256239414e+00                                               normal_vector |
@@ -41,6 +42,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.12952429085e-18                                               normal_vector |
 | || normal_1 ||L2 = 4.26327836514e+00                                               normal_vector |
+|  total mass = 0.505                                                            melt_pool_problem |
 | cycle: 1 n_dofs: 1509(ls) + 11794(vel) + 1509(p) T.size 1509                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.60060381889e+00                                               normal_vector |
@@ -58,6 +60,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.59395647049e+00                                               normal_vector |
+|  total mass = 0.505                                                            melt_pool_problem |
 | cycle: 2 n_dofs: 2345(ls) + 18466(vel) + 2345(p) T.size 2345                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.60060381889e+00                                               normal_vector |
@@ -75,6 +78,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.59395647049e+00                                               normal_vector |
+|  total mass = 0.505                                                            melt_pool_problem |
 | cycle: 3 n_dofs: 2345(ls) + 18466(vel) + 2345(p) T.size 2345                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.60060381889e+00                                               normal_vector |
@@ -92,6 +96,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.59395647049e+00                                               normal_vector |
+|  total mass = 0.505                                                            melt_pool_problem |
 | cycle: 4 n_dofs: 2345(ls) + 18466(vel) + 2345(p) T.size 2345                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.60060381889e+00                                               normal_vector |
@@ -109,6 +114,7 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.59395647049e+00                                               normal_vector |
+|  total mass = 0.505                                                            melt_pool_problem |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0 (analytical: 0.099)
 POSTPROCESSOR: max pressure: 0 (analytical: 9.9e-05)
@@ -238,7 +244,7 @@ POSTPROCESSOR: min pressure: 1.16e-10 (analytical: 0)
 +--------------------------------------------------------------------------------------------------+
 | || evaporative_velocity ||L2 = 7.0653986394e-02                            evaporation_operation |
 | || advected field ||L2 = 9.5901086928e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 2.00731344468e-13                                               normal_vector |
+| || normal_0 ||L2 = 2.00730841492e-13                                               normal_vector |
 | || normal_1 ||L2 = 4.60690010957e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.00390625                                                                 reinitialization |
@@ -252,7 +258,7 @@ POSTPROCESSOR: min pressure: 1.16e-10 (analytical: 0)
 |  τ = 0.0195312                                                                  reinitialization |
 | || delta phi ||L2 = 1.959939486693739e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.81236439055e-13                                               normal_vector |
+| || normal_0 ||L2 = 1.81272569439e-13                                               normal_vector |
 | || normal_1 ||L2 = 4.60840619919e+00                                               normal_vector |
 |  total mass = 0.505                                                            melt_pool_problem |
 

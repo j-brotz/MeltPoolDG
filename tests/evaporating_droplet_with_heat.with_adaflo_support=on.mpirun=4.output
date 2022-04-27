@@ -13,6 +13,7 @@
 | || normal_0 ||L2 = 2.90806447461e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.90806457911e+00                                               normal_vector |
 | || curvature ||L2 = 6.47764375215e+00                                                  curvature |
+|  total mass = 0.14483970937                                                    melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -399,7 +400,7 @@ Time step #16, advancing from t_n-1 = 0.015 to t = 0.016 (dt = 0.001).
 | Newton Raphson solver converged: ||solution|| = 2.94604e-01                newton_raphson_solver |
 |  total mass = 0.14387640164                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.88268e-09       evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 8.3569502899e-10            evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 8.3569502898e-10            evaporation_source_terms_continuous |
 
 Time step #17, advancing from t_n-1 = 0.016 to t = 0.017 (dt = 0.001). 
 | || velocity ||L2 = 1.419631008733790e-04                                    navier_stokes_adaflo |

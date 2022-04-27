@@ -25,6 +25,7 @@
 | || normal_0 ||L2 = 2.26933890855e-16                                               normal_vector |
 | || normal_1 ||L2 = 4.98960351944e+00                                               normal_vector |
 | || curvature ||L2 = 1.22118031979e+01                                                  curvature |
+|  total mass = 0.45989907272                                                    melt_pool_problem |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0 (analytical: 0.99)
 POSTPROCESSOR: max pressure: 0 (analytical: 0.0099)

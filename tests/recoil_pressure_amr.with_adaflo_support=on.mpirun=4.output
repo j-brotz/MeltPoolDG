@@ -9,24 +9,25 @@
 | || normal_1 ||L2 = 5.23983532749e+00                                               normal_vector |
 |  τ = 5.52427e-06                                                                reinitialization |
 | || delta phi ||L2 = 9.998563970011449e-08                                       reinitialization |
-| || normal_0 ||L2 = 8.07139915876e-18                                               normal_vector |
+| || normal_0 ||L2 = 5.31065816727e-18                                               normal_vector |
 | || normal_1 ||L2 = 5.24203629751e+00                                               normal_vector |
 |  τ = 8.28641e-06                                                                reinitialization |
 | || delta phi ||L2 = 8.206473703511071e-08                                       reinitialization |
-| || normal_0 ||L2 = 1.20313149356e-17                                               normal_vector |
+| || normal_0 ||L2 = 5.81629228160e-18                                               normal_vector |
 | || normal_1 ||L2 = 5.24414957275e+00                                               normal_vector |
 |  τ = 1.10485e-05                                                                reinitialization |
 | || delta phi ||L2 = 7.431832270076723e-08                                       reinitialization |
-| || normal_0 ||L2 = 2.18563312103e-17                                               normal_vector |
+| || normal_0 ||L2 = 7.27838440082e-17                                               normal_vector |
 | || normal_1 ||L2 = 5.24609003543e+00                                               normal_vector |
 |  τ = 1.38107e-05                                                                reinitialization |
 | || delta phi ||L2 = 6.800096822765221e-08                                       reinitialization |
-| || normal_0 ||L2 = 5.94089584139e-17                                               normal_vector |
+| || normal_0 ||L2 = 2.91766087954e-17                                               normal_vector |
 | || normal_1 ||L2 = 5.24782613808e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.4173178217e-17                                         normal_vector_adaflo |
+| || normal_0 ||L2 = 2.5518013211e-17                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 5.0362812056e+00                                         normal_vector_adaflo |
-| || curvature ||L2 = 4.7153219440e-17                                            curvature_adaflo |
+| || curvature ||L2 = 2.4873509749e-17                                            curvature_adaflo |
+|  total mass = 0.00041884303125                                                 melt_pool_problem |
 | cycle: 0 n_dofs: 4225(ls) + 33282(vel) + 4225(p) T.size 4225 solid.size 4225   melt_pool_problem |
 | || normal_0 ||L2 = 6.78547328979e-03                                               normal_vector |
 | || normal_1 ||L2 = 5.98205178858e+00                                               normal_vector |
@@ -45,6 +46,7 @@
 | || normal_0 ||L2 = 4.7006503213e-03                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 5.8323725303e+00                                         normal_vector_adaflo |
 | || curvature ||L2 = 5.7149524983e-03                                            curvature_adaflo |
+|  total mass = 0.00042069871729                                                 melt_pool_problem |
 | cycle: 1 n_dofs: 5661(ls) + 44770(vel) + 5661(p) T.size 5661 solid.size 5661   melt_pool_problem |
 | || normal_0 ||L2 = 5.03839391489e-03                                               normal_vector |
 | || normal_1 ||L2 = 6.22344670907e+00                                               normal_vector |
@@ -63,6 +65,7 @@
 | || normal_0 ||L2 = 3.9356197593e-03                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 6.1760409498e+00                                         normal_vector_adaflo |
 | || curvature ||L2 = 1.5646276024e-02                                            curvature_adaflo |
+|  total mass = 0.00042020187231                                                 melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+

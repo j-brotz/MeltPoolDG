@@ -687,6 +687,8 @@ namespace MeltPoolDG::MeltPool
           AssertThrow(false, ExcNotImplemented());
 #endif
       }
+    // update the phases for the flow solver considering the updated level set and temperature
+    update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
   }
 
   template <int dim>
