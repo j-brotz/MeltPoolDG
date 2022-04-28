@@ -8,6 +8,7 @@
 #include "advection_diffusion/advection_diffusion_user_output.hpp"
 #include "evaporating_droplet/evaporating_droplet.hpp"
 #include "evaporating_droplet/evaporating_droplet_with_heat.hpp"
+#include "evaporating_droplet/evaporating_shell.hpp"
 #include "film_boiling/film_boiling.hpp"
 #include "flow_past_cylinder/flow_past_cylinder.hpp"
 #include "melt_front_propagation/melt_front_propagation.hpp"
@@ -86,6 +87,9 @@ namespace MeltPoolDG::Simulation
     else if (simulation_name == "evaporating_droplet")
       return std::make_shared<EvaporatingDroplet::SimulationEvaporatingDroplet<dim>>(
         parameter_file, mpi_communicator);
+    else if (simulation_name == "evaporating_shell")
+      return std::make_shared<EvaporatingShell::SimulationEvaporatingShell<dim>>(parameter_file,
+                                                                                 mpi_communicator);
     else if (simulation_name == "evaporating_droplet_with_heat")
       return std::make_shared<
         EvaporatingDropletWithHeat::SimulationEvaporatingDropletWithHeat<dim>>(parameter_file,

@@ -1,0 +1,122 @@
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 3.59564466682e-11                                               normal_vector |
+| || normal_1 ||L2 = 3.59561093631e-11                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #1, advancing from t_n-1 = 0 to t = 0.0001 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.592460347046850e+01                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 2      t = 1.0000e-04 to 2.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 7.19251498444e-11                                               normal_vector |
+| || normal_1 ||L2 = 7.19248932667e-11                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #2, advancing from t_n-1 = 0.0001 to t = 0.0002 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 7.962300567250027e+00                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 3      t = 2.0000e-04 to 3.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 1.07893684389e-10                                               normal_vector |
+| || normal_1 ||L2 = 1.07893836224e-10                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #3, advancing from t_n-1 = 0.0002 to t = 0.0003 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138176058174e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.182667777592427e-06                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 4      t = 3.0000e-04 to 4.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 1.43862010629e-10                                               normal_vector |
+| || normal_1 ||L2 = 1.43862071907e-10                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #4, advancing from t_n-1 = 0.0003 to t = 0.0004 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.175415290721672e-06                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 5      t = 4.0000e-04 to 5.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 1.79830157581e-10                                               normal_vector |
+| || normal_1 ||L2 = 1.79830472456e-10                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #5, advancing from t_n-1 = 0.0004 to t = 0.0005 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.180563275259787e-06                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 6      t = 5.0000e-04 to 6.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 2.15797364906e-10                                               normal_vector |
+| || normal_1 ||L2 = 2.15797267219e-10                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #6, advancing from t_n-1 = 0.0005 to t = 0.0006 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138176058174e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.178530694753337e-06                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 7      t = 6.0000e-04 to 7.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 2.51766728957e-10                                               normal_vector |
+| || normal_1 ||L2 = 2.51766410169e-10                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #7, advancing from t_n-1 = 0.0006 to t = 0.0007 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.178682041329407e-06                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 8      t = 7.0000e-04 to 8.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 2.87736392795e-10                                               normal_vector |
+| || normal_1 ||L2 = 2.87735701450e-10                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #8, advancing from t_n-1 = 0.0007 to t = 0.0008 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138176058174e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.178574011664919e-06                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 9      t = 8.0000e-04 to 9.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 3.23703996817e-10                                               normal_vector |
+| || normal_1 ||L2 = 3.23703608666e-10                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #9, advancing from t_n-1 = 0.0008 to t = 0.0009 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.178458207352159e-06                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 10     t = 9.0000e-04 to 1.0000e-03 ( dt = 1.0000e-04 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 3.59672189081e-10                                               normal_vector |
+| || normal_1 ||L2 = 3.59672110112e-10                                               normal_vector |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
+
+Time step #10, advancing from t_n-1 = 0.0009 to t = 0.001 (dt = 0.0001). 
+| || velocity ||L2 = 1.475138151687756e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.178348381950922e-06                                    navier_stokes_adaflo |
+
+analytical pressure analytical radial velocity  pressure   radial velocity 
+        -7.1875e-07                 1.0000e-03 -1.2551e-06      1.0000e-03 
+        -2.9875e-07                 4.0000e-04 -2.8778e-07      4.0178e-04 
+        -2.5000e-07                 2.5000e-04 -2.3300e-07      2.5107e-04 
+
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+

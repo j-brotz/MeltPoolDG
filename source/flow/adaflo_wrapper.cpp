@@ -35,7 +35,9 @@ namespace MeltPoolDG::Flow
         for (const auto &dirichlet_bc : base_in->get_dirichlet_bc("navier_stokes_u"))
           navier_stokes->set_velocity_dirichlet_boundary(dirichlet_bc.first, dirichlet_bc.second);
         for (const auto &open_id : base_in->get_open_boundary_id("navier_stokes_u"))
-          navier_stokes->set_open_boundary(open_id);
+          {
+            navier_stokes->set_open_boundary(open_id);
+          }
       }
     /*
      * Boundary conditions for the pressure field
@@ -168,8 +170,9 @@ namespace MeltPoolDG::Flow
                                      initial_field_function_velocity,
                                      navier_stokes->solution.block(0));
 
-    navier_stokes->get_constraints_u().distribute(navier_stokes->solution.block(0));
-    navier_stokes->get_constraints_p().distribute(navier_stokes->solution.block(1));
+    // the hanging node constraints contain the inhomogeneity
+    navier_stokes->get_hanging_node_constraints_u().distribute(navier_stokes->solution.block(0));
+    navier_stokes->get_hanging_node_constraints_p().distribute(navier_stokes->solution.block(1));
 
     navier_stokes->solution.update_ghost_values();
     navier_stokes->solution_old.update_ghost_values();
@@ -296,7 +299,6 @@ namespace MeltPoolDG::Flow
                                navier_stokes->get_dof_handler_u().get_fe().tensor_degree());
         data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
       }
-
 
     AssertThrow(n_newton_steps < adaflo_params.max_nl_iteration,
                 ExcMessage(
@@ -559,13 +561,13 @@ namespace MeltPoolDG::Flow
   void
   AdafloWrapper<dim>::distribute_constraints()
   {
-    navier_stokes->get_constraints_u().distribute(navier_stokes->solution.block(0));
+    navier_stokes->get_hanging_node_constraints_u().distribute(navier_stokes->solution.block(0));
     navier_stokes->get_hanging_node_constraints_u().distribute(
       navier_stokes->solution_old.block(0));
     navier_stokes->get_hanging_node_constraints_u().distribute(
       navier_stokes->solution_old_old.block(0));
 
-    navier_stokes->get_constraints_p().distribute(navier_stokes->solution.block(1));
+    navier_stokes->get_hanging_node_constraints_p().distribute(navier_stokes->solution.block(1));
     navier_stokes->get_hanging_node_constraints_p().distribute(
       navier_stokes->solution_old.block(1));
     navier_stokes->get_hanging_node_constraints_p().distribute(
