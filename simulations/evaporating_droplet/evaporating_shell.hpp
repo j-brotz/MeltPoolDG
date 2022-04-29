@@ -56,14 +56,14 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
       const double radius = p.distance(center);
       const auto   n      = p - center;
 
-      if constexpr (dim == 2)
+      if (dim == 2)
         {
           if (comp == 0)
             return v * n[0] / radius;
           else //(comp == 1)
             return v * n[1] / radius;
         }
-      else if constexpr (dim == 3)
+      else if (dim == 3)
         {
           const double phi   = std::acos(n[2] / radius);
           const double theta = std::atan2(n[1], n[0]);
