@@ -1,0 +1,64 @@
+{
+  "base": {
+    "problem name": "melt_pool",
+    "application name": "evaporating_shell",
+    "global refinements": "7",
+    "dimension": "2",
+    "degree": "1",
+    "gravity": "0.00",
+    "do print parameters": "false",
+    "verbosity level": "3"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.01",
+    "time step size": "1e-4",
+    "max n steps": "100"
+  },
+  "material": {
+    "material first viscosity": "1e-3",
+    "material first density": "1.0"
+  },
+  "paraview": {
+    "paraview do output": "true",
+    "paraview directory": "evaporating_shell_3d",
+    "paraview print boundary id": "true"
+  },
+  "simulation specific": {
+    "velocity": "1e-3"
+  },
+  "Navier-Stokes": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "physical type": "incompressible",
+        "dimension": "2",
+        "global refinements": "0",
+        "velocity degree": "2",
+        "formulation convective term momentum balance": "convective",
+        "constitutive type": "newtonian incompressible",
+        "Solver": {
+          "linearization scheme": "coupled implicit Newton",
+          "NL max iterations": "10",
+          "NL tolerance": "1.e-12",
+          "lin max iterations": "30",
+          "lin tolerance": "1.e-5",
+          "lin velocity preconditioner": "ilu",
+          "lin its before inner solvers": "50"
+        }
+      },
+      "Output options": {
+        "output verbosity": "3",
+        "output walltimes": "0"
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      }
+    }
+  },
+  "problem specific": {
+    "do evaporative heat flux": "false",
+    "do evaporative mass flux": "false",
+    "do evaporation": "false",
+    "do heat transfer": "false"
+  }
+}
