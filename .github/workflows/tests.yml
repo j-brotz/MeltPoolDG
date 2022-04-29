@@ -41,7 +41,7 @@ jobs:
       - name: Compile adaflo
         if: matrix.adaflo == 'adaflo=on'
         run: |
-          git clone https://github.com/kronbichler/adaflo.git
+          git clone https://github.com/MeltPoolDG/adaflo.git
           mkdir adaflo-build
           cd adaflo-build
           cmake \
