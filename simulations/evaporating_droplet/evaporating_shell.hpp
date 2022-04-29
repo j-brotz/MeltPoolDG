@@ -49,21 +49,19 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     double
     value(const Point<dim> &p, const unsigned int comp) const
     {
-      const double radius = p.distance(center);
-      const double v      = velocity;
-
-      const auto n = p - center;
-
+      const double v = velocity;
       if constexpr (dim == 1)
         return v;
-      else if constexpr (dim == 2)
+
+      const double radius = p.distance(center);
+      const auto   n      = p - center;
+
+      if constexpr (dim == 2)
         {
           if (comp == 0)
             return v * n[0] / radius;
-          else if (comp == 1)
+          else //(comp == 1)
             return v * n[1] / radius;
-          else
-            AssertThrow(false, ExcNotImplemented());
         }
       else if constexpr (dim == 3)
         {
@@ -74,13 +72,14 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
             return v * std::cos(theta) * std::sin(phi);
           else if (comp == 1)
             return v * std::sin(theta) * std::sin(phi);
-          else if (comp == 2)
+          else // if (comp == 2)
             return v * std::cos(phi);
-          else
-            AssertThrow(false, ExcNotImplemented());
         }
       else
-        AssertThrow(false, ExcNotImplemented());
+        {
+          AssertThrow(false, ExcNotImplemented());
+          return 0;
+        }
     }
 
   private:
