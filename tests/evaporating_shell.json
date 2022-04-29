@@ -18,12 +18,18 @@
     "time step size": "1e-4",
     "max n steps": "10"
   },
+  "normal vector": {
+    "normal vec verbosity level": "1"
+  },
+  "curvature": {
+    "curv verbosity level": "1"
+  },
   "material": {
     "material first viscosity": "1e-3",
     "material first density": "1.0"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "simulation specific": {
     "velocity": "1e-3"
