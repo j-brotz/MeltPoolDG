@@ -69,21 +69,15 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   using namespace MeltPoolDG::Simulation;
 
   /**
-   *  Initial level set field
+   *  Create a signed distance function, which is used to compute the initial
+   *  level set field.
    */
   template <int dim>
-  class InitialValuesLS : public Function<dim>
+  class InitialSignedDistance : public Function<dim>
   {
   public:
-    InitialValuesLS(const double x_min,
-                    const double x_max,
-                    const double y_min,
-                    const double y_interface,
-                    const double lambda0)
+    InitialSignedDistance(const double y_interface, const double lambda0)
       : Function<dim>()
-      , x_min(x_min)
-      , x_max(x_max)
-      , y_min(y_min)
       , y_interface(y_interface)
       , lambda0(lambda0)
     {}
@@ -91,27 +85,25 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const
     {
-      double radius;
-      if (dim == 2)
-        radius = p[0];
-      else
-        radius = std::sqrt(p[0] * p[0] + p[1] * p[1]);
+      // compute the projected distance from the symmetry plane characterized by dim-1=0.0
+      const double projected_radius = dim == 1 ? 0 :
+                                      dim == 2 ? p[0] :
+                                                 std::sqrt(p[0] * p[0] + p[1] * p[1]);
 
-      double y_interface_disturbed =
-        y_interface +
-        lambda0 / 160. * std::cos(2 * numbers::PI * radius / lambda0); // according to Hardt
+      const double y_interface_disturbed =
+        y_interface + lambda0 / 160. *
+                        std::cos(2 * numbers::PI * projected_radius /
+                                 lambda0); // according to Hardt & Wondra (2007)
 
-      Point<dim> lower_left  = dim == 1 ? Point<dim>(y_min) :
-                               dim == 2 ? Point<dim>(x_min, y_min) :
-                                          Point<dim>(x_min, x_min, y_min);
-      Point<dim> upper_right = dim == 1 ? Point<dim>(y_interface_disturbed) :
-                               dim == 2 ? Point<dim>(x_max, y_interface_disturbed) :
-                                          Point<dim>(x_max, x_max, y_interface_disturbed);
+      Point<dim> at_interface;
+      at_interface[dim - 1] = y_interface_disturbed;
 
-      return -UtilityFunctions::CharacteristicFunctions::sgn(
-        DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
+      const auto plane =
+        Functions::SignedDistance::Plane<dim>(at_interface, Point<dim>::unit_vector(dim - 1));
+
+      return plane.value(p);
     }
-    double x_min, x_max, y_min, y_interface, lambda0;
+    double y_interface, lambda0;
   };
   /**
    *  Initial temperature field
@@ -189,115 +181,62 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                                      (dim == 2) ? Point<dim>(x_max, y_max) :
                                                   Point<dim>(x_max, x_max, y_max);
 
-      if (this->parameters.base.do_simplex)
-        {
-          // create mesh
-          std::vector<unsigned int> subdivisions(
-            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
-          subdivisions[dim - 1] *= 2;
+      // create mesh
+      std::vector<unsigned int> subdivisions(
+        dim,
+        5 * (this->parameters.base.do_simplex ?
+               Utilities::pow(2, this->parameters.base.global_refinements) :
+               1));
+      // Create elements with a width to height ratio of 3. This leads to a higher resolution
+      // in the dim-1 direction, which is the predominant direction of this example.
+      subdivisions[dim - 1] *= 3;
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                   subdivisions,
-                                                                   bottom_left,
-                                                                   top_right);
-        }
+      if (this->parameters.base.do_simplex)
+        GridGenerator::subdivided_hyper_rectangle_with_simplices(
+          *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
       else
-        {
-          std::vector<unsigned int> subdivisions(dim, 1);
-          subdivisions[dim - 1] *= 3;
-          GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                    subdivisions,
-                                                    bottom_left,
-                                                    top_right);
-        }
+        GridGenerator::subdivided_hyper_rectangle(
+          *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
     }
 
     void
     set_boundary_conditions() final
     {
-      /*
-       *  create a pair of (boundary_id, dirichlet_function)
-       */
+      // face numbering according to the deal.II colorize flag
 
-      const types::boundary_id lower_bc = 1;
-      const types::boundary_id upper_bc = 2;
-      const types::boundary_id left_bc  = 3;
-      const types::boundary_id right_bc = 4;
-      const types::boundary_id front_bc = 5;
-      const types::boundary_id back_bc  = 6;
-
-
-      if constexpr (dim == 1)
-        {
-          for (auto &cell : this->triangulation->cell_iterators())
-            for (auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (face->center()[0] == y_min)
-                    face->set_boundary_id(lower_bc);
-                  else if (face->center()[0] == y_max)
-                    face->set_boundary_id(upper_bc);
-                }
-        }
-      else if constexpr (dim == 2)
-        {
-          for (const auto &cell : this->triangulation->cell_iterators())
-            for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (face->center()[1] == y_min)
-                    face->set_boundary_id(lower_bc);
-                  else if (face->center()[1] == y_max)
-                    face->set_boundary_id(upper_bc);
-                  else if (face->center()[0] == x_min)
-                    face->set_boundary_id(left_bc);
-                  else if (face->center()[0] == x_max)
-                    face->set_boundary_id(right_bc);
-                }
-        }
-      else if constexpr (dim == 3)
-        {
-          for (const auto &cell : this->triangulation->cell_iterators())
-            for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (face->center()[2] == y_min)
-                    face->set_boundary_id(lower_bc);
-                  else if (face->center()[2] == y_max)
-                    face->set_boundary_id(upper_bc);
-                  else if (face->center()[0] == x_min)
-                    face->set_boundary_id(left_bc);
-                  else if (face->center()[0] == x_max)
-                    face->set_boundary_id(right_bc);
-                  else if (face->center()[1] == x_min)
-                    face->set_boundary_id(front_bc);
-                  else if (face->center()[1] == x_max)
-                    face->set_boundary_id(back_bc);
-                }
-        }
-      else
-        {
-          AssertThrow(false, ExcNotImplemented());
-        }
+      // faces in dim-1 direction
+      const types::boundary_id lower_bc = dim == 1 ? 0 : dim == 2 ? 2 : 4;
+      const types::boundary_id upper_bc = dim == 1 ? 1 : dim == 2 ? 3 : 5;
 
       this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-
       this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
-
-      this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
-      if (dim == 3)
-        this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
-
       this->attach_dirichlet_boundary_condition(lower_bc,
                                                 std::make_shared<Functions::ConstantFunction<dim>>(
                                                   this->parameters.material.boiling_temperature +
                                                   5.),
                                                 "heat_transfer");
 
-      // @todo: had to comment out the following line to not get a partitioner error --> maybe its
-      //        the corner nodes have both -- dirichlet and PBC?
+      // @note: this BC is necessary
       this->attach_dirichlet_boundary_condition(
         lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1), "level_set");
+
+
+      if (dim > 1)
+        {
+          // faces in x-direction
+          const types::boundary_id left_bc  = 0;
+          const types::boundary_id right_bc = 1;
+          this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+        }
+
+      if (dim > 2)
+        {
+          // faces in y direction
+          const types::boundary_id front_bc = 2;
+          const types::boundary_id back_bc  = 3;
+
+          this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
+        }
 
       if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
@@ -307,13 +246,13 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     set_field_conditions() final
     {
       this->attach_initial_condition(
-        std::make_shared<InitialValuesLS<dim>>(x_min, x_max, y_min, 9. * lambda0 / 128., lambda0),
-        "level_set");
+        std::make_shared<InitialSignedDistance<dim>>(9. * lambda0 / 128., lambda0),
+        "signed_distance");
 
       this->attach_initial_condition(
         std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
 
-      // boiling temperature at the interface
+      // assign initial temperature such that at the interface the boiling temperature is met
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(
                                        this->parameters.material.boiling_temperature + 5,
                                        this->parameters.material.boiling_temperature,
