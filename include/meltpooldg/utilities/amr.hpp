@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  *
- * Author: Peter Münch, Magdalena Schreter, TUM, December 2020
+ * Author: Peter Munch, Magdalena Schreter, TUM, December 2020
  *
  * ---------------------------------------------------------------------*/
 #pragma once

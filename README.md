@@ -16,10 +16,10 @@ The aim of `MeltPoolDG` is to provide application-oriented, research-driven solv
 
 The principal developers are (in chronological order of entering the project):
 * [Magdalena Schreter](https://www.uibk.ac.at/bft/mitarbeiter/schreter.html) [@mschreter](https://github.com/mschreter), University of Innsbruck (AT)/Technical University of Munich (DE)
-* [Peter Munch](https://www.mw.tum.de/lnm/staff/peter-munch) [@peterrum](https://github.com/peterrum), Technical University of Munich/Helmholtz Zentrum hereon (DE)
+* [Peter Munch](https://www.hereon.de/institutes/material_systems_modeling/continuum_simulation/team/098983/index.php.de) [@peterrum](https://github.com/peterrum), Helmholtz Zentrum Hereon/University of Augsburg (DE)
 * [Nils Much](https://www.mw.tum.de/lnm/staff/nils-much/) [@nmuch](https://github.com/nmuch), Technical University of Munich (DE)
 
-We gratefully acknowledge the contributions and discussions with Christoph Meier (Technical University of Munich) and Martin Kronbichler (Technical University of Munich/Uppsala University).
+We gratefully acknowledge the contributions and discussions with Christoph Meier (Technical University of Munich) and Martin Kronbichler (University of Augsburg).
 
 ## Documentation
 
