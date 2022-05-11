@@ -58,11 +58,13 @@ namespace MeltPoolDG::Heat
   HeatTransferOperation<dim>::register_evaporative_mass_flux(
     VectorType *       evaporative_mass_flux_in,
     const unsigned int evapor_mass_flux_dof_idx_in,
-    const double       latent_heat_of_evaporation)
+    const double       latent_heat_of_evaporation,
+    const bool         do_phenomenological_recoil_pressure)
   {
     heat_operator->register_evaporative_mass_flux(evaporative_mass_flux_in,
                                                   evapor_mass_flux_dof_idx_in,
-                                                  latent_heat_of_evaporation);
+                                                  latent_heat_of_evaporation,
+                                                  do_phenomenological_recoil_pressure);
   }
 
   template <int dim>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
 
 namespace MeltPoolDG
 {
@@ -84,7 +85,7 @@ namespace MeltPoolDG
     number molar_mass                 = 0.0;
     number sticking_constant          = 1.0;
 
-    number specific_enthalpy_reference_temperature = 0.0;
+    number specific_enthalpy_reference_temperature = numbers::invalid_double;
 
     SolidLiquidPropertiesTransitionType solidification_type =
       SolidLiquidPropertiesTransitionType::sharp; // TODO rename parameter according to enum

@@ -88,7 +88,8 @@ namespace MeltPoolDG::Heat
   HeatTransferOperator<dim, number>::register_evaporative_mass_flux(
     VectorType *       evaporative_mass_flux_in,
     const unsigned int evapor_mass_flux_dof_idx_in,
-    const double       latent_heat_of_evaporation_in)
+    const double       latent_heat_of_evaporation_in,
+    const bool         do_phenomenological_recoil_pressure_in)
   {
     do_level_set_temperature_gradient_interpolation = scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx);
 
@@ -98,9 +99,25 @@ namespace MeltPoolDG::Heat
         scratch_data.get_dof_handler(ls_dof_idx),
         true /* do_matrix_free */);
 
-    evaporative_mass_flux      = evaporative_mass_flux_in;
-    evapor_mass_flux_dof_idx   = evapor_mass_flux_dof_idx_in;
-    latent_heat_of_evaporation = latent_heat_of_evaporation_in;
+    evaporative_mass_flux               = evaporative_mass_flux_in;
+    evapor_mass_flux_dof_idx            = evapor_mass_flux_dof_idx_in;
+    latent_heat_of_evaporation          = latent_heat_of_evaporation_in;
+    do_phenomenological_recoil_pressure = do_phenomenological_recoil_pressure_in;
+
+    if (do_phenomenological_recoil_pressure)
+      {
+        const auto &material_data = material.get_data();
+        AssertThrow(!numbers::is_invalid(material_data.specific_enthalpy_reference_temperature),
+                    ExcMessage(
+                      "For the phenomenological recoil pressure model, the reference temperature "
+                      "for computing the specific enthalpy must be specified. Abort..."));
+
+        AssertThrow(!data.solidification ||
+                      (material_data.solid.capacity == material_data.second.capacity),
+                    ExcMessage("The equation for specific enthalpy for evaporative heat sink "
+                               "assumes equality between the solid and liquid "
+                               "phase heat capacity! Abort..."));
+      }
   }
 
   template <int dim, typename number>
@@ -612,17 +629,15 @@ namespace MeltPoolDG::Heat
                  * @note: Instead of T_ref we could have also introduced directly
                  *        h_ref as an input parameter.
                  */
-                const auto &material_data = material.get_data();
-                Assert(!data.solidification ||
-                         (material_data.solid.capacity == material_data.second.capacity),
-                       ExcMessage("The equation for specific enthalpy for evaporative heat sink "
-                                  "assumes equality between the solid and liquid "
-                                  "phase heat capacity! Abort..."));
+                VectorizedArray<number> specific_enthalpy(0.0);
 
-                VectorizedArray<number> specific_enthalpy;
-                specific_enthalpy = material_data.second.capacity *
-                                    (temp_vals.get_value(q_index) -
-                                     material_data.specific_enthalpy_reference_temperature);
+                if (do_phenomenological_recoil_pressure)
+                  {
+                    const auto &material_data = material.get_data();
+                    specific_enthalpy         = material_data.second.capacity *
+                                        (temp_vals.get_value(q_index) -
+                                         material_data.specific_enthalpy_reference_temperature);
+                  }
 
                 VectorizedArray<double> weight(1.0);
 
@@ -880,7 +895,7 @@ namespace MeltPoolDG::Heat
             // todo: add term containing ∇·u  in case of evaporation
           }
 
-        if (evaporative_mass_flux)
+        if (evaporative_mass_flux && do_phenomenological_recoil_pressure)
           {
             /*
              * derivative of specific enthalpy h(T) with respect to the temperature:

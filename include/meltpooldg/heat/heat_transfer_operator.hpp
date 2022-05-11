@@ -137,6 +137,7 @@ namespace MeltPoolDG::Heat
     VectorType * evaporative_mass_flux      = nullptr;
     unsigned int evapor_mass_flux_dof_idx   = 0;
     double       latent_heat_of_evaporation = 0;
+    bool         do_phenomenological_recoil_pressure;
 
     // interpolation of the level set space to the temperature space
     FullMatrix<double> ls_to_temp_grad_interpolation_matrix;
@@ -174,7 +175,8 @@ namespace MeltPoolDG::Heat
     void
     register_evaporative_mass_flux(VectorType *       evaporative_mass_flux_in,
                                    const unsigned int evapor_mass_flux_dof_idx_in,
-                                   const double       latent_heat_of_evaporation);
+                                   const double       latent_heat_of_evaporation,
+                                   const bool         do_phenomenological_recoil_pressure);
 
     void
     assemble_matrixbased(const VectorType &advected_field_old,
