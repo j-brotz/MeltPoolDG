@@ -133,8 +133,7 @@ namespace MeltPoolDG::Heat
      */
     VectorType interpolated_vec;
 
-    if (const FE_Q_iso_Q1<dim> *fe_interpolated = dynamic_cast<const FE_Q_iso_Q1<dim> *>(
-          &scratch_data.get_dof_handler(ls_dof_idx).get_fe()))
+    if (scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx))
       {
         const auto ls_to_temperature_grad_interpolation_matrix =
           UtilityFunctions::create_dof_interpolation_matrix<dim>(
