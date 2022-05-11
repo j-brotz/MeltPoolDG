@@ -80,7 +80,8 @@ namespace MeltPoolDG::Heat
     void
     register_evaporative_mass_flux(VectorType *       evaporative_mass_flux_in,
                                    const unsigned int evapor_mass_flux_dof_idx_in,
-                                   const double       latent_heat_of_evaporation);
+                                   const double       latent_heat_of_evaporation,
+                                   const bool         do_phenomenological_recoil_pressure);
 
     void
     set_initial_condition(const Function<dim> &initial_field_function_temperature);
