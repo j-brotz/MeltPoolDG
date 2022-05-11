@@ -74,6 +74,15 @@ def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
             name = line.split(" - ")[-1].split(" (Failed)")[0]
             failed_tests.append(name)
             p = name.split(".")[0] + "." + name.split(".")[-1]
+
+            # check if failing output exists
+            if glob.glob(os.path.join(
+                    build_dir, "**", p, "**/failing_output"), recursive=True):
+                print(
+                    "ERROR: the following test >>> {:} <<< failed. Abort ...".format(name))
+                exit()
+
+            # locate test output
             output_found = glob.glob(os.path.join(
                 build_dir, "**", p, "**/output"), recursive=True)
             if not output_found:
