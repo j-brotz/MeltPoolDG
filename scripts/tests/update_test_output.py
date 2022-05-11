@@ -81,7 +81,7 @@ def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
                     "ERROR: output to the test >>> {:} <<< not found. Abort ...".format(name))
                 exit()
             else:
-                failed_tests_path.append(output_found)
+                   failed_tests_path.append(output_found)
 
     # copy new test output to test_root_dir
     print(70*"-")
