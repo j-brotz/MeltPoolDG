@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  *
- * Author: Peter Munch, Magdalena Schreter, TUM, October 2020
+ * Author: Peter Münch, Magdalena Schreter, TUM, October 2020
  *
  * ---------------------------------------------------------------------*/
 #pragma once
@@ -80,6 +80,13 @@ namespace MeltPoolDG
 
       virtual void
       set_mass_balance_rhs(const LinearAlgebra::distributed::Vector<double> &vec) = 0;
+
+      virtual void
+      set_user_defined_material(std::function<Tensor<2, dim, VectorizedArray<double>>(
+                                  const Tensor<2, dim, VectorizedArray<double>> &,
+                                  const unsigned int,
+                                  const unsigned int,
+                                  const bool)> my_user_defined_material) = 0;
 
       virtual VectorizedArray<double> &
       get_density(const unsigned int cell, const unsigned int q) = 0;

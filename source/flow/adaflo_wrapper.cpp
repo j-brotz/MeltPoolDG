@@ -487,6 +487,18 @@ namespace MeltPoolDG::Flow
   }
 
   template <int dim>
+  void
+  AdafloWrapper<dim>::set_user_defined_material(
+    std::function<
+      Tensor<2, dim, VectorizedArray<double>>(const Tensor<2, dim, VectorizedArray<double>> &,
+                                              const unsigned int,
+                                              const unsigned int,
+                                              const bool)> my_user_defined_material)
+  {
+    navier_stokes->set_user_defined_material(my_user_defined_material);
+  }
+
+  template <int dim>
   VectorizedArray<double> &
   AdafloWrapper<dim>::get_density(const unsigned int cell, const unsigned int q)
   {

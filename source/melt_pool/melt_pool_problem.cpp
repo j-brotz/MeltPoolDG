@@ -187,8 +187,30 @@ namespace MeltPoolDG::MeltPool
         {
           TimerOutput::Scope scope(scratch_data->get_timer(), "NavierStokes::solve");
 
+          // Set a modified viscous stress relation in case of evaporation. This is only
+          // executed if in the Navier-Stokes section the "constitutive type" is set to "user
+          // defined".
+          if (evaporation_operation)
+            {
+              level_set_operation.get_normal_vector().update_ghost_values();
+              flow_operation->set_user_defined_material(
+                [&](const Tensor<2, dim, VectorizedArray<double>> &velocity_grad,
+                    const unsigned int                             cell,
+                    const unsigned int                             q,
+                    const bool do_tangent) -> Tensor<2, dim, VectorizedArray<double>> {
+                  evaporation_fluid_material->reinit(velocity_grad, cell, q);
+
+                  return do_tangent ?
+                           evaporation_fluid_material->get_d_tau_d_vel_times_vel_correction() :
+                           evaporation_fluid_material->get_tau();
+                });
+            }
+
           // solver Navier-Stokes problem
           flow_operation->solve();
+
+          if (evaporation_operation)
+            level_set_operation.get_normal_vector().zero_out_ghost_values();
         }
 
         {
@@ -524,6 +546,19 @@ namespace MeltPoolDG::MeltPool
                                       base_in->parameters.reinit.constant_epsilon,
                                       base_in->parameters.reinit.scale_factor_epsilon,
                                       temp_dof_idx);
+
+        /*
+         * create modified viscous stress - strain relation in case of evaporation mass source term
+         */
+        evaporation_fluid_material = std::make_shared<
+          Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>(
+          *scratch_data,
+          [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
+            return flow_operation->get_viscosity(cell, quad);
+          },
+          level_set_operation.get_normal_vector(),
+          normal_dof_idx,
+          flow_operation->get_quad_idx_velocity());
         /*
          * register evaporative mass flux to compute the heat sink
          */
