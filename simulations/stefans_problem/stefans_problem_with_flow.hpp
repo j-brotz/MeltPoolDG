@@ -101,8 +101,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     set_boundary_conditions() final
     {
       // faces in dim-1 direction
-      const types::boundary_id lower_bc = dim == 1 ? 0 : dim == 2 ? 2 : 4;
-      const types::boundary_id upper_bc = dim == 1 ? 1 : dim == 2 ? 3 : 5;
+      const types::boundary_id lower_bc = 2. * (dim - 1);
+      const types::boundary_id upper_bc = 2. * (dim - 1) + 1;
 
       if (this->parameters.evapor.ls_value_liquid == -1)
         {
@@ -120,18 +120,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
       // collect boundary ids of side walls
       std::vector<types::boundary_id> side_walls;
 
-      if (dim > 1)
-        {
-          // faces in x-direction
-          side_walls.emplace_back(0);
-          side_walls.emplace_back(1);
-        }
-      if (dim > 2)
-        {
-          // faces in y-direction
-          side_walls.emplace_back(2);
-          side_walls.emplace_back(3);
-        }
+      for (unsigned int i = 0; i < 2 * (dim - 1); ++i)
+        side_walls.push_back(i);
 
       for (const auto &s : side_walls)
         this->attach_symmetry_boundary_condition(s, "navier_stokes_u");
