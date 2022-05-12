@@ -690,6 +690,10 @@ namespace MeltPoolDG::MeltPool
       }
     // update the phases for the flow solver considering the updated level set and temperature
     update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
+
+    // compute the evaporative mass flux from the temperature field
+    if (evaporation_operation)
+      evaporation_operation->compute_evaporative_mass_flux();
   }
 
   template <int dim>
