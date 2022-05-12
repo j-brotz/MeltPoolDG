@@ -101,8 +101,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
     set_boundary_conditions() final
     {
       // faces in dim-1 direction
-      const types::boundary_id lower_bc = 2. * (dim - 1);
-      const types::boundary_id upper_bc = 2. * (dim - 1) + 1;
+      const types::boundary_id lower_bc = 2 * (dim - 1);
+      const types::boundary_id upper_bc = 2 * (dim - 1) + 1;
 
       if (this->parameters.evapor.ls_value_liquid == -1)
         {
