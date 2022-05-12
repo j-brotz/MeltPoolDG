@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# format python files
+for i in $(find . -type f -name "*.py"); do 
+  autopep8 -i $i
+done
