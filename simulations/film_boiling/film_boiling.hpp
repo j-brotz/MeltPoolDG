@@ -226,12 +226,13 @@ namespace MeltPoolDG::Simulation::FilmBoiling
           // faces in x-direction
           const types::boundary_id left_bc  = 0;
           const types::boundary_id right_bc = 1;
+
           this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
         }
 
       if (dim > 2)
         {
-          // faces in y direction
+          // faces in y-direction
           const types::boundary_id front_bc = 2;
           const types::boundary_id back_bc  = 3;
 
