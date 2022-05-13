@@ -17,12 +17,14 @@ namespace MeltPoolDG::Flow
    *   σ = -p * I + τ
    *
    * with the Cauchy stress tensor σ, the pressure p, the second-order Identity tensor I
-   * and the deviatoric stress tensor τ. The pressure is given from the incompressibility
-   * constraint and solely the deviatoric stress τ will be computed by the material law
+   * and the deviatoric stress tensor τ.
+   *
+   * @note: The pressure p is given from the incompressibility constraint from the flow
+   * solver and solely the deviatoric stress τ will be computed herein. Thus, the material
+   * law relates solely the deviatoric (shear) stress tensor to the velocity gradient ∇u:
    *
    *   τ(∇u)
    *
-   * in terms of the velocity gradient ∇u.
    */
   template <int dim, typename number = double>
   class IncompressibleMaterialBase

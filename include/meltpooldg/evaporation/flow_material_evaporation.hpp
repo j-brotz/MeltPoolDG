@@ -14,6 +14,22 @@ namespace MeltPoolDG::Evaporation
 {
   using namespace dealii;
 
+  /**
+   * Class for the shear stress computation of an incompressible vapor/liquid mixture,
+   * where the velocity field is not divergence free in the interfacial region. The
+   * intention is to correct the rate-of-deformation tensor to be nearly deviatoric.
+   *
+   * It is assumed that the stress computes as follows
+   *
+   *   σ = -p * I + 2 * μ * (D - tr(D) * n⊗ n)
+   *
+   * with the Cauchy stress tensor σ, the pressure p, the second-order Identity tensor I,
+   * the dynamic viscosity μ, the rate-of-deformation tensor
+   *
+   *   D = 0.5 * (∇u + (∇u)^T)
+   *
+   * the interfacial unit normal vector n and the dyadic product ⊗ .
+   */
   template <int dim, typename number = double>
   class IncompressibleNewtonianFluidEvaporationMaterial
     : public Flow::IncompressibleMaterialBase<dim, number>
@@ -37,6 +53,11 @@ namespace MeltPoolDG::Evaporation
       , normal_vals(scratch_data.get_matrix_free(), normal_dof_idx, velocity_quad_idx)
     {}
 
+    /**
+     * Reinit function to be used to compute quadrature point variables (grad_u, div_u, viscosity,
+     * normal). The gradient of the velocity vector @p velocity_gradient, the current cell index
+     * @p cell_idx and the current quadrature point index @p quad_idx are known.
+     */
     void
     reinit(const Tensor<2, dim, VectorizedArray<number>> &velocity_gradient,
            const unsigned int                             cell_idx,
@@ -60,6 +81,17 @@ namespace MeltPoolDG::Evaporation
       cell = cell_idx;
     }
 
+    /**
+     * Return the deviatoric stress τ for the given velocity gradient ∇u, set by reinit()
+     *
+     *   τ(∇u) = 2 * μ * (D - tr(D) * n⊗ n)
+     *
+     * with the dynamic viscosity μ, the rate-of-deformation tensor
+     *
+     *   D = 0.5 * (∇u + (∇u)^T)
+     *
+     * the interfacial unit normal vector n and the dyadic product ⊗ .
+     */
     Tensor<2, dim, VectorizedArray<number>>
     get_tau() final
     {
@@ -67,6 +99,26 @@ namespace MeltPoolDG::Evaporation
              (0.5 * (grad_u + transpose(grad_u)) - div_u * outer_product(normal, normal));
     }
 
+    /**
+     * Return the material tangent of the deviatoric stress and perform a vmult with the
+     * gradient of the nodal DoF values δu, set by reinit(),
+     *
+     *    ∂ τ
+     *   ------ * ∇N * δu
+     *    ∂ ∇u
+     * |________|
+     *  material
+     *  tangent
+     *
+     * with the shape functions N and the material tangent written in index notation
+     *
+     *   ∂ τ
+     *  ----- = C     = 2 * μ * (δ     - δ   * n  n  )
+     *   ∂ ∇u    ijkl             ijkl    ij    k   l
+     *
+     * with the Kronecker delta δ.
+     *
+     */
     Tensor<2, dim, VectorizedArray<number>>
     get_vmult_d_tau_d_grad_vel() final
     {
@@ -87,12 +139,18 @@ namespace MeltPoolDG::Evaporation
       // outer_product(normal, normal))); return double_contract<0,0,1,1>(temp, grad_u);
     }
 
+    /**
+     * Update ghost values of the vectors, to be used to compute the deviatoric stress.
+     */
     void
     update_ghost_values() final
     {
       normal_vector.update_ghost_values();
     }
 
+    /**
+     * Zero out ghost values of the vectors, to be used to compute the deviatoric stress.
+     */
     void
     zero_out_ghost_values() final
     {
