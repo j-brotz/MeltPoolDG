@@ -25,7 +25,7 @@
 #include <deal.II/numerics/error_estimator.h>
 // MeltPoolDG
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
-#include <meltpooldg/evaporation/flow_material_evaporation.hpp>
+#include <meltpooldg/evaporation/incompressible_newtonian_evaporation_material.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
