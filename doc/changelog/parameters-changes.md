@@ -1,6 +1,21 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-05-13
+- Add parameter for a user-defined material model in the Navier-Stokes solver
+
+```json
+{
+  "Navier-Stokes": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "constitutive type": "user defined"
+      }
+    }
+  }
+}
+```
+
 ## 2022-03-16
 - Add parameter for absolute tolerance of linear solvers.
 
