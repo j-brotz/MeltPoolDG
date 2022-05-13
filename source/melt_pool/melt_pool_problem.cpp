@@ -187,8 +187,14 @@ namespace MeltPoolDG::MeltPool
         {
           TimerOutput::Scope scope(scratch_data->get_timer(), "NavierStokes::solve");
 
+          if (evaporation_fluid_material)
+            evaporation_fluid_material->update_ghost_values();
+
           // solver Navier-Stokes problem
           flow_operation->solve();
+
+          if (evaporation_fluid_material)
+            evaporation_fluid_material->zero_out_ghost_values();
         }
 
         {
@@ -524,6 +530,41 @@ namespace MeltPoolDG::MeltPool
                                       base_in->parameters.reinit.constant_epsilon,
                                       base_in->parameters.reinit.scale_factor_epsilon,
                                       temp_dof_idx);
+
+        /*
+         *  Create a modified viscous stress-strain relation in case of an existing evaporation mass
+         *  source term, such that div(u)!=0. This material law will be only evaluated if the
+         * parameter "constitutive type" is set to "user defined" in the Navier-Stokes section.
+         */
+
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+        if (base_in->parameters.adaflo_params.params.constitutive_type ==
+            FlowParameters::ConstitutiveType::user_defined)
+          {
+            evaporation_fluid_material = std::make_shared<
+              Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>(
+              *scratch_data,
+              [&](const unsigned int cell,
+                  const unsigned int quad) -> const VectorizedArray<double> & {
+                return flow_operation->get_viscosity(cell, quad);
+              },
+              level_set_operation.get_normal_vector(),
+              normal_dof_idx,
+              flow_operation->get_quad_idx_velocity());
+
+            flow_operation->set_user_defined_material(
+              [&](const Tensor<2, dim, VectorizedArray<double>> &velocity_grad,
+                  const unsigned int                             cell,
+                  const unsigned int                             q,
+                  const bool do_tangent) -> Tensor<2, dim, VectorizedArray<double>> {
+                evaporation_fluid_material->reinit(velocity_grad, cell, q);
+
+                return do_tangent ? evaporation_fluid_material->get_vmult_d_tau_d_grad_vel() :
+                                    evaporation_fluid_material->get_tau();
+              });
+          }
+#endif
+
         /*
          * register evaporative mass flux to compute the heat sink
          */

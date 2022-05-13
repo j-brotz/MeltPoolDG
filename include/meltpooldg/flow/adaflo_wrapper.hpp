@@ -125,6 +125,13 @@ namespace MeltPoolDG::Flow
     void
     set_mass_balance_rhs(const LinearAlgebra::distributed::Vector<double> &vec) override;
 
+    void
+    set_user_defined_material(std::function<Tensor<2, dim, VectorizedArray<double>>(
+                                const Tensor<2, dim, VectorizedArray<double>> &,
+                                const unsigned int,
+                                const unsigned int,
+                                const bool)> my_user_defined_material) override;
+
     VectorizedArray<double> &
     get_density(const unsigned int cell, const unsigned int q) override;
 
