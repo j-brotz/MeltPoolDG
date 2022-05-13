@@ -17,17 +17,17 @@ namespace MeltPoolDG::Evaporation
 
   /**
    * Class for the shear stress computation of an incompressible vapor/liquid mixture,
-   * where the velocity field is not divergence free in the interfacial region. The
+   * where the velocity field is not divergence-free in the interfacial region. The
    * intention is to correct the rate-of-deformation tensor to be nearly deviatoric.
    *
    * It is assumed that the stress computes as follows
    *
    *   σ = -p * I + 2 * μ * (D - tr(D) * n⊗ n)
    *
-   * with the Cauchy stress tensor σ, the pressure p, the second-order Identity tensor I,
+   * with the Cauchy stress tensor σ, the pressure p, the second-order identity tensor I,
    * the dynamic viscosity μ, the rate-of-deformation tensor
    *
-   *   D = 0.5 * (∇u + (∇u)^T)
+   *   D = 0.5 * (∇u + (∇u)^T),
    *
    * the interfacial unit normal vector n and the dyadic product ⊗ .
    */
@@ -146,7 +146,9 @@ namespace MeltPoolDG::Evaporation
     void
     update_ghost_values() final
     {
-      normal_vector.update_ghost_values();
+      vector_is_ghosted = normal_vector.has_ghost_elements();
+      if (!vector_is_ghosted)
+        normal_vector.update_ghost_values();
     }
 
     /**
@@ -155,7 +157,9 @@ namespace MeltPoolDG::Evaporation
     void
     zero_out_ghost_values() final
     {
-      normal_vector.zero_out_ghost_values();
+      // only zero out ghost values if the vector was not ghosted in the beginning
+      if (!vector_is_ghosted)
+        normal_vector.zero_out_ghost_values();
     }
 
   private:
@@ -167,6 +171,7 @@ namespace MeltPoolDG::Evaporation
     const unsigned int                 normal_dof_idx;
     const unsigned int                 velocity_quad_idx;
     FECellIntegrator<dim, dim, number> normal_vals;
+    bool                               vector_is_ghosted;
 
     // temporary quadrature point values
     Tensor<2, dim, VectorizedArray<number>> grad_u;

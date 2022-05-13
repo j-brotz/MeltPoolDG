@@ -537,6 +537,7 @@ namespace MeltPoolDG::MeltPool
          * parameter "constitutive type" is set to "user defined" in the Navier-Stokes section.
          */
 
+#ifdef MELT_POOL_DG_WITH_ADAFLO
         if (base_in->parameters.adaflo_params.params.constitutive_type ==
             FlowParameters::ConstitutiveType::user_defined)
           {
@@ -562,6 +563,7 @@ namespace MeltPoolDG::MeltPool
                                     evaporation_fluid_material->get_tau();
               });
           }
+#endif
 
         /*
          * register evaporative mass flux to compute the heat sink
