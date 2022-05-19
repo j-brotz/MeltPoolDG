@@ -330,6 +330,11 @@ namespace MeltPoolDG
         "ls n subdivisions",
         ls.n_subdivisions,
         "Set the number of subdivisions for the finite element of the level set operation.");
+      prm.add_parameter("ls do localized heaviside",
+                        ls.do_localized_heaviside,
+                        "Determine if the heaviside representation of the level set should be "
+                        "calculated as a localized function, being exactly 0 and 1 outside of "
+                        "the interface region.");
     }
     prm.leave_subsection();
 

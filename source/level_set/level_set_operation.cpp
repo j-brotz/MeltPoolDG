@@ -578,8 +578,12 @@ namespace MeltPoolDG::LevelSet
                 epsilon_cell,
                 cut_off_level_set);
               distance_to_level_set(local_dof_indices[i]) = distance;
-              level_set_as_heaviside(local_dof_indices[i]) =
-                smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
+              if (level_set_data.do_localized_heaviside)
+                level_set_as_heaviside(local_dof_indices[i]) =
+                  smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
+              else
+                level_set_as_heaviside(local_dof_indices[i]) =
+                  (get_level_set()(local_dof_indices[i]) + 1.) * 0.5;
             }
         }
     scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);

@@ -1,6 +1,18 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-05-19
+- Add parameter for determining if the heaviside representation of the level 
+set function should be calculated localized or not
+
+```json
+{
+  "levelset": {
+    "ls do localized heaviside": "true|false"
+  }
+}
+```
+
 ## 2022-05-13
 - Add parameter for a user-defined material model in the Navier-Stokes solver
 
