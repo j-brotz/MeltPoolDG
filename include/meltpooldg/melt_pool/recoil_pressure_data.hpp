@@ -55,7 +55,7 @@ namespace MeltPoolDG
                           "Type that determines how the recoil pressure force is computed in the "
                           "interfacial zone.");
         prm.add_parameter(
-          "recoil pressure activation temperature",
+          "activation temperature",
           activation_temperature,
           "Activation temperature for the recoil pressure. It must be smaller than or equal to the "
           "boiling temperature. As default value, the boiling temperature is chosen.");
@@ -67,7 +67,7 @@ namespace MeltPoolDG
     void
     set_default_parameters(const double boiling_temperature)
     {
-      if (is_invalid(activation_temperature))
+      if (dealii::numbers::is_invalid(activation_temperature))
         activation_temperature = boiling_temperature;
     }
   };

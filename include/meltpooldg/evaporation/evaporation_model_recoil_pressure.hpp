@@ -37,7 +37,7 @@ namespace MeltPoolDG::Evaporation
                                    const double                      boiling_temperature,
                                    const double                      sticking_constant,
                                    const double                      molar_mass,
-                                   const double                      mass_flux_scale_factor = 1.0);
+                                   const double                      mass_flux_scale_factor);
 
     /*
      * The evaporative mass flux is computed as

@@ -23,8 +23,8 @@ namespace MeltPoolDG::MeltPool
   {
     const number T_ac = recoil_data.activation_temperature;
 
-    // if (T < T_ac)
-    // return 0.0;
+    if (T < T_ac)
+      return 0.0;
 
     // In order to smoothly activate the recoil pressure, a scaling coefficient is computed and
     // multiplied with the recoil pressure coefficient
@@ -48,8 +48,7 @@ namespace MeltPoolDG::MeltPool
     const number scaling_coeff =
       (T >= T_v || std::abs(T_v - T_ac) < 1e-10) ? 1. : (T - T_ac) / (T_v - T_ac);
 
-    // return scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v));
-    return c_p * std::exp(-c_T * (1. / T - 1. / T_v));
+    return scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v));
   }
 
   template <int dim>

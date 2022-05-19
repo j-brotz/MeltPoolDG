@@ -2,6 +2,17 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-05-13
+- Add parameter for activation temperature of the recoil pressure
+
+```json
+{
+  "recoil pressure": {
+    "activation temperature": ""
+  }
+}
+```
+
+## 2022-05-13
 - Add parameter for a user-defined material model in the Navier-Stokes solver
 
 ```json

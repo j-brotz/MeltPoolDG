@@ -101,6 +101,7 @@ namespace MeltPoolDG::Evaporation
     else if (evaporation_data.evaporation_model == "recoil pressure")
       evapor_model = std::make_shared<EvaporationModelRecoilPressure<dim>>(
         recoil_data,
+        material.boiling_temperature,
         material.sticking_constant,
         material.molar_mass,
         evaporation_data.evaporative_mass_flux_scale_factor);
