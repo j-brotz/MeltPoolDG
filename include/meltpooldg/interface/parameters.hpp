@@ -107,6 +107,7 @@ namespace MeltPoolDG
     std::string time_integration_scheme = "crank_nicolson";
     bool        do_curvature_correction = false;
     int         n_subdivisions          = 1;
+    bool        do_localized_heaviside  = true;
     std::string implementation          = "meltpooldg";
   };
 
