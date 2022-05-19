@@ -5,6 +5,7 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 #include <meltpooldg/evaporation/evaporation_model_base.hpp>
+#include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -23,9 +24,8 @@ namespace MeltPoolDG::Evaporation
   class EvaporationModelRecoilPressure : public EvaporationModelBase
   {
   private:
-    const double boiling_temperature;
-    const double pressure_constant;
-    const double temperature_constant;
+    const MeltPool::RecoilPressureModel<double> recoil_model;
+
     const double mass_flux_scale_factor;
 
     // according to Meier 2020
@@ -33,12 +33,11 @@ namespace MeltPoolDG::Evaporation
     const double Cm; // molar_mass/(2*pi*molar_gas_constant)
 
   public:
-    EvaporationModelRecoilPressure(const double boiling_temperature,
-                                   const double pressure_constant,
-                                   const double temperature_constant,
-                                   const double sticking_constant,
-                                   const double molar_mass,
-                                   const double mass_flux_scale_factor = 1.0);
+    EvaporationModelRecoilPressure(const RecoilPressureData<double> &recoil_data,
+                                   const double                      boiling_temperature,
+                                   const double                      sticking_constant,
+                                   const double                      molar_mass,
+                                   const double                      mass_flux_scale_factor = 1.0);
 
     /*
      * The evaporative mass flux is computed as
@@ -46,9 +45,9 @@ namespace MeltPoolDG::Evaporation
      *                                  ______
      *                                 /  M
      * .                              /-------
-     * m(T) = 0.82 · c_s  · p_r(T) · √  2πR T
+     * m(T) = 0.82 · c_s  · p_v(T) · √  2πR T
      *
-     * where c_s is the sticking coefficient, p_r(T) the recoil pressure,
+     * where c_s is the sticking coefficient, p_v(T) the recoil pressure,
      * M the molar mass, R the molar gas constant and T the temperature.
      */
     double

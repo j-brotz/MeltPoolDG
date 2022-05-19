@@ -8,9 +8,57 @@
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
+#include <meltpooldg/melt_pool/recoil_pressure_data.hpp>
 
 namespace MeltPoolDG::MeltPool
 {
+  /**
+   * This class implements the phenomenological recoil pressure model according to
+   *
+   * Anisimov, S. I., & Khokhlov, V. A. (1995). Instabilities in laser-matter interaction. CRC
+   * press.
+   */
+  template <typename number>
+  class RecoilPressureModel
+  {
+  private:
+    const RecoilPressureData<number> &recoil_data;
+    const number                      boiling_temperature;
+
+  public:
+    RecoilPressureModel(const RecoilPressureData<number> &recoil_data,
+                        const number                      boiling_temperature);
+
+    /**
+     * Compute the recoil pressure p_v(T) in terms of the temperature T
+     *
+     *                                  /  1       1  \
+     *    p_v(T) = s * c_p * exp(-c_T * | ---  -  --- |
+     *                                  \  T      T_v /
+     *
+     * with a scaling factor s (0<=s<=1), the recoil pressure constant c_p, the temperature
+     * constant c_T and the boiling temperature T_v.
+     *
+     * The scaling factor is introduced to potentially smoothly activate the recoil pressure
+     * and avoid a sharp activation. It computed depending on the activation temperature T_ac
+     * of the recoil pressure
+     *
+     *        -
+     *       |     0         if T <= T_ac
+     *       |
+     *       |  T - T_ac
+     *   s = |  --------     if T_ac < T < T_v
+     *       |  T_v - T_ac
+     *       |
+     *       |     1         if T >= T_v
+     *        -
+     *
+     * whereas the T_ac<=T_v.
+     */
+    number
+    compute_recoil_pressure_coefficient(const number T) const;
+  };
+
   /**
    * The force contribution of the recoil pressure due to evaporation is computed. The model of
    * S.I. Anisimov and V.A. Khokhlov (1995) is considered. The consideration of any other model
@@ -25,10 +73,6 @@ namespace MeltPoolDG::MeltPool
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
     const ScratchData<dim> &scratch_data;
-
-    const RecoilPressureData<double> &recoil_pressure_data;
-
-    const double boiling_temperature;
     /*
      * indices for getting DoFHandler<dim> and Quadrature<dim> of relevant subproblems
      */
@@ -40,6 +84,8 @@ namespace MeltPoolDG::MeltPool
 
     const bool         do_level_set_pressure_gradient_interpolation;
     FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
+
+    const RecoilPressureModel<double> recoil_pressure_model;
 
     std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
 
@@ -62,21 +108,6 @@ namespace MeltPoolDG::MeltPool
                                   const VectorType &level_set_as_heaviside,
                                   const VectorType &temperature,
                                   bool              zero_out = true) const;
-
-    /**
-     * compute the recoil pressure coefficient depending on the temperature
-     */
-    static double
-    compute_recoil_pressure_coefficient(const double  T,
-                                        const double &pressure_constant,
-                                        const double &temperature_constant,
-                                        const double &boiling_temperature);
-
-  private:
-    /**
-     * compute the recoil pressure coefficient depending on the temperature
-     */
-    inline double
-    compute_recoil_pressure_coefficient(const double T) const;
   };
+
 } // namespace MeltPoolDG::MeltPool
