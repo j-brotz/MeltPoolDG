@@ -32,16 +32,16 @@ namespace MeltPoolDG::MeltPool
     /**
      * Compute the recoil pressure p_v(T) in terms of the temperature T
      *
-     *                                  /  1       1  \
-     *    p_v(T) = s * c_p * exp(-c_T * | ---  -  --- |
-     *                                  \  T      T_v /
+     *                          /       /  1       1  \\
+     *    p_v(T) = s * c_p * exp|-c_T * | ---  -  --- ||
+     *                          \       \  T      T_v //
      *
      * with a scaling factor s (0<=s<=1), the recoil pressure constant c_p, the temperature
      * constant c_T and the boiling temperature T_v.
      *
      * The scaling factor is introduced to potentially smoothly activate the recoil pressure
-     * and avoid a sharp activation. It computed depending on the activation temperature T_ac
-     * of the recoil pressure
+     * and avoid a sharp activation. It is computed depending on the activation temperature
+     * T_ac of the recoil pressure
      *
      *        -
      *       |     0         if T <= T_ac

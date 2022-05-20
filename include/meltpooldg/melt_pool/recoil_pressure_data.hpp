@@ -36,7 +36,7 @@ namespace MeltPoolDG
     // * interface_value: use the value at the interface (level set=0)
     InterfaceDistributedFluxType interface_distributed_flux_type =
       InterfaceDistributedFluxType::continuous;
-    // Choose the-delta function for computing the continuum interface force.
+    // Choose the delta-function for computing the continuum interface force.
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
 
     void
@@ -62,13 +62,6 @@ namespace MeltPoolDG
         delta_approximation_phase_weighted.add_parameters(prm);
       }
       prm.leave_subsection();
-    }
-
-    void
-    set_default_parameters(const double boiling_temperature)
-    {
-      if (dealii::numbers::is_invalid(activation_temperature))
-        activation_temperature = boiling_temperature;
     }
   };
 } // namespace MeltPoolDG

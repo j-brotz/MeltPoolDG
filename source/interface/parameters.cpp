@@ -107,7 +107,8 @@ namespace MeltPoolDG
      *  recoil pressure: set default value of activation temperature equal to the boiling
      * temperature
      */
-    recoil.set_default_parameters(material.boiling_temperature);
+    if (dealii::numbers::is_invalid(recoil.activation_temperature))
+      recoil.activation_temperature = material.boiling_temperature;
 
     if (heat.solidification)
       {
