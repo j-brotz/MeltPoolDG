@@ -6,6 +6,7 @@
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/melt_pool/recoil_pressure_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
@@ -35,14 +36,6 @@ namespace MeltPoolDG
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
     Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
   )
-  BETTER_ENUM(InterfaceDistributedFluxType,
-              char,
-              // The flux distributed in the interfacial zone is computed based on local values
-              // evaluated at the quadrature points.
-              continuous,
-              // The flux distributed in the interfacial zone is computed based on values evaluated
-              // at the projected quadrature points to the level set = 0 isosurface.
-              interface_value)
   BETTER_ENUM(EvaporationLevelSetSourceTermType,
               char,
               // calculate a divergence-free interface velocity and use it to advect the level set
@@ -202,16 +195,6 @@ namespace MeltPoolDG
       number max_temperature          = 0.0;
       number ambient_temperature      = 0.0;
     } analytical;
-  };
-
-  template <typename number = double>
-  struct RecoilPressureData
-  {
-    number                       pressure_constant    = 0.0;
-    number                       temperature_constant = 0.0;
-    InterfaceDistributedFluxType interface_distributed_flux_type =
-      InterfaceDistributedFluxType::continuous;
-    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
   };
 
   template <typename number = double>

@@ -2,6 +2,55 @@
 
 namespace MeltPoolDG::MeltPool
 {
+  template <typename number>
+  RecoilPressureModel<number>::RecoilPressureModel(const RecoilPressureData<number> &recoil_data,
+                                                   const number boiling_temperature)
+    : recoil_data(recoil_data)
+    , boiling_temperature(boiling_temperature)
+  {
+    AssertThrow(boiling_temperature > 0.0,
+                ExcMessage("The boiling temperature must be greater than zero! Abort..."));
+
+    AssertThrow(recoil_data.activation_temperature <= boiling_temperature,
+                ExcMessage(
+                  "The activation temperature for the recoil pressure must be smaller than "
+                  " or equal to the boiling temperature. Abort..."));
+  }
+
+  template <typename number>
+  number
+  RecoilPressureModel<number>::compute_recoil_pressure_coefficient(const number T) const
+  {
+    const number T_ac = recoil_data.activation_temperature;
+
+    if (T < T_ac)
+      return 0.0;
+
+    // In order to smoothly activate the recoil pressure, a scaling coefficient is computed and
+    // multiplied with the recoil pressure coefficient
+    //
+    //                  -
+    //                 |     0         if T <= T_ac
+    //                 |
+    //                 |  T - T_ac
+    // scaling_coeff = |  --------     if T_ac < T < T_v
+    //                 |  T_v - T_ac
+    //                 |
+    //                 |     1         if T >= T_v
+    //                  -
+    //
+    // with T_ac the activation temperature of the recoil pressure and T_v the boiling temperature.
+
+    const number T_v = boiling_temperature;
+    const number c_p = recoil_data.pressure_constant;
+    const number c_T = recoil_data.temperature_constant;
+
+    const number scaling_coeff =
+      (T >= T_v || std::abs(T_v - T_ac) < 1e-10) ? 1. : (T - T_ac) / (T_v - T_ac);
+
+    return scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v));
+  }
+
   template <int dim>
   RecoilPressureOperation<dim>::RecoilPressureOperation(const ScratchData<dim> &  scratch_data_in,
                                                         const Parameters<double> &data_in,
@@ -11,18 +60,16 @@ namespace MeltPoolDG::MeltPool
                                                         const unsigned int ls_dof_idx_in,
                                                         const unsigned int temp_dof_idx_in)
     : scratch_data(scratch_data_in)
-    , recoil_pressure_data(data_in.recoil)
-    , boiling_temperature(data_in.material.boiling_temperature)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , flow_pressure_dof_idx(flow_pressure_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , temp_dof_idx(temp_dof_idx_in)
     , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in))
+    , recoil_pressure_model(data_in.recoil, data_in.material.boiling_temperature)
+    , delta_phase_weighted(create_phase_weighted_delta_approximation(
+        data_in.recoil.delta_approximation_phase_weighted))
   {
-    AssertThrow(boiling_temperature > 0.0,
-                ExcMessage("The boiling temperature must be greater than zero! Abort..."));
-
     if (do_level_set_pressure_gradient_interpolation)
       {
         ls_to_pressure_grad_interpolation_matrix =
@@ -31,9 +78,6 @@ namespace MeltPoolDG::MeltPool
             scratch_data.get_dof_handler(ls_dof_idx),
             true /*do_matrix_free*/);
       }
-
-    delta_phase_weighted = create_phase_weighted_delta_approximation(
-      recoil_pressure_data.delta_approximation_phase_weighted);
   }
 
   template <int dim>
@@ -100,7 +144,8 @@ namespace MeltPoolDG::MeltPool
                 VectorizedArray<double> recoil_pressure_coefficient = 0;
 
                 for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
-                  recoil_pressure_coefficient[v] = compute_recoil_pressure_coefficient(t[v]);
+                  recoil_pressure_coefficient[v] =
+                    recoil_pressure_model.compute_recoil_pressure_coefficient(t[v]);
 
                 VectorizedArray<double> weight(1.0);
 
@@ -120,29 +165,9 @@ namespace MeltPoolDG::MeltPool
     temperature.zero_out_ghost_values();
   }
 
-  template <int dim>
-  inline double
-  RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(const double T) const
-  {
-    return compute_recoil_pressure_coefficient(T,
-                                               recoil_pressure_data.pressure_constant,
-                                               recoil_pressure_data.temperature_constant,
-                                               boiling_temperature);
-  }
-
-  template <int dim>
-  double
-  RecoilPressureOperation<dim>::compute_recoil_pressure_coefficient(
-    const double  T,
-    const double &pressure_constant,
-    const double &temperature_constant,
-    const double &boiling_temperature)
-  {
-    return pressure_constant *
-           std::exp(-temperature_constant * (1. / T - 1. / boiling_temperature));
-  }
-
   template class RecoilPressureOperation<1>;
   template class RecoilPressureOperation<2>;
   template class RecoilPressureOperation<3>;
+
+  template class RecoilPressureModel<double>;
 } // namespace MeltPoolDG::MeltPool

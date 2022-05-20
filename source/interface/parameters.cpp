@@ -103,6 +103,12 @@ namespace MeltPoolDG
       AssertThrow(
         false, ExcMessage("Parameterhandler: ls value liquid must not be equal to ls value gas."));
 
+    /*
+     *  recoil pressure: set default value of activation temperature equal to the boiling
+     * temperature
+     */
+    if (dealii::numbers::is_invalid(recoil.activation_temperature))
+      recoil.activation_temperature = material.boiling_temperature;
 
     if (heat.solidification)
       {
@@ -110,7 +116,6 @@ namespace MeltPoolDG
           1.0 / (material.liquidus_temperature -
                  material.solidus_temperature); //@todo: move to new material class
       }
-
     // create output directory and copy parameter file
     {
       namespace fs = std::filesystem;
@@ -572,23 +577,9 @@ namespace MeltPoolDG
     }
     prm.leave_subsection();
     /*
-     *   recoil pressure
+     * recoil pressure
      */
-    prm.enter_subsection("recoil pressure");
-    {
-      prm.add_parameter("recoil pressure constant",
-                        recoil.pressure_constant,
-                        "Pressure constant for the recoil pressure model.");
-      prm.add_parameter("recoil temperature constant",
-                        recoil.temperature_constant,
-                        "Temperature constant for the recoil pressure model.");
-      prm.add_parameter("interface distributed flux type",
-                        recoil.interface_distributed_flux_type,
-                        "Type that determines how the recoil pressure force is computed in the "
-                        "interfacial zone.");
-      recoil.delta_approximation_phase_weighted.add_parameters(prm);
-    }
-    prm.leave_subsection();
+    recoil.add_parameters(prm);
     /*
      *   melt pool
      */
