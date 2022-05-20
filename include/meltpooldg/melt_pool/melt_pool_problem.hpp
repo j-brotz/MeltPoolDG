@@ -81,6 +81,7 @@ namespace MeltPoolDG::MeltPool
       bool do_evaporative_mass_flux = false;
       bool do_melt_pool             = false;
       bool do_recoil_pressure       = false;
+      bool do_advect_level_set      = true;
       struct
       {
         AMRStrategy                 strategy = AMRStrategy::generic;
