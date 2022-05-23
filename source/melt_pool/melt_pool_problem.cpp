@@ -30,39 +30,42 @@ namespace MeltPoolDG::MeltPool
          * LEVEL SET
          ******************************************************************************************/
 
-        scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
-        interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
-
-        if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
+        if (problem_specific_parameters.do_advect_level_set)
           {
-            TimerOutput::Scope scope(scratch_data->get_timer(),
-                                     "Evaporation::level_set_source_term");
+            scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
+            interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
 
-            switch (base_in->parameters.evapor.level_set_source_term_type)
+            if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
               {
-                default:
-                case EvaporationLevelSetSourceTermType::interface_velocity:
-                  // Option 1: compute modified advection velocity due to evaporation
-                  evaporation_operation->compute_evaporation_velocity();
-                  interface_velocity += evaporation_operation->get_velocity();
-                  break;
+                TimerOutput::Scope scope(scratch_data->get_timer(),
+                                         "Evaporation::level_set_source_term");
 
-                case EvaporationLevelSetSourceTermType::rhs:
-                  // Option 2: use source term as rhs in the level set equation
-                  scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
-                  evaporation_operation->compute_level_set_source_term(
-                    level_set_rhs,
-                    ls_dof_idx,
-                    level_set_operation.get_level_set(),
-                    pressure_dof_idx);
-                  level_set_operation.set_level_set_user_rhs(level_set_rhs);
-                  break;
+                switch (base_in->parameters.evapor.level_set_source_term_type)
+                  {
+                    default:
+                    case EvaporationLevelSetSourceTermType::interface_velocity:
+                      // Option 1: compute modified advection velocity due to evaporation
+                      evaporation_operation->compute_evaporation_velocity();
+                      interface_velocity += evaporation_operation->get_velocity();
+                      break;
+
+                    case EvaporationLevelSetSourceTermType::rhs:
+                      // Option 2: use source term as rhs in the level set equation
+                      scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
+                      evaporation_operation->compute_level_set_source_term(
+                        level_set_rhs,
+                        ls_dof_idx,
+                        level_set_operation.get_level_set(),
+                        pressure_dof_idx);
+                      level_set_operation.set_level_set_user_rhs(level_set_rhs);
+                      break;
+                  }
               }
-          }
 
-        // ... solve level-set problem with the given advection field
-        scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
-        level_set_operation.solve(dt, interface_velocity);
+            // ... solve level-set problem with the given advection field
+            scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
+            level_set_operation.solve(dt, interface_velocity);
+          }
 
         /******************************************************************************************
          * HEAT TRANSFER
@@ -260,6 +263,10 @@ namespace MeltPoolDG::MeltPool
       prm.add_parameter("do recoil pressure",
                         problem_specific_parameters.do_recoil_pressure,
                         "Set this parameter to true to enable recoil pressure.");
+      prm.add_parameter(
+        "do advect level set",
+        problem_specific_parameters.do_advect_level_set,
+        "Set this parameter to true if you want to advect the level set with the fluid velocity.");
       prm.enter_subsection("amr");
       {
         prm.add_parameter("strategy",

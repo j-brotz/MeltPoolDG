@@ -1,6 +1,21 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-05-20
+- Add parameter enable/disable the advection of the level set in
+the melt pool problem
+
+```json
+{
+  "base": {
+    "problem name": "melt_pool"
+  },
+  "problem specific": {
+    "do advect level set": "true|false"
+  }
+}
+```
+
 ## 2022-05-19
 - Add parameter for determining if the heaviside representation of the level 
 set function should be calculated localized or not
