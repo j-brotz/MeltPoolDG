@@ -297,7 +297,7 @@ namespace MeltPoolDG
     process_parameters_file(const std::string &parameter_filename);
 
     void
-    print_parameters(std::ostream &pcout);
+    print_parameters(std::ostream &pcout, const bool print_details);
 
   private:
     void
