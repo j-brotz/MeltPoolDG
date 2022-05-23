@@ -2,7 +2,7 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-05-20
-- Add parameter enable the switch on/off the advection of the level set in
+- Add parameter enable/disable the advection of the level set in
 the melt pool problem
 
 ```json
