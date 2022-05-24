@@ -158,16 +158,14 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  Parameters<number>::print_parameters(std::ostream &pcout)
+  Parameters<number>::print_parameters(std::ostream &pcout, const bool print_details)
   {
-    if (base.do_print_parameters)
-      {
-        ParameterHandler prm;
-        add_parameters(prm);
-        prm.print_parameters(pcout,
-                             ParameterHandler::OutputStyle::Text |
-                               ParameterHandler::OutputStyle::KeepDeclarationOrder);
-      }
+    ParameterHandler prm;
+    add_parameters(prm);
+    prm.print_parameters(pcout,
+                         print_details ? ParameterHandler::OutputStyle::JSON |
+                                           ParameterHandler::OutputStyle::KeepDeclarationOrder :
+                                         ParameterHandler::OutputStyle::ShortJSON);
   }
 
   template <typename number>

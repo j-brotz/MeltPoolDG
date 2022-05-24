@@ -29,8 +29,9 @@ namespace MeltPoolDG
                                                                parameter_file,
                                                                mpi_communicator);
               sim->create();
-              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-                parameters.print_parameters(std::cout);
+              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+                  parameters.base.do_print_parameters)
+                parameters.print_parameters(std::cout, false /*print_details*/);
               auto problem = ProblemSelector<1>::get_problem(parameters.base.problem_name);
               problem->run(sim);
             }
@@ -40,8 +41,9 @@ namespace MeltPoolDG
                                                                parameter_file,
                                                                mpi_communicator);
               sim->create();
-              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-                parameters.print_parameters(std::cout);
+              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+                  parameters.base.do_print_parameters)
+                parameters.print_parameters(std::cout, false /*print_details*/);
               auto problem = ProblemSelector<2>::get_problem(parameters.base.problem_name);
               problem->run(sim);
             }
@@ -51,8 +53,9 @@ namespace MeltPoolDG
                                                                parameter_file,
                                                                mpi_communicator);
               sim->create();
-              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-                parameters.print_parameters(std::cout);
+              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+                  parameters.base.do_print_parameters)
+                parameters.print_parameters(std::cout, false /*print_details*/);
               auto problem = ProblemSelector<3>::get_problem(parameters.base.problem_name);
               problem->run(sim);
             }
@@ -95,12 +98,31 @@ main(int argc, char *argv[])
 
   MPI_Comm mpi_comm(MPI_COMM_WORLD);
 
-
   std::string input_file;
-  if (argc >= 2)
+  // check command line arguments
+  if (argc == 1)
+    {
+      if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
+        std::cout << "ERROR: No .json parameter files has been provided!" << std::endl;
+      return 1;
+    }
+  else if (argc == 2)
     {
       input_file = std::string(argv[argc - 1]);
       Simulation::run_simulation(input_file, mpi_comm);
+    }
+  else if (argc == 3 &&
+           ((std::string(argv[1]) == "--help") || (std::string(argv[1]) == "--help-detail")))
+    {
+      input_file = std::string(argv[argc - 1]);
+
+      Parameters<double> parameters;
+      parameters.process_parameters_file(input_file);
+
+      if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
+        parameters.print_parameters(std::cout,
+                                    std::string(argv[1]) == "--help-detail" /*print_details*/);
+      return 0;
     }
   else
     AssertThrow(false, ExcMessage("no input file specified"));
