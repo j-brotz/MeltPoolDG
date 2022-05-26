@@ -25,7 +25,7 @@ namespace MeltPoolDG::Flow
    *          \            Γ   /        \             Γ   Γ       /
    *                            Ω                                  Ω
    *
-   *  with the temperature-dependent surface tension cofficient
+   *  with the temperature-dependent surface tension coefficient
    *
    *  α = α_0 - α'_0 ( T - T    )
    *                        α_0
