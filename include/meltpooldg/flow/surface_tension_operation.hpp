@@ -112,7 +112,7 @@ namespace MeltPoolDG::Flow
     compute_surface_tension(VectorType &force_rhs, const bool zero_out = true);
 
     /**
-     * Compute the time step limit for explicit treatment of surface tension, as
+     * Compute the time step limit for explicit treatment of surface tension [*], as
      *
      *                __________________
      *               / (ρ1 + ρ2) * Δx^3
@@ -124,9 +124,11 @@ namespace MeltPoolDG::Flow
      * density_1) st and ρ2 (@p density_2), the element size Δx (minimal edge length) and the
      * surface tension coefficient α.
      *
-     * @note: As a conservative assumption, in case of temperature-dependent surface tension we
-     * choose α as max (α (T)).
-     *                T
+     * [*] J.U. Brackbill, D.B. Kothe, C. Zemach: A continuum method for modeling surface
+     *      tension, J. Comput. Phys. 100 (2) (1992) 335–354.
+     *
+     * @note: As a conservative assumption, we choose α as max (α (T)) in case of
+     * temperature-dependent surface tension.
      */
     double
     compute_time_step_limit(const double density_1, const double density_2);
@@ -136,8 +138,8 @@ namespace MeltPoolDG::Flow
      * Compute the temperature-dependent surface tension coefficient for a given temperature
      * @p T.
      */
-    VectorizedArray<double>
-    local_compute_temperature_dependent_surface_tension_coefficient(
-      const VectorizedArray<double> &T);
+    template <typename number>
+    number
+    local_compute_temperature_dependent_surface_tension_coefficient(const number &T);
   };
 } // namespace MeltPoolDG::Flow

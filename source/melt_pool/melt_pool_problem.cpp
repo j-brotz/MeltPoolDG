@@ -141,7 +141,6 @@ namespace MeltPoolDG::MeltPool
               const auto dt_lim = surface_tension_operation->compute_time_step_limit(
                 base_in->parameters.material.first.density,
                 base_in->parameters.material.second.density);
-              std::cout << "dt_lim " << dt_lim << std::endl;
 
               AssertThrow(time_iterator.check_time_step_limit(dt_lim),
                           ExcMessage("The time step limit for surface tension (dt=" +

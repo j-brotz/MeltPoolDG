@@ -245,21 +245,35 @@ namespace MeltPoolDG::Flow
   SurfaceTensionOperation<dim>::compute_time_step_limit(const double density_1,
                                                         const double density_2)
   {
+    double alpha = data.surface_tension_coefficient;
+
+    // compute maximum value for alpha
+    if (temperature)
+      {
+        const double T_max = VectorTools::max_element(*temperature, scratch_data.get_mpi_comm());
+        alpha =
+          std::max(alpha, local_compute_temperature_dependent_surface_tension_coefficient(T_max));
+        const double T_min = VectorTools::min_element(*temperature, scratch_data.get_mpi_comm());
+        alpha =
+          std::min(alpha, local_compute_temperature_dependent_surface_tension_coefficient(T_min));
+      }
+
     return data.time_step_limit.scale_factor *
            std::sqrt((density_1 + density_2) * std::pow(scratch_data.get_min_cell_size(), 3) /
-                     (2 * numbers::PI * data.surface_tension_coefficient));
+                     (2 * numbers::PI * alpha));
   }
 
   template <int dim>
-  VectorizedArray<double>
+  template <typename number>
+  number
   SurfaceTensionOperation<dim>::local_compute_temperature_dependent_surface_tension_coefficient(
-    const VectorizedArray<double> &T)
+    const number &T)
   {
-    const double &                alpha0   = data.surface_tension_coefficient;
-    const double &                d_alpha0 = data.temperature_dependent_surface_tension_coefficient;
-    const VectorizedArray<double> T0(data.reference_temperature);
+    const number &alpha0   = data.surface_tension_coefficient;
+    const number &d_alpha0 = data.temperature_dependent_surface_tension_coefficient;
+    const number &T0       = data.reference_temperature;
 
-    VectorizedArray<double> alpha = alpha0 - d_alpha0 * (T - T0);
+    auto alpha = alpha0 - d_alpha0 * (T - T0);
 
     // The surface tension must not become negative or smaller than its residual
     // value.

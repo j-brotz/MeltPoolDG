@@ -6,10 +6,13 @@
     "global refinements": "6",
     "degree": "1"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "0.005",
+    "max n steps": "30"
+  },
   "reinitialization": {
-    "reinit max n steps": "30",
     "reinit modeltype": "olsson2007",
-    "reinit dtau": "0.005",
     "linear solver": {
       "do matrix free": "true"
     }

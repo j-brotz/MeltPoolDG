@@ -2,6 +2,19 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-05-26
+- Move parameter 
+
+```json
+{
+  "reinitialization": {
+-    "reinit dtau": "",
+  },
+  "levelset": {
++    "ls reinit time step size": "",
+  }
+}
+```
+
 - Add parameter enable/disable the time step limit due to explicit treatment
 of surface tension in the melt pool problem
 

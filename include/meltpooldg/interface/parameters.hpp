@@ -94,15 +94,15 @@ namespace MeltPoolDG
     int         n_subdivisions          = 1;
     bool        do_localized_heaviside  = true;
     std::string implementation          = "meltpooldg";
+    number      reinit_time_step_size   = -1.;
   };
 
   template <typename number = double>
   struct ReinitializationData
   {
-    unsigned int             max_n_steps          = 5;
+    unsigned int             max_n_steps          = 5; //@todo: move to LevelSetData
     number                   constant_epsilon     = -1.0;
     number                   scale_factor_epsilon = 0.5;
-    number                   dtau                 = -1.0;
     std::string              modeltype            = "olsson2007";
     std::string              implementation       = "meltpooldg";
     LinearSolverData<number> linear_solver;

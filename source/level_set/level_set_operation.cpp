@@ -155,10 +155,11 @@ namespace MeltPoolDG::LevelSet
     reinit_time_iterator.initialize(
       TimeSteppingData<double>{0.0,
                                std::numeric_limits<double>::max(),
-                               reinit_data.dtau > 0.0 ? reinit_data.dtau :
-                                                        scratch_data->get_min_cell_size() *
-                                                          reinit_data.scale_factor_epsilon /
-                                                          scratch_data->get_degree(ls_dof_idx),
+                               level_set_data.reinit_time_step_size > 0.0 ?
+                                 level_set_data.reinit_time_step_size :
+                                 scratch_data->get_min_cell_size() *
+                                   reinit_data.scale_factor_epsilon /
+                                   scratch_data->get_degree(ls_dof_idx),
                                (unsigned int)level_set_data.n_initial_reinit_steps});
   }
   /**
@@ -227,8 +228,8 @@ namespace MeltPoolDG::LevelSet
     scratch_data->initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
     scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
 
-    reinit_time_iterator.set_current_time_increment(reinit_data.dtau > 0.0 ?
-                                                      reinit_data.dtau :
+    reinit_time_iterator.set_current_time_increment(level_set_data.reinit_time_step_size > 0.0 ?
+                                                      level_set_data.reinit_time_step_size :
                                                       scratch_data->get_min_cell_size() *
                                                         reinit_data.scale_factor_epsilon /
                                                         scratch_data->get_degree(ls_dof_idx));

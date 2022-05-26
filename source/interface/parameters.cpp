@@ -298,6 +298,9 @@ namespace MeltPoolDG
         "ls n initial reinit steps",
         ls.n_initial_reinit_steps,
         "Defines the number of initial reinitialization steps of the level set function.");
+      prm.add_parameter("ls reinit time step size",
+                        ls.reinit_time_step_size,
+                        "Defines the time step size of the reinitialization.");
       prm.add_parameter("ls time integration scheme",
                         ls.time_integration_scheme,
                         "Determines the time integration scheme.",
@@ -342,11 +345,6 @@ namespace MeltPoolDG
         reinit.scale_factor_epsilon,
         "Defines the scaling factor of the diffusion parameter in the reinitialization "
         "equation; the scaling factor is multipled by the mesh size (default: 0.5 i.e. eps=0.5*h_min");
-      prm.add_parameter(
-        "reinit dtau",
-        reinit.dtau,
-        "Defines the time step size of the reinitialization to be constant and"
-        "not to dependent on the mesh size (default: -1.0 i.e. grid size dependent");
       prm.add_parameter("reinit modeltype",
                         reinit.modeltype,
                         "Sets the type of reinitialization model that should be used.");
