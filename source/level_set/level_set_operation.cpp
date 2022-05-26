@@ -153,14 +153,13 @@ namespace MeltPoolDG::LevelSet
      * initialize the time iterator for the reinitialization
      */
     reinit_time_iterator.initialize(
-      TimeIteratorData<double>{0.0,
-                               100000.,
+      TimeSteppingData<double>{0.0,
+                               std::numeric_limits<double>::max(),
                                reinit_data.dtau > 0.0 ? reinit_data.dtau :
                                                         scratch_data->get_min_cell_size() *
                                                           reinit_data.scale_factor_epsilon /
                                                           scratch_data->get_degree(ls_dof_idx),
-                               (unsigned int)level_set_data.n_initial_reinit_steps,
-                               false});
+                               (unsigned int)level_set_data.n_initial_reinit_steps});
   }
   /**
    * set initial condition

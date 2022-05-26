@@ -24,7 +24,12 @@ namespace MeltPoolDG::Flow
     , flow_pressure_hanging_nodes_dof_idx(flow_pressure_hanging_nodes_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx)
     , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx))
+    , alpha_residual(data.surface_tension_coefficient * data.coefficient_residual_fraction)
   {
+    AssertThrow(data.time_step_limit.scale_factor >= 0 && data.time_step_limit.scale_factor <= 1.0,
+                ExcMessage(
+                  "The scale factor for the time step limit must be between 0 and 1.0. Abort..."));
+
     if (do_level_set_pressure_gradient_interpolation)
       {
         ls_to_pressure_grad_interpolation_matrix =
@@ -129,12 +134,9 @@ namespace MeltPoolDG::Flow
                                                            flow_vel_dof_idx,
                                                            flow_vel_quad_idx);
 
-        const double &alpha0         = data.surface_tension_coefficient;
-        const double &d_alpha0       = data.temperature_dependent_surface_tension_coefficient;
-        const double  alpha_residual = alpha0 * data.coefficient_residual_fraction;
-        const auto    T0             = VectorizedArray<double>(data.reference_temperature);
+        auto alpha = VectorizedArray<double>(data.surface_tension_coefficient);
 
-        auto alpha = VectorizedArray<double>(alpha0);
+        const double &d_alpha0 = data.temperature_dependent_surface_tension_coefficient;
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
@@ -208,15 +210,8 @@ namespace MeltPoolDG::Flow
                                                (-d_alpha0) * grad_T[j] :
                                              -(n[i] * n[j]) * (-d_alpha0) * grad_T[j];
 
-                    alpha = VectorizedArray<double>(alpha0) -
-                            VectorizedArray<double>(d_alpha0) * (T - T0);
+                    alpha = local_compute_temperature_dependent_surface_tension_coefficient(T);
 
-                    // The surface tension must not become negative or smaller than its residual
-                    // value.
-                    alpha = compare_and_apply_mask<SIMDComparison::less_than>(alpha,
-                                                                              alpha_residual,
-                                                                              alpha_residual,
-                                                                              alpha);
                     surface_tension.submit_value(mask * alpha * n * curvature.get_value(q_index) *
                                                      delta +
                                                    temp_surf_ten * delta,
@@ -244,6 +239,37 @@ namespace MeltPoolDG::Flow
     if (solid)
       solid->zero_out_ghost_values();
   }
+
+  template <int dim>
+  double
+  SurfaceTensionOperation<dim>::compute_time_step_limit(const double density_1,
+                                                        const double density_2)
+  {
+    return data.time_step_limit.scale_factor *
+           std::sqrt((density_1 + density_2) * std::pow(scratch_data.get_min_cell_size(), 3) /
+                     (2 * numbers::PI * data.surface_tension_coefficient));
+  }
+
+  template <int dim>
+  VectorizedArray<double>
+  SurfaceTensionOperation<dim>::local_compute_temperature_dependent_surface_tension_coefficient(
+    const VectorizedArray<double> &T)
+  {
+    const double &                alpha0   = data.surface_tension_coefficient;
+    const double &                d_alpha0 = data.temperature_dependent_surface_tension_coefficient;
+    const VectorizedArray<double> T0(data.reference_temperature);
+
+    VectorizedArray<double> alpha = alpha0 - d_alpha0 * (T - T0);
+
+    // The surface tension must not become negative or smaller than its residual
+    // value.
+    alpha = compare_and_apply_mask<SIMDComparison::less_than>(alpha,
+                                                              alpha_residual,
+                                                              alpha_residual,
+                                                              alpha);
+    return alpha;
+  }
+
 
   template class SurfaceTensionOperation<1>;
   template class SurfaceTensionOperation<2>;

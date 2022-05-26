@@ -224,24 +224,7 @@ namespace MeltPoolDG
     /*
      *   time stepping
      */
-    prm.enter_subsection("time stepping");
-    {
-      prm.add_parameter("start time",
-                        time_stepping.start_time,
-                        "Defines the start time for the solution of the levelset problem");
-      prm.add_parameter("end time",
-                        time_stepping.end_time,
-                        "Sets the end time for the solution of the levelset problem");
-      prm.add_parameter("time step size",
-                        time_stepping.time_step_size,
-                        "Sets the step size for time stepping. For non-uniform "
-                        "time stepping, this parameter determines the size of the first "
-                        "time step.");
-      prm.add_parameter("max n steps",
-                        time_stepping.max_n_steps,
-                        "Sets the maximum number of melt_pool steps");
-    }
-    prm.leave_subsection();
+    time_stepping.add_parameters(prm);
     /*
      *    adaptive meshing
      */
@@ -636,6 +619,7 @@ namespace MeltPoolDG
         "zero surface tension in solid",
         surface_tension.zero_surface_tension_in_solid,
         "Set this parameter to true to only apply surface tension if the solid fraction is zero.");
+      surface_tension.time_step_limit.add_parameters(prm);
     }
     prm.leave_subsection();
     /*

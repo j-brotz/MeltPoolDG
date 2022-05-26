@@ -77,8 +77,7 @@ namespace MeltPoolDG::Reinitialization
     /*
      *  initialize the time iterator
      */
-    time_iterator.initialize(TimeIteratorData<double>{
-      0.0, 10000., base_in->parameters.reinit.dtau, base_in->parameters.reinit.max_n_steps, false});
+    time_iterator.initialize(base_in->parameters.time_stepping);
     /*
      *  set initial conditions of the levelset function
      */

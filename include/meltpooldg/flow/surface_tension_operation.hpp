@@ -25,7 +25,7 @@ namespace MeltPoolDG::Flow
    *          \            Γ   /        \             Γ   Γ       /
    *                            Ω                                  Ω
    *
-   *  with the temperature-dependent surface tension
+   *  with the temperature-dependent surface tension cofficient
    *
    *  α = α_0 - α'_0 ( T - T    )
    *                        α_0
@@ -74,6 +74,8 @@ namespace MeltPoolDG::Flow
 
     std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
 
+    const double alpha_residual;
+
   public:
     SurfaceTensionOperation(const SurfaceTensionData<double> &data_in,
                             const ScratchData<dim> &          scratch_data,
@@ -86,8 +88,9 @@ namespace MeltPoolDG::Flow
                             const unsigned int                flow_quad_idx);
 
     /**
-     * Registers the temperature and normal vector, which are required for temperature-dependent
-     * surface tension forces, i.e. Marangoni convection.
+     * Registers the DoF vectors of the @p temperature and normal vector (@p solution_normal_vector),
+     * which are required for temperature-dependent surface tension forces, i.e. Marangoni
+     * convection.
      */
     void
     register_temperature_and_normal_vector(const unsigned int     temp_dof_idx,
@@ -95,16 +98,46 @@ namespace MeltPoolDG::Flow
                                            const VectorType *     temperature,
                                            const BlockVectorType *solution_normal_vector);
     /**
-     * Registers the solid fraction, which is required if surface tension should be zeroed out in
-     * the solid domain.
+     * Registers the solid fraction, given by a DoF vector @p solid and a DoF index @p solid_dof_idx,
+     * which is required if surface tension should be zeroed out in the solid domain.
      */
     void
     register_solid_fraction(const unsigned int solid_dof_idx, const VectorType *solid);
 
-    /*
-     *  Compute surface tension
+    /**
+     * Compute a DoF vector of the surface tension and add it into to @p force_rhs. If the
+     * latter should be zeroed out first, @p zero_out must be set true.
      */
     void
     compute_surface_tension(VectorType &force_rhs, const bool zero_out = true);
+
+    /**
+     * Compute the time step limit for explicit treatment of surface tension, as
+     *
+     *                __________________
+     *               / (ρ1 + ρ2) * Δx^3
+     *              / ------------------
+     * Δt   = k   \/       2 π α
+     *   st    st
+     *
+     * with an arbitrary scale factor 0 <= k  <= 1, the densities of the two fluids, ρ1 (@p
+     * density_1) st and ρ2 (@p density_2), the element size Δx (minimal edge length) and the
+     * surface tension coefficient α.
+     *
+     * @note: As a conservative assumption, in case of temperature-dependent surface tension we
+     * choose α as max (α (T)).
+     *                T
+     */
+    double
+    compute_time_step_limit(const double density_1, const double density_2);
+
+  private:
+    /**
+     * Compute the temperature-dependent surface tension coefficient for a given temperature
+     * @p T.
+     */
+    VectorizedArray<double>
+    local_compute_temperature_dependent_surface_tension_coefficient(
+      const VectorizedArray<double> &T);
   };
 } // namespace MeltPoolDG::Flow

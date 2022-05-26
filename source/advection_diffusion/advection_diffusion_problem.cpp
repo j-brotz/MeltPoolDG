@@ -194,13 +194,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     /*
      *  initialize the time iterator
      */
-    time_iterator.initialize(
-      TimeIteratorData<double>{base_in->parameters.time_stepping.start_time,
-                               base_in->parameters.time_stepping.end_time,
-                               base_in->parameters.time_stepping.time_step_size,
-                               base_in->parameters.time_stepping.max_n_steps,
-                               false});
-
+    time_iterator.initialize(base_in->parameters.time_stepping);
 
     if (base_in->parameters.advec_diff.implementation == "meltpooldg")
       {

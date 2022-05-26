@@ -10,6 +10,7 @@
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
+#include <meltpooldg/utilities/time_stepping_data.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -53,15 +54,6 @@ namespace MeltPoolDG
     int    max_nonlinear_iterations_alt   = 0;
     number field_correction_tolerance_alt = 1e-9;
     number residual_tolerance_alt         = 1e-8;
-  };
-
-  template <typename number = double>
-  struct TimeSteppingData
-  {
-    number       start_time     = 0.0;
-    number       end_time       = 1.0;
-    number       time_step_size = 0.01;
-    unsigned int max_n_steps    = 1000000;
   };
 
   template <typename number = double>
@@ -224,6 +216,7 @@ namespace MeltPoolDG
     number coefficient_residual_fraction                     = 0.0;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     bool                                        zero_surface_tension_in_solid = false;
+    TimeStepLimitData<number>                   time_step_limit;
   };
 
   template <typename number = double>

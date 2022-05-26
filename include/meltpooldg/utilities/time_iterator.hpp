@@ -1,20 +1,12 @@
 #pragma once
 #include <meltpooldg/utilities/conditional_ostream.hpp>
+#include <meltpooldg/utilities/time_stepping_data.hpp>
 
 #include <iomanip>
 #include <iostream>
 
 namespace MeltPoolDG
 {
-  template <typename number = double>
-  struct TimeIteratorData
-  {
-    number       start_time       = 0.0;
-    number       end_time         = 1.0;
-    number       time_increment   = 0.01;
-    unsigned int max_n_time_steps = 1000;
-    bool         CFL_condition    = false;
-  };
   /*
    *  This class provides a simple time stepping routine.
    */
@@ -25,7 +17,7 @@ namespace MeltPoolDG
     TimeIterator() = default;
 
     void
-    initialize(const TimeIteratorData<number> &data_in);
+    initialize(const TimeSteppingData<number> &data_in);
 
     bool
     is_finished() const;
@@ -57,8 +49,14 @@ namespace MeltPoolDG
     void
     print_me(const ConditionalOStream &pcout) const;
 
+    /**
+     * Check whether the current time increment is smaller than the @p time_step_limit.
+     */
+    bool
+    check_time_step_limit(const number &time_step_limit);
+
   private:
-    TimeIteratorData<number> time_data;
+    TimeSteppingData<number> time_data;
     number                   old_time;
     number                   current_time;
     number                   current_time_increment;

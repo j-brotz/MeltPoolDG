@@ -5,11 +5,11 @@ namespace MeltPoolDG
 {
   template <typename number>
   void
-  TimeIterator<number>::initialize(const TimeIteratorData<number> &data_in)
+  TimeIterator<number>::initialize(const TimeSteppingData<number> &data_in)
   {
     time_data              = data_in;
     current_time           = data_in.start_time;
-    current_time_increment = data_in.time_increment;
+    current_time_increment = data_in.time_step_size;
     n_time_steps           = 0;
     old_time               = current_time;
   }
@@ -19,7 +19,7 @@ namespace MeltPoolDG
   TimeIterator<number>::is_finished() const
   {
     // number of maximum steps is reached
-    if (n_time_steps >= time_data.max_n_time_steps)
+    if (n_time_steps >= time_data.max_n_steps)
       return true;
     // current_time is larger than end time
     if (current_time > time_data.end_time)
@@ -62,7 +62,7 @@ namespace MeltPoolDG
   void
   TimeIterator<number>::reset_max_n_time_steps(const int time_steps_in)
   {
-    time_data.max_n_time_steps = time_steps_in;
+    time_data.max_n_steps = time_steps_in;
   }
 
   template <typename number>
@@ -92,7 +92,7 @@ namespace MeltPoolDG
   {
     n_time_steps           = 0;
     current_time           = time_data.start_time;
-    current_time_increment = time_data.time_increment;
+    current_time_increment = time_data.time_step_size;
   }
 
   template <typename number>
@@ -108,6 +108,13 @@ namespace MeltPoolDG
         << std::setprecision(4) << current_time_increment << " )";
     Journal::print_line(pcout, str.str(), "time_iterator");
     Journal::print_decoration_line(pcout);
+  }
+
+  template <typename number>
+  bool
+  TimeIterator<number>::check_time_step_limit(const number &time_step_limit)
+  {
+    return current_time_increment <= time_step_limit;
   }
 
   template class TimeIterator<>;
