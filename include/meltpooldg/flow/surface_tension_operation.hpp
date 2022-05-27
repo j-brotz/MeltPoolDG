@@ -142,9 +142,6 @@ namespace MeltPoolDG::Flow
      *                        α_0
      *
      * @note: If α'_0 is positive, α decreases with increasing temperature.
-     *
-     *
-     *
      */
     template <typename number>
     number
