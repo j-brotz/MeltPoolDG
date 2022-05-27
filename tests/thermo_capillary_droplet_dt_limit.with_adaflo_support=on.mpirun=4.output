@@ -47,3 +47,95 @@
 | || normal_1 ||L2 = 5.33747231960e+00                                               normal_vector |
 | || curvature ||L2 = 1.28936839104e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
+
+
+----------------------------------------------------
+Exception on processing: 
+
+
+----------------------------------------------------
+Exception on processing: 
+
+
+----------------------------------------------------
+Exception on processing: 
+
+
+----------------------------------------------------
+Exception on processing: 
+
+--------------------------------------------------------
+An error occurred in line <145> of file </home/magdalena/TUM/MeltPoolDG-evaporating_droplet/source/melt_pool/melt_pool_problem.cpp> in function
+    void MeltPoolDG::MeltPool::MeltPoolProblem<dim>::run(std::shared_ptr<MeltPoolDG::SimulationBase<dim> >) [with int dim = 2]
+The violated condition was: 
+    time_iterator.check_time_step_limit(dt_lim)
+Additional information: 
+    The time step limit for surface tension (dt=4.664171e-05) is exceeded.
+    Try to choose a smaller time step size. Abort...
+
+Stacktrace:
+-----------
+#0  /home/magdalena/TUM/MeltPoolDG-evaporating_droplet/build/libmeltpooldg.so: MeltPoolDG::MeltPool::MeltPoolProblem<2>::run(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
+#1  meltpooldg: void MeltPoolDG::Simulation::run_simulation<double>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, ompi_communicator_t*)
+#2  meltpooldg: main
+--------------------------------------------------------
+
+Aborting!
+----------------------------------------------------
+
+--------------------------------------------------------
+An error occurred in line <145> of file </home/magdalena/TUM/MeltPoolDG-evaporating_droplet/source/melt_pool/melt_pool_problem.cpp> in function
+    void MeltPoolDG::MeltPool::MeltPoolProblem<dim>::run(std::shared_ptr<MeltPoolDG::SimulationBase<dim> >) [with int dim = 2]
+The violated condition was: 
+    time_iterator.check_time_step_limit(dt_lim)
+Additional information: 
+    The time step limit for surface tension (dt=4.664171e-05) is exceeded.
+    Try to choose a smaller time step size. Abort...
+
+Stacktrace:
+-----------
+#0  /home/magdalena/TUM/MeltPoolDG-evaporating_droplet/build/libmeltpooldg.so: MeltPoolDG::MeltPool::MeltPoolProblem<2>::run(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
+#1  meltpooldg: void MeltPoolDG::Simulation::run_simulation<double>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, ompi_communicator_t*)
+#2  meltpooldg: main
+--------------------------------------------------------
+
+Aborting!
+----------------------------------------------------
+
+--------------------------------------------------------
+An error occurred in line <145> of file </home/magdalena/TUM/MeltPoolDG-evaporating_droplet/source/melt_pool/melt_pool_problem.cpp> in function
+    void MeltPoolDG::MeltPool::MeltPoolProblem<dim>::run(std::shared_ptr<MeltPoolDG::SimulationBase<dim> >) [with int dim = 2]
+The violated condition was: 
+    time_iterator.check_time_step_limit(dt_lim)
+Additional information: 
+    The time step limit for surface tension (dt=4.664171e-05) is exceeded.
+    Try to choose a smaller time step size. Abort...
+
+Stacktrace:
+-----------
+#0  /home/magdalena/TUM/MeltPoolDG-evaporating_droplet/build/libmeltpooldg.so: MeltPoolDG::MeltPool::MeltPoolProblem<2>::run(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
+#1  meltpooldg: void MeltPoolDG::Simulation::run_simulation<double>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, ompi_communicator_t*)
+#2  meltpooldg: main
+--------------------------------------------------------
+
+Aborting!
+----------------------------------------------------
+
+--------------------------------------------------------
+An error occurred in line <145> of file </home/magdalena/TUM/MeltPoolDG-evaporating_droplet/source/melt_pool/melt_pool_problem.cpp> in function
+    void MeltPoolDG::MeltPool::MeltPoolProblem<dim>::run(std::shared_ptr<MeltPoolDG::SimulationBase<dim> >) [with int dim = 2]
+The violated condition was: 
+    time_iterator.check_time_step_limit(dt_lim)
+Additional information: 
+    The time step limit for surface tension (dt=4.664171e-05) is exceeded.
+    Try to choose a smaller time step size. Abort...
+
+Stacktrace:
+-----------
+#0  /home/magdalena/TUM/MeltPoolDG-evaporating_droplet/build/libmeltpooldg.so: MeltPoolDG::MeltPool::MeltPoolProblem<2>::run(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
+#1  meltpooldg: void MeltPoolDG::Simulation::run_simulation<double>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, ompi_communicator_t*)
+#2  meltpooldg: main
+--------------------------------------------------------
+
+Aborting!
+----------------------------------------------------
