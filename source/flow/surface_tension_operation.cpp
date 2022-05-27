@@ -250,12 +250,22 @@ namespace MeltPoolDG::Flow
     // compute maximum value for alpha
     if (temperature)
       {
-        const double T_max = VectorTools::max_element(*temperature, scratch_data.get_mpi_comm());
-        alpha =
-          std::max(alpha, local_compute_temperature_dependent_surface_tension_coefficient(T_max));
-        const double T_min = VectorTools::min_element(*temperature, scratch_data.get_mpi_comm());
-        alpha =
-          std::min(alpha, local_compute_temperature_dependent_surface_tension_coefficient(T_min));
+        // Surface tension coefficient decreases with increasing temperature --> the maximum
+        // surface tension coefficient arises at the minimum temperature.
+        if (data.temperature_dependent_surface_tension_coefficient > 0)
+          {
+            const double T_min =
+              VectorTools::min_element(*temperature, scratch_data.get_mpi_comm());
+            alpha = local_compute_temperature_dependent_surface_tension_coefficient(T_min);
+          }
+        // Surface tension coefficient increases with decreasing temperature --> the maximum
+        // surface tension coefficient arises at the maximum temperature.
+        else
+          {
+            const double T_max =
+              VectorTools::max_element(*temperature, scratch_data.get_mpi_comm());
+            alpha = local_compute_temperature_dependent_surface_tension_coefficient(T_max);
+          }
       }
 
     return data.time_step_limit.scale_factor *

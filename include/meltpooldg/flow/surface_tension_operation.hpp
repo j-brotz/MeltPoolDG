@@ -136,7 +136,15 @@ namespace MeltPoolDG::Flow
   private:
     /**
      * Compute the temperature-dependent surface tension coefficient for a given temperature
-     * @p T.
+     * @p T, according to
+     *
+     *  α = α_0 - α'_0 ( T - T    ).
+     *                        α_0
+     *
+     * @note: If α'_0 is positive, α decreases with increasing temperature.
+     *
+     *
+     *
      */
     template <typename number>
     number
