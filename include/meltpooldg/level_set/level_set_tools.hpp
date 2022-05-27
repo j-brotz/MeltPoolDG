@@ -75,52 +75,6 @@ namespace MeltPoolDG::LevelSet::Tools
     return (val2 - val1) * (-6. * ls * ls + 6. * ls);
   }
 
-  template <int dim, int n_components = 1>
-  void
-  broadcast_interface_value_to_vector(
-    const Mapping<dim> &                             mapping,
-    const DoFHandler<dim> &                          dof_handler_ls,
-    const DoFHandler<dim> &                          dof_handler_req,
-    const VectorType &                               level_set_as_heaviside,
-    const VectorType &                               distance,
-    const BlockVectorType &                          normal_vector,
-    const VectorType &                               solution_in,
-    VectorType &                                     solution_out,
-    Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
-      Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
-    const unsigned int max_iterations   = 5,
-    const double       rel_tol_distance = 1e-5)
-  {
-    AssertThrow(n_components == 1, ExcNotImplemented());
-
-    const auto [dof_indices, evaluation_points] =
-      compute_projected_points_at_interface<dim>(mapping,
-                                                 dof_handler_ls,
-                                                 dof_handler_req,
-                                                 level_set_as_heaviside,
-                                                 distance,
-                                                 normal_vector,
-                                                 remote_point_evaluation,
-                                                 max_iterations,
-                                                 rel_tol_distance);
-
-    remote_point_evaluation.reinit(evaluation_points, dof_handler_req.get_triangulation(), mapping);
-
-    solution_in.update_ghost_values();
-
-    const auto vals =
-      dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler_req, solution_in);
-    solution_in.zero_out_ghost_values();
-
-    /*
-     * compute evaporative mass flux from the temperature value at the interface
-     */
-    solution_out = 0.0;
-
-    for (unsigned int i = 0; i < evaluation_points.size(); ++i)
-      solution_out[dof_indices[i]] = vals[i];
-  }
-
   /**
    * This utility function computes the projection of nodal points from a given @p dof_handler_req
    * within the interfacial region (0 < level_set_as_heaviside < 1) on the interface, the latter
@@ -309,7 +263,6 @@ namespace MeltPoolDG::LevelSet::Tools
         if (n_processed_points == 0)
           break;
       }
-
     /*
      * compute maximum distance of projected points to the level set 0 isosurface
      */
@@ -359,6 +312,53 @@ namespace MeltPoolDG::LevelSet::Tools
 
     return {dof_indices, projected_points_at_interface};
   }
+
+  template <int dim, int n_components = 1>
+  void
+  broadcast_interface_value_to_vector(
+    const Mapping<dim> &                             mapping,
+    const DoFHandler<dim> &                          dof_handler_ls,
+    const DoFHandler<dim> &                          dof_handler_req,
+    const VectorType &                               level_set_as_heaviside,
+    const VectorType &                               distance,
+    const BlockVectorType &                          normal_vector,
+    const VectorType &                               solution_in,
+    VectorType &                                     solution_out,
+    Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
+      Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
+    const unsigned int max_iterations   = 5,
+    const double       rel_tol_distance = 1e-5)
+  {
+    AssertThrow(n_components == 1, ExcNotImplemented());
+
+    const auto [dof_indices, evaluation_points] =
+      compute_projected_points_at_interface<dim>(mapping,
+                                                 dof_handler_ls,
+                                                 dof_handler_req,
+                                                 level_set_as_heaviside,
+                                                 distance,
+                                                 normal_vector,
+                                                 remote_point_evaluation,
+                                                 max_iterations,
+                                                 rel_tol_distance);
+
+    remote_point_evaluation.reinit(evaluation_points, dof_handler_req.get_triangulation(), mapping);
+
+    solution_in.update_ghost_values();
+
+    const auto vals =
+      dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler_req, solution_in);
+    solution_in.zero_out_ghost_values();
+
+    /*
+     * compute evaporative mass flux from the temperature value at the interface
+     */
+    solution_out = 0.0;
+
+    for (unsigned int i = 0; i < evaluation_points.size(); ++i)
+      solution_out[dof_indices[i]] = vals[i];
+  }
+
 
   /**
    * For two indicator vectors, representing e.g. implicit geometries, this function computes a

@@ -153,14 +153,14 @@ namespace MeltPoolDG::LevelSet
      * initialize the time iterator for the reinitialization
      */
     reinit_time_iterator.initialize(
-      TimeIteratorData<double>{0.0,
-                               100000.,
-                               reinit_data.dtau > 0.0 ? reinit_data.dtau :
-                                                        scratch_data->get_min_cell_size() *
-                                                          reinit_data.scale_factor_epsilon /
-                                                          scratch_data->get_degree(ls_dof_idx),
-                               (unsigned int)level_set_data.n_initial_reinit_steps,
-                               false});
+      TimeSteppingData<double>{0.0,
+                               std::numeric_limits<double>::max(),
+                               level_set_data.reinit_time_step_size > 0.0 ?
+                                 level_set_data.reinit_time_step_size :
+                                 scratch_data->get_min_cell_size() *
+                                   reinit_data.scale_factor_epsilon /
+                                   scratch_data->get_degree(ls_dof_idx),
+                               (unsigned int)level_set_data.n_initial_reinit_steps});
   }
   /**
    * set initial condition
@@ -228,8 +228,8 @@ namespace MeltPoolDG::LevelSet
     scratch_data->initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
     scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
 
-    reinit_time_iterator.set_current_time_increment(reinit_data.dtau > 0.0 ?
-                                                      reinit_data.dtau :
+    reinit_time_iterator.set_current_time_increment(level_set_data.reinit_time_step_size > 0.0 ?
+                                                      level_set_data.reinit_time_step_size :
                                                       scratch_data->get_min_cell_size() *
                                                         reinit_data.scale_factor_epsilon /
                                                         scratch_data->get_degree(ls_dof_idx));

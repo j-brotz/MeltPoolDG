@@ -10,6 +10,7 @@
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
+#include <meltpooldg/utilities/time_stepping_data.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -56,15 +57,6 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
-  struct TimeSteppingData
-  {
-    number       start_time     = 0.0;
-    number       end_time       = 1.0;
-    number       time_step_size = 0.01;
-    unsigned int max_n_steps    = 1000000;
-  };
-
-  template <typename number = double>
   struct BaseData
   {
     std::string  application_name    = "none";
@@ -102,15 +94,15 @@ namespace MeltPoolDG
     int         n_subdivisions          = 1;
     bool        do_localized_heaviside  = true;
     std::string implementation          = "meltpooldg";
+    number      reinit_time_step_size   = -1.;
   };
 
   template <typename number = double>
   struct ReinitializationData
   {
-    unsigned int             max_n_steps          = 5;
+    unsigned int             max_n_steps          = 5; //@todo: move to LevelSetData
     number                   constant_epsilon     = -1.0;
     number                   scale_factor_epsilon = 0.5;
-    number                   dtau                 = -1.0;
     std::string              modeltype            = "olsson2007";
     std::string              implementation       = "meltpooldg";
     LinearSolverData<number> linear_solver;
@@ -224,6 +216,7 @@ namespace MeltPoolDG
     number coefficient_residual_fraction                     = 0.0;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     bool                                        zero_surface_tension_in_solid = false;
+    TimeStepLimitData<number>                   time_step_limit;
   };
 
   template <typename number = double>

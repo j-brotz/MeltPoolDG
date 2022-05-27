@@ -34,6 +34,8 @@
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
+#include <sstream>
+
 namespace MeltPoolDG
 {
   using namespace dealii;
@@ -49,7 +51,17 @@ namespace MeltPoolDG
 
   namespace UtilityFunctions
   {
-    /*
+    template <typename T>
+    std::string
+    to_string_with_precision(const T a_value, const int n = 6)
+    {
+      std::ostringstream out;
+      out.precision(n);
+      out << std::scientific << a_value;
+      return out.str();
+    }
+
+    /**
      * This function converts a string of coordinates given as e.g. "5,10,5" to a Point<dim>
      * object.
      */

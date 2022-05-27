@@ -136,6 +136,20 @@ namespace MeltPoolDG::MeltPool
           surface_tension_operation->compute_surface_tension(vel_force_rhs,
                                                              false /*do not zero out*/);
 
+          if (base_in->parameters.surface_tension.time_step_limit.enable)
+            {
+              const auto dt_lim = surface_tension_operation->compute_time_step_limit(
+                base_in->parameters.material.first.density,
+                base_in->parameters.material.second.density);
+
+              AssertThrow(time_iterator.check_time_step_limit(dt_lim),
+                          ExcMessage("The time step limit for surface tension (dt=" +
+                                     UtilityFunctions::to_string_with_precision(dt_lim) +
+                                     ") is exceeded. Try to choose a smaller "
+                                     "time step size. Abort..."));
+            }
+
+
           // .... d) evaporative mass fluxes
           if (evaporation_operation && problem_specific_parameters.do_evaporative_mass_flux)
             {
@@ -451,12 +465,7 @@ namespace MeltPoolDG::MeltPool
     /*
      *  initialize the time stepping scheme
      */
-    time_iterator.initialize(
-      TimeIteratorData<double>{base_in->parameters.time_stepping.start_time,
-                               base_in->parameters.time_stepping.end_time,
-                               base_in->parameters.time_stepping.time_step_size,
-                               base_in->parameters.time_stepping.max_n_steps,
-                               false /*cfl_condition-->not supported yet*/});
+    time_iterator.initialize(base_in->parameters.time_stepping);
     /*
      *    initialize the levelset operation class
      *    and setup initial conditions

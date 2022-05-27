@@ -1,4 +1,6 @@
 #pragma once
+#include <deal.II/base/mpi.h>
+
 #include <deal.II/lac/solver_cg.h>
 
 #include <deal.II/matrix_free/operators.h>
@@ -400,6 +402,34 @@ namespace MeltPoolDG
       for (unsigned int i = 0; i < vec.locally_owned_size(); ++i)
         if (weights.local_element(i) != 0.0)
           vec.local_element(i) /= weights.local_element(i);
+    }
+
+    /**
+     * Calculate the overall maximum element of a distributed vector @p vec.
+     */
+    template <typename number>
+    number
+    max_element(const LinearAlgebra::distributed::Vector<number> &vec, const MPI_Comm &mpi_comm)
+    {
+      number max = std::numeric_limits<number>::lowest();
+      for (unsigned int i = 0; i < vec.locally_owned_size(); ++i)
+        max = std::max(max, vec.local_element(i));
+
+      return dealii::Utilities::MPI::max(max, mpi_comm);
+    }
+
+    /**
+     * Calculate the overall minimum element of a distributed vector @p vec.
+     */
+    template <typename number>
+    number
+    min_element(const LinearAlgebra::distributed::Vector<number> &vec, const MPI_Comm &mpi_comm)
+    {
+      number min = std::numeric_limits<number>::max();
+      for (unsigned int i = 0; i < vec.locally_owned_size(); ++i)
+        min = std::min(min, vec.local_element(i));
+
+      return dealii::Utilities::MPI::min(min, mpi_comm);
     }
 
   } // namespace VectorTools

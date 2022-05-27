@@ -137,8 +137,9 @@ namespace MeltPoolDG::MeltPool
     refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
 
     TimeIterator<double> time_iterator;
-    DoFHandler<dim>      dof_handler_ls;
-    DoFHandler<dim>      dof_handler_heat;
+
+    DoFHandler<dim> dof_handler_ls;
+    DoFHandler<dim> dof_handler_heat;
 
     AffineConstraints<double> ls_constraints_dirichlet;
     AffineConstraints<double> ls_hanging_node_constraints;

@@ -224,24 +224,7 @@ namespace MeltPoolDG
     /*
      *   time stepping
      */
-    prm.enter_subsection("time stepping");
-    {
-      prm.add_parameter("start time",
-                        time_stepping.start_time,
-                        "Defines the start time for the solution of the levelset problem");
-      prm.add_parameter("end time",
-                        time_stepping.end_time,
-                        "Sets the end time for the solution of the levelset problem");
-      prm.add_parameter("time step size",
-                        time_stepping.time_step_size,
-                        "Sets the step size for time stepping. For non-uniform "
-                        "time stepping, this parameter determines the size of the first "
-                        "time step.");
-      prm.add_parameter("max n steps",
-                        time_stepping.max_n_steps,
-                        "Sets the maximum number of melt_pool steps");
-    }
-    prm.leave_subsection();
+    time_stepping.add_parameters(prm);
     /*
      *    adaptive meshing
      */
@@ -315,6 +298,9 @@ namespace MeltPoolDG
         "ls n initial reinit steps",
         ls.n_initial_reinit_steps,
         "Defines the number of initial reinitialization steps of the level set function.");
+      prm.add_parameter("ls reinit time step size",
+                        ls.reinit_time_step_size,
+                        "Defines the time step size of the reinitialization.");
       prm.add_parameter("ls time integration scheme",
                         ls.time_integration_scheme,
                         "Determines the time integration scheme.",
@@ -359,11 +345,6 @@ namespace MeltPoolDG
         reinit.scale_factor_epsilon,
         "Defines the scaling factor of the diffusion parameter in the reinitialization "
         "equation; the scaling factor is multipled by the mesh size (default: 0.5 i.e. eps=0.5*h_min");
-      prm.add_parameter(
-        "reinit dtau",
-        reinit.dtau,
-        "Defines the time step size of the reinitialization to be constant and"
-        "not to dependent on the mesh size (default: -1.0 i.e. grid size dependent");
       prm.add_parameter("reinit modeltype",
                         reinit.modeltype,
                         "Sets the type of reinitialization model that should be used.");
@@ -636,6 +617,7 @@ namespace MeltPoolDG
         "zero surface tension in solid",
         surface_tension.zero_surface_tension_in_solid,
         "Set this parameter to true to only apply surface tension if the solid fraction is zero.");
+      surface_tension.time_step_limit.add_parameters(prm);
     }
     prm.leave_subsection();
     /*

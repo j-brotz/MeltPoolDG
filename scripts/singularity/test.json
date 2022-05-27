@@ -13,10 +13,13 @@
     "lower perc to coarsen": "    0.00",
     "max grid refinement level": "8"
   },
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "0.005",
+    "max n steps": "5"
+  },
   "reinitialization": {
-    "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit dtau": "0.005",
     "reinit do matrix free": "false",
     "reinit do print l2norm": "true",
     "reinit constant epsilon": "0.05"
