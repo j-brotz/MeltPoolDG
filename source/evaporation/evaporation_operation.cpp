@@ -1,8 +1,11 @@
+#include <deal.II/base/function_parser.h>
+
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_thickness_integration.hpp>
+#include <meltpooldg/evaporation/evaporation_model_constant.hpp>
 #include <meltpooldg/evaporation/evaporation_model_hardt_wondra.hpp>
 #include <meltpooldg/evaporation/evaporation_model_recoil_pressure.hpp>
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
@@ -12,6 +15,8 @@
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <algorithm>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -78,6 +83,15 @@ namespace MeltPoolDG::Evaporation
     else
       Assert(false, ExcMessage("Specified evaporation source term is not implemented!"));
     reinit();
+
+    /*                 .
+     * local operation m(T)
+     */
+    if (evaporation_data.evaporation_model == EvaporationModelType::constant)
+      {
+        evapor_model =
+          std::make_shared<EvaporationModelConstant>(evaporation_data.evaporative_mass_flux);
+      }
   }
 
   template <int dim>
@@ -91,29 +105,22 @@ namespace MeltPoolDG::Evaporation
   {
     temperature  = temperature_in;
     temp_dof_idx = temp_dof_idx_in;
-    /*                 .
-     * local operation m(T)
-     */
-    //@todo: add asserts of parameters
-    if (evaporation_data.evaporation_model == "constant")
-      { /* do nothing --> no model has to be set up */
-      }
-    else if (evaporation_data.evaporation_model == "recoil pressure")
-      evapor_model = std::make_shared<EvaporationModelRecoilPressure<dim>>(
+
+    // setup of temperature-dependent evaporation models
+    if (evaporation_data.evaporation_model == EvaporationModelType::recoil_pressure)
+      evapor_model = std::make_shared<EvaporationModelRecoilPressure>(
         recoil_data,
         material.boiling_temperature,
         material.sticking_constant,
         material.molar_mass,
         evaporation_data.evaporative_mass_flux_scale_factor);
-    else if (evaporation_data.evaporation_model == "Hardt Wondra")
+    else if (evaporation_data.evaporation_model == EvaporationModelType::hardt_wondra)
       evapor_model =
         std::make_shared<EvaporationModelHardtWondra>(evaporation_data.coefficient,
                                                       material.latent_heat_of_evaporation,
                                                       material.first.density,
                                                       material.molar_mass,
                                                       material.boiling_temperature);
-    else
-      AssertThrow(false, ExcNotImplemented());
     /*
      * Computation of DoF-Vector
      */
@@ -153,10 +160,20 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
+  EvaporationOperation<dim>::set_time(const double &time_in)
+  {
+    time = time_in;
+  }
+
+  template <int dim>
+  void
   EvaporationOperation<dim>::compute_evaporative_mass_flux()
   {
-    if (evaporation_data.evaporation_model == "constant")
-      evaporative_mass_flux = evaporation_data.evaporative_mass_flux;
+    // prescribe spatially constant, potentially time-dependent evaporative mass flux
+    if (evaporation_data.evaporation_model == EvaporationModelType::constant)
+      {
+        evaporative_mass_flux = evapor_model->local_compute_evaporative_mass_flux(time);
+      }
     else
       {
         Assert(evapor_mass_flux_operator && temperature,

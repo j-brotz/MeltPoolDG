@@ -37,6 +37,19 @@ namespace MeltPoolDG
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
     Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
   )
+
+  // evaporation specific @todo: move to own file evaporation_data.hpp
+  BETTER_ENUM(
+    EvaporationModelType,
+    char,
+    // prescribe a (time-dependent) function for an evaporative mass flux being constant
+    // over the domain
+    constant,
+    // calculate the evaporative mass flux from the recoil pressure
+    recoil_pressure,
+    // calculate the evaporative mass flux according to the model proposed by Hardt & Wondra
+    hardt_wondra)
+
   BETTER_ENUM(EvaporationLevelSetSourceTermType,
               char,
               // calculate a divergence-free interface velocity and use it to advect the level set
@@ -231,16 +244,15 @@ namespace MeltPoolDG
   struct EvaporationData
   {
     number      evaporative_mass_flux_scale_factor = 1.0;
-    number      evaporative_mass_flux              = 0.0;
+    std::string evaporative_mass_flux              = "0.0";
     number      ls_value_liquid                    = 1.0;
     number      ls_value_gas                       = -1.0;
     std::string formulation_source_term_continuity = "diffuse";
     std::string formulation_evaporative_mass_flux_over_interface =
       "continuous"; // not needed if evaporation_model == "constant"
-    std::string evaporation_model =
-      "constant"; // @todo: instead of constant --> temperature-independent ?
-    number                            coefficient                           = 0.0;
-    unsigned int                      interface_value_n_iterations          = 3;
+    EvaporationModelType              evaporation_model            = EvaporationModelType::constant;
+    number                            coefficient                  = 0.0;
+    unsigned int                      interface_value_n_iterations = 3;
     unsigned int                      line_integral_n_subdivisions_per_side = 10;
     unsigned int                      line_integral_n_subdivisions_MCA      = 1;
     EvaporationLevelSetSourceTermType level_set_source_term_type =

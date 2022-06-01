@@ -91,7 +91,7 @@
     }
   },
   "evaporation": {
-    "evapor evaporation model": "Hardt Wondra",
+    "evapor evaporation model": "hardt_wondra",
     "evapor coefficient": "0.1"
   },
   "heat": {

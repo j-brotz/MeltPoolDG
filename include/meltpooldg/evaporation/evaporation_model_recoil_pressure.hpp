@@ -20,7 +20,6 @@ namespace MeltPoolDG::Evaporation
    * DOI: 10.1016/j.actamat.2016.02.014.
    *
    */
-  template <int dim>
   class EvaporationModelRecoilPressure : public EvaporationModelBase
   {
   private:

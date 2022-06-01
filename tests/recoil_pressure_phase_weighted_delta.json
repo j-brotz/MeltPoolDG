@@ -39,7 +39,7 @@
     }
   },
   "evaporation": {
-    "evapor evaporation model": "recoil pressure"
+    "evapor evaporation model": "recoil_pressure"
   },
   "melt pool": {
     "mp do not reinitialize in solid": "false",

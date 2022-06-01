@@ -651,7 +651,9 @@ namespace MeltPoolDG
       prm.add_parameter(
         "evapor evaporative mass flux",
         evapor.evaporative_mass_flux,
-        "Prescribe a spatially and temporally constant mass flux due to evaporation (SI unit in kg/m²s).");
+        "For evapor evaporation model == constant, prescribe a spatially constant "
+        "mass flux due to evaporation (SI unit in kg/m²s), as a function over time t "
+        ", e.g. min(2.*t,0.01).");
       prm.add_parameter("evapor ls value liquid",
                         evapor.ls_value_liquid,
                         "Set the level set value corresponding to the liquid domain.",
@@ -675,8 +677,7 @@ namespace MeltPoolDG
       prm.add_parameter("evapor evaporation model",
                         evapor.evaporation_model,
                         "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) "
-                        "will be calculated.",
-                        Patterns::Selection("constant|recoil pressure|Hardt Wondra"));
+                        "will be calculated.");
       prm.add_parameter("evapor coefficient", evapor.coefficient, "Evaporation coefficient.");
       prm.add_parameter("evapor interface value n iterations",
                         evapor.interface_value_n_iterations,

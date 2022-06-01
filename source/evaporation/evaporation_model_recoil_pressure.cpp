@@ -4,8 +4,7 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  template <int dim>
-  EvaporationModelRecoilPressure<dim>::EvaporationModelRecoilPressure(
+  EvaporationModelRecoilPressure::EvaporationModelRecoilPressure(
     const RecoilPressureData<double> &recoil_data,
     const double                      boiling_temperature,
     const double                      sticking_constant,
@@ -17,16 +16,10 @@ namespace MeltPoolDG::Evaporation
     , Cm(molar_mass / (2. * numbers::PI * PhysicalConstants::universal_gas_constant))
   {}
 
-  template <int dim>
   double
-  EvaporationModelRecoilPressure<dim>::local_compute_evaporative_mass_flux(const double T) const
+  EvaporationModelRecoilPressure::local_compute_evaporative_mass_flux(const double T) const
   {
     return mass_flux_scale_factor * 0.82 * sticking_constant *
            recoil_model.compute_recoil_pressure_coefficient(T) * std::sqrt(Cm / T);
   }
-
-  template class EvaporationModelRecoilPressure<1>;
-  template class EvaporationModelRecoilPressure<2>;
-  template class EvaporationModelRecoilPressure<3>;
-
 } // namespace MeltPoolDG::Evaporation

@@ -46,6 +46,14 @@ namespace MeltPoolDG::LevelSet
 
         if (evaporation_operation)
           {
+            // Only if a spatially constant evaporative mass flux is given as an analytical
+            // function, the time is needed to evaluate the function.
+            if (base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
+              evaporation_operation->set_time(time_iterator.get_current_time());
+            else
+              AssertThrow(false,
+                          ExcMessage("Only a evaporation model of constant type is supported."));
+
             // compute velocity due to evaporative mass flux
             evaporation_operation->compute_evaporation_velocity();
 
@@ -167,11 +175,8 @@ namespace MeltPoolDG::LevelSet
           ls_hanging_nodes_dof_idx,
           ls_quad_idx);
 
-        /**
-         *  set evaporative mass flux constant
-         */
-        evaporation_operation->get_evaporative_mass_flux() =
-          base_in->parameters.evapor.evaporative_mass_flux;
+        // prescribe evaporative mass flux spatially constant
+        evaporation_operation->compute_evaporative_mass_flux();
       }
     /**
      * set the initial velocity field

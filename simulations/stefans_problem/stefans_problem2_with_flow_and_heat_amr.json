@@ -88,7 +88,7 @@
     }
   },
   "evaporation": {
-    "evapor evaporation model": "Hardt Wondra",
+    "evapor evaporation model": "hardt_wondra",
     "evapor evaporative mass flux": "0.0",
     "evapor coefficient": "0.1"
   },

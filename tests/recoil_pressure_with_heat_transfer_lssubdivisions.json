@@ -52,7 +52,7 @@
     "formulation": "implicit_formulation"
   },
   "evaporation": {
-    "evapor evaporation model": "recoil pressure",
+    "evapor evaporation model": "recoil_pressure",
     "evapor latent heat of evaporation": "1.e6"
   },
   "surface tension": {

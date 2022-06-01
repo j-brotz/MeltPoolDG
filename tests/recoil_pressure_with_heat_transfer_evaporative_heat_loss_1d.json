@@ -47,7 +47,7 @@
     "recoil temperature constant": "10000."
   },
   "evaporation": {
-    "evapor evaporation model": "recoil pressure"
+    "evapor evaporation model": "recoil_pressure"
   },
   "laser": {
     "laser power": "156.",

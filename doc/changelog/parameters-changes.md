@@ -1,16 +1,28 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-06-01
+- Extend parameter and rename parameter values
+
+```diff
+{
+  "evaporation": {
+~   "evapor evaporative mass flux": "any time-dependent function e.g. 1.*t",
+~   "evapor evaporation model": "constant|hardt_wondra|recoil_pressure"
+  }
+}
+```
+
 ## 2022-05-26
 - Move parameter 
 
-```json
+```diff
 {
   "reinitialization": {
--    "reinit dtau": "",
+-   "reinit dtau": ""
   },
   "levelset": {
-+    "ls reinit time step size": "",
++   "ls reinit time step size": ""
   }
 }
 ```

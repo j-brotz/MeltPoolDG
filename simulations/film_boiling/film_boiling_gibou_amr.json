@@ -82,7 +82,7 @@
     "curv damping scale factor": "2"
   },
   "evaporation": {
-    "evapor evaporation model": "Hardt Wondra",
+    "evapor evaporation model": "hardt_wondra",
     "evapor coefficient": "1.",
     "evapor level set source term type": "rhs",
     "evapor do level set pressure gradient interpolation": "true"
