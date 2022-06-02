@@ -131,7 +131,7 @@ namespace MeltPoolDG
 
     // set automatic weights of asymmetric delta functions, if requested
     heat.delta_approximation_phase_weighted.set_parameters(material);
-    laser.gauss.delta_approximation_phase_weighted.set_parameters(material);
+    laser.delta_approximation_phase_weighted.set_parameters(material);
     surface_tension.delta_approximation_phase_weighted.set_parameters(material);
     recoil.delta_approximation_phase_weighted.set_parameters(material);
 
@@ -539,6 +539,16 @@ namespace MeltPoolDG
         "laser do move",
         laser.do_move,
         "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.");
+      prm.add_parameter(
+        "laser impact type",
+        laser.impact_type,
+        "Laser impact model. "
+        "volumetric: volumetric heat source; "
+        "interface: surface heat source at the two-phase interface modelled as a "
+        "continuum surface force within the interface region; "
+        "interface sharp: impact of surface heat source at the two-phase interface modelled as a "
+        "a sharp surface force (evaluation of a surface integral);");
+      laser.delta_approximation_phase_weighted.add_parameters(prm);
       prm.add_parameter("laser heat source model",
                         laser.heat_source_model,
                         "Laser heat source model.");
@@ -560,15 +570,6 @@ namespace MeltPoolDG
       /*
        *   Gauss
        */
-      prm.add_parameter(
-        "laser impact type",
-        laser.impact_type,
-        "Laser impact model. "
-        "volumetric: volumetric heat source; "
-        "interface: surface heat source at the two-phase interface modelled as a "
-        "continuum surface force within the interface region; "
-        "interface sharp: impact of surface heat source at the two-phase interface modelled as a "
-        "a sharp surface force (evaluation of a surface integral);");
       prm.add_parameter("laser gauss laser beam radius",
                         laser.gauss.laser_beam_radius,
                         "Laser beam radius.");
@@ -578,7 +579,6 @@ namespace MeltPoolDG
       prm.add_parameter("laser gauss absorptivity liquid",
                         laser.gauss.absorptivity_liquid,
                         "Laser energy absorptivity of the liquid part of the domain.");
-      laser.gauss.delta_approximation_phase_weighted.add_parameters(prm);
       /*
        *   Analytical temperature field
        */

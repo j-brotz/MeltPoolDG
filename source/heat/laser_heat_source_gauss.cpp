@@ -8,8 +8,9 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   LaserHeatSourceGauss<dim>::LaserHeatSourceGauss(
-    const LaserData<double>::GaussData &         data_in,
-    const TwoPhaseFluidPropertiesTransitionType &variable_properties_over_interface)
+    const LaserData<double>::GaussData &               data_in,
+    const TwoPhaseFluidPropertiesTransitionType &      variable_properties_over_interface,
+    const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data)
     : data(data_in)
     , variable_properties_over_interface(variable_properties_over_interface)
     , vol_peak_power_density_factor(
@@ -21,7 +22,7 @@ namespace MeltPoolDG::Heat
                 ExcMessage("The laser beam radius must be greater than zero! Abort.."));
 
     delta_phase_weighted =
-      create_phase_weighted_delta_approximation(data.delta_approximation_phase_weighted);
+      create_phase_weighted_delta_approximation(delta_approximation_phase_weighted_data);
   }
 
   template <int dim>
