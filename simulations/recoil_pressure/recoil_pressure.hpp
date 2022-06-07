@@ -249,15 +249,19 @@ namespace MeltPoolDG
           const types::boundary_id front_bc = 5;
           const types::boundary_id back_bc  = 6;
 
+          const auto double_eq = [](const double a, const double b) {
+            return std::abs(a - b) < std::numeric_limits<double>::epsilon() * 128;
+          };
+
           if (dim == 1)
             {
               for (const auto &cell : this->triangulation->cell_iterators())
                 for (const auto &face : cell->face_iterators())
                   if ((face->at_boundary()))
                     {
-                      if (face->center()[0] == domain_y_min)
+                      if (double_eq(face->center()[0], domain_y_min))
                         face->set_boundary_id(lower_bc);
-                      else if (face->center()[0] == domain_y_max)
+                      else if (double_eq(face->center()[0], domain_y_max))
                         face->set_boundary_id(upper_bc);
                     }
             }
@@ -267,26 +271,26 @@ namespace MeltPoolDG
                 for (const auto &face : cell->face_iterators())
                   if ((face->at_boundary()))
                     {
-                      if (face->center()[0] == domain_x_min)
+                      if (double_eq(face->center()[0], domain_x_min))
                         face->set_boundary_id(left_bc);
-                      else if (face->center()[0] == domain_x_max)
+                      else if (double_eq(face->center()[0], domain_x_max))
                         face->set_boundary_id(right_bc);
                       else if (dim == 2)
                         {
-                          if (face->center()[1] == domain_y_min)
+                          if (double_eq(face->center()[1], domain_y_min))
                             face->set_boundary_id(lower_bc);
-                          else if (face->center()[1] == domain_y_max)
+                          else if (double_eq(face->center()[1], domain_y_max))
                             face->set_boundary_id(upper_bc);
                         }
                       else // dim == 3
                         {
-                          if (face->center()[1] == domain_x_min)
+                          if (double_eq(face->center()[1], domain_x_min))
                             face->set_boundary_id(back_bc);
-                          else if (face->center()[1] == domain_x_max)
+                          else if (double_eq(face->center()[1], domain_x_max))
                             face->set_boundary_id(front_bc);
-                          else if (face->center()[2] == domain_y_min)
+                          else if (double_eq(face->center()[2], domain_y_min))
                             face->set_boundary_id(lower_bc);
-                          else if (face->center()[2] == domain_y_max)
+                          else if (double_eq(face->center()[2], domain_y_max))
                             face->set_boundary_id(upper_bc);
                         }
                     }
