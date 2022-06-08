@@ -60,25 +60,27 @@ namespace MeltPoolDG
       class SimulationRecoilPressure : public SimulationBase<dim>
       {
       private:
-        double       domain_x_min                   = 0;
-        double       domain_x_max                   = 0;
-        double       domain_y_min                   = 0;
-        double       domain_y_max                   = 0;
-        std::string  cell_repetitions               = "1,1,1";
-        bool         periodic_boundary              = false;
-        bool         evaporation_boundary           = false;
-        unsigned int n_local_refinement             = 0;
-        double       T_initial_top                  = 500;
-        double       T_initial_bottom               = T_initial_top;
-        std::string  local_refinement_1_bottom_left = "";
-        std::string  local_refinement_1_top_right   = "";
-        std::string  local_refinement_2_bottom_left = "";
-        std::string  local_refinement_2_top_right   = "";
+        double                        domain_x_min = 0;
+        double                        domain_x_max = 0;
+        double                        domain_y_min = 0;
+        double                        domain_y_max = 0;
+        std::array<unsigned int, dim> cell_repetitions;
+        bool                          periodic_boundary              = false;
+        bool                          evaporation_boundary           = false;
+        unsigned int                  n_local_refinement             = 0;
+        double                        T_initial_top                  = 500;
+        double                        T_initial_bottom               = T_initial_top;
+        std::string                   local_refinement_1_bottom_left = "";
+        std::string                   local_refinement_1_top_right   = "";
+        std::string                   local_refinement_2_bottom_left = "";
+        std::string                   local_refinement_2_top_right   = "";
 
       public:
         SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
           : SimulationBase<dim>(parameter_file, mpi_communicator)
-        {}
+        {
+          cell_repetitions.fill(1);
+        }
 
         void
         add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
@@ -177,16 +179,13 @@ namespace MeltPoolDG
                                          (dim == 2) ? Point<dim>(x_max, y_max) :
                                                       Point<dim>(x_max, x_max, y_max);
 
-          auto repetitions = UtilityFunctions::convert_string_to_vector(cell_repetitions);
-          repetitions.resize(dim);
-
           if (this->parameters.base.do_simplex)
             {
               std::vector<unsigned int> subdivisions(
                 dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
               subdivisions[dim - 1] *= 2;
               for (int d = 0; d < dim; d++)
-                subdivisions[d] *= repetitions[d];
+                subdivisions[d] *= cell_repetitions[d];
 
               GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
                                                                        subdivisions,
@@ -195,10 +194,11 @@ namespace MeltPoolDG
             }
           else
             {
-              GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                        repetitions,
-                                                        bottom_left,
-                                                        top_right);
+              GridGenerator::subdivided_hyper_rectangle(
+                *this->triangulation,
+                std::vector<unsigned int>(cell_repetitions.begin(), cell_repetitions.end()),
+                bottom_left,
+                top_right);
             }
         }
 

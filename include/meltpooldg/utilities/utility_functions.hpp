@@ -94,29 +94,6 @@ namespace MeltPoolDG
     }
 
     /**
-     * This function converts a string with @p delimiter separated integers to a std::vector<unsinged int>
-     * object.
-     */
-    inline std::vector<unsigned int>
-    convert_string_to_vector(const std::string s_in, const std::string delimiter = ",")
-    {
-      std::vector<unsigned int> vec;
-      size_t                    pos;
-      std::string               coord;
-      std::string               s = s_in;
-
-      // split parts between delimiters
-      while ((pos = s.find(delimiter)) != std::string::npos)
-        {
-          coord = s.substr(0, pos);
-          vec.push_back(std::stoul(coord));
-          s.erase(0, pos + delimiter.length());
-        }
-      vec.push_back(std::stoul(s));
-      return vec;
-    }
-
-    /**
      * This function returns heaviside values for a given VectorizedArray. The limit to
      * distinguish between 0 and 1 can be adjusted by the argument "limit". This function is
      * particularly suited in the context of MatrixFree routines.

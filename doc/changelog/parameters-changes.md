@@ -33,8 +33,11 @@ All notable changes of the input parameters will be documented in this file.
 - Add parameter to recoil pressure simulation for cell repetitions per dimension applied before global refinement.
 
 ```json
-"simulation specific domain": {
-  "cell repetitions": "x,y,z"
+{
+  "application name": "recoil_pressure",
+  "simulation specific domain": {
+    "cell repetitions": "x,y,z"
+  }
 }
 ```
 
