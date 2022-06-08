@@ -107,7 +107,8 @@
     "material two phase properties transition type": "smooth",
     "material solidification type": "mushy_zone",
     "material latent heat of evaporation": "1e6",
-    "material boiling temperature": "3000."
+    "material boiling temperature": "3000.",
+    "material specific enthalpy reference temperature": "663.731"
   },
   "melt pool": {
     "mp boiling temperature": "3000.",
