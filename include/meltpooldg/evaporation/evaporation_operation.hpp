@@ -69,6 +69,9 @@ namespace MeltPoolDG::Evaporation
      */
     mutable const VectorType *temperature;
     unsigned int              temp_dof_idx;
+
+    // only needed if a time-dependent function is given
+    mutable double time = numbers::invalid_double;
     /**
      * evaporative mass flux
      */
@@ -133,6 +136,9 @@ namespace MeltPoolDG::Evaporation
 
     void
     reinit();
+
+    void
+    set_time(const double &time);
     /*
      * attach functions
      */

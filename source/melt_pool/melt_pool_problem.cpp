@@ -26,6 +26,12 @@ namespace MeltPoolDG::MeltPool
 
         time_iterator.print_me(scratch_data->get_pcout());
 
+        // Only if a spatially constant evaporative mass flux is given as an analytical function,
+        // the time is needed to evaluate the function.
+        if (evaporation_operation &&
+            base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
+          evaporation_operation->set_time(time_iterator.get_current_time());
+
         /******************************************************************************************
          * LEVEL SET
          ******************************************************************************************/
@@ -87,7 +93,7 @@ namespace MeltPoolDG::MeltPool
           //    * the temperature field is prescribed analytically
           if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
               (evaporation_operation &&
-               !(base_in->parameters.evapor.evaporation_model == "constant")) ||
+               !(base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)) ||
               (melt_pool_operation &&
                !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
             heat_operation->solve(dt);
@@ -721,14 +727,11 @@ namespace MeltPoolDG::MeltPool
      *  @todo: improve cases where it must not be specified
      */
     if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
-        (evaporation_operation && !(base_in->parameters.evapor.evaporation_model == "constant")) ||
+        (evaporation_operation &&
+         !(base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)) ||
         (melt_pool_operation &&
          !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
       heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
-
-    // compute the evaporative mass flux from the initial temperature field
-    if (evaporation_operation)
-      evaporation_operation->compute_evaporative_mass_flux();
 
     /*
      * set initial condition of the melt pool class
@@ -745,12 +748,20 @@ namespace MeltPoolDG::MeltPool
           AssertThrow(false, ExcNotImplemented());
 #endif
       }
+
     // update the phases for the flow solver considering the updated level set and temperature
     update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
 
-    // compute the evaporative mass flux from the temperature field
+    // compute the evaporative mass flux from the initial temperature field
     if (evaporation_operation)
-      evaporation_operation->compute_evaporative_mass_flux();
+      {
+        // Only if a spatially constant evaporative mass flux is given as an analytical function,
+        // the time is needed to evaluate the function.
+        if (base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
+          evaporation_operation->set_time(time_iterator.get_current_time());
+
+        evaporation_operation->compute_evaporative_mass_flux();
+      }
   }
 
   template <int dim>

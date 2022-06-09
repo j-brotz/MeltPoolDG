@@ -1,33 +1,26 @@
 {
   "base": {
     "problem name": "melt_pool",
-    "application name": "stefans_problem1_with_flow_and_heat",
+    "application name": "stefans_problem_with_flow",
     "dimension": "2",
-    "global refinements": "10",
+    "global refinements": "5",
     "gravity": "0.",
     "degree": "1",
-    "do print parameters": "false",
-    "verbosity level": "0"
+    "do print parameters": "false"
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "0.1",
-    "time step size": "5.e-4",
-    "max n steps": "10"
+    "end time": "0.002",
+    "time step size": "0.0005"
   },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
-    "material boiling temperature": "373.15",
-    "material first density": "1.",
-    "material first viscosity": "0.0001",
-    "material first conductivity": "0.01",
-    "material first capacity": "1000.",
+    "material first density": "0.01",
+    "material first viscosity": "1e-6",
+    "material first conductivity": "1e-16",
     "material second density": "1.0",
-    "material second viscosity": "0.01",
-    "material second conductivity": "0.01",
-    "material second capacity": "1000.",
-    "material molar mass": "0.01801528",
-    "material latent heat of evaporation": "1.e1"
+    "material second viscosity": "1e-6",
+    "material second conductivity": "1e-16"
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -60,54 +53,35 @@
     "ls do reinitialization": "true",
     "ls time integration scheme": "crank_nicolson"
   },
-  "adaptive meshing": {
-    "do amr": "false",
-    "do not modify boundary cells": "false",
-    "upper perc to refine": "     0.1",
-    "lower perc to coarsen": "0.05",
-    "n initial refinement cycles": "5",
-    "max grid refinement level": "7",
-    "every n step": "1"
-  },
   "reinitialization": {
-    "reinit max n steps": "2",
+    "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "4e-6",
+    "reinit constant epsilon": "0.02",
     "linear solver": {
       "do matrix free": "true"
     }
   },
   "normal vector": {
     "normal vec implementation": "meltpooldg",
-    "normal vec damping scale factor": "10",
     "linear solver": {
       "do matrix free": "true"
     }
   },
   "curvature": {
     "curv implementation": "meltpooldg",
-    "curv damping scale factor": "4",
-    "curv verbosity level": "1",
     "linear solver": {
       "do matrix free": "true"
     }
   },
   "evaporation": {
-    "evapor evaporation model": "hardt_wondra",
-    "evapor evaporative mass flux": "0.0",
-    "evapor coefficient": "1.0"
-  },
-  "heat": {
-    "heat two phase": "true",
-    "linear solver": {
-      "rel tolerance": "1e-12",
-      "preconditioner type": "AMG"
-    }
+    "evapor evaporative mass flux": "1.*t"
   },
   "paraview": {
     "paraview do output": "false"
   },
   "problem specific": {
+    "do evaporative heat flux": "false",
+    "do evaporative mass flux": "true",
     "do evaporation": "true",
     "do heat transfer": "true"
   },

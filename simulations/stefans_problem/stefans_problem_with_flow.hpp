@@ -9,6 +9,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/evaporation/evaporation_model_constant.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -178,14 +179,20 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
                                                    generic_data_out.get_dof_handler("velocity"),
                                                    generic_data_out.get_vector("velocity"));
 
+          const auto m_dot =
+            Evaporation::EvaporationModelConstant(this->parameters.evapor.evaporative_mass_flux);
+
           const auto analytical_velocity = [&](const double &ls) -> double {
-            return this->parameters.evapor.evaporative_mass_flux * (1. - ls) *
+            return m_dot.local_compute_evaporative_mass_flux(generic_data_out.get_time()) *
+                   (1. - ls) *
                    (1. / this->parameters.material.first.density -
                     1. / this->parameters.material.second.density);
           };
 
           const auto analytical_pressure = [&](const double &ls) -> double {
-            return std::pow(this->parameters.evapor.evaporative_mass_flux, 2) * ls *
+            return std::pow(m_dot.local_compute_evaporative_mass_flux(generic_data_out.get_time()),
+                            2) *
+                   ls *
                    (1. / this->parameters.material.first.density -
                     1. / this->parameters.material.second.density);
           };
