@@ -54,6 +54,9 @@ namespace MeltPoolDG::LevelSet
               AssertThrow(false,
                           ExcMessage("Only a evaporation model of constant type is supported."));
 
+            // compute evaporative mass flux spatially constant
+            evaporation_operation->compute_evaporative_mass_flux();
+
             // compute velocity due to evaporative mass flux
             evaporation_operation->compute_evaporation_velocity();
 
@@ -174,9 +177,6 @@ namespace MeltPoolDG::LevelSet
           ls_hanging_nodes_dof_idx,
           ls_hanging_nodes_dof_idx,
           ls_quad_idx);
-
-        // prescribe evaporative mass flux spatially constant
-        evaporation_operation->compute_evaporative_mass_flux();
       }
     /**
      * set the initial velocity field
