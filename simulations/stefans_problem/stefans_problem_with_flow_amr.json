@@ -99,9 +99,8 @@
   },
   "problem specific": {
     "do evaporative heat flux": "false",
-    "do evaporative mass flux": "true",
-    "do evaporation": "true",
-    "do heat transfer": "true"
+    "do heat transfer": "true",
+    "do evaporative velocity jump": "true"
   },
   "advection diffusion": {
     "linear solver": {
