@@ -570,8 +570,10 @@ namespace MeltPoolDG::MeltPool
             &evaporation_operation->get_evaporative_mass_flux(),
             evapor_mass_flux_dof_idx,
             base_in->parameters.material.latent_heat_of_evaporation,
-            problem_specific_parameters
-              .do_recoil_pressure /*do phenomenological recoil pressure model*/); // @todo: clean-up
+            problem_specific_parameters.do_recoil_pressure &&
+              !problem_specific_parameters
+                 .do_evaporative_velocity_jump /*do phenomenological recoil pressure model*/); // @todo:
+                                                                                               // clean-up
       }
     /*
      *    initialize the melt pool operation class
