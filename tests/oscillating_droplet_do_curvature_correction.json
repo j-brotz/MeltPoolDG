@@ -108,7 +108,6 @@
     "paraview do output": "false"
   },
   "problem specific": {
-    "do evaporation": "false",
     "do melt pool": "false",
     "do recoil pressure": "false",
     "do heat transfer": "false"

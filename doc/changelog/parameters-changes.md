@@ -2,6 +2,22 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-06-01
+- Remove parameter of MeltPoolProblem and rename parameter "do evaporative mass flux"
+  to "do evaporative velocity jump"
+
+```diff
+{
+  "base": {
+    "problem name": "melt_pool"
+  },
+  "problem specific": {
+-   "do evaporation": "",
+-   "do evaporative mass flux": "",
++   "do evaporative velocity jump": ""
+  }
+}
+```
+## 2022-06-01
 - Extend parameter and rename parameter values
 
 ```diff

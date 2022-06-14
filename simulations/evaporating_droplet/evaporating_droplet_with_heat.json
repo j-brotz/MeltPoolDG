@@ -102,7 +102,8 @@
     }
   },
   "problem specific": {
-    "do evaporation": "true",
+    "do evaporative heat flux": "true",
+    "do evaporative velocity jump": "true",
     "do heat transfer": "true"
   },
   "advection diffusion": {

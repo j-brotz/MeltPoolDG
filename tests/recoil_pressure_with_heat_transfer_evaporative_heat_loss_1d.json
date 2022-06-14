@@ -142,12 +142,11 @@
     }
   },
   "problem specific": {
-    "do evaporation": "true",
     "do evaporative heat flux": "true",
-    "do evaporative mass flux": "false",
     "do melt pool": "true",
     "do recoil pressure": "true",
-    "do heat transfer": "true"
+    "do heat transfer": "true",
+    "do evaporative velocity jump": "false"
   },
   "advection diffusion": {
     "linear solver": {

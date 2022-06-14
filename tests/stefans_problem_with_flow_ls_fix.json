@@ -81,10 +81,9 @@
   },
   "problem specific": {
     "do evaporative heat flux": "false",
-    "do evaporative mass flux": "true",
-    "do evaporation": "true",
     "do heat transfer": "true",
-    "do advect level set": "false"
+    "do advect level set": "false",
+    "do evaporative velocity jump": "true"
   },
   "advection diffusion": {
     "linear solver": {

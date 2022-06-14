@@ -105,7 +105,6 @@
     "paraview do output": "true"
   },
   "problem specific": {
-    "do evaporation": "true",
     "do heat transfer": "true"
   },
   "advection diffusion": {

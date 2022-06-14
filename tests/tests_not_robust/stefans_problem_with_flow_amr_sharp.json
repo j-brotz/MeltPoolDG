@@ -93,10 +93,9 @@
     "paraview do output": "false"
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
-    "do evaporative mass flux": "true",
-    "do evaporation": "true",
-    "do heat transfer": "true"
+    "do heat transfer": "true",
+    "do evaporative velocity jump": "true",
+    "do evaporative heat flux": "false"
   },
   "advection diffusion": {
     "linear solver": {
