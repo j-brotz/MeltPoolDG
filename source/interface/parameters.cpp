@@ -87,11 +87,6 @@ namespace MeltPoolDG
     if (ls.do_reinitialization && ls.n_initial_reinit_steps < 0.0)
       ls.n_initial_reinit_steps = reinit.max_n_steps;
     /*
-     *  set the melt pool center if not specified
-     */
-    if (mp.melt_pool_center == "not_initialized")
-      mp.melt_pool_center = laser.center;
-    /*
      *  set the maximum temperature of the melt pool if not specified
      */
     if (laser.analytical.max_temperature < material.boiling_temperature)
@@ -564,10 +559,6 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("melt pool");
     {
-      prm.add_parameter("mp melt pool center",
-                        mp.melt_pool_center,
-                        "Center coordinates of the melt pool ellipse/parabola. If no value is "
-                        "provided it will be set equally to the laser center");
       prm.add_parameter(
         "mp set velocity to zero in solid",
         mp.solid.set_velocity_to_zero,

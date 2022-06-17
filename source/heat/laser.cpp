@@ -15,6 +15,24 @@ namespace MeltPoolDG::Heat
       AssertThrow(false, ExcMessage("Unknown laser impact type! Abort..."));
   }
 
+  namespace
+  {
+    template <int dim, typename ForwardIterator>
+    Point<dim>
+    to_point(const ForwardIterator begin, const ForwardIterator end)
+    {
+      AssertDimension(std::distance(begin, end), dim);
+
+      Point<dim> point;
+
+      auto it = begin;
+      for (int i = 0; i < dim; ++i)
+        point[i] = *it++;
+
+      return point;
+    }
+  } // namespace
+
   template <int dim>
   LaserOperation<dim>::LaserOperation(const ScratchData<dim> &    scratch_data_in,
                                       const LaserData<double> &   laser_data_in,
@@ -22,7 +40,7 @@ namespace MeltPoolDG::Heat
     : scratch_data(scratch_data_in)
     , laser_data(laser_data_in)
     , material(material_data_in)
-    , laser_position(UtilityFunctions::convert_string_coords_to_point<dim>(laser_data.center))
+    , laser_position(to_point<dim>(laser_data.center.begin(), laser_data.center.end()))
     , impact_type(impact_type_to_emun(laser_data.impact_type))
   {}
 
