@@ -66,7 +66,7 @@ namespace MeltPoolDG
      * object.
      */
     template <int dim>
-    Point<dim>
+    inline Point<dim>
     convert_string_coords_to_point(const std::string s_in, const std::string delimiter = ",")
     {
       Point<dim>  p;

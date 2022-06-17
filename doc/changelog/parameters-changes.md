@@ -17,6 +17,7 @@ All notable changes of the input parameters will be documented in this file.
   }
 }
 ```
+
 ## 2022-06-01
 - Extend parameter and rename parameter values
 
@@ -25,6 +26,17 @@ All notable changes of the input parameters will be documented in this file.
   "evaporation": {
 ~   "evapor evaporative mass flux": "any time-dependent function e.g. 1.*t",
 ~   "evapor evaporation model": "constant|hardt_wondra|recoil_pressure"
+  }
+```
+
+## 2022-06-07
+- Add parameter to recoil pressure simulation for cell repetitions per dimension applied before global refinement.
+
+```json
+{
+  "application name": "recoil_pressure",
+  "simulation specific domain": {
+    "cell repetitions": "x,y,z"
   }
 }
 ```
