@@ -65,15 +65,15 @@ namespace MeltPoolDG
         double                    domain_y_min = 0;
         double                    domain_y_max = 0;
         std::vector<unsigned int> cell_repetitions;
-        bool                      periodic_boundary              = false;
-        bool                      evaporation_boundary           = false;
-        unsigned int              n_local_refinement             = 0;
-        double                    T_initial_top                  = 500;
-        double                    T_initial_bottom               = T_initial_top;
-        std::string               local_refinement_1_bottom_left = "";
-        std::string               local_refinement_1_top_right   = "";
-        std::string               local_refinement_2_bottom_left = "";
-        std::string               local_refinement_2_top_right   = "";
+        bool                      periodic_boundary    = false;
+        bool                      evaporation_boundary = false;
+        unsigned int              n_local_refinement   = 0;
+        double                    T_initial_top        = 500;
+        double                    T_initial_bottom     = T_initial_top;
+        Point<dim>                local_refinement_1_bottom_left;
+        Point<dim>                local_refinement_1_top_right;
+        Point<dim>                local_refinement_2_bottom_left;
+        Point<dim>                local_refinement_2_top_right;
 
       public:
         SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
@@ -404,27 +404,12 @@ namespace MeltPoolDG
               if constexpr (dim == 2)
                 {
                   // 1. region
-                  AssertThrow(local_refinement_1_bottom_left.size() > 0 &&
-                                local_refinement_1_bottom_left.size() > 0,
-                              ExcMessage("The points of the refinement region must be specified."));
-                  const auto bl = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                    local_refinement_1_bottom_left);
-                  const auto tr = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                    local_refinement_1_top_right);
-                  const auto refinement_region = BoundingBox<dim>({bl, tr});
+                  const auto refinement_region = BoundingBox<dim>(
+                    {local_refinement_1_bottom_left, local_refinement_1_top_right});
 
-                  // 2. region (optional)
-                  Point<dim> bl_2;
-                  Point<dim> tr_2;
-                  if (local_refinement_2_bottom_left.size() > 0 &&
-                      local_refinement_2_top_right.size() > 0)
-                    {
-                      bl_2 = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                        local_refinement_2_bottom_left);
-                      tr_2 = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-                        local_refinement_2_top_right);
-                    }
-                  const auto refinement_region_2 = BoundingBox<dim>({bl_2, tr_2});
+                  // 2. region
+                  const auto refinement_region_2 = BoundingBox<dim>(
+                    {local_refinement_2_bottom_left, local_refinement_2_top_right});
 
                   for (unsigned int j = 0; j < n_local_refinement; ++j)
                     {
@@ -452,11 +437,11 @@ namespace MeltPoolDG
         void
         set_field_conditions() override
         {
-          auto laser_center = MeltPoolDG::UtilityFunctions::convert_string_coords_to_point<dim>(
-            this->parameters.laser.center);
+          AssertDimension(this->parameters.laser.center.size(), dim);
 
           this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
-                                           Point<dim>::unit_vector(dim - 1) * laser_center[dim - 1],
+                                           Point<dim>::unit_vector(dim - 1) *
+                                             this->parameters.laser.center[dim - 1],
                                            -Point<dim>::unit_vector(dim - 1)),
                                          "signed_distance");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
