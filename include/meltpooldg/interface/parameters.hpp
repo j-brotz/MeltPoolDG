@@ -169,11 +169,11 @@ namespace MeltPoolDG
   template <typename number = double>
   struct LaserData
   {
-    number               power            = 0.0;
-    std::string          power_over_time  = "constant";
-    number               power_start_time = 0.0;
-    number               power_end_time   = 1.e12;
-    std::vector<double>  center;
+    number               power             = 0.0;
+    std::string          power_over_time   = "constant";
+    number               power_start_time  = 0.0;
+    number               power_end_time    = 1.e12;
+    std::vector<double>  center            = {0, 0, 0};
     bool                 do_move           = false;
     number               scan_speed        = 0.0;
     std::string          impact_type       = "volumetric";

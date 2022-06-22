@@ -21,7 +21,8 @@ namespace MeltPoolDG::Heat
     Point<dim>
     to_point(const ForwardIterator begin, const ForwardIterator end)
     {
-      AssertDimension(std::distance(begin, end), dim);
+      (void)end;
+      AssertIndexRange(dim, std::distance(begin, end) + 1);
 
       Point<dim> point;
 

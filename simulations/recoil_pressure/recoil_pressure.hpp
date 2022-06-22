@@ -437,7 +437,7 @@ namespace MeltPoolDG
         void
         set_field_conditions() override
         {
-          AssertDimension(this->parameters.laser.center.size(), dim);
+          AssertIndexRange(dim, this->parameters.laser.center.size() + 1);
 
           this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
                                            Point<dim>::unit_vector(dim - 1) *
