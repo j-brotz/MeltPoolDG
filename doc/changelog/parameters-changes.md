@@ -11,6 +11,15 @@ All notable changes of the input parameters will be documented in this file.
   }
 }
 ```
+- Introduce new parameter to enable time-dependent boundary conditions in the
+  HeatOperation.
+```diff
+{
+  "heat": {
++   "enable time dependent bc": "true|false"
+  }
+}
+```
 
 ## 2022-06-01
 - Remove parameter of MeltPoolProblem and rename parameter "do evaporative mass flux"

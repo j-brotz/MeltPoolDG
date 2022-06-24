@@ -53,6 +53,13 @@ namespace MeltPoolDG
     {
       return bc;
     }
+
+    void
+    set_time(const double time)
+    {
+      for (auto &b : bc)
+        b.second->set_time(time);
+    }
   };
 
   template <int dim>
@@ -70,5 +77,8 @@ namespace MeltPoolDG
 
     BoundaryTypes
     get_boundary_type(types::boundary_id id);
+
+    void
+    set_time(const double time);
   };
 } // namespace MeltPoolDG

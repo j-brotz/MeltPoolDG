@@ -25,6 +25,10 @@ namespace MeltPoolDG
     {
       using namespace dealii;
 
+      static std::string T_bc_top    = "";
+      static std::string T_bc_bottom = "";
+
+
       template <int dim>
       class InitialConditionTemperature : public Function<dim>
       {
@@ -132,6 +136,16 @@ namespace MeltPoolDG
                                 "Set the initial temperature on the top boundary.");
               prm.add_parameter("bottom",
                                 T_initial_bottom,
+                                "Set the initial temperature on the bottom boundary.");
+            }
+            prm.leave_subsection();
+            prm.enter_subsection("bc temperature");
+            {
+              prm.add_parameter("top",
+                                T_bc_top,
+                                "Set the initial temperature on the top boundary.");
+              prm.add_parameter("bottom",
+                                T_bc_bottom,
                                 "Set the initial temperature on the bottom boundary.");
             }
             prm.leave_subsection();
@@ -259,7 +273,7 @@ namespace MeltPoolDG
           const types::boundary_id back_bc  = 6;
 
           const auto double_eq = [](const double a, const double b) {
-            return std::abs(a - b) < std::numeric_limits<double>::epsilon() * 128;
+            return std::abs(a - b) < 1e-10;
           };
 
           if (dim == 1)
@@ -362,19 +376,27 @@ namespace MeltPoolDG
           if (this->parameters.laser.heat_source_model != LaserHeatSourceModel::Analytical)
             {
               if (evaporation_boundary && this->parameters.heat.convection_coefficient > 0)
-                {
-                  this->attach_convection_boundary_condition(upper_bc, "heat_transfer");
-                }
+                this->attach_convection_boundary_condition(upper_bc, "heat_transfer");
               else
-                this->attach_dirichlet_boundary_condition(
-                  upper_bc,
-                  std::make_shared<Functions::ConstantFunction<dim>>(T_initial_top),
-                  "heat_transfer");
+                {
+                  std::shared_ptr<Function<dim>> T_1;
+                  std::shared_ptr<Function<dim>> T_2;
 
-              this->attach_dirichlet_boundary_condition(
-                lower_bc,
-                std::make_shared<Functions::ConstantFunction<dim>>(T_initial_bottom),
-                "heat_transfer");
+                  if ((T_bc_top != "") && (T_bc_bottom != ""))
+                    {
+                      T_1 = std::make_shared<FunctionParser<dim>>(T_bc_top);
+                      T_2 = std::make_shared<FunctionParser<dim>>(T_bc_bottom);
+                    }
+                  else
+                    {
+                      T_1 = std::make_shared<Functions::ConstantFunction<dim>>(T_initial_top);
+                      T_2 = std::make_shared<Functions::ConstantFunction<dim>>(T_initial_bottom);
+                    }
+
+                  this->attach_dirichlet_boundary_condition(upper_bc, T_1, "heat_transfer");
+
+                  this->attach_dirichlet_boundary_condition(lower_bc, T_2, "heat_transfer");
+                }
             }
 
           if (!this->parameters.base.do_simplex)

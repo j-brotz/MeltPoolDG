@@ -7,18 +7,21 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   HeatTransferOperation<dim>::HeatTransferOperation(
-    const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
-    const ScratchData<dim> &                        scratch_data_in,
-    const HeatData<double> &                        heat_data_in,
-    const Material<double> &                        material,
-    const unsigned int                              temp_dof_idx_in,
-    const unsigned int                              temp_hanging_nodes_dof_idx_in,
-    const unsigned int                              temp_quad_idx_in,
-    const unsigned int                              vel_dof_idx_in,
-    VectorType *                                    velocity_in,
-    const unsigned int                              ls_dof_idx_in,
-    VectorType *                                    level_set_as_heaviside_in)
+    std::shared_ptr<BoundaryConditions<dim>> bc_data_in,
+    const PeriodicBoundaryConditions<dim> &  pbc,
+    const ScratchData<dim> &                 scratch_data_in,
+    const HeatData<double> &                 heat_data_in,
+    const Material<double> &                 material,
+    const unsigned int                       temp_dof_idx_in,
+    const unsigned int                       temp_hanging_nodes_dof_idx_in,
+    const unsigned int                       temp_quad_idx_in,
+    const unsigned int                       vel_dof_idx_in,
+    VectorType *                             velocity_in,
+    const unsigned int                       ls_dof_idx_in,
+    VectorType *                             level_set_as_heaviside_in)
     : scratch_data(scratch_data_in)
+    , bc_data(bc_data_in)
+    , pbc(pbc)
     , heat_data(heat_data_in)
     , temp_dof_idx(temp_dof_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
@@ -70,14 +73,25 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   HeatTransferOperation<dim>::set_initial_condition(
-    const Function<dim> &initial_field_function_temperature)
+    const Function<dim> &initial_field_function_temperature,
+    const double         start_time)
   {
     reinit();
+
+    if (heat_data.enable_time_dependent_bc)
+      bc_data->set_time(start_time);
 
     dealii::VectorTools::interpolate(scratch_data.get_mapping(),
                                      scratch_data.get_dof_handler(temp_dof_idx),
                                      initial_field_function_temperature,
                                      temperature);
+
+    if (heat_data.enable_time_dependent_bc)
+      MeltPoolDG::setup_and_merge_constraints<dim>(const_cast<ScratchData<dim> &>(scratch_data),
+                                                   bc_data->dirichlet_bc,
+                                                   temp_dof_idx,
+                                                   temp_hanging_nodes_dof_idx);
+
     scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
     temperature_old.copy_locally_owned_data_from(temperature);
   }
@@ -99,12 +113,22 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferOperation<dim>::solve(const double dt)
+  HeatTransferOperation<dim>::solve(
+    const TimeIterator<double> &time_iterator) // @todo: move TimeIterator also to constructor?
   {
     if (!heat_data.linear_solver.do_matrix_free)
       AssertThrow(false, ExcNotImplemented());
 
-    heat_operator->reset_time_increment(dt);
+    heat_operator->reset_time_increment(time_iterator.get_current_time_increment());
+
+    if (heat_data.enable_time_dependent_bc)
+      {
+        bc_data->set_time(time_iterator.get_current_time());
+        MeltPoolDG::setup_and_merge_constraints<dim>(const_cast<ScratchData<dim> &>(scratch_data),
+                                                     bc_data->dirichlet_bc,
+                                                     temp_dof_idx,
+                                                     temp_hanging_nodes_dof_idx);
+      }
 
     VectorType temperature_extrapolated;
     scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
@@ -112,8 +136,9 @@ namespace MeltPoolDG::Heat
     UtilityFunctions::compute_linear_predictor(temperature,
                                                temperature_old,
                                                temperature_extrapolated,
-                                               dt,
-                                               dt); // @todo adapt for adaptive time stepping
+                                               time_iterator.get_current_time_increment(),
+                                               time_iterator.get_current_time_increment());
+
 
     temperature_old.copy_locally_owned_data_from(temperature);
     temperature.copy_locally_owned_data_from(temperature_extrapolated);
@@ -176,6 +201,8 @@ namespace MeltPoolDG::Heat
                                            solve_linear_system);
 
     newton.solve();
+
+    distribute_constraints();
   }
 
   template <int dim>

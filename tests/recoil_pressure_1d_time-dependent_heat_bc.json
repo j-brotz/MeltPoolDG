@@ -1,0 +1,95 @@
+{
+  "Navier-Stokes": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "Solver": {
+          "NL max iterations": "50",
+          "NL tolerance": "1.e-9",
+          "lin its before inner solvers": "50",
+          "lin max iterations": "50",
+          "lin relative tolerance": "1",
+          "lin tolerance": "1.e-5",
+          "lin pressure preconditioner": "ilu scalar",
+          "lin velocity preconditioner": "ilu",
+          "linearization scheme": "coupled implicit Newton"
+        },
+        "dimension": "2",
+        "formulation convective term momentum balance": "convective",
+        "global refinements": "0",
+        "physical type": "incompressible",
+        "constitutive type": "newtonian incompressible",
+        "velocity degree": "2"
+      },
+      "Output options": {
+        "output verbosity": "0",
+        "output walltimes": "0"
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      }
+    }
+  },
+  "base": {
+    "application name": "recoil_pressure",
+    "degree": "1",
+    "dimension": "1",
+    "do print parameters": "false",
+    "global refinements": "5",
+    "gravity": "0.0",
+    "problem name": "melt_pool",
+    "verbosity level": "0"
+  },
+  "curvature": {
+    "curv damping scale factor": "8",
+    "verbosity level": "1"
+  },
+  "heat": {
+    "heat nlsolve field correction tolerance": "1e-6",
+    "heat nlsolve max nonlinear iterations": "20",
+    "heat nlsolve residual tolerance": "1e-1",
+    "heat solidification": "false",
+    "enable time dependent bc": "true",
+    "linear solver": {
+      "preconditioner type": "DiagonalReduced",
+      "rel tolerance": "1e-4"
+    },
+    "heat two phase": "true"
+  },
+  "material": {
+    "material template": "Ti64"
+  },
+  "normal vector": {
+    "normal vec damping scale factor": "0.1",
+    "normal vec do narrow band": "false",
+    "normal vec implementation": "meltpooldg"
+  },
+  "paraview": {
+    "paraview directory": "output",
+    "paraview do output": "true"
+  },
+  "problem specific": {
+    "do advect level set": "false",
+    "do evaporative heat flux": "false",
+    "do evaporative velocity jump": "false",
+    "do melt pool": "false",
+    "do heat transfer": "true"
+  },
+  "simulation specific domain": {
+    "domain x max": "400e-6",
+    "domain x min": "-400e-6",
+    "domain y max": "300e-6",
+    "domain y min": "-300e-6",
+    "initial temperature": {
+      "top": "500.",
+      "bottom": "500."
+    },
+    "bc temperature": {
+      "top": "1000 + min(t/1e-9*1300,1300)",
+      "bottom": "1000 + min(t/1e-9*1300,1300)"
+    }
+  },
+  "time stepping": {
+    "max n steps": "5",
+    "time step size": "1e-10"
+  }
+}

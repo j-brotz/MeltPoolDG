@@ -33,6 +33,16 @@ namespace MeltPoolDG
       }
   }
 
+  template <int dim>
+  void
+  BoundaryConditions<dim>::set_time(const double time)
+  {
+    dirichlet_bc.set_time(time);
+
+    for (auto &n : neumann_bc)
+      n.second->set_time(time);
+  }
+
   template struct BoundaryConditions<1>;
   template struct BoundaryConditions<2>;
   template struct BoundaryConditions<3>;

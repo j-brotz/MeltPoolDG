@@ -12,10 +12,12 @@
 
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
+#include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Heat
@@ -29,7 +31,9 @@ namespace MeltPoolDG::Heat
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim> &                 scratch_data;
+    std::shared_ptr<BoundaryConditions<dim>> bc_data;
+    const PeriodicBoundaryConditions<dim> &  pbc;
     /**
      * parameters
      */
@@ -63,19 +67,19 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<DiagonalMatrix<VectorType>>                diag_preconditioner;
     std::shared_ptr<TrilinosWrappers::PreconditionBase>        trilinos_preconditioner;
 
-
   public:
-    HeatTransferOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc_data,
-                          const ScratchData<dim> &                        scratch_data_in,
-                          const HeatData<double> &                        heat_data_in,
-                          const Material<double> &                        material,
-                          unsigned int                                    temp_dof_idx_in,
-                          unsigned int temp_hanging_nodes_dof_idx_in,
-                          unsigned int temp_quad_idx_in,
-                          unsigned int vel_dof_idx_in            = 0,
-                          VectorType * velocity_in               = nullptr,
-                          unsigned int ls_dof_idx_in             = 0,
-                          VectorType * level_set_as_heaviside_in = nullptr);
+    HeatTransferOperation(std::shared_ptr<BoundaryConditions<dim>> bc_data,
+                          const PeriodicBoundaryConditions<dim> &  pbc,
+                          const ScratchData<dim> &                 scratch_data_in,
+                          const HeatData<double> &                 heat_data_in,
+                          const Material<double> &                 material,
+                          unsigned int                             temp_dof_idx_in,
+                          unsigned int                             temp_hanging_nodes_dof_idx_in,
+                          unsigned int                             temp_quad_idx_in,
+                          unsigned int                             vel_dof_idx_in = 0,
+                          VectorType *                             velocity_in    = nullptr,
+                          unsigned int                             ls_dof_idx_in  = 0,
+                          VectorType *level_set_as_heaviside_in                   = nullptr);
 
     void
     register_evaporative_mass_flux(VectorType *       evaporative_mass_flux_in,
@@ -84,13 +88,14 @@ namespace MeltPoolDG::Heat
                                    const bool         do_phenomenological_recoil_pressure);
 
     void
-    set_initial_condition(const Function<dim> &initial_field_function_temperature);
+    set_initial_condition(const Function<dim> &initial_field_function_temperature,
+                          const double         start_time);
 
     void
     reinit();
 
     void
-    solve(double dt);
+    solve(const TimeIterator<double> &time_iterator);
 
     void
     compute_interface_temperature(const VectorType &distance, const BlockVectorType &normal_vector);

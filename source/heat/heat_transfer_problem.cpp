@@ -81,7 +81,7 @@ namespace MeltPoolDG::Heat
               }
           }
 
-        heat_operation->solve(dt);
+        heat_operation->solve(time_iterator);
 
         // ... and output the results to vtk files.
         output_results(n, time_iterator.get_current_time(), base_in);
@@ -226,6 +226,7 @@ namespace MeltPoolDG::Heat
      *    initialize the heat operation class
      */
     heat_operation = std::make_shared<HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
+                                                                  base_in->get_periodic_bc(),
                                                                   *scratch_data,
                                                                   base_in->parameters.heat,
                                                                   *material,
@@ -237,7 +238,8 @@ namespace MeltPoolDG::Heat
                                                                   level_set_dof_idx,
                                                                   level_set_as_heaviside_ptr);
 
-    heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+    heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
+                                          base_in->parameters.time_stepping.start_time);
 
     /*
      *  initialize postprocessor
@@ -261,7 +263,8 @@ namespace MeltPoolDG::Heat
           /*
            *  set initial conditions after initial AMR
            */
-          heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+          heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
+                                                base_in->parameters.time_stepping.start_time);
         }
     /*
      *  output results of initialization
