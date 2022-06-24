@@ -1,0 +1,103 @@
+{
+  "base": {
+    "application name": "thermo_capillary_droplet",
+    "degree": "1",
+    "dimension": "2",
+    "do print parameters": "false",
+    "global refinements": "4",
+    "problem name": "melt_pool",
+    "gravity": "0.0",
+    "verbosity level": "3"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.12",
+    "time step size": "0.00002"
+  },
+  "problem specific": {
+    "do heat transfer": "true",
+    "amr": {
+      "strategy": "generic",
+      "do refine all interface cells": "true",
+      "automatic grid refinement type": "fixed_fraction"
+    }
+  },
+  "adaptive meshing": {
+    "do amr": "true",
+    "every n step": "100",
+    "lower perc to coarsen": "0.2",
+    "max grid refinement level": "7",
+    "n initial refinement cycles": "5",
+    "upper perc to refine": "0.2"
+  },
+  "heat": {
+    "heat two phase": "true"
+  },
+  "material": {
+    "material first capacity": "1e-4",
+    "material first conductivity": "2.4e-6",
+    "material first density": "500",
+    "material first viscosity": "0.024",
+    "material second capacity": "5e-5",
+    "material second conductivity": "1.2e-6",
+    "material second density": "250",
+    "material second viscosity": "0.012"
+  },
+  "surface tension": {
+    "surface tension coefficient": "0.01",
+    "temperature dependent surface tension coefficient": "0.002",
+    "reference temperature": "290",
+    "time step limit": {
+      "enable": "true",
+      "scale factor": "1.0"
+    }
+  },
+  "Navier-Stokes": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "physical type": "incompressible",
+        "dimension": "2",
+        "global refinements": "0",
+        "velocity degree": "2",
+        "Solver": {
+          "linearization scheme": "coupled implicit Newton",
+          "NL max iterations": "10",
+          "NL tolerance": "1.e-10",
+          "lin max iterations": "30",
+          "lin tolerance": "1.e-4",
+          "lin relative tolerance": "1",
+          "lin velocity preconditioner": "ilu scalar",
+          "lin pressure mass preconditioner": "ilu",
+          "lin its before inner solvers": "50"
+        }
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      },
+      "Output options": {
+        "output verbosity": "2",
+        "output walltimes": "0"
+      }
+    }
+  },
+  "levelset": {
+    "ls do reinitialization": "true",
+    "ls time integration scheme": "crank_nicolson",
+    "ls n subdivisions": "2"
+  },
+  "reinitialization": {
+    "reinit max n steps": "2",
+    "reinit constant epsilon": "5e-5"
+  },
+  "normal vector": {
+    "normal vec damping scale factor": "2"
+  },
+  "curvature": {
+    "curv damping scale factor": "0.5"
+  },
+  "paraview": {
+    "paraview directory": "output_thermo_capillary/",
+    "paraview do output": "true",
+    "paraview write time step size": "1.e-3"
+  }
+}
