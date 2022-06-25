@@ -10,6 +10,7 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/interface/setup_constraints.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -70,51 +71,17 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  make hanging nodes and dirichlet constraints (Note: at the moment no time-dependent
      *  dirichlet constraints are supported)
      */
-    hanging_node_constraints.clear();
-    hanging_node_constraints.reinit(scratch_data->get_locally_relevant_dofs(advec_diff_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler, hanging_node_constraints);
-    hanging_node_constraints.close();
-
-    UtilityFunctions::check_constraints(dof_handler, hanging_node_constraints);
-
-    hanging_node_constraints_with_zero_dirichlet.clear();
-    hanging_node_constraints_with_zero_dirichlet.reinit(
-      scratch_data->get_locally_relevant_dofs(advec_diff_adaflo_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler,
-                                            hanging_node_constraints_with_zero_dirichlet);
-    for (const auto &bc : base_in->get_dirichlet_bc(
-           "advection_diffusion")) // @todo: add name of bc at a more central place
-      {
-        dealii::DoFTools::make_zero_boundary_constraints(
-          dof_handler, bc.first, hanging_node_constraints_with_zero_dirichlet);
-      }
-    hanging_node_constraints_with_zero_dirichlet.close();
-
-    UtilityFunctions::check_constraints(dof_handler, hanging_node_constraints_with_zero_dirichlet);
-
-    hanging_node_constraints_velocity.clear();
-    hanging_node_constraints_velocity.reinit(
-      scratch_data->get_locally_relevant_dofs(velocity_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler_velocity,
-                                            hanging_node_constraints_velocity);
-    hanging_node_constraints_velocity.close();
-
-    UtilityFunctions::check_constraints(dof_handler_velocity, hanging_node_constraints_velocity);
-
-    constraints.clear();
-    constraints.reinit(scratch_data->get_locally_relevant_dofs(advec_diff_dof_idx));
-    for (const auto &bc : base_in->get_dirichlet_bc(
-           "advection_diffusion")) // @todo: add name of bc at a more central place
-      {
-        dealii::VectorTools::interpolate_boundary_values(
-          scratch_data->get_mapping(), dof_handler, bc.first, *bc.second, constraints);
-      }
-    constraints.close();
-    constraints.merge(hanging_node_constraints,
-                      AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
-
-    UtilityFunctions::check_constraints(dof_handler, constraints);
-
+    MeltPoolDG::setup_constraints<dim>(*scratch_data,
+                                       base_in->get_bc("advection_diffusion"),
+                                       base_in->get_periodic_bc(),
+                                       advec_diff_dof_idx,
+                                       advec_diff_hanging_nodes_dof_idx);
+    MeltPoolDG::setup_and_merge_constraints<dim>(*scratch_data,
+                                                 base_in->get_bc("advection_diffusion"),
+                                                 advec_diff_adaflo_dof_idx,
+                                                 advec_diff_hanging_nodes_dof_idx,
+                                                 false /*set inhomogeneities to zero*/);
+    MeltPoolDG::setup_constraints<dim>(*scratch_data, base_in->get_periodic_bc(), velocity_dof_idx);
     /*
      *  create the matrix-free object
      */

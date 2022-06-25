@@ -1,3 +1,4 @@
+#include <meltpooldg/interface/setup_constraints.hpp>
 #include <meltpooldg/reinitialization/reinitialization_problem.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -150,13 +151,7 @@ namespace MeltPoolDG::Reinitialization
     /*
      *  make hanging nodes constraints
      */
-    constraints.clear();
-    constraints.reinit(scratch_data->get_locally_relevant_dofs());
-    DoFTools::make_hanging_node_constraints(dof_handler, constraints);
-    constraints.close();
-
-    UtilityFunctions::check_constraints(dof_handler, constraints);
-
+    MeltPoolDG::setup_constraints<dim>(*scratch_data, base_in->get_periodic_bc(), reinit_dof_idx);
     /*
      *  create the matrix-free object
      */
