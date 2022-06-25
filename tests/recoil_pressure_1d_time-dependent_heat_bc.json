@@ -41,7 +41,7 @@
   },
   "curvature": {
     "curv damping scale factor": "8",
-    "verbosity level": "1"
+    "curv verbosity level": "1"
   },
   "heat": {
     "heat nlsolve field correction tolerance": "1e-6",
