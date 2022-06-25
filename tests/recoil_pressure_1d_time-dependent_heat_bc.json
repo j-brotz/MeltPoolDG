@@ -65,7 +65,7 @@
   },
   "paraview": {
     "paraview directory": "output",
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "problem specific": {
     "do advect level set": "false",
