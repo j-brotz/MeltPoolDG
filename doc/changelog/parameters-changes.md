@@ -1,6 +1,17 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-06-26
+- Add option to determine weights for phase weighted Dirac delta function 
+  automatically
+```json
+{
+  "dirac delta function approximation": {
+    "auto weights": "true|false"
+  }
+}
+```
+
 ## 2022-06-01
 - Remove parameter of MeltPoolProblem and rename parameter "do evaporative mass flux"
   to "do evaporative velocity jump"
