@@ -31,7 +31,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     for (const auto &symmetry_id : base_in->get_symmetry_id(operation_name))
       bcs.symmetry.insert(symmetry_id);
-    for (const auto &dirichlet_bc : base_in->get_dirichlet_bc(operation_name))
+    for (const auto &dirichlet_bc : base_in->get_dirichlet_bc(operation_name).get_data())
       bcs.dirichlet[dirichlet_bc.first] = dirichlet_bc.second;
     /*
      * initialize adaflo operation

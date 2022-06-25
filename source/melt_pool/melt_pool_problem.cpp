@@ -779,23 +779,28 @@ namespace MeltPoolDG::MeltPool
     /*
      * make constraints
      */
+    //@todo move to a more central place
+    base_in->register_operation("level_set");
+    base_in->register_operation("reinitialization");
+    base_in->register_operation("heat_transfer");
+
     MeltPoolDG::setup_constraints<dim>(*scratch_data,
-                                       base_in->get_bc("level_set"),
+                                       base_in->get_dirichlet_bc("level_set"),
                                        base_in->get_periodic_bc(),
                                        ls_dof_idx,
                                        ls_hanging_nodes_dof_idx);
     MeltPoolDG::setup_and_merge_constraints<dim>(*scratch_data,
-                                                 base_in->get_bc("level_set"),
+                                                 base_in->get_dirichlet_bc("level_set"),
                                                  reinit_dof_idx,
                                                  ls_hanging_nodes_dof_idx,
                                                  false /*set inhomogeneities to zero*/);
 
     // additional reinitialization dirichlet bc
     if (base_in->get_bc("reinitialization") &&
-        !base_in->get_dirichlet_bc("reinitialization").empty())
+        !base_in->get_dirichlet_bc("reinitialization").get_data().empty())
       {
-        for (const auto &bc : base_in->get_dirichlet_bc(
-               "reinitialization")) // @todo: add name of bc at a more central place
+        for (const auto &bc : base_in->get_dirichlet_bc("reinitialization")
+                                .get_data()) // @todo: add name of bc at a more central place
           {
             dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
                                                              dof_handler_ls,
@@ -808,7 +813,7 @@ namespace MeltPoolDG::MeltPool
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
     MeltPoolDG::setup_constraints<dim>(*scratch_data,
-                                       base_in->get_bc("heat_transfer"),
+                                       base_in->get_dirichlet_bc("heat_transfer"),
                                        base_in->get_periodic_bc(),
                                        temp_dof_idx,
                                        temp_hanging_nodes_dof_idx);

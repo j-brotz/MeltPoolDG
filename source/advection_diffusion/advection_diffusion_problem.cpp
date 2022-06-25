@@ -71,13 +71,14 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  make hanging nodes and dirichlet constraints (Note: at the moment no time-dependent
      *  dirichlet constraints are supported)
      */
+    base_in->register_operation("advection_diffusion"); //@todo move to a more central place
     MeltPoolDG::setup_constraints<dim>(*scratch_data,
-                                       base_in->get_bc("advection_diffusion"),
+                                       base_in->get_dirichlet_bc("advection_diffusion"),
                                        base_in->get_periodic_bc(),
                                        advec_diff_dof_idx,
                                        advec_diff_hanging_nodes_dof_idx);
     MeltPoolDG::setup_and_merge_constraints<dim>(*scratch_data,
-                                                 base_in->get_bc("advection_diffusion"),
+                                                 base_in->get_dirichlet_bc("advection_diffusion"),
                                                  advec_diff_adaflo_dof_idx,
                                                  advec_diff_hanging_nodes_dof_idx,
                                                  false /*set inhomogeneities to zero*/);

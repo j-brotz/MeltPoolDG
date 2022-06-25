@@ -241,16 +241,19 @@ namespace MeltPoolDG::LevelSet
     /*
      *  create AffineConstraints
      */
+    base_in->register_operation("level_set"); //@todo move to a more central place
     MeltPoolDG::setup_constraints<dim>(*scratch_data,
-                                       base_in->get_bc("level_set"),
+                                       base_in->get_dirichlet_bc("level_set"),
                                        base_in->get_periodic_bc(),
                                        ls_dof_idx,
                                        ls_hanging_nodes_dof_idx);
+
     MeltPoolDG::setup_and_merge_constraints<dim>(*scratch_data,
-                                                 base_in->get_bc("level_set"),
+                                                 base_in->get_dirichlet_bc("level_set"),
                                                  ls_zero_bc_idx,
                                                  ls_hanging_nodes_dof_idx,
                                                  false /*set inhomogeneities to zero*/);
+
     MeltPoolDG::setup_constraints<dim>(*scratch_data, base_in->get_periodic_bc(), vel_dof_idx);
     /*
      *  create the matrix-free object

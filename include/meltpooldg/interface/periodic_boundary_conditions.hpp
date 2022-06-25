@@ -14,10 +14,12 @@ namespace MeltPoolDG
   template <int dim>
   struct PeriodicBoundaryConditions
   {
+  public:
+    using Type = std::vector<
+      std::tuple<types::boundary_id /*inflow*/, types::boundary_id /*outflow*/, int /*direction*/>>;
+
   private:
-    std::vector<
-      std::tuple<types::boundary_id /*inflow*/, types::boundary_id /*outflow*/, int /*direction*/>>
-      periodic_bc;
+    Type periodic_bc;
 
   public:
     void
@@ -25,7 +27,7 @@ namespace MeltPoolDG
                               const types::boundary_id id_out,
                               const int                direction);
 
-    const std::vector<std::tuple<types::boundary_id, types::boundary_id, int>> &
-    get_periodic_bc();
+    const Type &
+    get_data() const;
   };
 } // namespace MeltPoolDG

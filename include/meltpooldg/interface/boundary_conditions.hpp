@@ -6,8 +6,9 @@
 #pragma once
 #include <deal.II/base/function.h>
 
+#include <meltpooldg/interface/exceptions.hpp>
+
 #include <map>
-#include <memory>
 #include <string>
 
 namespace MeltPoolDG
@@ -30,9 +31,34 @@ namespace MeltPoolDG
   };
 
   template <int dim>
+  struct DirichletBoundaryConditions
+  {
+  public:
+    using Type = std::map<types::boundary_id, std::shared_ptr<Function<dim>>>;
+
+  private:
+    Type bc;
+
+  public:
+    void
+    attach(const types::boundary_id id, const std::shared_ptr<Function<dim>> f)
+    {
+      AssertThrow(bc.count(id) == 0, ExcBCAlreadyAssigned("Dirichlet"));
+
+      bc[id] = f;
+    }
+
+    const Type &
+    get_data() const
+    {
+      return bc;
+    }
+  };
+
+  template <int dim>
   struct BoundaryConditions
   {
-    std::map<types::boundary_id, std::shared_ptr<Function<dim>>> dirichlet_bc;
+    DirichletBoundaryConditions<dim>                             dirichlet_bc;
     std::map<types::boundary_id, std::shared_ptr<Function<dim>>> neumann_bc;
     std::vector<types::boundary_id>                              outflow;
     std::vector<types::boundary_id>                              no_slip_bc;
