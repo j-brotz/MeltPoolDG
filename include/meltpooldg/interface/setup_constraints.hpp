@@ -4,24 +4,25 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/numerics/vector_tools.h>
+
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
-#include <deal.II/numerics/vector_tools.h>
 
 namespace MeltPoolDG
 {
   /**
-   * Setup AffineConstraints according to given Dirichlet boundary conditions 
+   * Setup AffineConstraints according to given Dirichlet boundary conditions
    * @p bc_data and assign it to a given @p dof_idx inside @p scratch_data.
-   * If @p set_inhomogeneities is true, inhomogeneities are considered else 
+   * If @p set_inhomogeneities is true, inhomogeneities are considered else
    * homogeneous DBC are assumed.
    */
   template <int dim>
   void
   setup_constraints(ScratchData<dim> &                      scratch_data,
-                    const DirichletBoundaryConditions<dim>& bc_data,
+                    const DirichletBoundaryConditions<dim> &bc_data,
                     const unsigned int                      dof_idx,
                     const bool                              set_inhomogeneities = true)
   {
@@ -30,7 +31,7 @@ namespace MeltPoolDG
     scratch_data.get_constraint(dof_idx).reinit(scratch_data.get_locally_relevant_dofs(dof_idx));
 
     if (!bc_data.get_data().empty())
-    {
+      {
         for (const auto &bc : bc_data.get_data())
           {
             if (set_inhomogeneities)
@@ -46,7 +47,7 @@ namespace MeltPoolDG
                 bc.first,
                 scratch_data.get_constraint(dof_idx));
           }
-    }
+      }
 
     scratch_data.get_constraint(dof_idx).close();
     UtilityFunctions::check_constraints(scratch_data.get_dof_handler(dof_idx),
@@ -54,19 +55,19 @@ namespace MeltPoolDG
   }
 
   /**
-   * Setup AffineConstraints according to given Dirichlet boundary conditions 
+   * Setup AffineConstraints according to given Dirichlet boundary conditions
    * @p bc_data and assign it to a given @p dof_idx inside @p scratch_data.
    * It will be automatically merged with the AffineConstraints corresponding
-   * to @p dof_hanging_nodes_idx. If @p set_inhomogeneities is true, 
+   * to @p dof_hanging_nodes_idx. If @p set_inhomogeneities is true,
    * inhomogeneities are considered else homogeneous DBC are assumed.
    */
   template <int dim>
   void
-  setup_and_merge_constraints(ScratchData<dim> &                              scratch_data,
-                    const DirichletBoundaryConditions<dim>& bc_data,
-                              const unsigned int                              dof_idx,
-                              const unsigned int                              dof_hanging_nodes_idx,
-                              const bool set_inhomogeneities = true)
+  setup_and_merge_constraints(ScratchData<dim> &                      scratch_data,
+                              const DirichletBoundaryConditions<dim> &bc_data,
+                              const unsigned int                      dof_idx,
+                              const unsigned int                      dof_hanging_nodes_idx,
+                              const bool                              set_inhomogeneities = true)
   {
     // setup dirichlet constraints
     setup_constraints(scratch_data, bc_data, dof_idx, set_inhomogeneities);
@@ -100,8 +101,8 @@ namespace MeltPoolDG
   }
 
   /**
-   * Setup AffineConstraints corresponding to a given @p dof_hanging_nodes_idx 
-   * inside @p scratch_data, considering periodic boundary conditions @p 
+   * Setup AffineConstraints corresponding to a given @p dof_hanging_nodes_idx
+   * inside @p scratch_data, considering periodic boundary conditions @p
    * pbc and hanging nodes.
    */
   template <int dim>
@@ -134,20 +135,20 @@ namespace MeltPoolDG
   }
 
   /**
-   * Setup AffineConstraints according to given Dirichlet boundary conditions 
-   * @p bc_data, periodic boundary conditions @p pbc and hanging nodes @p dof_hanging_nodes_idx, 
+   * Setup AffineConstraints according to given Dirichlet boundary conditions
+   * @p bc_data, periodic boundary conditions @p pbc and hanging nodes @p dof_hanging_nodes_idx,
    * and assign it to a given @p dof_idx inside @p scratch_data.
-   * If @p set_inhomogeneities is true, inhomogeneities are considered else 
+   * If @p set_inhomogeneities is true, inhomogeneities are considered else
    * homogeneous DBC are assumed.
    */
   template <int dim>
   void
-  setup_constraints(ScratchData<dim> &                              scratch_data,
-                    const DirichletBoundaryConditions<dim>& bc_data,
-                    const PeriodicBoundaryConditions<dim>&          pbc,
-                    const unsigned int                              dof_idx,
-                    const unsigned int                              dof_hanging_nodes_idx,
-                    const bool                                      set_inhomogeneities = true)
+  setup_constraints(ScratchData<dim> &                      scratch_data,
+                    const DirichletBoundaryConditions<dim> &bc_data,
+                    const PeriodicBoundaryConditions<dim> & pbc,
+                    const unsigned int                      dof_idx,
+                    const unsigned int                      dof_hanging_nodes_idx,
+                    const bool                              set_inhomogeneities = true)
   {
     setup_constraints(scratch_data, pbc, dof_hanging_nodes_idx);
     setup_and_merge_constraints(
