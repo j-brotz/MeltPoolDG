@@ -322,7 +322,7 @@ namespace MeltPoolDG::Heat
                                                          base_in->get_periodic_bc(),
                                                          level_set_dof_idx);
 
-    base_in->register_operation("heat_transfer"); //@todo move to a more central place
+    base_in->attach_boundary_condition("heat_transfer"); //@todo move to a more central place
     MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
                                                          base_in->get_dirichlet_bc("heat_transfer"),
                                                          base_in->get_periodic_bc(),

@@ -27,7 +27,7 @@ namespace MeltPoolDG::Flow
     /*
      * Boundary conditions for the velocity field
      */
-    base_in->register_operation("navier_stokes_u");
+    base_in->attach_boundary_condition("navier_stokes_u");
     for (const auto &symmetry_id : base_in->get_symmetry_id("navier_stokes_u"))
       navier_stokes->set_symmetry_boundary(symmetry_id);
     for (const auto &no_slip_id : base_in->get_no_slip_id("navier_stokes_u"))
@@ -39,7 +39,7 @@ namespace MeltPoolDG::Flow
     /*
      * Boundary conditions for the pressure field
      */
-    base_in->register_operation("navier_stokes_p");
+    base_in->attach_boundary_condition("navier_stokes_p");
     for (const auto &neumann_bc : base_in->get_neumann_bc("navier_stokes_p"))
       navier_stokes->set_open_boundary_with_normal_flux(neumann_bc.first, neumann_bc.second);
     for (const auto &fix_pressure_constant_id :

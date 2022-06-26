@@ -241,7 +241,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  create AffineConstraints
      */
-    base_in->register_operation("level_set"); //@todo move to a more central place
+    base_in->attach_boundary_condition("level_set"); //@todo move to a more central place
     MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
                                                          base_in->get_dirichlet_bc("level_set"),
                                                          base_in->get_periodic_bc(),

@@ -780,9 +780,9 @@ namespace MeltPoolDG::MeltPool
      * make constraints
      */
     //@todo move to a more central place
-    base_in->register_operation("level_set");
-    base_in->register_operation("reinitialization");
-    base_in->register_operation("heat_transfer");
+    base_in->attach_boundary_condition("level_set");
+    base_in->attach_boundary_condition("reinitialization");
+    base_in->attach_boundary_condition("heat_transfer");
 
     MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
                                                          base_in->get_dirichlet_bc("level_set"),

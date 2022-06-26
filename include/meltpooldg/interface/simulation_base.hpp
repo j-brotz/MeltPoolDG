@@ -398,15 +398,18 @@ namespace MeltPoolDG
     }
 
     /**
-     * Getter functions for boundary conditions
+     * Attach a new BoundaryConditions<dim> with id @p operation_name.
      */
     void
-    register_operation(const std::string operation_name)
+    attach_boundary_condition(const std::string operation_name)
     {
       if (boundary_conditions_map.count(operation_name) == 0)
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
     }
 
+    /**
+     * Getter functions for boundary conditions
+     */
     const auto &
     get_bc(const std::string operation_name)
     {
@@ -415,7 +418,7 @@ namespace MeltPoolDG
         ExcMessage(
           "BC for " + operation_name +
           "not found. "
-          "Did you forget to register the operation via register_operation(operation_name)?"));
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
 
       return boundary_conditions_map[operation_name];
     }
@@ -428,7 +431,7 @@ namespace MeltPoolDG
         ExcMessage(
           "BC for " + operation_name +
           "not found. "
-          "Did you forget to register the operation via register_operation(operation_name)?"));
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
 
       return boundary_conditions_map[operation_name]->dirichlet_bc;
     }
@@ -441,7 +444,7 @@ namespace MeltPoolDG
         ExcMessage(
           "BC for " + operation_name +
           "not found. "
-          "Did you forget to register the operation via register_operation(operation_name)?"));
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->neumann_bc;
     }
 
@@ -453,7 +456,7 @@ namespace MeltPoolDG
         ExcMessage(
           "BC for " + operation_name +
           "not found. "
-          "Did you forget to register the operation via register_operation(operation_name)?"));
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->no_slip_bc;
     }
 
@@ -465,7 +468,7 @@ namespace MeltPoolDG
         ExcMessage(
           "BC for " + operation_name +
           "not found. "
-          "Did you forget to register the operation via register_operation(operation_name)?"));
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->fix_pressure_constant;
     }
 
@@ -477,7 +480,7 @@ namespace MeltPoolDG
         ExcMessage(
           "BC for " + operation_name +
           "not found. "
-          "Did you forget to register the operation via register_operation(operation_name)?"));
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->symmetry_bc;
     }
 
