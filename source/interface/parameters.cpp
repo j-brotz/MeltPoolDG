@@ -106,10 +106,10 @@ namespace MeltPoolDG
       recoil.activation_temperature = material.boiling_temperature;
 
     // set automatic weights of asymmetric delta functions, if requested
-    heat.delta_approximation_phase_weighted.set_auto_parameters(material);
-    laser.gauss.delta_approximation_phase_weighted.set_auto_parameters(material);
-    surface_tension.delta_approximation_phase_weighted.set_auto_parameters(material);
-    recoil.delta_approximation_phase_weighted.set_auto_parameters(material);
+    heat.delta_approximation_phase_weighted.set_parameters(material);
+    laser.gauss.delta_approximation_phase_weighted.set_parameters(material);
+    surface_tension.delta_approximation_phase_weighted.set_parameters(material);
+    recoil.delta_approximation_phase_weighted.set_parameters(material);
 
     if (heat.solidification)
       {

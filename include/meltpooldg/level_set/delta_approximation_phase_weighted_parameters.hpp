@@ -65,7 +65,7 @@ namespace MeltPoolDG
     }
 
     void
-    set_auto_parameters(const MaterialData<number> &mat)
+    set_parameters(const MaterialData<number> &mat)
     {
       if (auto_weights)
         {
