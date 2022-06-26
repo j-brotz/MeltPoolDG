@@ -188,6 +188,7 @@ namespace MeltPoolDG::MeltPool
                     vel_force_rhs,
                     level_set_operation.get_level_set_as_heaviside(),
                     heat_operation->get_temperature(),
+                    evaporation_operation->get_evaporative_mass_flux(),
                     false);
                 }
             }
@@ -317,6 +318,17 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::check_input_parameters(
     Parameters<double> &parameters /*todo: could be made const*/)
   {
+    std::cout << "evaporative velocity jump"
+              << (problem_specific_parameters.do_evaporative_velocity_jump ||
+                  (parameters.recoil.model_type == RecoilPressureModelType::phenomenological))
+              << std::endl;
+
+    AssertThrow(!problem_specific_parameters.do_recoil_pressure ||
+                  (problem_specific_parameters.do_evaporative_velocity_jump ||
+                   parameters.recoil.model_type == RecoilPressureModelType::phenomenological),
+                ExcMessage("For the phenomenological recoil pressure model, no velocity jump "
+                           "is allowed."));
+
     AssertThrow(!problem_specific_parameters.do_evaporative_heat_flux ||
                   parameters.material.latent_heat_of_evaporation > 0.0,
                 ExcMessage("To consider the evaporative heat flux the value for "

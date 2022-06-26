@@ -20,6 +20,7 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelRecoilPressure::local_compute_evaporative_mass_flux(const double T) const
   {
     return mass_flux_scale_factor * 0.82 * sticking_constant *
-           recoil_model.compute_recoil_pressure_coefficient(T) * std::sqrt(Cm / T);
+           recoil_model.compute_recoil_pressure_coefficient(T) *
+           std::sqrt(Cm / T); //@todo: replace recoil pressure by saturated vapor pressure
   }
 } // namespace MeltPoolDG::Evaporation
