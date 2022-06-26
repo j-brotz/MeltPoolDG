@@ -82,7 +82,7 @@
     "normal vec damping scale factor": "0.1"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "problem specific": {
     "do advect level set": "true",
