@@ -1,4 +1,4 @@
-g44.1g211.3h4087h21130g44.1g211.3h4087h21130| current laser position: 0 0                                                                laser |
+| current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | || normal_0 ||L2 = 8.15096373757e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.05557719741e+00                                               normal_vector |
@@ -124,7 +124,7 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06).
 |  total mass = 0.0001358328261                                                  melt_pool_problem |
 
 Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06). 
-g44.1g211.3h4087h21130g44.1g211.3h4087h21130g44.1g211.3h4087h21130g44.1g211.3h4087h21130g44.1g211.3h4087h21130g44.1g211.3h4087h21130| || velocity ||L2 = 7.643264451298064e-12                                    navier_stokes_adaflo |
+| || velocity ||L2 = 7.643264451298064e-12                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.330078163675040e-04                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-06 to 3.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
