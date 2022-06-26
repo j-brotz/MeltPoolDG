@@ -64,7 +64,6 @@
     "normal vec implementation": "meltpooldg"
   },
   "paraview": {
-    "paraview directory": "output",
     "paraview do output": "false"
   },
   "problem specific": {
