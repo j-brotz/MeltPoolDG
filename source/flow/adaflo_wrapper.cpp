@@ -1,5 +1,6 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
+#  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Flow

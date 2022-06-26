@@ -11,8 +11,31 @@
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::UtilityFunctions
 {
+  /**
+   * Check whether @p constraints are consistent in parallel with the
+   * @p dof_handler.
+   */
+  template <int dim, int spacedim, typename number>
+  void
+  check_constraints(const DoFHandler<dim, spacedim> &dof_handler,
+                    const AffineConstraints<number> &constraints)
+  {
+#ifndef DEBUG
+    return;
+#endif
+
+    IndexSet locally_active_dofs;
+    DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
+
+    AssertThrow(constraints.is_consistent_in_parallel(
+                  Utilities::MPI::all_gather(dof_handler.get_communicator(),
+                                             dof_handler.locally_owned_dofs()),
+                  locally_active_dofs,
+                  dof_handler.get_communicator()),
+                ExcInternalError());
+  }
   /**
    * Setup AffineConstraints according to given Dirichlet boundary conditions
    * @p bc_data and assign it to a given @p dof_idx inside @p scratch_data.
@@ -50,8 +73,7 @@ namespace MeltPoolDG
       }
 
     scratch_data.get_constraint(dof_idx).close();
-    UtilityFunctions::check_constraints(scratch_data.get_dof_handler(dof_idx),
-                                        scratch_data.get_constraint(dof_idx));
+    check_constraints(scratch_data.get_dof_handler(dof_idx), scratch_data.get_constraint(dof_idx));
   }
 
   /**
@@ -76,8 +98,7 @@ namespace MeltPoolDG
       scratch_data.get_constraint(dof_hanging_nodes_idx),
       AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
     scratch_data.get_constraint(dof_idx).close();
-    UtilityFunctions::check_constraints(scratch_data.get_dof_handler(dof_idx),
-                                        scratch_data.get_constraint(dof_idx));
+    check_constraints(scratch_data.get_dof_handler(dof_idx), scratch_data.get_constraint(dof_idx));
   }
 
   /**
@@ -96,8 +117,8 @@ namespace MeltPoolDG
                                             scratch_data.get_constraint(dof_hanging_nodes_idx));
     scratch_data.get_constraint(dof_hanging_nodes_idx).close();
 
-    UtilityFunctions::check_constraints(scratch_data.get_dof_handler(dof_hanging_nodes_idx),
-                                        scratch_data.get_constraint(dof_hanging_nodes_idx));
+    check_constraints(scratch_data.get_dof_handler(dof_hanging_nodes_idx),
+                      scratch_data.get_constraint(dof_hanging_nodes_idx));
   }
 
   /**
@@ -130,8 +151,8 @@ namespace MeltPoolDG
 
     scratch_data.get_constraint(dof_hanging_nodes_idx).close();
 
-    UtilityFunctions::check_constraints(scratch_data.get_dof_handler(dof_hanging_nodes_idx),
-                                        scratch_data.get_constraint(dof_hanging_nodes_idx));
+    check_constraints(scratch_data.get_dof_handler(dof_hanging_nodes_idx),
+                      scratch_data.get_constraint(dof_hanging_nodes_idx));
   }
 
   /**
@@ -154,4 +175,4 @@ namespace MeltPoolDG
     setup_and_merge_constraints(
       scratch_data, bc_data, dof_idx, dof_hanging_nodes_idx, set_inhomogeneities);
   }
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::UtilityFunctions

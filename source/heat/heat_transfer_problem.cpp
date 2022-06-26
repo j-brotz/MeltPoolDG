@@ -10,9 +10,9 @@
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
-#include <meltpooldg/interface/setup_constraints.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -315,17 +315,19 @@ namespace MeltPoolDG::Heat
     /*
      *  create AffineConstraints
      */
-    MeltPoolDG::setup_constraints<dim>(*scratch_data, base_in->get_periodic_bc(), velocity_dof_idx);
-    MeltPoolDG::setup_constraints<dim>(*scratch_data,
-                                       base_in->get_periodic_bc(),
-                                       level_set_dof_idx);
+    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                         base_in->get_periodic_bc(),
+                                                         velocity_dof_idx);
+    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                         base_in->get_periodic_bc(),
+                                                         level_set_dof_idx);
 
     base_in->register_operation("heat_transfer"); //@todo move to a more central place
-    MeltPoolDG::setup_constraints<dim>(*scratch_data,
-                                       base_in->get_dirichlet_bc("heat_transfer"),
-                                       base_in->get_periodic_bc(),
-                                       temp_dof_idx,
-                                       temp_hanging_nodes_dof_idx);
+    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                         base_in->get_dirichlet_bc("heat_transfer"),
+                                                         base_in->get_periodic_bc(),
+                                                         temp_dof_idx,
+                                                         temp_hanging_nodes_dof_idx);
 
     scratch_data->build();
 

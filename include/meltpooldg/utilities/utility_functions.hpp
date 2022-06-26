@@ -260,26 +260,6 @@ namespace MeltPoolDG
                                1e-12));
     }
 
-    template <int dim, int spacedim, typename number>
-    void
-    check_constraints(const DoFHandler<dim, spacedim> &dof_handler,
-                      const AffineConstraints<number> &constraints)
-    {
-#ifndef DEBUG
-      return;
-#endif
-
-      IndexSet locally_active_dofs;
-      DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
-
-      AssertThrow(constraints.is_consistent_in_parallel(
-                    Utilities::MPI::all_gather(dof_handler.get_communicator(),
-                                               dof_handler.locally_owned_dofs()),
-                    locally_active_dofs,
-                    dof_handler.get_communicator()),
-                  ExcInternalError());
-    }
-
     /*
      * Compute a linearly extrapolated initial guess value (predictor) for the
      * Newton-Raphson solver at time "t_n+1" from the old solution @param old_vec
