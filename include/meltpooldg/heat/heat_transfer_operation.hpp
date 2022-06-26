@@ -33,7 +33,6 @@ namespace MeltPoolDG::Heat
 
     const ScratchData<dim> &                 scratch_data;
     std::shared_ptr<BoundaryConditions<dim>> bc_data;
-    const PeriodicBoundaryConditions<dim> &  pbc;
     /**
      * parameters
      */
@@ -69,7 +68,6 @@ namespace MeltPoolDG::Heat
 
   public:
     HeatTransferOperation(std::shared_ptr<BoundaryConditions<dim>> bc_data,
-                          const PeriodicBoundaryConditions<dim> &  pbc,
                           const ScratchData<dim> &                 scratch_data_in,
                           const HeatData<double> &                 heat_data_in,
                           const Material<double> &                 material,

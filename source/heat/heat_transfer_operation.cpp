@@ -1,6 +1,7 @@
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
 namespace MeltPoolDG::Heat
@@ -8,7 +9,6 @@ namespace MeltPoolDG::Heat
   template <int dim>
   HeatTransferOperation<dim>::HeatTransferOperation(
     std::shared_ptr<BoundaryConditions<dim>> bc_data_in,
-    const PeriodicBoundaryConditions<dim> &  pbc,
     const ScratchData<dim> &                 scratch_data_in,
     const HeatData<double> &                 heat_data_in,
     const Material<double> &                 material,
@@ -21,7 +21,6 @@ namespace MeltPoolDG::Heat
     VectorType *                             level_set_as_heaviside_in)
     : scratch_data(scratch_data_in)
     , bc_data(bc_data_in)
-    , pbc(pbc)
     , heat_data(heat_data_in)
     , temp_dof_idx(temp_dof_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
@@ -87,10 +86,11 @@ namespace MeltPoolDG::Heat
                                      temperature);
 
     if (heat_data.enable_time_dependent_bc)
-      MeltPoolDG::setup_and_merge_constraints<dim>(const_cast<ScratchData<dim> &>(scratch_data),
-                                                   bc_data->dirichlet_bc,
-                                                   temp_dof_idx,
-                                                   temp_hanging_nodes_dof_idx);
+      MeltPoolDG::UtilityFunctions::setup_and_merge_constraints<dim>(const_cast<ScratchData<dim> &>(
+                                                                       scratch_data),
+                                                                     bc_data->dirichlet_bc,
+                                                                     temp_dof_idx,
+                                                                     temp_hanging_nodes_dof_idx);
 
     scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
     temperature_old.copy_locally_owned_data_from(temperature);
@@ -124,10 +124,11 @@ namespace MeltPoolDG::Heat
     if (heat_data.enable_time_dependent_bc)
       {
         bc_data->set_time(time_iterator.get_current_time());
-        MeltPoolDG::setup_and_merge_constraints<dim>(const_cast<ScratchData<dim> &>(scratch_data),
-                                                     bc_data->dirichlet_bc,
-                                                     temp_dof_idx,
-                                                     temp_hanging_nodes_dof_idx);
+        MeltPoolDG::UtilityFunctions::setup_and_merge_constraints<dim>(
+          const_cast<ScratchData<dim> &>(scratch_data),
+          bc_data->dirichlet_bc,
+          temp_dof_idx,
+          temp_hanging_nodes_dof_idx);
       }
 
     VectorType temperature_extrapolated;

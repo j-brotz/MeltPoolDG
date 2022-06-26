@@ -468,7 +468,6 @@ namespace MeltPoolDG::MeltPool
     if (problem_specific_parameters.do_heat_transfer)
       heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
         base_in->get_bc("heat_transfer"),
-        base_in->get_periodic_bc(),
         *scratch_data,
         base_in->parameters.heat,
         *material,
