@@ -20,6 +20,14 @@ All notable changes of the input parameters will be documented in this file.
   }
 }
 ```
+- Add new parameter
+```diff
+{
+ "recoil pressure": {
++  "model type": "phenomenological|hybrid",
+  }
+}
+```
 
 ## 2022-06-01
 - Remove parameter of MeltPoolProblem and rename parameter "do evaporative mass flux"
