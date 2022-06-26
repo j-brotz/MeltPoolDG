@@ -318,11 +318,6 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::check_input_parameters(
     Parameters<double> &parameters /*todo: could be made const*/)
   {
-    std::cout << "evaporative velocity jump"
-              << (problem_specific_parameters.do_evaporative_velocity_jump ||
-                  (parameters.recoil.model_type == RecoilPressureModelType::phenomenological))
-              << std::endl;
-
     AssertThrow(!problem_specific_parameters.do_recoil_pressure ||
                   (problem_specific_parameters.do_evaporative_velocity_jump ||
                    parameters.recoil.model_type == RecoilPressureModelType::phenomenological),
