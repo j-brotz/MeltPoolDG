@@ -1,5 +1,6 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
+#  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Flow
@@ -26,32 +27,28 @@ namespace MeltPoolDG::Flow
     /*
      * Boundary conditions for the velocity field
      */
-    if (base_in->get_bc("navier_stokes_u"))
-      {
-        for (const auto &symmetry_id : base_in->get_symmetry_id("navier_stokes_u"))
-          navier_stokes->set_symmetry_boundary(symmetry_id);
-        for (const auto &no_slip_id : base_in->get_no_slip_id("navier_stokes_u"))
-          navier_stokes->set_no_slip_boundary(no_slip_id);
-        for (const auto &dirichlet_bc : base_in->get_dirichlet_bc("navier_stokes_u"))
-          navier_stokes->set_velocity_dirichlet_boundary(dirichlet_bc.first, dirichlet_bc.second);
-        for (const auto &open_id : base_in->get_open_boundary_id("navier_stokes_u"))
-          navier_stokes->set_open_boundary(open_id);
-      }
+    base_in->attach_boundary_condition("navier_stokes_u");
+    for (const auto &symmetry_id : base_in->get_symmetry_id("navier_stokes_u"))
+      navier_stokes->set_symmetry_boundary(symmetry_id);
+    for (const auto &no_slip_id : base_in->get_no_slip_id("navier_stokes_u"))
+      navier_stokes->set_no_slip_boundary(no_slip_id);
+    for (const auto &dirichlet_bc : base_in->get_dirichlet_bc("navier_stokes_u").get_data())
+      navier_stokes->set_velocity_dirichlet_boundary(dirichlet_bc.first, dirichlet_bc.second);
+    for (const auto &open_id : base_in->get_open_boundary_id("navier_stokes_u"))
+      navier_stokes->set_open_boundary(open_id);
     /*
      * Boundary conditions for the pressure field
      */
-    if (base_in->get_bc("navier_stokes_p"))
-      {
-        for (const auto &neumann_bc : base_in->get_neumann_bc("navier_stokes_p"))
-          navier_stokes->set_open_boundary_with_normal_flux(neumann_bc.first, neumann_bc.second);
-        for (const auto &fix_pressure_constant_id :
-             base_in->get_fix_pressure_constant_id("navier_stokes_p"))
-          navier_stokes->fix_pressure_constant(fix_pressure_constant_id);
-      }
+    base_in->attach_boundary_condition("navier_stokes_p");
+    for (const auto &neumann_bc : base_in->get_neumann_bc("navier_stokes_p"))
+      navier_stokes->set_open_boundary_with_normal_flux(neumann_bc.first, neumann_bc.second);
+    for (const auto &fix_pressure_constant_id :
+         base_in->get_fix_pressure_constant_id("navier_stokes_p"))
+      navier_stokes->fix_pressure_constant(fix_pressure_constant_id);
     /*
      * Periodic boundary conditions
      */
-    for (const auto &periodic_bc : base_in->get_periodic_bc())
+    for (const auto &periodic_bc : base_in->get_periodic_bc().get_data())
       {
         const auto [id_in, id_out, direction] = periodic_bc;
         navier_stokes->set_periodic_direction(direction, id_in, id_out);

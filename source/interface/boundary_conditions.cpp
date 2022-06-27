@@ -6,7 +6,7 @@ namespace MeltPoolDG
   BoundaryTypes
   BoundaryConditions<dim>::get_boundary_type(types::boundary_id id)
   {
-    if (dirichlet_bc.find(id) != dirichlet_bc.end())
+    if (dirichlet_bc.get_data().find(id) != dirichlet_bc.get_data().end())
       return BoundaryTypes::dirichlet_bc;
     else if (neumann_bc.find(id) != neumann_bc.end())
       return BoundaryTypes::neumann_bc;

@@ -9,6 +9,7 @@
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
+#include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::MeltPool
@@ -776,47 +777,31 @@ namespace MeltPoolDG::MeltPool
      */
     scratch_data->create_partitioning();
     /*
-     *  make hanging nodes and dirichlet constraints (at the moment no time-dependent
-     *  dirichlet constraints are supported)
+     * make constraints
      */
-    ls_hanging_node_constraints.clear();
-    ls_hanging_node_constraints.reinit(
-      scratch_data->get_locally_relevant_dofs(ls_hanging_nodes_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler_ls, ls_hanging_node_constraints);
+    //@todo move to a more central place
+    base_in->attach_boundary_condition("level_set");
+    base_in->attach_boundary_condition("reinitialization");
+    base_in->attach_boundary_condition("heat_transfer");
 
-    /*
-     * make constraints for level set advection (and reinitialization)
-     */
-    ls_constraints_dirichlet.clear();
-    ls_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(ls_dof_idx));
-    reinit_constraints_dirichlet.clear();
-    reinit_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs());
-    if (base_in->get_bc("level_set") && !base_in->get_dirichlet_bc("level_set").empty())
-      {
-        for (const auto &bc : base_in->get_dirichlet_bc(
-               "level_set")) // @todo: add name of bc at a more central place
-          {
-            dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
-                                                             dof_handler_ls,
-                                                             bc.first,
-                                                             *bc.second,
-                                                             ls_constraints_dirichlet);
-
-            // do not reinitialize level set at constrained points
-            dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
-                                                             dof_handler_ls,
-                                                             bc.first,
-                                                             Functions::ZeroFunction<dim>(),
-                                                             reinit_constraints_dirichlet);
-          }
-      }
+    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                         base_in->get_dirichlet_bc("level_set"),
+                                                         base_in->get_periodic_bc(),
+                                                         ls_dof_idx,
+                                                         ls_hanging_nodes_dof_idx);
+    MeltPoolDG::UtilityFunctions::setup_and_merge_constraints<dim>(
+      *scratch_data,
+      base_in->get_dirichlet_bc("level_set"),
+      reinit_dof_idx,
+      ls_hanging_nodes_dof_idx,
+      false /*set inhomogeneities to zero*/);
 
     // additional reinitialization dirichlet bc
     if (base_in->get_bc("reinitialization") &&
-        !base_in->get_dirichlet_bc("reinitialization").empty())
+        !base_in->get_dirichlet_bc("reinitialization").get_data().empty())
       {
-        for (const auto &bc : base_in->get_dirichlet_bc(
-               "reinitialization")) // @todo: add name of bc at a more central place
+        for (const auto &bc : base_in->get_dirichlet_bc("reinitialization")
+                                .get_data()) // @todo: add name of bc at a more central place
           {
             dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
                                                              dof_handler_ls,
@@ -825,68 +810,14 @@ namespace MeltPoolDG::MeltPool
                                                              reinit_constraints_dirichlet);
           }
       }
-
     reinit_constraints_dirichlet.close();
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
-    temp_constraints_dirichlet.clear();
-    temp_constraints_dirichlet.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
-    if (base_in->get_bc("heat_transfer") && !base_in->get_dirichlet_bc("heat_transfer").empty())
-      {
-        for (const auto &bc : base_in->get_dirichlet_bc(
-               "heat_transfer")) // @todo: add name of bc at a more central place
-          {
-            dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
-                                                             dof_handler_heat,
-                                                             bc.first,
-                                                             *bc.second,
-                                                             temp_constraints_dirichlet);
-          }
-      }
-
-    temp_hanging_node_constraints.clear();
-    temp_hanging_node_constraints.reinit(
-      scratch_data->get_locally_relevant_dofs(temp_hanging_nodes_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler_heat, temp_hanging_node_constraints);
-
-    // periodic constraints
-    for (const auto &bc : base_in->get_periodic_bc())
-      {
-        const auto [id_in, id_out, direction] = bc;
-        DoFTools::make_periodicity_constraints(
-          dof_handler_ls, id_in, id_out, direction, ls_hanging_node_constraints);
-        DoFTools::make_periodicity_constraints(
-          dof_handler_heat, id_in, id_out, direction, temp_hanging_node_constraints);
-      }
-
-    temp_hanging_node_constraints.close();
-    ls_hanging_node_constraints.close();
-
-    UtilityFunctions::check_constraints(dof_handler_heat, temp_hanging_node_constraints);
-    UtilityFunctions::check_constraints(dof_handler_ls, ls_hanging_node_constraints);
-
-    ls_constraints_dirichlet.close();
-    ls_constraints_dirichlet.merge(
-      ls_hanging_node_constraints,
-      AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
-    ls_constraints_dirichlet.close();
-
-    UtilityFunctions::check_constraints(dof_handler_ls, ls_constraints_dirichlet);
-
-    reinit_constraints_dirichlet.merge(
-      ls_hanging_node_constraints,
-      AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
-    reinit_constraints_dirichlet.close();
-
-    UtilityFunctions::check_constraints(dof_handler_ls, reinit_constraints_dirichlet);
-
-    temp_constraints_dirichlet.close();
-    temp_constraints_dirichlet.merge(
-      temp_hanging_node_constraints,
-      AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
-    temp_constraints_dirichlet.close();
-
-    UtilityFunctions::check_constraints(dof_handler_heat, temp_constraints_dirichlet);
+    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                         base_in->get_dirichlet_bc("heat_transfer"),
+                                                         base_in->get_periodic_bc(),
+                                                         temp_dof_idx,
+                                                         temp_hanging_nodes_dof_idx);
 
     scratch_data->build();
 

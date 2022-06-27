@@ -3,6 +3,7 @@
 
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
+#include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 
 namespace MeltPoolDG::MeltPool

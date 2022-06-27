@@ -25,8 +25,8 @@ namespace MeltPoolDG
   }
 
   template <int dim>
-  const std::vector<std::tuple<types::boundary_id, types::boundary_id, int>> &
-  PeriodicBoundaryConditions<dim>::get_periodic_bc()
+  const PeriodicBoundaryConditions<dim>::Type &
+  PeriodicBoundaryConditions<dim>::get_data() const
   {
     return periodic_bc;
   }

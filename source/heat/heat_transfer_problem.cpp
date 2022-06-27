@@ -12,6 +12,7 @@
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -312,55 +313,25 @@ namespace MeltPoolDG::Heat
      */
     scratch_data->create_partitioning();
     /*
-     *  make hanging nodes and dirichlet constraints (at the moment no time-dependent
-     *  dirichlet constraints are supported)
+     *  create AffineConstraints
      */
-    temp_hanging_nodes_constraints.clear();
-    temp_hanging_nodes_constraints.reinit(
-      scratch_data->get_locally_relevant_dofs(temp_hanging_nodes_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler, temp_hanging_nodes_constraints);
-    temp_hanging_nodes_constraints.close();
+    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                         base_in->get_periodic_bc(),
+                                                         velocity_dof_idx);
+    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                         base_in->get_periodic_bc(),
+                                                         level_set_dof_idx);
 
-    UtilityFunctions::check_constraints(dof_handler, temp_hanging_nodes_constraints);
-
-    temp_constraints.clear();
-    temp_constraints.reinit(scratch_data->get_locally_relevant_dofs(temp_dof_idx));
-    if (base_in->get_bc("heat_transfer") && !base_in->get_dirichlet_bc("heat_transfer").empty())
-      {
-        for (const auto &bc : base_in->get_dirichlet_bc(
-               "heat_transfer")) // @todo: add name of bc at a more central place
-          {
-            dealii::VectorTools::interpolate_boundary_values(
-              scratch_data->get_mapping(), dof_handler, bc.first, *bc.second, temp_constraints);
-          }
-      }
-    temp_constraints.close();
-    temp_constraints.merge(temp_hanging_nodes_constraints,
-                           AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
-
-    UtilityFunctions::check_constraints(dof_handler, temp_constraints);
-
-    velocity_hanging_nodes_constraints.clear();
-    velocity_hanging_nodes_constraints.reinit(
-      scratch_data->get_locally_relevant_dofs(velocity_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler_velocity,
-                                            velocity_hanging_nodes_constraints);
-    velocity_hanging_nodes_constraints.close();
-
-    UtilityFunctions::check_constraints(dof_handler_velocity, velocity_hanging_nodes_constraints);
-
-    level_set_hanging_nodes_constraints.clear();
-    level_set_hanging_nodes_constraints.reinit(
-      scratch_data->get_locally_relevant_dofs(level_set_dof_idx));
-    DoFTools::make_hanging_node_constraints(dof_handler_level_set,
-                                            level_set_hanging_nodes_constraints);
-    level_set_hanging_nodes_constraints.close();
-
-    UtilityFunctions::check_constraints(dof_handler_level_set, level_set_hanging_nodes_constraints);
+    base_in->attach_boundary_condition("heat_transfer"); //@todo move to a more central place
+    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                         base_in->get_dirichlet_bc("heat_transfer"),
+                                                         base_in->get_periodic_bc(),
+                                                         temp_dof_idx,
+                                                         temp_hanging_nodes_dof_idx);
 
     scratch_data->build();
 
-    if (do_reinit)
+    if (do_reinit && heat_operation)
       heat_operation->reinit();
   }
 

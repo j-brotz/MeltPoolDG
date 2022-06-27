@@ -183,10 +183,7 @@ namespace MeltPoolDG
       if (!boundary_conditions_map[operation_name])
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
-      AssertThrow(boundary_conditions_map[operation_name]->dirichlet_bc.count(id) == 0,
-                  ExcBCAlreadyAssigned("Dirichlet"));
-
-      boundary_conditions_map[operation_name]->dirichlet_bc[id] = boundary_function;
+      boundary_conditions_map[operation_name]->dirichlet_bc.attach(id, boundary_function);
     }
 
     template <typename FunctionType>
@@ -401,58 +398,96 @@ namespace MeltPoolDG
     }
 
     /**
+     * Attach a new BoundaryConditions<dim> with id @p operation_name.
+     */
+    void
+    attach_boundary_condition(const std::string operation_name)
+    {
+      if (boundary_conditions_map.count(operation_name) == 0)
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+    }
+
+    /**
      * Getter functions for boundary conditions
      */
     const auto &
     get_bc(const std::string operation_name)
     {
-      if (!boundary_conditions_map[operation_name])
-        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+      AssertThrow(
+        boundary_conditions_map[operation_name],
+        ExcMessage(
+          "BC for " + operation_name +
+          "not found. "
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
+
       return boundary_conditions_map[operation_name];
     }
 
     const auto &
     get_dirichlet_bc(const std::string operation_name)
     {
-      if (!boundary_conditions_map[operation_name])
-        AssertThrow(false, ExcMessage("dirichlet_bc: requested boundary condition not found"));
+      AssertThrow(
+        boundary_conditions_map[operation_name],
+        ExcMessage(
+          "BC for " + operation_name +
+          "not found. "
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
+
       return boundary_conditions_map[operation_name]->dirichlet_bc;
     }
 
     const auto &
     get_neumann_bc(const std::string operation_name)
     {
+      AssertThrow(
+        boundary_conditions_map[operation_name],
+        ExcMessage(
+          "BC for " + operation_name +
+          "not found. "
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->neumann_bc;
     }
 
     const std::vector<types::boundary_id> &
     get_no_slip_id(const std::string operation_name)
     {
+      AssertThrow(
+        boundary_conditions_map[operation_name],
+        ExcMessage(
+          "BC for " + operation_name +
+          "not found. "
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->no_slip_bc;
     }
 
     const std::vector<types::boundary_id> &
     get_fix_pressure_constant_id(const std::string operation_name)
     {
-      if (!boundary_conditions_map[operation_name])
-        AssertThrow(false,
-                    ExcMessage(
-                      "get_fix_pressure_constant_id: requested boundary condition not found"));
+      AssertThrow(
+        boundary_conditions_map[operation_name],
+        ExcMessage(
+          "BC for " + operation_name +
+          "not found. "
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->fix_pressure_constant;
     }
 
     const std::vector<types::boundary_id> &
     get_symmetry_id(const std::string operation_name)
     {
-      // if (!boundary_conditions_map[operation_name])
-      //AssertThrow(false, ExcMessage("get_symmetry_id: requested boundary condition not found")); // @todo temporarily disabled due to compatibility with level set operation of adaflo
+      AssertThrow(
+        boundary_conditions_map[operation_name],
+        ExcMessage(
+          "BC for " + operation_name +
+          "not found. "
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->symmetry_bc;
     }
 
     const auto &
     get_periodic_bc()
     {
-      return periodic_boundary_conditions.get_periodic_bc();
+      return periodic_boundary_conditions;
     }
 
     const std::vector<types::boundary_id> &
