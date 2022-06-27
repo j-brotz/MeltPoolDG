@@ -468,6 +468,9 @@ namespace MeltPoolDG
       prm.add_parameter("heat solidification",
                         heat.solidification,
                         "Set this parameter to true to consider solidification.");
+      prm.add_parameter("enable time dependent bc",
+                        heat.enable_time_dependent_bc,
+                        "Set this parameter to true to enable time-dependent bc.");
       heat.delta_approximation_phase_weighted.add_parameters(prm);
       heat.linear_solver.solver_type         = LinearSolverType::GMRES;
       heat.linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;

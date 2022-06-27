@@ -411,6 +411,14 @@ namespace MeltPoolDG
      * Getter functions for boundary conditions
      */
     const auto &
+    get_bc(const std::string operation_name) const
+    {
+      if (!boundary_conditions_map[operation_name])
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+      return boundary_conditions_map[operation_name];
+    }
+
+    std::shared_ptr<BoundaryConditions<dim>>
     get_bc(const std::string operation_name)
     {
       AssertThrow(
@@ -485,7 +493,7 @@ namespace MeltPoolDG
     }
 
     const auto &
-    get_periodic_bc()
+    get_periodic_bc() const
     {
       return periodic_boundary_conditions;
     }

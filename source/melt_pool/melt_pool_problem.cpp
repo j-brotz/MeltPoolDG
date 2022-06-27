@@ -97,7 +97,7 @@ namespace MeltPoolDG::MeltPool
                !(base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)) ||
               (melt_pool_operation &&
                !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
-            heat_operation->solve(dt);
+            heat_operation->solve(time_iterator);
 
           if (melt_pool_operation)
             {
@@ -314,7 +314,8 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::check_input_parameters(Parameters<double> &parameters)
+  MeltPoolProblem<dim>::check_input_parameters(
+    Parameters<double> &parameters /*todo: could be made const*/)
   {
     AssertThrow(!problem_specific_parameters.do_evaporative_heat_flux ||
                   parameters.material.latent_heat_of_evaporation > 0.0,
@@ -710,7 +711,8 @@ namespace MeltPoolDG::MeltPool
          !(base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)) ||
         (melt_pool_operation &&
          !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
-      heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"));
+      heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
+                                            base_in->parameters.time_stepping.start_time);
 
     /*
      * set initial condition of the melt pool class
