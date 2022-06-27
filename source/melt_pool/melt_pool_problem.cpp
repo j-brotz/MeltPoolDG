@@ -1175,8 +1175,7 @@ namespace MeltPoolDG::MeltPool
   {
     const auto &amr_data = base_in->parameters.amr;
 
-    const auto mark_cells_for_refinement =
-      [&](parallel::distributed::Triangulation<dim> &tria) -> bool {
+    const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       if (problem_specific_parameters.amr.do_auto_detect_frequency)
         {
           // Check whether the interface changed that much such that refinement is needed.
@@ -1295,19 +1294,35 @@ namespace MeltPoolDG::MeltPool
                   default: // this is the default case, since it was determined to be robust for CI
                            // testing
                     case AutomaticGridRefinementType::fixed_number: {
-                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-                        tria,
-                        estimated_error_per_cell,
-                        amr_data.upper_perc_to_refine,
-                        amr_data.lower_perc_to_coarsen);
+                      if (auto pdt_tria =
+                            dynamic_cast<parallel::distributed::Triangulation<dim> *>(&tria))
+                        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+                          *pdt_tria,
+                          estimated_error_per_cell,
+                          amr_data.upper_perc_to_refine,
+                          amr_data.lower_perc_to_coarsen);
+                      else
+                        GridRefinement::refine_and_coarsen_fixed_number(
+                          tria,
+                          estimated_error_per_cell,
+                          amr_data.upper_perc_to_refine,
+                          amr_data.lower_perc_to_coarsen);
                       break;
                     }
                     case AutomaticGridRefinementType::fixed_fraction: {
-                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
-                        tria,
-                        estimated_error_per_cell,
-                        amr_data.upper_perc_to_refine,
-                        amr_data.lower_perc_to_coarsen);
+                      if (auto pdt_tria =
+                            dynamic_cast<parallel::distributed::Triangulation<dim> *>(&tria))
+                        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+                          *pdt_tria,
+                          estimated_error_per_cell,
+                          amr_data.upper_perc_to_refine,
+                          amr_data.lower_perc_to_coarsen);
+                      else
+                        GridRefinement::refine_and_coarsen_fixed_number(
+                          tria,
+                          estimated_error_per_cell,
+                          amr_data.upper_perc_to_refine,
+                          amr_data.lower_perc_to_coarsen);
                       break;
                     }
                 }
@@ -1371,19 +1386,35 @@ namespace MeltPoolDG::MeltPool
                   default: // this is the default case, since it was determined to be robust for CI
                            // testing
                     case AutomaticGridRefinementType::fixed_number: {
-                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-                        tria,
-                        estimated_error_per_cell,
-                        amr_data.upper_perc_to_refine,
-                        amr_data.lower_perc_to_coarsen);
+                      if (auto pdt_tria =
+                            dynamic_cast<parallel::distributed::Triangulation<dim> *>(&tria))
+                        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+                          *pdt_tria,
+                          estimated_error_per_cell,
+                          amr_data.upper_perc_to_refine,
+                          amr_data.lower_perc_to_coarsen);
+                      else
+                        GridRefinement::refine_and_coarsen_fixed_number(
+                          tria,
+                          estimated_error_per_cell,
+                          amr_data.upper_perc_to_refine,
+                          amr_data.lower_perc_to_coarsen);
                       break;
                     }
                     case AutomaticGridRefinementType::fixed_fraction: {
-                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
-                        tria,
-                        estimated_error_per_cell,
-                        amr_data.upper_perc_to_refine,
-                        amr_data.lower_perc_to_coarsen);
+                      if (auto pdt_tria =
+                            dynamic_cast<parallel::distributed::Triangulation<dim> *>(&tria))
+                        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+                          *pdt_tria,
+                          estimated_error_per_cell,
+                          amr_data.upper_perc_to_refine,
+                          amr_data.lower_perc_to_coarsen);
+                      else
+                        GridRefinement::refine_and_coarsen_fixed_fraction(
+                          tria,
+                          estimated_error_per_cell,
+                          amr_data.upper_perc_to_refine,
+                          amr_data.lower_perc_to_coarsen);
                       break;
                     }
                 }
