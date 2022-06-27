@@ -41,6 +41,9 @@ namespace MeltPoolDG::MeltPool
   template <typename number>
   class RecoilPressurePhenomenologicalModel : public RecoilPressureModelBase<number>
   {
+    //@todo: to avoid compiler warnings regarding hidden overriden functions
+    using RecoilPressureModelBase<number>::compute_recoil_pressure_coefficient;
+
   private:
     const RecoilPressureData<number> &recoil_data;
     const number                      boiling_temperature;
@@ -82,6 +85,9 @@ namespace MeltPoolDG::MeltPool
   template <typename number>
   class RecoilPressureHybridModel : public RecoilPressureModelBase<number>
   {
+    //@todo: to avoid compiler warnings regarding hidden overriden functions
+    using RecoilPressureModelBase<number>::compute_recoil_pressure_coefficient;
+
   private:
     const RecoilPressureData<number> &                recoil_data;
     const number                                      boiling_temperature;
