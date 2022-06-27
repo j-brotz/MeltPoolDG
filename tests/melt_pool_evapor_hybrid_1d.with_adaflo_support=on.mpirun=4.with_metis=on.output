@@ -23,8 +23,8 @@
 | || evapartive_mass_source ||L2 = 7.3293356639e+00            evaporation_source_terms_continuous |
 
 Time step #1, advancing from t_n-1 = 0 to t = 1e-10 (dt = 1e-10). 
-| || velocity ||L2 = 2.309122346150877e-01                                    navier_stokes_adaflo |
-| || pressure ||L2 = 3.446620624278699e+06                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.309122248825131e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 3.446619680150344e+06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-10 to 2.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -45,19 +45,19 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-10 (dt = 1e-10).
 | || evapartive_mass_source ||L2 = 7.3379552041e+00            evaporation_source_terms_continuous |
 
 Time step #2, advancing from t_n-1 = 1e-10 to t = 2e-10 (dt = 1e-10). 
-| || velocity ||L2 = 2.309173452975726e-01                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.724681341016312e+06                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.309173463332743e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.724682285347891e+06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-10 to 3.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 2.3912776788e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 7.03125e-06                                                                reinitialization |
-| || delta phi ||L2 = 1.513390122962943e-06                                       reinitialization |
+| || delta phi ||L2 = 1.513390225502181e-06                                       reinitialization |
 |  τ = 1.40625e-05                                                                reinitialization |
-| || delta phi ||L2 = 1.092597741037291e-06                                       reinitialization |
+| || delta phi ||L2 = 1.092597798932054e-06                                       reinitialization |
 |  τ = 2.10937e-05                                                                reinitialization |
-| || delta phi ||L2 = 7.742399086650106e-07                                       reinitialization |
+| || delta phi ||L2 = 7.742398920076116e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
@@ -67,19 +67,19 @@ Time step #2, advancing from t_n-1 = 1e-10 to t = 2e-10 (dt = 1e-10).
 | || evapartive_mass_source ||L2 = 7.3420878205e+00            evaporation_source_terms_continuous |
 
 Time step #3, advancing from t_n-1 = 2e-10 to t = 3e-10 (dt = 1e-10). 
-| || velocity ||L2 = 2.309197258623728e-01                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.951674125420932e+03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.309197279341179e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.950637303770024e+03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-10 to 4.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 2.3913544146e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 7.03125e-06                                                                reinitialization |
-| || delta phi ||L2 = 5.412994042919567e-07                                       reinitialization |
+| || delta phi ||L2 = 5.412995628125772e-07                                       reinitialization |
 |  τ = 1.40625e-05                                                                reinitialization |
-| || delta phi ||L2 = 3.742169186982198e-07                                       reinitialization |
+| || delta phi ||L2 = 3.742169868865192e-07                                       reinitialization |
 |  τ = 2.10937e-05                                                                reinitialization |
-| || delta phi ||L2 = 2.566578284778843e-07                                       reinitialization |
+| || delta phi ||L2 = 2.566578319388414e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
@@ -89,19 +89,19 @@ Time step #3, advancing from t_n-1 = 2e-10 to t = 3e-10 (dt = 1e-10).
 | || evapartive_mass_source ||L2 = 7.3435709353e+00            evaporation_source_terms_continuous |
 
 Time step #4, advancing from t_n-1 = 3e-10 to t = 4e-10 (dt = 1e-10). 
-| || velocity ||L2 = 2.309205694390951e-01                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.186081867164860e+03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.309205720289355e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.185047920716082e+03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-10 to 5.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 2.3913795871e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 7.03125e-06                                                                reinitialization |
-| || delta phi ||L2 = 1.752409466198870e-07                                       reinitialization |
+| || delta phi ||L2 = 1.752411631084328e-07                                       reinitialization |
 |  τ = 1.40625e-05                                                                reinitialization |
-| || delta phi ||L2 = 1.188507574840421e-07                                       reinitialization |
+| || delta phi ||L2 = 1.188508520923401e-07                                       reinitialization |
 |  τ = 2.10937e-05                                                                reinitialization |
-| || delta phi ||L2 = 8.033893122397807e-08                                       reinitialization |
+| || delta phi ||L2 = 8.033894041158359e-08                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
@@ -111,8 +111,8 @@ Time step #4, advancing from t_n-1 = 3e-10 to t = 4e-10 (dt = 1e-10).
 | || evapartive_mass_source ||L2 = 7.3440503894e+00            evaporation_source_terms_continuous |
 
 Time step #5, advancing from t_n-1 = 4e-10 to t = 5e-10 (dt = 1e-10). 
-| || velocity ||L2 = 2.309208379677813e-01                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.198208675634879e+03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.309208410756519e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.197174998554623e+03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
