@@ -165,8 +165,6 @@ namespace MeltPoolDG
             std::vector<std::vector<VectorType>> new_grid_solutions_full(n);
             std::vector<std::vector<VectorType>> old_grid_solutions_full(n);
 
-            // TODO: initialize old_grid_solutions_full
-
             for (unsigned int j = 0; j < n; ++j)
               {
                 data[j].second(new_grid_solutions[j]);
@@ -179,10 +177,24 @@ namespace MeltPoolDG
                 solution_transfer[j] =
                   std::make_shared<SolutionTransfer<dim, VectorType>>(*data[j].first);
 
-                // TODO: copy old_grid_solutions -> old_grid_solutions_full
+                old_grid_solutions_full[j].resize(new_grid_solutions[j].size());
+                for (unsigned int i = 0; i < old_grid_solutions_full[j].size(); ++i)
+                  {
+                    const auto &distributed = *old_grid_solutions[j][i];
+                    IndexSet    ghost(distributed.size());
+                    ghost.add_range(0, distributed.size());
+                    old_grid_solutions_full[j][i].reinit(distributed.locally_owned_elements(),
+                                                         ghost,
+                                                         distributed.get_mpi_communicator());
+
+                    old_grid_solutions_full[j][i].copy_locally_owned_data_from(
+                      *old_grid_solutions[j][i]);
+                    old_grid_solutions_full[j][i].update_ghost_values();
+                  }
                 solution_transfer[j]->prepare_for_coarsening_and_refinement(
                   old_grid_solutions_full[j]);
               }
+
             /*
              *  Execute the grid refinement
              */
@@ -197,10 +209,23 @@ namespace MeltPoolDG
              */
             for (unsigned int j = 0; j < n; ++j)
               {
-                // TODO: initialize new_grid_solutions_full
+                new_grid_solutions_full[j].resize(new_grid_solutions[j].size());
+                for (unsigned int i = 0; i < new_grid_solutions_full[j].size(); ++i)
+                  {
+                    const auto &distributed = *new_grid_solutions[j][i];
+                    IndexSet    ghost(distributed.size());
+                    ghost.add_range(0, distributed.size());
+                    new_grid_solutions_full[j][i].reinit(distributed.locally_owned_elements(),
+                                                         ghost,
+                                                         distributed.get_mpi_communicator());
+                  }
+
                 solution_transfer[j]->interpolate(old_grid_solutions_full[j],
                                                   new_grid_solutions_full[j]);
-                // TODO: copy new_grid_solutions_full -> new_grid_solutions
+
+                for (unsigned int i = 0; i < new_grid_solutions_full[j].size(); ++i)
+                  new_grid_solutions[j][i]->copy_locally_owned_data_from(
+                    new_grid_solutions_full[j][i]);
               }
             post();
           }
