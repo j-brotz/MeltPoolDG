@@ -101,7 +101,7 @@
   },
   "reinitialization": {
     "reinit max n steps": "3",
-    "reinit scale factor epsilon": "1.5"
+    "reinit scale factor epsilon": "2"
   },
   "simulation specific domain": {
     "domain x max": "400e-6",
