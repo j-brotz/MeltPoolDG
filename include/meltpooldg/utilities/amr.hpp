@@ -117,6 +117,9 @@ namespace MeltPoolDG
           }
         else
           {
+            AssertThrow(Utilities::MPI::n_mpi_processes(data[0].first->get_communicator()) == 1,
+                        ExcNotImplemented());
+
             auto tria = triangulation;
 
             if (mark_cells_for_refinement(*tria) == false)
