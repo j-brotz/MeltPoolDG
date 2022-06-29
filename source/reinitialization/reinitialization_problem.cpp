@@ -177,8 +177,7 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    const auto mark_cells_for_refinement =
-      [&](parallel::distributed::Triangulation<dim> &tria) -> bool {
+    const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
 
       VectorType locally_relevant_solution;
@@ -193,11 +192,18 @@ namespace MeltPoolDG::Reinitialization
                                          locally_relevant_solution,
                                          estimated_error_per_cell);
 
-      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-        tria,
-        estimated_error_per_cell,
-        base_in->parameters.amr.upper_perc_to_refine,
-        base_in->parameters.amr.lower_perc_to_coarsen);
+      if (auto pdt_tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(&tria))
+        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+          *pdt_tria,
+          estimated_error_per_cell,
+          base_in->parameters.amr.upper_perc_to_refine,
+          base_in->parameters.amr.lower_perc_to_coarsen);
+      else
+        GridRefinement::refine_and_coarsen_fixed_number(
+          tria,
+          estimated_error_per_cell,
+          base_in->parameters.amr.upper_perc_to_refine,
+          base_in->parameters.amr.lower_perc_to_coarsen);
 
       return true;
     };
