@@ -203,6 +203,8 @@ namespace MeltPoolDG::Reinitialization
 
     solution_level_set += delta_level_set;
 
+    max_change_level_set = delta_psi_vec.linfty_norm();
+
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   MeltPoolDG::VectorTools::compute_L2_norm<dim>(
                                     rhs, *scratch_data, reinit_dof_idx, reinit_quad_idx),
@@ -217,8 +219,9 @@ namespace MeltPoolDG::Reinitialization
                                   "reinitialization",
                                   15 /*precision*/
     );
+
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
-                                  delta_psi_vec.linfty_norm(),
+                                  max_change_level_set,
                                   "delta phi",
                                   "reinitialization",
                                   15 /*precision*/,
@@ -237,6 +240,13 @@ namespace MeltPoolDG::Reinitialization
     Journal::print_line(scratch_data->get_pcout(1),
                         "     * CG: i = " + std::to_string(iter),
                         "reinitialization");
+  }
+
+  template <int dim>
+  const double &
+  ReinitializationOperation<dim>::get_max_change_level_set() const
+  {
+    return max_change_level_set;
   }
 
   template <int dim>

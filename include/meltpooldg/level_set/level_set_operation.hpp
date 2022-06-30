@@ -66,6 +66,8 @@ namespace MeltPoolDG::LevelSet
     VectorType level_set_as_heaviside;
     VectorType distance_to_level_set;
 
+    double max_d_level_set_since_last_reinit = std::numeric_limits<double>::max();
+
   public:
     LevelSetOperation() = default;
 

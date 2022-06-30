@@ -77,6 +77,9 @@ namespace MeltPoolDG
       void
       solve(const double d_tau) override;
 
+      const double &
+      get_max_change_level_set() const final;
+
       const BlockVectorType &
       get_normal_vector() const override;
 
@@ -141,6 +144,9 @@ namespace MeltPoolDG
        * Flag, if preconditioner matrices should be updated
        */
       bool update_preconditioner_matrixfree = true;
+
+      // maximum change of the level set due to the current reinitialization step
+      double max_change_level_set = std::numeric_limits<double>::max();
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG

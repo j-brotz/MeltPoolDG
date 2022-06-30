@@ -118,8 +118,11 @@ namespace MeltPoolDG::Reinitialization
            distorted solutions*/
       ,
       compute_normal);
+
+    max_change_level_set = increment.linfty_norm();
+
     Journal::print_formatted_norm(scratch_data.get_pcout(1),
-                                  increment.linfty_norm(),
+                                  max_change_level_set,
                                   "delta phi",
                                   "reinitialization",
                                   10 /*precision*/,
@@ -136,6 +139,13 @@ namespace MeltPoolDG::Reinitialization
       10 /*precision*/
     );
     force_compute_normal = false;
+  }
+
+  template <int dim>
+  const double &
+  ReinitializationOperationAdaflo<dim>::get_max_change_level_set() const
+  {
+    return max_change_level_set;
   }
 
   template <int dim>
