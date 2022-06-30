@@ -94,8 +94,8 @@
   },
   "recoil pressure": {
     "interface distributed flux type": "continuous",
-    "recoil pressure constant": "56000",
-    "recoil temperature constant": "50821",
+    "recoil pressure constant": "1.0",
+    "recoil temperature constant": "1.0",
     "activation temperature": "500",
     "model type": "hybrid"
   },
