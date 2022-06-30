@@ -59,8 +59,10 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     scratch_data->get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
     scratch_data->initialize_dof_vector(solution_advected_field_old, advec_diff_dof_idx);
+
     solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
     scratch_data->initialize_dof_vector(user_rhs, advec_diff_dof_idx);
+    scratch_data->initialize_dof_vector(rhs, advec_diff_dof_idx);
   }
 
   template <int dim>
@@ -70,6 +72,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     scratch_data->initialize_dof_vector(solution_advected_field, advec_diff_dof_idx);
     scratch_data->initialize_dof_vector(solution_advected_field_old, advec_diff_dof_idx);
     scratch_data->initialize_dof_vector(user_rhs, advec_diff_dof_idx);
+    scratch_data->initialize_dof_vector(rhs, advec_diff_dof_idx);
     /*
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
@@ -92,6 +95,9 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperation<dim>::solve(const double dt, const VectorType &advection_velocity)
   {
     solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
+    solution_advected_field = 0.0;
+
+    rhs = 0.0;
 
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   VectorTools::compute_L2_norm<dim>(advection_velocity,
@@ -106,10 +112,6 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (!advec_diff_operator)
       create_operator(advection_velocity);
-
-    VectorType rhs;
-
-    scratch_data->initialize_dof_vector(rhs, advec_diff_dof_idx);
 
     advec_diff_operator->reset_time_increment(dt);
 

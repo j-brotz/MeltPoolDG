@@ -110,6 +110,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
       preconditioner_matrixfree;
 
+    VectorType rhs;
     VectorType user_rhs;
   };
 } // namespace MeltPoolDG::AdvectionDiffusion

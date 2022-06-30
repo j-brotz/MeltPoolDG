@@ -437,7 +437,6 @@ namespace MeltPoolDG::LevelSet
     temp -= reinit_operation->get_level_set();
     max_d_level_set_since_last_reinit = temp.linfty_norm();
 
-    std::cout << "max delta s " << max_d_level_set_since_last_reinit << std::endl;
     // do reinitialization only if the level set has changed more than a certain tolerance
     if (max_d_level_set_since_last_reinit >
         level_set_data.reinitialization_tolerances.delta_level_set)
