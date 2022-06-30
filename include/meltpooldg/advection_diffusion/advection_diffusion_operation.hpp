@@ -103,6 +103,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      *    accessible for output_results.
      */
     VectorType solution_advected_field;
+    VectorType solution_advected_field_old;
     /*
      * Preconditioner for the matrix-free advection diffusion operator
      */
