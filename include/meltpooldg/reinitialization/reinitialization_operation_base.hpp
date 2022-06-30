@@ -49,7 +49,7 @@ namespace MeltPoolDG
       virtual LinearAlgebra::distributed::Vector<double> &
       get_level_set() = 0;
 
-      virtual const double &
+      virtual double
       get_max_change_level_set() const = 0;
 
       virtual const LinearAlgebra::distributed::BlockVector<double> &

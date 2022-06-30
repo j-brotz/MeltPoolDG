@@ -77,7 +77,7 @@ namespace MeltPoolDG
       void
       solve(const double d_tau) override;
 
-      const double &
+      double
       get_max_change_level_set() const final;
 
       const BlockVectorType &

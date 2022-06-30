@@ -142,7 +142,7 @@ namespace MeltPoolDG::Reinitialization
   }
 
   template <int dim>
-  const double &
+  double
   ReinitializationOperationAdaflo<dim>::get_max_change_level_set() const
   {
     return max_change_level_set;

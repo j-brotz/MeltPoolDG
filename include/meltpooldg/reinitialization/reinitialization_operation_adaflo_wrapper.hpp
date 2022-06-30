@@ -62,7 +62,7 @@ namespace MeltPoolDG
       LinearAlgebra::distributed::Vector<double> &
       get_level_set() override;
 
-      const double &
+      double
       get_max_change_level_set() const final;
 
       const LinearAlgebra::distributed::BlockVector<double> &
