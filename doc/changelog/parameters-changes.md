@@ -5,7 +5,7 @@ All notable changes of the input parameters will be documented in this file.
 - Add tolerance for activating reinitialization 
 ```json
 {
-  "level set": {
+  "levelset": {
     "tol reinit": ""
   }
 }
