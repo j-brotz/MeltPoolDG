@@ -326,20 +326,11 @@ namespace MeltPoolDG
                         "calculated as a localized function, being exactly 0 and 1 outside of "
                         "the interface region.");
 
-      prm.enter_subsection("reinitialization tolerances");
-      {
-        prm.add_parameter("delta level set",
-                          ls.reinitialization_tolerances.delta_level_set,
-                          "Set the value for |Ф_(n+x) - Ф_(n)|∞, "
-                          "which determines for the current time step n+x, if reinitialization is "
-                          "necessary or not. Time step n corresponds to the last time step, where "
-                          "reinitialization was performed.");
-        prm.add_parameter("delta reinit",
-                          ls.reinitialization_tolerances.delta_reinit,
-                          "Set the value for |ψ_(n+1) - ψ_(n)|∞, "
-                          "which determines if the current reinitialization can be aborted.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("tol reinit",
+                        ls.tol_reinit,
+                        "Set the tolerance for reinitialization. If the "
+                        "maximum change of the level set field, i.e. ||ΔФ||∞, exceeds the "
+                        "tolerance, reinitialization steps will be performed.");
     }
     prm.leave_subsection();
 

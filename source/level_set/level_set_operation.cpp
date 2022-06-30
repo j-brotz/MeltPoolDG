@@ -438,8 +438,7 @@ namespace MeltPoolDG::LevelSet
     max_d_level_set_since_last_reinit = temp.linfty_norm();
 
     // do reinitialization only if the level set has changed more than a certain tolerance
-    if (max_d_level_set_since_last_reinit >
-        level_set_data.reinitialization_tolerances.delta_level_set)
+    if (max_d_level_set_since_last_reinit > level_set_data.tol_reinit)
       {
         reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
 
@@ -455,8 +454,7 @@ namespace MeltPoolDG::LevelSet
             reinit_operation->solve(d_tau);
 
             // Check how much the level set changed due to reinitialization
-            if (reinit_operation->get_max_change_level_set() <
-                level_set_data.reinitialization_tolerances.delta_reinit)
+            if (reinit_operation->get_max_change_level_set() < level_set_data.tol_reinit)
               break;
 
             /*

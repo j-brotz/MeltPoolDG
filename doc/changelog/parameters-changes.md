@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-06-30
+- Add tolerance for activating reinitialization 
+```json
+{
+  "level set": {
+    "tol reinit": ""
+  }
+}
+```
+
 ## 2022-06-26
 - Add option to determine weights for phase weighted Dirac delta function 
   automatically
