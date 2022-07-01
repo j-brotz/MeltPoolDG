@@ -19,6 +19,9 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
 {
   using namespace dealii;
 
+  static double side_length = 1.0;
+  static double radius      = 0.25;
+
   template <int dim>
   class InitialLevelSetCircle : public Function<dim>
   {
@@ -86,6 +89,8 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
                           droplet_shape,
                           "Shape of the droplet: circle or ellipse",
                           Patterns::Selection("circle|ellipse"));
+        prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
+        prm.add_parameter("radius", radius, "Radius.");
       }
       prm.leave_subsection();
     }
@@ -98,7 +103,7 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
 
       if constexpr (dim == 2)
         {
-          GridGenerator::hyper_cube(*this->triangulation, -2.5, 2.5);
+          GridGenerator::hyper_cube(*this->triangulation, -side_length / 2., side_length / 2);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
       else
@@ -125,12 +130,11 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
       AssertThrow(eps > 0, ExcNotImplemented());
 
       Point<dim> center;
-      for (unsigned int d = 0; d < dim; ++d)
-        center[d] = 0.02 + 0.01 * d;
+      // for (unsigned int d = 0; d < dim; ++d)
+      // center[d] = 0.02 + 0.01 * d;
 
       if (droplet_shape == "circle")
         {
-          const double radius = 0.5;
           this->attach_initial_condition(
             std::make_shared<InitialLevelSetCircle<dim>>(center, radius, eps), "level_set");
         }
