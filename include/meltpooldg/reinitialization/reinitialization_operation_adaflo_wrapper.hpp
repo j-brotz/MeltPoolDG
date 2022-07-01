@@ -62,6 +62,9 @@ namespace MeltPoolDG
       LinearAlgebra::distributed::Vector<double> &
       get_level_set() override;
 
+      double
+      get_max_change_level_set() const final;
+
       const LinearAlgebra::distributed::BlockVector<double> &
       get_normal_vector() const override;
 
@@ -125,6 +128,9 @@ namespace MeltPoolDG
       bool                                   force_compute_normal = true;
       std::function<void(bool)>              compute_normal;
       const ConditionalOStream               pcout;
+
+      // maximum change of the level set due to the current reinitialization step
+      double max_change_level_set = std::numeric_limits<double>::max();
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG

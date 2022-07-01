@@ -58,7 +58,11 @@ namespace MeltPoolDG::AdvectionDiffusion
                                      solution_advected_field);
 
     scratch_data->get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
+    scratch_data->initialize_dof_vector(solution_advected_field_old, advec_diff_dof_idx);
+
+    solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
     scratch_data->initialize_dof_vector(user_rhs, advec_diff_dof_idx);
+    scratch_data->initialize_dof_vector(rhs, advec_diff_dof_idx);
   }
 
   template <int dim>
@@ -66,7 +70,9 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperation<dim>::reinit()
   {
     scratch_data->initialize_dof_vector(solution_advected_field, advec_diff_dof_idx);
+    scratch_data->initialize_dof_vector(solution_advected_field_old, advec_diff_dof_idx);
     scratch_data->initialize_dof_vector(user_rhs, advec_diff_dof_idx);
+    scratch_data->initialize_dof_vector(rhs, advec_diff_dof_idx);
     /*
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
@@ -88,6 +94,11 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperation<dim>::solve(const double dt, const VectorType &advection_velocity)
   {
+    solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
+    solution_advected_field = 0.0;
+
+    rhs = 0.0;
+
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   VectorTools::compute_L2_norm<dim>(advection_velocity,
                                                                     *scratch_data,
@@ -97,15 +108,10 @@ namespace MeltPoolDG::AdvectionDiffusion
                                   "advection_diffusion");
 
     advection_velocity.update_ghost_values();
-    solution_advected_field.update_ghost_values();
+    solution_advected_field_old.update_ghost_values();
 
     if (!advec_diff_operator)
       create_operator(advection_velocity);
-
-    VectorType src, rhs;
-
-    scratch_data->initialize_dof_vector(src, advec_diff_dof_idx);
-    scratch_data->initialize_dof_vector(rhs, advec_diff_dof_idx);
 
     advec_diff_operator->reset_time_increment(dt);
 
@@ -121,7 +127,7 @@ namespace MeltPoolDG::AdvectionDiffusion
         Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
           *advec_diff_operator,
           rhs,
-          solution_advected_field,
+          solution_advected_field_old,
           *scratch_data,
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx,
@@ -133,7 +139,7 @@ namespace MeltPoolDG::AdvectionDiffusion
               preconditioner_matrixfree->compute_diagonal_preconditioner();
 
             iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                                   src,
+                                                   solution_advected_field,
                                                    rhs,
                                                    this->advec_diff_data.linear_solver,
                                                    *diag_preconditioner_matrixfree);
@@ -144,7 +150,7 @@ namespace MeltPoolDG::AdvectionDiffusion
               preconditioner_matrixfree->compute_trilinos_preconditioner();
 
             iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                                   src,
+                                                   solution_advected_field,
                                                    rhs,
                                                    this->advec_diff_data.linear_solver,
                                                    *trilinos_preconditioner_matrixfree);
@@ -152,7 +158,7 @@ namespace MeltPoolDG::AdvectionDiffusion
       }
     else
       {
-        advec_diff_operator->assemble_matrixbased(solution_advected_field,
+        advec_diff_operator->assemble_matrixbased(solution_advected_field_old,
                                                   advec_diff_operator->get_system_matrix(),
                                                   rhs);
 
@@ -165,16 +171,13 @@ namespace MeltPoolDG::AdvectionDiffusion
           advec_diff_operator->get_system_matrix(),
           this->advec_diff_data.linear_solver.preconditioner_type);
         iter = LinearSolver::solve<VectorType>(advec_diff_operator->get_system_matrix(),
-                                               src,
+                                               solution_advected_field,
                                                rhs,
                                                this->advec_diff_data.linear_solver,
                                                *preconditioner);
       }
 
-    scratch_data->get_constraint(advec_diff_dof_idx).distribute(src);
-
-    solution_advected_field.zero_out_ghost_values();
-    solution_advected_field.copy_locally_owned_data_from(src);
+    scratch_data->get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
 
     Journal::print_formatted_norm(scratch_data->get_pcout(2),
                                   advec_diff_operator->get_system_matrix().frobenius_norm(),
@@ -190,7 +193,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                   6 /*precision*/,
                                   "l2");
     Journal::print_formatted_norm(scratch_data->get_pcout(2),
-                                  src.l2_norm(),
+                                  solution_advected_field.l2_norm(),
                                   "src",
                                   "advection_diffusion",
                                   6 /*precision*/,
@@ -209,6 +212,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                         "     * GMRES: i = " + std::to_string(iter),
                         "advection_diffusion");
 
+    solution_advected_field_old.zero_out_ghost_values();
     advection_velocity.zero_out_ghost_values();
   }
 
@@ -230,14 +234,14 @@ namespace MeltPoolDG::AdvectionDiffusion
   const LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperation<dim>::get_advected_field_old() const
   {
-    return solution_advected_field;
+    return solution_advected_field_old;
   }
 
   template <int dim>
   LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperation<dim>::get_advected_field_old()
   {
-    return solution_advected_field;
+    return solution_advected_field_old;
   }
 
   template <int dim>
@@ -261,6 +265,8 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     solution_advected_field.update_ghost_values();
     vectors.push_back(&solution_advected_field);
+    solution_advected_field_old.update_ghost_values();
+    vectors.push_back(&solution_advected_field_old);
   }
 
   template <int dim>

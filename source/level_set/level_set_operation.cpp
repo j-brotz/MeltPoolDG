@@ -430,44 +430,61 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::do_reinitialization()
   {
-    reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
+    // compute the change in the level set since the last reinit
+    VectorType temp;
+    scratch_data->initialize_dof_vector(temp, ls_dof_idx);
+    temp.copy_locally_owned_data_from(get_level_set());
+    temp -= reinit_operation->get_level_set();
+    max_d_level_set_since_last_reinit = temp.linfty_norm();
 
-    Journal::print_decoration_line(scratch_data->get_pcout());
-    while (!reinit_time_iterator.is_finished())
+    // do reinitialization only if the level set has changed more than a certain tolerance
+    if (max_d_level_set_since_last_reinit > level_set_data.tol_reinit)
       {
-        const double       d_tau = reinit_time_iterator.get_next_time_increment();
-        std::ostringstream str;
-        str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
-        Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
-        reinit_operation->solve(d_tau);
-        /*
-         *  reset the solution of the level set field to the reinitialized solution ...
-         */
-        advec_diff_operation->get_advected_field().copy_locally_owned_data_from(
-          reinit_operation->get_level_set());
-        /*
-         *  @todo
-         *
-         *  ... and distribute the constraints;
-         *
-         *  Should constraints between advec diff operation
-         *  and reinitialization operation be synched?
-         */
-        // scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
+        reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
 
+        Journal::print_decoration_line(scratch_data->get_pcout());
+        while (!reinit_time_iterator.is_finished())
+          {
+            const double d_tau = reinit_time_iterator.get_next_time_increment();
 
-        // If it is the first reinitialization cycle, the normal vector
-        // field might not be computed very accurately from the initial level set
-        // field. Thus, in this case we update the normal vector in every reinitialization
-        // step.
-        if (very_first_step)
-          reinit_operation->set_initial_condition(get_level_set());
+            std::ostringstream str;
+            str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
+            Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
+
+            reinit_operation->solve(d_tau);
+
+            // Check how much the level set changed due to reinitialization
+            if (reinit_operation->get_max_change_level_set() < level_set_data.tol_reinit)
+              break;
+
+            /*
+             *  reset the solution of the level set field to the reinitialized solution ...
+             */
+            advec_diff_operation->get_advected_field().copy_locally_owned_data_from(
+              reinit_operation->get_level_set());
+            /*
+             *  @todo
+             *
+             *  ... and distribute the constraints;
+             *
+             *  Should constraints between advec diff operation
+             *  and reinitialization operation be synched?
+             */
+            // scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
+
+            // If it is the first reinitialization cycle, the normal vector
+            // field might not be computed very accurately from the initial level set
+            // field. Thus, in this case we update the normal vector in every reinitialization
+            // step.
+            if (very_first_step)
+              reinit_operation->set_initial_condition(get_level_set());
+          }
+        reinit_time_iterator.reset();
+
+        very_first_step = false;
+
+        Journal::print_decoration_line(scratch_data->get_pcout());
       }
-    reinit_time_iterator.reset();
-
-    very_first_step = false;
-
-    Journal::print_decoration_line(scratch_data->get_pcout());
   }
 
   template <int dim>

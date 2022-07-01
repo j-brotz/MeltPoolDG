@@ -325,6 +325,12 @@ namespace MeltPoolDG
                         "Determine if the heaviside representation of the level set should be "
                         "calculated as a localized function, being exactly 0 and 1 outside of "
                         "the interface region.");
+
+      prm.add_parameter("tol reinit",
+                        ls.tol_reinit,
+                        "Set the tolerance for reinitialization. If the "
+                        "maximum change of the level set field, i.e. ||ΔФ||∞, exceeds the "
+                        "tolerance, reinitialization steps will be performed.");
     }
     prm.leave_subsection();
 

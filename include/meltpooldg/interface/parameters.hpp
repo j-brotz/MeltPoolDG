@@ -108,6 +108,7 @@ namespace MeltPoolDG
     bool        do_localized_heaviside  = true;
     std::string implementation          = "meltpooldg";
     number      reinit_time_step_size   = -1.;
+    number      tol_reinit              = std::numeric_limits<number>::min();
   };
 
   template <typename number = double>
