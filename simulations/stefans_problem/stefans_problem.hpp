@@ -23,39 +23,6 @@ namespace MeltPoolDG::Simulation::StefansProblem
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-
-  template <int dim>
-  class InitialValuesLS : public Function<dim>
-  {
-  public:
-    InitialValuesLS(const double x_min,
-                    const double x_max,
-                    const double y_min,
-                    const double y_interface)
-      : Function<dim>()
-      , x_min(x_min)
-      , x_max(x_max)
-      , y_min(y_min)
-      , y_interface(y_interface)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
-    {
-      Point<dim> lower_left = dim == 2 ? Point<dim>(x_min, y_min) : Point<dim>(x_min, x_min, y_min);
-      Point<dim> upper_right =
-        dim == 2 ? Point<dim>(x_max, y_interface) : Point<dim>(x_max, x_max, y_interface);
-
-      return UtilityFunctions::CharacteristicFunctions::sgn(
-        DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
-    }
-    double x_min, x_max, y_min, y_interface;
-  };
-
-  /*
-   *      This class collects all relevant input data for the level set simulation
-   */
-
   template <int dim>
   class SimulationStefansProblem : public SimulationBase<dim>
   {
