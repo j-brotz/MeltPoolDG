@@ -26,111 +26,164 @@
 | || normal_1 ||L2 = 3.29886370897e+00                                               normal_vector |
 | || curvature ||L2 = 1.48896775246e+01                                                  curvature |
 cycle: 0 n_dofs: 1089(ls)
-
-
-----------------------------------------------------
-Exception on processing: 
-
-
-----------------------------------------------------
-Exception on processing: 
-
-
-----------------------------------------------------
-Exception on processing: 
-
-
-----------------------------------------------------
-Exception on processing: 
-
---------------------------------------------------------
-An error occurred in file <simulation_base.hpp> in function
-    std::shared_ptr<dealii::Function<dim, double> > MeltPoolDG::SimulationBase<dim, spacedim>::get_initial_condition(std::string, bool) [with int dim = 2; int spacedim = 2; std::string = std::__cxx11::basic_string<char>]
-The violated condition was: 
-    is_optional || (field_conditions && field_conditions->initial_field)
-Additional information: 
-    It seems that you have not called
-    SimulationBase::set_initial_condition() for the operator "level_set".
-    You can do that, e.g., in your simulation by overriding
-    SimulationBase::set_field_conditions().
-
-Stacktrace:
------------
-#0  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::SimulationBase<2, 2>::get_initial_condition(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool)
-#1  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::LevelSet::LevelSetProblem<2>::initialize(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
-#2  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::LevelSet::LevelSetProblem<2>::run(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
-#3  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/meltpooldg: void MeltPoolDG::Simulation::run_simulation<double>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, ompi_communicator_t*)
-#4  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/meltpooldg: main
---------------------------------------------------------
-
-Aborting!
-----------------------------------------------------
-
---------------------------------------------------------
-An error occurred in file <simulation_base.hpp> in function
-    std::shared_ptr<dealii::Function<dim, double> > MeltPoolDG::SimulationBase<dim, spacedim>::get_initial_condition(std::string, bool) [with int dim = 2; int spacedim = 2; std::string = std::__cxx11::basic_string<char>]
-The violated condition was: 
-    is_optional || (field_conditions && field_conditions->initial_field)
-Additional information: 
-    It seems that you have not called
-    SimulationBase::set_initial_condition() for the operator "level_set".
-    You can do that, e.g., in your simulation by overriding
-    SimulationBase::set_field_conditions().
-
-Stacktrace:
------------
-#0  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::SimulationBase<2, 2>::get_initial_condition(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool)
-#1  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::LevelSet::LevelSetProblem<2>::initialize(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
-#2  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::LevelSet::LevelSetProblem<2>::run(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
-#3  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/meltpooldg: void MeltPoolDG::Simulation::run_simulation<double>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, ompi_communicator_t*)
-#4  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/meltpooldg: main
---------------------------------------------------------
-
-Aborting!
-----------------------------------------------------
-
---------------------------------------------------------
-An error occurred in file <simulation_base.hpp> in function
-    std::shared_ptr<dealii::Function<dim, double> > MeltPoolDG::SimulationBase<dim, spacedim>::get_initial_condition(std::string, bool) [with int dim = 2; int spacedim = 2; std::string = std::__cxx11::basic_string<char>]
-The violated condition was: 
-    is_optional || (field_conditions && field_conditions->initial_field)
-Additional information: 
-    It seems that you have not called
-    SimulationBase::set_initial_condition() for the operator "level_set".
-    You can do that, e.g., in your simulation by overriding
-    SimulationBase::set_field_conditions().
-
-Stacktrace:
------------
-#0  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::SimulationBase<2, 2>::get_initial_condition(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool)
-#1  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::LevelSet::LevelSetProblem<2>::initialize(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
-#2  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::LevelSet::LevelSetProblem<2>::run(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
-#3  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/meltpooldg: void MeltPoolDG::Simulation::run_simulation<double>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, ompi_communicator_t*)
-#4  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/meltpooldg: main
---------------------------------------------------------
-
-Aborting!
-----------------------------------------------------
-
---------------------------------------------------------
-An error occurred in file <simulation_base.hpp> in function
-    std::shared_ptr<dealii::Function<dim, double> > MeltPoolDG::SimulationBase<dim, spacedim>::get_initial_condition(std::string, bool) [with int dim = 2; int spacedim = 2; std::string = std::__cxx11::basic_string<char>]
-The violated condition was: 
-    is_optional || (field_conditions && field_conditions->initial_field)
-Additional information: 
-    It seems that you have not called
-    SimulationBase::set_initial_condition() for the operator "level_set".
-    You can do that, e.g., in your simulation by overriding
-    SimulationBase::set_field_conditions().
-
-Stacktrace:
------------
-#0  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::SimulationBase<2, 2>::get_initial_condition(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool)
-#1  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::LevelSet::LevelSetProblem<2>::initialize(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
-#2  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/libmeltpooldg.so: MeltPoolDG::LevelSet::LevelSetProblem<2>::run(std::shared_ptr<MeltPoolDG::SimulationBase<2, 2> >)
-#3  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/meltpooldg: void MeltPoolDG::Simulation::run_simulation<double>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, ompi_communicator_t*)
-#4  /home/magdalena/TUM/MeltPoolDG-function_evaporative_mass_flux/build/meltpooldg: main
---------------------------------------------------------
-
-Aborting!
-----------------------------------------------------
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.53070783615e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.0078125                                                                  reinitialization |
+| || delta phi ||L2 = 1.161254243925214e-03                                       reinitialization |
+|  τ = 0.015625                                                                   reinitialization |
+| || delta phi ||L2 = 9.086569189094007e-04                                       reinitialization |
+|  τ = 0.0234375                                                                  reinitialization |
+| || delta phi ||L2 = 7.746319897705693e-04                                       reinitialization |
+|  τ = 0.03125                                                                    reinitialization |
+| || delta phi ||L2 = 7.064509409246971e-04                                       reinitialization |
+|  τ = 0.0390625                                                                  reinitialization |
+| || delta phi ||L2 = 6.599514163099229e-04                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.53884172440e+00                                               normal_vector |
+| || curvature ||L2 = 1.48896777630e+01                                                  curvature |
+cycle: 1 n_dofs: 1315(ls)
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.53070783615e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.0078125                                                                  reinitialization |
+| || delta phi ||L2 = 1.161254243925214e-03                                       reinitialization |
+|  τ = 0.015625                                                                   reinitialization |
+| || delta phi ||L2 = 9.086569189094007e-04                                       reinitialization |
+|  τ = 0.0234375                                                                  reinitialization |
+| || delta phi ||L2 = 7.746319897705693e-04                                       reinitialization |
+|  τ = 0.03125                                                                    reinitialization |
+| || delta phi ||L2 = 7.064509409246971e-04                                       reinitialization |
+|  τ = 0.0390625                                                                  reinitialization |
+| || delta phi ||L2 = 6.599514163099229e-04                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.53884172440e+00                                               normal_vector |
+| || curvature ||L2 = 1.48896777630e+01                                                  curvature |
+cycle: 2 n_dofs: 1315(ls)
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.53070783615e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.0078125                                                                  reinitialization |
+| || delta phi ||L2 = 1.161254243925214e-03                                       reinitialization |
+|  τ = 0.015625                                                                   reinitialization |
+| || delta phi ||L2 = 9.086569189094007e-04                                       reinitialization |
+|  τ = 0.0234375                                                                  reinitialization |
+| || delta phi ||L2 = 7.746319897705693e-04                                       reinitialization |
+|  τ = 0.03125                                                                    reinitialization |
+| || delta phi ||L2 = 7.064509409246971e-04                                       reinitialization |
+|  τ = 0.0390625                                                                  reinitialization |
+| || delta phi ||L2 = 6.599514163099229e-04                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.53884172440e+00                                               normal_vector |
+| || curvature ||L2 = 1.48896777630e+01                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 9.7884793715e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 4.83601589406e-16                                               normal_vector |
+| || normal_1 ||L2 = 3.53951266408e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.015625                                                                   reinitialization |
+| || delta phi ||L2 = 1.034432951181474e-03                                       reinitialization |
+|  τ = 0.03125                                                                    reinitialization |
+| || delta phi ||L2 = 8.962608679226260e-04                                       reinitialization |
+|  τ = 0.046875                                                                   reinitialization |
+| || delta phi ||L2 = 7.181087581385011e-04                                       reinitialization |
+|  τ = 0.0625                                                                     reinitialization |
+| || delta phi ||L2 = 5.304571266703970e-04                                       reinitialization |
+|  τ = 0.078125                                                                   reinitialization |
+| || delta phi ||L2 = 3.604476169115464e-04                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 6.00864210133e-16                                               normal_vector |
+| || normal_1 ||L2 = 3.55132682102e+00                                               normal_vector |
+| || curvature ||L2 = 1.48896777630e+01                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 2      t = 1.0000e-02 to 2.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 9.7981264114e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 8.13008314654e-16                                               normal_vector |
+| || normal_1 ||L2 = 3.63770381176e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.00390625                                                                 reinitialization |
+| || delta phi ||L2 = 1.740278198346085e-03                                       reinitialization |
+|  τ = 0.0078125                                                                  reinitialization |
+| || delta phi ||L2 = 4.988630998295461e-04                                       reinitialization |
+|  τ = 0.0117188                                                                  reinitialization |
+| || delta phi ||L2 = 2.225090204583184e-04                                       reinitialization |
+|  τ = 0.015625                                                                   reinitialization |
+| || delta phi ||L2 = 1.348692482867633e-04                                       reinitialization |
+|  τ = 0.0195312                                                                  reinitialization |
+| || delta phi ||L2 = 9.107127504201318e-05                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 1.07157416199e-15                                               normal_vector |
+| || normal_1 ||L2 = 3.64281648432e+00                                               normal_vector |
+| || curvature ||L2 = 1.48896775863e+01                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 3      t = 2.0000e-02 to 3.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 9.7987076104e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 1.14124344883e-15                                               normal_vector |
+| || normal_1 ||L2 = 3.77449923050e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.00390625                                                                 reinitialization |
+| || delta phi ||L2 = 1.748916129522579e-03                                       reinitialization |
+|  τ = 0.0078125                                                                  reinitialization |
+| || delta phi ||L2 = 5.048931199187232e-04                                       reinitialization |
+|  τ = 0.0117188                                                                  reinitialization |
+| || delta phi ||L2 = 2.049780179878062e-04                                       reinitialization |
+|  τ = 0.015625                                                                   reinitialization |
+| || delta phi ||L2 = 1.093077535200898e-04                                       reinitialization |
+|  τ = 0.0195312                                                                  reinitialization |
+| || delta phi ||L2 = 6.977127591946719e-05                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 1.11812632986e-15                                               normal_vector |
+| || normal_1 ||L2 = 3.78134471931e+00                                               normal_vector |
+| || curvature ||L2 = 1.48896777630e+01                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 4      t = 3.0000e-02 to 4.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 9.7989348547e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 1.10237637885e-15                                               normal_vector |
+| || normal_1 ||L2 = 3.78293724927e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.00390625                                                                 reinitialization |
+| || delta phi ||L2 = 6.395214282959812e-05                                       reinitialization |
+|  τ = 0.0078125                                                                  reinitialization |
+| || delta phi ||L2 = 5.409967635676024e-05                                       reinitialization |
+|  τ = 0.0117188                                                                  reinitialization |
+| || delta phi ||L2 = 4.676285767764305e-05                                       reinitialization |
+|  τ = 0.015625                                                                   reinitialization |
+| || delta phi ||L2 = 4.073556418320011e-05                                       reinitialization |
+|  τ = 0.0195312                                                                  reinitialization |
+| || delta phi ||L2 = 3.563938250243005e-05                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 1.35567766148e-15                                               normal_vector |
+| || normal_1 ||L2 = 3.78153467743e+00                                               normal_vector |
+| || curvature ||L2 = 1.48896777630e+01                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 5      t = 4.0000e-02 to 5.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 9.7988588099e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 1.46872752111e-15                                               normal_vector |
+| || normal_1 ||L2 = 3.78312620810e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 0.00390625                                                                 reinitialization |
+| || delta phi ||L2 = 7.069544375273027e-05                                       reinitialization |
+|  τ = 0.0078125                                                                  reinitialization |
+| || delta phi ||L2 = 5.584470014752510e-05                                       reinitialization |
+|  τ = 0.0117188                                                                  reinitialization |
+| || delta phi ||L2 = 4.601754730323188e-05                                       reinitialization |
+|  τ = 0.015625                                                                   reinitialization |
+| || delta phi ||L2 = 3.879461786191977e-05                                       reinitialization |
+|  τ = 0.0195312                                                                  reinitialization |
+| || delta phi ||L2 = 3.317293709651301e-05                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 1.44602384330e-15                                               normal_vector |
+| || normal_1 ||L2 = 3.78140444726e+00                                               normal_vector |
+| || curvature ||L2 = 1.48896777630e+01                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+
