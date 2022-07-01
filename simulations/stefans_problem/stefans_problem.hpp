@@ -52,35 +52,6 @@ namespace MeltPoolDG::Simulation::StefansProblem
     double x_min, x_max, y_min, y_interface;
   };
 
-  template <int dim>
-  class AdvectionField : public Function<dim>
-  {
-  public:
-    AdvectionField()
-      : Function<dim>(dim)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int component) const override
-    {
-      (void)p;
-      Tensor<1, dim> value_;
-
-      if constexpr (dim == 2)
-        {
-          // const double x = p[0];
-          // const double y = p[1];
-
-          value_[0] = 0.0;
-          value_[1] = 0.0;
-        }
-      else
-        AssertThrow(false, ExcMessage("Advection field for dim!=2 not implemented"));
-
-      return value_[component];
-    }
-  };
-
   /*
    *      This class collects all relevant input data for the level set simulation
    */
@@ -96,7 +67,7 @@ namespace MeltPoolDG::Simulation::StefansProblem
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.do_simplex || dim == 1)
         {
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
@@ -109,48 +80,38 @@ namespace MeltPoolDG::Simulation::StefansProblem
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
         }
+      // create mesh
+      const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
+                                     (dim == 2) ? Point<dim>(x_min, y_min) :
+                                                  Point<dim>(x_min, x_min, y_min);
+      const Point<dim> top_right   = dim == 1   ? Point<dim>(y_max) :
+                                     (dim == 2) ? Point<dim>(x_max, y_max) :
+                                                  Point<dim>(x_max, x_max, y_max);
 
-      if constexpr ((dim == 2) || (dim == 3))
+
+      if (this->parameters.base.do_simplex)
         {
           // create mesh
-          const Point<dim> bottom_left =
-            (dim == 2) ? Point<dim>(x_min, y_min) : Point<dim>(x_min, x_min, y_min);
-          const Point<dim> top_right =
-            (dim == 2) ? Point<dim>(x_max, y_max) : Point<dim>(x_max, x_max, y_max);
+          std::vector<unsigned int> subdivisions(
+            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+          subdivisions[dim - 1] *= 2;
 
-          if (this->parameters.base.do_simplex)
-            {
-              // create mesh
-              std::vector<unsigned int> subdivisions(
-                dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
-              subdivisions[dim - 1] *= 2;
-
-              GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                       subdivisions,
-                                                                       bottom_left,
-                                                                       top_right);
-            }
-          else
-            {
-              GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right);
-              this->triangulation->refine_global(this->parameters.base.global_refinements);
-            }
+          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+            *this->triangulation, subdivisions, bottom_left, top_right, true);
         }
       else
         {
-          AssertThrow(false, ExcNotImplemented());
+          GridGenerator::hyper_rectangle(*this->triangulation, bottom_left, top_right, true);
+          this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
     }
 
     void
     set_boundary_conditions() final
     {
-      /*
-       *  create a pair of (boundary_id, dirichlet_function)
-       */
-
-      constexpr types::boundary_id lower_bc = 1;
-      constexpr types::boundary_id upper_bc = 2;
+      // faces in dim-1 direction
+      const types::boundary_id lower_bc = 2 * (dim - 1);
+      const types::boundary_id upper_bc = 2 * (dim - 1) + 1;
 
       if (this->parameters.evapor.ls_value_liquid == -1)
         {
@@ -162,47 +123,17 @@ namespace MeltPoolDG::Simulation::StefansProblem
           this->attach_dirichlet_boundary_condition(
             upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
         }
-
-
-      /*
-       *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
-       *  due to the hyperbolic nature of the analyzed problem)
-       *
-                      fix
-       (0,1)  +---------------+ (1,1)
-              |    ls=-1      |
-              |               |
-       sym    |               |  sym
-              |               |
-              |               |
-              |    ls=1       |
-              +---------------+
-       * (0,1)      fix       (1,0)
-       */
-      if constexpr (dim == 2)
-        {
-          for (const auto &cell : this->triangulation->cell_iterators())
-            for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (face->center()[1] == y_min)
-                    face->set_boundary_id(lower_bc);
-                  else if (face->center()[1] == y_max)
-                    face->set_boundary_id(upper_bc);
-                }
-        }
-      else
-        {
-          AssertThrow(false, ExcNotImplemented());
-        }
     }
 
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(
-        std::make_shared<InitialValuesLS<dim>>(x_min, x_max, y_min, y_interface), "level_set");
-      this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "level_set");
+      this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
+                                       Point<dim>::unit_vector(dim - 1) * y_interface,
+                                       -Point<dim>::unit_vector(dim - 1)),
+                                     "signed_distance");
+      this->attach_advection_field(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+                                   "level_set");
     }
 
   private:
