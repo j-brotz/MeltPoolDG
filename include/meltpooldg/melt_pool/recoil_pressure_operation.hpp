@@ -13,21 +13,44 @@
 namespace MeltPoolDG::MeltPool
 {
   /**
+   * Base class for the recoil pressure model
+   */
+  template <typename number>
+  class RecoilPressureModelBase
+  {
+  public:
+    virtual number
+    compute_recoil_pressure_coefficient(const number /*T*/) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    };
+
+    virtual number
+    compute_recoil_pressure_coefficient(const number /*T*/, const number /*m_dot*/) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    };
+  };
+
+  /**
    * This class implements the phenomenological recoil pressure model according to
    *
    * Anisimov, S. I., & Khokhlov, V. A. (1995). Instabilities in laser-matter interaction. CRC
    * press.
    */
   template <typename number>
-  class RecoilPressureModel
+  class RecoilPressurePhenomenologicalModel : public RecoilPressureModelBase<number>
   {
+    //@todo: to avoid compiler warnings regarding hidden overriden functions
+    using RecoilPressureModelBase<number>::compute_recoil_pressure_coefficient;
+
   private:
     const RecoilPressureData<number> &recoil_data;
     const number                      boiling_temperature;
 
   public:
-    RecoilPressureModel(const RecoilPressureData<number> &recoil_data,
-                        const number                      boiling_temperature);
+    RecoilPressurePhenomenologicalModel(const RecoilPressureData<number> &recoil_data,
+                                        const number                      boiling_temperature);
 
     /**
      * Compute the recoil pressure p_v(T) in terms of the temperature T
@@ -56,7 +79,41 @@ namespace MeltPoolDG::MeltPool
      * whereas the T_ac<=T_v.
      */
     number
-    compute_recoil_pressure_coefficient(const number T) const;
+    compute_recoil_pressure_coefficient(const number T) const final;
+  };
+
+  template <typename number>
+  class RecoilPressureHybridModel : public RecoilPressureModelBase<number>
+  {
+    //@todo: to avoid compiler warnings regarding hidden overriden functions
+    using RecoilPressureModelBase<number>::compute_recoil_pressure_coefficient;
+
+  private:
+    const RecoilPressureData<number> &                recoil_data;
+    const number                                      boiling_temperature;
+    const number                                      density_coeff;
+    const RecoilPressurePhenomenologicalModel<number> recoil_phenomenological;
+
+  public:
+    RecoilPressureHybridModel(const RecoilPressureData<number> &recoil_data,
+                              const MaterialData<number> &      material_data);
+
+    /**
+     * Compute the recoil pressure p_v(T) in terms of the temperature @p T
+     *
+     *                          .  /   1       1   \
+     *    p_v(T) = p_pheno(T) - m² | ----- - ----- |
+     *                             \  ρ_g     ρ_l  /
+     *
+     *
+     * with the phenomenological recoil pressure p_pheno(T) (see documentation @class
+     * RecoilPressurePhenomenologicalModel)
+     *                           .
+     * the evaporative mass flux m (@p m_dot), the density of the gas (vapor) phase ρ_g and the
+     * density of the liquid phase ρ_l.
+     */
+    number
+    compute_recoil_pressure_coefficient(const number T, const number m_dot) const final;
   };
 
   /**
@@ -85,7 +142,9 @@ namespace MeltPoolDG::MeltPool
     const bool         do_level_set_pressure_gradient_interpolation;
     FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
 
-    const RecoilPressureModel<double> recoil_pressure_model;
+    const RecoilPressureModelType model_type;
+
+    std::unique_ptr<const RecoilPressureModelBase<double>> recoil_pressure_model;
 
     std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
 
@@ -107,6 +166,7 @@ namespace MeltPoolDG::MeltPool
     compute_recoil_pressure_force(VectorType &      force_rhs,
                                   const VectorType &level_set_as_heaviside,
                                   const VectorType &temperature,
+                                  const VectorType &evaporative_mass_flux,
                                   bool              zero_out = true) const;
   };
 

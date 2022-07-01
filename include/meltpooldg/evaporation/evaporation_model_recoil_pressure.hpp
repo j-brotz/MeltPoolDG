@@ -23,7 +23,7 @@ namespace MeltPoolDG::Evaporation
   class EvaporationModelRecoilPressure : public EvaporationModelBase
   {
   private:
-    const MeltPool::RecoilPressureModel<double> recoil_model;
+    const MeltPool::RecoilPressurePhenomenologicalModel<double> recoil_model;
 
     const double mass_flux_scale_factor;
 

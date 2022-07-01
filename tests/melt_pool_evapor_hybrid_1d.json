@@ -1,0 +1,124 @@
+{
+  "Navier-Stokes": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "Solver": {
+          "NL max iterations": "50",
+          "NL tolerance": "1.e-6",
+          "lin its before inner solvers": "50",
+          "lin max iterations": "50",
+          "lin relative tolerance": "1",
+          "lin tolerance": "1.e-5",
+          "lin pressure preconditioner": "ilu scalar",
+          "lin velocity preconditioner": "ilu",
+          "linearization scheme": "coupled implicit Newton"
+        },
+        "dimension": "2",
+        "formulation convective term momentum balance": "convective",
+        "global refinements": "0",
+        "physical type": "incompressible",
+        "constitutive type": "user defined",
+        "velocity degree": "2"
+      },
+      "Output options": {
+        "output verbosity": "0",
+        "output walltimes": "0"
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      }
+    }
+  },
+  "base": {
+    "application name": "recoil_pressure",
+    "degree": "1",
+    "dimension": "1",
+    "do print parameters": "false",
+    "global refinements": "6",
+    "gravity": "0.0",
+    "problem name": "melt_pool",
+    "verbosity level": "0"
+  },
+  "curvature": {
+    "curv damping scale factor": "8",
+    "curv verbosity level": "1"
+  },
+  "darcy damping": {
+    "avoid div zero constant": "1.",
+    "formulation": "implicit_formulation",
+    "mushy zone morphology": "1e11"
+  },
+  "evaporation": {
+    "evapor evaporation model": "recoil_pressure",
+    "evapor formulation evaporative mass flux over interface": "continuous",
+    "evapor level set source term type": "rhs",
+    "evapor mass flux scale factor": "1.464"
+  },
+  "heat": {
+    "heat nlsolve field correction tolerance": "1e-6",
+    "heat nlsolve max nonlinear iterations": "20",
+    "heat nlsolve residual tolerance": "1e-5",
+    "heat solidification": "true",
+    "heat two phase": "true"
+  },
+  "laser": {
+    "laser gauss laser beam radius": "70.e-6",
+    "laser heat source model": "Gauss",
+    "laser impact type": "interface",
+    "laser power": "0"
+  },
+  "levelset": {
+    "ls do reinitialization": "true",
+    "ls n initial reinit steps": "0",
+    "ls n subdivisions": "2",
+    "ls time integration scheme": "crank_nicolson"
+  },
+  "material": {
+    "material template": "Ti64",
+    "material two phase properties transition type": "consistent_with_evaporation",
+    "material first density": "4.087"
+  },
+  "normal vector": {
+    "normal vec damping scale factor": "0.1"
+  },
+  "paraview": {
+    "paraview do output": "false"
+  },
+  "problem specific": {
+    "do advect level set": "true",
+    "do evaporative heat flux": "false",
+    "do evaporative velocity jump": "true",
+    "do heat transfer": "true",
+    "do melt pool": "true",
+    "do recoil pressure": "true"
+  },
+  "recoil pressure": {
+    "interface distributed flux type": "continuous",
+    "recoil pressure constant": "1.0",
+    "recoil temperature constant": "1.0",
+    "activation temperature": "500",
+    "model type": "hybrid"
+  },
+  "reinitialization": {
+    "reinit max n steps": "3",
+    "reinit scale factor epsilon": "2"
+  },
+  "simulation specific domain": {
+    "domain x max": "400e-6",
+    "domain x min": "-400e-6",
+    "domain y max": "300e-6",
+    "domain y min": "-300e-6",
+    "periodic boundary": "true",
+    "evaporation boundary": "true",
+    "initial temperature": {
+      "bottom": "3300",
+      "top": "3300"
+    }
+  },
+  "time stepping": {
+    "end time": "1e-3",
+    "start time": "0.0",
+    "time step size": "1e-10",
+    "max n steps": "5"
+  }
+}

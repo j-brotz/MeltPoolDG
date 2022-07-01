@@ -54,14 +54,16 @@ namespace MeltPoolDG::MeltPool
      * initialize the recoil pressure operation class
      */
     if (do_recoil_pressure)
-      recoil_pressure_operation =
-        std::make_shared<RecoilPressureOperation<dim>>(*scratch_data_in,
-                                                       data_in,
-                                                       flow_vel_dof_idx_in,
-                                                       flow_vel_quad_idx_in,
-                                                       flow_pressure_dof_idx_in,
-                                                       ls_dof_idx_in,
-                                                       temp_dof_idx_in);
+      {
+        recoil_pressure_operation =
+          std::make_shared<RecoilPressureOperation<dim>>(*scratch_data_in,
+                                                         data_in,
+                                                         flow_vel_dof_idx_in,
+                                                         flow_vel_quad_idx_in,
+                                                         flow_pressure_dof_idx_in,
+                                                         ls_dof_idx_in,
+                                                         temp_dof_idx_in);
+      }
     /*
      * initialize the dof_vectors
      */
@@ -207,6 +209,7 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::compute_force_flow_rhs(VectorType &      vel_force_rhs,
                                                  const VectorType &level_set_as_heaviside,
                                                  const VectorType &temperature_interface,
+                                                 const VectorType &evaporative_mass_flux,
                                                  const bool        zero_out) const
   {
     // compute recoil pressure force
@@ -215,6 +218,7 @@ namespace MeltPoolDG::MeltPool
         vel_force_rhs,
         level_set_as_heaviside,
         temperature_interface,
+        evaporative_mass_flux,
         zero_out /*false means add to force vector*/);
   }
 

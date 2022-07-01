@@ -17,6 +17,20 @@ namespace MeltPoolDG
               // at the projected quadrature points to the level set = 0 isosurface.
               interface_value)
 
+  BETTER_ENUM(RecoilPressureModelType,
+              char,
+              // default: compute phenomenological recoil pressure
+              //    p_v(T) = p_recoil_phenomenological(T)
+              phenomenological,
+              // hybrid recoil pressure model, considering the evaporation-induced velocity jump;
+              // The pressure jump is computed from
+              //
+              //    p_v(T) = p_recoil_phenomenological(T) - mDot^2*(1/rho_g-1/rho_l).
+              //
+              // This ensures that the evaporation-induced pressure jump is the same as
+              // in the phenomenological recoil pressure model.
+              hybrid)
+
   template <typename number = double>
   struct RecoilPressureData
   {
@@ -38,6 +52,11 @@ namespace MeltPoolDG
       InterfaceDistributedFluxType::continuous;
     // Choose the delta-function for computing the continuum interface force.
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+    // Choose the model type to compute the recoil pressure:
+    //   * phenomenological (default)
+    //   * consistent
+    RecoilPressureModelType model_type = RecoilPressureModelType::phenomenological;
+
 
     void
     add_parameters(ParameterHandler &prm)
@@ -60,6 +79,11 @@ namespace MeltPoolDG
           "Activation temperature for the recoil pressure. It must be smaller than or equal to the "
           "boiling temperature. As default value, the boiling temperature is chosen.");
         delta_approximation_phase_weighted.add_parameters(prm);
+        prm.add_parameter(
+          "model type",
+          model_type,
+          "Choose the model to compute the recoil pressure coefficient: phenomenological "
+          "or hybrid, in case there is also an evaporation-induced velocity jump.");
       }
       prm.leave_subsection();
     }
