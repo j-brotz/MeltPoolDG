@@ -86,7 +86,7 @@ namespace MeltPoolDG::Evaporation
           ls_vals.evaluate(EvaluationFlags::values);
         }
 
-      normal = MeltPoolDG::VectorTools::normalize<dim>(normal_vals.get_value(quad_idx), 1e-2);
+      normal = MeltPoolDG::VectorTools::normalize<dim>(normal_vals.get_value(quad_idx), 1e-10);
       hs     = ls_vals.get_value(quad_idx);
 
       cell = cell_idx;
