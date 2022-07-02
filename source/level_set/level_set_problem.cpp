@@ -179,11 +179,28 @@ namespace MeltPoolDG::LevelSet
           ls_hanging_nodes_dof_idx,
           ls_quad_idx);
       }
-    /**
-     * set the initial velocity field
+    /*
+     *  set initial conditions of the level set field ...
      */
-    level_set_operation.set_initial_condition(*base_in->get_initial_condition("level_set"),
-                                              advection_velocity);
+    if (const auto initial_field =
+          base_in->get_initial_condition("level_set", true /*is optional*/))
+      {
+        // ... via a given level set field
+        level_set_operation.set_initial_condition(*initial_field, advection_velocity);
+      }
+    else if (const auto initial_field =
+               base_in->get_initial_condition("signed_distance", true /*is optional*/))
+      {
+        // ... or a given signed distance field.
+        level_set_operation.set_initial_condition(*initial_field,
+                                                  advection_velocity,
+                                                  true /*is signed distance function*/);
+      }
+    else
+      AssertThrow(
+        false,
+        ExcMessage("For the level set operation either a function for the initial level set or the "
+                   "signed distance field must be provided. Abort ..."));
     /*
      *  initialize postprocessor
      */
@@ -208,8 +225,26 @@ namespace MeltPoolDG::LevelSet
            *  set initial conditions after initial AMR
            */
           compute_advection_velocity(*base_in->get_advection_field("level_set"));
-          level_set_operation.set_initial_condition(*base_in->get_initial_condition("level_set"),
-                                                    advection_velocity);
+          if (const auto initial_field =
+                base_in->get_initial_condition("level_set", true /*is optional*/))
+            {
+              // ... via a given level set field
+              level_set_operation.set_initial_condition(*initial_field, advection_velocity);
+            }
+          else if (const auto initial_field =
+                     base_in->get_initial_condition("signed_distance", true /*is optional*/))
+            {
+              // ... or a given signed distance field.
+              level_set_operation.set_initial_condition(*initial_field,
+                                                        advection_velocity,
+                                                        true /*is signed distance function*/);
+            }
+          else
+            AssertThrow(
+              false,
+              ExcMessage(
+                "For the level set operation either a function for the initial level set or the "
+                "signed distance field must be provided. Abort ..."));
         }
   }
 
