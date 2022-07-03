@@ -44,14 +44,19 @@ namespace MeltPoolDG::Evaporation
       const std::function<const VectorizedArray<number> &(const unsigned int cell,
                                                           const unsigned int q)> get_viscosity,
       const BlockVectorType &                                                    normal_vector,
+      const VectorType &                                                         heaviside,
       const unsigned int                                                         normal_dof_idx,
-      const unsigned int                                                         velocity_quad_idx)
+      const unsigned int ls_hanging_nodes_dof_idx,
+      const unsigned int velocity_quad_idx)
       : scratch_data(scratch_data)
       , get_viscosity(get_viscosity)
       , normal_vector(normal_vector)
+      , heaviside(heaviside)
       , normal_dof_idx(normal_dof_idx)
+      , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx)
       , velocity_quad_idx(velocity_quad_idx)
       , normal_vals(scratch_data.get_matrix_free(), normal_dof_idx, velocity_quad_idx)
+      , ls_vals(scratch_data.get_matrix_free(), ls_hanging_nodes_dof_idx, velocity_quad_idx)
     {}
 
     /**
@@ -75,9 +80,14 @@ namespace MeltPoolDG::Evaporation
           normal_vals.reinit(cell_idx);
           normal_vals.read_dof_values_plain(normal_vector);
           normal_vals.evaluate(EvaluationFlags::values);
+
+          ls_vals.reinit(cell_idx);
+          ls_vals.read_dof_values_plain(heaviside);
+          ls_vals.evaluate(EvaluationFlags::values);
         }
 
       normal = MeltPoolDG::VectorTools::normalize<dim>(normal_vals.get_value(quad_idx), 1e-10);
+      hs     = ls_vals.get_value(quad_idx);
 
       cell = cell_idx;
     }
@@ -96,8 +106,11 @@ namespace MeltPoolDG::Evaporation
     Tensor<2, dim, VectorizedArray<number>>
     get_tau() final
     {
+      const auto mask = compare_and_apply_mask<SIMDComparison::less_than>(
+        hs, 1.0, compare_and_apply_mask<SIMDComparison::greater_than>(hs, 0, 1.0, 0.0), 0);
+
       return 2. * viscosity *
-             (0.5 * (grad_u + transpose(grad_u)) - div_u * outer_product(normal, normal));
+             (0.5 * (grad_u + transpose(grad_u)) - mask * div_u * outer_product(normal, normal));
     }
 
     /**
@@ -146,9 +159,12 @@ namespace MeltPoolDG::Evaporation
     void
     update_ghost_values() final
     {
-      vector_is_ghosted = normal_vector.has_ghost_elements();
+      vector_is_ghosted = normal_vector.has_ghost_elements() || heaviside.has_ghost_elements();
       if (!vector_is_ghosted)
-        normal_vector.update_ghost_values();
+        {
+          normal_vector.update_ghost_values();
+          heaviside.update_ghost_values();
+        }
     }
 
     /**
@@ -159,7 +175,10 @@ namespace MeltPoolDG::Evaporation
     {
       // only zero out ghost values if the vector was not ghosted in the beginning
       if (!vector_is_ghosted)
-        normal_vector.zero_out_ghost_values();
+        {
+          normal_vector.zero_out_ghost_values();
+          heaviside.zero_out_ghost_values();
+        }
     }
 
   private:
@@ -168,9 +187,12 @@ namespace MeltPoolDG::Evaporation
                                                         const unsigned int q)>
                                        get_viscosity;
     const BlockVectorType &            normal_vector;
+    const VectorType &                 heaviside;
     const unsigned int                 normal_dof_idx;
+    const unsigned int                 ls_hanging_nodes_dof_idx;
     const unsigned int                 velocity_quad_idx;
     FECellIntegrator<dim, dim, number> normal_vals;
+    FECellIntegrator<dim, 1, number>   ls_vals;
     bool                               vector_is_ghosted;
 
     // temporary quadrature point values
@@ -178,6 +200,7 @@ namespace MeltPoolDG::Evaporation
     VectorizedArray<number>                 div_u;
     VectorizedArray<number>                 viscosity;
     Tensor<1, dim, VectorizedArray<number>> normal;
+    VectorizedArray<number>                 hs;
     unsigned int                            cell;
   };
 } // namespace MeltPoolDG::Evaporation

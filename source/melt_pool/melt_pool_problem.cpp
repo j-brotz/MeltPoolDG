@@ -555,7 +555,9 @@ namespace MeltPoolDG::MeltPool
                 return flow_operation->get_viscosity(cell, quad);
               },
               level_set_operation.get_normal_vector(),
+              level_set_operation.get_level_set_as_heaviside(),
               normal_dof_idx,
+              ls_hanging_nodes_dof_idx,
               flow_operation->get_quad_idx_velocity());
 
             flow_operation->set_user_defined_material(
