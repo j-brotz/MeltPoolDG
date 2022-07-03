@@ -24,44 +24,6 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
   static double radius_2    = 0.75;
 
   template <int dim>
-  class SignedDistanceCircle : public Function<dim>
-  {
-  public:
-    SignedDistanceCircle(const Point<dim> &center)
-      : Function<dim>()
-      , distance_sphere(center, radius)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
-    {
-      return -distance_sphere.value(p);
-    }
-
-  private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
-  };
-
-  template <int dim>
-  class SignedDistanceEllipsoid : public Function<dim>
-  {
-  public:
-    SignedDistanceEllipsoid(const Point<dim> &center, const std::array<double, dim> &radii)
-      : Function<dim>()
-      , distance(center, radii)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
-    {
-      return -distance.value(p);
-    }
-
-  private:
-    const Functions::SignedDistance::Ellipsoid<dim> distance;
-  };
-
-  template <int dim>
   class SimulationSpuriousCurrents : public SimulationBase<dim>
   {
   public:
@@ -128,8 +90,10 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
 
       if (droplet_shape == "circle")
         {
-          this->attach_initial_condition(std::make_shared<SignedDistanceCircle<dim>>(center),
-                                         "signed_distance");
+          this->attach_initial_condition(
+            std::make_shared<Functions::ChangedSignFunction<dim>>(
+              std::make_shared<Functions::SignedDistance::Sphere<dim>>(center, radius)),
+            "signed_distance");
         }
       else if (droplet_shape == "ellipse")
         {
@@ -139,9 +103,10 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
           else
             AssertThrow(false, ExcNotImplemented());
 
-          this->attach_initial_condition(std::make_shared<SignedDistanceEllipsoid<dim>>(center,
-                                                                                        radii),
-                                         "signed_distance");
+          this->attach_initial_condition(
+            std::make_shared<Functions::ChangedSignFunction<dim>>(
+              std::make_shared<Functions::SignedDistance::Ellipsoid<dim>>(center, radii)),
+            "signed_distance");
         }
       else
         AssertThrow(false,
