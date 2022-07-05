@@ -10,17 +10,16 @@ namespace dealii::Functions
   class ChangedSignFunction : public Function<dim, Number>
   {
   public:
-    ChangedSignFunction(const std::shared_ptr<Function<dim, Number>> &fu_)
+    ChangedSignFunction(const std::shared_ptr<Function<dim, Number>> fu_)
       : Function<dim, Number>(fu_->n_components, fu_->get_time())
       , fu(fu_)
-    {}
+    {
+      AssertThrow(fu, ExcMessage("The input function does not exist. Abort ..."));
+    }
 
     Number
     value(const Point<dim> &point, const unsigned int component) const override
     {
-      std::cout << "point: " << point << std::endl;
-      std::cout << "f: " << fu->value(point, component) << std::endl;
-
       return -fu->value(point, component);
     }
 
@@ -49,7 +48,7 @@ namespace dealii::Functions
     }
 
   private:
-    const std::shared_ptr<Function<dim, Number>> &fu;
+    const std::shared_ptr<Function<dim, Number>> fu;
   };
 } // namespace dealii::Functions
 
