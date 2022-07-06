@@ -19,55 +19,9 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
 {
   using namespace dealii;
 
-  template <int dim>
-  class InitialLevelSetCircle : public Function<dim>
-  {
-  public:
-    InitialLevelSetCircle(const Point<dim> &center, const double radius, const double eps)
-      : Function<dim>()
-      , distance_sphere(center, radius)
-      , eps(eps)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int) const override
-    {
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        -distance_sphere.value(p), eps);
-    }
-
-  private:
-    const Functions::SignedDistance::Sphere<dim> distance_sphere;
-    double                                       eps;
-  };
-
-  template <int dim>
-  class InitialLevelSetEllipse : public Function<dim>
-  {
-  public:
-    InitialLevelSetEllipse(const Point<dim> &             center,
-                           const std::array<double, dim> &radii,
-                           const double                   eps)
-      : Function<dim>()
-      , distance_ellipse(center, radii)
-      , eps(eps)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int) const override
-    {
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        -distance_ellipse.value(p), eps);
-    }
-
-  private:
-    const Functions::SignedDistance::Ellipsoid<dim> distance_ellipse;
-    double                                          eps;
-  };
-
-  /*
-   *      This class collects all relevant input data for the level set simulation
-   */
+  static double side_length = 5.0;
+  static double radius      = 0.5;
+  static double radius_2    = 0.75;
 
   template <int dim>
   class SimulationSpuriousCurrents : public SimulationBase<dim>
@@ -86,6 +40,11 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
                           droplet_shape,
                           "Shape of the droplet: circle or ellipse",
                           Patterns::Selection("circle|ellipse"));
+        prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
+        prm.add_parameter("radius",
+                          radius,
+                          "Radius of (i) circle or (ii) of the first semi-axis of an ellipse.");
+        prm.add_parameter("radius 2", radius_2, "Radius of second semi-axis of an ellipse.");
       }
       prm.leave_subsection();
     }
@@ -98,7 +57,7 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
 
       if constexpr (dim == 2)
         {
-          GridGenerator::hyper_cube(*this->triangulation, -2.5, 2.5);
+          GridGenerator::hyper_cube(*this->triangulation, -side_length / 2., side_length / 2);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
       else
@@ -124,26 +83,30 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
 
       AssertThrow(eps > 0, ExcNotImplemented());
 
+      // introduce slightly non-symmetric geometry
       Point<dim> center;
       for (unsigned int d = 0; d < dim; ++d)
         center[d] = 0.02 + 0.01 * d;
 
       if (droplet_shape == "circle")
         {
-          const double radius = 0.5;
           this->attach_initial_condition(
-            std::make_shared<InitialLevelSetCircle<dim>>(center, radius, eps), "level_set");
+            std::make_shared<Functions::ChangedSignFunction<dim>>(
+              std::make_shared<Functions::SignedDistance::Sphere<dim>>(center, radius)),
+            "signed_distance");
         }
       else if (droplet_shape == "ellipse")
         {
           std::array<double, dim> radii;
           if constexpr (dim == 2)
-            radii = {{0.75, 0.5}};
+            radii = {{radius_2, radius}};
           else
             AssertThrow(false, ExcNotImplemented());
 
           this->attach_initial_condition(
-            std::make_shared<InitialLevelSetEllipse<dim>>(center, radii, eps), "level_set");
+            std::make_shared<Functions::ChangedSignFunction<dim>>(
+              std::make_shared<Functions::SignedDistance::Ellipsoid<dim>>(center, radii)),
+            "signed_distance");
         }
       else
         AssertThrow(false,
