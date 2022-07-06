@@ -22,6 +22,9 @@
  *
  * It serves as a benchmark to test whether the solver is capable of dealing
  * with high density ratios.
+ *
+ * @note: In this simulation, we considered an aspect ratio of an 1
+ *        compared to Bussmann (2002) who considered 2.
  */
 
 namespace MeltPoolDG::Simulation::MovingDroplet
@@ -63,11 +66,11 @@ namespace MeltPoolDG::Simulation::MovingDroplet
     {}
 
     void
-    vector_value(const Point<dim> &p, Vector<double> &values) const override
+    vector_value(const Point<dim> &p, [[maybe_unused]] Vector<double> &values) const override
     {
       const auto hs = (level_set.value(p) + 1.) * 0.5;
 
-      if constexpr (dim == 2)
+      if (dim == 2)
         {
           values[0] = hs * velocity;
           values[1] = hs * velocity;
