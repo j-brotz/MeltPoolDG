@@ -137,11 +137,11 @@ namespace MeltPoolDG::Simulation::MovingDroplet
         UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
 
       AssertThrow(eps > 0, ExcNotImplemented());
-      const auto ls = std::make_shared<InitialLevelSet<dim>>(radius, eps);
-      this->attach_initial_condition(std::shared_ptr<Function<dim>>(ls), "level_set");
 
-      this->attach_initial_condition(std::shared_ptr<Function<dim>>(
-                                       std::make_shared<InitialVelocityField<dim>>(*ls)),
+      const auto ls = std::make_shared<InitialLevelSet<dim>>(radius, eps);
+      this->attach_initial_condition(ls, "level_set");
+
+      this->attach_initial_condition(std::make_shared<InitialVelocityField<dim>>(*ls),
                                      "navier_stokes_u");
     }
 

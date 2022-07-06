@@ -1115,6 +1115,9 @@ namespace MeltPoolDG::MeltPool
   {
     const auto &amr_data = base_in->parameters.amr;
 
+    level_set_operation.get_level_set().update_ghost_values();
+    level_set_operation.get_normal_vector().update_ghost_values();
+
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       if (problem_specific_parameters.amr.do_auto_detect_frequency)
         {
@@ -1151,8 +1154,6 @@ namespace MeltPoolDG::MeltPool
 
           bool needs_refinement_or_coarsening = false;
 
-          level_set_operation.get_normal_vector().update_ghost_values();
-
           for (auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
             {
               if (cell->is_locally_owned())
@@ -1186,8 +1187,6 @@ namespace MeltPoolDG::MeltPool
                     }
                 }
             }
-
-          level_set_operation.get_normal_vector().zero_out_ghost_values();
 
           const unsigned int do_refine =
             Utilities::MPI::max(static_cast<unsigned int>(needs_refinement_or_coarsening),
@@ -1509,7 +1508,6 @@ namespace MeltPoolDG::MeltPool
       if (problem_specific_parameters.amr.do_refine_all_interface_cells)
         {
           // make sure that cells close to the interfaces are refined
-          level_set_operation.get_level_set().update_ghost_values();
           Vector<double> ls_vals(scratch_data->get_fe(ls_dof_idx).n_dofs_per_cell());
           for (const auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
             {
@@ -1529,9 +1527,11 @@ namespace MeltPoolDG::MeltPool
                     break;
                   }
             }
-
-          level_set_operation.get_level_set().zero_out_ghost_values();
         }
+
+      level_set_operation.get_level_set().zero_out_ghost_values();
+      level_set_operation.get_normal_vector().zero_out_ghost_values();
+
 
       return true;
     };
