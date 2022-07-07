@@ -12,6 +12,7 @@
 #include "film_boiling/film_boiling.hpp"
 #include "flow_past_cylinder/flow_past_cylinder.hpp"
 #include "melt_front_propagation/melt_front_propagation.hpp"
+#include "moving_droplet/moving_droplet.hpp"
 #include "oscillating_droplet/oscillating_droplet.hpp"
 #include "recoil_pressure/recoil_pressure.hpp"
 #include "reinit_circle/reinit_circle.hpp"
@@ -117,11 +118,15 @@ namespace MeltPoolDG::Simulation
     else if (simulation_name == "oscillating_droplet")
       return std::make_shared<OscillatingDroplet::SimulationOscillatingDroplet<dim>>(
         parameter_file, mpi_communicator);
+    else if (simulation_name == "moving_droplet")
+      return std::make_shared<MovingDroplet::SimulationMovingDroplet<dim>>(parameter_file,
+                                                                           mpi_communicator);
 
     /* add your simulation here*/
     else
       AssertThrow(false,
-                  ExcMessage("The input-file for your requested application does not exist"));
+                  ExcMessage(
+                    "The input-file for your requested application does not exist. Abort ..."));
   }
 
   template class SimulationSelector<MELT_POOL_DG_DIM>;
