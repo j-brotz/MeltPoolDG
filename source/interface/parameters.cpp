@@ -477,6 +477,10 @@ namespace MeltPoolDG
       prm.add_parameter("enable time dependent bc",
                         heat.enable_time_dependent_bc,
                         "Set this parameter to true to enable time-dependent bc.");
+      prm.add_parameter(
+        "interpolate rho times cp",
+        heat.interpolate_rho_times_cp,
+        "Set this parameter to true to interpolate the product of density and capacity instead of both separately.");
       heat.delta_approximation_phase_weighted.add_parameters(prm);
       heat.linear_solver.solver_type         = LinearSolverType::GMRES;
       heat.linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
