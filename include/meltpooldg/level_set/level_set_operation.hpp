@@ -31,6 +31,9 @@ namespace MeltPoolDG::LevelSet
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
     std::shared_ptr<const ScratchData<dim>> scratch_data;
+
+    // Time stepping of the overall problem
+    const TimeIterator<double> &time_stepping;
     /*
      *  The following objects are the operations, which are performed for solving the
      *  level set equation.
@@ -69,19 +72,18 @@ namespace MeltPoolDG::LevelSet
     double max_d_level_set_since_last_reinit = std::numeric_limits<double>::max();
 
   public:
-    LevelSetOperation() = default;
+    LevelSetOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
+                      const TimeIterator<double> &                   time_stepping,
+                      std::shared_ptr<SimulationBase<dim>>           base_in,
+                      const unsigned int                             ls_dof_idx_in,
+                      const unsigned int                             ls_hanging_nodes_dof_idx_in,
+                      const unsigned int                             ls_quad_idx_in,
+                      const unsigned int                             reinit_dof_idx_in,
+                      const unsigned int                             curv_dof_idx_in,
+                      const unsigned int                             normal_dof_idx_in,
+                      const unsigned int                             vel_dof_idx,
+                      const unsigned int                             ls_zero_bc_idx);
 
-    void
-    initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-               std::shared_ptr<SimulationBase<dim>>           base_in,
-               const unsigned int                             ls_dof_idx_in,
-               const unsigned int                             ls_hanging_nodes_dof_idx_in,
-               const unsigned int                             ls_quad_idx_in,
-               const unsigned int                             reinit_dof_idx_in,
-               const unsigned int                             curv_dof_idx_in,
-               const unsigned int                             normal_dof_idx_in,
-               const unsigned int                             vel_dof_idx,
-               const unsigned int                             ls_zero_bc_idx = 0);
     /**
      * set initial condition
      */
@@ -97,7 +99,7 @@ namespace MeltPoolDG::LevelSet
     distribute_constraints();
 
     void
-    solve(const double dt, const VectorType &advection_velocity);
+    solve(const VectorType &advection_velocity);
 
     void
     set_level_set_user_rhs(const VectorType &level_set_user_rhs);

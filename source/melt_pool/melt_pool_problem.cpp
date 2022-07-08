@@ -62,16 +62,16 @@ namespace MeltPoolDG::MeltPool
                       evaporation_operation->compute_level_set_source_term(
                         level_set_rhs,
                         ls_dof_idx,
-                        level_set_operation.get_level_set(),
+                        level_set_operation->get_level_set(),
                         pressure_dof_idx);
-                      level_set_operation.set_level_set_user_rhs(level_set_rhs);
+                      level_set_operation->set_level_set_user_rhs(level_set_rhs);
                       break;
                   }
               }
 
             // ... solve level-set problem with the given advection field
             scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
-            level_set_operation.solve(dt, interface_velocity);
+            level_set_operation->solve(interface_velocity);
           }
 
         /******************************************************************************************
@@ -83,8 +83,8 @@ namespace MeltPoolDG::MeltPool
           if (melt_pool_operation)
             melt_pool_operation->compute_heat_source(
               heat_operation->get_heat_source(),
-              level_set_operation.get_level_set_as_heaviside(),
-              level_set_operation.get_normal_vector(),
+              level_set_operation->get_level_set_as_heaviside(),
+              level_set_operation->get_normal_vector(),
               normal_dof_idx,
               dt,
               true /* zero_out */);
@@ -102,7 +102,7 @@ namespace MeltPoolDG::MeltPool
           if (melt_pool_operation)
             {
               melt_pool_operation->compute_melt_front_propagation(
-                level_set_operation.get_level_set_as_heaviside());
+                level_set_operation->get_level_set_as_heaviside());
 
               if (base_in->parameters.mp.solid.set_velocity_to_zero ||
                   base_in->parameters.mp.solid.do_not_reinitialize)
@@ -132,7 +132,7 @@ namespace MeltPoolDG::MeltPool
           TimerOutput::Scope scope(scratch_data->get_timer(), "NavierStokes::rhs");
 
           // update the phases for the flow solver considering the updated level set and temperature
-          update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
+          update_phases(level_set_operation->get_level_set_as_heaviside(), base_in->parameters);
 
           // ... a) gravity force
           compute_gravity_force(vel_force_rhs,
@@ -174,11 +174,11 @@ namespace MeltPoolDG::MeltPool
                   InterfaceDistributedFluxType::interface_value)
                 {
                   heat_operation->compute_interface_temperature(
-                    level_set_operation.get_distance_to_level_set(),
-                    level_set_operation.get_normal_vector());
+                    level_set_operation->get_distance_to_level_set(),
+                    level_set_operation->get_normal_vector());
                   melt_pool_operation->compute_force_flow_rhs(
                     vel_force_rhs,
-                    level_set_operation.get_level_set_as_heaviside(),
+                    level_set_operation->get_level_set_as_heaviside(),
                     heat_operation->get_temperature_interface(),
                     false);
                 }
@@ -186,7 +186,7 @@ namespace MeltPoolDG::MeltPool
                 {
                   melt_pool_operation->compute_force_flow_rhs(
                     vel_force_rhs,
-                    level_set_operation.get_level_set_as_heaviside(),
+                    level_set_operation->get_level_set_as_heaviside(),
                     heat_operation->get_temperature(),
                     evaporation_operation->get_evaporative_mass_flux(),
                     false);
@@ -459,16 +459,18 @@ namespace MeltPoolDG::MeltPool
      *    initialize the levelset operation class
      *    and setup initial conditions
      */
-    level_set_operation.initialize(scratch_data,
-                                   base_in,
-                                   ls_dof_idx,
-                                   ls_hanging_nodes_dof_idx,
-                                   ls_quad_idx,
-                                   reinit_dof_idx,
-                                   curv_dof_idx,
-                                   normal_dof_idx,
-                                   vel_dof_idx,
-                                   ls_dof_idx /* todo: ls_zero_bc_idx*/);
+    level_set_operation =
+      std::make_shared<LevelSet::LevelSetOperation<dim>>(scratch_data,
+                                                         time_iterator,
+                                                         base_in,
+                                                         ls_dof_idx,
+                                                         ls_hanging_nodes_dof_idx,
+                                                         ls_quad_idx,
+                                                         reinit_dof_idx,
+                                                         curv_dof_idx,
+                                                         normal_dof_idx,
+                                                         vel_dof_idx,
+                                                         ls_dof_idx /* todo: ls_zero_bc_idx*/);
     /*
      *    initialize the heat operation class
      */
@@ -484,7 +486,7 @@ namespace MeltPoolDG::MeltPool
         vel_dof_idx,
         &flow_operation->get_velocity(),
         ls_hanging_nodes_dof_idx,
-        &level_set_operation.get_level_set_as_heaviside());
+        &level_set_operation->get_level_set_as_heaviside());
 
     /*
      *    initialize the surface tension operation class
@@ -492,8 +494,8 @@ namespace MeltPoolDG::MeltPool
     surface_tension_operation = std::make_shared<Flow::SurfaceTensionOperation<dim>>(
       base_in->parameters.surface_tension,
       *scratch_data,
-      level_set_operation.get_level_set_as_heaviside(),
-      level_set_operation.get_curvature(),
+      level_set_operation->get_level_set_as_heaviside(),
+      level_set_operation->get_curvature(),
       ls_hanging_nodes_dof_idx,
       curv_dof_idx,
       vel_dof_idx,
@@ -509,7 +511,7 @@ namespace MeltPoolDG::MeltPool
         temp_dof_idx,
         normal_dof_idx,
         &heat_operation->get_temperature(),
-        &level_set_operation.get_normal_vector());
+        &level_set_operation->get_normal_vector());
 
     /*
      *    initialize the evaporation class
@@ -519,8 +521,8 @@ namespace MeltPoolDG::MeltPool
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
           scratch_data,
-          level_set_operation.get_level_set_as_heaviside(),
-          level_set_operation.get_normal_vector(),
+          level_set_operation->get_level_set_as_heaviside(),
+          level_set_operation->get_normal_vector(),
           base_in,
           normal_dof_idx,
           evapor_vel_dof_idx,
@@ -531,7 +533,7 @@ namespace MeltPoolDG::MeltPool
          * register temperature field
          */
         evaporation_operation->reinit(&heat_operation->get_temperature(),
-                                      level_set_operation.get_distance_to_level_set(),
+                                      level_set_operation->get_distance_to_level_set(),
                                       base_in->parameters.recoil,
                                       base_in->parameters.reinit.constant_epsilon,
                                       base_in->parameters.reinit.scale_factor_epsilon,
@@ -554,8 +556,8 @@ namespace MeltPoolDG::MeltPool
                   const unsigned int quad) -> const VectorizedArray<double> & {
                 return flow_operation->get_viscosity(cell, quad);
               },
-              level_set_operation.get_normal_vector(),
-              level_set_operation.get_level_set_as_heaviside(),
+              level_set_operation->get_normal_vector(),
+              level_set_operation->get_level_set_as_heaviside(),
               normal_dof_idx,
               ls_hanging_nodes_dof_idx,
               flow_operation->get_quad_idx_velocity());
@@ -695,15 +697,15 @@ namespace MeltPoolDG::MeltPool
           base_in->get_initial_condition("level_set", true /*is optional*/))
       {
         // ... via a given level set field
-        level_set_operation.set_initial_condition(*initial_field, flow_operation->get_velocity());
+        level_set_operation->set_initial_condition(*initial_field, flow_operation->get_velocity());
       }
     else if (const auto initial_field =
                base_in->get_initial_condition("signed_distance", true /*is optional*/))
       {
         // ... or a given signed distance field.
-        level_set_operation.set_initial_condition(*initial_field,
-                                                  flow_operation->get_velocity(),
-                                                  true /*is signed distance function*/);
+        level_set_operation->set_initial_condition(*initial_field,
+                                                   flow_operation->get_velocity(),
+                                                   true /*is signed distance function*/);
       }
     else
       AssertThrow(
@@ -728,8 +730,8 @@ namespace MeltPoolDG::MeltPool
      */
     if (melt_pool_operation)
       {
-        melt_pool_operation->set_initial_condition(level_set_operation.get_level_set_as_heaviside(),
-                                                   level_set_operation.get_level_set());
+        melt_pool_operation->set_initial_condition(
+          level_set_operation->get_level_set_as_heaviside(), level_set_operation->get_level_set());
         if (base_in->parameters.mp.solid.set_velocity_to_zero ||
             base_in->parameters.mp.solid.do_not_reinitialize)
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -740,7 +742,7 @@ namespace MeltPoolDG::MeltPool
       }
 
     // update the phases for the flow solver considering the updated level set and temperature
-    update_phases(level_set_operation.get_level_set_as_heaviside(), base_in->parameters);
+    update_phases(level_set_operation->get_level_set_as_heaviside(), base_in->parameters);
 
     // compute the evaporative mass flux from the initial temperature field
     if (evaporation_operation)
@@ -834,7 +836,7 @@ namespace MeltPoolDG::MeltPool
 
     if (do_reinit)
       {
-        level_set_operation.reinit();
+        level_set_operation->reinit();
 
         if (evaporation_operation)
           evaporation_operation->reinit();
@@ -1086,7 +1088,7 @@ namespace MeltPoolDG::MeltPool
      * collect all relevant output data
      */
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
-      level_set_operation.attach_output_vectors(data_out);
+      level_set_operation->attach_output_vectors(data_out);
 
       flow_operation->attach_output_vectors(data_out);
 
@@ -1117,8 +1119,8 @@ namespace MeltPoolDG::MeltPool
   {
     const auto &amr_data = base_in->parameters.amr;
 
-    level_set_operation.get_level_set().update_ghost_values();
-    level_set_operation.get_normal_vector().update_ghost_values();
+    level_set_operation->get_level_set().update_ghost_values();
+    level_set_operation->get_normal_vector().update_ghost_values();
 
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       if (problem_specific_parameters.amr.do_auto_detect_frequency)
@@ -1166,7 +1168,7 @@ namespace MeltPoolDG::MeltPool
                   ls_values.reinit(cell);
 
                   for (unsigned int d = 0; d < dim; ++d)
-                    ls_values.get_function_values(level_set_operation.get_normal_vector().block(d),
+                    ls_values.get_function_values(level_set_operation->get_normal_vector().block(d),
                                                   ls_gradients[d]);
                   double distance_in_cells = 0;
                   for (unsigned int q = 0; q < quadrature.size(); ++q)
@@ -1212,7 +1214,7 @@ namespace MeltPoolDG::MeltPool
               locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
 
               locally_relevant_solution.copy_locally_owned_data_from(
-                level_set_operation.get_level_set());
+                level_set_operation->get_level_set());
               ls_constraints_dirichlet.distribute(locally_relevant_solution);
               locally_relevant_solution.update_ghost_values();
 
@@ -1280,7 +1282,7 @@ namespace MeltPoolDG::MeltPool
               VectorType locally_relevant_solution;
               locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
               locally_relevant_solution.copy_locally_owned_data_from(
-                level_set_operation.get_level_set());
+                level_set_operation->get_level_set());
               scratch_data->get_constraint(ls_dof_idx).distribute(locally_relevant_solution);
               locally_relevant_solution.update_ghost_values();
 
@@ -1414,11 +1416,11 @@ namespace MeltPoolDG::MeltPool
                       ls_values.reinit(cell);
                       vel_values.reinit(vel_cell);
 
-                      ls_values.get_function_values(level_set_operation.get_level_set(), ls_vals);
+                      ls_values.get_function_values(level_set_operation->get_level_set(), ls_vals);
 
                       for (unsigned int d = 0; d < dim; ++d)
                         ls_values.get_function_values(
-                          level_set_operation.get_normal_vector().block(d), ls_gradients[d]);
+                          level_set_operation->get_normal_vector().block(d), ls_gradients[d]);
 
                       double         distance_in_cells = 0;
                       Tensor<1, dim> ls_gradient;
@@ -1516,7 +1518,7 @@ namespace MeltPoolDG::MeltPool
               if (cell->is_locally_owned() == false)
                 continue;
 
-              cell->get_dof_values(level_set_operation.get_level_set(), ls_vals);
+              cell->get_dof_values(level_set_operation->get_level_set(), ls_vals);
 
               for (unsigned int i = 0; i < ls_vals.size(); ++i)
                 // Ensure that values at -0.975<=phi<=0.975 are refined.
@@ -1531,8 +1533,8 @@ namespace MeltPoolDG::MeltPool
             }
         }
 
-      level_set_operation.get_level_set().zero_out_ghost_values();
-      level_set_operation.get_normal_vector().zero_out_ghost_values();
+      level_set_operation->get_level_set().zero_out_ghost_values();
+      level_set_operation->get_normal_vector().zero_out_ghost_values();
 
 
       return true;
@@ -1546,7 +1548,7 @@ namespace MeltPoolDG::MeltPool
       data;
 
     data.emplace_back(&dof_handler_ls, [&](std::vector<VectorType *> &vectors) {
-      level_set_operation.attach_vectors(vectors); // ls + heaviside
+      level_set_operation->attach_vectors(vectors); // ls + heaviside
     });
     data.emplace_back(&flow_operation->get_dof_handler_velocity(),
                       [&](std::vector<VectorType *> &vectors) {
@@ -1582,8 +1584,8 @@ namespace MeltPoolDG::MeltPool
       /**
        * level set
        */
-      ls_constraints_dirichlet.distribute(level_set_operation.get_level_set());
-      ls_hanging_node_constraints.distribute(level_set_operation.get_level_set_as_heaviside());
+      ls_constraints_dirichlet.distribute(level_set_operation->get_level_set());
+      ls_hanging_node_constraints.distribute(level_set_operation->get_level_set_as_heaviside());
 
       /**
        * flow
