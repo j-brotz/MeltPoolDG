@@ -21,24 +21,26 @@ namespace MeltPoolDG::LevelSet
   using namespace AdvectionDiffusion;
 
   template <int dim>
-  void
-  LevelSetOperation<dim>::initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                                     std::shared_ptr<SimulationBase<dim>>           base_in,
-                                     const unsigned int                             ls_dof_idx_in,
-                                     const unsigned int ls_hanging_nodes_dof_idx_in,
-                                     const unsigned int ls_quad_idx_in,
-                                     const unsigned int reinit_dof_idx_in,
-                                     const unsigned int curv_dof_idx_in,
-                                     const unsigned int normal_dof_idx_in,
-                                     const unsigned int vel_dof_idx,
-                                     const unsigned int ls_zero_bc_idx)
+  LevelSetOperation<dim>::LevelSetOperation(
+    const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
+    const TimeIterator<double> &                   time_stepping,
+    std::shared_ptr<SimulationBase<dim>>           base_in,
+    const unsigned int                             ls_dof_idx_in,
+    const unsigned int                             ls_hanging_nodes_dof_idx_in,
+    const unsigned int                             ls_quad_idx_in,
+    const unsigned int                             reinit_dof_idx_in,
+    const unsigned int                             curv_dof_idx_in,
+    const unsigned int                             normal_dof_idx_in,
+    const unsigned int                             vel_dof_idx,
+    const unsigned int                             ls_zero_bc_idx)
+    : scratch_data(scratch_data_in)
+    , time_stepping(time_stepping)
+    , ls_dof_idx(ls_dof_idx_in)
+    , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx_in)
+    , ls_quad_idx(ls_quad_idx_in)
+    , curv_dof_idx(curv_dof_idx_in)
+    , reinit_dof_idx(reinit_dof_idx_in)
   {
-    scratch_data             = scratch_data_in;
-    ls_dof_idx               = ls_dof_idx_in;
-    ls_hanging_nodes_dof_idx = ls_hanging_nodes_dof_idx_in;
-    ls_quad_idx              = ls_quad_idx_in;
-    curv_dof_idx             = curv_dof_idx_in;
-    reinit_dof_idx           = reinit_dof_idx_in;
     /*
      *    initialize the advection diffusion operation
      */
@@ -162,6 +164,7 @@ namespace MeltPoolDG::LevelSet
                                    scratch_data->get_degree(ls_dof_idx),
                                (unsigned int)level_set_data.n_initial_reinit_steps});
   }
+
   /**
    * set initial condition
    */
@@ -262,14 +265,14 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::solve(const double dt, const VectorType &advection_velocity)
+  LevelSetOperation<dim>::solve(const VectorType &advection_velocity)
   {
     /*
      *  1) solve the advection step of the level set function
      */
     {
       TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::advect");
-      advect_level_set(dt, advection_velocity);
+      advect_level_set(time_stepping.get_current_time_increment(), advection_velocity);
     }
     /*
      *  2) solve the reinitialization problem of the level set equation

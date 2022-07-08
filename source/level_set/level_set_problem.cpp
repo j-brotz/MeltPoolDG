@@ -41,7 +41,7 @@ namespace MeltPoolDG::LevelSet
 
     while (!time_iterator.is_finished())
       {
-        const double dt = time_iterator.get_next_time_increment();
+        time_iterator.get_next_time_increment();
         time_iterator.print_me(scratch_data->get_pcout());
         compute_advection_velocity(*base_in->get_advection_field("level_set"));
 
@@ -64,7 +64,7 @@ namespace MeltPoolDG::LevelSet
             // compute advection velocity of the interface
             advection_velocity += evaporation_operation->get_velocity();
           }
-        level_set_operation.solve(dt, advection_velocity);
+        level_set_operation->solve(advection_velocity);
 
 
         // do paraview output if requested
@@ -147,16 +147,17 @@ namespace MeltPoolDG::LevelSet
      * initialize the levelset operation class
      */
 
-    level_set_operation.initialize(scratch_data,
-                                   base_in,
-                                   ls_dof_idx,
-                                   ls_hanging_nodes_dof_idx,
-                                   ls_quad_idx,
-                                   reinit_dof_idx,
-                                   curv_dof_idx,
-                                   normal_dof_idx,
-                                   vel_dof_idx,
-                                   ls_zero_bc_idx);
+    level_set_operation = std::make_shared<LevelSetOperation<dim>>(scratch_data,
+                                                                   time_iterator,
+                                                                   base_in,
+                                                                   ls_dof_idx,
+                                                                   ls_hanging_nodes_dof_idx,
+                                                                   ls_quad_idx,
+                                                                   reinit_dof_idx,
+                                                                   curv_dof_idx,
+                                                                   normal_dof_idx,
+                                                                   vel_dof_idx,
+                                                                   ls_zero_bc_idx);
 
     /*
      * set initial conditions
@@ -170,8 +171,8 @@ namespace MeltPoolDG::LevelSet
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
           scratch_data,
-          level_set_operation.get_level_set_as_heaviside(),
-          level_set_operation.get_normal_vector(),
+          level_set_operation->get_level_set_as_heaviside(),
+          level_set_operation->get_normal_vector(),
           base_in,
           normal_dof_idx,
           vel_dof_idx,
@@ -186,15 +187,15 @@ namespace MeltPoolDG::LevelSet
           base_in->get_initial_condition("level_set", true /*is optional*/))
       {
         // ... via a given level set field
-        level_set_operation.set_initial_condition(*initial_field, advection_velocity);
+        level_set_operation->set_initial_condition(*initial_field, advection_velocity);
       }
     else if (const auto initial_field =
                base_in->get_initial_condition("signed_distance", true /*is optional*/))
       {
         // ... or a given signed distance field.
-        level_set_operation.set_initial_condition(*initial_field,
-                                                  advection_velocity,
-                                                  true /*is signed distance function*/);
+        level_set_operation->set_initial_condition(*initial_field,
+                                                   advection_velocity,
+                                                   true /*is signed distance function*/);
       }
     else
       AssertThrow(
@@ -229,15 +230,15 @@ namespace MeltPoolDG::LevelSet
                 base_in->get_initial_condition("level_set", true /*is optional*/))
             {
               // ... via a given level set field
-              level_set_operation.set_initial_condition(*initial_field, advection_velocity);
+              level_set_operation->set_initial_condition(*initial_field, advection_velocity);
             }
           else if (const auto initial_field =
                      base_in->get_initial_condition("signed_distance", true /*is optional*/))
             {
               // ... or a given signed distance field.
-              level_set_operation.set_initial_condition(*initial_field,
-                                                        advection_velocity,
-                                                        true /*is signed distance function*/);
+              level_set_operation->set_initial_condition(*initial_field,
+                                                         advection_velocity,
+                                                         true /*is signed distance function*/);
             }
           else
             AssertThrow(
@@ -300,7 +301,7 @@ namespace MeltPoolDG::LevelSet
 
     if (do_reinit)
       {
-        level_set_operation.reinit();
+        level_set_operation->reinit();
         if (evaporation_operation)
           evaporation_operation->reinit();
       }
@@ -332,7 +333,7 @@ namespace MeltPoolDG::LevelSet
                                        std::shared_ptr<SimulationBase<dim>> base_in)
   {
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
-      level_set_operation.attach_output_vectors(data_out);
+      level_set_operation->attach_output_vectors(data_out);
       if (evaporation_operation)
         evaporation_operation->attach_output_vectors(data_out);
 
@@ -371,7 +372,7 @@ namespace MeltPoolDG::LevelSet
 
       VectorType locally_relevant_solution;
       locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
-      locally_relevant_solution.copy_locally_owned_data_from(level_set_operation.get_level_set());
+      locally_relevant_solution.copy_locally_owned_data_from(level_set_operation->get_level_set());
       constraints_dirichlet.distribute(locally_relevant_solution);
       locally_relevant_solution.update_ghost_values();
 
@@ -406,14 +407,14 @@ namespace MeltPoolDG::LevelSet
     };
 
     const auto attach_vectors = [&](std::vector<VectorType *> &vectors) {
-      level_set_operation.attach_vectors(vectors);
+      level_set_operation->attach_vectors(vectors);
       if (evaporation_operation)
         evaporation_operation->attach_vectors(vectors);
     };
 
     const auto post = [&]() {
-      constraints_dirichlet.distribute(level_set_operation.get_level_set());
-      hanging_node_constraints.distribute(level_set_operation.get_level_set_as_heaviside());
+      constraints_dirichlet.distribute(level_set_operation->get_level_set());
+      hanging_node_constraints.distribute(level_set_operation->get_level_set_as_heaviside());
     };
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };

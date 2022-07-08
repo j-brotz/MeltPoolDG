@@ -48,7 +48,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int &reinit_hanging_nodes_dof_idx =
       ls_hanging_nodes_dof_idx; //@todo: would it make sense to use ls_zero_bc_idx?
 
-    LevelSetOperation<dim>                                  level_set_operation;
+    std::shared_ptr<LevelSetOperation<dim>>                 level_set_operation;
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation;
 
     VectorType advection_velocity;
