@@ -133,6 +133,10 @@ namespace MeltPoolDG::Heat
     const unsigned int ls_dof_idx;
     const VectorType * level_set_as_heaviside;
 
+    // optional: rho times cp
+    double rho_cp_gas;
+    double rho_cp_heavy;
+
     // optional: two phase flow with evaporation
     VectorType * evaporative_mass_flux      = nullptr;
     unsigned int evapor_mass_flux_dof_idx   = 0;

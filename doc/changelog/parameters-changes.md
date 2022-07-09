@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-07-08
+- Add parameter to make the heat operator interpolate the product of density and capacity instead of both separately.
+```json
+{
+  "heat": {
+    "interpolate rho times cp": "true|false"
+  }
+}
+```
+
 ## 2022-06-30
 - Add tolerance for activating reinitialization 
 ```json

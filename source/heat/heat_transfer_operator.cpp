@@ -79,6 +79,17 @@ namespace MeltPoolDG::Heat
         neumann_bc            = bc->neumann_bc;
       }
 
+    if (data.interpolate_rho_times_cp)
+      {
+        Assert(material_data.second.density == material_data.solid.density || !data.solidification,
+               ExcMessage("The density of melt and solid must match! Abort..."));
+        Assert(material_data.second.capacity == material_data.solid.capacity ||
+                 !data.solidification,
+               ExcMessage("The capacity of melt and solid must match! Abort..."));
+        rho_cp_gas   = material_data.first.density * material_data.first.capacity;
+        rho_cp_heavy = material_data.second.density * material_data.second.capacity;
+      }
+
     delta_phase_weighted =
       create_phase_weighted_delta_approximation(data.delta_approximation_phase_weighted);
   }
@@ -984,14 +995,26 @@ namespace MeltPoolDG::Heat
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
-      ls_heaviside_val,
-      temp_lin_val,
-      MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
-        MaterialUpdateFlags::density,
-      q_index);
-    return {/* rho cp */ material_values.capacity * material_values.density,
-            /* conductivity */ material_values.conductivity};
+    if (data.interpolate_rho_times_cp)
+      {
+        const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
+          ls_heaviside_val, temp_lin_val, MaterialUpdateFlags::conductivity, q_index);
+        return {/* rho cp */ LevelSet::Tools::interpolate(ls_heaviside_val.get_value(q_index),
+                                                          rho_cp_gas,
+                                                          rho_cp_heavy),
+                /* conductivity */ material_values.conductivity};
+      }
+    else
+      {
+        const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
+          ls_heaviside_val,
+          temp_lin_val,
+          MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
+            MaterialUpdateFlags::density,
+          q_index);
+        return {/* rho cp */ material_values.capacity * material_values.density,
+                /* conductivity */ material_values.conductivity};
+      }
   }
 
 
@@ -1006,18 +1029,36 @@ namespace MeltPoolDG::Heat
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
-      ls_heaviside_val,
-      temp_lin_val,
-      MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
-        MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_d_T |
-        MaterialUpdateFlags::d_conductivity_d_T | MaterialUpdateFlags::d_density_d_T,
-      q_index);
-    return {/* rho cp */ material_values.capacity * material_values.density,
-            /* conductivity */ material_values.conductivity,
-            /* d_rho_cp_dT */ material_values.d_capacity_d_T * material_values.density +
-              material_values.d_density_d_T * material_values.capacity,
-            /* d_conductivity_dT */ material_values.d_conductivity_d_T};
+    if (data.interpolate_rho_times_cp)
+      {
+        const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
+          ls_heaviside_val,
+          temp_lin_val,
+          MaterialUpdateFlags::conductivity | MaterialUpdateFlags::d_conductivity_d_T,
+          q_index);
+
+        return {/* rho cp */ LevelSet::Tools::interpolate(ls_heaviside_val.get_value(q_index),
+                                                          rho_cp_gas,
+                                                          rho_cp_heavy),
+                /* conductivity */ material_values.conductivity,
+                /* d_rho_cp_dT */ VectorizedArray<number>(0.0),
+                /* d_conductivity_dT */ material_values.d_conductivity_d_T};
+      }
+    else
+      {
+        const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
+          ls_heaviside_val,
+          temp_lin_val,
+          MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
+            MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_d_T |
+            MaterialUpdateFlags::d_conductivity_d_T | MaterialUpdateFlags::d_density_d_T,
+          q_index);
+        return {/* rho cp */ material_values.capacity * material_values.density,
+                /* conductivity */ material_values.conductivity,
+                /* d_rho_cp_dT */ material_values.d_capacity_d_T * material_values.density +
+                  material_values.d_density_d_T * material_values.capacity,
+                /* d_conductivity_dT */ material_values.d_conductivity_d_T};
+      }
   }
 
 

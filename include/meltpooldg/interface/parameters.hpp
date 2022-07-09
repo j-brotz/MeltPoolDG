@@ -166,6 +166,7 @@ namespace MeltPoolDG
     NonlinearSolverData<number>                 nlsolve;
     LinearSolverData<number>                    linear_solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+    bool                                        interpolate_rho_times_cp = false;
   };
 
   template <typename number = double>
