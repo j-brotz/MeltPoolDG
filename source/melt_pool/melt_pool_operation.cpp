@@ -152,7 +152,7 @@ namespace MeltPoolDG::MeltPool
       {
         switch (laser_operation->get_laser_impact_type())
           {
-              case Heat::LaserImpactType::volumetric: {
+              case LaserImpactType::volumetric: {
                 laser_heat_source_operation->compute_volumetric_heat_source(
                   heat_source,
                   *scratch_data,
@@ -162,8 +162,22 @@ namespace MeltPoolDG::MeltPool
                   zero_out);
                 break;
               }
-              case Heat::LaserImpactType::interface: {
+              case LaserImpactType::interface: {
                 laser_heat_source_operation->compute_interfacial_heat_source(
+                  heat_source,
+                  *scratch_data,
+                  temp_hanging_nodes_dof_idx,
+                  laser_operation->get_laser_power(),
+                  laser_operation->get_laser_position(),
+                  level_set_as_heaviside,
+                  ls_dof_idx,
+                  zero_out,
+                  &normal_vector,
+                  normal_dof_idx);
+                break;
+              }
+              case LaserImpactType::interface_sharp: {
+                laser_heat_source_operation->compute_interfacial_heat_source_sharp(
                   heat_source,
                   *scratch_data,
                   temp_hanging_nodes_dof_idx,

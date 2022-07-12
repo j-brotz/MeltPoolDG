@@ -34,6 +34,38 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   double
+  LaserHeatSourceGauss<dim>::local_compute_interfacial_heat_source_sharp(
+    const Point<dim> &            position,
+    const Point<dim> &            laser_position,
+    const double                  power,
+    const Tensor<1, dim, double> &normal_vector,
+    const double                  heaviside) const
+  {
+    Point<dim> projected_position(position);
+
+    if (dim > 1)
+      {
+        // Calculate the projected distance in x (2D) or x and y (3D) direction.
+        // To this end, we calculate a projected point lying in the laser plane.
+        projected_position[dim - 1] = laser_position[dim - 1];
+      }
+    const double distance = laser_position.distance(projected_position);
+
+    // assume laser direction coincides with the negative dim-1 direction
+    double projection_factor = normal_vector * -Point<dim>::unit_vector(dim - 1);
+    if (projection_factor < 0.0)
+      projection_factor = 0.0;
+
+    const double weight = (heaviside > 0.5) ? 1.0 : 0.0;
+
+    const double absorptivity =
+      LevelSet::Tools::interpolate(weight, data.absorptivity_gas, data.absorptivity_liquid);
+
+    return absorptivity * projection_factor * power_density_interfacial(distance, power);
+  }
+
+  template <int dim>
+  double
   LaserHeatSourceGauss<dim>::local_compute_interfacial_heat_source(
     const Point<dim> &            position,
     const Point<dim> &            laser_position,
@@ -305,6 +337,149 @@ namespace MeltPoolDG::Heat
     if (normal_vector)
       normal_vector->zero_out_ghost_values();
   }
+
+  template <int dim>
+  void
+  LaserHeatSourceGauss<dim>::compute_interfacial_heat_source_sharp(
+    VectorType &            heat_source_vector,
+    const ScratchData<dim> &scratch_data,
+    const unsigned int      temp_dof_idx,
+    const double            laser_power,
+    const Point<dim> &      laser_position,
+    const VectorType &      level_set_heaviside,
+    const unsigned int      ls_dof_idx,
+    const bool              zero_out,
+    const BlockVectorType * normal_vector,
+    const unsigned int      normal_dof_idx) const
+  {
+    if constexpr (dim > 1) // @todo: otherwise i am getting a compiling error atm
+      {
+        if (zero_out)
+          scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);
+
+        level_set_heaviside.update_ghost_values();
+        if (normal_vector)
+          normal_vector->update_ghost_values();
+
+        FEPointEvaluation<1, dim> ls(scratch_data.get_mapping(),
+                                     scratch_data.get_fe(ls_dof_idx),
+                                     update_values | update_gradients);
+
+        std::unique_ptr<FEPointEvaluation<dim, dim>> normal_vals;
+        if (normal_vector)
+          normal_vals =
+            std::make_unique<FEPointEvaluation<dim, dim>>(scratch_data.get_mapping(),
+                                                          scratch_data.get_fe(normal_dof_idx),
+                                                          update_values);
+
+        FEPointEvaluation<1, dim> heat_source_vals(scratch_data.get_mapping(),
+                                                   scratch_data.get_fe(temp_dof_idx),
+                                                   update_values);
+
+        std::vector<double>                  buffer;
+        std::vector<double>                  buffer_dim;
+        std::vector<types::global_dof_index> local_dof_indices;
+
+        LevelSet::Tools::evaluate_at_interface<dim>(
+          scratch_data.get_dof_handler(temp_dof_idx),
+          scratch_data.get_mapping(),
+          level_set_heaviside,
+          [&](const auto &cell, const auto &, const auto &points, const auto &weights) {
+            // evaluate rhs term
+            local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
+            buffer.resize(cell->get_fe().n_dofs_per_cell());
+            buffer_dim.resize(scratch_data.get_fe(normal_dof_idx).n_dofs_per_cell());
+            cell->get_dof_indices(local_dof_indices);
+
+            const unsigned int n_points = points.size();
+
+            const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
+            const ArrayView<const double>     JxW(weights.data(), n_points);
+
+            ls.reinit(cell, unit_points);
+            heat_source_vals.reinit(cell, unit_points);
+
+            // gather evaluate level set for the points at the interface
+            ls.reinit(cell, unit_points);
+            {
+              scratch_data.get_constraint(ls_dof_idx)
+                .get_dof_values(level_set_heaviside,
+                                local_dof_indices.begin(),
+                                buffer.begin(),
+                                buffer.end());
+              ls.evaluate(buffer, EvaluationFlags::values | EvaluationFlags::gradients);
+            }
+
+            // gather_evaluate unit normal vector for the points at the interface
+            if (normal_vals)
+              {
+                normal_vals->reinit(cell, unit_points);
+                {
+                  buffer_dim.resize(scratch_data.get_fe(normal_dof_idx).n_dofs_per_cell());
+                  for (int d = 0; d < dim; ++d)
+                    {
+                      cell->get_dof_values(normal_vector->block(d), buffer.begin(), buffer.end());
+
+                      for (unsigned int c = 0; c < cell->get_fe().n_dofs_per_cell(); ++c)
+                        buffer_dim[scratch_data.get_fe(normal_dof_idx)
+                                     .component_to_system_index(d, c)] = buffer[c];
+                    }
+
+                  // normalize
+                  for (unsigned int c = 0; c < cell->get_fe().n_dofs_per_cell(); ++c)
+                    {
+                      double norm = 0.0;
+                      for (int d = 0; d < dim; ++d)
+                        norm += std::pow(buffer_dim[scratch_data.get_fe(normal_dof_idx)
+                                                      .component_to_system_index(d, c)],
+                                         2);
+
+                      norm = std::sqrt(norm);
+                      for (int d = 0; d < dim; ++d)
+                        buffer_dim[scratch_data.get_fe(normal_dof_idx)
+                                     .component_to_system_index(d, c)] /= norm;
+                    }
+
+                  normal_vals->evaluate(make_array_view(buffer_dim), EvaluationFlags::values);
+                }
+              }
+
+            for (unsigned int q = 0; q < n_points; ++q)
+              {
+                const auto grad_ls_at_q      = ls.get_gradient(q);
+                const auto norm_grad_ls_at_q = grad_ls_at_q.norm();
+                const auto ls_at_q           = ls.get_value(q);
+
+                const auto unit_normal =
+                  normal_vector ? normal_vals->get_value(q) : grad_ls_at_q / norm_grad_ls_at_q;
+
+                heat_source_vals.submit_value(
+                  local_compute_interfacial_heat_source_sharp(
+                    unit_points[q], laser_position, laser_power, unit_normal, ls_at_q) *
+                    JxW[q],
+                  q);
+              }
+
+            // integrate laser heat source
+            heat_source_vals.integrate(buffer, EvaluationFlags::values);
+
+            scratch_data.get_constraint(temp_dof_idx)
+              .distribute_local_to_global(buffer, local_dof_indices, heat_source_vector);
+          },
+          0.5, /*contour value*/
+          3 /*n_subdivisions*/);
+        heat_source_vector.compress(VectorOperation::add);
+
+        level_set_heaviside.zero_out_ghost_values();
+        if (normal_vector)
+          normal_vector->zero_out_ghost_values();
+      }
+    else
+      {
+        Assert(false, ExcNotImplemented());
+      }
+  }
+
 
   template <int dim>
   double

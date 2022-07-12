@@ -37,6 +37,13 @@ namespace MeltPoolDG
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
     Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
   )
+  BETTER_ENUM(LaserImpactType,
+              char,
+              volumetric,     // TODO
+              interface,      // TODO
+              interface_sharp // TODO
+  )
+
 
   // evaporation specific @todo: move to own file evaporation_data.hpp
   BETTER_ENUM(
@@ -179,7 +186,7 @@ namespace MeltPoolDG
     std::vector<double>  center            = {0, 0, 0};
     bool                 do_move           = false;
     number               scan_speed        = 0.0;
-    std::string          impact_type       = "volumetric";
+    LaserImpactType      impact_type       = LaserImpactType::volumetric;
     LaserHeatSourceModel heat_source_model = LaserHeatSourceModel::not_initialized;
     struct GaussData
     {
