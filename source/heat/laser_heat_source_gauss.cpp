@@ -1,3 +1,5 @@
+#include <deal.II/numerics/data_out.h>
+
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
@@ -341,7 +343,7 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   LaserHeatSourceGauss<dim>::compute_interfacial_heat_source_sharp(
-    VectorType &            heat_source_vector,
+    VectorType &            heat_rhs,
     const ScratchData<dim> &scratch_data,
     const unsigned int      temp_dof_idx,
     const double            laser_power,
@@ -355,7 +357,7 @@ namespace MeltPoolDG::Heat
     if constexpr (dim > 1) // @todo: otherwise i am getting a compiling error atm
       {
         if (zero_out)
-          scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);
+          scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);
 
         level_set_heaviside.update_ghost_values();
         if (normal_vector)
@@ -384,11 +386,10 @@ namespace MeltPoolDG::Heat
           scratch_data.get_dof_handler(temp_dof_idx),
           scratch_data.get_mapping(),
           level_set_heaviside,
-          [&](const auto &cell, const auto &, const auto &points, const auto &weights) {
+          [&](const auto &cell, const auto &points_real, const auto &points, const auto &weights) {
             // evaluate rhs term
             local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
             buffer.resize(cell->get_fe().n_dofs_per_cell());
-            buffer_dim.resize(scratch_data.get_fe(normal_dof_idx).n_dofs_per_cell());
             cell->get_dof_indices(local_dof_indices);
 
             const unsigned int n_points = points.size();
@@ -401,78 +402,105 @@ namespace MeltPoolDG::Heat
 
             // gather evaluate level set for the points at the interface
             ls.reinit(cell, unit_points);
-            {
-              scratch_data.get_constraint(ls_dof_idx)
-                .get_dof_values(level_set_heaviside,
-                                local_dof_indices.begin(),
-                                buffer.begin(),
-                                buffer.end());
-              ls.evaluate(buffer, EvaluationFlags::values | EvaluationFlags::gradients);
-            }
+            scratch_data.get_constraint(ls_dof_idx)
+              .get_dof_values(level_set_heaviside,
+                              local_dof_indices.begin(),
+                              buffer.begin(),
+                              buffer.end());
+            ls.evaluate(buffer, EvaluationFlags::values | EvaluationFlags::gradients);
 
             // gather_evaluate unit normal vector for the points at the interface
-            if (normal_vals)
+            if (normal_vals && normal_vector)
               {
                 normal_vals->reinit(cell, unit_points);
-                {
-                  buffer_dim.resize(scratch_data.get_fe(normal_dof_idx).n_dofs_per_cell());
-                  for (int d = 0; d < dim; ++d)
-                    {
-                      cell->get_dof_values(normal_vector->block(d), buffer.begin(), buffer.end());
 
-                      for (unsigned int c = 0; c < cell->get_fe().n_dofs_per_cell(); ++c)
-                        buffer_dim[scratch_data.get_fe(normal_dof_idx)
-                                     .component_to_system_index(d, c)] = buffer[c];
-                    }
+                buffer_dim.resize(
+                  scratch_data.get_fe(normal_dof_idx).n_dofs_per_cell()); // @todo: times dim
 
-                  // normalize
-                  for (unsigned int c = 0; c < cell->get_fe().n_dofs_per_cell(); ++c)
-                    {
-                      double norm = 0.0;
-                      for (int d = 0; d < dim; ++d)
-                        norm += std::pow(buffer_dim[scratch_data.get_fe(normal_dof_idx)
-                                                      .component_to_system_index(d, c)],
-                                         2);
+                for (int d = 0; d < dim; ++d)
+                  {
+                    cell->get_dof_values(normal_vector->block(d), buffer.begin(), buffer.end());
 
-                      norm = std::sqrt(norm);
-                      for (int d = 0; d < dim; ++d)
-                        buffer_dim[scratch_data.get_fe(normal_dof_idx)
-                                     .component_to_system_index(d, c)] /= norm;
-                    }
+                    for (unsigned int c = 0;
+                         c < scratch_data.get_fe(normal_dof_idx).n_dofs_per_cell();
+                         ++c)
+                      buffer_dim[scratch_data.get_fe(normal_dof_idx)
+                                   .component_to_system_index(d, c)] = buffer[c];
+                  }
 
-                  normal_vals->evaluate(make_array_view(buffer_dim), EvaluationFlags::values);
-                }
+                // normalize
+                for (unsigned int c = 0; c < cell->get_fe().n_dofs_per_cell(); ++c)
+                  {
+                    double norm = 0.0;
+                    for (int d = 0; d < dim; ++d)
+                      norm += std::pow(buffer_dim[scratch_data.get_fe(normal_dof_idx)
+                                                    .component_to_system_index(d, c)],
+                                       2);
+
+                    norm = std::max(1e-6, std::sqrt(norm));
+
+                    for (int d = 0; d < dim; ++d)
+                      buffer_dim[scratch_data.get_fe(normal_dof_idx)
+                                   .component_to_system_index(d, c)] /= norm;
+                  }
+
+                normal_vals->evaluate(make_array_view(buffer_dim), EvaluationFlags::values);
               }
 
             for (unsigned int q = 0; q < n_points; ++q)
               {
                 const auto grad_ls_at_q      = ls.get_gradient(q);
-                const auto norm_grad_ls_at_q = grad_ls_at_q.norm();
+                const auto norm_grad_ls_at_q = std::max(grad_ls_at_q.norm(), 1e-6);
                 const auto ls_at_q           = ls.get_value(q);
 
-                const auto unit_normal =
-                  normal_vector ? normal_vals->get_value(q) : grad_ls_at_q / norm_grad_ls_at_q;
+                // TODO: Problem with normal_vals->get_value(q)
+                // const auto unit_normal =
+                // normal_vector ? normal_vals->get_value(q) : grad_ls_at_q / norm_grad_ls_at_q;
+                const auto unit_normal = grad_ls_at_q / norm_grad_ls_at_q;
 
-                heat_source_vals.submit_value(
-                  local_compute_interfacial_heat_source_sharp(
-                    unit_points[q], laser_position, laser_power, unit_normal, ls_at_q) *
-                    JxW[q],
-                  q);
+                const auto result = local_compute_interfacial_heat_source_sharp(points_real[q],
+                                                                                laser_position,
+                                                                                laser_power,
+                                                                                unit_normal,
+                                                                                ls_at_q) *
+                                    JxW[q];
+
+                heat_source_vals.submit_value(result, q);
               }
 
             // integrate laser heat source
             heat_source_vals.integrate(buffer, EvaluationFlags::values);
 
             scratch_data.get_constraint(temp_dof_idx)
-              .distribute_local_to_global(buffer, local_dof_indices, heat_source_vector);
+              .distribute_local_to_global(buffer, local_dof_indices, heat_rhs);
           },
           0.5, /*contour value*/
           3 /*n_subdivisions*/);
-        heat_source_vector.compress(VectorOperation::add);
 
+        heat_rhs.compress(VectorOperation::add);
+
+        heat_rhs.zero_out_ghost_values();
         level_set_heaviside.zero_out_ghost_values();
         if (normal_vector)
           normal_vector->zero_out_ghost_values();
+        if (true)
+          {
+            /*
+             * add output vectors
+             */
+            DataOutBase::VtkFlags flags;
+            flags.write_higher_order_cells = true;
+
+            DataOut<dim> data_out;
+            data_out.set_flags(flags);
+
+            data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                                     heat_rhs,
+                                     "heat_sourece");
+            data_out.build_patches(scratch_data.get_mapping());
+            std::string output = "heat_source.vtu";
+            data_out.write_vtu_in_parallel(output, scratch_data.get_mpi_comm());
+          }
       }
     else
       {

@@ -102,6 +102,7 @@ namespace MeltPoolDG::Heat
   {
     scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
     scratch_data.initialize_dof_vector(temperature_old, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(user_rhs, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(temperature_interface, temp_hanging_nodes_dof_idx);
     /*
@@ -174,6 +175,7 @@ namespace MeltPoolDG::Heat
       // solely homogeneous dirichlet bc are distributed for the
       // corrected temperature field in the newton solver
       heat_operator->update_ghost_values();
+      rhs.copy_locally_owned_data_from(user_rhs);
       heat_operator->create_rhs(rhs, temperature_old);
     };
 
@@ -324,6 +326,20 @@ namespace MeltPoolDG::Heat
   HeatTransferOperation<dim>::get_heat_source()
   {
     return heat_source;
+  }
+
+  template <int dim>
+  const VectorType &
+  HeatTransferOperation<dim>::get_user_rhs() const
+  {
+    return user_rhs;
+  }
+
+  template <int dim>
+  VectorType &
+  HeatTransferOperation<dim>::get_user_rhs()
+  {
+    return user_rhs;
   }
 
   template <int dim>

@@ -130,6 +130,7 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   MeltPoolOperation<dim>::compute_heat_source(VectorType &           heat_source,
+                                              VectorType &           user_rhs,
                                               const VectorType &     level_set_as_heaviside,
                                               const BlockVectorType &normal_vector,
                                               const unsigned int     normal_dof_idx,
@@ -178,7 +179,7 @@ namespace MeltPoolDG::MeltPool
               }
               case LaserImpactType::interface_sharp: {
                 laser_heat_source_operation->compute_interfacial_heat_source_sharp(
-                  heat_source,
+                  user_rhs,
                   *scratch_data,
                   temp_hanging_nodes_dof_idx,
                   laser_operation->get_laser_power(),

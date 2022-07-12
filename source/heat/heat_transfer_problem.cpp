@@ -76,7 +76,7 @@ namespace MeltPoolDG::Heat
                   }
                   case LaserImpactType::interface_sharp: {
                     laser_heat_source_operation->compute_interfacial_heat_source_sharp(
-                      heat_operation->get_heat_source(),
+                      heat_operation->get_user_rhs(),
                       *scratch_data,
                       temp_dof_idx,
                       laser_operation->get_laser_power(),

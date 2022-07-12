@@ -83,6 +83,7 @@ namespace MeltPoolDG::MeltPool
           if (melt_pool_operation)
             melt_pool_operation->compute_heat_source(
               heat_operation->get_heat_source(),
+              heat_operation->get_user_rhs(),
               level_set_operation->get_level_set_as_heaviside(),
               level_set_operation->get_normal_vector(),
               normal_dof_idx,
