@@ -43,6 +43,18 @@ namespace MeltPoolDG::Heat
                                     const BlockVectorType * normal_vector  = nullptr,
                                     const unsigned int      normal_dof_idx = 0) const final;
 
+    void
+    compute_interfacial_heat_source_sharp(VectorType &            heat_source_vector,
+                                          const ScratchData<dim> &scratch_data,
+                                          const unsigned int      temp_dof_idx,
+                                          const double            laser_power_density,
+                                          const Point<dim> &      laser_position,
+                                          const VectorType &      level_set_heaviside,
+                                          const unsigned int      ls_dof_idx,
+                                          const bool              zero_out       = true,
+                                          const BlockVectorType * normal_vector  = nullptr,
+                                          const unsigned int      normal_dof_idx = 0) const final;
+
     /**
      * volumetric heat source
      */
@@ -55,8 +67,7 @@ namespace MeltPoolDG::Heat
     double
     local_compute_interfacial_heat_source(const double                  power_density,
                                           const Tensor<1, dim, double> &normal_vector,
-                                          const double                  delta_value,
-                                          const double                  heaviside) const;
+                                          const double                  delta_value) const;
 
     std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
   };

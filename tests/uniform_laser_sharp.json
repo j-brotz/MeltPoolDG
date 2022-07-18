@@ -1,0 +1,116 @@
+{
+  "base": {
+    "application name": "recoil_pressure",
+    "degree": "1",
+    "dimension": "2",
+    "do print parameters": "false",
+    "global refinements": "0",
+    "gravity": "0.0",
+    "problem name": "melt_pool",
+    "verbosity level": "0"
+  },
+  "time stepping": {
+    "time step size": "1e-07",
+    "start time": "0.0",
+    "max n steps": "10"
+  },
+  "levelset": {
+    "ls n initial reinit steps": "0"
+  },
+  "reinitialization": {
+    "reinit constant epsilon": "5e-06",
+    "linear solver": {
+      "preconditioner type": "Diagonal",
+      "do matrix free": "true"
+    }
+  },
+  "heat": {
+    "heat nlsolve field correction tolerance": "1e-06",
+    "heat nlsolve max nonlinear iterations": "15",
+    "heat nlsolve residual tolerance": "1e-2",
+    "heat solidification": "false",
+    "heat two phase": "true",
+    "linear solver": {
+      "rel tolerance": "0.0001",
+      "abs tolerance": "1e-12",
+      "preconditioner type": "ILU"
+    }
+  },
+  "laser": {
+    "laser gauss absorptivity gas": "1.0",
+    "laser gauss absorptivity liquid": "1.0",
+    "laser heat source model": "uniform",
+    "laser impact type": "interface_sharp",
+    "laser power": "1e10"
+  },
+  "material": {
+    "material template": "Ti64",
+    "material first density": "4.087",
+    "material two phase properties transition type": "sharp"
+  },
+  "simulation specific domain": {
+    "domain x max": "1e-07",
+    "domain x min": "0.0",
+    "domain y max": "0.0001",
+    "domain y min": "-0.0001",
+    "cell repetitions": "1,200",
+    "periodic boundary": "false"
+  },
+  "problem specific": {
+    "do evaporative heat flux": "false",
+    "do evaporative mass flux": "false",
+    "do evaporation": "false",
+    "do melt pool": "true",
+    "do recoil pressure": "false",
+    "do heat transfer": "true",
+    "do advect level set": "false"
+  },
+  "Navier-Stokes": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "Solver": {
+          "NL max iterations": "15",
+          "NL tolerance": "1e8",
+          "lin its before inner solvers": "50",
+          "lin max iterations": "30",
+          "lin pressure mass preconditioner": "ilu",
+          "lin relative tolerance": "1",
+          "lin tolerance": "1e8",
+          "lin velocity preconditioner": "ilu scalar",
+          "linearization scheme": "coupled implicit Newton"
+        },
+        "dimension": "2",
+        "formulation convective term momentum balance": "convective",
+        "global refinements": "0",
+        "physical type": "incompressible",
+        "velocity degree": "2"
+      },
+      "Output options": {
+        "output verbosity": "0",
+        "output walltimes": "0"
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      }
+    }
+  },
+  "curvature": {
+    "curv damping scale factor": "2",
+    "curv do narrow band": "false",
+    "curv implementation": "meltpooldg",
+    "linear solver": {
+      "do matrix free": "true",
+      "abs tolerance": "1e-14"
+    }
+  },
+  "normal vector": {
+    "normal vec damping scale factor": "2",
+    "linear solver": {
+      "do matrix free": "true",
+      "abs tolerance": "1e-14"
+    }
+  },
+  "paraview": {
+    "paraview do output": "false"
+  }
+}
