@@ -71,6 +71,7 @@ namespace MeltPoolDG
 
         bool         periodic_boundary    = false;
         bool         evaporation_boundary = false;
+        bool         slip_boundary        = false;
         unsigned int n_local_refinement   = 0;
         double       T_initial_top        = 500;
         double       T_initial_bottom     = T_initial_top;
@@ -152,6 +153,10 @@ namespace MeltPoolDG
               evaporation_boundary,
               "Set this Parameter to true if the upper boundary of the domain should be open "
               "to enable an outward mass flow.");
+            prm.add_parameter(
+              "slip boundary",
+              slip_boundary,
+              "Set this Parameter to true if the outer boundaries should be slip boundaries instead of no-slip.");
             prm.enter_subsection("initial temperature");
             {
               prm.add_parameter("top",
@@ -336,39 +341,75 @@ namespace MeltPoolDG
            *                   lower_bc
            *
            * -----------------------------------------------------------------------------
-           * evaporation boundary    = false
+           * evaporation boundary = false
            * periodic boundary = false
+           * slip boundary = false
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |  adiabatic     | no-slip  |       -        |     -
            * lower_bc            |  T = T_initial | no-slip  | fixed constant |     -
            * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
-           * evaporation boundary    = false
+           * evaporation boundary = false
+           * periodic boundary = false
+           * slip boundary = true
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |  adiabatic     |   slip   |       -        |     -
+           * lower_bc            |  T = T_initial |   slip   | fixed constant |     -
+           * upper_bc            |  T = T_initial |   slip   |       -        |     -
+           * -----------------------------------------------------------------------------
+           * evaporation boundary = false
            * periodic boundary = true
+           * slip boundary = false
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
            * lower_bc            |  T = T_initial | no-slip  | fixed constant |     -
            * upper_bc            |  T = T_initial | no-slip  |       -        |     -
            * -----------------------------------------------------------------------------
-           * evaporation boundary    = true
-           * periodic boundary = false
-           *                     |   temperature  | velocity |    pressure    | level set
-           * left_bc, right_bc   |  adiabatic     | symmetry |       -        |     -
-           * lower_bc            |  T = T_initial |   open   |       -        |     -
-           * upper_bc            |  T = T_initial | no-slip  |       -        |     -
-           * -----------------------------------------------------------------------------
-           * evaporation boundary    = true
+           * evaporation boundary = false
            * periodic boundary = true
+           * slip boundary = true
            *                     |   temperature  | velocity |    pressure    | level set
            * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
-           * lower_bc            |  T = T_initial |   open   |       -        |     -
-           * upper_bc            |  T = T_initial | no-slip  |       -        |     -
+           * lower_bc            |  T = T_initial |   slip   | fixed constant |     -
+           * upper_bc            |  T = T_initial |   slip   |       -        |     -
+           * -----------------------------------------------------------------------------
+           * evaporation boundary = true
+           * periodic boundary = false
+           * slip boundary = false
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |  adiabatic     | symmetry |       -        |     -
+           * lower_bc            |  T = T_initial | no-slip  |       -        |     -
+           * upper_bc            |  T = T_initial |   open   |       -        |     -
+           * -----------------------------------------------------------------------------
+           * evaporation boundary = true
+           * periodic boundary = false
+           * slip boundary = true
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |  adiabatic     | symmetry |       -        |     -
+           * lower_bc            |  T = T_initial |   slip   |       -        |     -
+           * upper_bc            |  T = T_initial |   open   |       -        |     -
+           * -----------------------------------------------------------------------------
+           * evaporation boundary = true
+           * periodic boundary = true
+           * slip boundary = false
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
+           * lower_bc            |  T = T_initial | no-slip  |       -        |     -
+           * upper_bc            |  T = T_initial |   open   |       -        |     -
+           * -----------------------------------------------------------------------------
+           * evaporation boundary = true
+           * periodic boundary = true
+           * slip boundary = true
+           *                     |   temperature  | velocity |    pressure    | level set
+           * left_bc, right_bc   |    periodic    | periodic |    periodic    | periodic
+           * lower_bc            |  T = T_initial |   slip   |       -        |     -
+           * upper_bc            |  T = T_initial |   open   |       -        |     -
            * -----------------------------------------------------------------------------
            *
            * Note: In the 3D recoil pressure simulation, the front and back boundaries are treated
            * the same as the left and right boundaries.
            *
-           * Note: For 1d we consider the constraints along the y-axis, i.e. lower_bc and upper_bc.
+           * Note: For 1D we consider the constraints along the y-axis, i.e. lower_bc and upper_bc.
            */
           const types::boundary_id lower_bc = 1;
           const types::boundary_id upper_bc = 2;
@@ -437,9 +478,15 @@ namespace MeltPoolDG
           /*
            * BC for two-phase flow
            */
+          auto add_slip_or_no_slip_boundary = [&](const types::boundary_id bc) {
+            if (slip_boundary)
+              this->attach_symmetry_boundary_condition(bc, "navier_stokes_u");
+            else
+              this->attach_no_slip_boundary_condition(bc, "navier_stokes_u");
+          };
           if (this->parameters.base.problem_name == ProblemType::melt_pool)
             {
-              this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
+              add_slip_or_no_slip_boundary(lower_bc);
               if (evaporation_boundary)
                 {
                   this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
@@ -459,15 +506,15 @@ namespace MeltPoolDG
                   // The fix pressure constant condition can be set on any boundary (that is not a
                   // periodic boundary).
                   this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
-                  this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
+                  add_slip_or_no_slip_boundary(upper_bc);
                   if (!periodic_boundary)
                     {
-                      this->attach_no_slip_boundary_condition(left_bc, "navier_stokes_u");
-                      this->attach_no_slip_boundary_condition(right_bc, "navier_stokes_u");
+                      add_slip_or_no_slip_boundary(left_bc);
+                      add_slip_or_no_slip_boundary(right_bc);
                       if (dim == 3)
                         {
-                          this->attach_no_slip_boundary_condition(front_bc, "navier_stokes_u");
-                          this->attach_no_slip_boundary_condition(back_bc, "navier_stokes_u");
+                          add_slip_or_no_slip_boundary(front_bc);
+                          add_slip_or_no_slip_boundary(back_bc);
                         }
                     }
                 }
