@@ -192,18 +192,11 @@ namespace MeltPoolDG::Reinitialization
                                          locally_relevant_solution,
                                          estimated_error_per_cell);
 
-      if (auto pdt_tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(&tria))
-        parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-          *pdt_tria,
-          estimated_error_per_cell,
-          base_in->parameters.amr.upper_perc_to_refine,
-          base_in->parameters.amr.lower_perc_to_coarsen);
-      else
-        GridRefinement::refine_and_coarsen_fixed_number(
-          tria,
-          estimated_error_per_cell,
-          base_in->parameters.amr.upper_perc_to_refine,
-          base_in->parameters.amr.lower_perc_to_coarsen);
+      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+        tria,
+        estimated_error_per_cell,
+        base_in->parameters.amr.upper_perc_to_refine,
+        base_in->parameters.amr.lower_perc_to_coarsen);
 
       return true;
     };
