@@ -9,6 +9,7 @@
 #include <meltpooldg/interface/exceptions.hpp>
 
 #include <map>
+#include <memory>
 #include <string>
 
 namespace MeltPoolDG
