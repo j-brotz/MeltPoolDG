@@ -7,6 +7,8 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/types.h>
 
+#include <vector>
+
 namespace MeltPoolDG
 {
   using namespace dealii;
