@@ -1,0 +1,16 @@
+#pragma once
+
+/**
+ * Name of the local git branch of the source directory.
+ */
+#define LOCAL_GIT_BRANCH "@MELTPOOLDG_GIT_BRANCH@"
+
+/**
+ * Full sha1 revision of the current git HEAD.
+ */
+#define LOCAL_GIT_REVISION "@MELTPOOLDG_GIT_REVISION@"
+
+/**
+ * Short sha1 revision of the current git HEAD.
+ */
+#define LOCAL_GIT_SHORTREV "@MELTPOOLDG_GIT_SHORTREV@"
