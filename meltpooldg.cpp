@@ -1,12 +1,13 @@
-// deal-specific libraries
 #include <deal.II/base/mpi.h>
-// c++
-#include <iostream>
-// MeltPoolDG
+#include <deal.II/base/revision.h>
+
 #include <meltpooldg/interface/problem_selector.hpp>
+#include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/revision.hpp>
+
+#include <iostream>
 
 #include "simulations/simulation_selector.hpp"
-// simulations
 
 namespace MeltPoolDG
 {
@@ -18,6 +19,24 @@ namespace MeltPoolDG
     {
       Parameters<number> parameters;
       parameters.process_parameters_file(parameter_file);
+
+      // print GIT hashes if verbosity level >= 1
+      if (parameters.base.verbosity_level >= 1)
+        {
+          dealii::ConditionalOStream pcout(std::cout,
+                                           Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0);
+
+          Journal::print_decoration_line(pcout);
+          pcout << "  - deal.II ("
+                << "branch: " << DEAL_II_GIT_BRANCH << "; "
+                << "revision: " << DEAL_II_GIT_REVISION << "; short: " << DEAL_II_GIT_SHORTREV
+                << ")" << std::endl;
+          pcout << "  - MeltPoolDG ("
+                << "branch: " << LOCAL_GIT_BRANCH "; "
+                << "revision: " << LOCAL_GIT_REVISION << "; short: " << LOCAL_GIT_SHORTREV << ")"
+                << std::endl;
+          Journal::print_decoration_line(pcout);
+        }
 
       const auto dim = parameters.base.dimension;
 
