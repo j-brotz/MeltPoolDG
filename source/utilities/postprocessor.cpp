@@ -55,7 +55,7 @@ namespace MeltPoolDG
     DataOut<dim> data_out;
 
     // do search algorithm only once
-    if (do_export_paraview.size() == 0)
+    if (mask_export_variables.size() == 0)
       {
         if (std::find(pv_data.output_variables.begin(), pv_data.output_variables.end(), "all") !=
             pv_data.output_variables.end())
@@ -81,9 +81,9 @@ namespace MeltPoolDG
                           pv_data.output_variables.end(),
                           entry_name) != pv_data.output_variables.end() ||
                 pv_data.output_variables[0] == "all")
-              do_export_paraview.emplace_back(true);
+              mask_export_variables.emplace_back(true);
             else
-              do_export_paraview.emplace_back(false);
+              mask_export_variables.emplace_back(false);
           }
 
         std::ostringstream message;
@@ -94,13 +94,13 @@ namespace MeltPoolDG
         for (const auto &n : names)
           message << "  * " << n << std::endl;
 
-        AssertThrow(std::count(do_export_paraview.begin(), do_export_paraview.end(), true) ==
+        AssertThrow(std::count(mask_export_variables.begin(), do_export_paraview.end(), true) ==
                         pv_data.output_variables.size() ||
                       pv_data.output_variables[0] == "all",
                     ExcMessage(message.str()));
 
         AssertThrow(
-          std::count(do_export_paraview.begin(), do_export_paraview.end(), true),
+          std::count(mask_export_variables.begin(), do_export_paraview.end(), true),
           ExcMessage(
             "Your requested output variables could not be read. In case you don't want "
             "to produce output set 'paraview do output' to false. Otherwise make sure that you"
@@ -110,7 +110,7 @@ namespace MeltPoolDG
     unsigned short i = 0;
     for (const auto &data : generic_data_out.entries)
       {
-        if (do_export_paraview[i])
+        if (mask_export_variables[i])
           {
             data_out.add_data_vector(*std::get<0>(data),
                                      *std::get<1>(data),
