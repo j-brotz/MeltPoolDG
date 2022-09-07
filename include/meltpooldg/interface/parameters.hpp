@@ -265,18 +265,19 @@ namespace MeltPoolDG
   template <typename number = double>
   struct ParaviewData
   {
-    bool        do_output                = false;
-    std::string filename                 = "solution";
-    std::string directory                = "./";
-    int         write_frequency          = 1;
-    double      write_time_step_size     = 0.0;
-    bool        do_initial_state         = true;
-    bool        print_boundary_id        = false;
-    bool        output_subdomains        = false;
-    int         n_digits_timestep        = 4;
-    int         n_groups                 = 1;
-    int         n_patches                = 0;
-    bool        write_higher_order_cells = true;
+    bool                     do_output                = false;
+    std::string              filename                 = "solution";
+    std::string              directory                = "./";
+    int                      write_frequency          = 1;
+    double                   write_time_step_size     = 0.0;
+    bool                     do_initial_state         = true;
+    bool                     print_boundary_id        = false;
+    bool                     output_subdomains        = false;
+    int                      n_digits_timestep        = 4;
+    int                      n_groups                 = 1;
+    int                      n_patches                = 0;
+    bool                     write_higher_order_cells = true;
+    std::vector<std::string> output_variables         = {"all"};
   };
 
   template <typename number = double>

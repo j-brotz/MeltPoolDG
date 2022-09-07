@@ -54,11 +54,71 @@ namespace MeltPoolDG
   {
     DataOut<dim> data_out;
 
+    // do search algorithm only once
+    if (do_export_paraview.size() == 0)
+      {
+        if (std::find(pv_data.output_variables.begin(), pv_data.output_variables.end(), "all") !=
+            pv_data.output_variables.end())
+          {
+            AssertThrow(
+              !(std::find(pv_data.output_variables.begin(),
+                          pv_data.output_variables.end(),
+                          "all") != pv_data.output_variables.end()) ||
+                pv_data.output_variables.size() == 1,
+              ExcMessage(
+                "The requested output variables are ambiguous. Please specify either 'all' or "
+                "a list of specific output variables separated by a comma, e.g. 'var1,var2'."));
+          }
+
+
+        std::vector<std::string> names;
+        for (const auto &data : generic_data_out.entries)
+          {
+            const auto entry_name = std::get<2>(data)[0];
+            names.emplace_back(entry_name);
+
+            if (std::find(pv_data.output_variables.begin(),
+                          pv_data.output_variables.end(),
+                          entry_name) != pv_data.output_variables.end() ||
+                pv_data.output_variables[0] == "all")
+              do_export_paraview.emplace_back(true);
+            else
+              do_export_paraview.emplace_back(false);
+          }
+
+        std::ostringstream message;
+        message << "One of your requested output variables could not be read. Please make sure "
+                << "that the spelling is correct. Either choose 'all' or a comma separated list "
+                << "of the following names: " << std::endl;
+
+        for (const auto &n : names)
+          message << "  * " << n << std::endl;
+
+        AssertThrow(std::count(do_export_paraview.begin(), do_export_paraview.end(), true) ==
+                        pv_data.output_variables.size() ||
+                      pv_data.output_variables[0] == "all",
+                    ExcMessage(message.str()));
+
+        AssertThrow(
+          std::count(do_export_paraview.begin(), do_export_paraview.end(), true),
+          ExcMessage(
+            "Your requested output variables could not be read. In case you don't want "
+            "to produce output set 'paraview do output' to false. Otherwise make sure that you"
+            " specify your variables in a comma separated list, e.g. 'var1,var2'."));
+      }
+
+    unsigned short i = 0;
     for (const auto &data : generic_data_out.entries)
-      data_out.add_data_vector(*std::get<0>(data),
-                               *std::get<1>(data),
-                               std::get<2>(data),
-                               std::get<3>(data));
+      {
+        if (do_export_paraview[i])
+          {
+            data_out.add_data_vector(*std::get<0>(data),
+                                     *std::get<1>(data),
+                                     std::get<2>(data),
+                                     std::get<3>(data));
+          }
+        ++i;
+      }
 
 
     if (pv_data.output_subdomains)
