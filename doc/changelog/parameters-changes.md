@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-09-07
+- Add parameter to specify request variables for paraview output
+```json
+{
+  "paraview": {
+    "output variables": "var1,var2"
+  }
+}
+```
+
 ## 2022-07-08
 - Add parameter to make the heat operator interpolate the product of density and capacity instead of both separately.
 ```json

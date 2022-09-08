@@ -766,6 +766,9 @@ namespace MeltPoolDG
         "Set this parameter to false to write bi- or trilinear data only. "
         "Set this parameter to true to write higher order cell data. Note: higher order "
         "cell data can only be written for hexaeder meshes and 2 or 3 dimensions.");
+      prm.add_parameter("output variables",
+                        paraview.output_variables,
+                        "Specify variables that you request to output to paraview.");
     }
     prm.leave_subsection();
 

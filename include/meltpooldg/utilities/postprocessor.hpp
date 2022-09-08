@@ -32,6 +32,7 @@ namespace MeltPoolDG
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
+    //@todo: delete
     std::vector<std::vector<double>> volumes;
     TableHandler                     volume_table;
 
@@ -41,6 +42,7 @@ namespace MeltPoolDG
     const Triangulation<dim> &  triangulation;
     const ConditionalOStream    pcout;
     bool                        do_simplex;
+    std::vector<bool>           mask_export_variables;
 
     std::vector<std::pair<double, std::string>> times_and_names;
 
