@@ -25,7 +25,7 @@ namespace MeltPoolDG
   }
 
   template <int dim>
-  const PeriodicBoundaryConditions<dim>::Type &
+  const typename PeriodicBoundaryConditions<dim>::Type &
   PeriodicBoundaryConditions<dim>::get_data() const
   {
     return periodic_bc;

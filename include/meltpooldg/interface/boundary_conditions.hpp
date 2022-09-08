@@ -34,10 +34,8 @@ namespace MeltPoolDG
   template <int dim>
   struct DirichletBoundaryConditions
   {
-  public:
-    using Type = std::map<types::boundary_id, std::shared_ptr<Function<dim>>>;
-
   private:
+    using Type = std::map<types::boundary_id, std::shared_ptr<Function<dim>>>;
     Type bc;
 
   public:
