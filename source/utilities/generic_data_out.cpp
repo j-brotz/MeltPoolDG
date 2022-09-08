@@ -36,7 +36,7 @@ namespace MeltPoolDG
   }
 
   template <int dim>
-  const GenericDataOut<dim>::VectorType &
+  const typename GenericDataOut<dim>::VectorType &
   GenericDataOut<dim>::get_vector(const std::string &name) const
   {
     if (entry_id.find(name) == entry_id.end())
