@@ -57,33 +57,26 @@ namespace MeltPoolDG
     // do search algorithm only once
     if (mask_export_variables.size() == 0)
       {
-        if (std::find(pv_data.output_variables.begin(), pv_data.output_variables.end(), "all") !=
-            pv_data.output_variables.end())
-          {
-            AssertThrow(
-              !(std::find(pv_data.output_variables.begin(),
-                          pv_data.output_variables.end(),
-                          "all") != pv_data.output_variables.end()) ||
-                pv_data.output_variables.size() == 1,
-              ExcMessage(
-                "The requested output variables are ambiguous. Please specify either 'all' or "
-                "a list of specific output variables separated by a comma, e.g. 'var1,var2'."));
-          }
+        AssertThrow(
+          (pv_data.output_variables.size() == 1 && pv_data.output_variables[0] == "all") ||
+            (std::find(pv_data.output_variables.begin(), pv_data.output_variables.end(), "all") ==
+             pv_data.output_variables.end()),
+          ExcMessage(
+            "The requested output variables are ambiguous. Please specify either 'all' or "
+            "a list of specific output variables separated by a comma, e.g. 'var1,var2'."));
 
+        std::vector<std::string> names(generic_data_out.entries.size());
 
-        std::vector<std::string> names;
         for (const auto &data : generic_data_out.entries)
           {
             const auto entry_name = std::get<2>(data)[0];
             names.emplace_back(entry_name);
 
-            if (std::find(pv_data.output_variables.begin(),
-                          pv_data.output_variables.end(),
-                          entry_name) != pv_data.output_variables.end() ||
-                pv_data.output_variables[0] == "all")
-              mask_export_variables.emplace_back(true);
-            else
-              mask_export_variables.emplace_back(false);
+            mask_export_variables.emplace_back(std::find(pv_data.output_variables.begin(),
+                                                         pv_data.output_variables.end(),
+                                                         entry_name) !=
+                                                 pv_data.output_variables.end() ||
+                                               pv_data.output_variables[0] == "all");
           }
 
         std::ostringstream message;
@@ -94,13 +87,14 @@ namespace MeltPoolDG
         for (const auto &n : names)
           message << "  * " << n << std::endl;
 
-        AssertThrow(std::count(mask_export_variables.begin(), do_export_paraview.end(), true) ==
-                        pv_data.output_variables.size() ||
+        AssertThrow((unsigned int)std::count(mask_export_variables.begin(),
+                                             mask_export_variables.end(),
+                                             true) == pv_data.output_variables.size() ||
                       pv_data.output_variables[0] == "all",
                     ExcMessage(message.str()));
 
         AssertThrow(
-          std::count(mask_export_variables.begin(), do_export_paraview.end(), true),
+          std::count(mask_export_variables.begin(), mask_export_variables.end(), true) > 0,
           ExcMessage(
             "Your requested output variables could not be read. In case you don't want "
             "to produce output set 'paraview do output' to false. Otherwise make sure that you"
