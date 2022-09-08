@@ -224,11 +224,11 @@ namespace MeltPoolDG::MeltPool
               {
                 const auto &t = temperature_val.get_value(q_index);
 
-                VectorizedArray<double> m_dot;
+                VectorizedArray<double> m_dot = 0.0;
                 if (evapor_flux_val)
                   m_dot = evapor_flux_val->get_value(q_index);
 
-                VectorizedArray<double> recoil_pressure_coefficient = 0;
+                VectorizedArray<double> recoil_pressure_coefficient = 0.0;
 
                 for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
                   recoil_pressure_coefficient[v] =
@@ -236,7 +236,7 @@ namespace MeltPoolDG::MeltPool
                       recoil_pressure_model->compute_recoil_pressure_coefficient(t[v], m_dot[v]) :
                       recoil_pressure_model->compute_recoil_pressure_coefficient(t[v]);
 
-                VectorizedArray<double> weight(1.0);
+                VectorizedArray<double> weight = 1.0;
 
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
