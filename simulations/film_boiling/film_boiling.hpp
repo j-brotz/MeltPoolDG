@@ -17,8 +17,10 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/post_processing/create_slice.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
+
 
 /**
  * This example is derived from
@@ -285,21 +287,13 @@ namespace MeltPoolDG::Simulation::FilmBoiling
 
           GridTools::rotate(Point<dim>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
 
-          tria_slice.refine_global(this->parameters.base.global_refinements);
+          tria_slice.refine_global(7);
 
-          MappingQ1<2, 3> mapping_slice;
-
-          DataOutResample<3, 2, 3> data_out(tria_slice, mapping_slice);
-          data_out.add_data_vector(generic_data_out.get_dof_handler("level_set"),
-                                   generic_data_out.get_vector("level_set"),
-                                   "level_set");
-          data_out.add_data_vector(generic_data_out.get_dof_handler("temperature"),
-                                   generic_data_out.get_vector("temperature"),
-                                   "temperature");
-          data_out.update_mapping(generic_data_out.get_mapping());
-          data_out.build_patches();
-          data_out.write_vtu_with_pvtu_record(
-            "./", "data_out_01" /*TODO*/, 0, this->mpi_communicator, 1 /*TODO*/, 1);
+          auto slice = PostProcessing::SliceCreator(generic_data_out,
+                                                    tria_slice,
+                                                    {"level_set", "temperature"},
+                                                    this->parameters.paraview);
+          slice.process();
         }
 
       // create iso-surface
