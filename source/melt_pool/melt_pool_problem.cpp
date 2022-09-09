@@ -236,6 +236,7 @@ namespace MeltPoolDG::MeltPool
           if (base_in->parameters.amr.do_amr)
             refine_mesh(base_in);
         }
+        scratch_data->get_timer().print_summary();
       }
     Journal::print_end(scratch_data->get_pcout());
 
