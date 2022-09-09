@@ -10,12 +10,11 @@ namespace MeltPoolDG
   {
     using namespace dealii;
 
-    template <int dim>
     class PostProcessorBase
     {
-      public:
-        virtual void process()=0;
+    public:
+      virtual void
+      process(const unsigned int n_time_step) = 0;
     };
-  }
-}
-
+  } // namespace PostProcessing
+} // namespace MeltPoolDG

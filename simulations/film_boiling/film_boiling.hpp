@@ -289,11 +289,12 @@ namespace MeltPoolDG::Simulation::FilmBoiling
 
           tria_slice.refine_global(7);
 
-          auto slice = PostProcessing::SliceCreator(generic_data_out,
-                                                    tria_slice,
-                                                    {"level_set", "temperature"},
-                                                    this->parameters.paraview);
-          slice.process();
+          auto slice = PostProcessing::SliceCreator<3>(generic_data_out,
+                                                       tria_slice,
+                                                       {"level_set", "temperature"},
+                                                       this->parameters.paraview);
+          slice.process(n_written_time_step);
+          ++n_written_time_step;
         }
 
       // create iso-surface
@@ -320,10 +321,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     }
 
   private:
-    double       lambda0 = 0.0;
-    double       x_max;
-    double       y_max;
-    const double x_min;
-    const double y_min = 0.0;
+    double               lambda0 = 0.0;
+    double               x_max;
+    double               y_max;
+    const double         x_min;
+    const double         y_min               = 0.0;
+    mutable unsigned int n_written_time_step = 0;
   };
 } // namespace MeltPoolDG::Simulation::FilmBoiling
