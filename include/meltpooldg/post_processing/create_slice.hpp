@@ -7,7 +7,7 @@
 #include <meltpooldg/post_processing/post_processor_base.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
 
-namespace MeltPoolDG::PostProcessing
+namespace MeltPoolDG::PostProcessingTools
 {
   template <int dim>
   class SliceCreator : public PostProcessorBase
@@ -63,7 +63,7 @@ namespace MeltPoolDG::PostProcessing
 
           // write a pvd file relating the pvtu-file with a simulation time
           if (Utilities::MPI::this_mpi_process(tria_slice.get_communicator()) == 0 &&
-              generic_data_out.get_time() >= 0.0)
+              generic_data_out.get_time() >= 0.0) // @todo: why >= 0 necessary (?)
             {
               times_and_names.emplace_back(generic_data_out.get_time(), pvtu_filename);
               std::ofstream pvd_output(pv_data.directory + "/" + pv_data.filename + "_slice.pvd");
@@ -72,4 +72,4 @@ namespace MeltPoolDG::PostProcessing
         }
     }
   };
-} // namespace MeltPoolDG::PostProcessing
+} // namespace MeltPoolDG::PostProcessingTools

@@ -6,7 +6,7 @@
 
 namespace MeltPoolDG
 {
-  namespace PostProcessing
+  namespace PostProcessingTools
   {
     using namespace dealii;
 
@@ -16,5 +16,5 @@ namespace MeltPoolDG
       virtual void
       process(const unsigned int n_time_step) = 0;
     };
-  } // namespace PostProcessing
+  } // namespace PostProcessingTools
 } // namespace MeltPoolDG
