@@ -207,11 +207,6 @@ namespace MeltPoolDG
             }
           else
             {
-              std::vector<unsigned int> subdivisions(
-                dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
-              subdivisions[dim - 1] *= 2;
-              for (int d = 0; d < dim; d++)
-                subdivisions[d] *= cell_repetitions[d];
               GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
                                                         cell_repetitions,
                                                         bottom_left,
@@ -480,38 +475,6 @@ namespace MeltPoolDG
                 T_initial_bottom, T_initial_top, domain_y_min, domain_y_max),
               "heat_transfer");
         }
-    void
-    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
-    {
-      if (this->parameters.paraview.do_output == false)
-        return;
-
-      // create slice
-      if constexpr (dim == 3)
-        {
-          parallel::distributed::Triangulation<2, 3> tria_slice(this->mpi_communicator);
-
-          const Point<2> bottom_left(domain_x_min, domain_y_min);
-          const Point<2> top_right(domain_x_max, domain_y_max);
-
-          std::vector<unsigned int> subdivisions{1, 3};
-
-          GridGenerator::subdivided_hyper_rectangle(tria_slice,
-                                                    subdivisions,
-                                                    bottom_left,
-                                                    top_right);
-
-          GridTools::rotate(Point<dim>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
-
-          tria_slice.refine_global(6);
-
-          auto slice = PostProcessingTools::SliceCreator<3>(generic_data_out,
-                                                       tria_slice,
-                                                       {"level_set", "heaviside", "temperature", "density", "distance"},
-                                                       this->parameters.paraview);
-          slice.process(1);
-        }
-    }
       };
 
     } // namespace RecoilPressure
