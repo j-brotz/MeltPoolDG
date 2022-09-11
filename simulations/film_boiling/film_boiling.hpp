@@ -17,7 +17,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/post_processing/create_slice.hpp>
+#include <meltpooldg/post_processing/slice.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -289,10 +289,10 @@ namespace MeltPoolDG::Simulation::FilmBoiling
 
           tria_slice.refine_global(7);
 
-          auto slice = PostProcessing::SliceCreator<3>(generic_data_out,
-                                                       tria_slice,
-                                                       {"level_set", "temperature"},
-                                                       this->parameters.paraview);
+          auto slice = PostProcessingTools::SliceCreator<3>(generic_data_out,
+                                                            tria_slice,
+                                                            {"level_set", "temperature"},
+                                                            this->parameters.paraview);
           slice.process(n_written_time_step);
           ++n_written_time_step;
         }
