@@ -144,6 +144,39 @@ namespace MeltPoolDG
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
         }
+    void
+    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
+    {
+      if (this->parameters.paraview.do_output == false)
+        return;
+
+      // create slice
+      if constexpr (dim == 3)
+        {
+          parallel::distributed::Triangulation<2, 3> tria_slice(this->mpi_communicator);
+
+          const Point<2> bottom_left(0,0);
+          const Point<2> top_right(1,2);
+
+          std::vector<unsigned int> subdivisions{1, 3};
+
+          GridGenerator::subdivided_hyper_rectangle(tria_slice,
+                                                    subdivisions,
+                                                    bottom_left,
+                                                    top_right);
+
+          GridTools::rotate(Point<dim>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
+          GridTools::shift(Point<dim>::unit_vector(1)*0.5, tria_slice);
+
+          tria_slice.refine_global(5);
+
+          auto slice = PostProcessingTools::SliceCreator<3>(generic_data_out,
+                                                       tria_slice,
+                                                       {"level_set", "heaviside", "density", "distance"},
+                                                       this->parameters.paraview);
+          slice.process(1);
+        }
+    };
       };
 
     } // namespace RisingBubble

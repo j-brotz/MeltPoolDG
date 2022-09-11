@@ -136,7 +136,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       else
         return T_max - (T_max - T_min) / y_interface_disturbed * p[dim - 1];
     }
-    double T_max, T_min, y_interface, lambda0;
+    const double T_max, T_min, y_interface, lambda0;
   };
 
   /**
@@ -156,6 +156,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       , x_max(lambda0 / 2.)
       , y_max(lambda0)
       , x_min(-x_max)
+      , tria_slice(mpi_communicator)
     {}
 
     void
@@ -199,6 +200,19 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       else
         GridGenerator::subdivided_hyper_rectangle(
           *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
+
+      // create slice for postprocessing
+      if constexpr (dim == 3)
+        {
+          GridGenerator::subdivided_hyper_rectangle(tria_slice,
+                                                    {1, 3} /*subdivisions*/,
+                                                    Point<2>(x_min, y_min),
+                                                    Point<2>(x_max, y_max));
+
+          GridTools::rotate(Point<3>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
+
+          tria_slice.refine_global(4);
+        }
     }
 
     void
@@ -273,27 +287,18 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       // create slice
       if constexpr (dim == 3)
         {
-          parallel::distributed::Triangulation<2, 3> tria_slice(this->mpi_communicator);
+          if (!slice)
+            {
+              const std::vector<std::string> req_vars = {"level_set", "temperature", "velocity"};
 
-          const Point<2> bottom_left(x_min, y_min);
-          const Point<2> top_right(x_max, y_max);
+              slice = std::make_shared<PostProcessingTools::SliceCreator<3>>(
+                generic_data_out, tria_slice, req_vars, this->parameters.paraview);
+            }
+          // @todo: We need to reinit, since generic_data_out is currently created
+          // for every time step.
+          slice->reinit(generic_data_out);
 
-          std::vector<unsigned int> subdivisions{1, 3};
-
-          GridGenerator::subdivided_hyper_rectangle(tria_slice,
-                                                    subdivisions,
-                                                    bottom_left,
-                                                    top_right);
-
-          GridTools::rotate(Point<dim>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
-
-          tria_slice.refine_global(7);
-
-          auto slice = PostProcessingTools::SliceCreator<3>(generic_data_out,
-                                                            tria_slice,
-                                                            {"level_set", "temperature"},
-                                                            this->parameters.paraview);
-          slice.process(n_written_time_step);
+          slice->process(n_written_time_step);
           ++n_written_time_step;
         }
 
@@ -321,11 +326,14 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     }
 
   private:
-    double               lambda0 = 0.0;
-    double               x_max;
-    double               y_max;
-    const double         x_min;
-    const double         y_min               = 0.0;
-    mutable unsigned int n_written_time_step = 0;
+    const double                               lambda0 = 0.0;
+    const double                               x_max;
+    const double                               y_max;
+    const double                               x_min;
+    const double                               y_min               = 0.0;
+    mutable unsigned int                       n_written_time_step = 0;
+    parallel::distributed::Triangulation<2, 3> tria_slice;
+
+    mutable std::shared_ptr<PostProcessingTools::SliceCreator<3>> slice;
   };
 } // namespace MeltPoolDG::Simulation::FilmBoiling
