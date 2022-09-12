@@ -25,6 +25,7 @@ namespace MeltPoolDG::PostProcessingTools
 
     // Collect file name and corresponding time step for the pvd-file
     std::vector<std::pair<double, std::string>> times_and_names;
+    std::vector<unsigned int>                   idx_req_vars;
 
   public:
     /**
@@ -38,6 +39,7 @@ namespace MeltPoolDG::PostProcessingTools
       , tria_slice(tria_slice)
       , request_variables(request_variables)
       , pv_data(pv_data)
+      , idx_req_vars(generic_data_out.get_indices_data_request(request_variables))
     {}
 
     /**
@@ -48,6 +50,7 @@ namespace MeltPoolDG::PostProcessingTools
     reinit(const GenericDataOut<dim> &generic_data_out_in)
     {
       generic_data_out = &generic_data_out_in;
+      idx_req_vars     = generic_data_out->get_indices_data_request(request_variables);
     }
 
     /**
@@ -67,32 +70,16 @@ namespace MeltPoolDG::PostProcessingTools
           MappingQ1<dim - 1, dim>            mapping_slice;
           DataOutResample<dim, dim - 1, dim> data_out(tria_slice, mapping_slice);
 
-          if (request_variables[0] == "all" && request_variables.size() == 1)
+          for (const auto &i : idx_req_vars)
             {
-              for (const auto &data : generic_data_out->entries)
-                {
-                  // strip components of vector
-                  // @todo: problem with dim components for dim-1 slice (vectors get messed up)
-                  data_out.add_data_vector(*std::get<0>(data),
-                                           *std::get<1>(data),
-                                           std::get<2>(data),
-                                           std::get<3>(data));
-                }
+              const auto &data = generic_data_out->entries[i];
+
+              data_out.add_data_vector(*std::get<0>(data),
+                                       *std::get<1>(data),
+                                       std::get<2>(data),
+                                       std::get<3>(data));
             }
-          else if (request_variables.size() > 1)
-            {
-              // add vectors of requested variables from GenericDataOut
-              for (const auto &r : request_variables)
-                {
-                  //@todo: vectorial data is currently written componentwise
-                  //       problem with dim components for dim-1 slice (vectors get messed up)
-                  data_out.add_data_vector(generic_data_out->get_dof_handler(r),
-                                           generic_data_out->get_vector(r),
-                                           r);
-                }
-            }
-          else
-            AssertThrow(false, ExcMessage("SliceCreator: error in request variables."));
+
 
           data_out.update_mapping(generic_data_out->get_mapping());
           data_out.build_patches();

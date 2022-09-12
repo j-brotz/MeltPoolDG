@@ -49,6 +49,9 @@ namespace MeltPoolDG
     const double &
     get_time() const;
 
+    std::vector<unsigned int>
+    get_indices_data_request(const std::vector<std::string> req_var) const;
+
   private:
     std::map<std::string, unsigned int> entry_id;
     const Mapping<dim> &                mapping;

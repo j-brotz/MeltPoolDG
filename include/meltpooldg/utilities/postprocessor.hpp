@@ -42,7 +42,7 @@ namespace MeltPoolDG
     const Triangulation<dim> &  triangulation;
     const ConditionalOStream    pcout;
     bool                        do_simplex;
-    std::vector<bool>           mask_export_variables;
+    std::vector<unsigned int>   idx_req_vars;
 
     std::vector<std::pair<double, std::string>> times_and_names;
 
