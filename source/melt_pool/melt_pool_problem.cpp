@@ -23,7 +23,7 @@ namespace MeltPoolDG::MeltPool
     while (!time_iterator.is_finished())
       {
         const auto dt = time_iterator.get_next_time_increment();
-        const auto n  = time_iterator.get_current_time_step_number();
+        const int  n  = time_iterator.get_current_time_step_number();
 
         time_iterator.print_me(scratch_data->get_pcout());
 
@@ -236,9 +236,14 @@ namespace MeltPoolDG::MeltPool
           if (base_in->parameters.amr.do_amr)
             refine_mesh(base_in);
         }
+
+        //@todo: adapt in case of adaptive time stepping
+        if (!(n % base_in->parameters.profiling.write_frequency))
+          scratch_data->get_timer().print_wall_time_statistics(MPI_COMM_WORLD);
       }
     Journal::print_end(scratch_data->get_pcout());
 
+    //... always print timing statistics if verbosity level >= 1
     scratch_data->get_timer().print_wall_time_statistics(MPI_COMM_WORLD);
   }
 
