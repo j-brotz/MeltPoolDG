@@ -31,7 +31,7 @@
 | || curvature ||L2 = 1.56027641908e+01                                                  curvature |
 | current laser position: 0.0003 0                                                           laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 4.90128e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 4.90014e-01                newton_raphson_solver |
 |  total mass = 0.000495732                                                      melt_pool_problem |
 
 Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06). 
