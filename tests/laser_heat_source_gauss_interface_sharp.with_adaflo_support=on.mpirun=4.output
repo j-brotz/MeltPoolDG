@@ -1,0 +1,42 @@
+| current laser position: 0.0003 0                                                           laser |
+| current laser intensity: 1                                                                 laser |
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 9.12401787651e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
+| || normal_1 ||L2 = 9.12401787651e+00                                               normal_vector |
+| || curvature ||L2 = 1.56027650639e+01                                                  curvature |
+|  total mass = 0.000495732                                                      melt_pool_problem |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 4.8564760450e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 9.84798216534e-16                                               normal_vector |
+| || normal_1 ||L2 = 9.12401787651e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 1.5625e-06                                                                 reinitialization |
+| || delta phi ||L2 = 4.809511418797343e-07                                       reinitialization |
+|  τ = 3.125e-06                                                                  reinitialization |
+| || delta phi ||L2 = 4.092333450526987e-07                                       reinitialization |
+|  τ = 4.6875e-06                                                                 reinitialization |
+| || delta phi ||L2 = 3.633316710444736e-07                                       reinitialization |
+|  τ = 6.25e-06                                                                   reinitialization |
+| || delta phi ||L2 = 3.120214860729013e-07                                       reinitialization |
+|  τ = 7.8125e-06                                                                 reinitialization |
+| || delta phi ||L2 = 2.566351675637629e-07                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 2.80689197794e-15                                               normal_vector |
+| || normal_1 ||L2 = 9.18906606072e+00                                               normal_vector |
+| || curvature ||L2 = 1.56027641908e+01                                                  curvature |
+| current laser position: 0.0003 0                                                           laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 4.90128e-01                newton_raphson_solver |
+|  total mass = 0.000495732                                                      melt_pool_problem |
+
+Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06). 
+| || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
+| || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+
