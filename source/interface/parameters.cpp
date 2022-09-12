@@ -78,7 +78,7 @@ namespace MeltPoolDG
             "time step size for writing paraview files must be equal or larger than the simulation "
             "time step size."));
         paraview.write_frequency =
-          (int)paraview.write_time_step_size /
+          paraview.write_time_step_size /
           time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
     /*
