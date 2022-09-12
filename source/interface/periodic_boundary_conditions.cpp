@@ -1,5 +1,7 @@
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 
+#include <tuple>
+
 namespace MeltPoolDG
 {
   template <int dim>
@@ -21,7 +23,7 @@ namespace MeltPoolDG
                                "must be unique."));
       }
 
-    periodic_bc.push_back(std::make_tuple(id_in, id_out, direction));
+    periodic_bc.emplace_back(id_in, id_out, direction);
   }
 
   template <int dim>

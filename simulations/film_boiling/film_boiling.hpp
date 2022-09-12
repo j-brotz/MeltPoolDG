@@ -52,7 +52,15 @@ namespace dealii::GridGenerator
                                                                n_subdivisions,
                                                                tolerance);
 
+    const bool vector_is_ghosted = ls_vector.has_ghost_elements();
+
+    if (vector_is_ghosted == false)
+      ls_vector.update_ghost_values();
+
     mc.process(background_dof_handler, ls_vector, iso_level, vertices, cells);
+
+    if (vector_is_ghosted == false)
+      ls_vector.zero_out_ghost_values();
 
     std::vector<unsigned int> considered_vertices;
 
