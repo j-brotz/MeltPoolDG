@@ -583,6 +583,8 @@ namespace MeltPoolDG::MeltPool
 
         /*
          * register evaporative mass flux to compute the heat sink
+         *
+         * TODO: consider sharp model
          */
         if (problem_specific_parameters.do_evaporative_heat_flux)
           heat_operation->register_evaporative_mass_flux(

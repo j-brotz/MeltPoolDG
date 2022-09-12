@@ -231,6 +231,16 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
+  EvaporationOperation<dim>::compute_heat_loss_term(VectorType &heat_rhs, bool zero_out)
+  {
+    if (zero_out)
+      scratch_data->initialize_dof_vector(heat_rhs, temp_dof_idx);
+
+    evapor_source_terms_operator->compute_heat_source_term(heat_rhs);
+  }
+
+  template <int dim>
+  void
   EvaporationOperation<dim>::reinit()
   {
     scratch_data->initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);

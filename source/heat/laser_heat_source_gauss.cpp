@@ -118,7 +118,7 @@ namespace MeltPoolDG::Heat
     const unsigned int      normal_dof_idx) const
   {
     if (zero_out)
-      scratch_data.initialize_dof_vector(heat_source_vector, temp_dof_idx);
+      heat_source_vector = 0.0;
 
     level_set_heaviside.update_ghost_values();
     if (normal_vector)
@@ -482,21 +482,21 @@ namespace MeltPoolDG::Heat
         if (normal_vector)
           normal_vector->zero_out_ghost_values();
 
-#if 0
-          {
-            DataOutBase::VtkFlags flags;
-            flags.write_higher_order_cells = true;
+#if TRUE
+        {
+          DataOutBase::VtkFlags flags;
+          flags.write_higher_order_cells = true;
 
-            DataOut<dim> data_out;
-            data_out.set_flags(flags);
+          DataOut<dim> data_out;
+          data_out.set_flags(flags);
 
-            data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
-                                     heat_rhs,
-                                     "heat_source");
-            data_out.build_patches(scratch_data.get_mapping());
-            std::string output = "heat_source.vtu";
-            data_out.write_vtu_in_parallel(output, scratch_data.get_mpi_comm());
-          }
+          data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                                   heat_rhs,
+                                   "heat_source");
+          data_out.build_patches(scratch_data.get_mapping());
+          std::string output = "heat_source.vtu";
+          data_out.write_vtu_in_parallel(output, scratch_data.get_mpi_comm());
+        }
 #endif
       }
     else

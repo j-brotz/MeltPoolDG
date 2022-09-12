@@ -80,8 +80,9 @@ namespace MeltPoolDG::Heat
     const BlockVectorType * /*normal_vector*/,
     const unsigned int /*normal_dof_idx*/) const
   {
-    throw ExcMessage(
-      "The Gurasov laser heat source model is not suited for surface impact! Abort...");
+    AssertThrow(
+      false,
+      ExcMessage("The Gurasov laser heat source model is not suited for surface impact! Abort..."));
   }
 
   template class LaserHeatSourceGusarov<1>;

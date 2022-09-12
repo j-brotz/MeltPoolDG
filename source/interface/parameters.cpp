@@ -551,7 +551,12 @@ namespace MeltPoolDG
       prm.add_parameter(
         "laser impact type",
         laser.impact_type,
-        "Laser impact model. volumetric: volumetric heat source | surface: surface heat source at two-phase interface.");
+        "Laser impact model. "
+        "volumetric: volumetric heat source; "
+        "interface: surface heat source at the two-phase interface modelled as a "
+        "continuum surface force within the interface region; "
+        "interface sharp: impact of surface heat source at the two-phase interface modelled as a "
+        "a sharp surface force (evaluation of a surface integral);");
       prm.add_parameter("laser gauss laser beam radius",
                         laser.gauss.laser_beam_radius,
                         "Laser beam radius.");

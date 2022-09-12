@@ -135,6 +135,9 @@ namespace MeltPoolDG::Evaporation
                                      bool               zero_out);
 
     void
+    compute_heat_loss_term(VectorType &heat_rhs, bool zero_out);
+
+    void
     reinit();
 
     void
