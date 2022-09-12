@@ -55,7 +55,7 @@ namespace MeltPoolDG::Heat
      */
     virtual void
     compute_interfacial_heat_source_sharp(
-      VectorType & /*heat_source_vector*/,
+      VectorType & /*heat_rhs*/,
       const ScratchData<dim> & /*scratch_data*/,
       const unsigned int /*temp_dof_idx*/,
       const double /*laser_power*/,

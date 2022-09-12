@@ -354,7 +354,7 @@ namespace MeltPoolDG::Heat
     const BlockVectorType * normal_vector,
     const unsigned int      normal_dof_idx) const
   {
-    if constexpr (dim > 1) // @todo: otherwise i am getting a compiling error atm
+    if constexpr (dim > 1) // @todo: otherwise a compile error occurs
       {
         if (zero_out)
           scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);
@@ -365,14 +365,19 @@ namespace MeltPoolDG::Heat
 
         FEPointEvaluation<1, dim> ls(scratch_data.get_mapping(),
                                      scratch_data.get_fe(ls_dof_idx),
-                                     update_values | update_gradients);
+                                     normal_vector ? update_values :
+                                                     update_values | update_gradients);
 
         std::unique_ptr<FEPointEvaluation<dim, dim>> normal_vals;
+        std::unique_ptr<FESystem<dim>>               fe_normal;
+
         if (normal_vector)
-          normal_vals =
-            std::make_unique<FEPointEvaluation<dim, dim>>(scratch_data.get_mapping(),
-                                                          scratch_data.get_fe(normal_dof_idx),
-                                                          update_values);
+          {
+            fe_normal   = std::make_unique<FESystem<dim>>(scratch_data.get_fe(normal_dof_idx), dim);
+            normal_vals = std::make_unique<FEPointEvaluation<dim, dim>>(scratch_data.get_mapping(),
+                                                                        *fe_normal,
+                                                                        update_values);
+          }
 
         FEPointEvaluation<1, dim> heat_source_vals(scratch_data.get_mapping(),
                                                    scratch_data.get_fe(temp_dof_idx),
@@ -407,15 +412,15 @@ namespace MeltPoolDG::Heat
                               local_dof_indices.begin(),
                               buffer.begin(),
                               buffer.end());
-            ls.evaluate(buffer, EvaluationFlags::values | EvaluationFlags::gradients);
+            ls.evaluate(buffer,
+                        normal_vector ? EvaluationFlags::values :
+                                        EvaluationFlags::values | EvaluationFlags::gradients);
 
             // gather_evaluate unit normal vector for the points at the interface
             if (normal_vals && normal_vector)
               {
                 normal_vals->reinit(cell, unit_points);
-
-                buffer_dim.resize(
-                  scratch_data.get_fe(normal_dof_idx).n_dofs_per_cell()); // @todo: times dim
+                buffer_dim.resize(fe_normal->n_dofs_per_cell()); // @todo: times dim
 
                 for (int d = 0; d < dim; ++d)
                   {
@@ -424,8 +429,7 @@ namespace MeltPoolDG::Heat
                     for (unsigned int c = 0;
                          c < scratch_data.get_fe(normal_dof_idx).n_dofs_per_cell();
                          ++c)
-                      buffer_dim[scratch_data.get_fe(normal_dof_idx)
-                                   .component_to_system_index(d, c)] = buffer[c];
+                      buffer_dim[fe_normal->component_to_system_index(d, c)] = buffer[c];
                   }
 
                 // normalize
@@ -433,32 +437,26 @@ namespace MeltPoolDG::Heat
                   {
                     double norm = 0.0;
                     for (int d = 0; d < dim; ++d)
-                      norm += std::pow(buffer_dim[scratch_data.get_fe(normal_dof_idx)
-                                                    .component_to_system_index(d, c)],
-                                       2);
+                      norm += std::pow(buffer_dim[fe_normal->component_to_system_index(d, c)], 2);
 
                     norm = std::max(1e-6, std::sqrt(norm));
 
                     for (int d = 0; d < dim; ++d)
-                      buffer_dim[scratch_data.get_fe(normal_dof_idx)
-                                   .component_to_system_index(d, c)] /= norm;
+                      buffer_dim[fe_normal->component_to_system_index(d, c)] /= norm;
                   }
-
                 normal_vals->evaluate(make_array_view(buffer_dim), EvaluationFlags::values);
               }
 
             for (unsigned int q = 0; q < n_points; ++q)
               {
-                const auto grad_ls_at_q      = ls.get_gradient(q);
-                const auto norm_grad_ls_at_q = std::max(grad_ls_at_q.norm(), 1e-6);
-                const auto ls_at_q           = ls.get_value(q);
+                // If a normal vector field is given, use it to compute the unit normal to the
+                // interface. Otherwise use the gradient of the level set field.
+                const auto unit_normal =
+                  normal_vector ? normal_vals->get_value(q) :
+                                  ls.get_gradient(q) / std::max(ls.get_gradient(q).norm(), 1e-6);
 
-                // TODO: Problem with normal_vals->get_value(q)
-                // const auto unit_normal =
-                // normal_vector ? normal_vals->get_value(q) : grad_ls_at_q / norm_grad_ls_at_q;
-                const auto unit_normal = grad_ls_at_q / norm_grad_ls_at_q;
-
-                const auto result = local_compute_interfacial_heat_source_sharp(points_real[q],
+                const auto ls_at_q = ls.get_value(q);
+                const auto result  = local_compute_interfacial_heat_source_sharp(points_real[q],
                                                                                 laser_position,
                                                                                 laser_power,
                                                                                 unit_normal,
@@ -483,11 +481,9 @@ namespace MeltPoolDG::Heat
         level_set_heaviside.zero_out_ghost_values();
         if (normal_vector)
           normal_vector->zero_out_ghost_values();
-        if (true)
+
+#if 0
           {
-            /*
-             * add output vectors
-             */
             DataOutBase::VtkFlags flags;
             flags.write_higher_order_cells = true;
 
@@ -496,11 +492,12 @@ namespace MeltPoolDG::Heat
 
             data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
                                      heat_rhs,
-                                     "heat_sourece");
+                                     "heat_source");
             data_out.build_patches(scratch_data.get_mapping());
             std::string output = "heat_source.vtu";
             data_out.write_vtu_in_parallel(output, scratch_data.get_mpi_comm());
           }
+#endif
       }
     else
       {

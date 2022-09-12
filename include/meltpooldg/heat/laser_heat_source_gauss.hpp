@@ -59,8 +59,39 @@ namespace MeltPoolDG::Heat
                                     const BlockVectorType * normal_vector  = nullptr,
                                     const unsigned int      normal_dof_idx = 0) const final;
 
+    /**
+     * Compute a DoF vector and assemble it into @p heat_rhs, considering a Gaussian laser heat
+     * source (see class description) based on a surface integral evaluation
+     *
+     *   /     \    (Ω)  /   (Γ) \    (Γ)
+     *  | w, s | = N   s |  x     | JxW
+     *   \     /    a    \   q   /     q
+     *          Γ
+     * with shape functions N_a^(Ω) (from the background mesh), the laser heat source function s(x)
+     * quadrature points (from the interface mesh) x_q^(Γ) and integration weights JxW_q^(Γ)
+     * (from the interface mesh). The geometric quantities for cell cut by the interface (Φ=0)
+     * are visualized as follows
+     *
+     * +-----o-------------+
+     * |    /              |
+     * |   *               |
+     * |  / (Γ)            |
+     * | * x          Ω    |
+     * |/   q              |
+     * o                   |
+     * +-------------------+
+     *
+     * whereas Ω denotes the background mesh and Γ the interface. The parameters comprise
+     * @p scratch_data (DoF handlers, constraints, finite element info), the DoF index
+     * of the temperature field @p temp_dof_idx, parameters for the heat source evaluation,
+     * @p laser_power and @p laser_position, level-set related quantities @p level_set_heaviside
+     * and @p ls_dof_idx. If @p zero_out is set, @p heat_rhs will be zeroed out befor the
+     * operation. If a DoF vector for the @p normal_vector and a corresponding index
+     * @p normal_dof_idx is given, the latter will be used for computing the laser heat
+     * source.
+     */
     void
-    compute_interfacial_heat_source_sharp(VectorType &            heat_source_vector,
+    compute_interfacial_heat_source_sharp(VectorType &            heat_rhs,
                                           const ScratchData<dim> &scratch_data,
                                           const unsigned int      temp_dof_idx,
                                           const double            laser_power,
