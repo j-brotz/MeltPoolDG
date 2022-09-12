@@ -67,14 +67,33 @@ namespace MeltPoolDG::PostProcessingTools
           MappingQ1<dim - 1, dim>            mapping_slice;
           DataOutResample<dim, dim - 1, dim> data_out(tria_slice, mapping_slice);
 
-          // add vectors of requested variables from GenericDataOut
-          for (const auto &r : request_variables)
+          if (request_variables[0] == "all" && request_variables.size() == 1)
             {
-              //@todo: vectorial data is currently written componentwise
-              data_out.add_data_vector(generic_data_out->get_dof_handler(r),
-                                       generic_data_out->get_vector(r),
-                                       r);
+              for (const auto &data : generic_data_out->entries)
+                {
+                  // strip components of vector
+                  // @todo: problem with dim components for dim-1 slice (vectors get messed up)
+                  data_out.add_data_vector(*std::get<0>(data),
+                                           *std::get<1>(data),
+                                           std::get<2>(data),
+                                           std::get<3>(data));
+                }
             }
+          else if (request_variables.size() > 1)
+            {
+              // add vectors of requested variables from GenericDataOut
+              for (const auto &r : request_variables)
+                {
+                  //@todo: vectorial data is currently written componentwise
+                  //       problem with dim components for dim-1 slice (vectors get messed up)
+                  data_out.add_data_vector(generic_data_out->get_dof_handler(r),
+                                           generic_data_out->get_vector(r),
+                                           r);
+                }
+            }
+          else
+            AssertThrow(false, ExcMessage("SliceCreator: error in request variables."));
+
           data_out.update_mapping(generic_data_out->get_mapping());
           data_out.build_patches();
 
