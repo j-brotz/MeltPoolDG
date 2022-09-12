@@ -502,6 +502,16 @@ namespace MeltPoolDG::Heat
     else
       {
         Assert(false, ExcNotImplemented());
+        (void)heat_rhs;
+        (void)scratch_data;
+        (void)temp_dof_idx;
+        (void)laser_power;
+        (void)laser_position;
+        (void)level_set_heaviside;
+        (void)ls_dof_idx;
+        (void)zero_out;
+        (void)normal_vector;
+        (void)normal_dof_idx;
       }
   }
 
