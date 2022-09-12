@@ -1,6 +1,17 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-09-12
+- Add parameters to control write frequency of profiling output 
+```json
+{
+  "profiling": {
+    "write frequency": "",
+    "write time step size": "",
+  }
+}
+```
+
 ## 2022-09-07
 - Add parameter to specify request variables for paraview output
 ```json

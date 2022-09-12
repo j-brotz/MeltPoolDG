@@ -77,7 +77,23 @@ namespace MeltPoolDG
             "The "
             "time step size for writing paraview files must be equal or larger than the simulation "
             "time step size."));
-        paraview.write_frequency = paraview.write_time_step_size / time_stepping.time_step_size;
+        paraview.write_frequency =
+          (int)paraview.write_time_step_size /
+          time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
+      }
+    /*
+     * calculate the profiling output frequency if a time step size
+     */
+    if (profiling.write_time_step_size > 0.0)
+      {
+        AssertThrow(profiling.write_time_step_size >= time_stepping.time_step_size,
+                    ExcMessage(
+                      "The "
+                      "time step size for profiling must be equal or larger than the simulation "
+                      "time step size."));
+        profiling.write_frequency =
+          profiling.write_time_step_size /
+          time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
 
     /*
@@ -771,7 +787,20 @@ namespace MeltPoolDG
                         "Specify variables that you request to output to paraview.");
     }
     prm.leave_subsection();
-
+    /*
+     *   profiling
+     */
+    prm.enter_subsection("profiling");
+    {
+      prm.add_parameter("write frequency",
+                        profiling.write_frequency,
+                        "Every n timestep that should be written");
+      prm.add_parameter("write time step size",
+                        profiling.write_time_step_size,
+                        "Write profiling output every given time step size. If this parameter is "
+                        "set, the specified parameter for write frequency is overwritten.");
+    }
+    prm.leave_subsection();
     /*
      *   output
      */
