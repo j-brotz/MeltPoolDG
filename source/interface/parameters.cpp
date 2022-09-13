@@ -704,8 +704,11 @@ namespace MeltPoolDG
       prm.add_parameter("evapor formulation source term continuity",
                         evapor.formulation_source_term_continuity,
                         "Select how the additional source term due to evaporation in the"
-                        " continuity equation is computed.",
-                        Patterns::Selection("diffuse|sharp"));
+                        " continuity equation is computed.");
+      prm.add_parameter("evapor formulation source term heat",
+                        evapor.formulation_source_term_heat,
+                        "Select how the additional source term due to evaporation in the"
+                        " heat equation is computed.");
       // @todo must be modified
       prm.add_parameter(
         "evapor formulation evaporative mass flux over interface",

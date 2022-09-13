@@ -500,7 +500,7 @@ namespace MeltPoolDG::Heat
       }
     else
       {
-        Assert(false, ExcNotImplemented());
+        AssertThrow(false, ExcNotImplemented());
         (void)heat_rhs;
         (void)scratch_data;
         (void)temp_dof_idx;

@@ -72,6 +72,10 @@ namespace MeltPoolDG::MeltPool
             // ... solve level-set problem with the given advection field
             scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
             level_set_operation->solve(interface_velocity);
+
+            if (evaporation_operation && base_in->parameters.evapor.formulation_source_term_heat ==
+                                           InterfaceForceType::sharp)
+              level_set_operation->update_surface_mesh();
           }
 
         /******************************************************************************************
@@ -583,18 +587,23 @@ namespace MeltPoolDG::MeltPool
 
         /*
          * register evaporative mass flux to compute the heat sink
-         *
-         * TODO: consider sharp model
          */
         if (problem_specific_parameters.do_evaporative_heat_flux)
-          heat_operation->register_evaporative_mass_flux(
-            &evaporation_operation->get_evaporative_mass_flux(),
-            evapor_mass_flux_dof_idx,
-            base_in->parameters.material.latent_heat_of_evaporation,
-            problem_specific_parameters.do_recoil_pressure &&
-              !problem_specific_parameters
-                 .do_evaporative_velocity_jump /*do phenomenological recoil pressure model*/); // @todo:
-                                                                                               // clean-up
+          {
+            heat_operation->register_evaporative_mass_flux(
+              &evaporation_operation->get_evaporative_mass_flux(),
+              evapor_mass_flux_dof_idx,
+              base_in->parameters.material.latent_heat_of_evaporation,
+              problem_specific_parameters.do_recoil_pressure &&
+                !problem_specific_parameters
+                   .do_evaporative_velocity_jump /*do phenomenological recoil pressure model*/); // @todo:
+                                                                                                 // clean-up
+            if (base_in->parameters.evapor.formulation_source_term_heat ==
+                InterfaceForceType::sharp)
+              {
+                heat_operation->register_surface_mesh(level_set_operation->get_surface_mesh_info());
+              }
+          }
       }
     /*
      *    initialize the melt pool operation class

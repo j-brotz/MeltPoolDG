@@ -183,6 +183,13 @@ namespace MeltPoolDG::Heat
                                    const bool         do_phenomenological_recoil_pressure);
 
     void
+    register_surface_mesh(
+      const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                   std::vector<Point<dim>> /*quad_points*/,
+                                   std::vector<double> /*weights*/
+                                   >> &surface_mesh_info);
+
+    void
     assemble_matrixbased(const VectorType &advected_field_old,
                          SparseMatrixType &matrix,
                          VectorType &      rhs) const final;
@@ -261,14 +268,15 @@ namespace MeltPoolDG::Heat
      *   temp_vals.distribute_local_to_global(dst).
      */
     void
-    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  temp_vals,
-                                 FECellIntegrator<dim, 1, number> &  temp_lin_vals,
-                                 FECellIntegrator<dim, 1, number> &  temp_old_vals,
-                                 FECellIntegrator<dim, dim, number> &velocity_vals,
-                                 FECellIntegrator<dim, 1, number> &  ls_vals,
-                                 FECellIntegrator<dim, 1, number> &  ls_interpolated_vals,
-                                 FECellIntegrator<dim, 1, number> &  evapor_vals,
-                                 bool                                do_reinit_cells) const;
+    tangent_local_cell_operation(
+      FECellIntegrator<dim, 1, number> &                       temp_vals,
+      FECellIntegrator<dim, 1, number> &                       temp_lin_vals,
+      FECellIntegrator<dim, 1, number> &                       temp_old_vals,
+      FECellIntegrator<dim, dim, number> &                     velocity_vals,
+      FECellIntegrator<dim, 1, number> &                       ls_vals,
+      FECellIntegrator<dim, 1, number> &                       ls_interpolated_vals,
+      const std::unique_ptr<FECellIntegrator<dim, 1, number>> &evapor_vals,
+      bool                                                     do_reinit_cells) const;
 
     /**
      * This function executes the local boundary operation for computing the tangent.
@@ -316,5 +324,10 @@ namespace MeltPoolDG::Heat
       const FECellIntegrator<dim, 1, number> &temp_lin_val,
       const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
       unsigned int                            q_index) const;
+
+    const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                 std::vector<Point<dim>> /*quad_points*/,
+                                 std::vector<double> /*weights*/
+                                 >> *surface_mesh_info = nullptr;
   };
 } // namespace MeltPoolDG::Heat

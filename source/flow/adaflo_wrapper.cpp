@@ -102,7 +102,7 @@ namespace MeltPoolDG::Flow
 
     if (do_evaporative_mass_flux)
       {
-        if (parameters.evapor.formulation_source_term_continuity != "sharp")
+        if (parameters.evapor.formulation_source_term_continuity != InterfaceForceType::sharp)
           {
             AssertThrow(
               parameters.adaflo_params.params.beta_convective_term_momentum_balance == 0,

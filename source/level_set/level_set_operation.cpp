@@ -365,6 +365,13 @@ namespace MeltPoolDG::LevelSet
   {
     return distance_to_level_set;
   }
+
+  template <int dim>
+  const LevelSetOperation<dim>::SurfaceMeshInfo &
+  LevelSetOperation<dim>::get_surface_mesh_info() const
+  {
+    return surface_mesh_info;
+  }
   /**
    * register vectors for adaptive mesh refinement
    */
@@ -654,6 +661,25 @@ namespace MeltPoolDG::LevelSet
       data_in.ls.artificial_diffusivity; // @todo: remove level set parameter
     advec_diff_operation->advec_diff_data.time_integration_scheme =
       data_in.ls.time_integration_scheme; // @todo: remove level set parameter
+  }
+
+  template <int dim>
+  void
+  LevelSetOperation<dim>::update_surface_mesh()
+  {
+    surface_mesh_info.clear();
+    surface_mesh_info = Tools::generate_surface_mesh_info(scratch_data->get_dof_handler(ls_dof_idx),
+                                                          scratch_data->get_mapping(),
+                                                          level_set_as_heaviside,
+                                                          /*contour of surface*/ 0.5,
+                                                          /*n_subdivisions*/ 1,
+                                                          /*use_mca*/ true);
+
+    std::ostringstream str;
+    str << "Surface mesh generated, "
+        << Utilities::MPI::sum(surface_mesh_info.size(), scratch_data->get_mpi_comm())
+        << " cut cells found.";
+    Journal::print_line(scratch_data->get_pcout(), str.str(), "level set", 1);
   }
 
   template class LevelSetOperation<1>;
