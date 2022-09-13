@@ -37,6 +37,16 @@ namespace MeltPoolDG
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
     Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
   )
+  BETTER_ENUM(
+    LaserImpactType,
+    char,
+    // volumetric heat source
+    volumetric,
+    // interfacial heat source; use continuum surface force modeling within the interface region
+    interface,
+    // interfacial heat source; evaluate integral as surface integral over the sharp interface
+    interface_sharp)
+
 
   // evaporation specific @todo: move to own file evaporation_data.hpp
   BETTER_ENUM(
@@ -179,7 +189,7 @@ namespace MeltPoolDG
     std::vector<double>  center            = {0, 0, 0};
     bool                 do_move           = false;
     number               scan_speed        = 0.0;
-    std::string          impact_type       = "volumetric";
+    LaserImpactType      impact_type       = LaserImpactType::volumetric;
     LaserHeatSourceModel heat_source_model = LaserHeatSourceModel::not_initialized;
     struct GaussData
     {
@@ -250,6 +260,7 @@ namespace MeltPoolDG
     number      ls_value_liquid                    = 1.0;
     number      ls_value_gas                       = -1.0;
     std::string formulation_source_term_continuity = "diffuse";
+    std::string formulation_heat_loss_term         = "diffuse";
     std::string formulation_evaporative_mass_flux_over_interface =
       "continuous"; // not needed if evaporation_model == "constant"
     EvaporationModelType              evaporation_model            = EvaporationModelType::constant;

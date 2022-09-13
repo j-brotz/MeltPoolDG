@@ -84,6 +84,7 @@ namespace MeltPoolDG
 
       void
       compute_heat_source(VectorType &           heat_source,
+                          VectorType &           user_rhs,
                           const VectorType &     level_set_as_heaviside,
                           const BlockVectorType &normal_vector,
                           const unsigned int     normal_dof_idx,

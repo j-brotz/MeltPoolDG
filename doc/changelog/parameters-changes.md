@@ -8,6 +8,12 @@ All notable changes of the input parameters will be documented in this file.
   "profiling": {
     "write frequency": "",
     "write time step size": "",
+}
+- Add new option `interface_sharp` for Gaussian laser heat source
+```json
+{
+  "laser": {
+    "laser impact type": "interface_sharp"
   }
 }
 ```

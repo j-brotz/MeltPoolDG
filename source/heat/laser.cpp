@@ -4,17 +4,6 @@
 
 namespace MeltPoolDG::Heat
 {
-  LaserImpactType
-  impact_type_to_emun(const std::string &specifier)
-  {
-    if (specifier == "volumetric")
-      return LaserImpactType::volumetric;
-    else if (specifier == "interface")
-      return LaserImpactType::interface;
-    else
-      AssertThrow(false, ExcMessage("Unknown laser impact type! Abort..."));
-  }
-
   namespace
   {
     template <int dim, typename ForwardIterator>
@@ -42,7 +31,6 @@ namespace MeltPoolDG::Heat
     , laser_data(laser_data_in)
     , material(material_data_in)
     , laser_position(to_point<dim>(laser_data.center.begin(), laser_data.center.end()))
-    , impact_type(impact_type_to_emun(laser_data.impact_type))
   {}
 
   template <int dim>
@@ -125,7 +113,7 @@ namespace MeltPoolDG::Heat
   LaserImpactType
   LaserOperation<dim>::get_laser_impact_type() const
   {
-    return impact_type;
+    return laser_data.impact_type;
   }
 
   template class LaserOperation<1>;

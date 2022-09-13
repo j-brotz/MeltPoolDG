@@ -83,6 +83,7 @@ namespace MeltPoolDG::MeltPool
           if (melt_pool_operation)
             melt_pool_operation->compute_heat_source(
               heat_operation->get_heat_source(),
+              heat_operation->get_user_rhs(),
               level_set_operation->get_level_set_as_heaviside(),
               level_set_operation->get_normal_vector(),
               normal_dof_idx,
@@ -582,6 +583,8 @@ namespace MeltPoolDG::MeltPool
 
         /*
          * register evaporative mass flux to compute the heat sink
+         *
+         * TODO: consider sharp model
          */
         if (problem_specific_parameters.do_evaporative_heat_flux)
           heat_operation->register_evaporative_mass_flux(

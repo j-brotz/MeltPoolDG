@@ -50,6 +50,7 @@ namespace MeltPoolDG::Heat
     VectorType temperature;
     VectorType temperature_old;
     VectorType heat_source;
+    VectorType user_rhs;
     VectorType temperature_interface;
 
     // optional flow velocity for internal convection
@@ -124,6 +125,12 @@ namespace MeltPoolDG::Heat
 
     VectorType &
     get_heat_source();
+
+    const VectorType &
+    get_user_rhs() const;
+
+    VectorType &
+    get_user_rhs();
 
     const VectorType &
     get_level_set_as_heaviside() const;

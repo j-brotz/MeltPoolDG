@@ -74,6 +74,18 @@ namespace MeltPoolDG::Heat
                       true /* zero_out */);
                     break;
                   }
+                  case LaserImpactType::interface_sharp: {
+                    laser_heat_source_operation->compute_interfacial_heat_source_sharp(
+                      heat_operation->get_user_rhs(),
+                      *scratch_data,
+                      temp_dof_idx,
+                      laser_operation->get_laser_power(),
+                      laser_operation->get_laser_position(),
+                      heat_operation->get_level_set_as_heaviside(),
+                      level_set_dof_idx,
+                      true /* zero_out */);
+                    break;
+                  }
                   default: {
                     AssertThrow(false, ExcMessage("Unknown laser impact type! Abort..."));
                     break;

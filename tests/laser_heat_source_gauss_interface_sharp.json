@@ -1,0 +1,66 @@
+{
+  "base": {
+    "application name": "melt_front_propagation",
+    "degree": "1",
+    "dimension": "2",
+    "global refinements": "6",
+    "problem name": "melt_pool",
+    "verbosity level": "0",
+    "do print parameters": "false"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "1e-6",
+    "max n steps": "1"
+  },
+  "simulation specific parameters": {
+    "domain x min": "0.0",
+    "domain x max": "0.6e-3",
+    "domain z min": "-0.2e-3",
+    "domain z max": "0.2e-3",
+    "initial temperature": "1000.0"
+  },
+  "heat": {
+    "heat solidification": "true",
+    "heat two phase": "true",
+    "heat nlsolve residual tolerance": "1e-5",
+    "linear solver": {
+      "rel tolerance": "1e-12",
+      "preconditioner type": "AMG"
+    }
+  },
+  "levelset": {
+    "ls n initial reinit steps": "0"
+  },
+  "normal vector": {
+    "normal vec damping scale factor": "4"
+  },
+  "laser": {
+    "laser power": "10.",
+    "laser center": "3e-4,0.0",
+    "laser heat source model": "Gauss",
+    "laser impact type": "interface_sharp",
+    "laser gauss laser beam radius": "0.06e-3",
+    "laser gauss absorptivity gas": "0.5",
+    "laser gauss absorptivity liquid": "0.5"
+  },
+  "material": {
+    "material template": "Ti64",
+    "material two phase properties transition type": "sharp"
+  },
+  "problem specific": {
+    "do heat transfer": "true",
+    "do melt pool": "true"
+  },
+  "paraview": {
+    "paraview do output": "false"
+  },
+  "Navier-Stokes": {
+    "adaflo": {
+      "Output options": {
+        "output verbosity": "0",
+        "output wall times": "0"
+      }
+    }
+  }
+}

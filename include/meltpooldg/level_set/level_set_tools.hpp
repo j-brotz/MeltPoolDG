@@ -433,16 +433,16 @@ namespace MeltPoolDG::LevelSet::Tools
   template <int dim>
   void
   evaluate_at_interface(
-    const DoFHandler<dim> &                                 dof_handler,
-    const Mapping<dim> &                                    mapping,
-    const VectorType &                                      level_set_vector,
-    const std::function<void(const typename DoFHandler<dim>::active_cell_iterator &,
-                             const std::vector<Point<dim>> &,
-                             const std::vector<Point<dim>> &,
-                             const std::vector<double> &)> &evaluate_at_interface_points,
-    const double                                            contour_value  = 0.0,
-    const unsigned int                                      n_subdivisions = 1,
-    const bool                                              use_mca        = true)
+    const DoFHandler<dim> &                                         dof_handler,
+    const Mapping<dim> &                                            mapping,
+    const VectorType &                                              level_set_vector,
+    const std::function<void(const typename DoFHandler<dim>::active_cell_iterator & /*cell*/,
+                             const std::vector<Point<dim>> & /*points_real*/,
+                             const std::vector<Point<dim>> & /*points_reference*/,
+                             const std::vector<double> & /*JxW*/)> &evaluate_at_interface_points,
+    const double                                                    contour_value  = 0.0,
+    const unsigned int                                              n_subdivisions = 1,
+    const bool                                                      use_mca        = true)
   {
     AssertThrow(dim > 1, ExcNotImplemented());
 
