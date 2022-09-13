@@ -107,6 +107,15 @@ namespace MeltPoolDG
      */
     if (laser.analytical.max_temperature < material.boiling_temperature)
       laser.analytical.max_temperature = material.boiling_temperature + 500;
+
+    /*
+     *  set the laser center if it is not specified
+     */
+    if (laser.center.size() == 0)
+      {
+        laser.center.resize(base.dimension);
+        std::fill(laser.center.begin(), laser.center.end(), 0);
+      }
     /*
      *  check if level set assignment of gaseous/liquid phase is done correctly
      */
