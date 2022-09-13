@@ -1,6 +1,5 @@
 #pragma once
 
-// deal-specific libraries
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
@@ -13,9 +12,9 @@
 #include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/manifold_lib.h>
 
-#include <iostream>
-// MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
+
+#include <iostream>
 
 namespace MeltPoolDG
 {
@@ -69,20 +68,44 @@ namespace MeltPoolDG
         double                    domain_y_min = 0;
         double                    domain_y_max = 0;
         std::vector<unsigned int> cell_repetitions;
-        bool                      periodic_boundary    = false;
-        bool                      evaporation_boundary = false;
-        unsigned int              n_local_refinement   = 0;
-        double                    T_initial_top        = 500;
-        double                    T_initial_bottom     = T_initial_top;
-        Point<dim>                local_refinement_1_bottom_left;
-        Point<dim>                local_refinement_1_top_right;
-        Point<dim>                local_refinement_2_bottom_left;
-        Point<dim>                local_refinement_2_top_right;
+
+        bool         periodic_boundary    = false;
+        bool         evaporation_boundary = false;
+        unsigned int n_local_refinement   = 0;
+        double       T_initial_top        = 500;
+        double       T_initial_bottom     = T_initial_top;
+
+        Point<dim> local_refinement_1_bottom_left;
+        Point<dim> local_refinement_1_top_right;
+        Point<dim> local_refinement_2_bottom_left;
+        Point<dim> local_refinement_2_top_right;
+
+        // triangulation of a slice for reduced output in 3D
+        parallel::distributed::Triangulation<2, 3>                    tria_slice;
+        mutable std::shared_ptr<PostProcessingTools::SliceCreator<3>> slice;
+        mutable unsigned int                                          n_written_time_step_slice = 0;
+
+        struct SliceData
+        {
+          bool                     enable              = false;
+          int                      n_global_refinement = 4;
+          double                   coord               = 0.0;
+          std::vector<std::string> output_variables;
+
+          struct RefinedRegion
+          {
+            unsigned int n_local_refinement = 0;
+            Point<3>     bottom_left;
+            Point<3>     top_right;
+          } refined_region;
+
+        } slice_data;
 
       public:
         SimulationRecoilPressure(std::string parameter_file, const MPI_Comm mpi_communicator)
           : SimulationBase<dim>(parameter_file, mpi_communicator)
           , cell_repetitions(dim, 1)
+          , tria_slice(mpi_communicator)
         {}
 
         void
@@ -149,6 +172,38 @@ namespace MeltPoolDG
                                 "Set the initial temperature on the bottom boundary.");
             }
             prm.leave_subsection();
+            prm.enter_subsection("output slice");
+            {
+              prm.add_parameter("enable",
+                                slice_data.enable,
+                                "Set this parameter to true, if a slice output should be"
+                                " enabled.");
+              prm.add_parameter("output variables",
+                                slice_data.output_variables,
+                                "Specify variables that you request to output for the slice."
+                                "In the default case, the one specified within the paraview "
+                                "section will be adopted.");
+              prm.add_parameter("n global refinement",
+                                slice_data.n_global_refinement,
+                                "Set the maximum (global) refinement level.");
+              prm.add_parameter("coord",
+                                slice_data.coord,
+                                "Set the x/y coordinate where the slice should take place.");
+              prm.enter_subsection("refined region");
+              {
+                prm.add_parameter("n local refinement",
+                                  slice_data.refined_region.n_local_refinement,
+                                  "Set the additional refinements of the locally refined region.");
+                prm.add_parameter("bottom left",
+                                  slice_data.refined_region.bottom_left,
+                                  "Coordinates of the bottom left point of the refined domain");
+                prm.add_parameter("top right",
+                                  slice_data.refined_region.top_right,
+                                  "Coordinates of the top right point of the refined domain");
+              }
+              prm.leave_subsection();
+            }
+            prm.leave_subsection();
           }
           prm.leave_subsection();
         }
@@ -156,6 +211,11 @@ namespace MeltPoolDG
         void
         create_spatial_discretization() override
         {
+          // set default values of parameters @todo --> make own overwritten base function
+          slice_data.output_variables = (slice_data.output_variables.size() > 0) ?
+                                          slice_data.output_variables :
+                                          this->parameters.paraview.output_variables;
+
           if (this->parameters.base.do_simplex || dim == 1)
             {
 #ifdef DEAL_II_WITH_METIS
@@ -211,6 +271,51 @@ namespace MeltPoolDG
                                                         cell_repetitions,
                                                         bottom_left,
                                                         top_right);
+            }
+
+          // create slice for postprocessing
+          if constexpr (dim == 3)
+            {
+              if (slice_data.enable)
+                {
+                  GridGenerator::subdivided_hyper_rectangle(tria_slice,
+                                                            {1, 1} /*subdivisions*/,
+                                                            Point<2>(domain_x_min, domain_y_min),
+                                                            Point<2>(domain_x_max, domain_y_max));
+                  // rotate plane by 90° around x-axis
+                  GridTools::rotate(Point<3>::unit_vector(0), 0.5 * numbers::PI, tria_slice);
+                  // shift plane along y-axis
+                  GridTools::shift(Point<3>::unit_vector(1) * slice_data.coord, tria_slice);
+
+                  // refine globally
+                  tria_slice.refine_global(slice_data.n_global_refinement);
+
+                  // refine local region if requested
+                  if (slice_data.refined_region.n_local_refinement > 0)
+                    {
+                      const auto slice_refined =
+                        BoundingBox<3>({slice_data.refined_region.bottom_left,
+                                        slice_data.refined_region.top_right});
+
+                      for (unsigned int j = 0; j < slice_data.refined_region.n_local_refinement;
+                           ++j)
+                        {
+                          for (auto &cell : tria_slice.active_cell_iterators())
+                            {
+                              if (cell->is_locally_owned())
+                                {
+                                  for (unsigned int i = 0; i < cell->n_vertices(); ++i)
+                                    if (slice_refined.point_inside(cell->vertex(i)))
+                                      {
+                                        cell->set_refine_flag();
+                                        break;
+                                      }
+                                }
+                            }
+                          tria_slice.execute_coarsening_and_refinement();
+                        }
+                    }
+                }
             }
         }
 
@@ -459,7 +564,9 @@ namespace MeltPoolDG
         void
         set_field_conditions() override
         {
-          AssertIndexRange(dim, this->parameters.laser.center.size() + 1);
+          AssertThrow(this->parameters.laser.center.size() == dim,
+                      ExcMessage("There must be dim coordinates "
+                                 "of the laser center given."));
 
           this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
                                            Point<dim>::unit_vector(dim - 1) *
@@ -474,6 +581,32 @@ namespace MeltPoolDG
               std::make_shared<InitialConditionTemperature<dim>>(
                 T_initial_bottom, T_initial_top, domain_y_min, domain_y_max),
               "heat_transfer");
+        }
+
+        void
+        do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
+        {
+          if (this->parameters.paraview.do_output == false || !slice_data.enable)
+            return;
+
+          // create slice
+          if constexpr (dim == 3)
+            {
+              if (!slice)
+                {
+                  slice = std::make_shared<PostProcessingTools::SliceCreator<3>>(
+                    generic_data_out,
+                    tria_slice,
+                    slice_data.output_variables,
+                    this->parameters.paraview);
+                }
+              // @todo: We need to reinit, since generic_data_out is currently created
+              // for every time step.
+              slice->reinit(generic_data_out);
+
+              slice->process(n_written_time_step_slice);
+              ++n_written_time_step_slice;
+            }
         }
       };
 
