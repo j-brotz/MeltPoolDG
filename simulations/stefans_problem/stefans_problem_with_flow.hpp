@@ -207,7 +207,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
                                          std::to_string(generic_data_out.get_time()) + ".txt";
                   file_pressure_profile.open(file_name);
                   file_pressure_profile
-                    << " coordinate | velocity | analytical velocity | pressure value | analytical pressure value "
+                    << "% coordinate | velocity | analytical velocity | pressure value | analytical pressure value "
                     << std::endl;
 
                   for (unsigned int i = 0; i < pressure_evaluation_values.size(); ++i)
