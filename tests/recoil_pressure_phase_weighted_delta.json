@@ -24,7 +24,7 @@
     "material second density": "7074.3",
     "material second viscosity": "0.006",
     "material two phase properties transition type": "smooth",
-    "material boiling temperature": "400.",
+    "material boiling temperature": "499.",
     "material latent heat of evaporation": "1.e6",
     "material molar mass": "0.05224130936",
     "material specific enthalpy reference temperature": "663.731"
@@ -40,10 +40,6 @@
   },
   "evaporation": {
     "evapor evaporation model": "recoil_pressure"
-  },
-  "melt pool": {
-    "mp do not reinitialize in solid": "false",
-    "mp set velocity to zero in solid": "false"
   },
   "simulation specific domain": {
     "domain x min": "-0.0002",

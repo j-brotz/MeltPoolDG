@@ -31,8 +31,8 @@
 |  total mass = 0.00028891258766                                                 melt_pool_problem |
 
 Time step #1, advancing from t_n-1 = 0 to t = 1e-07 (dt = 1e-07). 
-| || velocity ||L2 = 5.814876298793707e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.204003346626252e+02                                    navier_stokes_adaflo |
+| || velocity ||L2 = 4.084531722749887e-08                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.948460003967412e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
