@@ -17,9 +17,9 @@
   },
   "material": {
     "material first density": "10",
-    "material first viscosity": "1e-10",
+    "material first viscosity": "1e-4",
     "material second density": "1000",
-    "material second viscosity": "1e-10",
+    "material second viscosity": "1e-4",
     "material two phase properties transition type": "smooth"
   },
   "levelset": {
