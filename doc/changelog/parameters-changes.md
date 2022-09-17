@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-09-14
+- Add parameter to distinguish between sharp (surface integral) and diffuse
+  (volume integral) of the evaporative heat loss term at the vapor surface
+```json
+{
+  "evaporation": {
+    "evapor formulation source term heat": "sharp|diffuse"
+  },
+}
+
 ## 2022-09-12
 - Add parameters to control write frequency of profiling output 
 ```json

@@ -1,0 +1,38 @@
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
++--------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+|  total mass = 0.00028599933333                                                 melt_pool_problem |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.1776822700e-04                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+| Surface mesh generated, 16 cut cells found.                                             level set |
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.10819e+00                newton_raphson_solver |
+|  total mass = 0.00028599933333                                                 melt_pool_problem |
+
+Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06). 
+| || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
+| || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 2      t = 1.0000e-06 to 2.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.1776822700e-04                                    advection_diffusion |
++--------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------+
+| Surface mesh generated, 16 cut cells found.                                             level set |
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
+| Newton Raphson solver converged: ||solution|| = 1.10802e+00                newton_raphson_solver |
+|  total mass = 0.00028599933333                                                 melt_pool_problem |
+
+Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06). 
+| || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
+| || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+

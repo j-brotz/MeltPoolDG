@@ -67,6 +67,7 @@ namespace MeltPoolDG
               // use the source term due to evaporation as right hand-side term
               rhs)
 
+  BETTER_ENUM(InterfaceForceType, char, diffuse, sharp)
 
   template <typename number = double>
   struct NonlinearSolverData
@@ -255,13 +256,13 @@ namespace MeltPoolDG
   template <typename number = double>
   struct EvaporationData
   {
-    number      evaporative_mass_flux_scale_factor = 1.0;
-    std::string evaporative_mass_flux              = "0.0";
-    number      ls_value_liquid                    = 1.0;
-    number      ls_value_gas                       = -1.0;
-    std::string formulation_source_term_continuity = "diffuse";
-    std::string formulation_heat_loss_term         = "diffuse";
-    std::string formulation_evaporative_mass_flux_over_interface =
+    number             evaporative_mass_flux_scale_factor = 1.0;
+    std::string        evaporative_mass_flux              = "0.0";
+    number             ls_value_liquid                    = 1.0;
+    number             ls_value_gas                       = -1.0;
+    InterfaceForceType formulation_source_term_continuity = InterfaceForceType::diffuse;
+    InterfaceForceType formulation_source_term_heat       = InterfaceForceType::diffuse;
+    std::string        formulation_evaporative_mass_flux_over_interface =
       "continuous"; // not needed if evaporation_model == "constant"
     EvaporationModelType              evaporation_model            = EvaporationModelType::constant;
     number                            coefficient                  = 0.0;

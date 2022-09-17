@@ -49,7 +49,7 @@ namespace MeltPoolDG::Evaporation
     AssertThrow(material.first.density > 0.0 && material.second.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
 
-    if (evaporation_data.formulation_source_term_continuity == "diffuse")
+    if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::diffuse)
       evapor_source_terms_operator = std::make_shared<EvaporationSourceTermsContinuous<dim>>(
         *scratch_data,
         evaporation_data,
@@ -65,7 +65,7 @@ namespace MeltPoolDG::Evaporation
         material.first.density,
         material.second.density,
         material.two_phase_properties_transition_type);
-    else if (evaporation_data.formulation_source_term_continuity == "sharp")
+    else if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::sharp)
       evapor_source_terms_operator =
         std::make_shared<EvaporationSourceTermsSharp<dim>>(*scratch_data,
                                                            evaporation_data,
@@ -227,16 +227,6 @@ namespace MeltPoolDG::Evaporation
                                                                    pressure_dof_idx,
                                                                    pressure_quad_idx,
                                                                    zero_out);
-  }
-
-  template <int dim>
-  void
-  EvaporationOperation<dim>::compute_heat_loss_term(VectorType &heat_rhs, bool zero_out)
-  {
-    if (zero_out)
-      scratch_data->initialize_dof_vector(heat_rhs, temp_dof_idx);
-
-    evapor_source_terms_operator->compute_heat_source_term(heat_rhs);
   }
 
   template <int dim>

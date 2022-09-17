@@ -96,6 +96,17 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
+  HeatTransferOperator<dim, number>::register_surface_mesh(
+    const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                 std::vector<Point<dim>> /*quad_points*/,
+                                 std::vector<double> /*weights*/
+                                 >> &surface_mesh_info_in)
+  {
+    surface_mesh_info = &surface_mesh_info_in;
+  }
+
+  template <int dim, typename number>
+  void
   HeatTransferOperator<dim, number>::register_evaporative_mass_flux(
     VectorType *       evaporative_mass_flux_in,
     const unsigned int evapor_mass_flux_dof_idx_in,
@@ -206,9 +217,14 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
                                                    temp_hanging_nodes_dof_idx,
                                                    temp_quad_idx);
-    FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
-                                                 evapor_mass_flux_dof_idx,
-                                                 temp_quad_idx);
+
+    std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
+    if (evaporative_mass_flux && !surface_mesh_info)
+      {
+        evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
+                                                                         evapor_mass_flux_dof_idx,
+                                                                         temp_quad_idx);
+      }
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -272,9 +288,13 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
                                                    temp_hanging_nodes_dof_idx,
                                                    temp_quad_idx);
-    FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
-                                                 evapor_mass_flux_dof_idx,
-                                                 temp_quad_idx);
+    std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
+    if (evaporative_mass_flux && !surface_mesh_info)
+      {
+        evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
+                                                                         evapor_mass_flux_dof_idx,
+                                                                         temp_quad_idx);
+      }
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -320,9 +340,13 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
                                                    temp_hanging_nodes_dof_idx,
                                                    temp_quad_idx);
-    FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
-                                                 evapor_mass_flux_dof_idx,
-                                                 temp_quad_idx);
+    std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
+    if (evaporative_mass_flux && !surface_mesh_info)
+      {
+        evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
+                                                                         evapor_mass_flux_dof_idx,
+                                                                         temp_quad_idx);
+      }
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -372,9 +396,13 @@ namespace MeltPoolDG::Heat
       FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free,
                                                      temp_hanging_nodes_dof_idx,
                                                      temp_quad_idx);
-      FECellIntegrator<dim, 1, number>   evapor_vals(matrix_free,
-                                                   evapor_mass_flux_dof_idx,
-                                                   temp_quad_idx);
+      std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
+      if (evaporative_mass_flux && !surface_mesh_info)
+        {
+          evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
+                                                                           evapor_mass_flux_dof_idx,
+                                                                           temp_quad_idx);
+        }
 
       const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
 
@@ -509,13 +537,20 @@ namespace MeltPoolDG::Heat
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> evapor_vals(matrix_free,
-                                                 evapor_mass_flux_dof_idx,
-                                                 temp_quad_idx);
 
     auto &ls_vals_used =
       do_level_set_temperature_gradient_interpolation ? ls_interpolated_vals : ls_vals;
 
+    std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
+
+    if (evaporative_mass_flux && !surface_mesh_info)
+      {
+        evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
+                                                                         evapor_mass_flux_dof_idx,
+                                                                         temp_quad_idx);
+      }
+
+    //@todo: only in case of certain verbosity level or if variable is requested
     q_vapor.resize(scratch_data.get_matrix_free().n_cell_batches(),
                    std::vector<VectorizedArray<double>>(temp_vals.n_q_points));
 
@@ -564,11 +599,11 @@ namespace MeltPoolDG::Heat
               ls_vals.evaluate(EvaluationFlags::values);
           }
 
-        if (evaporative_mass_flux)
+        if (evapor_vals)
           {
-            evapor_vals.reinit(cell);
-            evapor_vals.read_dof_values_plain(*evaporative_mass_flux);
-            evapor_vals.evaluate(EvaluationFlags::values);
+            evapor_vals->reinit(cell);
+            evapor_vals->read_dof_values_plain(*evaporative_mass_flux);
+            evapor_vals->evaluate(EvaluationFlags::values);
           }
 
         for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
@@ -589,7 +624,7 @@ namespace MeltPoolDG::Heat
                 val += rho_cp * temp_vals.get_gradient(q_index) * velocity_vals.get_value(q_index);
               }
 
-            if (evaporative_mass_flux)
+            if (evapor_vals)
               {
                 /*
                  * Compute the heat sink due to evaporation
@@ -655,7 +690,7 @@ namespace MeltPoolDG::Heat
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(ls_vals_used.get_value(q_index));
 
-                const auto temp = evapor_vals.get_value(q_index) *
+                const auto temp = evapor_vals->get_value(q_index) *
                                   (latent_heat_of_evaporation + specific_enthalpy) *
                                   ls_vals_used.get_gradient(q_index).norm() * weight;
 
@@ -669,6 +704,102 @@ namespace MeltPoolDG::Heat
                                       q_index); // -1 since residual is moved to rhs
           }
         temp_vals.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
+      }
+  }
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
+  {
+    // evaluate the evaporative heat loss term as surface integral
+    if (evaporative_mass_flux && surface_mesh_info)
+      {
+        FEPointEvaluation<1, dim> evapor_vals_surf(scratch_data.get_mapping(),
+                                                   scratch_data.get_fe(evapor_mass_flux_dof_idx),
+                                                   update_values);
+
+        FEPointEvaluation<1, dim> temp_vals_surf(scratch_data.get_mapping(),
+                                                 scratch_data.get_fe(temp_dof_idx),
+                                                 update_values);
+
+        std::vector<double>                  buffer;
+        std::vector<types::global_dof_index> local_dof_indices;
+
+        const int n_dofs_evapor = scratch_data.get_fe(evapor_mass_flux_dof_idx).n_dofs_per_cell();
+        const int n_dofs_temp   = scratch_data.get_fe(temp_dof_idx).n_dofs_per_cell();
+
+        if (surface_mesh_info->size() > 0)
+          {
+            for (const auto &[cell, quad_points, weights] : *(surface_mesh_info))
+              {
+                const unsigned int n_points = quad_points.size();
+
+                const ArrayView<const Point<dim>> unit_points(quad_points.data(), n_points);
+                const ArrayView<const double>     JxW(weights.data(), n_points);
+
+                evapor_vals_surf.reinit(cell, unit_points);
+                temp_vals_surf.reinit(cell, unit_points);
+
+                const auto temp_dof_cell =
+                  TriaIterator<DoFCellAccessor<dim, dim, false>>(&scratch_data.get_triangulation(),
+                                                                 cell->level(),
+                                                                 cell->index(),
+                                                                 &scratch_data.get_dof_handler(
+                                                                   temp_dof_idx));
+
+                const auto evapor_dof_cell =
+                  TriaIterator<DoFCellAccessor<dim, dim, false>>(&scratch_data.get_triangulation(),
+                                                                 cell->level(),
+                                                                 cell->index(),
+                                                                 &scratch_data.get_dof_handler(
+                                                                   evapor_mass_flux_dof_idx));
+
+                // gather evaluate mass_flux
+                local_dof_indices.resize(n_dofs_evapor);
+                buffer.resize(n_dofs_evapor);
+                evapor_dof_cell->get_dof_indices(local_dof_indices);
+                scratch_data.get_constraint(evapor_mass_flux_dof_idx)
+                  .get_dof_values(*evaporative_mass_flux,
+                                  local_dof_indices.begin(),
+                                  buffer.begin(),
+                                  buffer.end());
+                evapor_vals_surf.evaluate(buffer, EvaluationFlags::values);
+
+                // gather evaluate temperature
+                buffer.resize(n_dofs_temp);
+                local_dof_indices.resize(n_dofs_temp);
+                temp_dof_cell->get_dof_indices(local_dof_indices);
+                scratch_data.get_constraint(temp_dof_idx)
+                  .get_dof_values(temperature,
+                                  local_dof_indices.begin(),
+                                  buffer.begin(),
+                                  buffer.end());
+                temp_vals_surf.evaluate(buffer, EvaluationFlags::values);
+
+                for (unsigned int q = 0; q < n_points; ++q)
+                  {
+                    double specific_enthalpy = 0;
+
+                    if (do_phenomenological_recoil_pressure)
+                      {
+                        const auto &material_data = material.get_data();
+                        specific_enthalpy         = material_data.second.capacity *
+                                            (temp_vals_surf.get_value(q) -
+                                             material_data.specific_enthalpy_reference_temperature);
+                      }
+                    temp_vals_surf.submit_value(-evapor_vals_surf.get_value(q) *
+                                                  (latent_heat_of_evaporation + specific_enthalpy) *
+                                                  JxW[q],
+                                                q); // *(-1) for the residual
+                  }
+                temp_vals_surf.integrate(buffer,
+                                         EvaluationFlags::values); //
+
+                scratch_data.get_constraint(temp_dof_idx)
+                  .distribute_local_to_global(buffer, local_dof_indices, dst);
+              }
+          }
+        dst.compress(VectorOperation::add);
+        scratch_data.get_constraint(temp_dof_idx).set_zero(dst);
       }
   }
 
@@ -754,6 +885,8 @@ namespace MeltPoolDG::Heat
       dst,
       src,
       false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
+                                  //
+    rhs_cut_cell_loop(dst);
   }
 
   template <int dim, typename number>
@@ -784,7 +917,7 @@ namespace MeltPoolDG::Heat
     /**
      * write evaporative mass flux to dof vector
      */
-    if (evaporative_mass_flux)
+    if (evaporative_mass_flux && !surface_mesh_info)
       {
         scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
         if (!q_vapor.empty() && scratch_data.is_hex_mesh())
@@ -807,14 +940,14 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::tangent_local_cell_operation(
-    FECellIntegrator<dim, 1, number> &  temp_vals,
-    FECellIntegrator<dim, 1, number> &  temp_lin_vals,
-    FECellIntegrator<dim, 1, number> &  temp_old_vals,
-    FECellIntegrator<dim, dim, number> &velocity_vals,
-    FECellIntegrator<dim, 1, number> &  ls_vals,
-    FECellIntegrator<dim, 1, number> &  ls_interpolated_vals,
-    FECellIntegrator<dim, 1, number> &  evapor_vals,
-    const bool                          do_reinit_cells) const
+    FECellIntegrator<dim, 1, number> &                       temp_vals,
+    FECellIntegrator<dim, 1, number> &                       temp_lin_vals,
+    FECellIntegrator<dim, 1, number> &                       temp_old_vals,
+    FECellIntegrator<dim, dim, number> &                     velocity_vals,
+    FECellIntegrator<dim, 1, number> &                       ls_vals,
+    FECellIntegrator<dim, 1, number> &                       ls_interpolated_vals,
+    const std::unique_ptr<FECellIntegrator<dim, 1, number>> &evapor_vals,
+    const bool                                               do_reinit_cells) const
   {
     auto &ls_vals_used =
       do_level_set_temperature_gradient_interpolation ? ls_interpolated_vals : ls_vals;
@@ -867,11 +1000,11 @@ namespace MeltPoolDG::Heat
             temp_lin_vals.read_dof_values_plain(temperature);
             temp_lin_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
           }
-        if (evaporative_mass_flux)
+        if (evapor_vals)
           {
-            evapor_vals.reinit(temp_vals.get_current_cell_index());
-            evapor_vals.read_dof_values_plain(*evaporative_mass_flux);
-            evapor_vals.evaluate(EvaluationFlags::values);
+            evapor_vals->reinit(temp_vals.get_current_cell_index());
+            evapor_vals->read_dof_values_plain(*evaporative_mass_flux);
+            evapor_vals->evaluate(EvaluationFlags::values);
           }
       }
 
@@ -906,7 +1039,7 @@ namespace MeltPoolDG::Heat
             // todo: add term containing ∇·u  in case of evaporation
           }
 
-        if (evaporative_mass_flux && do_phenomenological_recoil_pressure)
+        if (evapor_vals && do_phenomenological_recoil_pressure)
           {
             /*
              * derivative of specific enthalpy h(T) with respect to the temperature:
@@ -931,7 +1064,7 @@ namespace MeltPoolDG::Heat
 
             const auto &material_data = material.get_data();
 
-            val += evapor_vals.get_value(q_index) * temp_vals.get_value(q_index) *
+            val += evapor_vals->get_value(q_index) * temp_vals.get_value(q_index) *
                    material_data.second.capacity * ls_vals_used.get_gradient(q_index).norm() *
                    weight;
           }
@@ -941,6 +1074,12 @@ namespace MeltPoolDG::Heat
         temp_vals.submit_gradient(val_grad, q_index);
       }
     temp_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+    // evaluate the evaporative heat loss term as surface integral
+    if (evaporative_mass_flux && surface_mesh_info && do_phenomenological_recoil_pressure)
+      {
+        // @todo
+      }
   }
 
   template <int dim, typename number>

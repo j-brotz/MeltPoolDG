@@ -453,6 +453,11 @@ namespace MeltPoolDG::LevelSet::Tools
                                                          dof_handler.get_fe(), // todo
                                                          n_subdivisions);
 
+    const bool is_ghosted = level_set_vector.has_ghost_elements();
+
+    if (!is_ghosted)
+      level_set_vector.update_ghost_values();
+
     // data structures for NonMatching::FEValues
     const unsigned int nm_n_q_points_1D =
       std::max<unsigned int>(dof_handler.get_fe().degree, n_subdivisions + 1);
@@ -574,7 +579,57 @@ namespace MeltPoolDG::LevelSet::Tools
             evaluate_at_interface_points(cell, points_real, points, weights);
           }
       }
+    if (!is_ghosted)
+      level_set_vector.zero_out_ghost_values();
   }
+
+  template <int dim>
+  std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                         std::vector<Point<dim>> /*quad_points*/,
+                         std::vector<double> /*weights*/
+                         >>
+  generate_surface_mesh_info(const DoFHandler<dim> &dof_handler,
+                             const Mapping<dim> &   mapping,
+                             const VectorType &     level_set_as_heaviside,
+                             const double           contour_value  = 0.0,
+                             const unsigned int     n_subdivisions = 1,
+                             const bool             use_mca        = true)
+  {
+    std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                           std::vector<Point<dim>> /*quad_points*/,
+                           std::vector<double> /*weights*/
+                           >>
+      surface_mesh_info;
+
+    if constexpr (dim > 1)
+      {
+        evaluate_at_interface<dim>(
+          dof_handler,
+          mapping,
+          level_set_as_heaviside,
+          [&](const auto &cell, const auto &, const auto &unit_points, const auto &weights) {
+            if (unit_points.size() > 0)
+              surface_mesh_info.emplace_back(cell, unit_points, weights);
+          },
+          contour_value,
+          n_subdivisions,
+          use_mca);
+      }
+    else
+      {
+        (void)dof_handler;
+        (void)mapping;
+        (void)level_set_as_heaviside;
+        (void)contour_value;
+        (void)n_subdivisions;
+        (void)use_mca;
+
+        AssertThrow(false, ExcNotImplemented());
+      }
+
+    return surface_mesh_info;
+  }
+
 
   /**
    * This utility function computes a point cloud @p global_points_normal_to_interface

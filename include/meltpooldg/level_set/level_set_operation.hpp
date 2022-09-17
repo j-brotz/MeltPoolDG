@@ -71,6 +71,16 @@ namespace MeltPoolDG::LevelSet
 
     double max_d_level_set_since_last_reinit = std::numeric_limits<double>::max();
 
+
+    // triangulation info on surface mesh of level set 0
+
+    using SurfaceMeshInfo =
+      std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                             std::vector<Point<dim>> /*quad_points*/,
+                             std::vector<double> /*weights*/
+                             >>;
+    SurfaceMeshInfo surface_mesh_info;
+
   public:
     LevelSetOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
                       const TimeIterator<double> &                   time_stepping,
@@ -133,6 +143,9 @@ namespace MeltPoolDG::LevelSet
 
     const LinearAlgebra::distributed::Vector<double> &
     get_distance_to_level_set() const;
+
+    const SurfaceMeshInfo &
+    get_surface_mesh_info() const;
     /**
      * register vectors for adaptive mesh refinement
      */
@@ -141,6 +154,9 @@ namespace MeltPoolDG::LevelSet
 
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;
+
+    void
+    update_surface_mesh();
 
   private:
     void

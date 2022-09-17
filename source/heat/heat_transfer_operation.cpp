@@ -55,6 +55,8 @@ namespace MeltPoolDG::Heat
     reinit();
   }
 
+
+
   template <int dim>
   void
   HeatTransferOperation<dim>::register_evaporative_mass_flux(
@@ -68,6 +70,19 @@ namespace MeltPoolDG::Heat
                                                   latent_heat_of_evaporation,
                                                   do_phenomenological_recoil_pressure);
   }
+
+
+  template <int dim>
+  void
+  HeatTransferOperation<dim>::register_surface_mesh(
+    const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                 std::vector<Point<dim>> /*quad_points*/,
+                                 std::vector<double> /*weights*/
+                                 >> &surface_mesh_info_in)
+  {
+    heat_operator->register_surface_mesh(surface_mesh_info_in);
+  }
+
 
   template <int dim>
   void
@@ -284,6 +299,12 @@ namespace MeltPoolDG::Heat
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              temperature_interface,
                              "temperature_interface");
+    /*
+     *  user rhs
+     */
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                             user_rhs,
+                             "heat_user_rhs");
   }
 
   template <int dim>
