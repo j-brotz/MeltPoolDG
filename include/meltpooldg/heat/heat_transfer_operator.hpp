@@ -249,6 +249,9 @@ namespace MeltPoolDG::Heat
                       [[maybe_unused]] const VectorType &   src,
                       std::pair<unsigned int, unsigned int> face_range) const;
 
+    void
+    rhs_cut_cell_loop(VectorType &dst) const;
+
     /**
      * -R(T)
      */

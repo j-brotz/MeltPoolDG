@@ -705,7 +705,11 @@ namespace MeltPoolDG::Heat
           }
         temp_vals.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
       }
-
+  }
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
+  {
     // evaluate the evaporative heat loss term as surface integral
     if (evaporative_mass_flux && surface_mesh_info)
       {
@@ -885,6 +889,8 @@ namespace MeltPoolDG::Heat
       dst,
       src,
       false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
+                                  //
+    rhs_cut_cell_loop(dst);
   }
 
   template <int dim, typename number>
