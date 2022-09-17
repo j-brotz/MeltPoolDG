@@ -713,9 +713,6 @@ namespace MeltPoolDG::Heat
     // evaluate the evaporative heat loss term as surface integral
     if (evaporative_mass_flux && surface_mesh_info)
       {
-        VectorType user_rhs;
-        scratch_data.initialize_dof_vector(user_rhs, temp_dof_idx);
-
         FEPointEvaluation<1, dim> evapor_vals_surf(scratch_data.get_mapping(),
                                                    scratch_data.get_fe(evapor_mass_flux_dof_idx),
                                                    update_values);
@@ -798,11 +795,10 @@ namespace MeltPoolDG::Heat
                                          EvaluationFlags::values); //
 
                 scratch_data.get_constraint(temp_dof_idx)
-                  .distribute_local_to_global(buffer, local_dof_indices, user_rhs);
+                  .distribute_local_to_global(buffer, local_dof_indices, dst);
               }
           }
-        user_rhs.compress(VectorOperation::add);
-        dst += user_rhs;
+        dst.compress(VectorOperation::add);
         scratch_data.get_constraint(temp_dof_idx).set_zero(dst);
       }
   }
