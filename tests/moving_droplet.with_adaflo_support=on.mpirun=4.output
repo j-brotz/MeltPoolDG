@@ -100,25 +100,5 @@ Time step #3, advancing from t_n-1 = 2e-05 to t = 3e-05 (dt = 1e-05).
 | || velocity ||L2 = 8.071746200881984e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.510486561743608e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
-|  Time increment # 4      t = 3.0000e-05 to 4.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.9681983888e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 4.03565621395e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03565633317e+00                                               normal_vector |
-
-Time step #4, advancing from t_n-1 = 3e-05 to t = 4e-05 (dt = 1e-05). 
-| || velocity ||L2 = 8.071745458624506e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.510487605879086e-01                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 5      t = 4.0000e-05 to 5.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.9681984186e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 4.03565621406e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03565633327e+00                                               normal_vector |
-
-Time step #5, advancing from t_n-1 = 4e-05 to t = 5e-05 (dt = 1e-05). 
-| || velocity ||L2 = 8.071745458712397e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.510488756146059e-01                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

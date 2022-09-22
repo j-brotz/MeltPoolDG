@@ -13,7 +13,7 @@
     "start time": "0.0",
     "end time": "1.0",
     "time step size": "1e-5",
-    "max n steps": "5"
+    "max n steps": "3"
   },
   "material": {
     "material first density": "10",
