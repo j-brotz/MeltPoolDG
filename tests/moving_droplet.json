@@ -6,7 +6,7 @@
     "dimension": "2",
     "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "4",
+    "global refinements": "5",
     "gravity": "0.0"
   },
   "time stepping": {
@@ -17,7 +17,7 @@
   },
   "material": {
     "material first density": "10",
-    "material first viscosity": "1e-4",
+    "material first viscosity": "1e-6",
     "material second density": "1000",
     "material second viscosity": "1e-4",
     "material two phase properties transition type": "smooth"
