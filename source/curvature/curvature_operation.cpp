@@ -48,6 +48,11 @@ namespace MeltPoolDG::Curvature
 
     scratch_data->initialize_dof_vector(rhs, curv_dof_idx);
     scratch_data->initialize_dof_vector(solution_curvature, curv_dof_idx);
+
+    // no need to compute curvature in 1d
+    if (dim == 1)
+      return;
+
     int iter = 0;
 
     solution_levelset.update_ghost_values();
