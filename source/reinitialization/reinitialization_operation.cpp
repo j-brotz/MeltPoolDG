@@ -68,6 +68,7 @@ namespace MeltPoolDG::Reinitialization
     create_operator();
     scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
     scratch_data->initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
   }
 
   template <int dim>
@@ -77,6 +78,7 @@ namespace MeltPoolDG::Reinitialization
     scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
     scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
     scratch_data->initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
 
     update_operator();
     normal_vector_operation->reinit();
@@ -136,6 +138,11 @@ namespace MeltPoolDG::Reinitialization
 
     // apply hanging node constraints to predictor
     scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
+
+    // zero-out rhs
+    rhs = 0.0;
+
+    reinit_operator->reset_time_increment(d_tau);
   }
 
   template <int dim>
@@ -146,12 +153,6 @@ namespace MeltPoolDG::Reinitialization
     solution_level_set.update_ghost_values();
 
     init_time_advance(d_tau);
-
-    VectorType rhs;
-
-    scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
-
-    reinit_operator->reset_time_increment(d_tau);
 
     int iter = 0;
 

@@ -166,6 +166,8 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperation<dim>::solve()
   {
+    init_time_advance();
+
     if (!heat_data.linear_solver.do_matrix_free)
       AssertThrow(false, ExcNotImplemented());
 

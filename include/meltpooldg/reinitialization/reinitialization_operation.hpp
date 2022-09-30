@@ -51,6 +51,7 @@ namespace MeltPoolDG
 
       VectorType delta_psi_vec;
       VectorType delta_psi_vec_old;
+      VectorType rhs;
 
       ReinitializationOperation() = default;
 

@@ -101,7 +101,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     UtilityFunctions::compute_linear_predictor(
       solution_advected_field, solution_advected_field_old, level_set_extrapolated, dt, dt);
 
-
     solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
     solution_advected_field.copy_locally_owned_data_from(level_set_extrapolated);
 
