@@ -19,6 +19,9 @@ namespace MeltPoolDG
     {
     public:
       virtual void
+      init_time_advance() = 0;
+
+      virtual void
       solve() = 0;
 
       virtual void

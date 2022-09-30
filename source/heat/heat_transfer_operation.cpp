@@ -12,6 +12,7 @@ namespace MeltPoolDG::Heat
     const ScratchData<dim> &                 scratch_data_in,
     const HeatData<double> &                 heat_data_in,
     const Material<double> &                 material,
+    const TimeIterator<double> &             time_iterator,
     const unsigned int                       temp_dof_idx_in,
     const unsigned int                       temp_hanging_nodes_dof_idx_in,
     const unsigned int                       temp_quad_idx_in,
@@ -22,6 +23,7 @@ namespace MeltPoolDG::Heat
     : scratch_data(scratch_data_in)
     , bc_data(bc_data_in)
     , heat_data(heat_data_in)
+    , time_iterator(time_iterator)
     , temp_dof_idx(temp_dof_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , temp_quad_idx(temp_quad_idx_in)
@@ -129,12 +131,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferOperation<dim>::solve(
-    const TimeIterator<double> &time_iterator) // @todo: move TimeIterator also to constructor?
+  HeatTransferOperation<dim>::init_time_advance()
   {
-    if (!heat_data.linear_solver.do_matrix_free)
-      AssertThrow(false, ExcNotImplemented());
-
     heat_operator->reset_time_increment(time_iterator.get_current_time_increment());
 
     if (heat_data.enable_time_dependent_bc)
@@ -162,6 +160,14 @@ namespace MeltPoolDG::Heat
 
     // apply hanging node constraints to predictor
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature);
+  }
+
+  template <int dim>
+  void
+  HeatTransferOperation<dim>::solve()
+  {
+    if (!heat_data.linear_solver.do_matrix_free)
+      AssertThrow(false, ExcNotImplemented());
 
     // setup preconditioner
     heat_operator->update_ghost_values();

@@ -49,6 +49,9 @@ namespace MeltPoolDG
        */
       VectorType solution_level_set;
 
+      VectorType delta_psi_vec;
+      VectorType delta_psi_vec_old;
+
       ReinitializationOperation() = default;
 
       void
@@ -73,6 +76,9 @@ namespace MeltPoolDG
 
       void
       update_dof_idx(const unsigned int &reinit_dof_idx_in) override;
+
+      void
+      init_time_advance(const double d_tau);
 
       void
       solve(const double d_tau) override;

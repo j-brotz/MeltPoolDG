@@ -92,8 +92,7 @@ namespace MeltPoolDG::Heat
                   }
               }
           }
-
-        heat_operation->solve(time_iterator);
+        heat_operation->solve();
 
         // ... and output the results to vtk files.
         output_results(n, time_iterator.get_current_time(), base_in);
@@ -241,6 +240,7 @@ namespace MeltPoolDG::Heat
                                                                   *scratch_data,
                                                                   base_in->parameters.heat,
                                                                   *material,
+                                                                  time_iterator,
                                                                   temp_dof_idx,
                                                                   temp_hanging_nodes_dof_idx,
                                                                   temp_quad_idx,

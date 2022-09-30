@@ -50,6 +50,9 @@ namespace MeltPoolDG::Flow
     void
     reinit_3();
 
+    void
+    init_time_advance() override;
+
     /**
      * Solver time step
      */

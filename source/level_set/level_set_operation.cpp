@@ -265,6 +265,14 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
+  LevelSetOperation<dim>::init_time_advance()
+  {
+    // advec_diff_operation->init_time_advance(time_stepping.get_current_time_increment());
+    transform_level_set_to_smooth_heaviside();
+  }
+
+  template <int dim>
+  void
   LevelSetOperation<dim>::solve(const VectorType &advection_velocity)
   {
     /*
