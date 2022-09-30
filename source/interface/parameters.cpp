@@ -305,6 +305,7 @@ namespace MeltPoolDG
       advec_diff.linear_solver.solver_type         = LinearSolverType::GMRES;
       advec_diff.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       advec_diff.linear_solver.add_parameters(prm);
+      prm.add_parameter("predictor", advec_diff.predictor, "Choose the predictor type.");
     }
     prm.leave_subsection();
 
@@ -389,6 +390,7 @@ namespace MeltPoolDG
       reinit.linear_solver.solver_type         = LinearSolverType::CG;
       reinit.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       reinit.linear_solver.add_parameters(prm);
+      prm.add_parameter("predictor", reinit.predictor, "Choose the predictor type.");
     }
     prm.leave_subsection();
     /*
@@ -510,6 +512,8 @@ namespace MeltPoolDG
       heat.linear_solver.solver_type         = LinearSolverType::GMRES;
       heat.linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
       heat.linear_solver.add_parameters(prm);
+
+      prm.add_parameter("predictor", heat.predictor, "Choose the predictor type.");
     }
     prm.leave_subsection();
     /*

@@ -127,12 +127,12 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::init_time_advance(const double d_tau)
   {
-    // TODO remove
-    delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
-    delta_psi_vec = 0.0;
-
-    // TODO activate
-    if (false)
+    if (reinit_data.predictor == PredictorType::none)
+      {
+        delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
+        delta_psi_vec = 0.0;
+      }
+    else if (reinit_data.predictor == PredictorType::linear)
       {
         VectorType delta_psi_extrapolated;
         scratch_data->initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
@@ -146,6 +146,7 @@ namespace MeltPoolDG::Reinitialization
         // apply hanging node constraints to predictor
         scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
       }
+
     // zero-out rhs
     rhs = 0.0;
 

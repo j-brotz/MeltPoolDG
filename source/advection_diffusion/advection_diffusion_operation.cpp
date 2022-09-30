@@ -95,11 +95,12 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperation<dim>::init_time_advance(const double dt)
   {
-    // TODO: delete
-    solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
-    solution_advected_field = 0.0;
-    // TODO: activate
-    if (false)
+    if (this->advec_diff_data.predictor == PredictorType::none)
+      {
+        solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
+        solution_advected_field = 0.0;
+      }
+    else if (this->advec_diff_data.predictor == PredictorType::linear)
       {
         VectorType level_set_extrapolated;
         scratch_data->initialize_dof_vector(level_set_extrapolated, advec_diff_dof_idx);

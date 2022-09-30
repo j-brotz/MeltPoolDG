@@ -69,6 +69,14 @@ namespace MeltPoolDG
 
   BETTER_ENUM(InterfaceForceType, char, diffuse, sharp)
 
+  // choose the particular predictor type for the nonlinear/linear solver
+  BETTER_ENUM(PredictorType,
+              char,
+              // no predictor specified; use old value as initial guess
+              none,
+              // calculate the predictor by a linear combination from the two old solution vectors
+              linear)
+
   template <typename number = double>
   struct NonlinearSolverData
   {
@@ -131,6 +139,7 @@ namespace MeltPoolDG
     std::string              modeltype            = "olsson2007";
     std::string              implementation       = "meltpooldg";
     LinearSolverData<number> linear_solver;
+    PredictorType            predictor = PredictorType::none;
   };
 
   template <typename number = double>
@@ -140,6 +149,7 @@ namespace MeltPoolDG
     std::string              time_integration_scheme = "crank_nicolson";
     std::string              implementation          = "meltpooldg";
     LinearSolverData<number> linear_solver;
+    PredictorType            predictor = PredictorType::none;
   };
 
   template <typename number = double>
@@ -178,6 +188,7 @@ namespace MeltPoolDG
     LinearSolverData<number>                    linear_solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     bool                                        interpolate_rho_times_cp = false;
+    PredictorType                               predictor                = PredictorType::linear;
   };
 
   template <typename number = double>
