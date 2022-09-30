@@ -95,17 +95,26 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperation<dim>::init_time_advance(const double dt)
   {
-    VectorType level_set_extrapolated;
-    scratch_data->initialize_dof_vector(level_set_extrapolated, advec_diff_dof_idx);
-
-    UtilityFunctions::compute_linear_predictor(
-      solution_advected_field, solution_advected_field_old, level_set_extrapolated, dt, dt);
-
+    // TODO: delete
     solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
-    solution_advected_field.copy_locally_owned_data_from(level_set_extrapolated);
+    solution_advected_field = 0.0;
+    // TODO: activate
+    if (false)
+      {
+        VectorType level_set_extrapolated;
+        scratch_data->initialize_dof_vector(level_set_extrapolated, advec_diff_dof_idx);
+
+        UtilityFunctions::compute_linear_predictor(
+          solution_advected_field, solution_advected_field_old, level_set_extrapolated, dt, dt);
+
+        solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
+        solution_advected_field.copy_locally_owned_data_from(level_set_extrapolated);
+      }
 
     // apply hanging node constraints to predictor
     scratch_data->get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
+
+    rhs = 0.0;
   }
 
   template <int dim>
@@ -113,7 +122,6 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperation<dim>::solve(const double dt, const VectorType &advection_velocity)
   {
     init_time_advance(dt);
-    rhs = 0.0;
 
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   VectorTools::compute_L2_norm<dim>(advection_velocity,
