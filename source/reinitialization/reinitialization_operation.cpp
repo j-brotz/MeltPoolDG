@@ -22,8 +22,6 @@ namespace MeltPoolDG::Reinitialization
     , ls_dof_idx(ls_dof_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
   {
-    scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx_in);
-
     AssertThrow(reinit_data.linear_solver.solver_type == LinearSolverType::CG ||
                   reinit_data.linear_solver.do_matrix_free == false,
                 ExcMessage(
@@ -64,6 +62,7 @@ namespace MeltPoolDG::Reinitialization
      *   and matrix-free computation.
      */
     create_operator();
+    scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
     scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
     scratch_data->initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
     scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
@@ -98,7 +97,6 @@ namespace MeltPoolDG::Reinitialization
     /*
      *    copy the given solution into the member variable
      */
-    scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
     solution_level_set.copy_locally_owned_data_from(solution_level_set_in);
     /*
      *    update the normal vector field corresponding to the given solution of the
@@ -221,6 +219,7 @@ namespace MeltPoolDG::Reinitialization
                                       "F");
       }
     scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
+
     solution_level_set.zero_out_ghost_values();
     get_normal_vector().zero_out_ghost_values();
 

@@ -103,9 +103,9 @@ namespace MeltPoolDG
       update_operator();
 
     private:
-      const std::shared_ptr<const ScratchData<dim>> &scratch_data;
-      const ReinitializationData<double>             reinit_data;
-      const TimeIterator<double> &                   time_iterator;
+      const std::shared_ptr<const ScratchData<dim>> scratch_data;
+      const ReinitializationData<double>            reinit_data;
+      const TimeIterator<double> &                  time_iterator;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

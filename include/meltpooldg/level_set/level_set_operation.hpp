@@ -30,7 +30,7 @@ namespace MeltPoolDG::LevelSet
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const std::shared_ptr<const ScratchData<dim>> &scratch_data;
+    const std::shared_ptr<const ScratchData<dim>> scratch_data;
 
     // Time stepping of the overall problem
     const TimeIterator<double> &time_stepping;
