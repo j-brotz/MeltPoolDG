@@ -20,6 +20,7 @@
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
@@ -53,15 +54,13 @@ namespace MeltPoolDG
       VectorType delta_psi_vec_old;
       VectorType rhs;
 
-      ReinitializationOperation() = default;
-
-      void
-      initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const Parameters<double> &                     data_in,
-                 const unsigned int                             reinit_dof_idx_in,
-                 const unsigned int                             reinit_quad_idx_in,
-                 const unsigned int                             ls_dof_idx_in,
-                 const unsigned int                             normal_dof_idx_in) override;
+      ReinitializationOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
+                                const Parameters<double> &                     data_in,
+                                const TimeIterator<double> &                   time_iterator,
+                                const unsigned int                             reinit_dof_idx_in,
+                                const unsigned int                             reinit_quad_idx_in,
+                                const unsigned int                             ls_dof_idx_in,
+                                const unsigned int                             normal_dof_idx_in);
 
       void
       reinit() override;
@@ -79,10 +78,10 @@ namespace MeltPoolDG
       update_dof_idx(const unsigned int &reinit_dof_idx_in) override;
 
       void
-      init_time_advance(const double d_tau);
+      init_time_advance();
 
       void
-      solve(const double d_tau) override;
+      solve() override;
 
       double
       get_max_change_level_set() const final;
@@ -115,6 +114,7 @@ namespace MeltPoolDG
 
     private:
       std::shared_ptr<const ScratchData<dim>> scratch_data;
+      const TimeIterator<double> &            time_iterator;
       /*
        *  This shared pointer will point to your user-defined reinitialization operator.
        */

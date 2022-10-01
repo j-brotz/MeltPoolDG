@@ -94,13 +94,14 @@ namespace MeltPoolDG::LevelSet
         if ((base_in->parameters.reinit.implementation ==
              "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
           {
-            reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>();
-            reinit_operation->initialize(scratch_data,
-                                         base_in->parameters,
-                                         reinit_dof_idx_in,
-                                         ls_quad_idx_in,
-                                         ls_dof_idx,
-                                         normal_dof_idx_in);
+            reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>(
+              scratch_data,
+              base_in->parameters,
+              reinit_time_iterator,
+              reinit_dof_idx_in,
+              ls_quad_idx_in,
+              ls_dof_idx,
+              normal_dof_idx_in);
           }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
         else if ((base_in->parameters.reinit.implementation == "adaflo") ||
@@ -111,6 +112,7 @@ namespace MeltPoolDG::LevelSet
             reinit_operation =
               std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
                 *scratch_data,
+                reinit_time_iterator,
                 reinit_dof_idx_in,
                 ls_quad_idx_in,
                 normal_dof_idx_in,
@@ -466,13 +468,13 @@ namespace MeltPoolDG::LevelSet
         Journal::print_decoration_line(scratch_data->get_pcout());
         while (!reinit_time_iterator.is_finished())
           {
-            const double d_tau = reinit_time_iterator.get_next_time_increment();
+            reinit_time_iterator.get_next_time_increment();
 
             std::ostringstream str;
             str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
             Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
 
-            reinit_operation->solve(d_tau);
+            reinit_operation->solve();
 
             // Check how much the level set changed due to reinitialization
             if (reinit_operation->get_max_change_level_set() < level_set_data.tol_reinit)

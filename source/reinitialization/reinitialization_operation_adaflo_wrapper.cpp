@@ -6,12 +6,14 @@ namespace MeltPoolDG::Reinitialization
 {
   template <int dim>
   ReinitializationOperationAdaflo<dim>::ReinitializationOperationAdaflo(
-    const ScratchData<dim> &  scratch_data,
-    const int                 reinit_dof_idx,
-    const int                 reinit_quad_idx,
-    const int                 normal_dof_idx,
-    const Parameters<double> &parameters)
+    const ScratchData<dim> &    scratch_data,
+    const TimeIterator<double> &time_iterator,
+    const int                   reinit_dof_idx,
+    const int                   reinit_quad_idx,
+    const int                   normal_dof_idx,
+    const Parameters<double> &  parameters)
     : scratch_data(scratch_data)
+    , time_iterator(time_iterator)
     , pcout(scratch_data.get_pcout(1))
   {
     /**
@@ -109,10 +111,10 @@ namespace MeltPoolDG::Reinitialization
 
   template <int dim>
   void
-  ReinitializationOperationAdaflo<dim>::solve(const double dt)
+  ReinitializationOperationAdaflo<dim>::solve()
   {
     reinit_operation_adaflo->reinitialize(
-      dt,
+      time_iterator.get_current_time_increment(),
       1 /*stab_steps --> we only solve one increment of reinitialization*/,
       0 /*additional diffusion steps --> no input parameter provided; would be useful for highly
            distorted solutions*/

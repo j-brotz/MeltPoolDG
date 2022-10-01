@@ -12,10 +12,10 @@ namespace MeltPoolDG::Reinitialization
 
     while (!time_iterator.is_finished())
       {
-        const double d_tau = time_iterator.get_next_time_increment();
+        time_iterator.get_next_time_increment();
         time_iterator.print_me(scratch_data->get_pcout());
 
-        reinit_operation->solve(d_tau);
+        reinit_operation->solve();
 
         output_results(time_iterator.get_current_time_step_number(),
                        time_iterator.get_current_time(),
@@ -101,14 +101,13 @@ namespace MeltPoolDG::Reinitialization
 
     if (base_in->parameters.reinit.implementation == "meltpooldg")
       {
-        reinit_operation = std::make_shared<ReinitializationOperation<dim>>();
-
-        reinit_operation->initialize(scratch_data,
-                                     base_in->parameters,
-                                     reinit_dof_idx,
-                                     reinit_quad_idx,
-                                     reinit_dof_idx,
-                                     normal_dof_idx);
+        reinit_operation = std::make_shared<ReinitializationOperation<dim>>(scratch_data,
+                                                                            base_in->parameters,
+                                                                            time_iterator,
+                                                                            reinit_dof_idx,
+                                                                            reinit_quad_idx,
+                                                                            reinit_dof_idx,
+                                                                            normal_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.reinit.implementation == "adaflo")
@@ -117,6 +116,7 @@ namespace MeltPoolDG::Reinitialization
 
         reinit_operation =
           std::make_shared<ReinitializationOperationAdaflo<dim>>(*scratch_data,
+                                                                 time_iterator,
                                                                  reinit_dof_idx,
                                                                  reinit_quad_idx,
                                                                  normal_dof_idx, // normal vec @todo

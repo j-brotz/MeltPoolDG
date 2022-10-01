@@ -23,15 +23,7 @@ namespace MeltPoolDG
     {
     public:
       virtual void
-      solve(const double dt) = 0;
-
-      virtual void
-      initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const Parameters<double> &                     data_in,
-                 const unsigned int                             reinit_dof_idx_in,
-                 const unsigned int                             reinit_quad_idx_in,
-                 const unsigned int                             ls_dof_idx_in,
-                 const unsigned int                             normal_dof_idx_in);
+      solve() = 0;
 
       virtual void
       reinit() = 0;

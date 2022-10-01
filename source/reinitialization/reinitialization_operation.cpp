@@ -5,26 +5,24 @@
 namespace MeltPoolDG::Reinitialization
 {
   template <int dim>
-  void
-  ReinitializationOperation<dim>::initialize(
+  ReinitializationOperation<dim>::ReinitializationOperation(
     const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
     const Parameters<double> &                     data_in,
+    const TimeIterator<double> &                   time_iterator,
     const unsigned int                             reinit_dof_idx_in,
     const unsigned int                             reinit_quad_idx_in,
     const unsigned int                             ls_dof_idx_in,
     const unsigned int                             normal_dof_idx_in)
+    : reinit_data(data_in.reinit)
+    , scratch_data(scratch_data_in)
+    , time_iterator(time_iterator)
+    , reinit_dof_idx(reinit_dof_idx_in)
+    , reinit_quad_idx(reinit_quad_idx_in)
+    , ls_dof_idx(ls_dof_idx_in)
+    , normal_dof_idx(normal_dof_idx_in)
   {
-    scratch_data    = scratch_data_in;
-    reinit_dof_idx  = reinit_dof_idx_in;
-    reinit_quad_idx = reinit_quad_idx_in;
-    ls_dof_idx      = ls_dof_idx_in;
-    normal_dof_idx  = normal_dof_idx_in;
     scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx_in);
-    /*
-     *    initialize the (local) parameters of the reinitialization
-     *    from the global user-defined parameters
-     */
-    reinit_data = data_in.reinit;
+
     AssertThrow(reinit_data.linear_solver.solver_type == LinearSolverType::CG ||
                   reinit_data.linear_solver.do_matrix_free == false,
                 ExcMessage(
@@ -125,7 +123,7 @@ namespace MeltPoolDG::Reinitialization
 
   template <int dim>
   void
-  ReinitializationOperation<dim>::init_time_advance(const double d_tau)
+  ReinitializationOperation<dim>::init_time_advance()
   {
     if (reinit_data.predictor == PredictorType::none)
       {
@@ -138,8 +136,11 @@ namespace MeltPoolDG::Reinitialization
         scratch_data->initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
 
         // TODO: use old time increment
-        UtilityFunctions::compute_linear_predictor(
-          delta_psi_vec, delta_psi_vec_old, delta_psi_extrapolated, d_tau, d_tau);
+        UtilityFunctions::compute_linear_predictor(delta_psi_vec,
+                                                   delta_psi_vec_old,
+                                                   delta_psi_extrapolated,
+                                                   time_iterator.get_current_time_increment(),
+                                                   time_iterator.get_old_time_increment());
 
         delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
         delta_psi_vec.copy_locally_owned_data_from(delta_psi_extrapolated);
@@ -147,17 +148,17 @@ namespace MeltPoolDG::Reinitialization
         // apply hanging node constraints to predictor
         scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
       }
-    reinit_operator->reset_time_increment(d_tau);
+    reinit_operator->reset_time_increment(time_iterator.get_current_time_increment());
   }
 
   template <int dim>
   void
-  ReinitializationOperation<dim>::solve(const double d_tau)
+  ReinitializationOperation<dim>::solve()
   {
     get_normal_vector().update_ghost_values();
     solution_level_set.update_ghost_values();
 
-    init_time_advance(d_tau);
+    init_time_advance();
 
     int iter = 0;
 
