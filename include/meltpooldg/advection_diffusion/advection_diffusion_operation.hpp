@@ -15,6 +15,7 @@
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion
 {
@@ -33,15 +34,13 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  All the necessary parameters are stored in this struct.
      */
 
-    AdvectionDiffusionOperation() = default;
-
-    void
-    initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-               const AdvectionDiffusionData<double> &         advec_diff_data_in,
-               const unsigned int                             advec_diff_dof_idx_in,
-               const unsigned int                             advec_diff_hanging_nodes_dof_idx_in,
-               const unsigned int                             advec_diff_quad_idx_in,
-               const unsigned int                             velocity_dof_idx_in) override;
+    AdvectionDiffusionOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
+                                const AdvectionDiffusionData<double> &         advec_diff_data_in,
+                                const TimeIterator<double> &                   time_iterator,
+                                const unsigned int advec_diff_dof_idx_in,
+                                const unsigned int advec_diff_hanging_nodes_dof_idx_in,
+                                const unsigned int advec_diff_quad_idx_in,
+                                const unsigned int velocity_dof_idx_in);
 
     /**
      * Provide a field function for the initial solution of the advected field
@@ -54,10 +53,10 @@ namespace MeltPoolDG::AdvectionDiffusion
     reinit() override;
 
     void
-    init_time_advance(double dt) override;
+    init_time_advance() override;
 
     void
-    solve(double dt, const VectorType &advection_velocity) override;
+    solve(const VectorType &advection_velocity) override;
 
     const LinearAlgebra::distributed::Vector<double> &
     get_advected_field() const override;
@@ -92,6 +91,8 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  This pointer will point to your user-defined advection_diffusion operator.
      */
     std::unique_ptr<OperatorBase<dim, double>> advec_diff_operator;
+
+    const TimeIterator<double> &time_iterator;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

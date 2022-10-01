@@ -163,7 +163,7 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    advect_level_set(const double dt, const VectorType &advection_velocity);
+    advect_level_set(const VectorType &advection_velocity);
 
     void
     do_reinitialization();

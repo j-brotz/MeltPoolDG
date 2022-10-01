@@ -49,13 +49,14 @@ namespace MeltPoolDG::LevelSet
       {
         (void)ls_zero_bc_idx;
         advec_diff_operation =
-          std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperation<dim>>();
-        advec_diff_operation->initialize(scratch_data,
-                                         base_in->parameters.advec_diff,
-                                         ls_dof_idx,
-                                         ls_hanging_nodes_dof_idx_in,
-                                         ls_quad_idx_in,
-                                         vel_dof_idx);
+          std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperation<dim>>(
+            scratch_data,
+            base_in->parameters.advec_diff,
+            time_stepping,
+            ls_dof_idx,
+            ls_hanging_nodes_dof_idx_in,
+            ls_quad_idx_in,
+            vel_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if ((base_in->parameters.advec_diff.implementation == "adaflo") ||
@@ -64,6 +65,7 @@ namespace MeltPoolDG::LevelSet
         advec_diff_operation =
           std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperationAdaflo<dim>>(
             *scratch_data,
+            time_stepping,
             ls_zero_bc_idx,
             ls_dof_idx,
             ls_quad_idx_in,
@@ -281,7 +283,7 @@ namespace MeltPoolDG::LevelSet
      */
     {
       TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::advect");
-      advect_level_set(time_stepping.get_current_time_increment(), advection_velocity);
+      advect_level_set(advection_velocity);
     }
     /*
      *  2) solve the reinitialization problem of the level set equation
@@ -508,9 +510,9 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::advect_level_set(const double dt, const VectorType &advection_velocity)
+  LevelSetOperation<dim>::advect_level_set(const VectorType &advection_velocity)
   {
-    advec_diff_operation->solve(dt, advection_velocity);
+    advec_diff_operation->solve(advection_velocity);
   }
 
   template <int dim>

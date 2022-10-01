@@ -26,27 +26,10 @@ namespace MeltPoolDG
       AdvectionDiffusionData<double> advec_diff_data;
 
       virtual void
-      init_time_advance(const double dt) = 0;
+      init_time_advance() = 0;
 
       virtual void
-      solve(const double dt, const LinearAlgebra::distributed::Vector<double> &velocity) = 0;
-
-      virtual void
-      initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const AdvectionDiffusionData<double> &         data_in,
-                 const unsigned int                             advec_diff_dof_idx_in,
-                 const unsigned int                             advec_diff_hanging_nodes_idx_in,
-                 const unsigned int                             advec_diff_quad_idx_in,
-                 const unsigned int                             velocity_dof_idx_in)
-      {
-        (void)scratch_data_in;
-        (void)data_in;
-        (void)advec_diff_dof_idx_in;
-        (void)advec_diff_hanging_nodes_idx_in;
-        (void)advec_diff_quad_idx_in;
-        (void)velocity_dof_idx_in;
-        AssertThrow(false, ExcNotImplemented());
-      }
+      solve(const LinearAlgebra::distributed::Vector<double> &velocity) = 0;
 
       virtual void
       reinit()
