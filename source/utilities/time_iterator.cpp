@@ -31,7 +31,7 @@ namespace MeltPoolDG
 
   template <typename number>
   number
-  TimeIterator<number>::get_next_time_increment()
+  TimeIterator<number>::compute_next_time_increment()
   {
     old_time           = current_time;
     old_time_increment = current_time_increment;

@@ -30,7 +30,7 @@ namespace MeltPoolDG::LevelSet
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    std::shared_ptr<const ScratchData<dim>> scratch_data;
+    const std::shared_ptr<const ScratchData<dim>> scratch_data;
 
     // Time stepping of the overall problem
     const TimeIterator<double> &time_stepping;
@@ -50,16 +50,16 @@ namespace MeltPoolDG::LevelSet
     /*
      *  necessary parameters
      */
-    LevelSetData<double>         level_set_data;
-    ReinitializationData<double> reinit_data;
+    const LevelSetData<double>         level_set_data;
+    const ReinitializationData<double> reinit_data;
     /*
      * select the relevant DoFHandler
      */
-    unsigned int ls_dof_idx;
-    unsigned int ls_hanging_nodes_dof_idx;
-    unsigned int ls_quad_idx;
-    unsigned int curv_dof_idx;
-    unsigned int reinit_dof_idx;
+    const unsigned int ls_dof_idx;
+    const unsigned int ls_hanging_nodes_dof_idx;
+    const unsigned int ls_quad_idx;
+    const unsigned int curv_dof_idx;
+    const unsigned int reinit_dof_idx;
 
     bool very_first_step = true;
     /*
@@ -163,7 +163,7 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    advect_level_set(const double dt, const VectorType &advection_velocity);
+    advect_level_set(const VectorType &advection_velocity);
 
     void
     do_reinitialization();
@@ -237,6 +237,6 @@ namespace MeltPoolDG::LevelSet
     correct_curvature_values();
 
     void
-    set_level_set_parameters(const Parameters<double> &data_in);
+    set_level_set_parameters();
   };
 } // namespace MeltPoolDG::LevelSet

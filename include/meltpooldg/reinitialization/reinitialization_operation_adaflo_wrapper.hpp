@@ -15,6 +15,7 @@
 #  include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #  include <meltpooldg/utilities/conditional_ostream.hpp>
 #  include <meltpooldg/utilities/generic_data_out.hpp>
+#  include <meltpooldg/utilities/time_iterator.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>
@@ -38,11 +39,12 @@ namespace MeltPoolDG
       /**
        * Constructor.
        */
-      ReinitializationOperationAdaflo(const ScratchData<dim> &  scratch_data,
-                                      const int                 reinit_dof_idx,
-                                      const int                 reinit_quad_idx,
-                                      const int                 normal_dof_idx,
-                                      const Parameters<double> &parameters);
+      ReinitializationOperationAdaflo(const ScratchData<dim> &    scratch_data,
+                                      const TimeIterator<double> &time_iterator,
+                                      const int                   reinit_dof_idx,
+                                      const int                   reinit_quad_idx,
+                                      const int                   normal_dof_idx,
+                                      const Parameters<double> &  parameters);
 
       void
       update_dof_idx(const unsigned int &reinit_dof_idx) override;
@@ -54,7 +56,7 @@ namespace MeltPoolDG
        * Solver time step
        */
       void
-      solve(const double dt) override;
+      solve() override;
 
       const LinearAlgebra::distributed::Vector<double> &
       get_level_set() const override;
@@ -92,6 +94,8 @@ namespace MeltPoolDG
 
     private:
       const ScratchData<dim> &scratch_data;
+
+      const TimeIterator<double> &time_iterator;
       /**
        *  advected field
        */

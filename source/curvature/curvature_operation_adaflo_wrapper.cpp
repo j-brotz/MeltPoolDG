@@ -32,7 +32,13 @@ namespace MeltPoolDG::Curvature
      */
     normal_vector_operation_adaflo =
       std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-        scratch_data, advec_diff_dof_idx, curv_dof_idx, curv_quad_idx, advected_field, data_in);
+        scratch_data,
+        advec_diff_dof_idx,
+        curv_dof_idx,
+        curv_quad_idx,
+        advected_field,
+        data_in.normal_vec,
+        data_in.reinit.scale_factor_epsilon);
 
     this->reinit();
     /*

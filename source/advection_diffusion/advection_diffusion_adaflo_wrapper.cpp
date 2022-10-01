@@ -9,6 +9,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   template <int dim>
   AdvectionDiffusionOperationAdaflo<dim>::AdvectionDiffusionOperationAdaflo(
     const ScratchData<dim> &             scratch_data,
+    const TimeIterator<double> &         time_iterator,
     const int                            advec_diff_zero_dirichlet_dof_idx,
     const int                            advec_diff_dirichlet_dof_idx,
     const int                            advec_diff_quad_idx,
@@ -16,6 +17,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     std::shared_ptr<SimulationBase<dim>> base_in,
     std::string                          operation_name)
     : scratch_data(scratch_data)
+    , time_iterator(time_iterator)
     , pcout(scratch_data.get_pcout(1))
     , dirichlet_dof_idx(advec_diff_dirichlet_dof_idx)
   {
@@ -95,7 +97,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::init_time_advance(const double /*dt*/)
+  AdvectionDiffusionOperationAdaflo<dim>::init_time_advance()
   {
     // TODO
     AssertThrow(false, ExcNotImplemented());
@@ -103,7 +105,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::solve(const double dt, const VectorType &current_velocity)
+  AdvectionDiffusionOperationAdaflo<dim>::solve(const VectorType &current_velocity)
   {
     advected_field_old_old.reinit(advected_field_old);
     advected_field_old_old.copy_locally_owned_data_from(advected_field_old);
@@ -120,7 +122,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     // solution_update.sadd((step_size + step_size_old) / step_size_old,
     //-step_size / step_size_old,
     // solution_old);
-    advec_diff_operation->advance_concentration(dt);
+    advec_diff_operation->advance_concentration(time_iterator.get_current_time_increment());
 
     std::ostringstream str;
     str << "|phi| = " << std::setw(11) << std::setprecision(10) << std::left

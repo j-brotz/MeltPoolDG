@@ -12,25 +12,24 @@
 namespace MeltPoolDG::AdvectionDiffusion
 {
   template <int dim>
-  void
-  AdvectionDiffusionOperation<dim>::initialize(
+  AdvectionDiffusionOperation<dim>::AdvectionDiffusionOperation(
     const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
     const AdvectionDiffusionData<double> &         advec_diff_data_in,
+    const TimeIterator<double> &                   time_iterator,
     const unsigned int                             advec_diff_dof_idx_in,
     const unsigned int                             advec_diff_hanging_nodes_dof_idx_in,
     const unsigned int                             advec_diff_quad_idx_in,
     const unsigned int                             velocity_dof_idx_in)
+    : scratch_data(scratch_data_in)
+    , time_iterator(time_iterator)
+    , advec_diff_dof_idx(advec_diff_dof_idx_in)
+    , advec_diff_quad_idx(advec_diff_quad_idx_in)
+    , advec_diff_hanging_nodes_dof_idx(advec_diff_hanging_nodes_dof_idx_in)
+    , velocity_dof_idx(velocity_dof_idx_in)
   {
-    scratch_data                     = scratch_data_in;
-    advec_diff_dof_idx               = advec_diff_dof_idx_in;
-    advec_diff_quad_idx              = advec_diff_quad_idx_in;
-    advec_diff_hanging_nodes_dof_idx = advec_diff_hanging_nodes_dof_idx_in;
-    velocity_dof_idx                 = velocity_dof_idx_in;
-    /*
-     *  set the advection diffusion data
-     */
     this->advec_diff_data = advec_diff_data_in;
 
+    // setup preconditioner matrixfree
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
         preconditioner_matrixfree = std::make_shared<
@@ -93,7 +92,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim>
   void
-  AdvectionDiffusionOperation<dim>::init_time_advance(const double dt)
+  AdvectionDiffusionOperation<dim>::init_time_advance()
   {
     if (this->advec_diff_data.predictor == PredictorType::none)
       {
@@ -105,8 +104,11 @@ namespace MeltPoolDG::AdvectionDiffusion
         VectorType level_set_extrapolated;
         scratch_data->initialize_dof_vector(level_set_extrapolated, advec_diff_dof_idx);
 
-        UtilityFunctions::compute_linear_predictor(
-          solution_advected_field, solution_advected_field_old, level_set_extrapolated, dt, dt);
+        UtilityFunctions::compute_linear_predictor(solution_advected_field,
+                                                   solution_advected_field_old,
+                                                   level_set_extrapolated,
+                                                   time_iterator.get_current_time_increment(),
+                                                   time_iterator.get_old_time_increment());
 
         solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
         solution_advected_field.copy_locally_owned_data_from(level_set_extrapolated);
@@ -120,9 +122,9 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim>
   void
-  AdvectionDiffusionOperation<dim>::solve(const double dt, const VectorType &advection_velocity)
+  AdvectionDiffusionOperation<dim>::solve(const VectorType &advection_velocity)
   {
-    init_time_advance(dt);
+    init_time_advance();
 
     Journal::print_formatted_norm(scratch_data->get_pcout(1),
                                   VectorTools::compute_L2_norm<dim>(advection_velocity,
@@ -138,7 +140,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     if (!advec_diff_operator)
       create_operator(advection_velocity);
 
-    advec_diff_operator->reset_time_increment(dt);
+    advec_diff_operator->reset_time_increment(time_iterator.get_current_time_increment());
 
     int iter = 0;
 

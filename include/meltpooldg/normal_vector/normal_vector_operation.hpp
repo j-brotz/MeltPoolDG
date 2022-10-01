@@ -48,21 +48,17 @@ namespace MeltPoolDG
       using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
     public:
-      NormalVectorData<double> normal_vector_data;
       /*
        *    This is the primary solution variable of this module, which will be also publically
        *    accessible for output_results.
        */
       BlockVectorType solution_normal_vector;
 
-      NormalVectorOperation() = default;
-
-      void
-      initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const Parameters<double> &                     data_in,
-                 const unsigned int                             normal_dof_idx_in,
-                 const unsigned int                             normal_quad_idx_in,
-                 const unsigned int                             ls_dof_idx_in) override;
+      NormalVectorOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
+                            const NormalVectorData<double> &               normal_vector_data,
+                            const unsigned int                             normal_dof_idx_in,
+                            const unsigned int                             normal_quad_idx_in,
+                            const unsigned int                             ls_dof_idx_in);
 
       void
       reinit() override;
@@ -85,19 +81,20 @@ namespace MeltPoolDG
       create_operator(const VectorType &solution_levelset_in);
 
     private:
-      std::shared_ptr<const ScratchData<dim>> scratch_data;
-      /*
-       *  This pointer will point to your user-defined normal vector operator.
-       */
-      std::unique_ptr<OperatorBase<dim, double>> normal_vector_operator;
+      const std::shared_ptr<const ScratchData<dim>> scratch_data;
+      const NormalVectorData<double>                normal_vector_data;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
        *  multiple DoFHandlers, quadrature rules, etc.
        */
-      unsigned int normal_dof_idx;
-      unsigned int normal_quad_idx;
-      unsigned int ls_dof_idx;
+      const unsigned int normal_dof_idx;
+      const unsigned int normal_quad_idx;
+      const unsigned int ls_dof_idx;
+      /*
+       *  This pointer will point to your user-defined normal vector operator.
+       */
+      std::unique_ptr<OperatorBase<dim, double>> normal_vector_operator;
       /*
        * Preconditioner for the matrix-free curvature operator
        */

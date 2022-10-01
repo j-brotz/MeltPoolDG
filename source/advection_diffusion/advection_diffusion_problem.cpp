@@ -24,13 +24,13 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     while (!time_iterator.is_finished())
       {
-        const double dt = time_iterator.get_next_time_increment();
+        time_iterator.compute_next_time_increment();
         time_iterator.print_me(scratch_data->get_pcout());
         /*
          * compute the advection velocity for the current time
          */
         compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
-        advec_diff_operation->solve(dt, advection_velocity);
+        advec_diff_operation->solve(advection_velocity);
         /*
          *  do paraview output if requested
          */
@@ -170,14 +170,14 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (base_in->parameters.advec_diff.implementation == "meltpooldg")
       {
-        advec_diff_operation = std::make_shared<AdvectionDiffusionOperation<dim>>();
-
-        advec_diff_operation->initialize(scratch_data,
-                                         base_in->parameters.advec_diff,
-                                         advec_diff_dof_idx,
-                                         advec_diff_hanging_nodes_dof_idx,
-                                         advec_diff_quad_idx,
-                                         velocity_dof_idx);
+        advec_diff_operation =
+          std::make_shared<AdvectionDiffusionOperation<dim>>(scratch_data,
+                                                             base_in->parameters.advec_diff,
+                                                             time_iterator,
+                                                             advec_diff_dof_idx,
+                                                             advec_diff_hanging_nodes_dof_idx,
+                                                             advec_diff_quad_idx,
+                                                             velocity_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.advec_diff.implementation == "adaflo")
@@ -186,6 +186,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                     ExcNotImplemented());
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperationAdaflo<dim>>(*scratch_data,
+                                                                   time_iterator,
                                                                    advec_diff_adaflo_dof_idx,
                                                                    advec_diff_dof_idx,
                                                                    advec_diff_quad_idx,

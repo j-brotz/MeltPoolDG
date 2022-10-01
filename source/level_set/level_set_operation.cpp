@@ -35,6 +35,8 @@ namespace MeltPoolDG::LevelSet
     const unsigned int                             ls_zero_bc_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
+    , level_set_data(base_in->parameters.ls)
+    , reinit_data(base_in->parameters.reinit)
     , ls_dof_idx(ls_dof_idx_in)
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx_in)
     , ls_quad_idx(ls_quad_idx_in)
@@ -49,13 +51,14 @@ namespace MeltPoolDG::LevelSet
       {
         (void)ls_zero_bc_idx;
         advec_diff_operation =
-          std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperation<dim>>();
-        advec_diff_operation->initialize(scratch_data,
-                                         base_in->parameters.advec_diff,
-                                         ls_dof_idx,
-                                         ls_hanging_nodes_dof_idx_in,
-                                         ls_quad_idx_in,
-                                         vel_dof_idx);
+          std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperation<dim>>(
+            scratch_data,
+            base_in->parameters.advec_diff,
+            time_stepping,
+            ls_dof_idx,
+            ls_hanging_nodes_dof_idx_in,
+            ls_quad_idx_in,
+            vel_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if ((base_in->parameters.advec_diff.implementation == "adaflo") ||
@@ -64,6 +67,7 @@ namespace MeltPoolDG::LevelSet
         advec_diff_operation =
           std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperationAdaflo<dim>>(
             *scratch_data,
+            time_stepping,
             ls_zero_bc_idx,
             ls_dof_idx,
             ls_quad_idx_in,
@@ -82,7 +86,7 @@ namespace MeltPoolDG::LevelSet
      *  Already determined parameters from the initialize call of advec_diff_operation
      *  are overwritten.
      */
-    set_level_set_parameters(base_in->parameters);
+    set_level_set_parameters();
 
     /*
      *    initialize the reinit operation
@@ -92,13 +96,15 @@ namespace MeltPoolDG::LevelSet
         if ((base_in->parameters.reinit.implementation ==
              "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
           {
-            reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>();
-            reinit_operation->initialize(scratch_data,
-                                         base_in->parameters,
-                                         reinit_dof_idx_in,
-                                         ls_quad_idx_in,
-                                         ls_dof_idx,
-                                         normal_dof_idx_in);
+            reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>(
+              scratch_data,
+              base_in->parameters.reinit,
+              base_in->parameters.normal_vec,
+              reinit_time_iterator,
+              reinit_dof_idx_in,
+              ls_quad_idx_in,
+              ls_dof_idx,
+              normal_dof_idx_in);
           }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
         else if ((base_in->parameters.reinit.implementation == "adaflo") ||
@@ -109,6 +115,7 @@ namespace MeltPoolDG::LevelSet
             reinit_operation =
               std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
                 *scratch_data,
+                reinit_time_iterator,
                 reinit_dof_idx_in,
                 ls_quad_idx_in,
                 normal_dof_idx_in,
@@ -124,14 +131,14 @@ namespace MeltPoolDG::LevelSet
     if ((base_in->parameters.curv.implementation ==
          "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
       {
-        curvature_operation = std::make_shared<Curvature::CurvatureOperation<dim>>();
-
-        curvature_operation->initialize(scratch_data,
-                                        base_in->parameters,
-                                        curv_dof_idx_in,
-                                        ls_quad_idx_in,
-                                        normal_dof_idx_in,
-                                        ls_dof_idx);
+        curvature_operation =
+          std::make_shared<Curvature::CurvatureOperation<dim>>(scratch_data,
+                                                               base_in->parameters.curv,
+                                                               base_in->parameters.normal_vec,
+                                                               curv_dof_idx_in,
+                                                               ls_quad_idx_in,
+                                                               normal_dof_idx_in,
+                                                               ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if ((base_in->parameters.curv.implementation == "adaflo") ||
@@ -281,7 +288,7 @@ namespace MeltPoolDG::LevelSet
      */
     {
       TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::advect");
-      advect_level_set(time_stepping.get_current_time_increment(), advection_velocity);
+      advect_level_set(advection_velocity);
     }
     /*
      *  2) solve the reinitialization problem of the level set equation
@@ -464,13 +471,13 @@ namespace MeltPoolDG::LevelSet
         Journal::print_decoration_line(scratch_data->get_pcout());
         while (!reinit_time_iterator.is_finished())
           {
-            const double d_tau = reinit_time_iterator.get_next_time_increment();
+            reinit_time_iterator.compute_next_time_increment();
 
             std::ostringstream str;
             str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
             Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
 
-            reinit_operation->solve(d_tau);
+            reinit_operation->solve();
 
             // Check how much the level set changed due to reinitialization
             if (reinit_operation->get_max_change_level_set() < level_set_data.tol_reinit)
@@ -508,9 +515,9 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::advect_level_set(const double dt, const VectorType &advection_velocity)
+  LevelSetOperation<dim>::advect_level_set(const VectorType &advection_velocity)
   {
-    advec_diff_operation->solve(dt, advection_velocity);
+    advec_diff_operation->solve(advection_velocity);
   }
 
   template <int dim>
@@ -661,15 +668,11 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::set_level_set_parameters(const Parameters<double> &data_in)
+  LevelSetOperation<dim>::set_level_set_parameters()
   {
-    level_set_data = data_in.ls;
-    reinit_data    = data_in.reinit;
-
-    advec_diff_operation->advec_diff_data.diffusivity =
-      data_in.ls.artificial_diffusivity; // @todo: remove level set parameter
+    advec_diff_operation->advec_diff_data.diffusivity = level_set_data.artificial_diffusivity;
     advec_diff_operation->advec_diff_data.time_integration_scheme =
-      data_in.ls.time_integration_scheme; // @todo: remove level set parameter
+      level_set_data.time_integration_scheme;
   }
 
   template <int dim>

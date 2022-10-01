@@ -13,6 +13,7 @@
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulation_base.hpp>
 #  include <meltpooldg/utilities/generic_data_out.hpp>
+#  include <meltpooldg/utilities/time_iterator.hpp>
 
 #  include <adaflo/diagonal_preconditioner.h>
 #  include <adaflo/level_set_okz_advance_concentration.h>
@@ -31,11 +32,12 @@ namespace MeltPoolDG::AdvectionDiffusion
     /**
      * Constructor.
      */
-    AdvectionDiffusionOperationAdaflo(const ScratchData<dim> &scratch_data,
-                                      int                     advec_diff_zero_dirichlet_dof_idx,
-                                      int                     advec_diff_dirichlet_dof_idx,
-                                      int                     advec_diff_quad_idx,
-                                      int                     velocity_dof_idx,
+    AdvectionDiffusionOperationAdaflo(const ScratchData<dim> &    scratch_data,
+                                      const TimeIterator<double> &time_iterator,
+                                      const int                   advec_diff_zero_dirichlet_dof_idx,
+                                      const int                   advec_diff_dirichlet_dof_idx,
+                                      const int                   advec_diff_quad_idx,
+                                      const int                   velocity_dof_idx,
                                       std::shared_ptr<SimulationBase<dim>> base_in,
                                       std::string operation_name = "advection_diffusion");
 
@@ -50,12 +52,12 @@ namespace MeltPoolDG::AdvectionDiffusion
                           const VectorType &   initial_velocity) override;
 
     void
-    init_time_advance(double dt) override;
+    init_time_advance() override;
     /**
      * Solver time step
      */
     void
-    solve(double dt, const VectorType &current_velocity) override;
+    solve(const VectorType &current_velocity) override;
 
     const LinearAlgebra::distributed::Vector<double> &
     get_advected_field() const override;
@@ -97,7 +99,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     void
     initialize_vectors();
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim> &    scratch_data;
+    const TimeIterator<double> &time_iterator;
     /**
      *  advected field
      */
