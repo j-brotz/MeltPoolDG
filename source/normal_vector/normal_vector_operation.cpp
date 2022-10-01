@@ -6,15 +6,15 @@ namespace MeltPoolDG::NormalVector
   template <int dim>
   NormalVectorOperation<dim>::NormalVectorOperation(
     const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const Parameters<double> &                     data_in,
+    const NormalVectorData<double> &               normal_vector_data,
     const unsigned int                             normal_dof_idx_in,
     const unsigned int                             normal_quad_idx_in,
     const unsigned int                             ls_dof_idx_in)
     : scratch_data(scratch_data_in)
+    , normal_vector_data(normal_vector_data)
     , normal_dof_idx(normal_dof_idx_in)
     , normal_quad_idx(normal_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , normal_vector_data(data_in.normal_vec)
   {
     AssertThrow(normal_vector_data.linear_solver.solver_type == LinearSolverType::CG,
                 ExcMessage("The normal vector operation only supports the CG solver type."));

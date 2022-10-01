@@ -7,14 +7,15 @@ namespace MeltPoolDG::Reinitialization
   template <int dim>
   ReinitializationOperation<dim>::ReinitializationOperation(
     const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const Parameters<double> &                     data_in,
+    const ReinitializationData<double> &           reinit_data,
+    const NormalVectorData<double> &               normal_vec_data,
     const TimeIterator<double> &                   time_iterator,
     const unsigned int                             reinit_dof_idx_in,
     const unsigned int                             reinit_quad_idx_in,
     const unsigned int                             ls_dof_idx_in,
     const unsigned int                             normal_dof_idx_in)
-    : reinit_data(data_in.reinit)
-    , scratch_data(scratch_data_in)
+    : scratch_data(scratch_data_in)
+    , reinit_data(reinit_data)
     , time_iterator(time_iterator)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_quad_idx(reinit_quad_idx_in)
@@ -30,29 +31,30 @@ namespace MeltPoolDG::Reinitialization
     /*
      *    initialize normal_vector_field
      */
-    AssertThrow(data_in.normal_vec.linear_solver.do_matrix_free ==
-                  data_in.reinit.linear_solver.do_matrix_free,
+    AssertThrow(normal_vec_data.linear_solver.do_matrix_free ==
+                  reinit_data.linear_solver.do_matrix_free,
                 ExcMessage("For the reinitialization problem both the "
                            " normal vector and the reinitialization operation have to be "
                            " computed either matrix-based or matrix-free."));
 
-    if (data_in.normal_vec.implementation == "meltpooldg")
+    if (normal_vec_data.implementation == "meltpooldg")
       {
         normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperation<dim>>(
-          scratch_data_in, data_in, normal_dof_idx, reinit_quad_idx, ls_dof_idx);
+          scratch_data_in, normal_vec_data, normal_dof_idx, reinit_quad_idx, ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    else if (data_in.normal_vec.implementation == "adaflo")
+    else if (normal_vec_data.implementation == "adaflo")
       {
-        AssertThrow(data_in.normal_vec.linear_solver.do_matrix_free, ExcNotImplemented());
+        AssertThrow(normal_vec_data.linear_solver.do_matrix_free, ExcNotImplemented());
 
-        normal_vector_operation =
-          std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(*scratch_data_in,
-                                                                           ls_dof_idx_in,
-                                                                           normal_dof_idx,
-                                                                           reinit_quad_idx,
-                                                                           solution_level_set,
-                                                                           data_in);
+        normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
+          *scratch_data_in,
+          ls_dof_idx_in,
+          normal_dof_idx,
+          reinit_quad_idx,
+          solution_level_set,
+          normal_vec_data,
+          reinit_data.scale_factor_epsilon);
       }
 #endif
     else

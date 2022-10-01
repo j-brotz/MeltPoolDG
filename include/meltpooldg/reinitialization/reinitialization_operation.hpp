@@ -43,19 +43,9 @@ namespace MeltPoolDG
       using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
     public:
-      ReinitializationData<double> reinit_data;
-      /*
-       *    This is the primary solution variable of this module, which will be also publically
-       *    accessible for output_results.
-       */
-      VectorType solution_level_set;
-
-      VectorType delta_psi_vec;
-      VectorType delta_psi_vec_old;
-      VectorType rhs;
-
       ReinitializationOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                                const Parameters<double> &                     data_in,
+                                const ReinitializationData<double> &           reinit_data,
+                                const NormalVectorData<double> &               normal_vec_data,
                                 const TimeIterator<double> &                   time_iterator,
                                 const unsigned int                             reinit_dof_idx_in,
                                 const unsigned int                             reinit_quad_idx_in,
@@ -113,8 +103,18 @@ namespace MeltPoolDG
       update_operator();
 
     private:
-      std::shared_ptr<const ScratchData<dim>> scratch_data;
-      const TimeIterator<double> &            time_iterator;
+      const std::shared_ptr<const ScratchData<dim>> &scratch_data;
+      const ReinitializationData<double>             reinit_data;
+      const TimeIterator<double> &                   time_iterator;
+      /*
+       *  Based on the following indices the correct DoFHandler or quadrature rule from
+       *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
+       *  multiple DoFHandlers, quadrature rules, etc.
+       */
+      mutable unsigned int reinit_dof_idx;
+      const unsigned int   reinit_quad_idx;
+      const unsigned int   ls_dof_idx;
+      const unsigned int   normal_dof_idx;
       /*
        *  This shared pointer will point to your user-defined reinitialization operator.
        */
@@ -123,16 +123,16 @@ namespace MeltPoolDG
        *   Computation of the normal vectors
        */
       std::shared_ptr<NormalVector::NormalVectorOperationBase<dim>> normal_vector_operation;
-      // NormalVector::NormalVectorOperation<dim> normal_vector_operation;
       /*
-       *  Based on the following indices the correct DoFHandler or quadrature rule from
-       *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
-       *  multiple DoFHandlers, quadrature rules, etc.
+       *    This is the primary solution variable of this module, which will be also publically
+       *    accessible for output_results.
        */
-      unsigned int reinit_dof_idx;
-      unsigned int reinit_quad_idx;
-      unsigned int ls_dof_idx;
-      unsigned int normal_dof_idx;
+      VectorType solution_level_set;
+
+      VectorType delta_psi_vec;
+      VectorType delta_psi_vec_old;
+      VectorType rhs;
+
       /*
        * Preconditioner for the matrix-free reinitialization operator
        */

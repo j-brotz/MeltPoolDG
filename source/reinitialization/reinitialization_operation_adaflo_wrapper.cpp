@@ -25,7 +25,13 @@ namespace MeltPoolDG::Reinitialization
      */
     normal_vector_operation_adaflo =
       std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-        scratch_data, reinit_dof_idx, normal_dof_idx, reinit_quad_idx, level_set, parameters);
+        scratch_data,
+        reinit_dof_idx,
+        normal_dof_idx,
+        reinit_quad_idx,
+        level_set,
+        parameters.normal_vec,
+        parameters.reinit.scale_factor_epsilon);
 
     /*
      * setup lambda function to compute the normal vector

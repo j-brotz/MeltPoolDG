@@ -96,7 +96,8 @@ namespace MeltPoolDG::LevelSet
           {
             reinit_operation = std::make_shared<Reinitialization::ReinitializationOperation<dim>>(
               scratch_data,
-              base_in->parameters,
+              base_in->parameters.reinit,
+              base_in->parameters.normal_vec,
               reinit_time_iterator,
               reinit_dof_idx_in,
               ls_quad_idx_in,
@@ -130,7 +131,8 @@ namespace MeltPoolDG::LevelSet
       {
         curvature_operation =
           std::make_shared<Curvature::CurvatureOperation<dim>>(scratch_data,
-                                                               base_in->parameters,
+                                                               base_in->parameters.curv,
+                                                               base_in->parameters.normal_vec,
                                                                curv_dof_idx_in,
                                                                ls_quad_idx_in,
                                                                normal_dof_idx_in,
@@ -467,7 +469,7 @@ namespace MeltPoolDG::LevelSet
         Journal::print_decoration_line(scratch_data->get_pcout());
         while (!reinit_time_iterator.is_finished())
           {
-            reinit_time_iterator.get_next_time_increment();
+            reinit_time_iterator.compute_next_time_increment();
 
             std::ostringstream str;
             str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();

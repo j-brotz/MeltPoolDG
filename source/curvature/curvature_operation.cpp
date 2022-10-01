@@ -6,19 +6,20 @@ namespace MeltPoolDG::Curvature
   template <int dim>
   CurvatureOperation<dim>::CurvatureOperation(
     const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const Parameters<double> &                     data_in,
+    const CurvatureData<double> &                  curvature_data,
+    const NormalVectorData<double> &               normal_vec_data,
     const unsigned int                             curv_dof_idx_in,
     const unsigned int                             curv_quad_idx_in,
     const unsigned int                             normal_dof_idx_in,
     const unsigned int                             ls_dof_idx_in)
     : scratch_data(scratch_data_in)
-    , curvature_data(data_in.curv)
+    , curvature_data(curvature_data)
     , curv_dof_idx(curv_dof_idx_in)
     , curv_quad_idx(curv_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , normal_vector_operation(scratch_data,
-                              data_in,
+                              normal_vec_data,
                               normal_dof_idx_in,
                               curv_quad_idx,
                               ls_dof_idx_in)

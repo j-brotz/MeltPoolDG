@@ -41,7 +41,7 @@ namespace MeltPoolDG::LevelSet
 
     while (!time_iterator.is_finished())
       {
-        time_iterator.get_next_time_increment();
+        time_iterator.compute_next_time_increment();
         time_iterator.print_me(scratch_data->get_pcout());
         compute_advection_velocity(*base_in->get_advection_field("level_set"));
 

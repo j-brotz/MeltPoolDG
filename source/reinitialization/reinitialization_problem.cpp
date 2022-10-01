@@ -12,7 +12,7 @@ namespace MeltPoolDG::Reinitialization
 
     while (!time_iterator.is_finished())
       {
-        time_iterator.get_next_time_increment();
+        time_iterator.compute_next_time_increment();
         time_iterator.print_me(scratch_data->get_pcout());
 
         reinit_operation->solve();
@@ -101,13 +101,15 @@ namespace MeltPoolDG::Reinitialization
 
     if (base_in->parameters.reinit.implementation == "meltpooldg")
       {
-        reinit_operation = std::make_shared<ReinitializationOperation<dim>>(scratch_data,
-                                                                            base_in->parameters,
-                                                                            time_iterator,
-                                                                            reinit_dof_idx,
-                                                                            reinit_quad_idx,
-                                                                            reinit_dof_idx,
-                                                                            normal_dof_idx);
+        reinit_operation =
+          std::make_shared<ReinitializationOperation<dim>>(scratch_data,
+                                                           base_in->parameters.reinit,
+                                                           base_in->parameters.normal_vec,
+                                                           time_iterator,
+                                                           reinit_dof_idx,
+                                                           reinit_quad_idx,
+                                                           reinit_dof_idx,
+                                                           normal_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.reinit.implementation == "adaflo")

@@ -22,7 +22,7 @@ namespace MeltPoolDG::MeltPool
 
     while (!time_iterator.is_finished())
       {
-        const auto dt = time_iterator.get_next_time_increment();
+        const auto dt = time_iterator.compute_next_time_increment();
         const int  n  = time_iterator.get_current_time_step_number();
 
         time_iterator.print_me(scratch_data->get_pcout());

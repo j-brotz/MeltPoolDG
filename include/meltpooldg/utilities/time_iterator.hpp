@@ -23,7 +23,7 @@ namespace MeltPoolDG
     is_finished() const;
 
     number
-    get_next_time_increment();
+    compute_next_time_increment();
 
     void
     resize_current_time_increment(const number factor);

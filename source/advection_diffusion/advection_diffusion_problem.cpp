@@ -24,7 +24,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     while (!time_iterator.is_finished())
       {
-        time_iterator.get_next_time_increment();
+        time_iterator.compute_next_time_increment();
         time_iterator.print_me(scratch_data->get_pcout());
         /*
          * compute the advection velocity for the current time

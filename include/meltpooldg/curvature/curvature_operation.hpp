@@ -37,11 +37,12 @@ namespace MeltPoolDG::Curvature
 
   public:
     CurvatureOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                       const Parameters<double> &                     data_in,
-                       unsigned int                                   curv_dof_idx_in,
-                       unsigned int                                   curv_quad_idx_in,
-                       unsigned int                                   normal_dof_idx_in,
-                       unsigned int                                   ls_dof_idx_in);
+                       const CurvatureData<double> &                  curvature_data,
+                       const NormalVectorData<double> &               normal_vec_data,
+                       const unsigned int                             curv_dof_idx_in,
+                       const unsigned int                             curv_quad_idx_in,
+                       const unsigned int                             normal_dof_idx_in,
+                       const unsigned int                             ls_dof_idx_in);
 
     void
     solve(const VectorType &solution_levelset) override;
@@ -65,18 +66,18 @@ namespace MeltPoolDG::Curvature
     void
     create_operator(const VectorType &solution_levelset);
 
-    std::shared_ptr<const ScratchData<dim>> scratch_data;
+    const std::shared_ptr<const ScratchData<dim>> &scratch_data;
 
-    CurvatureData<double> curvature_data;
+    const CurvatureData<double> curvature_data;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
      *  multiple DoFHandlers, quadrature rules, etc.
      */
-    unsigned int curv_dof_idx;
-    unsigned int curv_quad_idx;
-    unsigned int normal_dof_idx;
-    unsigned int ls_dof_idx;
+    const unsigned int curv_dof_idx;
+    const unsigned int curv_quad_idx;
+    const unsigned int normal_dof_idx;
+    const unsigned int ls_dof_idx;
 
     NormalVector::NormalVectorOperation<dim> normal_vector_operation;
 

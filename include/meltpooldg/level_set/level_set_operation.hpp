@@ -55,11 +55,11 @@ namespace MeltPoolDG::LevelSet
     /*
      * select the relevant DoFHandler
      */
-    unsigned int ls_dof_idx;
-    unsigned int ls_hanging_nodes_dof_idx;
-    unsigned int ls_quad_idx;
-    unsigned int curv_dof_idx;
-    unsigned int reinit_dof_idx;
+    const unsigned int ls_dof_idx;
+    const unsigned int ls_hanging_nodes_dof_idx;
+    const unsigned int ls_quad_idx;
+    const unsigned int curv_dof_idx;
+    const unsigned int reinit_dof_idx;
 
     bool very_first_step = true;
     /*
