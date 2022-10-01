@@ -133,7 +133,6 @@ namespace MeltPoolDG::Reinitialization
         VectorType delta_psi_extrapolated;
         scratch_data->initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
 
-        // TODO: use old time increment
         UtilityFunctions::compute_linear_predictor(delta_psi_vec,
                                                    delta_psi_vec_old,
                                                    delta_psi_extrapolated,
