@@ -145,7 +145,7 @@ namespace MeltPoolDG::Heat
           temp_hanging_nodes_dof_idx);
       }
 
-    if (heat_data.predictor == PredictorType::linear)
+    if (heat_data.predictor == PredictorType::linear_extrapolation)
       {
         VectorType temperature_extrapolated;
         scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
@@ -154,7 +154,7 @@ namespace MeltPoolDG::Heat
                                                    temperature_old,
                                                    temperature_extrapolated,
                                                    time_iterator.get_current_time_increment(),
-                                                   time_iterator.get_current_time_increment());
+                                                   time_iterator.get_old_time_increment());
 
         temperature_old.copy_locally_owned_data_from(temperature);
         temperature.copy_locally_owned_data_from(temperature_extrapolated);

@@ -100,7 +100,7 @@ namespace MeltPoolDG::AdvectionDiffusion
         solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
         solution_advected_field = 0.0;
       }
-    else if (this->advec_diff_data.predictor == PredictorType::linear)
+    else if (this->advec_diff_data.predictor == PredictorType::linear_extrapolation)
       {
         VectorType level_set_extrapolated;
         scratch_data->initialize_dof_vector(level_set_extrapolated, advec_diff_dof_idx);

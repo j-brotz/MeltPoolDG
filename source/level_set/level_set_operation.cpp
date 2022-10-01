@@ -267,8 +267,9 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::init_time_advance()
   {
+    // TODO: activate
     // advec_diff_operation->init_time_advance(time_stepping.get_current_time_increment());
-    transform_level_set_to_smooth_heaviside();
+    // transform_level_set_to_smooth_heaviside();
   }
 
   template <int dim>

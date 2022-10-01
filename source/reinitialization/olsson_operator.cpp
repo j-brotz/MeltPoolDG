@@ -209,7 +209,7 @@ namespace MeltPoolDG::Reinitialization
       },
       dst,
       src,
-      true);
+      true /*zero out dst*/);
   }
 
   template <int dim, typename number>

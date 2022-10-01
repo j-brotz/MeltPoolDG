@@ -283,6 +283,12 @@ namespace MeltPoolDG
                              const double      current_time_increment,
                              const double      old_time_increment)
     {
+      if (std::abs(old_time_increment) < 1e-12)
+        {
+          predictor = old_vec;
+          return;
+        }
+
       predictor.copy_locally_owned_data_from(old_vec);
       predictor.add(current_time_increment / old_time_increment,
                     old_vec,

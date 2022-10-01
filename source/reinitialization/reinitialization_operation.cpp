@@ -132,11 +132,12 @@ namespace MeltPoolDG::Reinitialization
         delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
         delta_psi_vec = 0.0;
       }
-    else if (reinit_data.predictor == PredictorType::linear)
+    else if (reinit_data.predictor == PredictorType::linear_extrapolation)
       {
         VectorType delta_psi_extrapolated;
         scratch_data->initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
 
+        // TODO: use old time increment
         UtilityFunctions::compute_linear_predictor(
           delta_psi_vec, delta_psi_vec_old, delta_psi_extrapolated, d_tau, d_tau);
 
@@ -146,10 +147,6 @@ namespace MeltPoolDG::Reinitialization
         // apply hanging node constraints to predictor
         scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
       }
-
-    // zero-out rhs
-    rhs = 0.0;
-
     reinit_operator->reset_time_increment(d_tau);
   }
 

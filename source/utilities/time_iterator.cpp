@@ -7,11 +7,8 @@ namespace MeltPoolDG
   void
   TimeIterator<number>::initialize(const TimeSteppingData<number> &data_in)
   {
-    time_data              = data_in;
-    current_time           = data_in.start_time;
-    current_time_increment = data_in.time_step_size;
-    n_time_steps           = 0;
-    old_time               = current_time;
+    time_data = data_in;
+    reset();
   }
 
   template <typename number>
@@ -36,9 +33,12 @@ namespace MeltPoolDG
   number
   TimeIterator<number>::get_next_time_increment()
   {
-    old_time = current_time;
+    old_time           = current_time;
+    old_time_increment = current_time_increment;
+
     if (current_time + current_time_increment > time_data.end_time)
       current_time_increment = time_data.end_time - current_time;
+
     current_time += current_time_increment;
     n_time_steps += 1;
     return current_time_increment;
@@ -87,12 +87,21 @@ namespace MeltPoolDG
   }
 
   template <typename number>
+  number
+  TimeIterator<number>::get_old_time_increment() const
+  {
+    return current_time_increment;
+  }
+
+  template <typename number>
   void
   TimeIterator<number>::reset()
   {
     n_time_steps           = 0;
     current_time           = time_data.start_time;
     current_time_increment = time_data.time_step_size;
+    old_time               = current_time;
+    old_time_increment     = 0.0;
   }
 
   template <typename number>

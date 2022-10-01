@@ -75,7 +75,7 @@ namespace MeltPoolDG
               // no predictor specified; use old value as initial guess
               none,
               // calculate the predictor by a linear combination from the two old solution vectors
-              linear)
+              linear_extrapolation)
 
   template <typename number = double>
   struct NonlinearSolverData
@@ -188,7 +188,7 @@ namespace MeltPoolDG
     LinearSolverData<number>                    linear_solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     bool                                        interpolate_rho_times_cp = false;
-    PredictorType                               predictor                = PredictorType::linear;
+    PredictorType                               predictor = PredictorType::linear_extrapolation;
   };
 
   template <typename number = double>
