@@ -38,9 +38,7 @@ namespace MeltPoolDG::Reinitialization
 
     if (data_in.normal_vec.implementation == "meltpooldg")
       {
-        normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperation<dim>>();
-
-        normal_vector_operation->initialize(
+        normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperation<dim>>(
           scratch_data_in, data_in, normal_dof_idx, reinit_quad_idx, ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO

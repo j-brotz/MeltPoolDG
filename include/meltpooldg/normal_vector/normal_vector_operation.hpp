@@ -55,14 +55,11 @@ namespace MeltPoolDG
        */
       BlockVectorType solution_normal_vector;
 
-      NormalVectorOperation() = default;
-
-      void
-      initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const Parameters<double> &                     data_in,
-                 const unsigned int                             normal_dof_idx_in,
-                 const unsigned int                             normal_quad_idx_in,
-                 const unsigned int                             ls_dof_idx_in) override;
+      NormalVectorOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
+                            const Parameters<double> &                     data_in,
+                            const unsigned int                             normal_dof_idx_in,
+                            const unsigned int                             normal_quad_idx_in,
+                            const unsigned int                             ls_dof_idx_in);
 
       void
       reinit() override;

@@ -23,13 +23,6 @@ namespace MeltPoolDG
       solve(const LinearAlgebra::distributed::Vector<double> &advected_field) = 0;
 
       virtual void
-      initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                 const Parameters<double> &                     data_in,
-                 const unsigned int                             normal_dof_idx_in,
-                 const unsigned int                             normal_quad_idx_in,
-                 const unsigned int                             ls_dof_idx_in);
-
-      virtual void
       reinit() = 0;
 
       virtual const LinearAlgebra::distributed::BlockVector<double> &

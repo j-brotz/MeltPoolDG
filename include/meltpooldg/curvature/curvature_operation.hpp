@@ -36,20 +36,12 @@ namespace MeltPoolDG::Curvature
     using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
   public:
-    /*
-     *  In this struct, the main parameters of the curvature class are stored.
-     */
-    CurvatureData<double> curvature_data;
-
-    CurvatureOperation() = default;
-
-    void
-    initialize(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-               const Parameters<double> &                     data_in,
-               unsigned int                                   curv_dof_idx_in,
-               unsigned int                                   curv_quad_idx_in,
-               unsigned int                                   normal_dof_idx_in,
-               unsigned int                                   ls_dof_idx_in) override;
+    CurvatureOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
+                       const Parameters<double> &                     data_in,
+                       unsigned int                                   curv_dof_idx_in,
+                       unsigned int                                   curv_quad_idx_in,
+                       unsigned int                                   normal_dof_idx_in,
+                       unsigned int                                   ls_dof_idx_in);
 
     void
     solve(const VectorType &solution_levelset) override;
@@ -75,12 +67,7 @@ namespace MeltPoolDG::Curvature
 
     std::shared_ptr<const ScratchData<dim>> scratch_data;
 
-    NormalVector::NormalVectorOperation<dim> normal_vector_operation;
-
-    /*
-     *  This pointer will point to your user-defined curvature operator.
-     */
-    std::shared_ptr<CurvatureOperator<dim>> curvature_operator;
+    CurvatureData<double> curvature_data;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from
      *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
@@ -90,6 +77,13 @@ namespace MeltPoolDG::Curvature
     unsigned int curv_quad_idx;
     unsigned int normal_dof_idx;
     unsigned int ls_dof_idx;
+
+    NormalVector::NormalVectorOperation<dim> normal_vector_operation;
+
+    /*
+     *  This pointer will point to your user-defined curvature operator.
+     */
+    std::shared_ptr<CurvatureOperator<dim>> curvature_operator;
     /*
      *    This is the primary solution variable of this module, which will be also publically
      *    accessible for output_results.

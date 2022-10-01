@@ -128,14 +128,13 @@ namespace MeltPoolDG::LevelSet
     if ((base_in->parameters.curv.implementation ==
          "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
       {
-        curvature_operation = std::make_shared<Curvature::CurvatureOperation<dim>>();
-
-        curvature_operation->initialize(scratch_data,
-                                        base_in->parameters,
-                                        curv_dof_idx_in,
-                                        ls_quad_idx_in,
-                                        normal_dof_idx_in,
-                                        ls_dof_idx);
+        curvature_operation =
+          std::make_shared<Curvature::CurvatureOperation<dim>>(scratch_data,
+                                                               base_in->parameters,
+                                                               curv_dof_idx_in,
+                                                               ls_quad_idx_in,
+                                                               normal_dof_idx_in,
+                                                               ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if ((base_in->parameters.curv.implementation == "adaflo") ||
