@@ -43,6 +43,9 @@ namespace MeltPoolDG
     number
     get_current_time_step_number() const;
 
+    number
+    get_old_time_increment() const;
+
     void
     reset();
 
@@ -60,6 +63,7 @@ namespace MeltPoolDG
     number                   old_time;
     number                   current_time;
     number                   current_time_increment;
+    number                   old_time_increment;
     number                   n_time_steps;
   };
 

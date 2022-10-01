@@ -95,6 +95,14 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim>
   void
+  AdvectionDiffusionOperationAdaflo<dim>::init_time_advance(const double /*dt*/)
+  {
+    // TODO
+    AssertThrow(false, ExcNotImplemented());
+  }
+
+  template <int dim>
+  void
   AdvectionDiffusionOperationAdaflo<dim>::solve(const double dt, const VectorType &current_velocity)
   {
     advected_field_old_old.reinit(advected_field_old);

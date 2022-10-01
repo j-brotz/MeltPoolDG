@@ -66,6 +66,9 @@ namespace MeltPoolDG::Reinitialization
      *   and matrix-free computation.
      */
     create_operator();
+    scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
   }
 
   template <int dim>
@@ -73,6 +76,10 @@ namespace MeltPoolDG::Reinitialization
   ReinitializationOperation<dim>::reinit()
   {
     scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
+    scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
+
     update_operator();
     normal_vector_operation->reinit();
 
@@ -118,17 +125,39 @@ namespace MeltPoolDG::Reinitialization
 
   template <int dim>
   void
+  ReinitializationOperation<dim>::init_time_advance(const double d_tau)
+  {
+    if (reinit_data.predictor == PredictorType::none)
+      {
+        delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
+        delta_psi_vec = 0.0;
+      }
+    else if (reinit_data.predictor == PredictorType::linear_extrapolation)
+      {
+        VectorType delta_psi_extrapolated;
+        scratch_data->initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
+
+        // TODO: use old time increment
+        UtilityFunctions::compute_linear_predictor(
+          delta_psi_vec, delta_psi_vec_old, delta_psi_extrapolated, d_tau, d_tau);
+
+        delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
+        delta_psi_vec.copy_locally_owned_data_from(delta_psi_extrapolated);
+
+        // apply hanging node constraints to predictor
+        scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
+      }
+    reinit_operator->reset_time_increment(d_tau);
+  }
+
+  template <int dim>
+  void
   ReinitializationOperation<dim>::solve(const double d_tau)
   {
     get_normal_vector().update_ghost_values();
     solution_level_set.update_ghost_values();
 
-    VectorType delta_psi_vec, rhs;
-
-    scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
-
-    reinit_operator->reset_time_increment(d_tau);
+    init_time_advance(d_tau);
 
     int iter = 0;
 

@@ -26,6 +26,9 @@ namespace MeltPoolDG
       AdvectionDiffusionData<double> advec_diff_data;
 
       virtual void
+      init_time_advance(const double dt) = 0;
+
+      virtual void
       solve(const double dt, const LinearAlgebra::distributed::Vector<double> &velocity) = 0;
 
       virtual void

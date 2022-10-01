@@ -54,6 +54,9 @@ namespace MeltPoolDG::AdvectionDiffusion
     reinit() override;
 
     void
+    init_time_advance(double dt) override;
+
+    void
     solve(double dt, const VectorType &advection_velocity) override;
 
     const LinearAlgebra::distributed::Vector<double> &

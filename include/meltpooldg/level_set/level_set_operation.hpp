@@ -109,6 +109,9 @@ namespace MeltPoolDG::LevelSet
     distribute_constraints();
 
     void
+    init_time_advance();
+
+    void
     solve(const VectorType &advection_velocity);
 
     void

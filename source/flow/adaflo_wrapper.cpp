@@ -245,6 +245,12 @@ namespace MeltPoolDG::Flow
     navier_stokes->solution_old_old.block(1).copy_locally_owned_data_from(pressure_temp_old_old);
   }
 
+  template <int dim>
+  void
+  AdafloWrapper<dim>::init_time_advance()
+  {
+    navier_stokes->init_time_advance();
+  }
 
   template <int dim>
   void
@@ -253,7 +259,9 @@ namespace MeltPoolDG::Flow
     navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
     navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
 
-    const auto n_newton_steps = navier_stokes->advance_time_step();
+
+    navier_stokes->init_time_advance();
+    const auto n_newton_steps = navier_stokes->evaluate_time_step();
 
     if (n_newton_steps >= adaflo_params.max_nl_iteration)
       {

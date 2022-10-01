@@ -49,6 +49,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     set_initial_condition(const Function<dim> &initial_field_function,
                           const VectorType &   initial_velocity) override;
 
+    void
+    init_time_advance(double dt) override;
     /**
      * Solver time step
      */

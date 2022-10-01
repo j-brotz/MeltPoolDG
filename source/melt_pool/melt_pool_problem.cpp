@@ -27,6 +27,14 @@ namespace MeltPoolDG::MeltPool
 
         time_iterator.print_me(scratch_data->get_pcout());
 
+        // TODO activate
+        // if (flow_operation)
+        // flow_operation->init_time_advance();
+        // if (heat_operation)
+        // heat_operation->init_time_advance(time_iterator);
+        // level_set_operation->init_time_advance();
+
+
         // Only if a spatially constant evaporative mass flux is given as an analytical function,
         // the time is needed to evaluate the function.
         if (evaporation_operation &&
@@ -36,7 +44,6 @@ namespace MeltPoolDG::MeltPool
         /******************************************************************************************
          * LEVEL SET
          ******************************************************************************************/
-
         if (problem_specific_parameters.do_advect_level_set)
           {
             scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
@@ -102,7 +109,7 @@ namespace MeltPoolDG::MeltPool
                !(base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)) ||
               (melt_pool_operation &&
                !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
-            heat_operation->solve(time_iterator);
+            heat_operation->solve();
 
           if (melt_pool_operation)
             {
@@ -135,7 +142,6 @@ namespace MeltPoolDG::MeltPool
          ******************************************************************************************/
         {
           TimerOutput::Scope scope(scratch_data->get_timer(), "NavierStokes::rhs");
-
           // update the phases for the flow solver considering the updated level set and temperature
           update_phases(level_set_operation->get_level_set_as_heaviside(), base_in->parameters);
 
@@ -207,7 +213,6 @@ namespace MeltPoolDG::MeltPool
 
           //  ... and set the resulting forces within the Navier-Stokes solver
           flow_operation->set_force_rhs(vel_force_rhs);
-
           // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
           // the mass balance equation
           if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump)
@@ -219,7 +224,6 @@ namespace MeltPoolDG::MeltPool
 
           if (evaporation_fluid_material)
             evaporation_fluid_material->update_ghost_values();
-
           // solver Navier-Stokes problem
           flow_operation->solve();
 
@@ -490,6 +494,7 @@ namespace MeltPoolDG::MeltPool
         *scratch_data,
         base_in->parameters.heat,
         *material,
+        time_iterator,
         temp_dof_idx,
         temp_hanging_nodes_dof_idx,
         temp_quad_idx,
