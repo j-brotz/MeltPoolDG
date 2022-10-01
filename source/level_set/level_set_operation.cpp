@@ -35,6 +35,8 @@ namespace MeltPoolDG::LevelSet
     const unsigned int                             ls_zero_bc_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
+    , level_set_data(base_in->parameters.ls)
+    , reinit_data(base_in->parameters.reinit)
     , ls_dof_idx(ls_dof_idx_in)
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx_in)
     , ls_quad_idx(ls_quad_idx_in)
@@ -84,7 +86,7 @@ namespace MeltPoolDG::LevelSet
      *  Already determined parameters from the initialize call of advec_diff_operation
      *  are overwritten.
      */
-    set_level_set_parameters(base_in->parameters);
+    set_level_set_parameters();
 
     /*
      *    initialize the reinit operation
@@ -666,15 +668,11 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::set_level_set_parameters(const Parameters<double> &data_in)
+  LevelSetOperation<dim>::set_level_set_parameters()
   {
-    level_set_data = data_in.ls;
-    reinit_data    = data_in.reinit;
-
-    advec_diff_operation->advec_diff_data.diffusivity =
-      data_in.ls.artificial_diffusivity; // @todo: remove level set parameter
+    advec_diff_operation->advec_diff_data.diffusivity = level_set_data.artificial_diffusivity;
     advec_diff_operation->advec_diff_data.time_integration_scheme =
-      data_in.ls.time_integration_scheme; // @todo: remove level set parameter
+      level_set_data.time_integration_scheme;
   }
 
   template <int dim>

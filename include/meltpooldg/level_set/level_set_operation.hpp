@@ -30,7 +30,7 @@ namespace MeltPoolDG::LevelSet
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    std::shared_ptr<const ScratchData<dim>> scratch_data;
+    const std::shared_ptr<const ScratchData<dim>> &scratch_data;
 
     // Time stepping of the overall problem
     const TimeIterator<double> &time_stepping;
@@ -50,8 +50,8 @@ namespace MeltPoolDG::LevelSet
     /*
      *  necessary parameters
      */
-    LevelSetData<double>         level_set_data;
-    ReinitializationData<double> reinit_data;
+    const LevelSetData<double>         level_set_data;
+    const ReinitializationData<double> reinit_data;
     /*
      * select the relevant DoFHandler
      */
@@ -237,6 +237,6 @@ namespace MeltPoolDG::LevelSet
     correct_curvature_values();
 
     void
-    set_level_set_parameters(const Parameters<double> &data_in);
+    set_level_set_parameters();
   };
 } // namespace MeltPoolDG::LevelSet
