@@ -6,14 +6,14 @@ namespace MeltPoolDG::Reinitialization
 {
   template <int dim>
   ReinitializationOperation<dim>::ReinitializationOperation(
-    const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const ReinitializationData<double> &           reinit_data,
-    const NormalVectorData<double> &               normal_vec_data,
-    const TimeIterator<double> &                   time_iterator,
-    const unsigned int                             reinit_dof_idx_in,
-    const unsigned int                             reinit_quad_idx_in,
-    const unsigned int                             ls_dof_idx_in,
-    const unsigned int                             normal_dof_idx_in)
+    const ScratchData<dim> &            scratch_data_in,
+    const ReinitializationData<double> &reinit_data,
+    const NormalVectorData<double> &    normal_vec_data,
+    const TimeIterator<double> &        time_iterator,
+    const unsigned int                  reinit_dof_idx_in,
+    const unsigned int                  reinit_quad_idx_in,
+    const unsigned int                  ls_dof_idx_in,
+    const unsigned int                  normal_dof_idx_in)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , time_iterator(time_iterator)
@@ -46,7 +46,7 @@ namespace MeltPoolDG::Reinitialization
         AssertThrow(normal_vec_data.linear_solver.do_matrix_free, ExcNotImplemented());
 
         normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-          *scratch_data_in,
+          scratch_data_in,
           ls_dof_idx_in,
           normal_dof_idx,
           reinit_quad_idx,
@@ -62,20 +62,20 @@ namespace MeltPoolDG::Reinitialization
      *   and matrix-free computation.
      */
     create_operator();
-    scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
-    scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    scratch_data->initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
-    scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
+    scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
   }
 
   template <int dim>
   void
   ReinitializationOperation<dim>::reinit()
   {
-    scratch_data->initialize_dof_vector(solution_level_set, ls_dof_idx);
-    scratch_data->initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    scratch_data->initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
-    scratch_data->initialize_dof_vector(rhs, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
+    scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
 
     update_operator();
     normal_vector_operation->reinit();
@@ -131,7 +131,7 @@ namespace MeltPoolDG::Reinitialization
     else if (reinit_data.predictor == PredictorType::linear_extrapolation)
       {
         VectorType delta_psi_extrapolated;
-        scratch_data->initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
+        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
 
         UtilityFunctions::compute_linear_predictor(delta_psi_vec,
                                                    delta_psi_vec_old,
@@ -143,7 +143,7 @@ namespace MeltPoolDG::Reinitialization
         delta_psi_vec.copy_locally_owned_data_from(delta_psi_extrapolated);
 
         // apply hanging node constraints to predictor
-        scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
+        scratch_data.get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
       }
     reinit_operator->reset_time_increment(time_iterator.get_current_time_increment());
   }
@@ -211,14 +211,14 @@ namespace MeltPoolDG::Reinitialization
                                                reinit_data.linear_solver,
                                                *preconditioner);
 
-        Journal::print_formatted_norm(scratch_data->get_pcout(0),
+        Journal::print_formatted_norm(scratch_data.get_pcout(0),
                                       reinit_operator->get_system_matrix().frobenius_norm(),
                                       "matrix",
                                       "reinitialization",
                                       15 /*precision*/,
                                       "F");
       }
-    scratch_data->get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
+    scratch_data.get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
 
     solution_level_set.zero_out_ghost_values();
     get_normal_vector().zero_out_ghost_values();
@@ -226,38 +226,38 @@ namespace MeltPoolDG::Reinitialization
 
     // copy the delta_psi to the DoFHandler of the level set
     VectorType delta_level_set;
-    scratch_data->initialize_dof_vector(delta_level_set, ls_dof_idx);
+    scratch_data.initialize_dof_vector(delta_level_set, ls_dof_idx);
     delta_level_set.copy_locally_owned_data_from(delta_psi_vec);
 
     solution_level_set += delta_level_set;
 
     max_change_level_set = delta_psi_vec.linfty_norm();
 
-    Journal::print_formatted_norm(scratch_data->get_pcout(1),
+    Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   MeltPoolDG::VectorTools::compute_L2_norm<dim>(
-                                    rhs, *scratch_data, reinit_dof_idx, reinit_quad_idx),
+                                    rhs, scratch_data, reinit_dof_idx, reinit_quad_idx),
                                   "RHS",
                                   "reinitialization",
                                   15 /*precision*/
     );
-    Journal::print_formatted_norm(scratch_data->get_pcout(0),
+    Journal::print_formatted_norm(scratch_data.get_pcout(0),
                                   VectorTools::compute_L2_norm<dim>(
-                                    delta_psi_vec, *scratch_data, reinit_dof_idx, reinit_quad_idx),
+                                    delta_psi_vec, scratch_data, reinit_dof_idx, reinit_quad_idx),
                                   "delta phi",
                                   "reinitialization",
                                   15 /*precision*/
     );
 
-    Journal::print_formatted_norm(scratch_data->get_pcout(1),
+    Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   max_change_level_set,
                                   "delta phi",
                                   "reinitialization",
                                   15 /*precision*/,
                                   "∞ ",
                                   2);
-    Journal::print_formatted_norm(scratch_data->get_pcout(1),
+    Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   VectorTools::compute_L2_norm<dim>(solution_level_set,
-                                                                    *scratch_data,
+                                                                    scratch_data,
                                                                     reinit_dof_idx,
                                                                     reinit_quad_idx),
                                   "phi",
@@ -265,7 +265,7 @@ namespace MeltPoolDG::Reinitialization
                                   15 /*precision*/
     );
 
-    Journal::print_line(scratch_data->get_pcout(1),
+    Journal::print_line(scratch_data.get_pcout(1),
                         "     * CG: i = " + std::to_string(iter),
                         "reinitialization");
   }
@@ -317,10 +317,10 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
-    data_out.add_data_vector(scratch_data->get_dof_handler(reinit_dof_idx), get_level_set(), "psi");
+    data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx), get_level_set(), "psi");
 
     for (unsigned int d = 0; d < dim; ++d)
-      data_out.add_data_vector(scratch_data->get_dof_handler(reinit_dof_idx),
+      data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
                                get_normal_vector().block(d),
                                "normal_" + std::to_string(d));
   }
@@ -332,7 +332,7 @@ namespace MeltPoolDG::Reinitialization
     if (reinit_data.modeltype == "olsson2007")
       {
         reinit_operator = std::make_unique<OlssonOperator<dim, double>>(
-          *scratch_data,
+          scratch_data,
           reinit_data,
           normal_vector_operation->get_solution_normal_vector(),
           reinit_dof_idx,
@@ -355,13 +355,13 @@ namespace MeltPoolDG::Reinitialization
      */
 
     if (!reinit_data.linear_solver.do_matrix_free)
-      reinit_operator->initialize_matrix_based(*scratch_data);
+      reinit_operator->initialize_matrix_based(scratch_data);
 
     if (reinit_data.linear_solver.do_matrix_free)
       {
         preconditioner_matrixfree = std::make_shared<
           Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
-          *scratch_data,
+          scratch_data,
           reinit_dof_idx,
           reinit_data.linear_solver.preconditioner_type,
           *reinit_operator);
@@ -378,7 +378,7 @@ namespace MeltPoolDG::Reinitialization
   ReinitializationOperation<dim>::update_operator()
   {
     if (!reinit_data.linear_solver.do_matrix_free)
-      reinit_operator->initialize_matrix_based(*scratch_data);
+      reinit_operator->initialize_matrix_based(scratch_data);
   }
 
   template class ReinitializationOperation<1>;

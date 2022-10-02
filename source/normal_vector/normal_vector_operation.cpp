@@ -1,15 +1,18 @@
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
+#include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::NormalVector
 {
   template <int dim>
   NormalVectorOperation<dim>::NormalVectorOperation(
-    const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const NormalVectorData<double> &               normal_vector_data,
-    const unsigned int                             normal_dof_idx_in,
-    const unsigned int                             normal_quad_idx_in,
-    const unsigned int                             ls_dof_idx_in)
+    const ScratchData<dim> &        scratch_data_in,
+    const NormalVectorData<double> &normal_vector_data,
+    const unsigned int              normal_dof_idx_in,
+    const unsigned int              normal_quad_idx_in,
+    const unsigned int              ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , normal_vector_data(normal_vector_data)
     , normal_dof_idx(normal_dof_idx_in)
@@ -24,10 +27,10 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::reinit()
   {
-    scratch_data->initialize_dof_vector(solution_normal_vector, normal_dof_idx);
+    scratch_data.initialize_dof_vector(solution_normal_vector, normal_dof_idx);
 
     if (!normal_vector_data.linear_solver.do_matrix_free)
-      normal_vector_operator->initialize_matrix_based(*scratch_data);
+      normal_vector_operator->initialize_matrix_based(scratch_data);
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
@@ -52,8 +55,8 @@ namespace MeltPoolDG::NormalVector
 
     BlockVectorType rhs;
 
-    scratch_data->initialize_dof_vector(rhs, normal_dof_idx);
-    scratch_data->initialize_dof_vector(solution_normal_vector, normal_dof_idx);
+    scratch_data.initialize_dof_vector(rhs, normal_dof_idx);
+    scratch_data.initialize_dof_vector(solution_normal_vector, normal_dof_idx);
 
     int iter = 0;
 
@@ -101,23 +104,23 @@ namespace MeltPoolDG::NormalVector
     solution_levelset_in.zero_out_ghost_values();
 
     for (unsigned int d = 0; d < dim; ++d)
-      scratch_data->get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
+      scratch_data.get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
 
     const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
     const ConditionalOStream &pcout =
-      scratch_data->get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
+      scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
 
     for (unsigned int d = 0; d < dim; ++d)
       Journal::print_formatted_norm(
         pcout,
         MeltPoolDG::VectorTools::compute_L2_norm<dim>(
-          solution_normal_vector.block(d), *scratch_data, normal_dof_idx, normal_quad_idx),
+          solution_normal_vector.block(d), scratch_data, normal_dof_idx, normal_quad_idx),
         "normal_" + std::to_string(d),
         "normal_vector",
         11 /*precision*/
       );
 
-    Journal::print_line(scratch_data->get_pcout(1),
+    Journal::print_line(scratch_data.get_pcout(1),
                         "     * CG: i = " + std::to_string(iter),
                         "normal_vector");
   }
@@ -141,7 +144,7 @@ namespace MeltPoolDG::NormalVector
   NormalVectorOperation<dim>::create_operator(const VectorType &solution_levelset_in)
   {
     normal_vector_operator =
-      std::make_unique<NormalVectorOperator<dim>>(*scratch_data,
+      std::make_unique<NormalVectorOperator<dim>>(scratch_data,
                                                   normal_vector_data,
                                                   normal_dof_idx,
                                                   normal_quad_idx,
@@ -153,7 +156,7 @@ namespace MeltPoolDG::NormalVector
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
     if (!normal_vector_data.linear_solver.do_matrix_free)
-      normal_vector_operator->initialize_matrix_based(*scratch_data);
+      normal_vector_operator->initialize_matrix_based(scratch_data);
     /*
      * initialize preconditioner matrix-free
      */
@@ -161,7 +164,7 @@ namespace MeltPoolDG::NormalVector
       {
         preconditioner_matrixfree = std::make_shared<
           Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
-          *scratch_data,
+          scratch_data,
           normal_dof_idx,
           normal_vector_data.linear_solver.preconditioner_type,
           *normal_vector_operator);

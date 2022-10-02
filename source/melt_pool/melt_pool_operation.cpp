@@ -1,30 +1,33 @@
 #include <meltpooldg/melt_pool/melt_pool_operation.hpp>
 //
 
+#include <deal.II/dofs/dof_tools.h>
+
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::MeltPool
 {
   template <int dim>
-  MeltPoolOperation<dim>::MeltPoolOperation(
-    const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
-    const Parameters<double> &               data_in,
-    const bool                               do_recoil_pressure,
-    const unsigned int                       ls_dof_idx_in,
-    VectorType *                             temperature,
-    const unsigned int                       reinit_dof_idx_in,
-    const unsigned int                       reinit_no_solid_dof_idx_in,
-    const unsigned int                       flow_vel_dof_idx_in,
-    const unsigned int                       flow_vel_no_solid_dof_idx_in,
-    const unsigned int                       flow_vel_quad_idx_in,
-    const unsigned int                       flow_pressure_dof_idx_in,
-    const unsigned int                       temp_dof_idx_in,
-    const unsigned int                       temp_hanging_nodes_dof_idx_in,
-    const double                             start_time_in)
+  MeltPoolOperation<dim>::MeltPoolOperation(const ScratchData<dim> &  scratch_data_in,
+                                            const Parameters<double> &data_in,
+                                            const bool                do_recoil_pressure,
+                                            const unsigned int        ls_dof_idx_in,
+                                            VectorType *              temperature,
+                                            const unsigned int        reinit_dof_idx_in,
+                                            const unsigned int        reinit_no_solid_dof_idx_in,
+                                            const unsigned int        flow_vel_dof_idx_in,
+                                            const unsigned int        flow_vel_no_solid_dof_idx_in,
+                                            const unsigned int        flow_vel_quad_idx_in,
+                                            const unsigned int        flow_pressure_dof_idx_in,
+                                            const unsigned int        temp_dof_idx_in,
+                                            const unsigned int        temp_hanging_nodes_dof_idx_in,
+                                            const double              start_time_in)
     : scratch_data(scratch_data_in)
+    , mp_data(data_in.mp)
     , material(data_in.material)
     , do_mushy_zone(data_in.heat.solidification)
     , ls_dof_idx(ls_dof_idx_in)
@@ -37,14 +40,10 @@ namespace MeltPoolDG::MeltPool
     , temperature(temperature)
   {
     /*
-     *  set the parameters for the melt pool operation
-     */
-    set_melt_pool_parameters(data_in);
-    /*
      *  initialize the laser operation class
      */
     laser_operation =
-      std::make_shared<Heat::LaserOperation<dim>>(*scratch_data, data_in.laser, data_in.material);
+      std::make_shared<Heat::LaserOperation<dim>>(scratch_data, data_in.laser, data_in.material);
     /*
      *  Initialize the laser operation
      */
@@ -56,7 +55,7 @@ namespace MeltPoolDG::MeltPool
     if (do_recoil_pressure)
       {
         recoil_pressure_operation =
-          std::make_shared<RecoilPressureOperation<dim>>(*scratch_data_in,
+          std::make_shared<RecoilPressureOperation<dim>>(scratch_data_in,
                                                          data_in,
                                                          flow_vel_dof_idx_in,
                                                          flow_vel_quad_idx_in,
@@ -67,8 +66,8 @@ namespace MeltPoolDG::MeltPool
     /*
      * initialize the dof_vectors
      */
-    scratch_data->initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
-    scratch_data->initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
 
     /*
      * Choose the laser heat source model
@@ -87,7 +86,7 @@ namespace MeltPoolDG::MeltPool
       {
         laser_analytical_temperature_field =
           std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(
-            *scratch_data_in,
+            scratch_data_in,
             data_in.laser.analytical,
             data_in.material,
             data_in.laser.scan_speed,
@@ -124,7 +123,7 @@ namespace MeltPoolDG::MeltPool
     /*
      * distribute the constraints for the level set in the solid region
      */
-    scratch_data->get_constraint(ls_dof_idx).distribute(level_set);
+    scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
   }
 
   template <int dim>
@@ -156,7 +155,7 @@ namespace MeltPoolDG::MeltPool
               case LaserImpactType::volumetric: {
                 laser_heat_source_operation->compute_volumetric_heat_source(
                   heat_source,
-                  *scratch_data,
+                  scratch_data,
                   temp_hanging_nodes_dof_idx,
                   laser_operation->get_laser_power(),
                   laser_operation->get_laser_position(),
@@ -166,7 +165,7 @@ namespace MeltPoolDG::MeltPool
               case LaserImpactType::interface: {
                 laser_heat_source_operation->compute_interfacial_heat_source(
                   heat_source,
-                  *scratch_data,
+                  scratch_data,
                   temp_hanging_nodes_dof_idx,
                   laser_operation->get_laser_power(),
                   laser_operation->get_laser_position(),
@@ -180,7 +179,7 @@ namespace MeltPoolDG::MeltPool
               case LaserImpactType::interface_sharp: {
                 laser_heat_source_operation->compute_interfacial_heat_source_sharp(
                   user_rhs,
-                  *scratch_data,
+                  scratch_data,
                   temp_hanging_nodes_dof_idx,
                   laser_operation->get_laser_power(),
                   laser_operation->get_laser_position(),
@@ -215,7 +214,7 @@ namespace MeltPoolDG::MeltPool
          * distribute the constraints for the level set in the solid region
          */
         //@todo:
-        // scratch_data->get_constraint(ls_dof_idx).distribute(level_set);
+        // scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
       }
   }
 
@@ -241,8 +240,8 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolOperation<dim>::reinit()
   {
-    scratch_data->initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
-    scratch_data->initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
   }
 
   template <int dim>
@@ -263,13 +262,13 @@ namespace MeltPoolDG::MeltPool
     /**
      *  solid
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              solid,
                              "solid");
     /**
      *  liquid
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              liquid,
                              "liquid");
   }
@@ -278,8 +277,8 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolOperation<dim>::distribute_constraints()
   {
-    scratch_data->get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
-    scratch_data->get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
   }
 
   template <int dim>
@@ -304,19 +303,19 @@ namespace MeltPoolDG::MeltPool
      *  Do not reinitialize the level set field in the solid domain
      */
     if (mp_data.solid.do_not_reinitialize)
-      ignore_reinitialization_in_solid_regions(scratch_data->get_dof_handler(reinit_dof_idx),
-                                               scratch_data->get_constraint(
-                                                 reinit_no_solid_dof_idx),
-                                               scratch_data->get_constraint(reinit_dof_idx));
+      ignore_reinitialization_in_solid_regions(scratch_data.get_dof_handler(reinit_dof_idx),
+                                               scratch_data.get_constraint(reinit_no_solid_dof_idx),
+                                               const_cast<AffineConstraints<double> &>(
+                                                 scratch_data.get_constraint(reinit_dof_idx)));
 
     /*
      *  Set the flow velocity to zero in the solid domain
      */
     if (mp_data.solid.set_velocity_to_zero)
-      set_flow_field_in_solid_regions_to_zero(scratch_data->get_dof_handler(flow_vel_dof_idx),
-                                              scratch_data->get_constraint(
-                                                flow_vel_no_solid_dof_idx),
-                                              scratch_data->get_constraint(flow_vel_dof_idx));
+      set_flow_field_in_solid_regions_to_zero(
+        scratch_data.get_dof_handler(flow_vel_dof_idx),
+        scratch_data.get_constraint(flow_vel_no_solid_dof_idx),
+        const_cast<AffineConstraints<double> &>(scratch_data.get_constraint(flow_vel_dof_idx)));
 
     // In the melt pool simulations, the solid domain
     // can be considered as rigid by setting the constraints
@@ -326,7 +325,7 @@ namespace MeltPoolDG::MeltPool
     // constrained indices in matrix-free have to be updated
     // which is done in the following by rebuilding matrix-free.
     if (mp_data.solid.set_velocity_to_zero || mp_data.solid.do_not_reinitialize)
-      scratch_data->build();
+      const_cast<ScratchData<dim> &>(scratch_data).build();
   }
 
   template <int dim>
@@ -337,12 +336,12 @@ namespace MeltPoolDG::MeltPool
     temperature->update_ghost_values();
 
     std::vector<types::global_dof_index> local_dof_indices(
-      scratch_data->get_n_dofs_per_cell(temp_hanging_nodes_dof_idx));
+      scratch_data.get_n_dofs_per_cell(temp_hanging_nodes_dof_idx));
 
-    FEValues<dim> ls_heaviside_eval(scratch_data->get_mapping(),
-                                    scratch_data->get_dof_handler(ls_dof_idx).get_fe(),
+    FEValues<dim> ls_heaviside_eval(scratch_data.get_mapping(),
+                                    scratch_data.get_dof_handler(ls_dof_idx).get_fe(),
                                     Quadrature<dim>(
-                                      scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx)
+                                      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx)
                                         .get_fe()
                                         .get_unit_support_points()),
                                     update_values);
@@ -353,10 +352,10 @@ namespace MeltPoolDG::MeltPool
     solid  = 0;
 
     typename DoFHandler<dim>::active_cell_iterator ls_cell =
-      scratch_data->get_dof_handler(ls_dof_idx).begin_active();
+      scratch_data.get_dof_handler(ls_dof_idx).begin_active();
 
     for (const auto &cell :
-         scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
+         scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
       {
         if (cell->is_locally_owned())
           {
@@ -382,8 +381,8 @@ namespace MeltPoolDG::MeltPool
     liquid.compress(VectorOperation::insert);
     solid.compress(VectorOperation::insert);
 
-    scratch_data->get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
-    scratch_data->get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
+    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
 
     temperature->zero_out_ghost_values();
     level_set_as_heaviside.zero_out_ghost_values();
@@ -406,13 +405,13 @@ namespace MeltPoolDG::MeltPool
     AffineConstraints<double> solid_constraints;
     solid_constraints.reinit(flow_locally_relevant_dofs);
 
-    FEValues<dim> flow_eval(scratch_data->get_mapping(),
+    FEValues<dim> flow_eval(scratch_data.get_mapping(),
                             flow_dof_handler.get_fe(),
                             Quadrature<dim>(flow_dof_handler.get_fe().get_unit_support_points()),
                             update_quadrature_points);
 
-    FEValues<dim> solid_eval(scratch_data->get_mapping(),
-                             scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).get_fe(),
+    FEValues<dim> solid_eval(scratch_data.get_mapping(),
+                             scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).get_fe(),
                              Quadrature<dim>(flow_dof_handler.get_fe().get_unit_support_points()),
                              update_values);
 
@@ -421,7 +420,7 @@ namespace MeltPoolDG::MeltPool
     std::vector<double>                  solid_at_q(dofs_per_cell);
 
     typename DoFHandler<dim>::active_cell_iterator solid_cell =
-      scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
+      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
 
     for (const auto &cell : flow_dof_handler.active_cell_iterators())
       {
@@ -443,7 +442,7 @@ namespace MeltPoolDG::MeltPool
 
     solid_constraints.make_consistent_in_parallel(flow_dof_handler.locally_owned_dofs(),
                                                   flow_locally_relevant_dofs,
-                                                  scratch_data->get_mpi_comm());
+                                                  scratch_data.get_mpi_comm());
     solid_constraints.close();
 
     UtilityFunctions::check_constraints(flow_dof_handler, solid_constraints);
@@ -475,13 +474,13 @@ namespace MeltPoolDG::MeltPool
 
     solid_constraints.reinit(ls_locally_relevant_dofs);
 
-    FEValues<dim> ls_eval(scratch_data->get_mapping(),
+    FEValues<dim> ls_eval(scratch_data.get_mapping(),
                           level_set_dof_handler.get_fe(),
                           Quadrature<dim>(level_set_dof_handler.get_fe().get_unit_support_points()),
                           update_quadrature_points);
 
-    FEValues<dim> solid_eval(scratch_data->get_mapping(),
-                             scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).get_fe(),
+    FEValues<dim> solid_eval(scratch_data.get_mapping(),
+                             scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).get_fe(),
                              Quadrature<dim>(
                                level_set_dof_handler.get_fe().get_unit_support_points()),
                              update_values);
@@ -491,7 +490,7 @@ namespace MeltPoolDG::MeltPool
     std::vector<double>                  solid_at_q(dofs_per_cell);
 
     typename DoFHandler<dim>::active_cell_iterator solid_cell =
-      scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
+      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx).begin_active();
 
     for (const auto &cell : level_set_dof_handler.active_cell_iterators())
       {
@@ -513,7 +512,7 @@ namespace MeltPoolDG::MeltPool
 
     solid_constraints.make_consistent_in_parallel(level_set_dof_handler.locally_owned_dofs(),
                                                   ls_locally_relevant_dofs,
-                                                  scratch_data->get_mpi_comm());
+                                                  scratch_data.get_mpi_comm());
     solid_constraints.close();
 
     UtilityFunctions::check_constraints(level_set_dof_handler, solid_constraints);
@@ -525,13 +524,6 @@ namespace MeltPoolDG::MeltPool
     UtilityFunctions::check_constraints(level_set_dof_handler, reinit_dirichlet_constraints);
 
     solid.zero_out_ghost_values();
-  }
-
-  template <int dim>
-  void
-  MeltPoolOperation<dim>::set_melt_pool_parameters(const Parameters<double> &data_in)
-  {
-    mp_data = data_in.mp;
   }
 
   template <int dim>

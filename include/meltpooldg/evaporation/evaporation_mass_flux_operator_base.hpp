@@ -8,8 +8,6 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/interface/scratch_data.hpp>
-
 namespace MeltPoolDG::Evaporation
 {
   using namespace dealii;

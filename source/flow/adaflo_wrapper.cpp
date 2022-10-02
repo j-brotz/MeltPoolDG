@@ -1,7 +1,11 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
+#  include <deal.II/fe/fe_simplex_p.h>
+
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
+#  include <meltpooldg/utilities/vector_tools.hpp>
+
 
 namespace MeltPoolDG::Flow
 {

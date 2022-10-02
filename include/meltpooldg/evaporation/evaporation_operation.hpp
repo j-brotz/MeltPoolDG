@@ -40,7 +40,7 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    std::shared_ptr<const ScratchData<dim>> scratch_data;
+    const ScratchData<dim> &scratch_data;
     /**
      *  parameters controlling the evaporation
      */
@@ -90,15 +90,15 @@ namespace MeltPoolDG::Evaporation
     std::shared_ptr<EvaporationSourceTermsBase<dim>>      evapor_source_terms_operator;
 
   public:
-    EvaporationOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                         const VectorType &                             level_set_as_heaviside_in,
-                         const BlockVectorType &                        normal_vector_in,
-                         std::shared_ptr<SimulationBase<dim>>           base_in,
-                         const unsigned int                             normal_dof_idx_in,
-                         const unsigned int                             evapor_vel_dof_idx_in,
-                         const unsigned int                             evapor_mass_flux_dof_idx_in,
-                         const unsigned int                             ls_hanging_nodes_dof_idx_in,
-                         const unsigned int                             ls_quad_idx_in);
+    EvaporationOperation(const ScratchData<dim> &             scratch_data_in,
+                         const VectorType &                   level_set_as_heaviside_in,
+                         const BlockVectorType &              normal_vector_in,
+                         std::shared_ptr<SimulationBase<dim>> base_in,
+                         const unsigned int                   normal_dof_idx_in,
+                         const unsigned int                   evapor_vel_dof_idx_in,
+                         const unsigned int                   evapor_mass_flux_dof_idx_in,
+                         const unsigned int                   ls_hanging_nodes_dof_idx_in,
+                         const unsigned int                   ls_quad_idx_in);
 
 
     /*

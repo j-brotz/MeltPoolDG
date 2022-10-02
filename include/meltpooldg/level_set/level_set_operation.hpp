@@ -30,7 +30,7 @@ namespace MeltPoolDG::LevelSet
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const std::shared_ptr<const ScratchData<dim>> scratch_data;
+    const ScratchData<dim> &scratch_data;
 
     // Time stepping of the overall problem
     const TimeIterator<double> &time_stepping;
@@ -82,17 +82,17 @@ namespace MeltPoolDG::LevelSet
     SurfaceMeshInfo surface_mesh_info;
 
   public:
-    LevelSetOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                      const TimeIterator<double> &                   time_stepping,
-                      std::shared_ptr<SimulationBase<dim>>           base_in,
-                      const unsigned int                             ls_dof_idx_in,
-                      const unsigned int                             ls_hanging_nodes_dof_idx_in,
-                      const unsigned int                             ls_quad_idx_in,
-                      const unsigned int                             reinit_dof_idx_in,
-                      const unsigned int                             curv_dof_idx_in,
-                      const unsigned int                             normal_dof_idx_in,
-                      const unsigned int                             vel_dof_idx,
-                      const unsigned int                             ls_zero_bc_idx);
+    LevelSetOperation(const ScratchData<dim> &             scratch_data_in,
+                      const TimeIterator<double> &         time_stepping,
+                      std::shared_ptr<SimulationBase<dim>> base_in,
+                      const unsigned int                   ls_dof_idx_in,
+                      const unsigned int                   ls_hanging_nodes_dof_idx_in,
+                      const unsigned int                   ls_quad_idx_in,
+                      const unsigned int                   reinit_dof_idx_in,
+                      const unsigned int                   curv_dof_idx_in,
+                      const unsigned int                   normal_dof_idx_in,
+                      const unsigned int                   vel_dof_idx,
+                      const unsigned int                   ls_zero_bc_idx);
 
     /**
      * set initial condition

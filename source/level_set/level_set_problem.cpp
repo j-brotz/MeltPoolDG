@@ -147,7 +147,7 @@ namespace MeltPoolDG::LevelSet
      * initialize the levelset operation class
      */
 
-    level_set_operation = std::make_shared<LevelSetOperation<dim>>(scratch_data,
+    level_set_operation = std::make_shared<LevelSetOperation<dim>>(*scratch_data,
                                                                    *time_iterator,
                                                                    base_in,
                                                                    ls_dof_idx,
@@ -170,7 +170,7 @@ namespace MeltPoolDG::LevelSet
     if (base_in->parameters.base.problem_name == ProblemType::level_set_with_evaporation)
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
-          scratch_data,
+          *scratch_data,
           level_set_operation->get_level_set_as_heaviside(),
           level_set_operation->get_normal_vector(),
           base_in,
