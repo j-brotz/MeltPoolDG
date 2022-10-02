@@ -4,14 +4,10 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <deal.II/dofs/dof_handler.h>
-
-#include <deal.II/numerics/data_out.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
 
 #include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -38,11 +34,9 @@ namespace MeltPoolDG
       }
 
       virtual void
-      set_initial_condition(const Function<dim> &initial_field_function,
-                            const VectorType &   initial_velocity)
+      set_initial_condition(const Function<dim> & /*initial_field_function*/,
+                            const LinearAlgebra::distributed::Vector<double> & /*initial_velocity*/)
       {
-        (void)initial_field_function;
-        (void)initial_velocity;
         AssertThrow(false, ExcNotImplemented());
       }
 

@@ -54,11 +54,11 @@ namespace MeltPoolDG
        */
       BlockVectorType solution_normal_vector;
 
-      NormalVectorOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                            const NormalVectorData<double> &               normal_vector_data,
-                            const unsigned int                             normal_dof_idx_in,
-                            const unsigned int                             normal_quad_idx_in,
-                            const unsigned int                             ls_dof_idx_in);
+      NormalVectorOperation(const ScratchData<dim> &        scratch_data_in,
+                            const NormalVectorData<double> &normal_vector_data,
+                            const unsigned int              normal_dof_idx_in,
+                            const unsigned int              normal_quad_idx_in,
+                            const unsigned int              ls_dof_idx_in);
 
       void
       reinit() override;
@@ -81,8 +81,8 @@ namespace MeltPoolDG
       create_operator(const VectorType &solution_levelset_in);
 
     private:
-      const std::shared_ptr<const ScratchData<dim>> scratch_data;
-      const NormalVectorData<double>                normal_vector_data;
+      const ScratchData<dim> &       scratch_data;
+      const NormalVectorData<double> normal_vector_data;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

@@ -21,18 +21,17 @@ namespace MeltPoolDG::LevelSet
   using namespace AdvectionDiffusion;
 
   template <int dim>
-  LevelSetOperation<dim>::LevelSetOperation(
-    const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const TimeIterator<double> &                   time_stepping,
-    std::shared_ptr<SimulationBase<dim>>           base_in,
-    const unsigned int                             ls_dof_idx_in,
-    const unsigned int                             ls_hanging_nodes_dof_idx_in,
-    const unsigned int                             ls_quad_idx_in,
-    const unsigned int                             reinit_dof_idx_in,
-    const unsigned int                             curv_dof_idx_in,
-    const unsigned int                             normal_dof_idx_in,
-    const unsigned int                             vel_dof_idx,
-    const unsigned int                             ls_zero_bc_idx)
+  LevelSetOperation<dim>::LevelSetOperation(const ScratchData<dim> &             scratch_data_in,
+                                            const TimeIterator<double> &         time_stepping,
+                                            std::shared_ptr<SimulationBase<dim>> base_in,
+                                            const unsigned int                   ls_dof_idx_in,
+                                            const unsigned int ls_hanging_nodes_dof_idx_in,
+                                            const unsigned int ls_quad_idx_in,
+                                            const unsigned int reinit_dof_idx_in,
+                                            const unsigned int curv_dof_idx_in,
+                                            const unsigned int normal_dof_idx_in,
+                                            const unsigned int vel_dof_idx,
+                                            const unsigned int ls_zero_bc_idx)
     : scratch_data(scratch_data_in)
     , time_stepping(time_stepping)
     , level_set_data(base_in->parameters.ls)
@@ -66,7 +65,7 @@ namespace MeltPoolDG::LevelSet
       {
         advec_diff_operation =
           std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperationAdaflo<dim>>(
-            *scratch_data,
+            scratch_data,
             time_stepping,
             ls_zero_bc_idx,
             ls_dof_idx,
@@ -114,7 +113,7 @@ namespace MeltPoolDG::LevelSet
                         ExcNotImplemented());
             reinit_operation =
               std::make_shared<Reinitialization::ReinitializationOperationAdaflo<dim>>(
-                *scratch_data,
+                scratch_data,
                 reinit_time_iterator,
                 reinit_dof_idx_in,
                 ls_quad_idx_in,
@@ -146,7 +145,7 @@ namespace MeltPoolDG::LevelSet
       {
         AssertThrow(base_in->parameters.curv.linear_solver.do_matrix_free, ExcNotImplemented());
         curvature_operation = std::make_shared<Curvature::CurvatureOperationAdaflo<dim>>(
-          *scratch_data_in,
+          scratch_data_in,
           ls_dof_idx_in,
           normal_dof_idx_in,
           curv_dof_idx_in,
@@ -166,9 +165,9 @@ namespace MeltPoolDG::LevelSet
                                std::numeric_limits<double>::max(),
                                level_set_data.reinit_time_step_size > 0.0 ?
                                  level_set_data.reinit_time_step_size :
-                                 scratch_data->get_min_cell_size() *
+                                 scratch_data.get_min_cell_size() *
                                    reinit_data.scale_factor_epsilon /
-                                   scratch_data->get_degree(ls_dof_idx),
+                                   scratch_data.get_degree(ls_dof_idx),
                                (unsigned int)level_set_data.n_initial_reinit_steps});
   }
 
@@ -192,9 +191,9 @@ namespace MeltPoolDG::LevelSet
     if (is_signed_distance_initial_field_function)
       {
         // setup DoF vector holding distances
-        scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
-        dealii::VectorTools::interpolate(scratch_data->get_mapping(),
-                                         scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
+        scratch_data.initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
+        dealii::VectorTools::interpolate(scratch_data.get_mapping(),
+                                         scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
                                          initial_field_function,
                                          distance_to_level_set);
 
@@ -235,14 +234,14 @@ namespace MeltPoolDG::LevelSet
       reinit_operation->reinit();
     curvature_operation->reinit();
 
-    scratch_data->initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
-    scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
 
     reinit_time_iterator.set_current_time_increment(level_set_data.reinit_time_step_size > 0.0 ?
                                                       level_set_data.reinit_time_step_size :
-                                                      scratch_data->get_min_cell_size() *
+                                                      scratch_data.get_min_cell_size() *
                                                         reinit_data.scale_factor_epsilon /
-                                                        scratch_data->get_degree(ls_dof_idx));
+                                                        scratch_data.get_degree(ls_dof_idx));
   }
 
   template <int dim>
@@ -254,12 +253,12 @@ namespace MeltPoolDG::LevelSet
     // reinit_operation->distribute_constraints();
     // curvature_operation->distribute_constraintst();
 
-    scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
-    scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
-    scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
+    scratch_data.get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
+    scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
+    scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
 
     for (unsigned int d = 0; d < dim; ++d)
-      scratch_data->get_constraint(ls_hanging_nodes_dof_idx)
+      scratch_data.get_constraint(ls_hanging_nodes_dof_idx)
         .distribute(get_normal_vector().block(d));
   }
 
@@ -287,7 +286,7 @@ namespace MeltPoolDG::LevelSet
      *  1) solve the advection step of the level set function
      */
     {
-      TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::advect");
+      TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::advect");
       advect_level_set(advection_velocity);
     }
     /*
@@ -295,7 +294,7 @@ namespace MeltPoolDG::LevelSet
      */
     if (reinit_operation)
       {
-        TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::reinit");
+        TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::reinit");
         do_reinitialization();
       }
     /*
@@ -306,7 +305,7 @@ namespace MeltPoolDG::LevelSet
      *    ... the curvature
      */
     {
-      TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::curvature");
+      TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::curvature");
       curvature_operation->solve(advec_diff_operation->get_advected_field());
     }
     /*
@@ -314,7 +313,7 @@ namespace MeltPoolDG::LevelSet
      */
     if (level_set_data.do_curvature_correction)
       {
-        TimerOutput::Scope scope(scratch_data->get_timer(), "LevelSet::curvature_correction");
+        TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::curvature_correction");
         correct_curvature_values();
       }
   }
@@ -420,14 +419,14 @@ namespace MeltPoolDG::LevelSet
      * @todo: advected_field duplicates level_set
      */
     advec_diff_operation->attach_output_vectors(data_out);
-    data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(ls_dof_idx),
                              get_level_set(),
                              "level_set");
     /*
      *  output normal vector field
      */
     for (unsigned int d = 0; d < dim; ++d)
-      data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+      data_out.add_data_vector(scratch_data.get_dof_handler(ls_dof_idx),
                                get_normal_vector().block(d),
                                "normal_" + std::to_string(d));
     /*
@@ -435,19 +434,19 @@ namespace MeltPoolDG::LevelSet
      *
      *  @todo: move to operation
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(ls_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(ls_dof_idx),
                              get_curvature(),
                              "curvature");
     /*
      *  output heaviside
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
                              level_set_as_heaviside,
                              "heaviside");
     /*
      *  output distance function
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
                              distance_to_level_set,
                              "distance");
   }
@@ -458,7 +457,7 @@ namespace MeltPoolDG::LevelSet
   {
     // compute the change in the level set since the last reinit
     VectorType temp;
-    scratch_data->initialize_dof_vector(temp, ls_dof_idx);
+    scratch_data.initialize_dof_vector(temp, ls_dof_idx);
     temp.copy_locally_owned_data_from(get_level_set());
     temp -= reinit_operation->get_level_set();
     max_d_level_set_since_last_reinit = temp.linfty_norm();
@@ -468,14 +467,14 @@ namespace MeltPoolDG::LevelSet
       {
         reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
 
-        Journal::print_decoration_line(scratch_data->get_pcout());
+        Journal::print_decoration_line(scratch_data.get_pcout());
         while (!reinit_time_iterator.is_finished())
           {
             reinit_time_iterator.compute_next_time_increment();
 
             std::ostringstream str;
             str << " τ = " << std::setw(10) << std::left << reinit_time_iterator.get_current_time();
-            Journal::print_line(scratch_data->get_pcout(), str.str(), "reinitialization", 1);
+            Journal::print_line(scratch_data.get_pcout(), str.str(), "reinitialization", 1);
 
             reinit_operation->solve();
 
@@ -496,7 +495,7 @@ namespace MeltPoolDG::LevelSet
              *  Should constraints between advec diff operation
              *  and reinitialization operation be synched?
              */
-            // scratch_data->get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
+            // scratch_data.get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
 
             // If it is the first reinitialization cycle, the normal vector
             // field might not be computed very accurately from the initial level set
@@ -509,7 +508,7 @@ namespace MeltPoolDG::LevelSet
 
         very_first_step = false;
 
-        Journal::print_decoration_line(scratch_data->get_pcout());
+        Journal::print_decoration_line(scratch_data.get_pcout());
       }
   }
 
@@ -525,18 +524,18 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim>::transform_distance_to_level_set()
   {
     distance_to_level_set.update_ghost_values();
-    scratch_data->initialize_dof_vector(get_level_set(), ls_dof_idx);
+    scratch_data.initialize_dof_vector(get_level_set(), ls_dof_idx);
 
     VectorType multiplicity;
-    scratch_data->initialize_dof_vector(multiplicity, ls_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(multiplicity, ls_hanging_nodes_dof_idx);
 
-    const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell(ls_hanging_nodes_dof_idx);
+    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(ls_hanging_nodes_dof_idx);
 
     FEValues<dim> distance_eval(
-      scratch_data->get_mapping(),
-      scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).get_fe(),
+      scratch_data.get_mapping(),
+      scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).get_fe(),
       Quadrature<dim>(
-        scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).get_fe().get_unit_support_points()),
+        scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).get_fe().get_unit_support_points()),
       update_values);
 
     std::vector<double> distance_at_q(distance_eval.n_quadrature_points);
@@ -544,7 +543,7 @@ namespace MeltPoolDG::LevelSet
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     for (const auto &cell :
-         scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
+         scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
       {
         if (cell->is_locally_owned())
           {
@@ -557,7 +556,7 @@ namespace MeltPoolDG::LevelSet
               reinit_data.constant_epsilon > 0.0 ?
                 reinit_data.constant_epsilon :
                 UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                  cell, reinit_data.scale_factor_epsilon / scratch_data->get_degree(ls_dof_idx));
+                  cell, reinit_data.scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
 
             Vector<double> level_set_local(dofs_per_cell);
             Vector<double> multiplicity_local(dofs_per_cell);
@@ -569,9 +568,9 @@ namespace MeltPoolDG::LevelSet
                   UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
                     distance_at_q[q], epsilon_cell);
               }
-            scratch_data->get_constraint(ls_dof_idx)
+            scratch_data.get_constraint(ls_dof_idx)
               .distribute_local_to_global(level_set_local, local_dof_indices, get_level_set());
-            scratch_data->get_constraint(ls_dof_idx)
+            scratch_data.get_constraint(ls_dof_idx)
               .distribute_local_to_global(multiplicity_local, local_dof_indices, multiplicity);
           }
       }
@@ -585,7 +584,7 @@ namespace MeltPoolDG::LevelSet
       if (multiplicity.local_element(i) > 1.0)
         get_level_set().local_element(i) /= multiplicity.local_element(i);
 
-    scratch_data->get_constraint(ls_dof_idx).distribute(get_level_set());
+    scratch_data.get_constraint(ls_dof_idx).distribute(get_level_set());
     distance_to_level_set.zero_out_ghost_values();
   }
 
@@ -593,17 +592,17 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::transform_level_set_to_smooth_heaviside()
   {
-    scratch_data->initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
-    scratch_data->initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
+    scratch_data.initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
 
-    const unsigned int dofs_per_cell = scratch_data->get_n_dofs_per_cell();
+    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell();
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     const double cut_off_level_set = std::tanh(2);
 
     for (const auto &cell :
-         scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
+         scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
       if (cell->is_locally_owned())
         {
           cell->get_dof_indices(local_dof_indices);
@@ -612,7 +611,7 @@ namespace MeltPoolDG::LevelSet
             reinit_data.constant_epsilon > 0.0 ?
               reinit_data.constant_epsilon :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                cell, reinit_data.scale_factor_epsilon / scratch_data->get_degree(ls_dof_idx));
+                cell, reinit_data.scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -629,8 +628,8 @@ namespace MeltPoolDG::LevelSet
                   (get_level_set()(local_dof_indices[i]) + 1.) * 0.5;
             }
         }
-    scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
-    scratch_data->get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
+    scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
+    scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
   }
 
   template <int dim>
@@ -642,9 +641,9 @@ namespace MeltPoolDG::LevelSet
       1e-6 /*tolerance*/, false /*unique mapping*/);
 
     LevelSet::Tools::broadcast_interface_value_to_vector<dim>(
-      scratch_data->get_mapping(),
-      scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
-      scratch_data->get_dof_handler(curv_dof_idx),
+      scratch_data.get_mapping(),
+      scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
+      scratch_data.get_dof_handler(curv_dof_idx),
       level_set_as_heaviside,
       distance_to_level_set,
       get_normal_vector(),
@@ -680,8 +679,8 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim>::update_surface_mesh()
   {
     surface_mesh_info.clear();
-    surface_mesh_info = Tools::generate_surface_mesh_info(scratch_data->get_dof_handler(ls_dof_idx),
-                                                          scratch_data->get_mapping(),
+    surface_mesh_info = Tools::generate_surface_mesh_info(scratch_data.get_dof_handler(ls_dof_idx),
+                                                          scratch_data.get_mapping(),
                                                           level_set_as_heaviside,
                                                           /*contour of surface*/ 0.5,
                                                           /*n_subdivisions*/ 1,
@@ -689,9 +688,9 @@ namespace MeltPoolDG::LevelSet
 
     std::ostringstream str;
     str << "Surface mesh generated, "
-        << Utilities::MPI::sum(surface_mesh_info.size(), scratch_data->get_mpi_comm())
+        << Utilities::MPI::sum(surface_mesh_info.size(), scratch_data.get_mpi_comm())
         << " cut cells found.";
-    Journal::print_line(scratch_data->get_pcout(), str.str(), "level set", 1);
+    Journal::print_line(scratch_data.get_pcout(), str.str(), "level set", 1);
   }
 
   template class LevelSetOperation<1>;

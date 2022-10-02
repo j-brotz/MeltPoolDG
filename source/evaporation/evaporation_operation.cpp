@@ -21,16 +21,15 @@
 namespace MeltPoolDG::Evaporation
 {
   template <int dim>
-  EvaporationOperation<dim>::EvaporationOperation(
-    const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const VectorType &                             level_set_as_heaviside_in,
-    const BlockVectorType &                        normal_vector_in,
-    std::shared_ptr<SimulationBase<dim>>           base_in,
-    const unsigned int                             normal_dof_idx_in,
-    const unsigned int                             evapor_vel_dof_idx_in,
-    const unsigned int                             evapor_mass_flux_dof_idx_in,
-    const unsigned int                             ls_hanging_nodes_dof_idx_in,
-    const unsigned int                             ls_quad_idx_in)
+  EvaporationOperation<dim>::EvaporationOperation(const ScratchData<dim> &scratch_data_in,
+                                                  const VectorType &      level_set_as_heaviside_in,
+                                                  const BlockVectorType & normal_vector_in,
+                                                  std::shared_ptr<SimulationBase<dim>> base_in,
+                                                  const unsigned int normal_dof_idx_in,
+                                                  const unsigned int evapor_vel_dof_idx_in,
+                                                  const unsigned int evapor_mass_flux_dof_idx_in,
+                                                  const unsigned int ls_hanging_nodes_dof_idx_in,
+                                                  const unsigned int ls_quad_idx_in)
 
     : scratch_data(scratch_data_in)
     , evaporation_data(base_in->parameters.evapor)
@@ -43,15 +42,15 @@ namespace MeltPoolDG::Evaporation
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx_in)
     , ls_quad_idx(ls_quad_idx_in)
     , tolerance_normal_vector(
-        UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data->get_triangulation(),
-                                                              scratch_data->get_mapping()))
+        UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
+                                                              scratch_data.get_mapping()))
   {
     AssertThrow(material.first.density > 0.0 && material.second.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
 
     if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::diffuse)
       evapor_source_terms_operator = std::make_shared<EvaporationSourceTermsContinuous<dim>>(
-        *scratch_data,
+        scratch_data,
         evaporation_data,
         level_set_as_heaviside,
         normal_vector,
@@ -67,7 +66,7 @@ namespace MeltPoolDG::Evaporation
         material.two_phase_properties_transition_type);
     else if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::sharp)
       evapor_source_terms_operator =
-        std::make_shared<EvaporationSourceTermsSharp<dim>>(*scratch_data,
+        std::make_shared<EvaporationSourceTermsSharp<dim>>(scratch_data,
                                                            evaporation_data,
                                                            level_set_as_heaviside,
                                                            normal_vector,
@@ -126,12 +125,12 @@ namespace MeltPoolDG::Evaporation
      */
     if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "continuous")
       evapor_mass_flux_operator =
-        std::make_shared<EvaporationMassFluxOperatorContinuous<dim>>(*scratch_data, *evapor_model);
+        std::make_shared<EvaporationMassFluxOperatorContinuous<dim>>(scratch_data, *evapor_model);
     else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "interface value")
       {
         evapor_mass_flux_operator =
           std::make_shared<EvaporationMassFluxOperatorInterfaceValue<dim>>(
-            *scratch_data,
+            scratch_data,
             *evapor_model,
             level_set_as_heaviside,
             distance,
@@ -144,7 +143,7 @@ namespace MeltPoolDG::Evaporation
     else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "line integral")
       evapor_mass_flux_operator =
         std::make_shared<EvaporationMassFluxOperatorThicknessIntegration<dim>>(
-          *scratch_data,
+          scratch_data,
           *evapor_model,
           level_set_as_heaviside,
           normal_vector,
@@ -183,9 +182,9 @@ namespace MeltPoolDG::Evaporation
         evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux,
                                                                  *temperature);
       }
-    Journal::print_formatted_norm(scratch_data->get_pcout(1),
+    Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   MeltPoolDG::VectorTools::compute_L2_norm(evaporative_mass_flux,
-                                                                           *scratch_data,
+                                                                           scratch_data,
                                                                            evapor_mass_flux_dof_idx,
                                                                            ls_quad_idx),
                                   "evaporative_mass_flux",
@@ -221,7 +220,7 @@ namespace MeltPoolDG::Evaporation
                                                               bool               zero_out)
   {
     if (zero_out)
-      scratch_data->initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
+      scratch_data.initialize_dof_vector(mass_balance_rhs, pressure_dof_idx);
 
     evapor_source_terms_operator->compute_mass_balance_source_term(mass_balance_rhs,
                                                                    pressure_dof_idx,
@@ -233,8 +232,8 @@ namespace MeltPoolDG::Evaporation
   void
   EvaporationOperation<dim>::reinit()
   {
-    scratch_data->initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
-    scratch_data->initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
+    scratch_data.initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
+    scratch_data.initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
   }
 
   template <int dim>
@@ -259,8 +258,8 @@ namespace MeltPoolDG::Evaporation
   void
   EvaporationOperation<dim>::distribute_constraints()
   {
-    scratch_data->get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
-    scratch_data->get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
+    scratch_data.get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
+    scratch_data.get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
   }
 
   template <int dim>
@@ -274,14 +273,14 @@ namespace MeltPoolDG::Evaporation
       vector_component_interpretation(dim,
                                       DataComponentInterpretation::component_is_part_of_vector);
 
-    data_out.add_data_vector(scratch_data->get_dof_handler(evapor_vel_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(evapor_vel_dof_idx),
                              evaporation_velocity,
                              std::vector<std::string>(dim, "evaporation_velocity"),
                              vector_component_interpretation);
     /*
      *  evaporation mass flux
      */
-    data_out.add_data_vector(scratch_data->get_dof_handler(evapor_mass_flux_dof_idx),
+    data_out.add_data_vector(scratch_data.get_dof_handler(evapor_mass_flux_dof_idx),
                              evaporative_mass_flux,
                              "evaporative_mass_flux");
   }
@@ -290,8 +289,8 @@ namespace MeltPoolDG::Evaporation
   inline Tensor<1, dim, VectorizedArray<double>> *
   EvaporationOperation<dim>::begin_evaporation_velocity(const unsigned int macro_cell)
   {
-    AssertIndexRange(macro_cell, scratch_data->get_matrix_free().n_cell_batches());
-    return &evaporation_velocities[scratch_data->get_matrix_free().get_n_q_points(ls_quad_idx) *
+    AssertIndexRange(macro_cell, scratch_data.get_matrix_free().n_cell_batches());
+    return &evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(ls_quad_idx) *
                                    macro_cell];
   }
 
@@ -299,8 +298,8 @@ namespace MeltPoolDG::Evaporation
   inline const Tensor<1, dim, VectorizedArray<double>> &
   EvaporationOperation<dim>::begin_evaporation_velocity(const unsigned int macro_cell) const
   {
-    AssertIndexRange(macro_cell, scratch_data->get_matrix_free().n_cell_batches());
-    return evaporation_velocities[scratch_data->get_matrix_free().get_n_q_points(ls_quad_idx) *
+    AssertIndexRange(macro_cell, scratch_data.get_matrix_free().n_cell_batches());
+    return evaporation_velocities[scratch_data.get_matrix_free().get_n_q_points(ls_quad_idx) *
                                   macro_cell];
   }
 

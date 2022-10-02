@@ -4,7 +4,7 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/utilities/generic_data_out.hpp>
 

@@ -4,14 +4,13 @@
 namespace MeltPoolDG::Curvature
 {
   template <int dim>
-  CurvatureOperation<dim>::CurvatureOperation(
-    const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-    const CurvatureData<double> &                  curvature_data,
-    const NormalVectorData<double> &               normal_vec_data,
-    const unsigned int                             curv_dof_idx_in,
-    const unsigned int                             curv_quad_idx_in,
-    const unsigned int                             normal_dof_idx_in,
-    const unsigned int                             ls_dof_idx_in)
+  CurvatureOperation<dim>::CurvatureOperation(const ScratchData<dim> &        scratch_data_in,
+                                              const CurvatureData<double> &   curvature_data,
+                                              const NormalVectorData<double> &normal_vec_data,
+                                              const unsigned int              curv_dof_idx_in,
+                                              const unsigned int              curv_quad_idx_in,
+                                              const unsigned int              normal_dof_idx_in,
+                                              const unsigned int              ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , curvature_data(curvature_data)
     , curv_dof_idx(curv_dof_idx_in)
@@ -45,8 +44,8 @@ namespace MeltPoolDG::Curvature
 
     VectorType rhs;
 
-    scratch_data->initialize_dof_vector(rhs, curv_dof_idx);
-    scratch_data->initialize_dof_vector(solution_curvature, curv_dof_idx);
+    scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
+    scratch_data.initialize_dof_vector(solution_curvature, curv_dof_idx);
 
     // no need to compute curvature in 1d
     if (dim == 1)
@@ -100,22 +99,22 @@ namespace MeltPoolDG::Curvature
     solution_levelset.zero_out_ghost_values();
     normal_vector_operation.get_solution_normal_vector().zero_out_ghost_values();
 
-    scratch_data->get_constraint(curv_dof_idx).distribute(solution_curvature);
+    scratch_data.get_constraint(curv_dof_idx).distribute(solution_curvature);
 
     const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
     const ConditionalOStream &pcout =
-      scratch_data->get_pcout(std::max(curvature_data.verbosity_level, verbosity_l2_norm));
+      scratch_data.get_pcout(std::max(curvature_data.verbosity_level, verbosity_l2_norm));
 
 
     Journal::print_formatted_norm(pcout,
                                   VectorTools::compute_L2_norm<dim>(
-                                    solution_curvature, *scratch_data, curv_dof_idx, curv_quad_idx),
+                                    solution_curvature, scratch_data, curv_dof_idx, curv_quad_idx),
                                   "curvature",
                                   "curvature",
                                   11 /*precision*/
     );
 
-    Journal::print_line(scratch_data->get_pcout(1),
+    Journal::print_line(scratch_data.get_pcout(1),
                         "     * CG: i = " + std::to_string(iter),
                         "curvature");
   }
@@ -153,7 +152,7 @@ namespace MeltPoolDG::Curvature
   CurvatureOperation<dim>::reinit()
   {
     if (!curvature_data.linear_solver.do_matrix_free)
-      curvature_operator->initialize_matrix_based(*scratch_data);
+      curvature_operator->initialize_matrix_based(scratch_data);
 
     if (curvature_data.linear_solver.do_matrix_free)
       {
@@ -180,7 +179,7 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::create_operator(const VectorType &solution_levelset)
   {
-    curvature_operator = std::make_shared<CurvatureOperator<dim>>(*scratch_data,
+    curvature_operator = std::make_shared<CurvatureOperator<dim>>(scratch_data,
                                                                   curvature_data,
                                                                   curv_dof_idx,
                                                                   curv_quad_idx,
@@ -194,7 +193,7 @@ namespace MeltPoolDG::Curvature
      */
     if (!curvature_data.linear_solver.do_matrix_free)
       {
-        curvature_operator->initialize_matrix_based(*scratch_data);
+        curvature_operator->initialize_matrix_based(scratch_data);
       }
     /*
      * initialize preconditioner matrix-free
@@ -203,7 +202,7 @@ namespace MeltPoolDG::Curvature
       {
         preconditioner_matrixfree = std::make_shared<
           Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
-          *scratch_data,
+          scratch_data,
           curv_dof_idx,
           curvature_data.linear_solver.preconditioner_type,
           *curvature_operator);

@@ -15,6 +15,7 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
+#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>

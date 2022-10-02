@@ -43,14 +43,14 @@ namespace MeltPoolDG
       using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
     public:
-      ReinitializationOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                                const ReinitializationData<double> &           reinit_data,
-                                const NormalVectorData<double> &               normal_vec_data,
-                                const TimeIterator<double> &                   time_iterator,
-                                const unsigned int                             reinit_dof_idx_in,
-                                const unsigned int                             reinit_quad_idx_in,
-                                const unsigned int                             ls_dof_idx_in,
-                                const unsigned int                             normal_dof_idx_in);
+      ReinitializationOperation(const ScratchData<dim> &            scratch_data_in,
+                                const ReinitializationData<double> &reinit_data,
+                                const NormalVectorData<double> &    normal_vec_data,
+                                const TimeIterator<double> &        time_iterator,
+                                const unsigned int                  reinit_dof_idx_in,
+                                const unsigned int                  reinit_quad_idx_in,
+                                const unsigned int                  ls_dof_idx_in,
+                                const unsigned int                  normal_dof_idx_in);
 
       void
       reinit() override;
@@ -103,9 +103,9 @@ namespace MeltPoolDG
       update_operator();
 
     private:
-      const std::shared_ptr<const ScratchData<dim>> scratch_data;
-      const ReinitializationData<double>            reinit_data;
-      const TimeIterator<double> &                  time_iterator;
+      const ScratchData<dim> &           scratch_data;
+      const ReinitializationData<double> reinit_data;
+      const TimeIterator<double> &       time_iterator;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

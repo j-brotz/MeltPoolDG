@@ -1,5 +1,4 @@
 #pragma once
-// dealii
 #include <deal.II/base/exceptions.h>
 
 #define AssertThrowZeroTimeIncrement(dt) AssertThrow(dt > 0, MeltPoolDG::ExcZeroTimeIncrement())

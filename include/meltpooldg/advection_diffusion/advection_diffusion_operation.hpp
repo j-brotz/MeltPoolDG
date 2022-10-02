@@ -34,10 +34,10 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  All the necessary parameters are stored in this struct.
      */
 
-    AdvectionDiffusionOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                                const AdvectionDiffusionData<double> &         advec_diff_data_in,
-                                const TimeIterator<double> &                   time_iterator,
-                                const unsigned int advec_diff_dof_idx_in,
+    AdvectionDiffusionOperation(const ScratchData<dim> &              scratch_data_in,
+                                const AdvectionDiffusionData<double> &advec_diff_data_in,
+                                const TimeIterator<double> &          time_iterator,
+                                const unsigned int                    advec_diff_dof_idx_in,
                                 const unsigned int advec_diff_hanging_nodes_dof_idx_in,
                                 const unsigned int advec_diff_quad_idx_in,
                                 const unsigned int velocity_dof_idx_in);
@@ -86,7 +86,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     void
     create_operator(const VectorType &advection_velocity);
 
-    std::shared_ptr<const ScratchData<dim>> scratch_data;
+    const ScratchData<dim> &scratch_data;
     /*
      *  This pointer will point to your user-defined advection_diffusion operator.
      */
@@ -98,10 +98,10 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
      *  multiple DoFHandlers, quadrature rules, etc.
      */
-    unsigned int advec_diff_dof_idx  = 0;
-    unsigned int advec_diff_quad_idx = 0;
-    unsigned int advec_diff_hanging_nodes_dof_idx;
-    unsigned int velocity_dof_idx = 0;
+    const unsigned int advec_diff_dof_idx  = 0;
+    const unsigned int advec_diff_quad_idx = 0;
+    const unsigned int advec_diff_hanging_nodes_dof_idx;
+    const unsigned int velocity_dof_idx = 0;
     /*
      *    This is the primary solution variable of this module, which will be also publically
      *    accessible for output_results.

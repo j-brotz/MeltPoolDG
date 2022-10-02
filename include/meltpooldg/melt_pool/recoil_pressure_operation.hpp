@@ -4,7 +4,6 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-// MeltPoolDG
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
