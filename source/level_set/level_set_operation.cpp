@@ -89,6 +89,18 @@ namespace MeltPoolDG::LevelSet
     set_level_set_parameters();
 
     /*
+     * initialize the time iterator for the reinitialization
+     */
+    reinit_time_iterator = std::make_shared<TimeIterator<double>>(
+      TimeSteppingData<double>{0.0,
+                               std::numeric_limits<double>::max(),
+                               level_set_data.reinit_time_step_size > 0.0 ?
+                                 level_set_data.reinit_time_step_size :
+                                 scratch_data->get_min_cell_size() *
+                                   reinit_data.scale_factor_epsilon /
+                                   scratch_data->get_degree(ls_dof_idx),
+                               (unsigned int)level_set_data.n_initial_reinit_steps});
+    /*
      *    initialize the reinit operation
      */
     if (level_set_data.do_reinitialization)
@@ -157,19 +169,6 @@ namespace MeltPoolDG::LevelSet
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
-
-    /*
-     * initialize the time iterator for the reinitialization
-     */
-    reinit_time_iterator = std::make_shared<TimeIterator<double>>(
-      TimeSteppingData<double>{0.0,
-                               std::numeric_limits<double>::max(),
-                               level_set_data.reinit_time_step_size > 0.0 ?
-                                 level_set_data.reinit_time_step_size :
-                                 scratch_data->get_min_cell_size() *
-                                   reinit_data.scale_factor_epsilon /
-                                   scratch_data->get_degree(ls_dof_idx),
-                               (unsigned int)level_set_data.n_initial_reinit_steps});
   }
 
   /**
