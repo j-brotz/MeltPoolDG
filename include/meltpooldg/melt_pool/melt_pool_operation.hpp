@@ -4,19 +4,14 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-// for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
-// DoFTools
-#include <deal.II/dofs/dof_tools.h>
-// MeltPoolDG
-#include <meltpooldg/heat/heat_transfer_operation.hpp>
+
 #include <meltpooldg/heat/laser.hpp>
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG
 {
@@ -30,13 +25,13 @@ namespace MeltPoolDG
     private:
       using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-      std::shared_ptr<ScratchData<dim>> scratch_data;
+      const ScratchData<dim> &scratch_data;
       /**
        *  Parameters
        */
-      MeltPoolData<double> mp_data;
-      MaterialData<double> material;
-      const bool           do_mushy_zone;
+      const MeltPoolData<double> mp_data;
+      const MaterialData<double> material;
+      const bool                 do_mushy_zone;
 
       std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
       std::shared_ptr<RecoilPressureOperation<dim>>   recoil_pressure_operation;
@@ -64,20 +59,20 @@ namespace MeltPoolDG
       VectorType liquid;
 
     public:
-      MeltPoolOperation(const std::shared_ptr<ScratchData<dim>> &scratch_data_in,
-                        const Parameters<double> &               data_in,
-                        const bool                               do_recoil_pressure,
-                        const unsigned int                       ls_dof_idx_in,
-                        VectorType *                             temperature,
-                        const unsigned int                       reinit_dof_idx_in,
-                        const unsigned int                       reinit_no_solid_dof_idx_in,
-                        const unsigned int                       flow_vel_dof_idx_in,
-                        const unsigned int                       flow_vel_no_solid_dof_idx_in,
-                        const unsigned int                       flow_vel_quad_idx_in,
-                        const unsigned int flow_pressure_hanging_nodes_dof_idx,
-                        const unsigned int temp_dof_idx_in,
-                        const unsigned int temp_hanging_nodes_dof_idx_in,
-                        const double       start_time_in);
+      MeltPoolOperation(const ScratchData<dim> &  scratch_data_in,
+                        const Parameters<double> &data_in,
+                        const bool                do_recoil_pressure,
+                        const unsigned int        ls_dof_idx_in,
+                        VectorType *              temperature,
+                        const unsigned int        reinit_dof_idx_in,
+                        const unsigned int        reinit_no_solid_dof_idx_in,
+                        const unsigned int        flow_vel_dof_idx_in,
+                        const unsigned int        flow_vel_no_solid_dof_idx_in,
+                        const unsigned int        flow_vel_quad_idx_in,
+                        const unsigned int        flow_pressure_hanging_nodes_dof_idx,
+                        const unsigned int        temp_dof_idx_in,
+                        const unsigned int        temp_hanging_nodes_dof_idx_in,
+                        const double              start_time_in);
 
       void
       set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
@@ -180,9 +175,6 @@ namespace MeltPoolDG
         const DoFHandler<dim> &          level_set_dof_handler,
         const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
         AffineConstraints<double> &      reinit_dirichlet_constraints);
-
-      void
-      set_melt_pool_parameters(const Parameters<double> &data_in);
 
       /**
        * This function returns the solid fraction from a linear interpolation between the solidus

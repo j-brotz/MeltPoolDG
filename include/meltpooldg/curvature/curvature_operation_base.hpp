@@ -4,10 +4,7 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <deal.II/dofs/dof_handler.h>
-
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
+#include <deal.II/lac/la_parallel_block_vector.h>
 
 namespace MeltPoolDG
 {

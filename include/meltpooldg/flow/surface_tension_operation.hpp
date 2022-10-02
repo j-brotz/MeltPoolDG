@@ -7,7 +7,6 @@
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
-#include <deal.II/lac/la_parallel_block_vector.h>
 
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

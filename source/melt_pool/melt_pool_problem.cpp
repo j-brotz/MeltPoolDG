@@ -474,7 +474,7 @@ namespace MeltPoolDG::MeltPool
      *    and setup initial conditions
      */
     level_set_operation =
-      std::make_shared<LevelSet::LevelSetOperation<dim>>(scratch_data,
+      std::make_shared<LevelSet::LevelSetOperation<dim>>(*scratch_data,
                                                          time_iterator,
                                                          base_in,
                                                          ls_dof_idx,
@@ -535,7 +535,7 @@ namespace MeltPoolDG::MeltPool
         problem_specific_parameters.do_evaporative_velocity_jump)
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
-          scratch_data,
+          *scratch_data,
           level_set_operation->get_level_set_as_heaviside(),
           level_set_operation->get_normal_vector(),
           base_in,
@@ -616,7 +616,7 @@ namespace MeltPoolDG::MeltPool
     if (problem_specific_parameters.do_melt_pool)
       {
         melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
-          scratch_data,
+          *scratch_data,
           base_in->parameters,
           problem_specific_parameters.do_recoil_pressure,
           ls_hanging_nodes_dof_idx,

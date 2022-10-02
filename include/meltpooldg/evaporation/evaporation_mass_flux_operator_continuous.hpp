@@ -5,7 +5,6 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
-#include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_base.hpp>

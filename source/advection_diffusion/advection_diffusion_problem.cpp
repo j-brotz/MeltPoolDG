@@ -171,7 +171,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     if (base_in->parameters.advec_diff.implementation == "meltpooldg")
       {
         advec_diff_operation =
-          std::make_shared<AdvectionDiffusionOperation<dim>>(scratch_data,
+          std::make_shared<AdvectionDiffusionOperation<dim>>(*scratch_data,
                                                              base_in->parameters.advec_diff,
                                                              time_iterator,
                                                              advec_diff_dof_idx,

@@ -36,13 +36,13 @@ namespace MeltPoolDG::Curvature
     using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
   public:
-    CurvatureOperation(const std::shared_ptr<const ScratchData<dim>> &scratch_data_in,
-                       const CurvatureData<double> &                  curvature_data,
-                       const NormalVectorData<double> &               normal_vec_data,
-                       const unsigned int                             curv_dof_idx_in,
-                       const unsigned int                             curv_quad_idx_in,
-                       const unsigned int                             normal_dof_idx_in,
-                       const unsigned int                             ls_dof_idx_in);
+    CurvatureOperation(const ScratchData<dim> &        scratch_data_in,
+                       const CurvatureData<double> &   curvature_data,
+                       const NormalVectorData<double> &normal_vec_data,
+                       const unsigned int              curv_dof_idx_in,
+                       const unsigned int              curv_quad_idx_in,
+                       const unsigned int              normal_dof_idx_in,
+                       const unsigned int              ls_dof_idx_in);
 
     void
     solve(const VectorType &solution_levelset) override;
@@ -66,7 +66,7 @@ namespace MeltPoolDG::Curvature
     void
     create_operator(const VectorType &solution_levelset);
 
-    const std::shared_ptr<const ScratchData<dim>> &scratch_data;
+    const ScratchData<dim> &scratch_data;
 
     const CurvatureData<double> curvature_data;
     /*

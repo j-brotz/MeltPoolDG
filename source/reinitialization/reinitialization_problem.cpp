@@ -102,7 +102,7 @@ namespace MeltPoolDG::Reinitialization
     if (base_in->parameters.reinit.implementation == "meltpooldg")
       {
         reinit_operation =
-          std::make_shared<ReinitializationOperation<dim>>(scratch_data,
+          std::make_shared<ReinitializationOperation<dim>>(*scratch_data,
                                                            base_in->parameters.reinit,
                                                            base_in->parameters.normal_vec,
                                                            time_iterator,

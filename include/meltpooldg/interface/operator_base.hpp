@@ -1,8 +1,6 @@
 #pragma once
-// dealii
 #include <deal.II/lac/generic_linear_algebra.h>
-#include <deal.II/lac/la_parallel_vector.h>
-// MeltPoolDG
+
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 
