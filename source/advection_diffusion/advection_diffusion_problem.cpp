@@ -1,6 +1,3 @@
-#include <meltpooldg/advection_diffusion/advection_diffusion_problem.hpp>
-//
-
 #include <deal.II/distributed/grid_refinement.h>
 
 #include <deal.II/fe/mapping.h>
@@ -10,6 +7,7 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
+#include <meltpooldg/advection_diffusion/advection_diffusion_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
@@ -22,10 +20,10 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     initialize(base_in);
 
-    while (!time_iterator.is_finished())
+    while (!time_iterator->is_finished())
       {
-        time_iterator.compute_next_time_increment();
-        time_iterator.print_me(scratch_data->get_pcout());
+        time_iterator->compute_next_time_increment();
+        time_iterator->print_me(scratch_data->get_pcout());
         /*
          * compute the advection velocity for the current time
          */
@@ -34,8 +32,8 @@ namespace MeltPoolDG::AdvectionDiffusion
         /*
          *  do paraview output if requested
          */
-        output_results(time_iterator.get_current_time_step_number(),
-                       time_iterator.get_current_time(),
+        output_results(time_iterator->get_current_time_step_number(),
+                       time_iterator->get_current_time(),
                        base_in);
 
         if (base_in->parameters.amr.do_amr)
@@ -166,14 +164,14 @@ namespace MeltPoolDG::AdvectionDiffusion
     /*
      *  initialize the time iterator
      */
-    time_iterator.initialize(base_in->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
 
     if (base_in->parameters.advec_diff.implementation == "meltpooldg")
       {
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperation<dim>>(scratch_data,
                                                              base_in->parameters.advec_diff,
-                                                             time_iterator,
+                                                             *time_iterator,
                                                              advec_diff_dof_idx,
                                                              advec_diff_hanging_nodes_dof_idx,
                                                              advec_diff_quad_idx,
@@ -186,7 +184,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                     ExcNotImplemented());
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperationAdaflo<dim>>(*scratch_data,
-                                                                   time_iterator,
+                                                                   *time_iterator,
                                                                    advec_diff_adaflo_dof_idx,
                                                                    advec_diff_dof_idx,
                                                                    advec_diff_quad_idx,
@@ -222,7 +220,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     /*
      *  set the current time to the advection field function
      */
-    advec_func.set_time(time_iterator.get_current_time());
+    advec_func.set_time(time_iterator->get_current_time());
     /*
      *  interpolate the values of the advection velocity
      */
@@ -307,7 +305,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                  setup_dof_system,
                                  base_in->parameters.amr,
                                  dof_handler,
-                                 time_iterator.get_current_time_step_number());
+                                 time_iterator->get_current_time_step_number());
   }
 
   template class AdvectionDiffusionProblem<1>;

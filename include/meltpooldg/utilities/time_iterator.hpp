@@ -1,4 +1,6 @@
 #pragma once
+#include <deal.II/base/function_parser.h>
+
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/time_stepping_data.hpp>
 
@@ -14,10 +16,7 @@ namespace MeltPoolDG
   class TimeIterator
   {
   public:
-    TimeIterator() = default;
-
-    void
-    initialize(const TimeSteppingData<number> &data_in);
+    TimeIterator(const TimeSteppingData<number> &data_in);
 
     bool
     is_finished() const;

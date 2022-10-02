@@ -70,15 +70,15 @@ namespace MeltPoolDG::AdvectionDiffusion
     std::unique_ptr<FiniteElement<dim>> fe;
     std::unique_ptr<FiniteElement<dim>> fe_velocity;
 
-    DoFHandler<dim>                   dof_handler;
-    AffineConstraints<double>         constraints;
-    AffineConstraints<double>         hanging_node_constraints;
-    AffineConstraints<double>         hanging_node_constraints_with_zero_dirichlet;
-    DoFHandler<dim>                   dof_handler_velocity;
-    AffineConstraints<double>         hanging_node_constraints_velocity;
-    std::shared_ptr<ScratchData<dim>> scratch_data;
-    VectorType                        advection_velocity;
-    TimeIterator<double>              time_iterator;
+    DoFHandler<dim>                       dof_handler;
+    AffineConstraints<double>             constraints;
+    AffineConstraints<double>             hanging_node_constraints;
+    AffineConstraints<double>             hanging_node_constraints_with_zero_dirichlet;
+    DoFHandler<dim>                       dof_handler_velocity;
+    AffineConstraints<double>             hanging_node_constraints_velocity;
+    std::shared_ptr<ScratchData<dim>>     scratch_data;
+    VectorType                            advection_velocity;
+    std::shared_ptr<TimeIterator<double>> time_iterator;
     std::shared_ptr<AdvectionDiffusionOperationBase<dim>> advec_diff_operation;
 
     unsigned int advec_diff_dof_idx;

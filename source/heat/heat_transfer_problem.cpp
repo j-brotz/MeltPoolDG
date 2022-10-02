@@ -24,12 +24,12 @@ namespace MeltPoolDG::Heat
   {
     initialize(base_in);
 
-    while (!time_iterator.is_finished())
+    while (!time_iterator->is_finished())
       {
-        const auto dt = time_iterator.compute_next_time_increment();
-        const auto n  = time_iterator.get_current_time_step_number();
+        const auto dt = time_iterator->compute_next_time_increment();
+        const auto n  = time_iterator->get_current_time_step_number();
 
-        time_iterator.print_me(scratch_data->get_pcout());
+        time_iterator->print_me(scratch_data->get_pcout());
 
         if (const auto velocity_field_function =
               base_in->get_velocity_field("heat_transfer", true /*is_optional*/))
@@ -95,7 +95,7 @@ namespace MeltPoolDG::Heat
         heat_operation->solve();
 
         // ... and output the results to vtk files.
-        output_results(n, time_iterator.get_current_time(), base_in);
+        output_results(n, time_iterator->get_current_time(), base_in);
 
         if (base_in->parameters.amr.do_amr)
           refine_mesh(base_in);
@@ -180,7 +180,7 @@ namespace MeltPoolDG::Heat
     /*
      *  initialize the time stepping scheme
      */
-    time_iterator.initialize(base_in->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
     /*
      *    set velocity field
      */
@@ -240,7 +240,7 @@ namespace MeltPoolDG::Heat
                                                                   *scratch_data,
                                                                   base_in->parameters.heat,
                                                                   *material,
-                                                                  time_iterator,
+                                                                  *time_iterator,
                                                                   temp_dof_idx,
                                                                   temp_hanging_nodes_dof_idx,
                                                                   temp_quad_idx,
@@ -293,7 +293,7 @@ namespace MeltPoolDG::Heat
     /*
      *  set the current time to the advection field function
      */
-    field_function.set_time(time_iterator.get_current_time());
+    field_function.set_time(time_iterator->get_current_time());
     /*
      *  interpolate the values of the advection velocity
      */
@@ -417,7 +417,7 @@ namespace MeltPoolDG::Heat
                                  setup_dof_system,
                                  base_in->parameters.amr,
                                  dof_handler,
-                                 time_iterator.get_current_time_step_number());
+                                 time_iterator->get_current_time_step_number());
   }
 
   template class HeatTransferProblem<1>;

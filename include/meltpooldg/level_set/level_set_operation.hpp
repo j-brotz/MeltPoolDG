@@ -46,7 +46,7 @@ namespace MeltPoolDG::LevelSet
      *  equation, which is solved up to quasi-steady state. Thus a time iterator is
      *  needed.
      */
-    TimeIterator<double> reinit_time_iterator;
+    std::shared_ptr<TimeIterator<double>> reinit_time_iterator;
     /*
      *  necessary parameters
      */

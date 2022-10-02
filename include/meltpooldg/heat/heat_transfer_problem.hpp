@@ -34,10 +34,10 @@ namespace MeltPoolDG::Heat
     VectorType velocity;
     VectorType level_set_as_heaviside;
 
-    TimeIterator<double> time_iterator;
-    DoFHandler<dim>      dof_handler;
-    DoFHandler<dim>      dof_handler_velocity;
-    DoFHandler<dim>      dof_handler_level_set;
+    std::shared_ptr<TimeIterator<double>> time_iterator;
+    DoFHandler<dim>                       dof_handler;
+    DoFHandler<dim>                       dof_handler_velocity;
+    DoFHandler<dim>                       dof_handler_level_set;
 
     AffineConstraints<double> temp_constraints;
     AffineConstraints<double> temp_hanging_nodes_constraints;

@@ -95,7 +95,6 @@ namespace MeltPoolDG
           profiling.write_time_step_size /
           time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
-
     /*
      *  set the number of initial reinitialization steps equal to the number of reinit steps
      *  if no value is provided

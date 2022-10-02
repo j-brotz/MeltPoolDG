@@ -20,12 +20,12 @@ namespace MeltPoolDG::MeltPool
   {
     initialize(base_in); // no timing needed, since the function does it self
 
-    while (!time_iterator.is_finished())
+    while (!time_iterator->is_finished())
       {
-        const auto dt = time_iterator.compute_next_time_increment();
-        const int  n  = time_iterator.get_current_time_step_number();
+        const auto dt = time_iterator->compute_next_time_increment();
+        const int  n  = time_iterator->get_current_time_step_number();
 
-        time_iterator.print_me(scratch_data->get_pcout());
+        time_iterator->print_me(scratch_data->get_pcout());
 
         // TODO activate
         // if (flow_operation)
@@ -39,7 +39,7 @@ namespace MeltPoolDG::MeltPool
         // the time is needed to evaluate the function.
         if (evaporation_operation &&
             base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
-          evaporation_operation->set_time(time_iterator.get_current_time());
+          evaporation_operation->set_time(time_iterator->get_current_time());
 
         /******************************************************************************************
          * LEVEL SET
@@ -160,7 +160,7 @@ namespace MeltPoolDG::MeltPool
                 base_in->parameters.material.first.density,
                 base_in->parameters.material.second.density);
 
-              AssertThrow(time_iterator.check_time_step_limit(dt_lim),
+              AssertThrow(time_iterator->check_time_step_limit(dt_lim),
                           ExcMessage("The time step limit for surface tension (dt=" +
                                      UtilityFunctions::to_string_with_precision(dt_lim) +
                                      ") is exceeded. Try to choose a smaller "
@@ -235,7 +235,7 @@ namespace MeltPoolDG::MeltPool
           TimerOutput::Scope scope(scratch_data->get_timer(), "Output");
 
           // ... and output the results to vtk files.
-          output_results(n, time_iterator.get_current_time(), base_in);
+          output_results(n, time_iterator->get_current_time(), base_in);
         }
 
 
@@ -468,14 +468,14 @@ namespace MeltPoolDG::MeltPool
     /*
      *  initialize the time stepping scheme
      */
-    time_iterator.initialize(base_in->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
     /*
      *    initialize the levelset operation class
      *    and setup initial conditions
      */
     level_set_operation =
       std::make_shared<LevelSet::LevelSetOperation<dim>>(scratch_data,
-                                                         time_iterator,
+                                                         *time_iterator,
                                                          base_in,
                                                          ls_dof_idx,
                                                          ls_hanging_nodes_dof_idx,
@@ -494,7 +494,7 @@ namespace MeltPoolDG::MeltPool
         *scratch_data,
         base_in->parameters.heat,
         *material,
-        time_iterator,
+        *time_iterator,
         temp_dof_idx,
         temp_hanging_nodes_dof_idx,
         temp_quad_idx,
@@ -772,7 +772,7 @@ namespace MeltPoolDG::MeltPool
         // Only if a spatially constant evaporative mass flux is given as an analytical function,
         // the time is needed to evaluate the function.
         if (base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
-          evaporation_operation->set_time(time_iterator.get_current_time());
+          evaporation_operation->set_time(time_iterator->get_current_time());
 
         evaporation_operation->compute_evaporative_mass_flux();
       }
@@ -1205,7 +1205,7 @@ namespace MeltPoolDG::MeltPool
 
                   if ((cell->level() < static_cast<int>(amr_data.max_grid_refinement_level) &&
                        distance_in_cells < 3.5) ||
-                      (time_iterator.get_current_time_step_number() == 0 &&
+                      (time_iterator->get_current_time_step_number() == 0 &&
                        cell->level() > amr_data.min_grid_refinement_level && distance_in_cells > 8))
                     {
                       needs_refinement_or_coarsening = true;
@@ -1429,7 +1429,7 @@ namespace MeltPoolDG::MeltPool
                                                                vel_vals);
 
                       // try to look ahead and bias the error towards the flow direction
-                      const double direction = 4. * time_iterator.get_current_time_increment() *
+                      const double direction = 4. * time_iterator->get_current_time_increment() *
                                                (ls_gradient * vel_vals[0]) / ls_gradient.norm() /
                                                diffusion_length;
                       const double advected_distance_in_cells =
@@ -1606,7 +1606,7 @@ namespace MeltPoolDG::MeltPool
                                  post,
                                  setup_dof_system,
                                  amr_data,
-                                 time_iterator.get_current_time_step_number());
+                                 time_iterator->get_current_time_step_number());
   }
 
   template class MeltPoolProblem<MELT_POOL_DG_DIM>;
