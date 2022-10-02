@@ -64,7 +64,12 @@ namespace MeltPoolDG::Reinitialization
     create_operator();
     scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
     scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
+      }
+
     scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
   }
 
@@ -74,7 +79,12 @@ namespace MeltPoolDG::Reinitialization
   {
     scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
     scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
+      }
+
     scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
 
     update_operator();
@@ -125,14 +135,13 @@ namespace MeltPoolDG::Reinitialization
   {
     if (reinit_data.predictor == PredictorType::none)
       {
+        // nothing to do
+        // TODO: delete
         delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
         delta_psi_vec = 0.0;
       }
     else if (reinit_data.predictor == PredictorType::linear_extrapolation)
       {
-        VectorType delta_psi_extrapolated;
-        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
-
         UtilityFunctions::compute_linear_predictor(delta_psi_vec,
                                                    delta_psi_vec_old,
                                                    delta_psi_extrapolated,
@@ -310,7 +319,12 @@ namespace MeltPoolDG::Reinitialization
   ReinitializationOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
+    normal_vector_operation->attach_vectors(vectors);
+
     vectors.push_back(&solution_level_set);
+    vectors.push_back(&delta_psi_vec);
+    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      vectors.push_back(&delta_psi_vec_old);
   }
 
   template <int dim>

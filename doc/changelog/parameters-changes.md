@@ -2,12 +2,21 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-10-03
+- Add a parameter for predictor type of linear solver
+```json
+{
+    "linear solver": {
+      "predictor": "none|linear_extrapolation"
+    }
+}
+
+## 2022-10-03
 - Add a parameter for prescribing an analytical function for the time step size
 ```json
 {
   "time stepping": {
     "time step size function": "0.01*t"
-  },
+  }
 }
 
 ## 2022-09-14

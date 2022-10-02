@@ -38,6 +38,9 @@ namespace MeltPoolDG
        */
       virtual LinearAlgebra::distributed::Vector<double> &
       get_curvature() = 0;
+
+      virtual void
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
     };
 
   } // namespace Curvature

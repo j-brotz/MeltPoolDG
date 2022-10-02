@@ -62,6 +62,9 @@ namespace MeltPoolDG::Curvature
     void
     reinit();
 
+    void
+    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) final;
+
   private:
     void
     create_operator(const VectorType &solution_levelset);
@@ -90,6 +93,9 @@ namespace MeltPoolDG::Curvature
      *    accessible for output_results.
      */
     VectorType solution_curvature;
+    VectorType solution_curvature_old;
+    VectorType solution_curvature_predictor;
+    VectorType rhs;
     /*
      * Preconditioner for the matrix-free curvature operator
      */

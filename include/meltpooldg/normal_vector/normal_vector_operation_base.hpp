@@ -27,6 +27,9 @@ namespace MeltPoolDG
 
       virtual LinearAlgebra::distributed::BlockVector<double> &
       get_solution_normal_vector() = 0;
+
+      virtual void
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
     };
 
   } // namespace NormalVector

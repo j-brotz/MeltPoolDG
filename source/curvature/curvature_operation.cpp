@@ -25,27 +25,48 @@ namespace MeltPoolDG::Curvature
   {
     AssertThrow(curvature_data.linear_solver.solver_type == LinearSolverType::CG,
                 ExcMessage("The curvature operation only supports the CG solver type."));
-    /*
-     *    initialize normal_vector_operation for computing the normal vector to the given
-     *    scalar function for which the curvature should be calculated.
-     */
+
+    scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
+    scratch_data.initialize_dof_vector(solution_curvature, curv_dof_idx);
+    if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        scratch_data.initialize_dof_vector(solution_curvature_old, curv_dof_idx);
+        scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);
+      }
   }
 
   template <int dim>
   void
   CurvatureOperation<dim>::solve(const VectorType &solution_levelset)
   {
+    if (curvature_data.linear_solver.predictor == PredictorType::none)
+      {
+        // do nothing
+        // TODO: delete
+        solution_curvature = 0.0;
+      }
+    else if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        // TODO: use time increment from global problem?
+        UtilityFunctions::compute_linear_predictor(solution_curvature,
+                                                   solution_curvature_old,
+                                                   solution_curvature_predictor,
+                                                   1 /*not time-dependent*/,
+                                                   1 /*not time-dependent*/);
+
+        solution_curvature_old.copy_locally_owned_data_from(solution_curvature);
+        solution_curvature.copy_locally_owned_data_from(solution_curvature_predictor);
+
+        // apply hanging node constraints to predictor
+        scratch_data.get_constraint(curv_dof_idx).distribute(solution_curvature);
+      }
+
     if (!curvature_operator)
       create_operator(solution_levelset);
     /*
      *    compute and solve the normal vector field for the given level set
      */
     normal_vector_operation.solve(solution_levelset);
-
-    VectorType rhs;
-
-    scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
-    scratch_data.initialize_dof_vector(solution_curvature, curv_dof_idx);
 
     // no need to compute curvature in 1d
     if (dim == 1)
@@ -151,6 +172,15 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::reinit()
   {
+    scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
+    scratch_data.initialize_dof_vector(solution_curvature, curv_dof_idx);
+
+    if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        scratch_data.initialize_dof_vector(solution_curvature_old, curv_dof_idx);
+        scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);
+      }
+
     if (!curvature_data.linear_solver.do_matrix_free)
       curvature_operator->initialize_matrix_based(scratch_data);
 
@@ -173,6 +203,22 @@ namespace MeltPoolDG::Curvature
       }
 
     normal_vector_operation.reinit();
+  }
+
+  template <int dim>
+  void
+  CurvatureOperation<dim>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  {
+    normal_vector_operation.attach_vectors(vectors);
+
+    solution_curvature.update_ghost_values();
+    vectors.push_back(&solution_curvature);
+    if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        solution_curvature_old.update_ghost_values();
+        vectors.push_back(&solution_curvature_old);
+      }
   }
 
   template <int dim>

@@ -55,6 +55,10 @@ namespace MeltPoolDG::Heat
       scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, heat_operator);
 
     reinit();
+
+    AssertThrow(heat_data.linear_solver.predictor == PredictorType::none, 
+        ExcMessage("It seems that you try to change the predictor for the linear solver of the "
+          "HeatOperation. Use the 'heat': 'predictor' instead."));
   }
 
 
@@ -160,7 +164,7 @@ namespace MeltPoolDG::Heat
         temperature.copy_locally_owned_data_from(temperature_extrapolated);
       }
     else if (heat_data.predictor == PredictorType::none)
-      AssertThrow(false, ExcNotImplemented());
+      temperature_old.copy_locally_owned_data_from(temperature);
 
     // apply hanging node constraints to predictor
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature);
@@ -262,11 +266,8 @@ namespace MeltPoolDG::Heat
   HeatTransferOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    temperature.update_ghost_values();
     vectors.push_back(&temperature);
-    temperature_old.update_ghost_values();
     vectors.push_back(&temperature_old);
-    temperature_interface.update_ghost_values();
     vectors.push_back(&temperature_interface);
   }
 
