@@ -22,11 +22,11 @@
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::LevelSet

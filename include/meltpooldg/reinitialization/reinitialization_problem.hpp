@@ -29,12 +29,12 @@
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 // C++
 #include <memory>

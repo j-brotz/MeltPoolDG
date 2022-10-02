@@ -1,5 +1,5 @@
+#include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/postprocessor.hpp>
 
 namespace MeltPoolDG
 {
