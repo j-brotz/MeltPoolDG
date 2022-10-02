@@ -32,28 +32,31 @@ namespace MeltPoolDG
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    //@todo: delete
-    std::vector<std::vector<double>> volumes;
-    TableHandler                     volume_table;
-
     const MPI_Comm              mpi_communicator;
     const ParaviewData<double> &pv_data;
     const Mapping<dim> &        mapping;
     const Triangulation<dim> &  triangulation;
     const ConditionalOStream    pcout;
-    bool                        do_simplex;
-    std::vector<unsigned int>   idx_req_vars;
+    const bool                  do_simplex;
+
+    // list of indices for the requested variables
+    std::vector<unsigned int> idx_req_vars;
+
+    // list of checkpoints at which the output will be written
+    std::vector<double> checkpoints;
+    unsigned int        idx_checkpoint = 0;
 
     std::vector<std::pair<double, std::string>> times_and_names;
 
   public:
-    Postprocessor(const MPI_Comm              mpi_communicator_in,
-                  const ParaviewData<double> &pv_data_in,
-                  const Mapping<dim> &        mapping_in,
-                  const Triangulation<dim> &  triangulation_in,
-                  const ConditionalOStream &  pcout_in);
+    Postprocessor(const MPI_Comm                  mpi_communicator_in,
+                  const ParaviewData<double> &    pv_data_in,
+                  const TimeSteppingData<double> &time_data,
+                  const Mapping<dim> &            mapping_in,
+                  const Triangulation<dim> &      triangulation_in,
+                  const ConditionalOStream &      pcout_in);
 
-    /*
+    /**
      *  This function collects and performs all relevant postprocessing steps.
      */
     void
@@ -88,13 +91,8 @@ namespace MeltPoolDG
                              const VectorType &     solution_levelset,
                              const double           time,
                              const MPI_Comm &       mpi_communicator,
+                             TableHandler &         volume_table,
                              const double           max_value = 1,
                              const double           min_value = -1.0);
-
-    void
-    collect_volume_fraction(const std::vector<double> &volume_fraction);
-
-    void
-    print_volume_fraction_table(const MPI_Comm &mpi_communicator, const std::string filename);
   };
 } // namespace MeltPoolDG

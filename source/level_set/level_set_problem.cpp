@@ -208,6 +208,7 @@ namespace MeltPoolDG::LevelSet
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(ls_dof_idx),
                                            base_in->parameters.paraview,
+                                           base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(ls_dof_idx),
                                            scratch_data->get_pcout(1));

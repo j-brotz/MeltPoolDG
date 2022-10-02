@@ -4,18 +4,34 @@
 namespace MeltPoolDG
 {
   template <int dim>
-  Postprocessor<dim>::Postprocessor(const MPI_Comm              mpi_communicator_in,
-                                    const ParaviewData<double> &pv_data_in,
-                                    const Mapping<dim> &        mapping_in,
-                                    const Triangulation<dim> &  triangulation_in,
-                                    const ConditionalOStream &  pcout_in)
+  Postprocessor<dim>::Postprocessor(const MPI_Comm                  mpi_communicator_in,
+                                    const ParaviewData<double> &    pv_data_in,
+                                    const TimeSteppingData<double> &time_data,
+                                    const Mapping<dim> &            mapping_in,
+                                    const Triangulation<dim> &      triangulation_in,
+                                    const ConditionalOStream &      pcout_in)
     : mpi_communicator(mpi_communicator_in)
     , pv_data(pv_data_in)
     , mapping(mapping_in)
     , triangulation(triangulation_in)
     , pcout(pcout_in)
     , do_simplex(!triangulation.all_reference_cells_are_hyper_cube())
-  {}
+  {
+    if (pv_data.write_time_step_size > 0.0)
+      {
+        AssertThrow(
+          pv_data.write_time_step_size >= time_data.time_step_size,
+          ExcMessage(
+            "The "
+            "time step size for writing paraview files must be equal or larger than the simulation "
+            "time step size."));
+
+        // generate a list of checkpoints, when the output data is written
+        for (double t = time_data.start_time; t <= time_data.end_time;
+             t += pv_data.write_time_step_size)
+          checkpoints.push_back(t);
+      }
+  }
 
   /*
    *  This function collects and performs all relevant postprocessing steps.
@@ -30,7 +46,13 @@ namespace MeltPoolDG
   {
     GenericDataOut<dim> data_out(mapping);
 
-    if ((pv_data.do_output) && !(n_time_step % pv_data.write_frequency))
+    const bool do_write_output =
+      (!pv_data.do_output)     ? false :
+      (checkpoints.size() > 0) ? (time >= checkpoints[idx_checkpoint] || idx_checkpoint == 0 ||
+                                  idx_checkpoint == checkpoints.size()) :
+                                 !(n_time_step % pv_data.write_frequency);
+
+    if (do_write_output)
       {
         attach_output_vectors(data_out);
 
@@ -40,6 +62,9 @@ namespace MeltPoolDG
 
         if (pv_data.print_boundary_id)
           print_boundary_ids();
+
+        // go to next checkpoint
+        idx_checkpoint++;
       }
 
     if (post_operation)
@@ -181,6 +206,7 @@ namespace MeltPoolDG
                                                const VectorType &     solution_levelset,
                                                const double           time,
                                                const MPI_Comm &       mpi_communicator,
+                                               TableHandler &         volume_table,
                                                const double           max_value,
                                                const double           min_value)
   {
@@ -227,42 +253,6 @@ namespace MeltPoolDG
     volume_table.add_value("vol phase 2", volume_fraction[1]);
 
     return volume_fraction;
-  }
-
-  template <int dim>
-  void
-  Postprocessor<dim>::collect_volume_fraction(const std::vector<double> &volume_fraction)
-  {
-    volumes.emplace_back(volume_fraction);
-  }
-
-  template <int dim>
-  void
-  Postprocessor<dim>::print_volume_fraction_table(const MPI_Comm &  mpi_communicator,
-                                                  const std::string filename)
-  {
-    if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-      {
-        // @todo: improve that is written to a standard *txt-file
-        std::ofstream out_file(filename);
-        volume_table.write_tex(out_file);
-        // size_t headerWidths[2] = {
-        // std::string("time").size(),
-        // std::string("volume phase 1").size()
-        //};
-
-        // if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-        //{
-        // std::cout << "output file opened" << std::endl;
-        // std::fstream fs;
-        // fs.open (parameters.filename_volume_output, std::fstream::out);
-        // fs.precision(10);
-        //fs << "time | volume phase 1 | volume phase 2 " << std::endl;
-        // fs << std::left << std::setw(headerWidths[0]) << time;
-        // fs << "   " << std::left << std::setw(headerWidths[1]) << volume_fraction[0];
-        // fs << "   " << std::left << std::setw(headerWidths[1]) << volume_fraction[1] <<
-        // std::endl; fs.close();
-      }
   }
 
   template class Postprocessor<1>;

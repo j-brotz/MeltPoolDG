@@ -258,6 +258,7 @@ namespace MeltPoolDG::Heat
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(temp_dof_idx),
                                            base_in->parameters.paraview,
+                                           base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(temp_dof_idx),
                                            scratch_data->get_pcout(1));
