@@ -4,10 +4,9 @@
 namespace MeltPoolDG
 {
   template <typename number>
-  void
-  TimeIterator<number>::initialize(const TimeSteppingData<number> &data_in)
+  TimeIterator<number>::TimeIterator(const TimeSteppingData<number> &data_in)
+    : time_data(data_in)
   {
-    time_data = data_in;
     reset();
   }
 

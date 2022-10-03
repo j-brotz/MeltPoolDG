@@ -39,10 +39,10 @@ namespace MeltPoolDG::LevelSet
   {
     initialize(base_in);
 
-    while (!time_iterator.is_finished())
+    while (!time_iterator->is_finished())
       {
-        time_iterator.compute_next_time_increment();
-        time_iterator.print_me(scratch_data->get_pcout());
+        time_iterator->compute_next_time_increment();
+        time_iterator->print_me(scratch_data->get_pcout());
         compute_advection_velocity(*base_in->get_advection_field("level_set"));
 
         if (evaporation_operation)
@@ -50,7 +50,7 @@ namespace MeltPoolDG::LevelSet
             // Only if a spatially constant evaporative mass flux is given as an analytical
             // function, the time is needed to evaluate the function.
             if (base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
-              evaporation_operation->set_time(time_iterator.get_current_time());
+              evaporation_operation->set_time(time_iterator->get_current_time());
             else
               AssertThrow(false,
                           ExcMessage("Only a evaporation model of constant type is supported."));
@@ -68,8 +68,8 @@ namespace MeltPoolDG::LevelSet
 
 
         // do paraview output if requested
-        output_results(time_iterator.get_current_time_step_number(),
-                       time_iterator.get_current_time(),
+        output_results(time_iterator->get_current_time_step_number(),
+                       time_iterator->get_current_time(),
                        base_in);
 
         if (base_in->parameters.amr.do_amr)
@@ -139,7 +139,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  initialize the time iterator
      */
-    time_iterator.initialize(base_in->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
 
     setup_dof_system(base_in, false);
 
@@ -148,7 +148,7 @@ namespace MeltPoolDG::LevelSet
      */
 
     level_set_operation = std::make_shared<LevelSetOperation<dim>>(*scratch_data,
-                                                                   time_iterator,
+                                                                   *time_iterator,
                                                                    base_in,
                                                                    ls_dof_idx,
                                                                    ls_hanging_nodes_dof_idx,
@@ -315,7 +315,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  set the current time to the advection field function
      */
-    advec_func.set_time(time_iterator.get_current_time());
+    advec_func.set_time(time_iterator->get_current_time());
 
     dealii::VectorTools::interpolate(scratch_data->get_mapping(),
                                      dof_handler_velocity,
@@ -418,7 +418,7 @@ namespace MeltPoolDG::LevelSet
                                  setup_dof_system,
                                  base_in->parameters.amr,
                                  dof_handler,
-                                 time_iterator.get_current_time_step_number());
+                                 time_iterator->get_current_time_step_number());
   }
 
   template class LevelSetProblem<1>;

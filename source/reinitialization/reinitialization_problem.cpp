@@ -10,15 +10,15 @@ namespace MeltPoolDG::Reinitialization
   {
     initialize(base_in);
 
-    while (!time_iterator.is_finished())
+    while (!time_iterator->is_finished())
       {
-        time_iterator.compute_next_time_increment();
-        time_iterator.print_me(scratch_data->get_pcout());
+        time_iterator->compute_next_time_increment();
+        time_iterator->print_me(scratch_data->get_pcout());
 
         reinit_operation->solve();
 
-        output_results(time_iterator.get_current_time_step_number(),
-                       time_iterator.get_current_time(),
+        output_results(time_iterator->get_current_time_step_number(),
+                       time_iterator->get_current_time(),
                        base_in);
 
         if (base_in->parameters.amr.do_amr)
@@ -78,7 +78,7 @@ namespace MeltPoolDG::Reinitialization
     /*
      *  initialize the time iterator
      */
-    time_iterator.initialize(base_in->parameters.time_stepping);
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
     /*
      *  set initial conditions of the levelset function
      */
@@ -105,7 +105,7 @@ namespace MeltPoolDG::Reinitialization
           std::make_shared<ReinitializationOperation<dim>>(*scratch_data,
                                                            base_in->parameters.reinit,
                                                            base_in->parameters.normal_vec,
-                                                           time_iterator,
+                                                           *time_iterator,
                                                            reinit_dof_idx,
                                                            reinit_quad_idx,
                                                            reinit_dof_idx,
@@ -118,7 +118,7 @@ namespace MeltPoolDG::Reinitialization
 
         reinit_operation =
           std::make_shared<ReinitializationOperationAdaflo<dim>>(*scratch_data,
-                                                                 time_iterator,
+                                                                 *time_iterator,
                                                                  reinit_dof_idx,
                                                                  reinit_quad_idx,
                                                                  normal_dof_idx, // normal vec @todo
@@ -223,7 +223,7 @@ namespace MeltPoolDG::Reinitialization
                                  setup_dof_system,
                                  base_in->parameters.amr,
                                  dof_handler,
-                                 time_iterator.get_current_time_step_number());
+                                 time_iterator->get_current_time_step_number());
   }
 
   template <int dim>

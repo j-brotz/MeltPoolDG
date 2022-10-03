@@ -99,7 +99,7 @@ namespace MeltPoolDG
       AffineConstraints<double> constraints;
 
       std::shared_ptr<ScratchData<dim>>                   scratch_data;
-      TimeIterator<double>                                time_iterator;
+      std::shared_ptr<TimeIterator<double>>               time_iterator;
       std::shared_ptr<ReinitializationOperationBase<dim>> reinit_operation;
       unsigned int                                        reinit_dof_idx;
       unsigned int                                        normal_dof_idx;
