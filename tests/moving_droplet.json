@@ -6,7 +6,7 @@
     "dimension": "2",
     "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "5",
+    "global refinements": "6",
     "gravity": "0.0"
   },
   "time stepping": {
@@ -39,7 +39,7 @@
     "curv verbosity level": "1"
   },
   "adaptive meshing": {
-    "do amr": "true",
+    "do amr": "false",
     "do not modify boundary cells": "false",
     "upper perc to refine": "0.20",
     "lower perc to coarsen": "0.20",

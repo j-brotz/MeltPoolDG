@@ -64,17 +64,21 @@ namespace MeltPoolDG::NormalVector
   {
     if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       {
-        UtilityFunctions::compute_linear_predictor(solution_normal_vector,
-                                                   solution_normal_vector_old,
-                                                   solution_normal_vector_predictor,
+        for (unsigned int d=0; d<dim; ++d)
+        {
+        UtilityFunctions::compute_linear_predictor(solution_normal_vector.block(d),
+                                                   solution_normal_vector_old.block(d),
+                                                   solution_normal_vector_predictor.block(d),
                                                    1 /*not time-dependent*/,
                                                    1 /*not time-dependent*/);
+        }
 
         solution_normal_vector_old.copy_locally_owned_data_from(solution_normal_vector);
         solution_normal_vector.copy_locally_owned_data_from(solution_normal_vector_predictor);
 
         // apply hanging node constraints to predictor
-        scratch_data.get_constraint(normal_dof_idx).distribute(solution_normal_vector);
+        for (unsigned int d = 0; d < dim; ++d)
+          scratch_data.get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
       }
 
     if (!normal_vector_operator)
@@ -166,12 +170,11 @@ namespace MeltPoolDG::NormalVector
   NormalVectorOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    solution_normal_vector.update_ghost_values();
     for (unsigned int d = 0; d < dim; ++d)
       vectors.push_back(&solution_normal_vector.block(d));
+
     if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       {
-        solution_normal_vector_old.update_ghost_values();
         for (unsigned int d = 0; d < dim; ++d)
           vectors.push_back(&solution_normal_vector_old.block(d));
       }

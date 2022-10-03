@@ -35,6 +35,16 @@ namespace MeltPoolDG::Reinitialization
                            " normal vector and the reinitialization operation have to be "
                            " computed either matrix-based or matrix-free."));
 
+    scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
+    scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
+    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
+      }
+
+    scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
+
     if (normal_vec_data.implementation == "meltpooldg")
       {
         normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperation<dim>>(
@@ -57,20 +67,12 @@ namespace MeltPoolDG::Reinitialization
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
+    
     /*
      *   create reinitialization operator. This class supports matrix-based
      *   and matrix-free computation.
      */
     create_operator();
-    scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
-    scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
-      {
-        scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
-        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
-      }
-
-    scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
   }
 
   template <int dim>

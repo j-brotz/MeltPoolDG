@@ -206,13 +206,9 @@ namespace MeltPoolDG::Curvature
   {
     normal_vector_operation.attach_vectors(vectors);
 
-    solution_curvature.update_ghost_values();
     vectors.push_back(&solution_curvature);
     if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
-      {
-        solution_curvature_old.update_ghost_values();
         vectors.push_back(&solution_curvature_old);
-      }
   }
 
   template <int dim>
