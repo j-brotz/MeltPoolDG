@@ -38,13 +38,12 @@ namespace MeltPoolDG
     const Triangulation<dim> &  triangulation;
     const ConditionalOStream    pcout;
     const bool                  do_simplex;
+    const double                end_time;
 
     // list of indices for the requested variables
     std::vector<unsigned int> idx_req_vars;
 
-    // list of checkpoints at which the output will be written
-    std::vector<double> checkpoints;
-    unsigned int        idx_checkpoint = 0;
+    double time_at_last_output = 0.0;
 
     std::vector<std::pair<double, std::string>> times_and_names;
 

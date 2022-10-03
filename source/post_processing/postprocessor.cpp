@@ -16,20 +16,15 @@ namespace MeltPoolDG
     , triangulation(triangulation_in)
     , pcout(pcout_in)
     , do_simplex(!triangulation.all_reference_cells_are_hyper_cube())
+    , time_at_last_output(time_data.start_time)
+    , end_time(time_data.end_time)
   {
     if (pv_data.write_time_step_size > 0.0)
       {
-        AssertThrow(
-          pv_data.write_time_step_size >= time_data.time_step_size,
-          ExcMessage(
-            "The "
-            "time step size for writing paraview files must be equal or larger than the simulation "
-            "time step size."));
-
-        // generate a list of checkpoints, when the output data is written
-        for (double t = time_data.start_time; t <= time_data.end_time;
-             t += pv_data.write_time_step_size)
-          checkpoints.push_back(t);
+        AssertThrow(pv_data.write_time_step_size >= time_data.time_step_size,
+                    ExcMessage(
+                      "The time step size for writing paraview files must be equal or larger "
+                      "than the simulation time step size."));
       }
   }
 
@@ -46,11 +41,12 @@ namespace MeltPoolDG
   {
     GenericDataOut<dim> data_out(mapping);
 
-    const bool do_write_output =
-      (!pv_data.do_output)     ? false :
-      (checkpoints.size() > 0) ? (time >= checkpoints[idx_checkpoint] || idx_checkpoint == 0 ||
-                                  idx_checkpoint == checkpoints.size()) :
-                                 !(n_time_step % pv_data.write_frequency);
+    const bool do_write_output = (!pv_data.do_output) ? false :
+                                 (n_time_step == 0) || (std::abs(time - end_time) <= 1e-10) ?
+                                                        true :
+                                 (time - time_at_last_output >= pv_data.write_time_step_size) ?
+                                                        true :
+                                                        !(n_time_step % pv_data.write_frequency);
 
     if (do_write_output)
       {
@@ -63,8 +59,8 @@ namespace MeltPoolDG
         if (pv_data.print_boundary_id)
           print_boundary_ids();
 
-        // go to next checkpoint
-        idx_checkpoint++;
+        // record written output time
+        time_at_last_output = time;
       }
 
     if (post_operation)

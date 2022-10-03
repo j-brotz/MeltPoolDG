@@ -255,9 +255,8 @@ namespace MeltPoolDG::Flow
   void
   AdafloWrapper<dim>::init_time_advance()
   {
-    std::cout << "current time" << time_iterator.get_current_time_increment() << std::endl;
     navier_stokes->time_stepping.set_time_step(time_iterator.get_current_time_increment());
-    navier_stokes->init_time_advance(true /*print time information*/);
+    navier_stokes->init_time_advance(true /*print time information; TODO: disable and introduce assert if time stepping is aligned*/);
   }
 
   template <int dim>
