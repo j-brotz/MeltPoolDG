@@ -67,7 +67,7 @@ namespace MeltPoolDG::Reinitialization
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
-    
+
     /*
      *   create reinitialization operator. This class supports matrix-based
      *   and matrix-free computation.

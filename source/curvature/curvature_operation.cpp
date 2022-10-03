@@ -208,7 +208,7 @@ namespace MeltPoolDG::Curvature
 
     vectors.push_back(&solution_curvature);
     if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
-        vectors.push_back(&solution_curvature_old);
+      vectors.push_back(&solution_curvature_old);
   }
 
   template <int dim>

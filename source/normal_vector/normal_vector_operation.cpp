@@ -64,14 +64,14 @@ namespace MeltPoolDG::NormalVector
   {
     if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       {
-        for (unsigned int d=0; d<dim; ++d)
-        {
-        UtilityFunctions::compute_linear_predictor(solution_normal_vector.block(d),
-                                                   solution_normal_vector_old.block(d),
-                                                   solution_normal_vector_predictor.block(d),
-                                                   1 /*not time-dependent*/,
-                                                   1 /*not time-dependent*/);
-        }
+        for (unsigned int d = 0; d < dim; ++d)
+          {
+            UtilityFunctions::compute_linear_predictor(solution_normal_vector.block(d),
+                                                       solution_normal_vector_old.block(d),
+                                                       solution_normal_vector_predictor.block(d),
+                                                       1 /*not time-dependent*/,
+                                                       1 /*not time-dependent*/);
+          }
 
         solution_normal_vector_old.copy_locally_owned_data_from(solution_normal_vector);
         solution_normal_vector.copy_locally_owned_data_from(solution_normal_vector_predictor);
