@@ -14,6 +14,9 @@
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulation_base.hpp>
 #  include <meltpooldg/utilities/generic_data_out.hpp>
+#  include <meltpooldg/utilities/time_iterator.hpp>
+#  include <meltpooldg/utilities/utility_functions.hpp>
+#  include <meltpooldg/utilities/vector_tools.hpp>
 
 #  include <adaflo/navier_stokes.h>
 #  include <adaflo/parameters.h>
@@ -32,6 +35,7 @@ namespace MeltPoolDG::Flow
      */
     AdafloWrapper(ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data,
                   std::shared_ptr<SimulationBase<dim>>                    base_in,
+                  const TimeIterator<double> &                            time_iterator,
                   const bool                                              do_evaporative_mass_flux);
 
     void
@@ -179,6 +183,8 @@ namespace MeltPoolDG::Flow
     const FlowParameters &adaflo_params;
 
     const bool do_evaporative_mass_flux;
+
+    const TimeIterator<double> &time_iterator;
 
     unsigned int dof_index_u;
     unsigned int dof_index_p;

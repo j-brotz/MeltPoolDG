@@ -449,7 +449,10 @@ namespace MeltPoolDG::MeltPool
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     flow_operation = std::make_shared<Flow::AdafloWrapper<dim>>(
-      *scratch_data, base_in, problem_specific_parameters.do_evaporative_velocity_jump);
+      *scratch_data,
+      base_in,
+      time_iterator,
+      problem_specific_parameters.do_evaporative_velocity_jump);
     flow_vel_no_solid_dof_idx =
       scratch_data->attach_constraint_matrix(flow_velocity_constraints_no_solid);
     scratch_data->attach_dof_handler(flow_operation->get_dof_handler_velocity());
