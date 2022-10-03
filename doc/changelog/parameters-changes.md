@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-10-04
+- Add a parameter to enable extrapolation of solution vectors for coupling terms
+```json
+{
+  "problem type": "melt_pool",
+  "problem specific": {
+    "do extrapolate coupling terms": "true|false"
+  },
+}
+
 ## 2022-10-03
 - Add a parameter for prescribing an analytical function for the time step size
 ```json

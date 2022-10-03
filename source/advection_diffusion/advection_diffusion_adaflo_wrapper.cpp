@@ -99,18 +99,17 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperationAdaflo<dim>::init_time_advance()
   {
-    // TODO
-    AssertThrow(false, ExcNotImplemented());
+    advected_field_old_old.reinit(advected_field_old);
+    advected_field_old_old.swap(advected_field_old);
+    advected_field_old.swap(advected_field);
   }
 
   template <int dim>
   void
   AdvectionDiffusionOperationAdaflo<dim>::solve(const VectorType &current_velocity)
   {
-    advected_field_old_old.reinit(advected_field_old);
-    advected_field_old_old.copy_locally_owned_data_from(advected_field_old);
-    advected_field_old.copy_locally_owned_data_from(advected_field);
-
+    if (!ready_for_time_advance)
+      init_time_advance();
     advected_field.update_ghost_values();
     advected_field_old.update_ghost_values();
     advected_field_old_old.update_ghost_values();
@@ -141,8 +140,9 @@ namespace MeltPoolDG::AdvectionDiffusion
                                              adaflo_params.dof_index_ls,
                                              adaflo_params.quad_index);
     Journal::print_line(scratch_data.get_pcout(), str.str(), "advection_diffusion_adaflo");
-  }
 
+    ready_for_time_advance = false;
+  }
 
   template <int dim>
   const LinearAlgebra::distributed::Vector<double> &

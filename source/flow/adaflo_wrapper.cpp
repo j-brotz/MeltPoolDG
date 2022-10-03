@@ -257,13 +257,16 @@ namespace MeltPoolDG::Flow
   {
     navier_stokes->time_stepping.set_time_step(time_iterator.get_current_time_increment());
     navier_stokes->init_time_advance(true /*print time information; TODO: disable and introduce assert if time stepping is aligned*/);
+
+    ready_for_time_advance = true;
   }
 
   template <int dim>
   void
   AdafloWrapper<dim>::solve()
   {
-    init_time_advance();
+    if (!ready_for_time_advance)
+      init_time_advance();
 
     navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
     navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
@@ -335,6 +338,8 @@ namespace MeltPoolDG::Flow
                                   "navier_stokes_adaflo",
                                   15 /*precision*/
     );
+
+    ready_for_time_advance = false;
   }
 
   template <int dim>

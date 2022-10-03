@@ -118,14 +118,18 @@ namespace MeltPoolDG::AdvectionDiffusion
     // apply hanging node constraints to predictor
     scratch_data.get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
 
+    // zero-out is needed since we potentially have a user rhs, which we add in advance
     rhs = 0.0;
+
+    ready_for_time_advance = true;
   }
 
   template <int dim>
   void
   AdvectionDiffusionOperation<dim>::solve(const VectorType &advection_velocity)
   {
-    init_time_advance();
+    if (!ready_for_time_advance)
+      init_time_advance();
 
     Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   VectorTools::compute_L2_norm<dim>(advection_velocity,
@@ -242,6 +246,8 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     solution_advected_field_old.zero_out_ghost_values();
     advection_velocity.zero_out_ghost_values();
+
+    ready_for_time_advance = false;
   }
 
   template <int dim>

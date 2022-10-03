@@ -61,7 +61,8 @@ namespace MeltPoolDG::LevelSet
      */
     TimeIterator<double> reinit_time_iterator;
 
-    bool very_first_step = true;
+    bool very_first_step        = true;
+    bool ready_for_time_advance = false;
     /*
      *    This is the surface_tension vector calculated after level set and reinitialization
      * update
@@ -116,6 +117,9 @@ namespace MeltPoolDG::LevelSet
     void
     set_level_set_user_rhs(const VectorType &level_set_user_rhs);
 
+    void
+    update_normal_vector();
+
     /*
      *  getter functions for solution vectors
      */
@@ -161,9 +165,6 @@ namespace MeltPoolDG::LevelSet
     update_surface_mesh();
 
   private:
-    void
-    advect_level_set(const VectorType &advection_velocity);
-
     void
     do_reinitialization();
 

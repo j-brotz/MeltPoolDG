@@ -68,6 +68,9 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<DiagonalMatrix<VectorType>>                diag_preconditioner;
     std::shared_ptr<TrilinosWrappers::PreconditionBase>        trilinos_preconditioner;
 
+    // determine whether solution vectors are prepared for time advance
+    bool ready_for_time_advance = false;
+
   public:
     HeatTransferOperation(std::shared_ptr<BoundaryConditions<dim>> bc_data,
                           const ScratchData<dim> &                 scratch_data_in,

@@ -78,10 +78,11 @@ namespace MeltPoolDG::MeltPool
       bool do_heat_transfer = false;
       bool do_evaporative_heat_flux =
         false; //@todo: move to struct "phase change", rename do_evaporative_enthalpy_jump
-      bool do_evaporative_velocity_jump = false; //@todo: move to struct "phase change"
-      bool do_recoil_pressure           = false; //@todo: move to struct "phase change", rename
-      bool do_melt_pool                 = false;
-      bool do_advect_level_set          = true;
+      bool do_evaporative_velocity_jump  = false; //@todo: move to struct "phase change"
+      bool do_recoil_pressure            = false; //@todo: move to struct "phase change", rename
+      bool do_melt_pool                  = false;
+      bool do_advect_level_set           = true;
+      bool do_extrapolate_coupling_terms = false;
       struct
       {
         AMRStrategy                 strategy = AMRStrategy::generic;

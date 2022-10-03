@@ -53,8 +53,9 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     void
     init_time_advance() override;
+
     /**
-     * Solver time step
+     * Solve time step
      */
     void
     solve(const VectorType &current_velocity) override;
@@ -146,6 +147,9 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  dof idx for constraints with dirichlet values (relevant for dirichlet neq 0)
      */
     unsigned int dirichlet_dof_idx;
+
+    // determine whether solution vectors are prepared for time advance
+    bool ready_for_time_advance = false;
   };
 
 } // namespace MeltPoolDG::AdvectionDiffusion
