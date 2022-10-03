@@ -37,7 +37,7 @@ namespace MeltPoolDG
     old_time_increment = current_time_increment;
     n_time_steps += 1;
 
-    // adapt time step size in case of a prescribed time step size function is prescribed
+    // adapt time step size in case of a prescribed time step size function
     time_step_size_function->set_time(current_time);
     if (time_step_size_function->value(Point<1>() /*dummy value*/) >
         std::numeric_limits<double>::min())
