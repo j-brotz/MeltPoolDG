@@ -6,9 +6,9 @@ namespace MeltPoolDG
   template <typename number>
   TimeIterator<number>::TimeIterator(const TimeSteppingData<number> &data_in)
     : time_data(data_in)
+    , time_step_size_function(FunctionParser<1>(data_in.time_step_size_function))
   {
     reset();
-    time_step_size_function = std::make_unique<FunctionParser<1>>(data_in.time_step_size_function);
   }
 
   template <typename number>
@@ -38,10 +38,10 @@ namespace MeltPoolDG
     n_time_steps += 1;
 
     // adapt time step size in case of a prescribed time step size function
-    time_step_size_function->set_time(current_time);
-    if (time_step_size_function->value(Point<1>() /*dummy value*/) >
+    time_step_size_function.set_time(current_time);
+    if (time_step_size_function.value(Point<1>() /*dummy value*/) >
         std::numeric_limits<double>::min())
-      current_time_increment = time_step_size_function->value(Point<1>());
+      current_time_increment = time_step_size_function.value(Point<1>());
 
     // correct time increment if it would overshoot the end time
     if (current_time + current_time_increment > time_data.end_time)

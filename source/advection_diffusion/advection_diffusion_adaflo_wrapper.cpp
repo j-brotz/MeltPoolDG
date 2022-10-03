@@ -226,11 +226,11 @@ namespace MeltPoolDG::AdvectionDiffusion
     const int                 advec_diff_quad_idx,
     const int                 velocity_dof_idx)
   {
-    adaflo_params.time.start_time                        = parameters.time_stepping.start_time;
-    adaflo_params.time.end_time                          = parameters.time_stepping.end_time;
-    parameters.adaflo_params.params.time_step_size_start = parameters.time_stepping.time_step_size;
-    parameters.adaflo_params.params.time_step_size_min   = 1e-16;
-    parameters.adaflo_params.params.time_step_size_max   = 1e10;
+    adaflo_params.time.start_time           = parameters.time_stepping.start_time;
+    adaflo_params.time.end_time             = parameters.time_stepping.end_time;
+    adaflo_params.time.time_step_size_start = parameters.time_stepping.time_step_size;
+    adaflo_params.time.time_step_size_min   = parameters.time_stepping.time_step_size;
+    adaflo_params.time.time_step_size_max   = parameters.time_stepping.time_step_size;
     if (parameters.advec_diff.time_integration_scheme == "implicit_euler")
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::implicit_euler;
     else if (parameters.advec_diff.time_integration_scheme == "explicit_euler")
