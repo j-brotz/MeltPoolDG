@@ -133,14 +133,7 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::init_time_advance()
   {
-    if (reinit_data.predictor == PredictorType::none)
-      {
-        // nothing to do
-        // TODO: delete
-        delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
-        delta_psi_vec = 0.0;
-      }
-    else if (reinit_data.predictor == PredictorType::linear_extrapolation)
+    if (reinit_data.predictor == PredictorType::linear_extrapolation)
       {
         UtilityFunctions::compute_linear_predictor(delta_psi_vec,
                                                    delta_psi_vec_old,

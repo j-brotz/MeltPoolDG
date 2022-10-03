@@ -62,13 +62,7 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::solve(const VectorType &solution_levelset_in)
   {
-    if (normal_vector_data.linear_solver.predictor == PredictorType::none)
-      {
-        // do nothing
-        // TODO: delete
-        solution_normal_vector = 0.0;
-      }
-    else if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       {
         UtilityFunctions::compute_linear_predictor(solution_normal_vector,
                                                    solution_normal_vector_old,

@@ -56,9 +56,10 @@ namespace MeltPoolDG::Heat
 
     reinit();
 
-    AssertThrow(heat_data.linear_solver.predictor == PredictorType::none, 
-        ExcMessage("It seems that you try to change the predictor for the linear solver of the "
-          "HeatOperation. Use the 'heat': 'predictor' instead."));
+    AssertThrow(heat_data.linear_solver.predictor == PredictorType::none,
+                ExcMessage(
+                  "It seems that you try to change the predictor for the linear solver of the "
+                  "HeatOperation. Use the 'heat': 'predictor' instead."));
   }
 
 

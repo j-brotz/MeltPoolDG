@@ -39,13 +39,7 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::solve(const VectorType &solution_levelset)
   {
-    if (curvature_data.linear_solver.predictor == PredictorType::none)
-      {
-        // do nothing
-        // TODO: delete
-        solution_curvature = 0.0;
-      }
-    else if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       {
         // TODO: use time increment from global problem?
         UtilityFunctions::compute_linear_predictor(solution_curvature,
