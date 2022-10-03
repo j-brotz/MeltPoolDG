@@ -58,12 +58,13 @@ namespace MeltPoolDG
     check_time_step_limit(const number &time_step_limit);
 
   private:
-    TimeSteppingData<number> time_data;
-    number                   old_time;
-    number                   current_time;
-    number                   current_time_increment;
-    number                   old_time_increment;
-    number                   n_time_steps;
+    TimeSteppingData<number>  time_data;
+    number                    old_time;
+    number                    current_time;
+    number                    current_time_increment;
+    number                    old_time_increment;
+    number                    n_time_steps;
+    dealii::FunctionParser<1> time_step_size_function;
   };
 
 } // namespace MeltPoolDG

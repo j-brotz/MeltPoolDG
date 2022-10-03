@@ -35,9 +35,9 @@
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_operation.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

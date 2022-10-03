@@ -11,11 +11,11 @@ namespace MeltPoolDG
   template <typename number>
   struct TimeSteppingData
   {
-    //@todo: docu
-    number       start_time     = 0.0;
-    number       end_time       = 1.0;
-    number       time_step_size = 0.01;
-    unsigned int max_n_steps    = 1000000;
+    number       start_time              = 0.0;
+    number       end_time                = 1.0;
+    number       time_step_size          = 0.01;
+    unsigned int max_n_steps             = 10000000;
+    std::string  time_step_size_function = "0.0";
 
     void
     add_parameters(dealii::ParameterHandler &prm)
@@ -34,6 +34,10 @@ namespace MeltPoolDG
                           "time stepping, this parameter determines the size of the first "
                           "time step.");
         prm.add_parameter("max n steps", max_n_steps, "Sets the maximum number of melt_pool steps");
+        prm.add_parameter("time step size function",
+                          time_step_size_function,
+                          "Set an analytical function to determine the time step size. "
+                          "For the prediction of the new time increment, the old time is used.");
       }
       prm.leave_subsection();
     }

@@ -436,6 +436,9 @@ namespace MeltPoolDG::MeltPool
           scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
       }
 
+    // initialize the time stepping scheme
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
+
     /*
      * initialize material
      */
@@ -449,7 +452,10 @@ namespace MeltPoolDG::MeltPool
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     flow_operation = std::make_shared<Flow::AdafloWrapper<dim>>(
-      *scratch_data, base_in, problem_specific_parameters.do_evaporative_velocity_jump);
+      *scratch_data,
+      base_in,
+      *time_iterator,
+      problem_specific_parameters.do_evaporative_velocity_jump);
     flow_vel_no_solid_dof_idx =
       scratch_data->attach_constraint_matrix(flow_velocity_constraints_no_solid);
     scratch_data->attach_dof_handler(flow_operation->get_dof_handler_velocity());
@@ -464,11 +470,6 @@ namespace MeltPoolDG::MeltPool
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
 
     setup_dof_system(base_in, false);
-
-    /*
-     *  initialize the time stepping scheme
-     */
-    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
     /*
      *    initialize the levelset operation class
      *    and setup initial conditions
@@ -664,6 +665,7 @@ namespace MeltPoolDG::MeltPool
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(vel_dof_idx),
                                            base_in->parameters.paraview,
+                                           base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(vel_dof_idx),
                                            scratch_data->get_pcout(1));

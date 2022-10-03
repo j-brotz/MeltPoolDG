@@ -22,11 +22,11 @@
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/postprocessor.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::LevelSet
@@ -208,6 +208,7 @@ namespace MeltPoolDG::LevelSet
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(ls_dof_idx),
                                            base_in->parameters.paraview,
+                                           base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(ls_dof_idx),
                                            scratch_data->get_pcout(1));

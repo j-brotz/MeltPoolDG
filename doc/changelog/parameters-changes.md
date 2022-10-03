@@ -1,6 +1,15 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-10-03
+- Add a parameter for prescribing an analytical function for the time step size
+```json
+{
+  "time stepping": {
+    "time step size function": "0.01*t"
+  },
+}
+
 ## 2022-09-14
 - Add parameter to distinguish between sharp (surface integral) and diffuse
   (volume integral) of the evaporative heat loss term at the vapor surface

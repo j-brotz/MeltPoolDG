@@ -13,11 +13,13 @@ namespace MeltPoolDG::Flow
   AdafloWrapper<dim>::AdafloWrapper(
     ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data,
     std::shared_ptr<SimulationBase<dim>>                    base_in,
+    const TimeIterator<double> &                            time_iterator,
     const bool                                              do_evaporative_mass_flux)
     : scratch_data(scratch_data)
     , timer(std::cout, TimerOutput::never, TimerOutput::wall_times)
     , adaflo_params(base_in->parameters.adaflo_params.get_parameters())
     , do_evaporative_mass_flux(do_evaporative_mass_flux)
+    , time_iterator(time_iterator)
   {
     /*
      *  create input parameters for adaflo
@@ -152,8 +154,8 @@ namespace MeltPoolDG::Flow
     parameters.adaflo_params.params.start_time           = parameters.time_stepping.start_time;
     parameters.adaflo_params.params.end_time             = parameters.time_stepping.end_time;
     parameters.adaflo_params.params.time_step_size_start = parameters.time_stepping.time_step_size;
-    parameters.adaflo_params.params.time_step_size_min   = parameters.time_stepping.time_step_size;
-    parameters.adaflo_params.params.time_step_size_max   = parameters.time_stepping.time_step_size;
+    parameters.adaflo_params.params.time_step_size_min   = 1e-16;
+    parameters.adaflo_params.params.time_step_size_max   = 1e10;
     parameters.adaflo_params.params.use_simplex_mesh     = parameters.base.do_simplex;
   }
 
@@ -253,18 +255,19 @@ namespace MeltPoolDG::Flow
   void
   AdafloWrapper<dim>::init_time_advance()
   {
-    navier_stokes->init_time_advance();
+    navier_stokes->time_stepping.set_time_step(time_iterator.get_current_time_increment());
+    navier_stokes->init_time_advance(true /*print time information; TODO: disable and introduce assert if time stepping is aligned*/);
   }
 
   template <int dim>
   void
   AdafloWrapper<dim>::solve()
   {
+    init_time_advance();
+
     navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
     navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
 
-
-    navier_stokes->init_time_advance();
     const auto n_newton_steps = navier_stokes->evaluate_time_step();
 
     if (n_newton_steps >= adaflo_params.max_nl_iteration)
