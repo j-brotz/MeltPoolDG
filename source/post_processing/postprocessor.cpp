@@ -16,8 +16,8 @@ namespace MeltPoolDG
     , triangulation(triangulation_in)
     , pcout(pcout_in)
     , do_simplex(!triangulation.all_reference_cells_are_hyper_cube())
-    , time_at_last_output(time_data.start_time)
     , end_time(time_data.end_time)
+    , time_at_last_output(time_data.start_time)
   {
     if (pv_data.write_time_step_size > 0.0)
       {

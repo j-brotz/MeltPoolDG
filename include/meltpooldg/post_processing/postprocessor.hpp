@@ -39,11 +39,11 @@ namespace MeltPoolDG
     const ConditionalOStream    pcout;
     const bool                  do_simplex;
     const double                end_time;
+    double                      time_at_last_output = 0.0;
 
     // list of indices for the requested variables
     std::vector<unsigned int> idx_req_vars;
 
-    double time_at_last_output = 0.0;
 
     std::vector<std::pair<double, std::string>> times_and_names;
 
