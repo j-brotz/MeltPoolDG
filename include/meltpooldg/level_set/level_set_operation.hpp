@@ -42,12 +42,6 @@ namespace MeltPoolDG::LevelSet
     std::shared_ptr<Reinitialization::ReinitializationOperationBase<dim>>     reinit_operation;
     std::shared_ptr<Curvature::CurvatureOperationBase<dim>>                   curvature_operation;
     /*
-     *  The reinitialization of the level set function is a "pseudo"-time-dependent
-     *  equation, which is solved up to quasi-steady state. Thus a time iterator is
-     *  needed.
-     */
-    std::shared_ptr<TimeIterator<double>> reinit_time_iterator;
-    /*
      *  necessary parameters
      */
     const LevelSetData<double>         level_set_data;
@@ -60,6 +54,12 @@ namespace MeltPoolDG::LevelSet
     const unsigned int ls_quad_idx;
     const unsigned int curv_dof_idx;
     const unsigned int reinit_dof_idx;
+    /*
+     *  The reinitialization of the level set function is a "pseudo"-time-dependent
+     *  equation, which is solved up to quasi-steady state. Thus a time iterator is
+     *  needed.
+     */
+    TimeIterator<double> reinit_time_iterator;
 
     bool very_first_step = true;
     /*
@@ -72,8 +72,7 @@ namespace MeltPoolDG::LevelSet
     double max_d_level_set_since_last_reinit = std::numeric_limits<double>::max();
 
 
-    // triangulation info on surface mesh of level set 0
-
+    // triangulation info on surface mesh of zero level set contour
     using SurfaceMeshInfo =
       std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                              std::vector<Point<dim>> /*quad_points*/,
