@@ -79,7 +79,7 @@ DEAL_II_INITIALIZE_CACHED_VARIABLES()
 DEAL_II_QUERY_GIT_INFORMATION(MELTPOOLDG)
 CONFIGURE_FILE(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/meltpooldg/utilities/revision.hpp.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/meltpooldg/utilities/revision.hpp)
+  ${CMAKE_CURRENT_BINARY_DIR}/include/meltpooldg/utilities/revision.hpp)
 
 # Set the include directory and the name of the project
 include_directories(include ${CMAKE_CURRENT_BINARY_DIR}/include)
