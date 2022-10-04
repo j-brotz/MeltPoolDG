@@ -34,7 +34,12 @@ namespace MeltPoolDG
           const LinearSolverData<double> &data,
           const PreconditionerType &      preconditioner = PreconditionIdentity())
     {
+      const bool monitor_history = data.monitor_type != LinearSolverMonitorType::none;
+
       ReductionControl solver_control(data.max_iterations, data.abs_tolerance, data.rel_tolerance);
+
+      if (monitor_history)
+        solver_control.enable_history_data();
 
       switch (data.solver_type)
         {
@@ -52,7 +57,39 @@ namespace MeltPoolDG
             AssertThrow(false, ExcNotImplemented());
         }
 
+<<<<<<< HEAD
       solution.update_ghost_values();
+=======
+      solution.update_ghost_values(); // PM: why the hack do we call update ghost value here?
+
+      if (solver_control.last_step() > 0 && monitor_history)
+        {
+          const auto &history_data = solver_control.get_history_data();
+
+          const auto print_value = [](const unsigned int iteration, const double value) {
+            std::cout << iteration << " " << value << std::endl;
+          };
+
+          if (data.monitor_type == LinearSolverMonitorType::all)
+            {
+              for (unsigned int i = 0; i < history_data.size(); ++i)
+                {
+                  print_value(i, history_data[i]);
+                }
+            }
+          else if (data.monitor_type == LinearSolverMonitorType::reduced)
+            {
+              print_value(0, history_data[0]);
+              if (history_data.size() >= 2)
+                print_value(history_data.size() - 1, history_data.back());
+            }
+          else
+            {
+              AssertThrow(false, ExcNotImplemented());
+            }
+        }
+
+>>>>>>> 46b7fce7 (Monitor history of linear solvers)
       return solver_control.last_step();
     }
   };

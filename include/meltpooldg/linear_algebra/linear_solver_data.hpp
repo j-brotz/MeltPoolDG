@@ -31,6 +31,14 @@ namespace MeltPoolDG
               // generalized minimal residual
               GMRES)
 
+  BETTER_ENUM(LinearSolverMonitorType,
+              char,
+              // do not monitor history (production run)
+              none,
+              // print first and last residual
+              reduced,
+              // print full history
+              all)
   /**
    * Parameters for the linear solver.
    */
@@ -43,6 +51,8 @@ namespace MeltPoolDG
     unsigned int       max_iterations      = 10000;
     number             rel_tolerance       = 1e-12;
     number             abs_tolerance       = 1e-50;
+
+    LinearSolverMonitorType monitor_type = LinearSolverMonitorType::all;
 
     void
     add_parameters(ParameterHandler &prm);
