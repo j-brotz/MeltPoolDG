@@ -478,12 +478,13 @@ namespace MeltPoolDG
           /*
            * BC for two-phase flow
            */
-          auto add_slip_or_no_slip_boundary = [&](const types::boundary_id bc) {
+          const auto add_slip_or_no_slip_boundary = [&](const types::boundary_id bc) {
             if (slip_boundary)
               this->attach_symmetry_boundary_condition(bc, "navier_stokes_u");
             else
               this->attach_no_slip_boundary_condition(bc, "navier_stokes_u");
           };
+
           if (this->parameters.base.problem_name == ProblemType::melt_pool)
             {
               add_slip_or_no_slip_boundary(lower_bc);
