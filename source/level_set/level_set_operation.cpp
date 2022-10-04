@@ -457,7 +457,6 @@ namespace MeltPoolDG::LevelSet
       {
         reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
 
-
         Journal::print_decoration_line(scratch_data.get_pcout());
         while (!reinit_time_iterator.is_finished())
           {

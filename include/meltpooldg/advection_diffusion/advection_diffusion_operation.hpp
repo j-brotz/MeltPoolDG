@@ -5,10 +5,8 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
-// for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
 
-// MeltPoolDG
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operator.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
@@ -108,6 +106,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     VectorType solution_advected_field;
     VectorType solution_advected_field_old;
+    VectorType solution_advected_field_extrapolated;
     /*
      * Preconditioner for the matrix-free advection diffusion operator
      */
