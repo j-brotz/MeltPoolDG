@@ -48,6 +48,13 @@ namespace MeltPoolDG::Heat
   public:
     LaserHeatSourceGusarov(const LaserData<double>::GusarovData &gusarov_data_in);
 
+
+    double
+    local_compute_volumetric_heat_source(const Point<dim> &position,
+                                         const Point<dim> &laser_position,
+                                         const double      power) const final;
+
+  private:
     /**
      * volumetric heat source; The z-axis (= axis of the laser beam) is assumed to correspond to
      * negative dim-1 coordinate.
@@ -60,13 +67,6 @@ namespace MeltPoolDG::Heat
                                           const double                  delta_value,
                                           const double                  heaviside) const final;
 
-
-    double
-    local_compute_volumetric_heat_source(const Point<dim> &position,
-                                         const Point<dim> &laser_position,
-                                         const double      power) const final;
-
-  private:
     /**
      * Equation (26) corrected to match Figure 5 of Gusarov et al. (2009)
      */
