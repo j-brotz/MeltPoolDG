@@ -63,7 +63,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
     scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);
-    if (this->advec_diff_data.predictor == PredictorType::linear_extrapolation)
+    if (this->advec_diff_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       scratch_data.initialize_dof_vector(solution_advected_field_extrapolated, advec_diff_dof_idx);
   }
 
@@ -73,7 +73,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     scratch_data.initialize_dof_vector(solution_advected_field, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(solution_advected_field_old, advec_diff_dof_idx);
-    if (this->advec_diff_data.predictor == PredictorType::linear_extrapolation)
+    if (this->advec_diff_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       scratch_data.initialize_dof_vector(solution_advected_field_extrapolated, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);
@@ -99,9 +99,9 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperation<dim>::init_time_advance()
   {
-    if (this->advec_diff_data.predictor == PredictorType::none)
+    if (this->advec_diff_data.linear_solver.predictor == PredictorType::none)
       solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
-    else if (this->advec_diff_data.predictor == PredictorType::linear_extrapolation)
+    else if (this->advec_diff_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       {
         VectorType solution_advected_field_extrapolated;
 
