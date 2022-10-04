@@ -24,6 +24,7 @@ namespace MeltPoolDG::Heat
     LaserHeatSourceUniform(
       const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
 
+  private:
     /**
      * volumetric heat source
      */
@@ -32,7 +33,9 @@ namespace MeltPoolDG::Heat
                                          const Point<dim> &laser_position,
                                          const double      power_density) const final;
 
-  private:
+    /**
+     * interfacial heat source
+     */
     double
     local_compute_interfacial_heat_source(const Point<dim> &            position,
                                           const Point<dim> &            laser_position,

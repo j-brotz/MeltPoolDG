@@ -48,16 +48,20 @@ namespace MeltPoolDG::Heat
   public:
     LaserHeatSourceGusarov(const LaserData<double>::GusarovData &gusarov_data_in);
 
-
-    double
-    local_compute_volumetric_heat_source(const Point<dim> &position,
-                                         const Point<dim> &laser_position,
-                                         const double      power) const final;
-
   private:
     /**
      * volumetric heat source; The z-axis (= axis of the laser beam) is assumed to correspond to
      * negative dim-1 coordinate.
+     */
+    double
+    local_compute_volumetric_heat_source(const Point<dim> &position,
+                                         const Point<dim> &laser_position,
+                                         const double      power) const final;
+    /**
+     * interface heat source
+     *
+     * @note The Gurasov laser heat source model is not suited for surface impact! This function
+     * will assert.
      */
     double
     local_compute_interfacial_heat_source(const Point<dim> &            position,

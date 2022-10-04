@@ -74,6 +74,7 @@ namespace MeltPoolDG::Heat
      * source.
      */
 
+  private:
     /**
      * volumetric heat source
      */
@@ -81,8 +82,6 @@ namespace MeltPoolDG::Heat
     local_compute_volumetric_heat_source(const Point<dim> &position,
                                          const Point<dim> &laser_position,
                                          const double      power) const final;
-
-  private:
     /**
      * interface heat source
      */

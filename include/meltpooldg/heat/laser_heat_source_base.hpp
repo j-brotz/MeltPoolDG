@@ -32,13 +32,6 @@ namespace MeltPoolDG::Heat
                                    const double            laser_power,
                                    const Point<dim> &      laser_position,
                                    const bool              zero_out = true) const;
-    /**
-     * Local volumetric heat source
-     */
-    virtual double
-    local_compute_volumetric_heat_source(const Point<dim> &position,
-                                         const Point<dim> &laser_position,
-                                         double            power) const = 0;
 
     /**
      * Compute a DoF vector of the interfacial heat source.
@@ -72,6 +65,13 @@ namespace MeltPoolDG::Heat
                                           const unsigned int      normal_dof_idx = 0) const;
 
   private:
+    /**
+     * Local volumetric heat source
+     */
+    virtual double
+    local_compute_volumetric_heat_source(const Point<dim> &position,
+                                         const Point<dim> &laser_position,
+                                         double            power) const = 0;
     /**
      * Local interfacial heat source
      *
