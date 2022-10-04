@@ -48,8 +48,8 @@ namespace MeltPoolDG::Curvature
                                                    1 /*not time-dependent*/,
                                                    1 /*not time-dependent*/);
 
-        solution_curvature_old.copy_locally_owned_data_from(solution_curvature);
-        solution_curvature.copy_locally_owned_data_from(solution_curvature_predictor);
+        solution_curvature_old.swap(solution_curvature);
+        solution_curvature.swap(solution_curvature_predictor);
 
         // apply hanging node constraints to predictor
         scratch_data.get_constraint(curv_dof_idx).distribute(solution_curvature);

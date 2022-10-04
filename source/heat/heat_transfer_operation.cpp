@@ -161,8 +161,8 @@ namespace MeltPoolDG::Heat
                                                    time_iterator.get_current_time_increment(),
                                                    time_iterator.get_old_time_increment());
 
-        temperature_old.copy_locally_owned_data_from(temperature);
-        temperature.copy_locally_owned_data_from(temperature_extrapolated);
+        temperature_old.swap(temperature);
+        temperature.swap(temperature_extrapolated);
       }
     else if (heat_data.predictor == PredictorType::none)
       temperature_old.copy_locally_owned_data_from(temperature);

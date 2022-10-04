@@ -73,8 +73,8 @@ namespace MeltPoolDG::NormalVector
                                                        1 /*not time-dependent*/);
           }
 
-        solution_normal_vector_old.copy_locally_owned_data_from(solution_normal_vector);
-        solution_normal_vector.copy_locally_owned_data_from(solution_normal_vector_predictor);
+        solution_normal_vector_old.swap(solution_normal_vector);
+        solution_normal_vector.swap(solution_normal_vector_predictor);
 
         // apply hanging node constraints to predictor
         for (unsigned int d = 0; d < dim; ++d)

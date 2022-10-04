@@ -143,8 +143,8 @@ namespace MeltPoolDG::Reinitialization
                                                    time_iterator.get_current_time_increment(),
                                                    time_iterator.get_old_time_increment());
 
-        delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
-        delta_psi_vec.copy_locally_owned_data_from(delta_psi_extrapolated);
+        delta_psi_vec_old.swap(delta_psi_vec);
+        delta_psi_vec.swap(delta_psi_extrapolated);
 
         // apply hanging node constraints to predictor
         scratch_data.get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
