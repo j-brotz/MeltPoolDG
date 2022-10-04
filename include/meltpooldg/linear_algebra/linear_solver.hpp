@@ -1,8 +1,6 @@
 #pragma once
 // for distributed vectors/matrices
 #include <deal.II/lac/generic_linear_algebra.h>
-#include <deal.II/lac/la_parallel_block_vector.h>
-#include <deal.II/lac/la_parallel_vector.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 // solvers
@@ -16,6 +14,7 @@
 
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 using namespace dealii;
 
@@ -57,25 +56,40 @@ namespace MeltPoolDG
             AssertThrow(false, ExcNotImplemented());
         }
 
-<<<<<<< HEAD
-      solution.update_ghost_values();
-=======
-      solution.update_ghost_values(); // PM: why the hack do we call update ghost value here?
-
       if (solver_control.last_step() > 0 && monitor_history)
         {
           const auto &history_data = solver_control.get_history_data();
 
-          const auto print_value = [](const unsigned int iteration, const double value) {
-            std::cout << iteration << " " << value << std::endl;
+          // TODO: introduce get_mpi_communicator() in BlockVector in deal.II
+          std::unique_ptr<dealii::ConditionalOStream> pcout;
+          if constexpr (internal::is_block_vector<VectorType>)
+            pcout = std::make_unique<dealii::ConditionalOStream>(
+              std::cout,
+              Utilities::MPI::this_mpi_process(solution.block(0).get_mpi_communicator()) == 0);
+          else
+            pcout = std::make_unique<dealii::ConditionalOStream>(
+              std::cout, Utilities::MPI::this_mpi_process(solution.get_mpi_communicator()) == 0);
+
+          Journal::print_decoration_line(*pcout);
+          {
+            std::ostringstream str;
+            str << std::setw(5) << "# iter" << std::setw(20) << std::scientific
+                << std::setprecision(5) << "|Res|    ";
+            Journal::print_line(*pcout, str.str(), "linear solver");
+          }
+          Journal::print_decoration_line(*pcout);
+
+          const auto print_value = [&](const unsigned int iteration, const double value) {
+            std::ostringstream str;
+            str << std::setw(5) << iteration << std::setw(20) << std::scientific
+                << std::setprecision(5) << value;
+            Journal::print_line(*pcout, str.str(), "linear solver");
           };
 
           if (data.monitor_type == LinearSolverMonitorType::all)
             {
               for (unsigned int i = 0; i < history_data.size(); ++i)
-                {
-                  print_value(i, history_data[i]);
-                }
+                print_value(i, history_data[i]);
             }
           else if (data.monitor_type == LinearSolverMonitorType::reduced)
             {
@@ -87,9 +101,9 @@ namespace MeltPoolDG
             {
               AssertThrow(false, ExcNotImplemented());
             }
+          Journal::print_decoration_line(*pcout);
         }
 
->>>>>>> 46b7fce7 (Monitor history of linear solvers)
       return solver_control.last_step();
     }
   };

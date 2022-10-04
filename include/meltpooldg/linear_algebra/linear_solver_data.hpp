@@ -52,7 +52,7 @@ namespace MeltPoolDG
     number             rel_tolerance       = 1e-12;
     number             abs_tolerance       = 1e-50;
 
-    LinearSolverMonitorType monitor_type = LinearSolverMonitorType::all;
+    LinearSolverMonitorType monitor_type = LinearSolverMonitorType::none;
 
     void
     add_parameters(ParameterHandler &prm);

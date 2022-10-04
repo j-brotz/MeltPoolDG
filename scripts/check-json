@@ -27,3 +27,6 @@ test '\"verbosity level\"' '\"1\"|\"2\"|\"3\"|\"4\"|\"5\"' 'verbosity level is n
 # test 3: "Navier-Stokes" -> "Output options" -> "output verbosity"
 test '\"output verbosity\"' '\"1\"|\"2\"|\"3\"' 'output verbosity is not correct in following files' || return 1
 
+# test 4: "Navier-Stokes" -> "Output options" -> "output verbosity"
+test '\"monitor type\"' '\"none\"' 'monitor type is not correct in following files' || return 1
+

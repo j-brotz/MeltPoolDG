@@ -30,6 +30,9 @@ namespace MeltPoolDG
         "do matrix free",
         this->do_matrix_free,
         "Set this parameter if a matrix free solution procedure should be performed.");
+      prm.add_parameter("monitor type",
+                        this->monitor_type,
+                        "Set the monitor type of the linear solver.");
     }
     prm.leave_subsection();
   }
