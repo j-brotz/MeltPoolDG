@@ -79,6 +79,7 @@ namespace MeltPoolDG::Heat
     AssertThrow(
       false,
       ExcMessage("The Gurasov laser heat source model is not suited for surface impact! Abort..."));
+    return 0.0;
   }
 
   template class LaserHeatSourceGusarov<1>;
