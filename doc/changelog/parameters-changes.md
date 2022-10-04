@@ -2,6 +2,14 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-10-04
+- Add parameter for monitoring
+```json
+{
+  "linear solver": {
+    "monitor type": "none|reduced|all"
+  }
+}
+```
 - Add uniform laser heat source
 ```json
 {
