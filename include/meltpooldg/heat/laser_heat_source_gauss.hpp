@@ -73,17 +73,7 @@ namespace MeltPoolDG::Heat
      * @p normal_dof_idx is given, the latter will be used for computing the laser heat
      * source.
      */
-    void
-    compute_interfacial_heat_source_sharp(VectorType &            heat_rhs,
-                                          const ScratchData<dim> &scratch_data,
-                                          const unsigned int      temp_dof_idx,
-                                          const double            laser_power,
-                                          const Point<dim> &      laser_position,
-                                          const VectorType &      level_set_heaviside,
-                                          const unsigned int      ls_dof_idx,
-                                          const bool              zero_out       = true,
-                                          const BlockVectorType * normal_vector  = nullptr,
-                                          const unsigned int      normal_dof_idx = 0) const final;
+
     /**
      * volumetric heat source
      */
@@ -93,15 +83,6 @@ namespace MeltPoolDG::Heat
                                          const double      power) const final;
 
   private:
-    /**
-     * interface heat source
-     */
-    double
-    local_compute_interfacial_heat_source_sharp(const Point<dim> &            position,
-                                                const Point<dim> &            laser_position,
-                                                const double                  power,
-                                                const Tensor<1, dim, double> &normal_vector,
-                                                const double                  heaviside) const;
     /**
      * interface heat source
      */

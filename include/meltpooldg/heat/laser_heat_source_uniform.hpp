@@ -25,21 +25,6 @@ namespace MeltPoolDG::Heat
       const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
 
     /**
-     * Compute a DoF vector of the heat source for sharp interface laser.
-     */
-    void
-    compute_interfacial_heat_source_sharp(VectorType &            heat_source_vector,
-                                          const ScratchData<dim> &scratch_data,
-                                          const unsigned int      temp_dof_idx,
-                                          const double            laser_power_density,
-                                          const Point<dim> &      laser_position,
-                                          const VectorType &      level_set_heaviside,
-                                          const unsigned int      ls_dof_idx,
-                                          const bool              zero_out       = true,
-                                          const BlockVectorType * normal_vector  = nullptr,
-                                          const unsigned int      normal_dof_idx = 0) const final;
-
-    /**
      * volumetric heat source
      */
     double
