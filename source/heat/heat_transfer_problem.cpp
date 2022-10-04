@@ -10,6 +10,7 @@
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
+#include <meltpooldg/heat/laser_heat_source_uniform.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
@@ -224,7 +225,13 @@ namespace MeltPoolDG::Heat
           {
             laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
               base_in->parameters.laser.gauss,
-              base_in->parameters.material.two_phase_properties_transition_type);
+              base_in->parameters.material.two_phase_properties_transition_type,
+              base_in->parameters.laser.delta_approximation_phase_weighted);
+          }
+        else if (base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::uniform)
+          {
+            laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceUniform<dim>>(
+              base_in->parameters.laser.delta_approximation_phase_weighted);
           }
         else
           AssertThrow(false,

@@ -1,11 +1,8 @@
-
 #pragma once
-
-#include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
+#include <meltpooldg/material/material_data.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -41,23 +38,9 @@ namespace MeltPoolDG::Heat
   {
   public:
     LaserHeatSourceGauss(
-      const LaserData<double>::GaussData &         data_in,
-      const TwoPhaseFluidPropertiesTransitionType &variable_properties_over_interface);
-
-    /**
-     * Compute a DoF vector of the heat source for interface laser.
-     */
-    void
-    compute_interfacial_heat_source(VectorType &            heat_source_vector,
-                                    const ScratchData<dim> &scratch_data,
-                                    const unsigned int      temp_dof_idx,
-                                    const double            laser_power,
-                                    const Point<dim> &      laser_position,
-                                    const VectorType &      level_set_heaviside,
-                                    const unsigned int      ls_dof_idx,
-                                    const bool              zero_out       = true,
-                                    const BlockVectorType * normal_vector  = nullptr,
-                                    const unsigned int      normal_dof_idx = 0) const final;
+      const LaserData<double>::GaussData &               data_in,
+      const TwoPhaseFluidPropertiesTransitionType &      variable_properties_over_interface,
+      const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
 
     /**
      * Compute a DoF vector and assemble it into @p heat_rhs, considering a Gaussian laser heat
@@ -90,17 +73,8 @@ namespace MeltPoolDG::Heat
      * @p normal_dof_idx is given, the latter will be used for computing the laser heat
      * source.
      */
-    void
-    compute_interfacial_heat_source_sharp(VectorType &            heat_rhs,
-                                          const ScratchData<dim> &scratch_data,
-                                          const unsigned int      temp_dof_idx,
-                                          const double            laser_power,
-                                          const Point<dim> &      laser_position,
-                                          const VectorType &      level_set_heaviside,
-                                          const unsigned int      ls_dof_idx,
-                                          const bool              zero_out       = true,
-                                          const BlockVectorType * normal_vector  = nullptr,
-                                          const unsigned int      normal_dof_idx = 0) const final;
+
+  private:
     /**
      * volumetric heat source
      */
@@ -108,17 +82,6 @@ namespace MeltPoolDG::Heat
     local_compute_volumetric_heat_source(const Point<dim> &position,
                                          const Point<dim> &laser_position,
                                          const double      power) const final;
-
-  private:
-    /**
-     * interface heat source
-     */
-    double
-    local_compute_interfacial_heat_source_sharp(const Point<dim> &            position,
-                                                const Point<dim> &            laser_position,
-                                                const double                  power,
-                                                const Tensor<1, dim, double> &normal_vector,
-                                                const double                  heaviside) const;
     /**
      * interface heat source
      */
@@ -128,7 +91,7 @@ namespace MeltPoolDG::Heat
                                           const double                  power,
                                           const Tensor<1, dim, double> &normal_vector,
                                           const double                  delta_value,
-                                          const double                  heaviside) const;
+                                          const double                  heaviside) const final;
     /*
      * Laser power density in volumetric case.
      * returns: power * exp( -2 radius^2 / laser_radius^2 ) / ( laser_radius * sqrt(pi/2) )^3
@@ -166,7 +129,5 @@ namespace MeltPoolDG::Heat
      * So that laser_power = int_R^2 p dx
      */
     const double surf_peak_power_density_factor;
-
-    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
   };
 } // namespace MeltPoolDG::Heat

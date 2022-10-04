@@ -5,11 +5,8 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
-#include <deal.II/lac/generic_linear_algebra.h>
-
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/interface/scratch_data.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -51,29 +48,29 @@ namespace MeltPoolDG::Heat
   public:
     LaserHeatSourceGusarov(const LaserData<double>::GusarovData &gusarov_data_in);
 
+  private:
     /**
      * volumetric heat source; The z-axis (= axis of the laser beam) is assumed to correspond to
      * negative dim-1 coordinate.
      */
-    void
-    compute_interfacial_heat_source(VectorType &            heat_source_vector,
-                                    const ScratchData<dim> &scratch_data,
-                                    const unsigned int      temp_dof_idx,
-                                    const double            laser_power,
-                                    const Point<dim> &      laser_position,
-                                    const VectorType &      level_set_heaviside,
-                                    const unsigned int      ls_dof_idx,
-                                    const bool              zero_out       = true,
-                                    const BlockVectorType * normal_vector  = nullptr,
-                                    const unsigned int      normal_dof_idx = 0) const final;
-
-
     double
     local_compute_volumetric_heat_source(const Point<dim> &position,
                                          const Point<dim> &laser_position,
                                          const double      power) const final;
+    /**
+     * interface heat source
+     *
+     * @note The Gurasov laser heat source model is not suited for surface impact! This function
+     * will assert.
+     */
+    double
+    local_compute_interfacial_heat_source(const Point<dim> &            position,
+                                          const Point<dim> &            laser_position,
+                                          const double                  power,
+                                          const Tensor<1, dim, double> &normal_vector,
+                                          const double                  delta_value,
+                                          const double                  heaviside) const final;
 
-  private:
     /**
      * Equation (26) corrected to match Figure 5 of Gusarov et al. (2009)
      */

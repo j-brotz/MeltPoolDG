@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-10-04
+- Add uniform laser heat source
+```json
+{
+  "laser": {
+    "laser heat source model": "uniform"
+  }
+}
+```
+
 ## 2022-10-03
 - Add a parameter for prescribing an analytical function for the time step size
 ```json
