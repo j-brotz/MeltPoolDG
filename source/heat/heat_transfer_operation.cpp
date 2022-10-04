@@ -127,6 +127,9 @@ namespace MeltPoolDG::Heat
     scratch_data.initialize_dof_vector(user_rhs, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(temperature_interface, temp_hanging_nodes_dof_idx);
+    if (heat_data.predictor == PredictorType::linear_extrapolation)
+      scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
+
     /*
      * setup sparsity pattern of system matrix only if the latter is
      * needed for computing the preconditioner
@@ -152,23 +155,21 @@ namespace MeltPoolDG::Heat
 
     if (heat_data.predictor == PredictorType::linear_extrapolation)
       {
-        VectorType temperature_extrapolated;
-        scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
-
         UtilityFunctions::compute_linear_predictor(temperature,
                                                    temperature_old,
                                                    temperature_extrapolated,
                                                    time_iterator.get_current_time_increment(),
                                                    time_iterator.get_old_time_increment());
 
-        temperature_old.swap(temperature);
+        temperature_old.copy_locally_owned_data_from(
+          temperature); //@note we don't use swap since the two vectors are initialized from different AffineConstraints objects
         temperature.swap(temperature_extrapolated);
       }
     else if (heat_data.predictor == PredictorType::none)
       temperature_old.copy_locally_owned_data_from(temperature);
 
-    // apply hanging node constraints to predictor
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature);
+    // apply constraints to predictor
+    scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
   }
 
   template <int dim>
