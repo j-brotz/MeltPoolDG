@@ -8,7 +8,8 @@ namespace MeltPoolDG::Heat
   using namespace dealii;
 
   template <int dim>
-  LaserHeatSourceBase<dim>::LaserHeatSourceBase(){};
+  LaserHeatSourceBase<dim>::LaserHeatSourceBase()
+  {}
 
   template <int dim>
   LaserHeatSourceBase<dim>::LaserHeatSourceBase(
