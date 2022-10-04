@@ -87,6 +87,6 @@
   "simulation specific": {
     "radius": "0.25",
     "side length": "2.0",
-    "velocity": "0.1"
+    "velocity": "0.01"
   }
 }
