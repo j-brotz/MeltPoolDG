@@ -114,7 +114,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
         // zero-out is needed since we potentially have a user rhs, which we add in advance
         rhs = 0.0;
-        
+
         // apply hanging node constraints to predictor
         scratch_data.get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
 
