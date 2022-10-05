@@ -33,6 +33,9 @@ namespace MeltPoolDG
       prm.add_parameter("monitor type",
                         this->monitor_type,
                         "Set the monitor type of the linear solver.");
+      prm.add_parameter("predictor",
+                        this->predictor,
+                        "Set this parameter for choosing an iterative linear solver type.");
     }
     prm.leave_subsection();
   }

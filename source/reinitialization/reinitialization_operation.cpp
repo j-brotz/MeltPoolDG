@@ -35,6 +35,16 @@ namespace MeltPoolDG::Reinitialization
                            " normal vector and the reinitialization operation have to be "
                            " computed either matrix-based or matrix-free."));
 
+    scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
+    scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
+    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
+      }
+
+    scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
+
     if (normal_vec_data.implementation == "meltpooldg")
       {
         normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperation<dim>>(
@@ -57,15 +67,12 @@ namespace MeltPoolDG::Reinitialization
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
+
     /*
      *   create reinitialization operator. This class supports matrix-based
      *   and matrix-free computation.
      */
     create_operator();
-    scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
-    scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
-    scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
   }
 
   template <int dim>
@@ -74,7 +81,12 @@ namespace MeltPoolDG::Reinitialization
   {
     scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
     scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      {
+        scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
+        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
+      }
+
     scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
 
     update_operator();
@@ -123,24 +135,16 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::init_time_advance()
   {
-    if (reinit_data.predictor == PredictorType::none)
+    if (reinit_data.predictor == PredictorType::linear_extrapolation)
       {
-        delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
-        delta_psi_vec = 0.0;
-      }
-    else if (reinit_data.predictor == PredictorType::linear_extrapolation)
-      {
-        VectorType delta_psi_extrapolated;
-        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
-
         UtilityFunctions::compute_linear_predictor(delta_psi_vec,
                                                    delta_psi_vec_old,
                                                    delta_psi_extrapolated,
                                                    time_iterator.get_current_time_increment(),
                                                    time_iterator.get_old_time_increment());
 
-        delta_psi_vec_old.copy_locally_owned_data_from(delta_psi_vec);
-        delta_psi_vec.copy_locally_owned_data_from(delta_psi_extrapolated);
+        delta_psi_vec_old.swap(delta_psi_vec);
+        delta_psi_vec.swap(delta_psi_extrapolated);
 
         // apply hanging node constraints to predictor
         scratch_data.get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
@@ -310,7 +314,12 @@ namespace MeltPoolDG::Reinitialization
   ReinitializationOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
+    normal_vector_operation->attach_vectors(vectors);
+
     vectors.push_back(&solution_level_set);
+    vectors.push_back(&delta_psi_vec);
+    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+      vectors.push_back(&delta_psi_vec_old);
   }
 
   template <int dim>

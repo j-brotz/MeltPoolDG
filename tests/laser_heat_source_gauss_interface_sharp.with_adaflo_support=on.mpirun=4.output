@@ -26,9 +26,9 @@
 |  τ = 7.8125e-06                                                                 reinitialization |
 | || delta phi ||L2 = 2.566351675637629e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.83274017706e-15                                               normal_vector |
+| || normal_0 ||L2 = 2.86353502609e-15                                               normal_vector |
 | || normal_1 ||L2 = 9.18906643335e+00                                               normal_vector |
-| || curvature ||L2 = 1.56027645133e+01                                                  curvature |
+| || curvature ||L2 = 2.57896781134e+01                                                  curvature |
 | current laser position: 0.0003 0                                                           laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 4.90014e-01                newton_raphson_solver |

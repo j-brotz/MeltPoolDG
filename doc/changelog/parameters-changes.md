@@ -10,6 +10,19 @@ All notable changes of the input parameters will be documented in this file.
   }
 }
 ```
+
+- Add parameter to use slip boundaries instead of no-slip boundaries in the recoil pressure simulation
+```diff
+{
+  "base": {
+    "application name": "recoil_pressure"
+  },
+  "simulation specific domain": {
++   "slip boundary": "false|true"
+  }
+}
+```
+
 - Add uniform laser heat source
 ```json
 {
@@ -20,12 +33,21 @@ All notable changes of the input parameters will be documented in this file.
 ```
 
 ## 2022-10-03
+- Add a parameter for predictor type of linear solver
+```json
+{
+    "linear solver": {
+      "predictor": "none|linear_extrapolation"
+    }
+}
+
+## 2022-10-03
 - Add a parameter for prescribing an analytical function for the time step size
 ```json
 {
   "time stepping": {
     "time step size function": "0.01*t"
-  },
+  }
 }
 
 ## 2022-09-14
