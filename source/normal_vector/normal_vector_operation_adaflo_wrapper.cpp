@@ -139,6 +139,16 @@ namespace MeltPoolDG::NormalVector
 
   template <int dim>
   void
+  NormalVectorOperationAdaflo<dim>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  {
+    normal_vector_field.update_ghost_values();
+    for (unsigned int d = 0; d < dim; ++d)
+      vectors.push_back(&normal_vector_field.block(d));
+  }
+
+  template <int dim>
+  void
   NormalVectorOperationAdaflo<dim>::set_adaflo_parameters(
     const NormalVectorData<double> &normal_vec_data,
     const double                    reinit_scale_factor_epsilon,

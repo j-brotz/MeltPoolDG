@@ -111,8 +111,8 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                    time_iterator.get_current_time_increment(),
                                                    time_iterator.get_old_time_increment());
 
-        solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
-        solution_advected_field.copy_locally_owned_data_from(level_set_extrapolated);
+        solution_advected_field_old.swap(solution_advected_field);
+        solution_advected_field.swap(level_set_extrapolated);
       }
 
     // apply hanging node constraints to predictor

@@ -35,7 +35,8 @@ namespace MeltPoolDG
     not_initialized, // must be specified by user
     Gauss,           // Gauss heat source distribution, see MeltPoolDG::Heat::LaserHeatSourceGauss
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
-    Analytical // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
+    Analytical, // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
+    uniform     // uniform laser model, see MeltPoolDG::Heat::LaserHeatSourceUniform
   )
   BETTER_ENUM(
     LaserImpactType,
@@ -68,14 +69,6 @@ namespace MeltPoolDG
               rhs)
 
   BETTER_ENUM(InterfaceForceType, char, diffuse, sharp)
-
-  // choose the particular predictor type for the nonlinear/linear solver
-  BETTER_ENUM(PredictorType,
-              char,
-              // no predictor specified; use old value as initial guess
-              none,
-              // calculate the predictor by a linear combination from the two old solution vectors
-              linear_extrapolation)
 
   template <typename number = double>
   struct NonlinearSolverData
@@ -194,21 +187,21 @@ namespace MeltPoolDG
   template <typename number = double>
   struct LaserData
   {
-    number               power            = 0.0;
-    std::string          power_over_time  = "constant";
-    number               power_start_time = 0.0;
-    number               power_end_time   = 1.e12;
-    std::vector<double>  center; // default value will be set after parameters are read
-    bool                 do_move           = false;
-    number               scan_speed        = 0.0;
-    LaserImpactType      impact_type       = LaserImpactType::volumetric;
+    number              power            = 0.0;
+    std::string         power_over_time  = "constant";
+    number              power_start_time = 0.0;
+    number              power_end_time   = 1.e12;
+    std::vector<double> center; // default value will be set after parameters are read
+    bool                do_move     = false;
+    number              scan_speed  = 0.0;
+    LaserImpactType     impact_type = LaserImpactType::volumetric;
+    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     LaserHeatSourceModel heat_source_model = LaserHeatSourceModel::not_initialized;
     struct GaussData
     {
-      number                                      laser_beam_radius   = 0.0;
-      number                                      absorptivity_liquid = 0.0;
-      number                                      absorptivity_gas    = 0.0;
-      DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+      number laser_beam_radius   = 0.0;
+      number absorptivity_liquid = 0.0;
+      number absorptivity_gas    = 0.0;
     } gauss;
     struct GusarovData
     {

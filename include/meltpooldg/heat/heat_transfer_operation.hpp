@@ -50,6 +50,7 @@ namespace MeltPoolDG::Heat
      */
     VectorType temperature;
     VectorType temperature_old;
+    VectorType temperature_extrapolated;
     VectorType heat_source;
     VectorType user_rhs;
     VectorType temperature_interface;

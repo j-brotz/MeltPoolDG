@@ -48,12 +48,6 @@ namespace MeltPoolDG
       using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
     public:
-      /*
-       *    This is the primary solution variable of this module, which will be also publically
-       *    accessible for output_results.
-       */
-      BlockVectorType solution_normal_vector;
-
       NormalVectorOperation(const ScratchData<dim> &        scratch_data_in,
                             const NormalVectorData<double> &normal_vector_data,
                             const unsigned int              normal_dof_idx_in,
@@ -71,6 +65,9 @@ namespace MeltPoolDG
 
       BlockVectorType &
       get_solution_normal_vector() override;
+
+      void
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 
     private:
       /**
@@ -91,6 +88,14 @@ namespace MeltPoolDG
       const unsigned int normal_dof_idx;
       const unsigned int normal_quad_idx;
       const unsigned int ls_dof_idx;
+      /*
+       *    This is the primary solution variable of this module, which will be also publically
+       *    accessible for output_results.
+       */
+      BlockVectorType solution_normal_vector;
+      BlockVectorType solution_normal_vector_old;
+      BlockVectorType solution_normal_vector_predictor;
+      BlockVectorType rhs;
       /*
        *  This pointer will point to your user-defined normal vector operator.
        */

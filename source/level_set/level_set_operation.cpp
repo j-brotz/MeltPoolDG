@@ -405,15 +405,10 @@ namespace MeltPoolDG::LevelSet
     advec_diff_operation->attach_vectors(vectors);
 
     // needed for evaporation
-    level_set_as_heaviside.update_ghost_values();
     vectors.push_back(&level_set_as_heaviside);
 
-    distance_to_level_set.update_ghost_values();
-    vectors.push_back(&distance_to_level_set);
-
-    get_normal_vector().update_ghost_values();
-    for (unsigned int d = 0; d < dim; ++d)
-      vectors.push_back(&get_normal_vector().block(d));
+    reinit_operation->attach_vectors(vectors);
+    curvature_operation->attach_vectors(vectors);
   }
 
   template <int dim>

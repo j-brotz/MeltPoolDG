@@ -1,86 +1,41 @@
-| || normal_0 ||L2 = 1.97092163563e+00                                               normal_vector |
-| || normal_1 ||L2 = 1.97092163563e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 2.047550398856401e-03                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.97092163563e+00                                               normal_vector |
-| || normal_1 ||L2 = 1.97092163563e+00                                               normal_vector |
-| cycle: 0 n_dofs: 4225(ls) + 8450(vel) + 1089(p)                                melt_pool_problem |
-| || normal_0 ||L2 = 3.09956330061e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.09956312180e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.09956324100e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.09956318140e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.0078125                                                                  reinitialization |
-| || delta phi ||L2 = 3.254998009651899e-04                                       reinitialization |
+| || delta phi ||L2 = 3.254998082411478e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.09956330061e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.09956312180e+00                                               normal_vector |
-| cycle: 1 n_dofs: 11249(ls) + 22498(vel) + 2845(p)                              melt_pool_problem |
-| || normal_0 ||L2 = 4.03565728664e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03565740585e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.00390625                                                                 reinitialization |
-| || delta phi ||L2 = 4.707356856670231e-05                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.03565728664e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03565740585e+00                                               normal_vector |
-| cycle: 2 n_dofs: 23729(ls) + 47458(vel) + 5965(p)                              melt_pool_problem |
-| || normal_0 ||L2 = 4.03565180302e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03565168381e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.00390625                                                                 reinitialization |
-| || delta phi ||L2 = 4.707368134404533e-05                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.03565180302e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03565168381e+00                                               normal_vector |
-| cycle: 3 n_dofs: 15793(ls) + 31586(vel) + 3981(p)                              melt_pool_problem |
-| || normal_0 ||L2 = 4.03565645218e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03565645218e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.00390625                                                                 reinitialization |
-| || delta phi ||L2 = 4.707356856670231e-05                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.03565645218e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03565645218e+00                                               normal_vector |
-| cycle: 4 n_dofs: 16961(ls) + 33922(vel) + 4273(p)                              melt_pool_problem |
-| || normal_0 ||L2 = 4.03564381599e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03564369678e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.00390625                                                                 reinitialization |
-| || delta phi ||L2 = 4.707367770606652e-05                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.03564381599e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03564369678e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.09956324100e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.09956318140e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.9681980908e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 4.03564381601e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03564381601e+00                                               normal_vector |
+| || advected field ||L2 = 1.9677976370e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 3.09956324101e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.09956330061e+00                                               normal_vector |
 
 Time step #1, advancing from t_n-1 = 0 to t = 1e-05 (dt = 1e-05). 
-| || velocity ||L2 = 8.071995330299857e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.616226181586222e+04                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.118673544883690e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 4.571954433349321e+03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-05 to 2.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.9681980908e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 4.03564369684e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03564369684e+00                                               normal_vector |
+| || advected field ||L2 = 1.9677976370e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 3.09956336021e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.09956330061e+00                                               normal_vector |
 
 Time step #2, advancing from t_n-1 = 1e-05 to t = 2e-05 (dt = 1e-05). 
-| || velocity ||L2 = 8.071995531846377e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.308113233164287e+04                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.118673292362232e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.285977225120301e+03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-05 to 3.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.9681980908e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 4.03564381611e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.03564393532e+00                                               normal_vector |
+| || advected field ||L2 = 1.9677976370e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 3.09956336021e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.09956330061e+00                                               normal_vector |
 
 Time step #3, advancing from t_n-1 = 2e-05 to t = 3e-05 (dt = 1e-05). 
-| || velocity ||L2 = 8.071995330378770e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.510518101275334e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.118673544884091e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.566258324240275e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

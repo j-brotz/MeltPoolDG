@@ -70,6 +70,9 @@ namespace MeltPoolDG
       LevelSetOKZSolverComputeNormal<dim> &
       get_adaflo_obj();
 
+      void
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+
     private:
       void
       set_adaflo_parameters(const NormalVectorData<double> &normal_vec_data,
