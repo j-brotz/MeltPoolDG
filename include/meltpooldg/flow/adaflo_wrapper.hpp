@@ -169,6 +169,9 @@ namespace MeltPoolDG::Flow
     void
     create_parameters(Parameters<double> &parameters, const std::string parameter_file);
 
+    bool
+    time_stepping_synchronized();
+
     ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data;
     /**
      * Timer
