@@ -715,11 +715,15 @@ namespace MeltPoolDG::Flow
   bool
   AdafloWrapper<dim>::time_stepping_synchronized()
   {
-    return navier_stokes->time_stepping.step_size() == time_iterator.get_current_time_increment() &&
-           navier_stokes->time_stepping.step_no() == time_iterator.get_current_time_step_number() &&
-           navier_stokes->time_stepping.old_step_size() == time_iterator.get_old_time_increment() &&
-           navier_stokes->time_stepping.now() == time_iterator.get_current_time() &&
-           navier_stokes->time_stepping.previous() == time_iterator.get_old_time();
+    return std::abs(navier_stokes->time_stepping.step_size() -
+                    time_iterator.get_current_time_increment()) < 1e-16 &&
+           std::abs(navier_stokes->time_stepping.step_no() -
+                    time_iterator.get_current_time_step_number()) < 1e-16 &&
+           std::abs(navier_stokes->time_stepping.old_step_size() -
+                    time_iterator.get_old_time_increment()) < 1e-16 &&
+           std::abs(navier_stokes->time_stepping.now() - time_iterator.get_current_time()) <
+             1e-16 &&
+           std::abs(navier_stokes->time_stepping.previous() - time_iterator.get_old_time()) < 1e-16;
   }
 
   template class AdafloWrapper<1>;
