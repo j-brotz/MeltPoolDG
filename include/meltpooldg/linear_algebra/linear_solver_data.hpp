@@ -39,7 +39,7 @@ namespace MeltPoolDG
               reduced,
               // print full history
               all)
-    
+
   // choose the particular predictor type for the nonlinear/linear solver
   BETTER_ENUM(PredictorType,
               char,
@@ -47,7 +47,7 @@ namespace MeltPoolDG
               none,
               // calculate the predictor by a linear combination from the two old solution vectors
               linear_extrapolation)
-    
+
   /**
    * Parameters for the linear solver.
    */
