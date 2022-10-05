@@ -135,7 +135,7 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::init_time_advance()
   {
-    if (reinit_data.predictor == PredictorType::linear_extrapolation)
+    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       {
         UtilityFunctions::compute_linear_predictor(delta_psi_vec,
                                                    delta_psi_vec_old,

@@ -127,7 +127,7 @@ namespace MeltPoolDG::Heat
     scratch_data.initialize_dof_vector(user_rhs, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(temperature_interface, temp_hanging_nodes_dof_idx);
-    if (heat_data.predictor == PredictorType::linear_extrapolation)
+    if (heat_data.nlsolve.predictor == PredictorType::linear_extrapolation)
       scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
 
     /*
@@ -153,7 +153,7 @@ namespace MeltPoolDG::Heat
           temp_hanging_nodes_dof_idx);
       }
 
-    if (heat_data.predictor == PredictorType::linear_extrapolation)
+    if (heat_data.nlsolve.predictor == PredictorType::linear_extrapolation)
       {
         UtilityFunctions::compute_linear_predictor(temperature,
                                                    temperature_old,
@@ -165,7 +165,7 @@ namespace MeltPoolDG::Heat
           temperature); //@note we don't use swap since the two vectors are initialized from different AffineConstraints objects
         temperature.swap(temperature_extrapolated);
       }
-    else if (heat_data.predictor == PredictorType::none)
+    else if (heat_data.nlsolve.predictor == PredictorType::none)
       temperature_old.copy_locally_owned_data_from(temperature);
 
     // apply constraints to predictor
