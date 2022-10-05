@@ -77,7 +77,8 @@
   },
   "advection diffusion": {
     "linear solver": {
-      "do matrix free": "true"
+      "do matrix free": "true",
+      "abs tolerance": "1e-16"
     }
   }
 }

@@ -103,8 +103,6 @@ namespace MeltPoolDG::AdvectionDiffusion
       solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
     else if (this->advec_diff_data.linear_solver.predictor == PredictorType::linear_extrapolation)
       {
-        VectorType solution_advected_field_extrapolated;
-
         UtilityFunctions::compute_linear_predictor(solution_advected_field,
                                                    solution_advected_field_old,
                                                    solution_advected_field_extrapolated,
@@ -117,8 +115,6 @@ namespace MeltPoolDG::AdvectionDiffusion
         // apply hanging node constraints to predictor
         scratch_data.get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
       }
-
-    rhs = 0.0;
   }
 
   template <int dim>
@@ -147,11 +143,10 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
-        /*
-         * apply dirichlet boundary values
-         */
         rhs = user_rhs;
 
+
+        // apply dirichlet boundary values
         Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
           *advec_diff_operator,
           rhs,
@@ -186,6 +181,7 @@ namespace MeltPoolDG::AdvectionDiffusion
       }
     else
       {
+        rhs = 0.0;
         advec_diff_operator->assemble_matrixbased(solution_advected_field_old,
                                                   advec_diff_operator->get_system_matrix(),
                                                   rhs);

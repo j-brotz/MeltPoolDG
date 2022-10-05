@@ -59,7 +59,7 @@ namespace MeltPoolDG
     LinearSolverType   solver_type         = LinearSolverType::GMRES;
     unsigned int       max_iterations      = 10000;
     number             rel_tolerance       = 1e-12;
-    number             abs_tolerance       = 1e-50;
+    number             abs_tolerance       = 1e-20;
     PredictorType      predictor           = PredictorType::none;
 
     LinearSolverMonitorType monitor_type = LinearSolverMonitorType::none;
