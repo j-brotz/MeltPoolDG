@@ -31,6 +31,14 @@ namespace MeltPoolDG
               // generalized minimal residual
               GMRES)
 
+  // choose the particular predictor type for the nonlinear/linear solver
+  BETTER_ENUM(PredictorType,
+              char,
+              // no predictor specified; use old value as initial guess
+              none,
+              // calculate the predictor by a linear combination from the two old solution vectors
+              linear_extrapolation)
+
   /**
    * Parameters for the linear solver.
    */
@@ -43,6 +51,7 @@ namespace MeltPoolDG
     unsigned int       max_iterations      = 10000;
     number             rel_tolerance       = 1e-12;
     number             abs_tolerance       = 1e-50;
+    PredictorType      predictor           = PredictorType::none;
 
     void
     add_parameters(ParameterHandler &prm);

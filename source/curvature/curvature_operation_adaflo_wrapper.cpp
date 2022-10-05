@@ -157,6 +157,17 @@ namespace MeltPoolDG::Curvature
 
   template <int dim>
   void
+  CurvatureOperationAdaflo<dim>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  {
+    normal_vector_operation_adaflo->attach_vectors(vectors);
+
+    curvature_field.update_ghost_values();
+    vectors.push_back(&curvature_field);
+  }
+
+  template <int dim>
+  void
   CurvatureOperationAdaflo<dim>::set_adaflo_parameters(const Parameters<double> &parameters,
                                                        const int                 advec_diff_dof_idx,
                                                        const int                 curv_dof_idx,
