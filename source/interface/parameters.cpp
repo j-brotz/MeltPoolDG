@@ -304,7 +304,6 @@ namespace MeltPoolDG
       advec_diff.linear_solver.solver_type         = LinearSolverType::GMRES;
       advec_diff.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       advec_diff.linear_solver.add_parameters(prm);
-      prm.add_parameter("predictor", advec_diff.predictor, "Choose the predictor type.");
     }
     prm.leave_subsection();
 
@@ -389,7 +388,6 @@ namespace MeltPoolDG
       reinit.linear_solver.solver_type         = LinearSolverType::CG;
       reinit.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       reinit.linear_solver.add_parameters(prm);
-      prm.add_parameter("predictor", reinit.predictor, "Choose the predictor type.");
     }
     prm.leave_subsection();
     /*
@@ -495,6 +493,9 @@ namespace MeltPoolDG
         "heat nlsolve residual tolerance alt",
         heat.nlsolve.residual_tolerance_alt,
         "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
+      prm.add_parameter("heat nlsolve predictor",
+                        heat.nlsolve.predictor,
+                        "Set the predictor for the nonlinear solver.");
       prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
       prm.add_parameter("heat two phase", heat.two_phase, "Set this parameter for two phase flow.");
       prm.add_parameter("heat solidification",
@@ -511,8 +512,6 @@ namespace MeltPoolDG
       heat.linear_solver.solver_type         = LinearSolverType::GMRES;
       heat.linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
       heat.linear_solver.add_parameters(prm);
-
-      prm.add_parameter("predictor", heat.predictor, "Choose the predictor type.");
     }
     prm.leave_subsection();
     /*

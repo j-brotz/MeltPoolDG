@@ -457,7 +457,6 @@ namespace MeltPoolDG::LevelSet
       {
         reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
 
-
         Journal::print_decoration_line(scratch_data.get_pcout());
         while (!reinit_time_iterator.is_finished())
           {
@@ -500,6 +499,14 @@ namespace MeltPoolDG::LevelSet
         very_first_step = false;
 
         Journal::print_decoration_line(scratch_data.get_pcout());
+      }
+    else
+      {
+        std::ostringstream str;
+        str << " skipped reinit since max(|ΔΦ|) = " << std::setw(10) << std::setprecision(5)
+            << std::scientific << std::left << max_d_level_set_since_last_reinit
+            << " < level_set_data.reinit_tol";
+        Journal::print_line(scratch_data.get_pcout(), str.str(), "reinitialization", 2);
       }
   }
 

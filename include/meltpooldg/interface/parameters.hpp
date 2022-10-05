@@ -73,12 +73,13 @@ namespace MeltPoolDG
   template <typename number = double>
   struct NonlinearSolverData
   {
-    int    max_nonlinear_iterations       = 10;
-    number field_correction_tolerance     = 1e-10;
-    number residual_tolerance             = 1e-9;
-    int    max_nonlinear_iterations_alt   = 0;
-    number field_correction_tolerance_alt = 1e-9;
-    number residual_tolerance_alt         = 1e-8;
+    int           max_nonlinear_iterations       = 10;
+    number        field_correction_tolerance     = 1e-10;
+    number        residual_tolerance             = 1e-9;
+    int           max_nonlinear_iterations_alt   = 0;
+    number        field_correction_tolerance_alt = 1e-9;
+    number        residual_tolerance_alt         = 1e-8;
+    PredictorType predictor                      = PredictorType::linear_extrapolation;
   };
 
   template <typename number = double>
@@ -132,7 +133,6 @@ namespace MeltPoolDG
     std::string              modeltype            = "olsson2007";
     std::string              implementation       = "meltpooldg";
     LinearSolverData<number> linear_solver;
-    PredictorType            predictor = PredictorType::none;
   };
 
   template <typename number = double>
@@ -142,7 +142,6 @@ namespace MeltPoolDG
     std::string              time_integration_scheme = "crank_nicolson";
     std::string              implementation          = "meltpooldg";
     LinearSolverData<number> linear_solver;
-    PredictorType            predictor = PredictorType::none;
   };
 
   template <typename number = double>
@@ -181,7 +180,6 @@ namespace MeltPoolDG
     LinearSolverData<number>                    linear_solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     bool                                        interpolate_rho_times_cp = false;
-    PredictorType                               predictor = PredictorType::linear_extrapolation;
   };
 
   template <typename number = double>

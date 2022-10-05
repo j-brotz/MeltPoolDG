@@ -31,7 +31,8 @@
     "material first density": "3925",
     "material second capacity": "460",
     "material second conductivity": "55.563",
-    "material second density": "7850"
+    "material second density": "7850",
+    "material two phase properties transition type": "smooth"
   },
   "paraview": {
     "paraview do output": "false"
