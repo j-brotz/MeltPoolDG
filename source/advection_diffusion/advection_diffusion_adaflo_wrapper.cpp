@@ -102,6 +102,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     advected_field_old_old.reinit(advected_field_old);
     advected_field_old_old.swap(advected_field_old);
     advected_field_old.swap(advected_field);
+
+    ready_for_time_advance = true;
   }
 
   template <int dim>
@@ -110,6 +112,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     if (!ready_for_time_advance)
       init_time_advance();
+
     advected_field.update_ghost_values();
     advected_field_old.update_ghost_values();
     advected_field_old_old.update_ghost_values();
