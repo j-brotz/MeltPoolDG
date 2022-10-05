@@ -31,6 +31,15 @@ namespace MeltPoolDG
               // generalized minimal residual
               GMRES)
 
+  BETTER_ENUM(LinearSolverMonitorType,
+              char,
+              // do not monitor history (production run)
+              none,
+              // print first and last residual
+              reduced,
+              // print full history
+              all)
+
   // choose the particular predictor type for the nonlinear/linear solver
   BETTER_ENUM(PredictorType,
               char,
@@ -52,6 +61,8 @@ namespace MeltPoolDG
     number             rel_tolerance       = 1e-12;
     number             abs_tolerance       = 1e-50;
     PredictorType      predictor           = PredictorType::none;
+
+    LinearSolverMonitorType monitor_type = LinearSolverMonitorType::none;
 
     void
     add_parameters(ParameterHandler &prm);
