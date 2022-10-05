@@ -256,7 +256,11 @@ namespace MeltPoolDG::Flow
   AdafloWrapper<dim>::init_time_advance()
   {
     navier_stokes->time_stepping.set_time_step(time_iterator.get_current_time_increment());
+
     navier_stokes->init_time_advance(true /*print time information; TODO: disable and introduce assert if time stepping is aligned*/);
+
+    Assert(time_stepping_synchronized(),
+           ExcMessage("Adaflo and MeltPoolDG time steppers are not aligned."));
   }
 
   template <int dim>
@@ -705,6 +709,17 @@ namespace MeltPoolDG::Flow
 
     viscosity.update_ghost_values();
     data_out.add_data_vector(dof_handler_parameters, viscosity, "viscosity");
+  }
+
+  template <int dim>
+  bool
+  AdafloWrapper<dim>::time_stepping_synchronized()
+  {
+    return navier_stokes->time_stepping.step_size() == time_iterator.get_current_time_increment() &&
+           navier_stokes->time_stepping.step_no() == time_iterator.get_current_time_step_number() &&
+           navier_stokes->time_stepping.old_step_size() == time_iterator.get_old_time_increment() &&
+           navier_stokes->time_stepping.now() == time_iterator.get_current_time() &&
+           navier_stokes->time_stepping.previous() == time_iterator.get_old_time();
   }
 
   template class AdafloWrapper<1>;

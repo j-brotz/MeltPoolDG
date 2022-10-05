@@ -45,6 +45,9 @@ namespace MeltPoolDG
     number
     get_old_time_increment() const;
 
+    number
+    get_old_time() const;
+
     void
     reset();
 
