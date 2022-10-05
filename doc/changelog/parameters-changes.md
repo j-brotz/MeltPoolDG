@@ -2,6 +2,19 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-10-04
+- Add parameter to use slip boundaries instead of no-slip boundaries in the recoil pressure simulation
+```diff
+{
+  "base": {
+    "application name": "recoil_pressure"
+  },
+  "simulation specific domain": {
++   "slip boundary": "false|true"
+  }
+}
+```
+
+## 2022-10-04
 - Add uniform laser heat source
 ```json
 {
