@@ -317,9 +317,10 @@ namespace MeltPoolDG::Flow
         data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
       }
 
-    AssertThrow(n_newton_steps < adaflo_params.max_nl_iteration,
-                ExcMessage(
-                  "Newton Raphson solver for the Navier-Stokes equations did not converge."));
+    if (Utilities::MPI::this_mpi_process(scratch_data.get_mpi_comm()) == 0)
+      AssertThrow(n_newton_steps < adaflo_params.max_nl_iteration,
+                  ExcMessage(
+                    "Newton Raphson solver for the Navier-Stokes equations did not converge."));
 
     distribute_constraints();
 
