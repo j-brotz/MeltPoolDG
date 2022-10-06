@@ -115,5 +115,8 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     VectorType rhs;
     VectorType user_rhs;
+
+    // determine whether solution vectors are prepared for time advance
+    bool ready_for_time_advance = false;
   };
 } // namespace MeltPoolDG::AdvectionDiffusion

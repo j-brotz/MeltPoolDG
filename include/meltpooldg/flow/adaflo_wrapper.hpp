@@ -54,7 +54,7 @@ namespace MeltPoolDG::Flow
     init_time_advance() override;
 
     /**
-     * Solver time step
+     * solve time step
      */
     void
     solve() override;
@@ -205,6 +205,9 @@ namespace MeltPoolDG::Flow
     VectorType mass_balance_source_term_projected;
     VectorType density;
     VectorType viscosity;
+
+    // determine whether solution vectors are prepared for time advance
+    bool ready_for_time_advance = false;
   };
 } // namespace MeltPoolDG::Flow
 #endif

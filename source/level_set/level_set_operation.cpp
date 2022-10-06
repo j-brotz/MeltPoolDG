@@ -266,23 +266,33 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
+  LevelSetOperation<dim>::update_normal_vector()
+  {
+    curvature_operation->solve(advec_diff_operation->get_advected_field());
+  }
+
+  template <int dim>
+  void
   LevelSetOperation<dim>::init_time_advance()
   {
-    // TODO: activate
-    // advec_diff_operation->init_time_advance(time_stepping.get_current_time_increment());
-    // transform_level_set_to_smooth_heaviside();
+    advec_diff_operation->init_time_advance();
+    transform_level_set_to_smooth_heaviside();
+
+    ready_for_time_advance = true;
   }
 
   template <int dim>
   void
   LevelSetOperation<dim>::solve(const VectorType &advection_velocity)
   {
+    if (!ready_for_time_advance)
+      init_time_advance();
     /*
      *  1) solve the advection step of the level set function
      */
     {
       TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::advect");
-      advect_level_set(advection_velocity);
+      advec_diff_operation->solve(advection_velocity);
     }
     /*
      *  2) solve the reinitialization problem of the level set equation
@@ -311,6 +321,8 @@ namespace MeltPoolDG::LevelSet
         TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::curvature_correction");
         correct_curvature_values();
       }
+
+    ready_for_time_advance = false;
   }
 
   template <int dim>
@@ -508,13 +520,6 @@ namespace MeltPoolDG::LevelSet
             << " < level_set_data.reinit_tol";
         Journal::print_line(scratch_data.get_pcout(), str.str(), "reinitialization", 2);
       }
-  }
-
-  template <int dim>
-  void
-  LevelSetOperation<dim>::advect_level_set(const VectorType &advection_velocity)
-  {
-    advec_diff_operation->solve(advection_velocity);
   }
 
   template <int dim>

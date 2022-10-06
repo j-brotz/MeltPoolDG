@@ -27,13 +27,16 @@ namespace MeltPoolDG::MeltPool
 
         time_iterator->print_me(scratch_data->get_pcout());
 
-        // TODO activate
-        // if (flow_operation)
-        // flow_operation->init_time_advance();
-        // if (heat_operation)
-        // heat_operation->init_time_advance(time_iterator);
-        // level_set_operation->init_time_advance();
-
+        // use extrapolated solution values in the coupling terms
+        if (problem_specific_parameters.do_extrapolate_coupling_terms)
+          {
+            if (flow_operation)
+              flow_operation->init_time_advance();
+            if (heat_operation)
+              heat_operation->init_time_advance();
+            if (level_set_operation)
+              level_set_operation->init_time_advance();
+          }
 
         // Only if a spatially constant evaporative mass flux is given as an analytical function,
         // the time is needed to evaluate the function.
@@ -57,11 +60,15 @@ namespace MeltPoolDG::MeltPool
                 switch (base_in->parameters.evapor.level_set_source_term_type)
                   {
                     default:
-                    case EvaporationLevelSetSourceTermType::interface_velocity:
-                      // Option 1: compute modified advection velocity due to evaporation
-                      evaporation_operation->compute_evaporation_velocity();
-                      interface_velocity += evaporation_operation->get_velocity();
-                      break;
+                      case EvaporationLevelSetSourceTermType::interface_velocity: {
+                        // Option 1: compute modified advection velocity due to evaporation
+                        if (problem_specific_parameters.do_extrapolate_coupling_terms)
+                          level_set_operation->update_normal_vector();
+
+                        evaporation_operation->compute_evaporation_velocity();
+                        interface_velocity += evaporation_operation->get_velocity();
+                        break;
+                      }
 
                     case EvaporationLevelSetSourceTermType::rhs:
                       // Option 2: use source term as rhs in the level set equation
@@ -78,6 +85,7 @@ namespace MeltPoolDG::MeltPool
 
             // ... solve level-set problem with the given advection field
             scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
+
             level_set_operation->solve(interface_velocity);
 
             if (evaporation_operation && base_in->parameters.evapor.formulation_source_term_heat ==
@@ -109,7 +117,9 @@ namespace MeltPoolDG::MeltPool
                !(base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)) ||
               (melt_pool_operation &&
                !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
-            heat_operation->solve();
+            {
+              heat_operation->solve();
+            }
 
           if (melt_pool_operation)
             {
@@ -297,6 +307,11 @@ namespace MeltPoolDG::MeltPool
         "do advect level set",
         problem_specific_parameters.do_advect_level_set,
         "Set this parameter to true if you want to advect the level set with the fluid velocity.");
+      prm.add_parameter(
+        "do extrapolate coupling terms",
+        problem_specific_parameters.do_extrapolate_coupling_terms,
+        "Set this parameter to true if you want to extrapolate the solution vectors for semi-explicit "
+        "treatment of coupling terms.");
       prm.enter_subsection("amr");
       {
         prm.add_parameter("strategy",

@@ -170,13 +170,15 @@ namespace MeltPoolDG::Heat
 
     // apply constraints to predictor
     scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
+    ready_for_time_advance = true;
   }
 
   template <int dim>
   void
   HeatTransferOperation<dim>::solve()
   {
-    init_time_advance();
+    if (!ready_for_time_advance)
+      init_time_advance();
 
     if (!heat_data.linear_solver.do_matrix_free)
       AssertThrow(false, ExcNotImplemented());
@@ -239,6 +241,8 @@ namespace MeltPoolDG::Heat
     newton.solve();
 
     distribute_constraints();
+
+    ready_for_time_advance = false;
   }
 
   template <int dim>
