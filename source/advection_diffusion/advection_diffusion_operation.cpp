@@ -139,7 +139,6 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                         &time_iterator);
 
 
-    // TODO clarify vector types
     predictor->vmult(*advec_diff_operator, solution_advected_field_extrapolated, rhs);
 
     solution_history.get_recent_old_solution().swap(solution_history.get_current_solution());
@@ -148,9 +147,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     // apply hanging node constraints to predictor
     scratch_data.get_constraint(advec_diff_dof_idx)
       .distribute(solution_history.get_current_solution());
-
-    solution_history.get_recent_old_solution().update_ghost_values();
-    advection_velocity.update_ghost_values();
 
     ready_for_time_advance = true;
   }
@@ -161,6 +157,12 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     if (!ready_for_time_advance)
       init_time_advance();
+
+    if (!solution_history.get_recent_old_solution().has_ghost_elements())
+      solution_history.get_recent_old_solution().update_ghost_values();
+
+    if (!advection_velocity.has_ghost_elements())
+      advection_velocity.update_ghost_values();
 
     Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   VectorTools::compute_L2_norm<dim>(advection_velocity,
