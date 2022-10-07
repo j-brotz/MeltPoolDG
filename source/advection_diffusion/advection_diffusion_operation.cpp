@@ -17,16 +17,20 @@ namespace MeltPoolDG::AdvectionDiffusion
     const ScratchData<dim> &              scratch_data_in,
     const AdvectionDiffusionData<double> &advec_diff_data_in,
     const TimeIterator<double> &          time_iterator,
+    const VectorType &                    advection_velocity,
     const unsigned int                    advec_diff_dof_idx_in,
     const unsigned int                    advec_diff_hanging_nodes_dof_idx_in,
     const unsigned int                    advec_diff_quad_idx_in,
     const unsigned int                    velocity_dof_idx_in)
     : scratch_data(scratch_data_in)
     , time_iterator(time_iterator)
+    , advection_velocity(advection_velocity)
     , advec_diff_dof_idx(advec_diff_dof_idx_in)
     , advec_diff_quad_idx(advec_diff_quad_idx_in)
     , advec_diff_hanging_nodes_dof_idx(advec_diff_hanging_nodes_dof_idx_in)
     , velocity_dof_idx(velocity_dof_idx_in)
+    , solution_history(std::max(advec_diff_data_in.predictor.n_old_solution_vectors,
+                                2 /*TODO: include time integration scheme*/))
   {
     this->advec_diff_data = advec_diff_data_in;
 
@@ -39,49 +43,44 @@ namespace MeltPoolDG::AdvectionDiffusion
           advec_diff_dof_idx,
           this->advec_diff_data.linear_solver.preconditioner_type,
           *advec_diff_operator);
-
-        preconditioner_matrixfree->reinit();
       }
+
+    reinit();
   }
 
   template <int dim>
   void
   AdvectionDiffusionOperation<dim>::set_initial_condition(
-    const Function<dim> &initial_field_function,
-    const VectorType &   initial_velocity)
+    const Function<dim> &initial_field_function)
   {
-    (void)initial_velocity; // @todo: delete
-    scratch_data.initialize_dof_vector(solution_advected_field, advec_diff_dof_idx);
     dealii::VectorTools::interpolate(scratch_data.get_mapping(),
                                      scratch_data.get_dof_handler(advec_diff_dof_idx),
                                      initial_field_function,
-                                     solution_advected_field);
+                                     solution_history.get_current_solution());
 
-    scratch_data.get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
-    scratch_data.initialize_dof_vector(solution_advected_field_old, advec_diff_dof_idx);
+    scratch_data.get_constraint(advec_diff_dof_idx)
+      .distribute(solution_history.get_current_solution());
 
-    solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
-    scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
-    scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);
-    if (this->advec_diff_data.linear_solver.predictor == PredictorType::linear_extrapolation)
-      scratch_data.initialize_dof_vector(solution_advected_field_extrapolated, advec_diff_dof_idx);
+    // TODO: set to zero
+    solution_history.set_recent_old_solution(solution_history.get_current_solution());
   }
 
   template <int dim>
   void
   AdvectionDiffusionOperation<dim>::reinit()
   {
-    scratch_data.initialize_dof_vector(solution_advected_field, advec_diff_dof_idx);
-    scratch_data.initialize_dof_vector(solution_advected_field_old, advec_diff_dof_idx);
-    if (this->advec_diff_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    solution_history.apply([this](VectorType &v) { scratch_data.initialize_dof_vector(v); });
+
+    if (this->advec_diff_data.predictor.type == PredictorType::linear_extrapolation)
       scratch_data.initialize_dof_vector(solution_advected_field_extrapolated, advec_diff_dof_idx);
+
     scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);
     /*
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
-    if (!this->advec_diff_data.linear_solver.do_matrix_free)
+    if (!this->advec_diff_data.linear_solver.do_matrix_free && advec_diff_operator)
       advec_diff_operator->initialize_matrix_based(scratch_data);
 
     if (this->advec_diff_data.linear_solver.do_matrix_free && preconditioner_matrixfree)
@@ -99,32 +98,66 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperation<dim>::init_time_advance()
   {
-    if (this->advec_diff_data.linear_solver.predictor == PredictorType::none)
-      solution_advected_field_old.copy_locally_owned_data_from(solution_advected_field);
-    else if (this->advec_diff_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (!advec_diff_operator)
+      create_operator(advection_velocity);
+
+    // pass time increment to operator TODO: pass time iterator directly to perator
+    advec_diff_operator->reset_time_increment(time_iterator.get_current_time_increment());
+
+    AssertThrow(
+      this->advec_diff_data.predictor.type != PredictorType::least_squares_projection ||
+        this->advec_diff_data.linear_solver.do_matrix_free,
+      ExcMessage(
+        "For matrix-based advection-diffusion solver least squares projection is not supported."));
+
+    // compute RHS
+    // TODO: also include it for matrix-based to this place (?)
+    solution_history.get_current_solution().update_ghost_values();
+    advection_velocity.update_ghost_values();
+
+    if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
-        UtilityFunctions::compute_linear_predictor(solution_advected_field,
-                                                   solution_advected_field_old,
-                                                   solution_advected_field_extrapolated,
-                                                   time_iterator.get_current_time_increment(),
-                                                   time_iterator.get_old_time_increment());
+        rhs = user_rhs;
 
-        solution_advected_field_old.swap(solution_advected_field);
-        solution_advected_field.swap(solution_advected_field_extrapolated);
-
-        // zero-out is needed since we potentially have a user rhs, which we add in advance
-        rhs = 0.0;
-
-        // apply hanging node constraints to predictor
-        scratch_data.get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
+        // apply dirichlet boundary values
+        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
+          *advec_diff_operator,
+          rhs,
+          solution_history.get_current_solution(), //= old_solution for current time step,
+          scratch_data,
+          advec_diff_dof_idx,
+          advec_diff_hanging_nodes_dof_idx,
+          false /*don't zero out rhs*/);
       }
+
+    solution_history.get_current_solution().zero_out_ghost_values();
+
+    if (!predictor)
+      predictor =
+        std::make_unique<Predictor<VectorType, double>>(this->advec_diff_data.predictor.type,
+                                                        solution_history.get_all_solutions(),
+                                                        &time_iterator);
+
+
+    // TODO clarify vector types
+    predictor->vmult(*advec_diff_operator, solution_advected_field_extrapolated, rhs);
+
+    solution_history.get_recent_old_solution().swap(solution_history.get_current_solution());
+    solution_history.get_current_solution().swap(solution_advected_field_extrapolated);
+
+    // apply hanging node constraints to predictor
+    scratch_data.get_constraint(advec_diff_dof_idx)
+      .distribute(solution_history.get_current_solution());
+
+    solution_history.get_recent_old_solution().update_ghost_values();
+    advection_velocity.update_ghost_values();
 
     ready_for_time_advance = true;
   }
 
   template <int dim>
   void
-  AdvectionDiffusionOperation<dim>::solve(const VectorType &advection_velocity)
+  AdvectionDiffusionOperation<dim>::solve()
   {
     if (!ready_for_time_advance)
       init_time_advance();
@@ -137,38 +170,17 @@ namespace MeltPoolDG::AdvectionDiffusion
                                   "velocity",
                                   "advection_diffusion");
 
-    advection_velocity.update_ghost_values();
-    solution_advected_field_old.update_ghost_values();
-
-    if (!advec_diff_operator)
-      create_operator(advection_velocity);
-
-    advec_diff_operator->reset_time_increment(time_iterator.get_current_time_increment());
-
     int iter = 0;
 
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
-        rhs = user_rhs;
-
-
-        // apply dirichlet boundary values
-        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
-          *advec_diff_operator,
-          rhs,
-          solution_advected_field_old,
-          scratch_data,
-          advec_diff_dof_idx,
-          advec_diff_hanging_nodes_dof_idx,
-          false /*zero_out rhs*/);
-
         if (this->advec_diff_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
             auto diag_preconditioner_matrixfree =
               preconditioner_matrixfree->compute_diagonal_preconditioner();
 
             iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                                   solution_advected_field,
+                                                   solution_history.get_current_solution(),
                                                    rhs,
                                                    this->advec_diff_data.linear_solver,
                                                    *diag_preconditioner_matrixfree);
@@ -179,7 +191,7 @@ namespace MeltPoolDG::AdvectionDiffusion
               preconditioner_matrixfree->compute_trilinos_preconditioner();
 
             iter = LinearSolver::solve<VectorType>(*advec_diff_operator,
-                                                   solution_advected_field,
+                                                   solution_history.get_current_solution(),
                                                    rhs,
                                                    this->advec_diff_data.linear_solver,
                                                    *trilinos_preconditioner_matrixfree);
@@ -188,7 +200,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     else
       {
         rhs = 0.0;
-        advec_diff_operator->assemble_matrixbased(solution_advected_field_old,
+        advec_diff_operator->assemble_matrixbased(solution_history.get_recent_old_solution(),
                                                   advec_diff_operator->get_system_matrix(),
                                                   rhs);
 
@@ -201,13 +213,14 @@ namespace MeltPoolDG::AdvectionDiffusion
           advec_diff_operator->get_system_matrix(),
           this->advec_diff_data.linear_solver.preconditioner_type);
         iter = LinearSolver::solve<VectorType>(advec_diff_operator->get_system_matrix(),
-                                               solution_advected_field,
+                                               solution_history.get_current_solution(),
                                                rhs,
                                                this->advec_diff_data.linear_solver,
                                                *preconditioner);
       }
 
-    scratch_data.get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
+    scratch_data.get_constraint(advec_diff_dof_idx)
+      .distribute(solution_history.get_current_solution());
 
     Journal::print_formatted_norm(scratch_data.get_pcout(2),
                                   advec_diff_operator->get_system_matrix().frobenius_norm(),
@@ -223,7 +236,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                   6 /*precision*/,
                                   "l2");
     Journal::print_formatted_norm(scratch_data.get_pcout(2),
-                                  solution_advected_field.l2_norm(),
+                                  solution_history.get_current_solution().l2_norm(),
                                   "src",
                                   "advection_diffusion",
                                   6 /*precision*/,
@@ -231,8 +244,10 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(0),
-      MeltPoolDG::VectorTools::compute_L2_norm<dim>(
-        solution_advected_field, scratch_data, advec_diff_dof_idx, advec_diff_quad_idx),
+      MeltPoolDG::VectorTools::compute_L2_norm<dim>(solution_history.get_current_solution(),
+                                                    scratch_data,
+                                                    advec_diff_dof_idx,
+                                                    advec_diff_quad_idx),
       "advected field",
       "advection_diffusion",
       10 /*precision*/
@@ -242,7 +257,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                         "     * GMRES: i = " + std::to_string(iter),
                         "advection_diffusion");
 
-    solution_advected_field_old.zero_out_ghost_values();
+    solution_history.get_recent_old_solution().zero_out_ghost_values();
     advection_velocity.zero_out_ghost_values();
 
     ready_for_time_advance = false;
@@ -252,28 +267,28 @@ namespace MeltPoolDG::AdvectionDiffusion
   const LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperation<dim>::get_advected_field() const
   {
-    return solution_advected_field;
+    return solution_history.get_current_solution();
   }
 
   template <int dim>
   LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperation<dim>::get_advected_field()
   {
-    return solution_advected_field;
+    return solution_history.get_current_solution();
   }
 
   template <int dim>
   const LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperation<dim>::get_advected_field_old() const
   {
-    return solution_advected_field_old;
+    return solution_history.get_recent_old_solution();
   }
 
   template <int dim>
   LinearAlgebra::distributed::Vector<double> &
   AdvectionDiffusionOperation<dim>::get_advected_field_old()
   {
-    return solution_advected_field_old;
+    return solution_history.get_recent_old_solution();
   }
 
   template <int dim>
@@ -295,8 +310,8 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    vectors.push_back(&solution_advected_field);
-    vectors.push_back(&solution_advected_field_old);
+    vectors.push_back(&solution_history.get_current_solution());
+    vectors.push_back(&solution_history.get_recent_old_solution());
   }
 
   template <int dim>
@@ -304,7 +319,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(advec_diff_dof_idx),
-                             solution_advected_field,
+                             solution_history.get_current_solution(),
                              "advected_field");
     data_out.add_data_vector(scratch_data.get_dof_handler(advec_diff_dof_idx),
                              user_rhs,

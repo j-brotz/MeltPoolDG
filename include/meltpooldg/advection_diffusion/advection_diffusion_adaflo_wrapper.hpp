@@ -34,6 +34,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     AdvectionDiffusionOperationAdaflo(const ScratchData<dim> &    scratch_data,
                                       const TimeIterator<double> &time_iterator,
+                                      const VectorType &          advection_velocity,
                                       const int                   advec_diff_zero_dirichlet_dof_idx,
                                       const int                   advec_diff_dirichlet_dof_idx,
                                       const int                   advec_diff_quad_idx,
@@ -48,8 +49,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  set initial solution of advected field
      */
     void
-    set_initial_condition(const Function<dim> &initial_field_function,
-                          const VectorType &   initial_velocity) override;
+    set_initial_condition(const Function<dim> &initial_field_function) override;
 
     void
     init_time_advance() override;
@@ -58,7 +58,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      * Solve time step
      */
     void
-    solve(const VectorType &current_velocity) override;
+    solve() override;
 
     const LinearAlgebra::distributed::Vector<double> &
     get_advected_field() const override;
@@ -95,13 +95,14 @@ namespace MeltPoolDG::AdvectionDiffusion
                           int                       velocity_dof_idx);
 
     void
-    set_velocity(const LinearAlgebra::distributed::Vector<double> &vec, bool initial_step = false);
+    set_velocity(bool initial_step = false);
 
     void
     initialize_vectors();
 
-    const ScratchData<dim> &    scratch_data;
-    const TimeIterator<double> &time_iterator;
+    const ScratchData<dim> &                          scratch_data;
+    const TimeIterator<double> &                      time_iterator;
+    const LinearAlgebra::distributed::Vector<double> &advection_velocity;
     /**
      *  advected field
      */

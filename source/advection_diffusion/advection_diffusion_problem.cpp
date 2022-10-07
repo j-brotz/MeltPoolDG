@@ -28,7 +28,7 @@ namespace MeltPoolDG::AdvectionDiffusion
          * compute the advection velocity for the current time
          */
         compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
-        advec_diff_operation->solve(advection_velocity);
+        advec_diff_operation->solve();
         /*
          *  do paraview output if requested
          */
@@ -172,6 +172,7 @@ namespace MeltPoolDG::AdvectionDiffusion
           std::make_shared<AdvectionDiffusionOperation<dim>>(*scratch_data,
                                                              base_in->parameters.advec_diff,
                                                              *time_iterator,
+                                                             advection_velocity,
                                                              advec_diff_dof_idx,
                                                              advec_diff_hanging_nodes_dof_idx,
                                                              advec_diff_quad_idx,
@@ -185,6 +186,7 @@ namespace MeltPoolDG::AdvectionDiffusion
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperationAdaflo<dim>>(*scratch_data,
                                                                    *time_iterator,
+                                                                   advection_velocity,
                                                                    advec_diff_adaflo_dof_idx,
                                                                    advec_diff_dof_idx,
                                                                    advec_diff_quad_idx,
@@ -200,7 +202,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
     advec_diff_operation->set_initial_condition(
-      *base_in->get_initial_condition("advection_diffusion"), advection_velocity);
+      *base_in->get_initial_condition("advection_diffusion"));
     /*
      *  initialize postprocessor
      */

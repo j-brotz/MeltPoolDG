@@ -85,6 +85,7 @@ namespace MeltPoolDG::LevelSet
     LevelSetOperation(const ScratchData<dim> &             scratch_data_in,
                       const TimeIterator<double> &         time_stepping,
                       std::shared_ptr<SimulationBase<dim>> base_in,
+                      const VectorType &                   advection_velocity,
                       const unsigned int                   ls_dof_idx_in,
                       const unsigned int                   ls_hanging_nodes_dof_idx_in,
                       const unsigned int                   ls_quad_idx_in,
@@ -99,7 +100,6 @@ namespace MeltPoolDG::LevelSet
      */
     void
     set_initial_condition(const Function<dim> &initial_field_function_level_set,
-                          const VectorType &   initial_velocity_in,
                           const bool           is_signed_distance_initial_field_function = false);
 
     void
@@ -112,7 +112,7 @@ namespace MeltPoolDG::LevelSet
     init_time_advance();
 
     void
-    solve(const VectorType &advection_velocity);
+    solve();
 
     void
     set_level_set_user_rhs(const VectorType &level_set_user_rhs);

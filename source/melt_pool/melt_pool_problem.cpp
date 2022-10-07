@@ -49,7 +49,6 @@ namespace MeltPoolDG::MeltPool
          ******************************************************************************************/
         if (problem_specific_parameters.do_advect_level_set)
           {
-            scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
             interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
 
             if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump)
@@ -86,7 +85,7 @@ namespace MeltPoolDG::MeltPool
             // ... solve level-set problem with the given advection field
             scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
 
-            level_set_operation->solve(interface_velocity);
+            level_set_operation->solve();
 
             if (evaporation_operation && base_in->parameters.evapor.formulation_source_term_heat ==
                                            InterfaceForceType::sharp)
@@ -493,6 +492,7 @@ namespace MeltPoolDG::MeltPool
       std::make_shared<LevelSet::LevelSetOperation<dim>>(*scratch_data,
                                                          *time_iterator,
                                                          base_in,
+                                                         interface_velocity,
                                                          ls_dof_idx,
                                                          ls_hanging_nodes_dof_idx,
                                                          ls_quad_idx,
@@ -736,14 +736,13 @@ namespace MeltPoolDG::MeltPool
           base_in->get_initial_condition("level_set", true /*is optional*/))
       {
         // ... via a given level set field
-        level_set_operation->set_initial_condition(*initial_field, flow_operation->get_velocity());
+        level_set_operation->set_initial_condition(*initial_field);
       }
     else if (const auto initial_field =
                base_in->get_initial_condition("signed_distance", true /*is optional*/))
       {
         // ... or a given signed distance field.
         level_set_operation->set_initial_condition(*initial_field,
-                                                   flow_operation->get_velocity(),
                                                    true /*is signed distance function*/);
       }
     else
@@ -883,6 +882,8 @@ namespace MeltPoolDG::MeltPool
           melt_pool_operation->reinit();
         if (heat_operation)
           heat_operation->reinit();
+
+        scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO

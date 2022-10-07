@@ -33,9 +33,6 @@ namespace MeltPoolDG
       prm.add_parameter("monitor type",
                         this->monitor_type,
                         "Set the monitor type of the linear solver.");
-      prm.add_parameter("predictor",
-                        this->predictor,
-                        "Choose the predictor as initial guess for the linear solver.");
     }
     prm.leave_subsection();
   }

@@ -64,7 +64,8 @@ namespace MeltPoolDG::LevelSet
             // compute advection velocity of the interface
             advection_velocity += evaporation_operation->get_velocity();
           }
-        level_set_operation->solve(advection_velocity);
+
+        level_set_operation->solve();
 
 
         // do paraview output if requested
@@ -150,6 +151,7 @@ namespace MeltPoolDG::LevelSet
     level_set_operation = std::make_shared<LevelSetOperation<dim>>(*scratch_data,
                                                                    *time_iterator,
                                                                    base_in,
+                                                                   advection_velocity,
                                                                    ls_dof_idx,
                                                                    ls_hanging_nodes_dof_idx,
                                                                    ls_quad_idx,
@@ -187,14 +189,13 @@ namespace MeltPoolDG::LevelSet
           base_in->get_initial_condition("level_set", true /*is optional*/))
       {
         // ... via a given level set field
-        level_set_operation->set_initial_condition(*initial_field, advection_velocity);
+        level_set_operation->set_initial_condition(*initial_field);
       }
     else if (const auto initial_field =
                base_in->get_initial_condition("signed_distance", true /*is optional*/))
       {
         // ... or a given signed distance field.
         level_set_operation->set_initial_condition(*initial_field,
-                                                   advection_velocity,
                                                    true /*is signed distance function*/);
       }
     else
@@ -231,14 +232,13 @@ namespace MeltPoolDG::LevelSet
                 base_in->get_initial_condition("level_set", true /*is optional*/))
             {
               // ... via a given level set field
-              level_set_operation->set_initial_condition(*initial_field, advection_velocity);
+              level_set_operation->set_initial_condition(*initial_field);
             }
           else if (const auto initial_field =
                      base_in->get_initial_condition("signed_distance", true /*is optional*/))
             {
               // ... or a given signed distance field.
               level_set_operation->set_initial_condition(*initial_field,
-                                                         advection_velocity,
                                                          true /*is signed distance function*/);
             }
           else

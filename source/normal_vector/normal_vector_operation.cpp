@@ -23,7 +23,7 @@ namespace MeltPoolDG::NormalVector
                 ExcMessage("The normal vector operation only supports the CG solver type."));
 
     scratch_data.initialize_dof_vector(solution_normal_vector, normal_dof_idx);
-    if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (normal_vector_data.predictor.type == PredictorType::linear_extrapolation)
       {
         scratch_data.initialize_dof_vector(solution_normal_vector_old, normal_dof_idx);
         scratch_data.initialize_dof_vector(solution_normal_vector_predictor, normal_dof_idx);
@@ -37,7 +37,7 @@ namespace MeltPoolDG::NormalVector
   {
     scratch_data.initialize_dof_vector(solution_normal_vector, normal_dof_idx);
     scratch_data.initialize_dof_vector(solution_normal_vector_old, normal_dof_idx);
-    if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (normal_vector_data.predictor.type == PredictorType::linear_extrapolation)
       {
         scratch_data.initialize_dof_vector(solution_normal_vector_old, normal_dof_idx);
         scratch_data.initialize_dof_vector(solution_normal_vector_predictor, normal_dof_idx);
@@ -62,7 +62,7 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::solve(const VectorType &solution_levelset_in)
   {
-    if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (normal_vector_data.predictor.type == PredictorType::linear_extrapolation)
       {
         for (unsigned int d = 0; d < dim; ++d)
           {
@@ -173,7 +173,7 @@ namespace MeltPoolDG::NormalVector
     for (unsigned int d = 0; d < dim; ++d)
       vectors.push_back(&solution_normal_vector.block(d));
 
-    if (normal_vector_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (normal_vector_data.predictor.type == PredictorType::linear_extrapolation)
       {
         for (unsigned int d = 0; d < dim; ++d)
           vectors.push_back(&solution_normal_vector_old.block(d));

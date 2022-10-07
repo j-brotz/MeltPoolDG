@@ -25,20 +25,13 @@ namespace MeltPoolDG
       init_time_advance() = 0;
 
       virtual void
-      solve(const LinearAlgebra::distributed::Vector<double> &velocity) = 0;
+      solve() = 0;
 
       virtual void
-      reinit()
-      {
-        AssertThrow(false, ExcNotImplemented());
-      }
+      reinit() = 0;
 
       virtual void
-      set_initial_condition(const Function<dim> & /*initial_field_function*/,
-                            const LinearAlgebra::distributed::Vector<double> & /*initial_velocity*/)
-      {
-        AssertThrow(false, ExcNotImplemented());
-      }
+      set_initial_condition(const Function<dim> & /*initial_field_function*/) = 0;
 
       virtual const LinearAlgebra::distributed::Vector<double> &
       get_advected_field() const = 0;

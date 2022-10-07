@@ -141,6 +141,7 @@ namespace MeltPoolDG
           1.0 / (material.liquidus_temperature -
                  material.solidus_temperature); //@todo: move to new material class
       }
+
     // create output directory and copy parameter file
     {
       namespace fs = std::filesystem;
@@ -300,6 +301,7 @@ namespace MeltPoolDG
         advec_diff.implementation,
         "Choose the corresponding implementation of the advection diffusion operation.",
         Patterns::Selection("meltpooldg|adaflo"));
+      advec_diff.predictor.add_parameters(prm);
       // default value
       advec_diff.linear_solver.solver_type         = LinearSolverType::GMRES;
       advec_diff.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
@@ -384,6 +386,7 @@ namespace MeltPoolDG
         reinit.implementation,
         "Choose the corresponding implementation of the reinitialization operation.",
         Patterns::Selection("meltpooldg|adaflo"));
+      reinit.predictor.add_parameters(prm);
       // default value
       reinit.linear_solver.solver_type         = LinearSolverType::CG;
       reinit.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
@@ -417,6 +420,7 @@ namespace MeltPoolDG
         normal_vec.narrow_band_threshold,
         "If >> normal vec do narrow band << is set to true this parameter determines the level set "
         "treshold for the narrow band.");
+      curv.predictor.add_parameters(prm);
 
       // default parameter
       normal_vec.linear_solver.solver_type         = LinearSolverType::CG;
@@ -450,6 +454,7 @@ namespace MeltPoolDG
         curv.narrow_band_threshold,
         "If >> curv do narrow band << is set to true this parameter determines the level set "
         "treshold for the narrow band.");
+      curv.predictor.add_parameters(prm);
       // default parameter
       curv.linear_solver.solver_type         = LinearSolverType::CG;
       curv.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
@@ -493,9 +498,10 @@ namespace MeltPoolDG
         "heat nlsolve residual tolerance alt",
         heat.nlsolve.residual_tolerance_alt,
         "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
-      prm.add_parameter("heat nlsolve predictor",
-                        heat.nlsolve.predictor,
-                        "Set the predictor for the nonlinear solver.");
+
+      // override default value
+      heat.predictor.type = PredictorType::linear_extrapolation;
+      heat.predictor.add_parameters(prm);
       prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
       prm.add_parameter("heat two phase", heat.two_phase, "Set this parameter for two phase flow.");
       prm.add_parameter("heat solidification",
