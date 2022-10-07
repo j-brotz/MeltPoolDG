@@ -117,9 +117,9 @@ namespace MeltPoolDG::AdvectionDiffusion
 
         // apply hanging node constraints to predictor
         scratch_data.get_constraint(advec_diff_dof_idx).distribute(solution_advected_field);
-
-        ready_for_time_advance = true;
       }
+
+    ready_for_time_advance = true;
   }
 
   template <int dim>
