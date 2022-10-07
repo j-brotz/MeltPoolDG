@@ -115,7 +115,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     solution_history.get_current_solution().update_ghost_values();
     advection_velocity.update_ghost_values();
 
-    if (this->advec_diff_data.linear_solver.do_matrix_free)
+    if (this->advec_diff_data.linear_solver.do_matrix_free &&
+        this->advec_diff_data.predictor.type == PredictorType::least_squares_projection)
       {
         rhs = user_rhs;
 
@@ -134,7 +135,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (!predictor)
       predictor =
-        std::make_unique<Predictor<VectorType, double>>(this->advec_diff_data.predictor.type,
+        std::make_unique<Predictor<VectorType, double>>(this->advec_diff_data.predictor,
                                                         solution_history.get_all_solutions(),
                                                         &time_iterator);
 
@@ -176,6 +177,18 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
+        rhs = user_rhs;
+
+        // apply dirichlet boundary values
+        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(
+          *advec_diff_operator,
+          rhs,
+          solution_history.get_recent_old_solution(),
+          scratch_data,
+          advec_diff_dof_idx,
+          advec_diff_hanging_nodes_dof_idx,
+          false /*don't zero out rhs*/);
+
         if (this->advec_diff_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
             auto diag_preconditioner_matrixfree =

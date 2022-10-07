@@ -40,22 +40,25 @@ namespace MeltPoolDG
   class Predictor
   {
   private:
-    const PredictorType                      type;
+    const PredictorData<number>              data;
     const std::vector<VectorType> &          solution_history;
     const TimeIterator<number> *             time_iterator;
     const LeastSquaresProjection<VectorType> lsp;
 
   public:
-    Predictor(const PredictorType            type,
+    Predictor(const PredictorData<number>    data,
               const std::vector<VectorType> &solution_history,
               const TimeIterator<number> *   time_iterator = nullptr)
-      : type(type)
+      : data(data)
       , solution_history(solution_history)
       , time_iterator(time_iterator)
       , lsp(solution_history)
     {
       Assert(solution_history.size() >= 1, ExcInternalError());
-      Assert(solution_history.size() >= 2 || !(type == PredictorType::linear_extrapolation),
+      Assert(solution_history.size() >= 2 || !(data.type == PredictorType::linear_extrapolation),
+             ExcInternalError());
+      Assert(solution_history.size() >= data.n_old_solution_vectors ||
+               !(data.type == PredictorType::least_squares_projection),
              ExcInternalError());
     }
 
@@ -63,15 +66,12 @@ namespace MeltPoolDG
     void
     vmult(const MatrixType &matrix, VectorType &solution, const VectorType &rhs) const
     {
-      if (type == PredictorType::none)
+      if (data.type == PredictorType::none)
         {
           solution = solution_history[0];
         }
-      else if (type == PredictorType::linear_extrapolation)
+      else if (data.type == PredictorType::linear_extrapolation)
         {
-          AssertThrow(solution_history.size() >= 2,
-                      ExcMessage("You must at least provide two old solution vectors."));
-
           UtilityFunctions::compute_linear_predictor(
             solution_history[0],
             solution_history[1],
@@ -79,7 +79,7 @@ namespace MeltPoolDG
             time_iterator ? time_iterator->get_current_time_increment() : 1.0,
             time_iterator ? time_iterator->get_old_time_increment() : 1.0);
         }
-      else if (type == PredictorType::least_squares_projection)
+      else if (data.type == PredictorType::least_squares_projection)
         {
           lsp.vmult(matrix, solution, rhs);
         }
