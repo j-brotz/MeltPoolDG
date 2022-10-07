@@ -55,11 +55,6 @@ namespace MeltPoolDG::Heat
       scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, heat_operator);
 
     reinit();
-
-    AssertThrow(heat_data.predictor.type == PredictorType::none,
-                ExcMessage(
-                  "It seems that you try to change the predictor for the linear solver of the "
-                  "HeatOperation. Use the 'heat': 'predictor' instead."));
   }
 
 
