@@ -15,9 +15,17 @@ namespace MeltPoolDG
   class LeastSquaresProjection
   {
   public:
-    LeastSquaresProjection(const std::vector<VectorType> &old_solution)
-      : old_solution(old_solution)
-    {}
+    LeastSquaresProjection(const std::vector<VectorType> &solution_history,
+                           const unsigned int n_old_solutions = numbers::invalid_unsigned_int)
+    {
+      Assert(n_old_solutions <= solution_history.size(), ExcInternalError());
+
+      for (unsigned int i = 0;
+           i < (n_old_solutions == numbers::invalid_unsigned_int) ? solution_history.size() :
+                                                                    n_old_solutions;
+           ++i)
+        old_solution.push_back(&solution_history[i]);
+    }
 
     template <typename MatrixType>
     void
@@ -31,7 +39,7 @@ namespace MeltPoolDG
     }
 
   private:
-    const std::vector<VectorType> &old_solution;
+    std::vector<const VectorType *> old_solution;
 
     std::vector<VectorType> internal_vectors;
   };
@@ -52,7 +60,7 @@ namespace MeltPoolDG
       : data(data)
       , solution_history(solution_history)
       , time_iterator(time_iterator)
-      , lsp(solution_history)
+      , lsp(solution_history, data.n_old_solution_vectors)
     {
       Assert(solution_history.size() >= 1, ExcInternalError());
       Assert(solution_history.size() >= 2 || !(data.type == PredictorType::linear_extrapolation),
