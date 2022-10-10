@@ -84,7 +84,7 @@ namespace MeltPoolDG
   struct PredictorData
   {
     PredictorType type                   = PredictorType::none;
-    int           n_old_solution_vectors = 2;
+    unsigned int  n_old_solution_vectors = 2;
 
     void
     add_parameters(ParameterHandler &prm)

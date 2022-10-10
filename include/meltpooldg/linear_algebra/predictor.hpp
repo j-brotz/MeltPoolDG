@@ -22,8 +22,7 @@ namespace MeltPoolDG
       : old_solution(n_old_solutions == numbers::invalid_unsigned_int ? solution_history.size() :
                                                                         n_old_solutions)
     {
-      Assert(static_cast<unsigned int>(n_old_solutions) <= solution_history.size(),
-             ExcInternalError());
+      Assert(n_old_solutions <= solution_history.size(), ExcInternalError());
 
       for (unsigned int i = 0; i < old_solution.size(); ++i)
         old_solution[i] = &solution_history[i];

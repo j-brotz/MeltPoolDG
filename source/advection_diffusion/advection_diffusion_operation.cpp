@@ -30,7 +30,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     , advec_diff_hanging_nodes_dof_idx(advec_diff_hanging_nodes_dof_idx_in)
     , velocity_dof_idx(velocity_dof_idx_in)
     , solution_history(std::max(advec_diff_data_in.predictor.n_old_solution_vectors,
-                                2 /*TODO: include time integration scheme*/))
+                                2U /*TODO: include time integration scheme*/))
   {
     this->advec_diff_data = advec_diff_data_in;
 
