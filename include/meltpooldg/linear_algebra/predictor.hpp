@@ -22,7 +22,8 @@ namespace MeltPoolDG
       : old_solution(n_old_solutions == numbers::invalid_unsigned_int ? solution_history.size() :
                                                                         n_old_solutions)
     {
-      Assert(n_old_solutions <= solution_history.size(), ExcInternalError());
+      Assert(static_cast<unsigned int>(n_old_solutions) <= solution_history.size(),
+             ExcInternalError());
 
       for (unsigned int i = 0; i < old_solution.size(); ++i)
         old_solution[i] = &solution_history[i];
@@ -65,9 +66,6 @@ namespace MeltPoolDG
     {
       Assert(solution_history.size() >= 1, ExcInternalError());
       Assert(solution_history.size() >= 2 || data.type != PredictorType::linear_extrapolation,
-             ExcInternalError());
-      Assert(solution_history.size() >= data.n_old_solution_vectors ||
-               data.type != PredictorType::least_squares_projection,
              ExcInternalError());
     }
 
