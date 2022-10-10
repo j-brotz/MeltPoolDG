@@ -226,6 +226,7 @@ namespace MeltPoolDG::Reinitialization
                                                               const int reinit_quad_idx,
                                                               const int normal_dof_idx)
   {
+    reinit_params_adaflo.time.time_step_scheme     = TimeSteppingParameters::Scheme::implicit_euler;
     reinit_params_adaflo.time.start_time           = 0.0;
     reinit_params_adaflo.time.end_time             = 1e8;
     reinit_params_adaflo.time.time_step_size_start = parameters.time_stepping.time_step_size;
