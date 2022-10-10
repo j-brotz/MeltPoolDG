@@ -77,14 +77,14 @@ namespace MeltPoolDG
               none,
               // calculate the predictor by a linear combination from the two old solution vectors
               linear_extrapolation,
-              // least squares projection TODO
+              // least squares projection (WIP)
               least_squares_projection)
 
   template <typename number = double>
   struct PredictorData
   {
     PredictorType type                   = PredictorType::none;
-    int           n_old_solution_vectors = 2; // TODO
+    int           n_old_solution_vectors = 2;
 
     void
     add_parameters(ParameterHandler &prm)

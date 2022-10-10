@@ -101,7 +101,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     if (!advec_diff_operator)
       create_operator(advection_velocity);
 
-    // pass time increment to operator TODO: pass time iterator directly to perator
+    // pass time increment to operator TODO: pass time iterator directly to operator
     advec_diff_operator->reset_time_increment(time_iterator.get_current_time_increment());
 
     AssertThrow(
@@ -134,16 +134,11 @@ namespace MeltPoolDG::AdvectionDiffusion
     solution_history.get_current_solution().zero_out_ghost_values();
 
     if (!predictor)
-      predictor =
-        std::make_unique<Predictor<VectorType, double>>(this->advec_diff_data.predictor,
-                                                        solution_history.get_all_solutions(),
-                                                        &time_iterator);
-
+      predictor = std::make_unique<Predictor<VectorType, double>>(this->advec_diff_data.predictor,
+                                                                  solution_history,
+                                                                  &time_iterator);
 
     predictor->vmult(*advec_diff_operator, solution_advected_field_extrapolated, rhs);
-
-    solution_history.get_recent_old_solution().swap(solution_history.get_current_solution());
-    solution_history.get_current_solution().swap(solution_advected_field_extrapolated);
 
     // apply hanging node constraints to predictor
     scratch_data.get_constraint(advec_diff_dof_idx)
