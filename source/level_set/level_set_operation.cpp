@@ -391,7 +391,7 @@ namespace MeltPoolDG::LevelSet
   }
 
   template <int dim>
-  const LevelSetOperation<dim>::SurfaceMeshInfo &
+  const typename LevelSetOperation<dim>::SurfaceMeshInfo &
   LevelSetOperation<dim>::get_surface_mesh_info() const
   {
     return surface_mesh_info;
