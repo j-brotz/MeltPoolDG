@@ -53,6 +53,8 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperation<dim>::set_initial_condition(
     const Function<dim> &initial_field_function)
   {
+    if (solution_history.get_current_solution().has_ghost_elements())
+      solution_history.get_current_solution().zero_out_ghost_values();
     dealii::VectorTools::interpolate(scratch_data.get_mapping(),
                                      scratch_data.get_dof_handler(advec_diff_dof_idx),
                                      initial_field_function,
@@ -112,12 +114,12 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     // compute RHS
     // TODO: also include it for matrix-based to this place (?)
-    solution_history.get_current_solution().update_ghost_values();
-    advection_velocity.update_ghost_values();
-
     if (this->advec_diff_data.linear_solver.do_matrix_free &&
         this->advec_diff_data.predictor.type == PredictorType::least_squares_projection)
       {
+        solution_history.get_current_solution().update_ghost_values();
+        advection_velocity.update_ghost_values();
+
         rhs = user_rhs;
 
         // apply dirichlet boundary values
@@ -129,9 +131,10 @@ namespace MeltPoolDG::AdvectionDiffusion
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx,
           false /*don't zero out rhs*/);
-      }
 
-    solution_history.get_current_solution().zero_out_ghost_values();
+        solution_history.get_current_solution().zero_out_ghost_values();
+        advection_velocity.zero_out_ghost_values();
+      }
 
     if (!predictor)
       predictor = std::make_unique<Predictor<VectorType, double>>(this->advec_diff_data.predictor,
@@ -267,8 +270,11 @@ namespace MeltPoolDG::AdvectionDiffusion
                         "     * GMRES: i = " + std::to_string(iter),
                         "advection_diffusion");
 
-    solution_history.get_recent_old_solution().zero_out_ghost_values();
-    advection_velocity.zero_out_ghost_values();
+    if (!solution_history.get_recent_old_solution().has_ghost_elements())
+      solution_history.get_recent_old_solution().zero_out_ghost_values();
+
+    if (!advection_velocity.has_ghost_elements())
+      advection_velocity.zero_out_ghost_values();
 
     ready_for_time_advance = false;
   }

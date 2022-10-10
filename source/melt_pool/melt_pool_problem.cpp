@@ -49,6 +49,9 @@ namespace MeltPoolDG::MeltPool
          ******************************************************************************************/
         if (problem_specific_parameters.do_advect_level_set)
           {
+            // TODO: remove; could not be removed since during flow_operation->init_time_advance()
+            // an inconsistency in the DoF vectors is introduced
+            scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
             interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
 
             if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump)
@@ -134,7 +137,7 @@ namespace MeltPoolDG::MeltPool
                   AssertThrow(false, ExcNotImplemented());
 #endif
                 }
-
+              // TODO zero_out only
               scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
             }
         }
@@ -882,8 +885,6 @@ namespace MeltPoolDG::MeltPool
           melt_pool_operation->reinit();
         if (heat_operation)
           heat_operation->reinit();
-
-        scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
