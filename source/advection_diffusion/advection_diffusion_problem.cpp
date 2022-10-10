@@ -239,6 +239,9 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                  const double                         current_time,
                                                  std::shared_ptr<SimulationBase<dim>> base_in)
   {
+    if (!post_processor->now(time_step, current_time))
+      return;
+
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       advec_diff_operation->attach_output_vectors(data_out);
 

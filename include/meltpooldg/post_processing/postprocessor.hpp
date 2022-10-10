@@ -64,6 +64,20 @@ namespace MeltPoolDG
             const double                                      time           = -1.0,
             const std::function<void()> &                     post_operation = {});
 
+    /**
+     * Determines whether postprocessing should be performed now.
+     */
+    inline bool
+    now(const int n_time_step, const double time)
+    {
+      return (!pv_data.do_output) ? false :
+             (n_time_step == 0) || (std::abs(time - end_time) <= 1e-10) ?
+                                    true :
+             (time - time_at_last_output >= pv_data.write_time_step_size) ?
+                                    true :
+                                    !(n_time_step % pv_data.write_frequency);
+    }
+
   private:
     void
     write_paraview_files(const unsigned int   n_time_step,

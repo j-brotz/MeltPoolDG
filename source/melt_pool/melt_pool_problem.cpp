@@ -259,13 +259,15 @@ namespace MeltPoolDG::MeltPool
         }
 
         //@todo: adapt in case of adaptive time stepping
-        if (!(n % base_in->parameters.profiling.write_frequency))
-          scratch_data->get_timer().print_wall_time_statistics(MPI_COMM_WORLD);
+        if (!(n % base_in->parameters.profiling.write_frequency) &&
+            base_in->parameters.profiling.enable)
+          scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
       }
     Journal::print_end(scratch_data->get_pcout());
 
-    //... always print timing statistics if verbosity level >= 1
-    scratch_data->get_timer().print_wall_time_statistics(MPI_COMM_WORLD);
+    //... always print timing statistics
+    if (base_in->parameters.profiling.enable)
+      scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
   }
 
   template <int dim>
@@ -1125,6 +1127,8 @@ namespace MeltPoolDG::MeltPool
                                        const double                         current_time,
                                        std::shared_ptr<SimulationBase<dim>> base_in)
   {
+    if (!post_processor->now(n_time_step, current_time))
+      return;
     /**
      * collect all relevant output data
      */

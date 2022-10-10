@@ -317,6 +317,7 @@ namespace MeltPoolDG
   template <typename number = double>
   struct ProfilingData
   {
+    bool   enable               = false;
     int    write_frequency      = 1;
     double write_time_step_size = 0.0;
   };

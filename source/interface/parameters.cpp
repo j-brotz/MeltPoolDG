@@ -95,6 +95,10 @@ namespace MeltPoolDG
           profiling.write_time_step_size /
           time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
+
+    // enable profiling for verbosity level higher than 1
+    if (base.verbosity_level >= 1)
+      profiling.enable = true;
     /*
      *  set the number of initial reinitialization steps equal to the number of reinit steps
      *  if no value is provided
@@ -816,6 +820,11 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("profiling");
     {
+      prm.add_parameter(
+        "enable",
+        profiling.enable,
+        "Set this parameter to true if profiling should be enabled. It will be automatically"
+        "enabled for verbosity level >=3.");
       prm.add_parameter("write frequency",
                         profiling.write_frequency,
                         "Every n timestep that should be written");

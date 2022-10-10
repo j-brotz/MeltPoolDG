@@ -41,14 +41,7 @@ namespace MeltPoolDG
   {
     GenericDataOut<dim> data_out(mapping);
 
-    const bool do_write_output = (!pv_data.do_output) ? false :
-                                 (n_time_step == 0) || (std::abs(time - end_time) <= 1e-10) ?
-                                                        true :
-                                 (time - time_at_last_output >= pv_data.write_time_step_size) ?
-                                                        true :
-                                                        !(n_time_step % pv_data.write_frequency);
-
-    if (do_write_output)
+    if (now(n_time_step, time))
       {
         attach_output_vectors(data_out);
 
