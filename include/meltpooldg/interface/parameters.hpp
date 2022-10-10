@@ -70,16 +70,47 @@ namespace MeltPoolDG
 
   BETTER_ENUM(InterfaceForceType, char, diffuse, sharp)
 
+  // choose the particular predictor type for the nonlinear/linear solver
+  BETTER_ENUM(PredictorType,
+              char,
+              // no predictor specified; use old value as initial guess
+              none,
+              // calculate the predictor by a linear combination from the two old solution vectors
+              linear_extrapolation,
+              // least squares projection (WIP)
+              least_squares_projection)
+
+  template <typename number = double>
+  struct PredictorData
+  {
+    PredictorType type                   = PredictorType::none;
+    unsigned int  n_old_solution_vectors = 2;
+
+    void
+    add_parameters(ParameterHandler &prm)
+    {
+      prm.enter_subsection("predictor");
+      {
+        prm.add_parameter("type", type, "Choose a predictor type.");
+        prm.add_parameter("n old solutions",
+                          n_old_solution_vectors,
+                          "Choose the number of old solution vectors considered."
+                          "This parameter is only relevant for least squares projection.");
+      }
+      prm.leave_subsection();
+    }
+  };
+
+
   template <typename number = double>
   struct NonlinearSolverData
   {
-    int           max_nonlinear_iterations       = 10;
-    number        field_correction_tolerance     = 1e-10;
-    number        residual_tolerance             = 1e-9;
-    int           max_nonlinear_iterations_alt   = 0;
-    number        field_correction_tolerance_alt = 1e-9;
-    number        residual_tolerance_alt         = 1e-8;
-    PredictorType predictor                      = PredictorType::linear_extrapolation;
+    int    max_nonlinear_iterations       = 10;
+    number field_correction_tolerance     = 1e-10;
+    number residual_tolerance             = 1e-9;
+    int    max_nonlinear_iterations_alt   = 0;
+    number field_correction_tolerance_alt = 1e-9;
+    number residual_tolerance_alt         = 1e-8;
   };
 
   template <typename number = double>
@@ -132,6 +163,7 @@ namespace MeltPoolDG
     number                   scale_factor_epsilon = 0.5;
     std::string              modeltype            = "olsson2007";
     std::string              implementation       = "meltpooldg";
+    PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
   };
 
@@ -141,6 +173,7 @@ namespace MeltPoolDG
     number                   diffusivity             = 0.0;
     std::string              time_integration_scheme = "crank_nicolson";
     std::string              implementation          = "meltpooldg";
+    PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
   };
 
@@ -151,6 +184,7 @@ namespace MeltPoolDG
     std::string              implementation       = "meltpooldg";
     unsigned int             verbosity_level      = 0;
     bool                     do_narrow_band       = false;
+    PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
     number                   narrow_band_threshold = 0.9999999;
   };
@@ -162,6 +196,7 @@ namespace MeltPoolDG
     std::string              implementation       = "meltpooldg";
     unsigned int             verbosity_level      = 0;
     bool                     do_narrow_band       = false;
+    PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
     number                   narrow_band_threshold = 0.9999999;
   };
@@ -180,7 +215,10 @@ namespace MeltPoolDG
     LinearSolverData<number>                    linear_solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     bool                                        interpolate_rho_times_cp = false;
+    PredictorData<number>                       predictor;
   };
+
+
 
   template <typename number = double>
   struct LaserData

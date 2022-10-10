@@ -24,6 +24,7 @@ namespace MeltPoolDG::LevelSet
   LevelSetOperation<dim>::LevelSetOperation(const ScratchData<dim> &             scratch_data_in,
                                             const TimeIterator<double> &         time_stepping,
                                             std::shared_ptr<SimulationBase<dim>> base_in,
+                                            const VectorType &                   advection_velocity,
                                             const unsigned int                   ls_dof_idx_in,
                                             const unsigned int ls_hanging_nodes_dof_idx_in,
                                             const unsigned int ls_quad_idx_in,
@@ -63,6 +64,7 @@ namespace MeltPoolDG::LevelSet
             scratch_data,
             base_in->parameters.advec_diff,
             time_stepping,
+            advection_velocity,
             ls_dof_idx,
             ls_hanging_nodes_dof_idx_in,
             ls_quad_idx_in,
@@ -76,6 +78,7 @@ namespace MeltPoolDG::LevelSet
           std::make_shared<AdvectionDiffusion::AdvectionDiffusionOperationAdaflo<dim>>(
             scratch_data,
             time_stepping,
+            advection_velocity,
             ls_zero_bc_idx,
             ls_dof_idx,
             ls_quad_idx_in,
@@ -173,11 +176,10 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::set_initial_condition(
     const Function<dim> &initial_field_function,
-    const VectorType &   initial_velocity_in,
     const bool is_signed_distance_initial_field_function) //@todo: provide separate function for
                                                           // this argument
   {
-    advec_diff_operation->set_initial_condition(initial_field_function, initial_velocity_in);
+    advec_diff_operation->set_initial_condition(initial_field_function);
 
     // optional: if the provided function is a signed distance compute a corresponding
     // level set field
@@ -283,7 +285,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::solve(const VectorType &advection_velocity)
+  LevelSetOperation<dim>::solve()
   {
     if (!ready_for_time_advance)
       init_time_advance();
@@ -292,7 +294,7 @@ namespace MeltPoolDG::LevelSet
      */
     {
       TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::advect");
-      advec_diff_operation->solve(advection_velocity);
+      advec_diff_operation->solve();
     }
     /*
      *  2) solve the reinitialization problem of the level set equation

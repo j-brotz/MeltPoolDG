@@ -28,7 +28,7 @@ namespace MeltPoolDG::Curvature
 
     scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
     scratch_data.initialize_dof_vector(solution_curvature, curv_dof_idx);
-    if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (curvature_data.predictor.type == PredictorType::linear_extrapolation)
       {
         scratch_data.initialize_dof_vector(solution_curvature_old, curv_dof_idx);
         scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);
@@ -39,7 +39,7 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::solve(const VectorType &solution_levelset)
   {
-    if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (curvature_data.predictor.type == PredictorType::linear_extrapolation)
       {
         // TODO: use time increment from global problem?
         UtilityFunctions::compute_linear_predictor(solution_curvature,
@@ -169,7 +169,7 @@ namespace MeltPoolDG::Curvature
     scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
     scratch_data.initialize_dof_vector(solution_curvature, curv_dof_idx);
 
-    if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (curvature_data.predictor.type == PredictorType::linear_extrapolation)
       {
         scratch_data.initialize_dof_vector(solution_curvature_old, curv_dof_idx);
         scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);
@@ -207,7 +207,7 @@ namespace MeltPoolDG::Curvature
     normal_vector_operation.attach_vectors(vectors);
 
     vectors.push_back(&solution_curvature);
-    if (curvature_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (curvature_data.predictor.type == PredictorType::linear_extrapolation)
       vectors.push_back(&solution_curvature_old);
   }
 

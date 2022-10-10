@@ -10,6 +10,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperationAdaflo<dim>::AdvectionDiffusionOperationAdaflo(
     const ScratchData<dim> &             scratch_data,
     const TimeIterator<double> &         time_iterator,
+    const VectorType &                   advection_velocity,
     const int                            advec_diff_zero_dirichlet_dof_idx,
     const int                            advec_diff_dirichlet_dof_idx,
     const int                            advec_diff_quad_idx,
@@ -18,6 +19,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     std::string                          operation_name)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
+    , advection_velocity(advection_velocity)
     , pcout(scratch_data.get_pcout(1))
     , dirichlet_dof_idx(advec_diff_dirichlet_dof_idx)
   {
@@ -79,8 +81,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   template <int dim>
   void
   AdvectionDiffusionOperationAdaflo<dim>::set_initial_condition(
-    const Function<dim> &initial_field_function,
-    const VectorType &   initial_velocity)
+    const Function<dim> &initial_field_function)
   {
     initialize_vectors();
     dealii::VectorTools::interpolate(scratch_data.get_mapping(),
@@ -91,8 +92,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     scratch_data.get_constraint(dirichlet_dof_idx).distribute(advected_field);
     advected_field_old     = advected_field;
     advected_field_old_old = advected_field;
-
-    set_velocity(initial_velocity, true /* initial step */);
   }
 
   template <int dim>
@@ -103,12 +102,14 @@ namespace MeltPoolDG::AdvectionDiffusion
     advected_field_old_old.swap(advected_field_old);
     advected_field_old.swap(advected_field);
 
+    set_velocity(time_iterator.get_current_time_step_number() == 1 /* is initial step */);
+
     ready_for_time_advance = true;
   }
 
   template <int dim>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::solve(const VectorType &current_velocity)
+  AdvectionDiffusionOperationAdaflo<dim>::solve()
   {
     if (!ready_for_time_advance)
       init_time_advance();
@@ -116,8 +117,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     advected_field.update_ghost_values();
     advected_field_old.update_ghost_values();
     advected_field_old_old.update_ghost_values();
-
-    set_velocity(current_velocity);
 
     //@todo -- extrapolation (?)
     // if (step_size_old > 0)
@@ -258,9 +257,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::set_velocity(
-    const LinearAlgebra::distributed::Vector<double> &vec,
-    bool                                              initial_step)
+  AdvectionDiffusionOperationAdaflo<dim>::set_velocity(bool initial_step)
   {
     velocity_vec_old_old.zero_out_ghost_values();
     velocity_vec_old.zero_out_ghost_values();
@@ -268,15 +265,15 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (initial_step)
       {
-        velocity_vec_old_old = vec;
-        velocity_vec_old     = vec;
-        velocity_vec         = vec;
+        velocity_vec_old_old = advection_velocity;
+        velocity_vec_old     = advection_velocity;
+        velocity_vec         = advection_velocity;
       }
     else
       {
         velocity_vec_old_old = velocity_vec_old;
         velocity_vec_old     = velocity_vec;
-        velocity_vec         = vec;
+        velocity_vec         = advection_velocity;
       }
 
     velocity_vec_old_old.update_ghost_values();

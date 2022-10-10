@@ -37,7 +37,7 @@ namespace MeltPoolDG::Reinitialization
 
     scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
     scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (reinit_data.predictor.type == PredictorType::linear_extrapolation)
       {
         scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
         scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
@@ -81,7 +81,7 @@ namespace MeltPoolDG::Reinitialization
   {
     scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
     scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (reinit_data.predictor.type == PredictorType::linear_extrapolation)
       {
         scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
         scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
@@ -135,7 +135,7 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::init_time_advance()
   {
-    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (reinit_data.predictor.type == PredictorType::linear_extrapolation)
       {
         UtilityFunctions::compute_linear_predictor(delta_psi_vec,
                                                    delta_psi_vec_old,
@@ -318,7 +318,7 @@ namespace MeltPoolDG::Reinitialization
 
     vectors.push_back(&solution_level_set);
     vectors.push_back(&delta_psi_vec);
-    if (reinit_data.linear_solver.predictor == PredictorType::linear_extrapolation)
+    if (reinit_data.predictor.type == PredictorType::linear_extrapolation)
       vectors.push_back(&delta_psi_vec_old);
   }
 
