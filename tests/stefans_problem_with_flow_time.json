@@ -77,7 +77,8 @@
     "evapor evaporative mass flux": "1.*t"
   },
   "paraview": {
-    "paraview do output": "false"
+    "paraview do output": "false",
+    "do user defined postprocessing": "true"
   },
   "problem specific": {
     "do evaporative heat flux": "false",

@@ -39,10 +39,10 @@ namespace MeltPoolDG
     const double                                      time,
     const std::function<void()> &                     post_operation)
   {
-    GenericDataOut<dim> data_out(mapping);
-
     if (now(n_time_step, time))
       {
+        GenericDataOut<dim> data_out(mapping);
+
         attach_output_vectors(data_out);
 
         Journal::print_line(pcout, "write paraview files", "postprocessor");

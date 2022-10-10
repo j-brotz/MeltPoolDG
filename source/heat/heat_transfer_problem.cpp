@@ -363,7 +363,8 @@ namespace MeltPoolDG::Heat
                                            const double                         time,
                                            std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    if (!post_processor->now(n_time_step, time))
+    if (!post_processor->now(n_time_step, time) &&
+        !base_in->parameters.paraview.do_user_defined_postprocessing)
       return;
     /**
      * collect all relevant output data

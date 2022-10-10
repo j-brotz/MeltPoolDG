@@ -233,7 +233,8 @@ namespace MeltPoolDG::Reinitialization
                                                const double                         time,
                                                std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    if (!post_processor->now(time_step, time))
+    if (!post_processor->now(time_step, time) &&
+        !base_in->parameters.paraview.do_user_defined_postprocessing)
       return;
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       reinit_operation->attach_output_vectors(data_out);

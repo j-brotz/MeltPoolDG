@@ -813,6 +813,9 @@ namespace MeltPoolDG
       prm.add_parameter("output variables",
                         paraview.output_variables,
                         "Specify variables that you request to output to paraview.");
+      prm.add_parameter("do user defined postprocessing",
+                        paraview.do_user_defined_postprocessing,
+                        "Set this parameter to true to enable user defined postprocessing.");
     }
     prm.leave_subsection();
     /*

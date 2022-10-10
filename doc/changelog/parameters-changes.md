@@ -2,6 +2,13 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2022-10-10
+- Add a parameter to enable user-defined postprocessing
+```json
+{
+  "paraview": {
+    "do user defined postprocessing": "true"
+  },
+
 - Add a parameter to enable profiling
 ```json
 {

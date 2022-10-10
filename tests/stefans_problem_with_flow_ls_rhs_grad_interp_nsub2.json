@@ -80,7 +80,8 @@
     "evapor do level set pressure gradient interpolation": "true"
   },
   "paraview": {
-    "paraview do output": "false"
+    "paraview do output": "false",
+    "do user defined postprocessing": "true"
   },
   "problem specific": {
     "do evaporative heat flux": "false",
