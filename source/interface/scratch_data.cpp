@@ -21,7 +21,7 @@ namespace MeltPoolDG
                                    (Utilities::MPI::this_mpi_process(mpi_communicator)) == 0 &&
                                      (i <= max_verbosity_level)));
 
-    timer = std::make_shared<TimerOutput>(pcout[1], TimerOutput::never, TimerOutput::wall_times);
+    timer = std::make_shared<TimerOutput>(pcout[0], TimerOutput::never, TimerOutput::wall_times);
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>

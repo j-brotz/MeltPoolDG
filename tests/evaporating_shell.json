@@ -29,6 +29,7 @@
     "material first density": "1.0"
   },
   "paraview": {
+    "do user defined postprocessing": "true",
     "paraview do output": "false"
   },
   "simulation specific": {

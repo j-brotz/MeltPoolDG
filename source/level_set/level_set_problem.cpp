@@ -333,6 +333,9 @@ namespace MeltPoolDG::LevelSet
                                        const double                         time,
                                        std::shared_ptr<SimulationBase<dim>> base_in)
   {
+    if (!post_processor->now(time_step, time))
+      return;
+
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       level_set_operation->attach_output_vectors(data_out);
       if (evaporation_operation)

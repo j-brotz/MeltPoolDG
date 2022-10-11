@@ -11,7 +11,7 @@
   "time stepping": {
     "start time": "0.0",
     "end time": "0.002",
-    "time step size": "0.005"
+    "time step size": "0.002"
   },
   "material": {
     "material two phase properties transition type": "consistent_with_evaporation",
@@ -88,7 +88,8 @@
     "evapor ls value gas": "-1"
   },
   "paraview": {
-    "paraview do output": "false"
+    "paraview do output": "false",
+    "do user defined postprocessing": "true"
   },
   "problem specific": {
     "do evaporative heat flux": "false",
