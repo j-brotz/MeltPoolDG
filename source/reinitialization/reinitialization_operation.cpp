@@ -21,6 +21,7 @@ namespace MeltPoolDG::Reinitialization
     , reinit_quad_idx(reinit_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
+    , solution_history(reinit_data.predictor.n_old_solution_vectors)
   {
     AssertThrow(reinit_data.linear_solver.solver_type == LinearSolverType::CG ||
                   reinit_data.linear_solver.do_matrix_free == false,
@@ -34,16 +35,6 @@ namespace MeltPoolDG::Reinitialization
                 ExcMessage("For the reinitialization problem both the "
                            " normal vector and the reinitialization operation have to be "
                            " computed either matrix-based or matrix-free."));
-
-    scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
-    scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    if (reinit_data.predictor.type == PredictorType::linear_extrapolation)
-      {
-        scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
-        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
-      }
-
-    scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
 
     if (normal_vec_data.implementation == "meltpooldg")
       {
@@ -78,19 +69,18 @@ namespace MeltPoolDG::Reinitialization
      *   and matrix-free computation.
      */
     create_operator();
+
+    reinit();
   }
 
   template <int dim>
   void
   ReinitializationOperation<dim>::reinit()
   {
+    solution_history.apply([this](VectorType &v) { scratch_data.initialize_dof_vector(v); });
+
     scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
-    scratch_data.initialize_dof_vector(delta_psi_vec, reinit_dof_idx);
-    if (reinit_data.predictor.type == PredictorType::linear_extrapolation)
-      {
-        scratch_data.initialize_dof_vector(delta_psi_vec_old, reinit_dof_idx);
-        scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
-      }
+    scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);
 
     scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
 
@@ -140,21 +130,31 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::init_time_advance()
   {
-    if (reinit_data.predictor.type == PredictorType::linear_extrapolation)
-      {
-        UtilityFunctions::compute_linear_predictor(delta_psi_vec,
-                                                   delta_psi_vec_old,
-                                                   delta_psi_extrapolated,
-                                                   time_iterator.get_current_time_increment(),
-                                                   time_iterator.get_old_time_increment());
-
-        delta_psi_vec_old.swap(delta_psi_vec);
-        delta_psi_vec.swap(delta_psi_extrapolated);
-
-        // apply hanging node constraints to predictor
-        scratch_data.get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
-      }
     reinit_operator->reset_time_increment(time_iterator.get_current_time_increment());
+
+    // compute RHS
+    // TODO: also include it for matrix-based to this place (?)
+    if (reinit_data.linear_solver.do_matrix_free &&
+        reinit_data.predictor.type == PredictorType::least_squares_projection)
+      {
+        get_normal_vector().update_ghost_values();
+        solution_level_set.update_ghost_values();
+
+        reinit_operator->create_rhs(rhs, solution_level_set);
+
+        get_normal_vector().zero_out_ghost_values();
+        solution_level_set.zero_out_ghost_values();
+      }
+
+    if (!predictor)
+      predictor = std::make_unique<Predictor<VectorType, double>>(reinit_data.predictor,
+                                                                  solution_history,
+                                                                  &time_iterator);
+
+    predictor->vmult(*reinit_operator, delta_psi_extrapolated, rhs);
+
+    // apply hanging node constraints to predictor
+    scratch_data.get_constraint(reinit_dof_idx).distribute(solution_history.get_current_solution());
   }
 
   template <int dim>
@@ -184,7 +184,7 @@ namespace MeltPoolDG::Reinitialization
               }
 
             iter = LinearSolver::solve<VectorType>(*reinit_operator,
-                                                   delta_psi_vec,
+                                                   solution_history.get_current_solution(),
                                                    rhs,
                                                    reinit_data.linear_solver,
                                                    *diag_preconditioner_matrixfree);
@@ -199,7 +199,7 @@ namespace MeltPoolDG::Reinitialization
               }
 
             iter = LinearSolver::solve<VectorType>(*reinit_operator,
-                                                   delta_psi_vec,
+                                                   solution_history.get_current_solution(),
                                                    rhs,
                                                    reinit_data.linear_solver,
                                                    *trilinos_preconditioner_matrixfree);
@@ -215,7 +215,7 @@ namespace MeltPoolDG::Reinitialization
         auto preconditioner = Preconditioner::get_preconditioner_trilinos(
           reinit_operator->get_system_matrix(), reinit_data.linear_solver.preconditioner_type);
         iter = LinearSolver::solve<VectorType>(reinit_operator->get_system_matrix(),
-                                               delta_psi_vec,
+                                               solution_history.get_current_solution(),
                                                rhs,
                                                reinit_data.linear_solver,
                                                *preconditioner);
@@ -227,7 +227,7 @@ namespace MeltPoolDG::Reinitialization
                                       15 /*precision*/,
                                       "F");
       }
-    scratch_data.get_constraint(reinit_dof_idx).distribute(delta_psi_vec);
+    scratch_data.get_constraint(reinit_dof_idx).distribute(solution_history.get_current_solution());
 
     solution_level_set.zero_out_ghost_values();
     get_normal_vector().zero_out_ghost_values();
@@ -236,11 +236,11 @@ namespace MeltPoolDG::Reinitialization
     // copy the delta_psi to the DoFHandler of the level set
     VectorType delta_level_set;
     scratch_data.initialize_dof_vector(delta_level_set, ls_dof_idx);
-    delta_level_set.copy_locally_owned_data_from(delta_psi_vec);
+    delta_level_set.copy_locally_owned_data_from(solution_history.get_current_solution());
 
     solution_level_set += delta_level_set;
 
-    max_change_level_set = delta_psi_vec.linfty_norm();
+    max_change_level_set = solution_history.get_current_solution().linfty_norm();
 
     Journal::print_formatted_norm(scratch_data.get_pcout(1),
                                   MeltPoolDG::VectorTools::compute_L2_norm<dim>(
@@ -249,12 +249,13 @@ namespace MeltPoolDG::Reinitialization
                                   "reinitialization",
                                   15 /*precision*/
     );
-    Journal::print_formatted_norm(scratch_data.get_pcout(0),
-                                  VectorTools::compute_L2_norm<dim>(
-                                    delta_psi_vec, scratch_data, reinit_dof_idx, reinit_quad_idx),
-                                  "delta phi",
-                                  "reinitialization",
-                                  15 /*precision*/
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(0),
+      VectorTools::compute_L2_norm<dim>(
+        solution_history.get_current_solution(), scratch_data, reinit_dof_idx, reinit_quad_idx),
+      "delta phi",
+      "reinitialization",
+      15 /*precision*/
     );
 
     Journal::print_formatted_norm(scratch_data.get_pcout(1),
@@ -322,9 +323,8 @@ namespace MeltPoolDG::Reinitialization
     normal_vector_operation->attach_vectors(vectors);
 
     vectors.push_back(&solution_level_set);
-    vectors.push_back(&delta_psi_vec);
-    if (reinit_data.predictor.type == PredictorType::linear_extrapolation)
-      vectors.push_back(&delta_psi_vec_old);
+
+    solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
   template <int dim>
