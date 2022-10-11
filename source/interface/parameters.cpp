@@ -142,6 +142,10 @@ namespace MeltPoolDG
                  material.solidus_temperature); //@todo: move to new material class
       }
 
+    // set default values dependent on predictor type
+    for (unsigned int i = 0; i < PredictorData<number>::all.size(); ++i)
+      PredictorData<number>::all[i]->set_default_values();
+
     // create output directory and copy parameter file
     {
       namespace fs = std::filesystem;

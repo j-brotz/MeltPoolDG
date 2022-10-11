@@ -7,60 +7,48 @@ namespace MeltPoolDG::Curvature
   CurvatureOperation<dim>::CurvatureOperation(const ScratchData<dim> &        scratch_data_in,
                                               const CurvatureData<double> &   curvature_data,
                                               const NormalVectorData<double> &normal_vec_data,
+                                              const VectorType &              solution_levelset,
                                               const unsigned int              curv_dof_idx_in,
                                               const unsigned int              curv_quad_idx_in,
                                               const unsigned int              normal_dof_idx_in,
                                               const unsigned int              ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , curvature_data(curvature_data)
+    , solution_levelset(solution_levelset)
     , curv_dof_idx(curv_dof_idx_in)
     , curv_quad_idx(curv_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
     , normal_vector_operation(scratch_data,
                               normal_vec_data,
+                              solution_levelset,
                               normal_dof_idx_in,
                               curv_quad_idx,
                               ls_dof_idx_in)
+    , solution_history(curvature_data.predictor.n_old_solution_vectors)
   {
     AssertThrow(curvature_data.linear_solver.solver_type == LinearSolverType::CG,
                 ExcMessage("The curvature operation only supports the CG solver type."));
 
-    scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
-    scratch_data.initialize_dof_vector(solution_curvature, curv_dof_idx);
-    if (curvature_data.predictor.type == PredictorType::linear_extrapolation)
-      {
-        scratch_data.initialize_dof_vector(solution_curvature_old, curv_dof_idx);
-        scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);
-      }
+    if (!curvature_operator)
+      create_operator(solution_levelset);
+
+    reinit();
   }
 
   template <int dim>
   void
-  CurvatureOperation<dim>::solve(const VectorType &solution_levelset)
+  CurvatureOperation<dim>::solve()
   {
-    if (curvature_data.predictor.type == PredictorType::linear_extrapolation)
-      {
-        // TODO: use time increment from global problem?
-        UtilityFunctions::compute_linear_predictor(solution_curvature,
-                                                   solution_curvature_old,
-                                                   solution_curvature_predictor,
-                                                   1 /*not time-dependent*/,
-                                                   1 /*not time-dependent*/);
+    if (!predictor)
+      predictor =
+        std::make_unique<Predictor<VectorType, double>>(curvature_data.predictor, solution_history);
 
-        solution_curvature_old.swap(solution_curvature);
-        solution_curvature.swap(solution_curvature_predictor);
-
-        // apply hanging node constraints to predictor
-        scratch_data.get_constraint(curv_dof_idx).distribute(solution_curvature);
-      }
-
-    if (!curvature_operator)
-      create_operator(solution_levelset);
+    predictor->vmult(*curvature_operator, solution_curvature_predictor, rhs);
     /*
      *    compute and solve the normal vector field for the given level set
      */
-    normal_vector_operation.solve(solution_levelset);
+    normal_vector_operation.solve();
 
     // no need to compute curvature in 1d
     if (dim == 1)
@@ -80,7 +68,7 @@ namespace MeltPoolDG::Curvature
         if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
             iter = LinearSolver::solve<VectorType>(*curvature_operator,
-                                                   solution_curvature,
+                                                   solution_history.get_current_solution(),
                                                    rhs,
                                                    curvature_data.linear_solver,
                                                    *diag_preconditioner_matrixfree);
@@ -88,7 +76,7 @@ namespace MeltPoolDG::Curvature
         else
           {
             iter = LinearSolver::solve<VectorType>(*curvature_operator,
-                                                   solution_curvature,
+                                                   solution_history.get_current_solution(),
                                                    rhs,
                                                    curvature_data.linear_solver,
                                                    *trilinos_preconditioner_matrixfree);
@@ -106,7 +94,7 @@ namespace MeltPoolDG::Curvature
           rhs);
 
         iter = LinearSolver::solve<VectorType>(curvature_operator->get_system_matrix(),
-                                               solution_curvature,
+                                               solution_history.get_current_solution(),
                                                rhs,
                                                curvature_data.linear_solver);
       }
@@ -114,19 +102,20 @@ namespace MeltPoolDG::Curvature
     solution_levelset.zero_out_ghost_values();
     normal_vector_operation.get_solution_normal_vector().zero_out_ghost_values();
 
-    scratch_data.get_constraint(curv_dof_idx).distribute(solution_curvature);
+    scratch_data.get_constraint(curv_dof_idx).distribute(solution_history.get_current_solution());
 
     const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
     const ConditionalOStream &pcout =
       scratch_data.get_pcout(std::max(curvature_data.verbosity_level, verbosity_l2_norm));
 
 
-    Journal::print_formatted_norm(pcout,
-                                  VectorTools::compute_L2_norm<dim>(
-                                    solution_curvature, scratch_data, curv_dof_idx, curv_quad_idx),
-                                  "curvature",
-                                  "curvature",
-                                  11 /*precision*/
+    Journal::print_formatted_norm(
+      pcout,
+      VectorTools::compute_L2_norm<dim>(
+        solution_history.get_current_solution(), scratch_data, curv_dof_idx, curv_quad_idx),
+      "curvature",
+      "curvature",
+      11 /*precision*/
     );
 
     Journal::print_line(scratch_data.get_pcout(1),
@@ -138,14 +127,14 @@ namespace MeltPoolDG::Curvature
   const LinearAlgebra::distributed::Vector<double> &
   CurvatureOperation<dim>::get_curvature() const
   {
-    return solution_curvature;
+    return solution_history.get_current_solution();
   }
 
   template <int dim>
   LinearAlgebra::distributed::Vector<double> &
   CurvatureOperation<dim>::get_curvature()
   {
-    return solution_curvature;
+    return solution_history.get_current_solution();
   }
 
   template <int dim>
@@ -166,14 +155,10 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::reinit()
   {
-    scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
-    scratch_data.initialize_dof_vector(solution_curvature, curv_dof_idx);
+    solution_history.apply([this](VectorType &v) { scratch_data.initialize_dof_vector(v); });
 
-    if (curvature_data.predictor.type == PredictorType::linear_extrapolation)
-      {
-        scratch_data.initialize_dof_vector(solution_curvature_old, curv_dof_idx);
-        scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);
-      }
+    scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
+    scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);
 
     if (!curvature_data.linear_solver.do_matrix_free)
       curvature_operator->initialize_matrix_based(scratch_data);
@@ -206,9 +191,7 @@ namespace MeltPoolDG::Curvature
   {
     normal_vector_operation.attach_vectors(vectors);
 
-    vectors.push_back(&solution_curvature);
-    if (curvature_data.predictor.type == PredictorType::linear_extrapolation)
-      vectors.push_back(&solution_curvature_old);
+    solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
   template <int dim>

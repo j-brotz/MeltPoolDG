@@ -13,6 +13,7 @@ namespace MeltPoolDG::Curvature
                                                           const VectorType &advected_field,
                                                           const Parameters<double> &data_in)
     : scratch_data(scratch_data)
+    , advected_field(advected_field)
   {
     (void)normal_vec_dof_idx;
 
@@ -104,12 +105,11 @@ namespace MeltPoolDG::Curvature
 
   template <int dim>
   void
-  CurvatureOperationAdaflo<dim>::solve(const VectorType &advected_field)
+  CurvatureOperationAdaflo<dim>::solve()
   {
     advected_field.update_ghost_values();
     initialize_vectors();
-    normal_vector_operation_adaflo->solve(
-      advected_field); //@todo check how advected_field is processed
+    normal_vector_operation_adaflo->solve();
     curvature_operation->compute_curvature(
       false); // @todo: adaflo does not use the boolean function argument
 

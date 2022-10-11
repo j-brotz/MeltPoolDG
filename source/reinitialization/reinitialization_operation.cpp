@@ -47,8 +47,13 @@ namespace MeltPoolDG::Reinitialization
 
     if (normal_vec_data.implementation == "meltpooldg")
       {
-        normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperation<dim>>(
-          scratch_data_in, normal_vec_data, normal_dof_idx, reinit_quad_idx, ls_dof_idx);
+        normal_vector_operation =
+          std::make_shared<NormalVector::NormalVectorOperation<dim>>(scratch_data_in,
+                                                                     normal_vec_data,
+                                                                     solution_level_set,
+                                                                     normal_dof_idx,
+                                                                     reinit_quad_idx,
+                                                                     ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (normal_vec_data.implementation == "adaflo")
@@ -115,7 +120,7 @@ namespace MeltPoolDG::Reinitialization
      *    level set; the normal vector field is called by reference within the
      *    operator class
      */
-    normal_vector_operation->solve(solution_level_set);
+    normal_vector_operation->solve();
     /*
      * precompute preconditioner system matrix
      */

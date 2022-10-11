@@ -326,8 +326,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    vectors.push_back(&solution_history.get_current_solution());
-    vectors.push_back(&solution_history.get_recent_old_solution());
+    solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
   }
 
   template <int dim>

@@ -81,8 +81,14 @@ namespace MeltPoolDG
               least_squares_projection)
 
   template <typename number = double>
-  struct PredictorData
+  class PredictorData
   {
+  public:
+    PredictorData()
+    {
+      all.emplace_back(this);
+    }
+
     PredictorType type                   = PredictorType::none;
     unsigned int  n_old_solution_vectors = 2;
 
@@ -99,8 +105,22 @@ namespace MeltPoolDG
       }
       prm.leave_subsection();
     }
+
+    void
+    set_default_values()
+    {
+      if (type == PredictorType::none)
+        n_old_solution_vectors = 1;
+      else if (type == PredictorType::linear_extrapolation)
+        n_old_solution_vectors = 2;
+    }
+
+    static std::vector<PredictorData<number> *> all;
   };
 
+
+  template <typename number>
+  std::vector<PredictorData<number> *> PredictorData<number>::all;
 
   template <typename number = double>
   struct NonlinearSolverData

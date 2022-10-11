@@ -10,11 +10,13 @@ namespace MeltPoolDG::NormalVector
   NormalVectorOperation<dim>::NormalVectorOperation(
     const ScratchData<dim> &        scratch_data_in,
     const NormalVectorData<double> &normal_vector_data,
+    const VectorType &              solution_level_set,
     const unsigned int              normal_dof_idx_in,
     const unsigned int              normal_quad_idx_in,
     const unsigned int              ls_dof_idx_in)
     : scratch_data(scratch_data_in)
     , normal_vector_data(normal_vector_data)
+    , solution_level_set(solution_level_set)
     , normal_dof_idx(normal_dof_idx_in)
     , normal_quad_idx(normal_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
@@ -22,13 +24,10 @@ namespace MeltPoolDG::NormalVector
     AssertThrow(normal_vector_data.linear_solver.solver_type == LinearSolverType::CG,
                 ExcMessage("The normal vector operation only supports the CG solver type."));
 
-    scratch_data.initialize_dof_vector(solution_normal_vector, normal_dof_idx);
-    if (normal_vector_data.predictor.type == PredictorType::linear_extrapolation)
-      {
-        scratch_data.initialize_dof_vector(solution_normal_vector_old, normal_dof_idx);
-        scratch_data.initialize_dof_vector(solution_normal_vector_predictor, normal_dof_idx);
-      }
-    scratch_data.initialize_dof_vector(rhs, normal_dof_idx);
+    if (!normal_vector_operator)
+      create_operator();
+
+    reinit();
   }
 
   template <int dim>
@@ -60,7 +59,7 @@ namespace MeltPoolDG::NormalVector
 
   template <int dim>
   void
-  NormalVectorOperation<dim>::solve(const VectorType &solution_levelset_in)
+  NormalVectorOperation<dim>::solve()
   {
     if (normal_vector_data.predictor.type == PredictorType::linear_extrapolation)
       {
@@ -81,18 +80,15 @@ namespace MeltPoolDG::NormalVector
           scratch_data.get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
       }
 
-    if (!normal_vector_operator)
-      create_operator(solution_levelset_in);
-
     int iter = 0;
 
-    solution_levelset_in.update_ghost_values();
+    solution_level_set.update_ghost_values();
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
         AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
 
-        normal_vector_operator->create_rhs(rhs, solution_levelset_in);
+        normal_vector_operator->create_rhs(rhs, solution_level_set);
 
         if (diag_preconditioner_matrixfree)
           iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
@@ -116,7 +112,7 @@ namespace MeltPoolDG::NormalVector
           ExcMessage(
             "The computation of the normal vector in a narrow band is only implemented matrix-free."));
 
-        normal_vector_operator->assemble_matrixbased(solution_levelset_in,
+        normal_vector_operator->assemble_matrixbased(solution_level_set,
                                                      normal_vector_operator->get_system_matrix(),
                                                      rhs);
 
@@ -127,7 +123,7 @@ namespace MeltPoolDG::NormalVector
                                                  normal_vector_data.linear_solver);
       }
 
-    solution_levelset_in.zero_out_ghost_values();
+    solution_level_set.zero_out_ghost_values();
 
     for (unsigned int d = 0; d < dim; ++d)
       scratch_data.get_constraint(normal_dof_idx).distribute(solution_normal_vector.block(d));
@@ -182,7 +178,7 @@ namespace MeltPoolDG::NormalVector
 
   template <int dim>
   void
-  NormalVectorOperation<dim>::create_operator(const VectorType &solution_levelset_in)
+  NormalVectorOperation<dim>::create_operator()
   {
     normal_vector_operator =
       std::make_unique<NormalVectorOperator<dim>>(scratch_data,
@@ -191,7 +187,7 @@ namespace MeltPoolDG::NormalVector
                                                   normal_quad_idx,
                                                   ls_dof_idx,
                                                   normal_vector_data.do_narrow_band,
-                                                  &solution_levelset_in);
+                                                  &solution_level_set);
     /*
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.

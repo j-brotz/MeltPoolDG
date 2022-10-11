@@ -125,9 +125,7 @@ namespace MeltPoolDG
       else
         AssertThrow(false, ExcNotImplemented());
 
-      // TODO: use SolutionHistory functionality;
-      solution_history.get_recent_old_solution().swap(solution_history.get_current_solution());
-      solution_history.get_current_solution().swap(solution);
+      solution_history.commit_old_solutions();
 
       return;
     }

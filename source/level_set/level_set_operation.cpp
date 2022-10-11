@@ -141,14 +141,15 @@ namespace MeltPoolDG::LevelSet
     if ((base_in->parameters.curv.implementation ==
          "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
       {
-        curvature_operation =
-          std::make_shared<Curvature::CurvatureOperation<dim>>(scratch_data,
-                                                               base_in->parameters.curv,
-                                                               base_in->parameters.normal_vec,
-                                                               curv_dof_idx_in,
-                                                               ls_quad_idx_in,
-                                                               normal_dof_idx_in,
-                                                               ls_dof_idx);
+        curvature_operation = std::make_shared<Curvature::CurvatureOperation<dim>>(
+          scratch_data,
+          base_in->parameters.curv,
+          base_in->parameters.normal_vec,
+          advec_diff_operation->get_advected_field(),
+          curv_dof_idx_in,
+          ls_quad_idx_in,
+          normal_dof_idx_in,
+          ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if ((base_in->parameters.curv.implementation == "adaflo") ||
@@ -214,7 +215,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *    compute the curvature of the initial level set field
      */
-    curvature_operation->solve(advec_diff_operation->get_advected_field());
+    curvature_operation->solve();
     /*
      *    correct the curvature value far away from the zero level set
      */
@@ -270,7 +271,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::update_normal_vector()
   {
-    curvature_operation->solve(advec_diff_operation->get_advected_field());
+    curvature_operation->solve();
   }
 
   template <int dim>
@@ -313,7 +314,7 @@ namespace MeltPoolDG::LevelSet
      */
     {
       TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::curvature");
-      curvature_operation->solve(advec_diff_operation->get_advected_field());
+      curvature_operation->solve();
     }
     /*
      *    ... and correct the curvature value far away from the zero level set

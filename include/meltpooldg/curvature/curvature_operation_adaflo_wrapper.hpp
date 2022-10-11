@@ -49,7 +49,7 @@ namespace MeltPoolDG::Curvature
      * Solver time step
      */
     void
-    solve(const VectorType &advected_field) override;
+    solve() override;
 
     const LinearAlgebra::distributed::Vector<double> &
     get_curvature() const override;
@@ -77,6 +77,7 @@ namespace MeltPoolDG::Curvature
     initialize_vectors();
 
     const ScratchData<dim> &scratch_data;
+    VectorType              advected_field;
     /**
      *  Vectors for computing the normals
      */

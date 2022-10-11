@@ -17,7 +17,7 @@ namespace MeltPoolDG
     {
     public:
       virtual void
-      solve(const LinearAlgebra::distributed::Vector<double> &advected_field) = 0;
+      solve() = 0;
 
       virtual void
       reinit() = 0;
