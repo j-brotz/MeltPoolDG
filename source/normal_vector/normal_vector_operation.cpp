@@ -84,7 +84,7 @@ namespace MeltPoolDG::NormalVector
       scratch_data.get_constraint(normal_dof_idx)
         .distribute(solution_history.get_current_solution().block(d));
 
-    int iter = 0;
+    unsigned int iter = 0;
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {

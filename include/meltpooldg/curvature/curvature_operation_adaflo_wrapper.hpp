@@ -35,10 +35,10 @@ namespace MeltPoolDG::Curvature
      * Constructor.
      */
     CurvatureOperationAdaflo(const ScratchData<dim> &  scratch_data,
-                             int                       advec_diff_dof_idx,
-                             int                       normal_vec_dof_idx,
-                             int                       curv_dof_idx,
-                             int                       curv_quad_idx,
+                             const int                 advec_diff_dof_idx,
+                             const int                 normal_vec_dof_idx,
+                             const int                 curv_dof_idx,
+                             const int                 curv_quad_idx,
                              const VectorType &        advected_field,
                              const Parameters<double> &data_in);
 
@@ -77,7 +77,7 @@ namespace MeltPoolDG::Curvature
     initialize_vectors();
 
     const ScratchData<dim> &scratch_data;
-    VectorType              advected_field;
+    const VectorType &      advected_field;
     /**
      *  Vectors for computing the normals
      */

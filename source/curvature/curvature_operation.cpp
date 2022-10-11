@@ -65,7 +65,7 @@ namespace MeltPoolDG::Curvature
     if (dim == 1)
       return;
 
-    int iter = 0;
+    unsigned int iter = 0;
 
     if (curvature_data.linear_solver.do_matrix_free)
       {

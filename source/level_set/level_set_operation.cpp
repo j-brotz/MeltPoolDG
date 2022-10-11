@@ -85,8 +85,6 @@ namespace MeltPoolDG::LevelSet
             vel_dof_idx,
             base_in,
             "level_set");
-
-        advec_diff_operation->reinit();
       }
 #endif
     else
@@ -168,6 +166,8 @@ namespace MeltPoolDG::LevelSet
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
+
+    reinit();
   }
 
   /**
@@ -598,9 +598,6 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::transform_level_set_to_smooth_heaviside()
   {
-    scratch_data.initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
-    scratch_data.initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
-
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell();
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
