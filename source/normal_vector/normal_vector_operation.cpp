@@ -27,8 +27,6 @@ namespace MeltPoolDG::NormalVector
 
     if (!normal_vector_operator)
       create_operator();
-
-    reinit();
   }
 
   template <int dim>
@@ -49,8 +47,16 @@ namespace MeltPoolDG::NormalVector
          * precompute preconditioner
          */
         if (normal_vector_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          diag_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_block_diagonal_preconditioner();
+          {
+            solution_level_set.update_ghost_values();
+            solution_history.get_current_solution().update_ghost_values();
+
+            diag_preconditioner_matrixfree =
+              preconditioner_matrixfree->compute_block_diagonal_preconditioner();
+
+            solution_history.get_current_solution().zero_out_ghost_values();
+            solution_level_set.zero_out_ghost_values();
+          }
       }
   }
 
@@ -200,12 +206,6 @@ namespace MeltPoolDG::NormalVector
           normal_dof_idx,
           normal_vector_data.linear_solver.preconditioner_type,
           *normal_vector_operator);
-        /*
-         * precompute system matrix
-         */
-        if (normal_vector_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          diag_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_block_diagonal_preconditioner();
       }
   }
 

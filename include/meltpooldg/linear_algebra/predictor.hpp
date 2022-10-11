@@ -70,6 +70,10 @@ namespace MeltPoolDG
       solution.equ(project_sol[0], *old_solution[0]);
       for (unsigned int s = 1; s < step; ++s)
         solution.add(project_sol[s], *old_solution[s]);
+
+      std::cout << "projection matrix" << std::endl;
+      projection_matrix.print(std::cout);
+      std::cout << "predictor: " << solution.l2_norm() << std::endl;
     }
 
   private:
@@ -101,9 +105,11 @@ namespace MeltPoolDG
              ExcInternalError());
 
       // TODO: extend for BlockVectors
-      AssertThrow(internal::is_block_vector<VectorType> ||
+      AssertThrow(!internal::is_block_vector<VectorType> ||
                     data.type != PredictorType::least_squares_projection,
                   ExcNotImplemented());
+
+      // block = true; least square = false
     }
 
     template <typename MatrixType>
