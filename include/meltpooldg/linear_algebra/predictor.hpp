@@ -99,6 +99,11 @@ namespace MeltPoolDG
       Assert(solution_history.size() >= 1, ExcInternalError());
       Assert(solution_history.size() >= 2 || data.type != PredictorType::linear_extrapolation,
              ExcInternalError());
+
+      // TODO: extend for BlockVectors
+      AssertThrow(internal::is_block_vector<VectorType> ||
+                    data.type != PredictorType::least_squares_projection,
+                  ExcNotImplemented());
     }
 
     template <typename MatrixType>

@@ -11,8 +11,10 @@
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
+#include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -90,12 +92,14 @@ namespace MeltPoolDG
       const unsigned int normal_dof_idx;
       const unsigned int normal_quad_idx;
       const unsigned int ls_dof_idx;
+
+      TimeIntegration::SolutionHistory<BlockVectorType> solution_history;
+
+      std::unique_ptr<Predictor<BlockVectorType, double>> predictor;
       /*
        *    This is the primary solution variable of this module, which will be also publically
        *    accessible for output_results.
        */
-      BlockVectorType solution_normal_vector;
-      BlockVectorType solution_normal_vector_old;
       BlockVectorType solution_normal_vector_predictor;
       BlockVectorType rhs;
       /*

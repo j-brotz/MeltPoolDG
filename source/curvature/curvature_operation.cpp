@@ -40,24 +40,32 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::solve()
   {
-    if (!predictor)
-      predictor =
-        std::make_unique<Predictor<VectorType, double>>(curvature_data.predictor, solution_history);
-
-    predictor->vmult(*curvature_operator, solution_curvature_predictor, rhs);
     /*
      *    compute and solve the normal vector field for the given level set
      */
     normal_vector_operation.solve();
+
+    solution_levelset.update_ghost_values();
+    normal_vector_operation.get_solution_normal_vector().update_ghost_values();
+
+    // compute predictor
+    if (!predictor)
+      predictor =
+        std::make_unique<Predictor<VectorType, double>>(curvature_data.predictor, solution_history);
+
+    if (curvature_data.linear_solver.do_matrix_free &&
+        curvature_data.predictor.type == PredictorType::least_squares_projection)
+      {
+        curvature_operator->create_rhs(rhs, normal_vector_operation.get_solution_normal_vector());
+      }
+
+    predictor->vmult(*curvature_operator, solution_curvature_predictor, rhs);
 
     // no need to compute curvature in 1d
     if (dim == 1)
       return;
 
     int iter = 0;
-
-    solution_levelset.update_ghost_values();
-    normal_vector_operation.get_solution_normal_vector().update_ghost_values();
 
     if (curvature_data.linear_solver.do_matrix_free)
       {
