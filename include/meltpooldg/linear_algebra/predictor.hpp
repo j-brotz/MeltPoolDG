@@ -32,17 +32,50 @@ namespace MeltPoolDG
     void
     vmult(const MatrixType &matrix, VectorType &solution, const VectorType &rhs) const
     {
-      // TODO
-      (void)matrix;
-      (void)solution;
-      (void)rhs;
-      AssertThrow(false, ExcNotImplemented());
+      const unsigned int n_old_solutions = old_solution.size();
+      internal_vectors.resize(n_old_solutions);
+      FullMatrix<double> projection_matrix(n_old_solutions, n_old_solutions);
+      unsigned int       step = 0;
+      for (; step < n_old_solutions; ++step)
+        {
+          internal_vectors[step].reinit(rhs, true);
+          matrix.vmult(internal_vectors[step], *old_solution[step]);
+          // modified Gram-Schmidt
+          projection_matrix(0, step) = internal_vectors[step] * internal_vectors[0];
+          for (unsigned int j = 0; j < step; ++j)
+            projection_matrix(j + 1, step) =
+              internal_vectors[step].add_and_dot(-projection_matrix(j, step) /
+                                                   projection_matrix(j, j),
+                                                 internal_vectors[j],
+                                                 internal_vectors[j + 1]);
+          if (projection_matrix(step, step) < 1e-16 * projection_matrix(0, 0))
+            break;
+        }
+
+      // Solve least-squares system
+      std::vector<double> project_sol(step);
+      for (unsigned int s = 0; s < step; ++s)
+        project_sol[s] = internal_vectors[s] * rhs;
+
+      for (int s = step - 1; s >= 0; --s)
+        {
+          double sum = project_sol[s];
+          for (unsigned int j = s + 1; j < step; ++j)
+            sum -= project_sol[j] * projection_matrix(s, j);
+          project_sol[s] = sum / projection_matrix(s, s);
+        }
+
+      // extrapolate solution from old values
+      solution.reinit(rhs, true);
+      solution.equ(project_sol[0], *old_solution[0]);
+      for (unsigned int s = 1; s < step; ++s)
+        solution.add(project_sol[s], *old_solution[s]);
     }
 
   private:
     std::vector<const VectorType *> old_solution;
 
-    std::vector<VectorType> internal_vectors;
+    mutable std::vector<VectorType> internal_vectors;
   };
 
   template <typename VectorType, typename number = double>
