@@ -126,6 +126,7 @@ namespace MeltPoolDG
         AssertThrow(false, ExcNotImplemented());
 
       solution_history.commit_old_solutions();
+      solution_history.get_current_solution().swap(solution);
 
       return;
     }
