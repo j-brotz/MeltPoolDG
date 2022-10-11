@@ -81,16 +81,18 @@ namespace MeltPoolDG
           paraview.write_time_step_size /
           time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
+
+    // set default write time step size for profiling to the end time
+    profiling.write_time_step_size = time_stepping.end_time - time_stepping.start_time;
     /*
      * calculate the profiling output frequency if a time step size
      */
     if (profiling.write_time_step_size > 0.0)
       {
-        AssertThrow(profiling.write_time_step_size >= time_stepping.time_step_size,
-                    ExcMessage(
-                      "The "
-                      "time step size for profiling must be equal or larger than the simulation "
-                      "time step size."));
+        AssertThrow(
+          profiling.write_time_step_size >= time_stepping.time_step_size,
+          ExcMessage("The time step size for profiling must be equal or larger than the simulation "
+                     "time step size."));
         profiling.write_frequency =
           profiling.write_time_step_size /
           time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
@@ -827,7 +829,7 @@ namespace MeltPoolDG
         "enable",
         profiling.enable,
         "Set this parameter to true if profiling should be enabled. It will be automatically"
-        "enabled for verbosity level >=3.");
+        "enabled for verbosity level >=1.");
       prm.add_parameter("write frequency",
                         profiling.write_frequency,
                         "Every n timestep that should be written");
