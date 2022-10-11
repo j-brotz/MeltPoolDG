@@ -344,7 +344,6 @@ namespace MeltPoolDG::NormalVector
   {
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
-        damping.clear();
         damping.resize(scratch_data.get_matrix_free().n_cell_batches());
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
