@@ -178,6 +178,9 @@ namespace MeltPoolDG::Curvature
     if (!curvature_data.linear_solver.do_matrix_free)
       curvature_operator->initialize_matrix_based(scratch_data);
 
+    if (curvature_operator)
+      curvature_operator->reinit();
+
     if (curvature_data.linear_solver.do_matrix_free)
       {
         /*
@@ -231,6 +234,8 @@ namespace MeltPoolDG::Curvature
       {
         curvature_operator->initialize_matrix_based(scratch_data);
       }
+
+    curvature_operator->reinit();
     /*
      * initialize preconditioner matrix-free
      */

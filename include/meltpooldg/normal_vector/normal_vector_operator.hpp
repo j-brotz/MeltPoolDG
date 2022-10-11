@@ -80,6 +80,10 @@ namespace MeltPoolDG
                                    const bool                          do_reinit_cells) const;
 
     private:
+      void
+      reinit() final;
+
+    private:
       const ScratchData<dim> &        scratch_data;
       const NormalVectorData<double> &normal_vector_data;
 
@@ -90,6 +94,8 @@ namespace MeltPoolDG
       // optional parameters for narrow band
       const bool        do_narrow_band;
       const VectorType *solution_level_set;
+
+      std::vector<VectorizedArray<double>> damping;
     };
 
     /**

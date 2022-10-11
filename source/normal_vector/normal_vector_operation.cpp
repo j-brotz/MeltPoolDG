@@ -47,6 +47,8 @@ namespace MeltPoolDG::NormalVector
     if (!normal_vector_data.linear_solver.do_matrix_free)
       normal_vector_operator->initialize_matrix_based(scratch_data);
 
+    normal_vector_operator->reinit();
+
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
         /*
@@ -198,6 +200,8 @@ namespace MeltPoolDG::NormalVector
      */
     if (!normal_vector_data.linear_solver.do_matrix_free)
       normal_vector_operator->initialize_matrix_based(scratch_data);
+
+    normal_vector_operator->reinit();
     /*
      * initialize preconditioner matrix-free
      */

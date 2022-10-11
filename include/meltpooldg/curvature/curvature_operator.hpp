@@ -57,6 +57,8 @@ namespace MeltPoolDG::Curvature
     const unsigned int ls_dof_idx;
     const VectorType * solution_level_set;
 
+    std::vector<VectorizedArray<double>> damping;
+
   public:
     CurvatureOperator(const ScratchData<dim> &     scratch_data_in,
                       const CurvatureData<double> &curvature_data,
@@ -88,6 +90,9 @@ namespace MeltPoolDG::Curvature
 
     void
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
+
+    void
+    reinit() final;
 
   private:
     void
