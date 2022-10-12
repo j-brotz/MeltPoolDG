@@ -38,7 +38,7 @@ namespace MeltPoolDG::Reinitialization
      */
     compute_normal = [&](bool do_compute_normal) {
       if (do_compute_normal && force_compute_normal)
-        normal_vector_operation_adaflo->solve(level_set);
+        normal_vector_operation_adaflo->solve();
     };
 
     /**

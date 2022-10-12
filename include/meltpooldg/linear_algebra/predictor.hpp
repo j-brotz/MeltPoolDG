@@ -43,11 +43,14 @@ namespace MeltPoolDG
           // modified Gram-Schmidt
           projection_matrix(0, step) = internal_vectors[step] * internal_vectors[0];
           for (unsigned int j = 0; j < step; ++j)
-            projection_matrix(j + 1, step) =
-              internal_vectors[step].add_and_dot(-projection_matrix(j, step) /
-                                                   projection_matrix(j, j),
-                                                 internal_vectors[j],
-                                                 internal_vectors[j + 1]);
+            {
+              projection_matrix(j + 1, step) = internal_vectors[step].add_and_dot(
+                -projection_matrix(j, step) /
+                  projection_matrix(j, j), // TODO: check for division by zero?
+                internal_vectors[j],
+                internal_vectors[j + 1]);
+            }
+
           if (projection_matrix(step, step) < 1e-16 * projection_matrix(0, 0))
             break;
         }
@@ -62,7 +65,7 @@ namespace MeltPoolDG
           double sum = project_sol[s];
           for (unsigned int j = s + 1; j < step; ++j)
             sum -= project_sol[j] * projection_matrix(s, j);
-          project_sol[s] = sum / projection_matrix(s, s);
+          project_sol[s] = sum / projection_matrix(s, s); // TODO check for division by zero?
         }
 
       // extrapolate solution from old values
@@ -87,6 +90,8 @@ namespace MeltPoolDG
     const TimeIterator<number> *                  time_iterator;
     const LeastSquaresProjection<VectorType>      lsp;
 
+    mutable unsigned int n_calls = 0;
+
   public:
     Predictor(const PredictorData<number>                   data,
               TimeIntegration::SolutionHistory<VectorType> &solution_history_in,
@@ -99,6 +104,11 @@ namespace MeltPoolDG
       Assert(solution_history.size() >= 1, ExcInternalError());
       Assert(solution_history.size() >= 2 || data.type != PredictorType::linear_extrapolation,
              ExcInternalError());
+
+      // TODO: extend for BlockVectors
+      AssertThrow(!internal::is_block_vector<VectorType> ||
+                    data.type != PredictorType::least_squares_projection,
+                  ExcNotImplemented());
     }
 
     template <typename MatrixType>
@@ -120,15 +130,20 @@ namespace MeltPoolDG
         }
       else if (data.type == PredictorType::least_squares_projection)
         {
-          lsp.vmult(matrix, solution, rhs);
+          // use LSP only if n_old_solution_vectors are stored
+          if (n_calls >= data.n_old_solution_vectors)
+            lsp.vmult(matrix, solution, rhs);
+          else
+            // use const predictor
+            solution.swap(solution_history.get_current_solution());
         }
       else
         AssertThrow(false, ExcNotImplemented());
 
-      // TODO: use SolutionHistory functionality;
-      solution_history.get_recent_old_solution().swap(solution_history.get_current_solution());
+      solution_history.commit_old_solutions();
       solution_history.get_current_solution().swap(solution);
 
+      n_calls += 1;
       return;
     }
   };

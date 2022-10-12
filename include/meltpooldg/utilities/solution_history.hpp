@@ -52,8 +52,8 @@ namespace TimeIntegration
     void
     commit_old_solutions()
     {
-      for (int i = solutions.size() - 2; i >= 1; --i)
-        solutions[i + 1] = solutions[i];
+      for (int i = solutions.size() - 1; i >= 1; --i)
+        solutions[i].swap(solutions[i - 1]);
     }
 
     void

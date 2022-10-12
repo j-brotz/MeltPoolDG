@@ -56,7 +56,7 @@ namespace MeltPoolDG
        * Solver time step
        */
       void
-      solve(const VectorType &advected_field) override;
+      solve() override;
 
       /**
        *  getter

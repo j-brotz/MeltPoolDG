@@ -148,6 +148,10 @@ namespace MeltPoolDG
                  material.solidus_temperature); //@todo: move to new material class
       }
 
+    // set default values dependent on predictor type
+    for (unsigned int i = 0; i < PredictorData<number>::all.size(); ++i)
+      PredictorData<number>::all[i]->set_default_values();
+
     // create output directory and copy parameter file
     {
       namespace fs = std::filesystem;
@@ -426,7 +430,7 @@ namespace MeltPoolDG
         normal_vec.narrow_band_threshold,
         "If >> normal vec do narrow band << is set to true this parameter determines the level set "
         "treshold for the narrow band.");
-      curv.predictor.add_parameters(prm);
+      normal_vec.predictor.add_parameters(prm);
 
       // default parameter
       normal_vec.linear_solver.solver_type         = LinearSolverType::CG;

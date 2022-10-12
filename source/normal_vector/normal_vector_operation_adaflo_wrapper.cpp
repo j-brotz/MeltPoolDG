@@ -95,9 +95,8 @@ namespace MeltPoolDG::NormalVector
 
   template <int dim>
   void
-  NormalVectorOperationAdaflo<dim>::solve(const VectorType &advected_field)
+  NormalVectorOperationAdaflo<dim>::solve()
   {
-    (void)advected_field;
     initialize_vectors();
     normal_vec_operation->compute_normal(false /* fast computation*/);
 

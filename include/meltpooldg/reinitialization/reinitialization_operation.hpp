@@ -15,11 +15,13 @@
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -115,6 +117,10 @@ namespace MeltPoolDG
       const unsigned int   reinit_quad_idx;
       const unsigned int   ls_dof_idx;
       const unsigned int   normal_dof_idx;
+
+      TimeIntegration::SolutionHistory<VectorType> solution_history;
+
+      std::unique_ptr<Predictor<VectorType, double>> predictor;
       /*
        *  This shared pointer will point to your user-defined reinitialization operator.
        */
@@ -129,8 +135,6 @@ namespace MeltPoolDG
        */
       VectorType solution_level_set;
 
-      VectorType delta_psi_vec;
-      VectorType delta_psi_vec_old;
       VectorType delta_psi_extrapolated;
       VectorType rhs;
 
