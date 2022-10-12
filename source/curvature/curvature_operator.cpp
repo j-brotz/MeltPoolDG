@@ -290,14 +290,6 @@ namespace MeltPoolDG::Curvature
           }
       }
 
-    //@todo: do only once in create_rhs
-    const VectorizedArray<double> damping =
-      NormalVector::compute_cell_size_dependent_filter_parameter_mf<dim>(
-        scratch_data,
-        curv_dof_idx,
-        curv_vals.get_current_cell_index(),
-        curvature_data.damping_scale_factor);
-
     for (unsigned int q_index = 0; q_index < curv_vals.n_q_points; ++q_index)
       {
         const VectorizedArray<number> narrow_band_mask =
@@ -307,11 +299,28 @@ namespace MeltPoolDG::Curvature
             1.0;
 
         curv_vals.submit_value(narrow_band_mask * curv_vals.get_value(q_index), q_index);
-        curv_vals.submit_gradient(narrow_band_mask * damping * curv_vals.get_gradient(q_index),
+        curv_vals.submit_gradient(narrow_band_mask * damping[curv_vals.get_current_cell_index()] *
+                                    curv_vals.get_gradient(q_index),
                                   q_index);
       }
 
     curv_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+  }
+
+  template <int dim, typename number>
+  void
+  CurvatureOperator<dim, number>::reinit()
+  {
+    if (curvature_data.linear_solver.do_matrix_free)
+      {
+        damping.resize(scratch_data.get_matrix_free().n_cell_batches());
+
+        for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
+          {
+            damping[cell] = NormalVector::compute_cell_size_dependent_filter_parameter_mf<dim>(
+              scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
+          }
+      }
   }
 
 

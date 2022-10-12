@@ -293,15 +293,10 @@ namespace MeltPoolDG::NormalVector
         level_set_vals.evaluate(EvaluationFlags::values);
       }
 
-    const VectorizedArray<double> damping = compute_cell_size_dependent_filter_parameter_mf<dim>(
-      scratch_data,
-      normal_dof_idx,
-      normal_vector_vals.get_current_cell_index(),
-      normal_vector_data.damping_scale_factor);
-
     for (unsigned int q_index = 0; q_index < normal_vector_vals.n_q_points; ++q_index)
       {
-        const auto grad_val = damping * normal_vector_vals.get_gradient(q_index);
+        const auto grad_val = damping[normal_vector_vals.get_current_cell_index()] *
+                              normal_vector_vals.get_gradient(q_index);
 
         const VectorizedArray<number> narrow_band_mask =
           (do_narrow_band) ?
@@ -340,6 +335,22 @@ namespace MeltPoolDG::NormalVector
           n /= n_norm; //@todo: add exception if norm is zero
         else
           n = 0.0;
+      }
+  }
+
+  template <int dim, typename number>
+  void
+  NormalVectorOperator<dim, number>::reinit()
+  {
+    if (normal_vector_data.linear_solver.do_matrix_free)
+      {
+        damping.resize(scratch_data.get_matrix_free().n_cell_batches());
+
+        for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
+          {
+            damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim>(
+              scratch_data, normal_dof_idx, cell, normal_vector_data.damping_scale_factor);
+          }
       }
   }
 

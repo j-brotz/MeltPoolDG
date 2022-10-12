@@ -118,6 +118,12 @@ namespace MeltPoolDG
      *
      * ---------------------------------------------------------------------*/
 
+    virtual void
+    reinit()
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
     inline void
     reset_dof_index(const unsigned int dof_idx_in)
     {
