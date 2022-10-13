@@ -141,7 +141,7 @@ namespace MeltPoolDG::Evaporation
       // gradient times correction values for the velocity DoFs from the linear solver.
       return get_tau();
 
-      // @note: alternative, in case we want to convert this function to a real material tangent and
+      // @note alternative, in case we want to convert this function to a real material tangent and
       // leave the multiplication with the velocity gradient to the external code.
       //
       // const auto identity  = Tensor<4,dim,VectorizedArray<number>>(identity_tensor<dim,

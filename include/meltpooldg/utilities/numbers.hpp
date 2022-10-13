@@ -9,7 +9,7 @@
 
 namespace dealii::numbers
 {
-  // @note: We did not use std::numeric_limits<double>::lowest() on purpose.
+  // @note We did not use std::numeric_limits<double>::lowest() on purpose.
   // @p invalid_double should serve as a default value for an optional parameter.
   // During parsing, the ParameterHandler converts the default value (e.g.
   // set to invalid_double) to a string via Patterns::Tools::to_string<double>()

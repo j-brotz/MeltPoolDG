@@ -668,12 +668,12 @@ namespace MeltPoolDG::Heat
                  *    h(T) = c_p * (T - T_ref).
                  *
                  *
-                 * @note: For the computation of h(T), it is assumed that the
-                 *        specific heat capacity c_p corresponds to the value
-                 *        for the liquid and solid phase.
+                 * @note For the computation of h(T), it is assumed that the
+                 *       specific heat capacity c_p corresponds to the value
+                 *       for the liquid and solid phase.
                  *
-                 * @note: Instead of T_ref we could have also introduced directly
-                 *        h_ref as an input parameter.
+                 * @note Instead of T_ref we could have also introduced directly
+                 *       h_ref as an input parameter.
                  */
                 VectorizedArray<number> specific_enthalpy(0.0);
 

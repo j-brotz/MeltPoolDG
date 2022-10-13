@@ -35,7 +35,7 @@ namespace MeltPoolDG
 
     /**
      * add simulation-specific parameters to the parameter handler
-     * @note: they will be available after create() has been
+     * @note they will be available after create() has been
      * called.
      */
     virtual void

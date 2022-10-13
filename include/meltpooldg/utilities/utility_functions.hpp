@@ -320,7 +320,7 @@ namespace MeltPoolDG
      *
      * https://github.com/kronbichler/adaflo/blob/f873472c43798304bbdb7f0cbeb556061c489020/source/level_set_base.cc#L68-L137
      *
-     * @note: semantics slightly modified
+     * @note semantics slightly modified
      * ---------------------------------------------------------------------------------
      */
     template <int dim>
@@ -389,8 +389,8 @@ namespace MeltPoolDG
      * means of a given @param interpolation_matrix. Finally, from the interpolated_values
      * the gradients are evaluated.
      *
-     * @note: The interpolation_matrix should be computed using
-     *        UtilityFunctions::create_dof_interpolation_matrix().
+     * @note The interpolation_matrix should be computed using
+     *       UtilityFunctions::create_dof_interpolation_matrix().
      *
      */
     template <int dim>

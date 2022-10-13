@@ -24,8 +24,8 @@ namespace MeltPoolDG::Utilities::MatrixFree
    *
    * with zero Dirichlet boundary conditions.
    *
-   * @note: When using this function, it must be ensured that this->dof_idx is
-   *        used for reading the source vector "x".
+   * @note When using this function, it must be ensured that this->dof_idx is
+   *       used for reading the source vector "x".
    */
   template <int dim,
             typename number           = double,
