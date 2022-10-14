@@ -36,6 +36,75 @@
 
 #include <sstream>
 
+namespace dealii
+{
+  // note: the content of this namespace will be part of deal.II
+  namespace internal
+  {
+    template <typename VectorType,
+              std::enable_if_t<!IsBlockVector<VectorType>::value, VectorType> * = nullptr>
+    unsigned int
+    n_blocks(const VectorType &)
+    {
+      return 1;
+    }
+
+
+
+    template <typename VectorType,
+              std::enable_if_t<IsBlockVector<VectorType>::value, VectorType> * = nullptr>
+    unsigned int
+    n_blocks(const VectorType &vector)
+    {
+      return vector.n_blocks();
+    }
+
+
+
+    template <typename VectorType,
+              std::enable_if_t<!IsBlockVector<VectorType>::value, VectorType> * = nullptr>
+    VectorType &
+    block(VectorType &vector, const unsigned int b)
+    {
+      AssertDimension(b, 0);
+      (void)b;
+      return vector;
+    }
+
+
+
+    template <typename VectorType,
+              std::enable_if_t<IsBlockVector<VectorType>::value, VectorType> * = nullptr>
+    typename VectorType::BlockType &
+    block(VectorType &vector, const unsigned int b)
+    {
+      return vector.block(b);
+    }
+
+
+
+    template <typename VectorType,
+              std::enable_if_t<!IsBlockVector<VectorType>::value, VectorType> * = nullptr>
+    const VectorType &
+    block(const VectorType &vector, const unsigned int b)
+    {
+      AssertDimension(b, 0);
+      (void)b;
+      return vector;
+    }
+
+
+
+    template <typename VectorType,
+              std::enable_if_t<IsBlockVector<VectorType>::value, VectorType> * = nullptr>
+    const typename VectorType::BlockType &
+    block(const VectorType &vector, const unsigned int b)
+    {
+      return vector.block(b);
+    }
+  } // namespace internal
+} // namespace dealii
+
 namespace MeltPoolDG
 {
   using namespace dealii;
@@ -289,11 +358,14 @@ namespace MeltPoolDG
           return;
         }
 
-      predictor.copy_locally_owned_data_from(old_vec);
-      predictor.add(current_time_increment / old_time_increment,
-                    old_vec,
-                    -current_time_increment / old_time_increment,
-                    old_old_vec);
+      const double fraction = current_time_increment / old_time_increment;
+
+      for (unsigned int c = 0; c < internal::n_blocks(predictor); ++c)
+        DEAL_II_OPENMP_SIMD_PRAGMA
+      for (unsigned int i = 0; i < internal::block(predictor, c).locally_owned_size(); ++i)
+        internal::block(predictor, c).local_element(i) =
+          (fraction + 1.0) * internal::block(old_vec, c).local_element(i) -
+          fraction * internal::block(old_old_vec, c).local_element(i);
     }
 
     /**
@@ -320,7 +392,7 @@ namespace MeltPoolDG
      *
      * https://github.com/kronbichler/adaflo/blob/f873472c43798304bbdb7f0cbeb556061c489020/source/level_set_base.cc#L68-L137
      *
-     * @note: semantics slightly modified
+     * @note semantics slightly modified
      * ---------------------------------------------------------------------------------
      */
     template <int dim>
