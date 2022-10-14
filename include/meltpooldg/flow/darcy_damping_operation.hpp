@@ -59,7 +59,7 @@ namespace MeltPoolDG::Flow
     /**
      * Compute the contribution of the Darcy damping force into a force vector @param force_rhs.
      *
-     * @note: The Darcy damping coefficient is computed based on the @param solid_fraction_vec.
+     * @note The Darcy damping coefficient is computed based on the @param solid_fraction_vec.
      */
     void
     compute_darcy_damping(VectorType &      force_rhs,
@@ -70,7 +70,7 @@ namespace MeltPoolDG::Flow
     /**
      * Compute the contribution of the Darcy damping force into a force vector @param force_rhs.
      *
-     * @note: To use this function, the Darcy damping coefficient at the quadrature points of every
+     * @note To use this function, the Darcy damping coefficient at the quadrature points of every
      * cell, stored in @param damping_at_q, must be set IN ADVANCE. The latter is accessible cellwise
      * by get_damping(cell, q) or as a global vector by get_damping_at_q().
      */

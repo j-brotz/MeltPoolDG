@@ -461,8 +461,8 @@ namespace MeltPoolDG
      * means of a given @param interpolation_matrix. Finally, from the interpolated_values
      * the gradients are evaluated.
      *
-     * @note: The interpolation_matrix should be computed using
-     *        UtilityFunctions::create_dof_interpolation_matrix().
+     * @note The interpolation_matrix should be computed using
+     *       UtilityFunctions::create_dof_interpolation_matrix().
      *
      */
     template <int dim>

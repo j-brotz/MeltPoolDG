@@ -126,7 +126,7 @@ namespace MeltPoolDG::Flow
      * [*] J.U. Brackbill, D.B. Kothe, C. Zemach: A continuum method for modeling surface
      *      tension, J. Comput. Phys. 100 (2) (1992) 335–354.
      *
-     * @note: As a conservative assumption, we choose α as max (α (T)) in case of
+     * @note As a conservative assumption, we choose α as max (α (T)) in case of
      * temperature-dependent surface tension.
      */
     double
@@ -140,7 +140,7 @@ namespace MeltPoolDG::Flow
      *  α = α_0 - α'_0 ( T - T    ).
      *                        α_0
      *
-     * @note: If α'_0 is positive, α decreases with increasing temperature.
+     * @note If α'_0 is positive, α decreases with increasing temperature.
      */
     template <typename number>
     number

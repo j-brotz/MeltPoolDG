@@ -12,7 +12,7 @@ namespace MeltPoolDG::PostProcessingTools
   /**
    * Create a (dim-1,dim) slice through a (dim,dim) triangulation.
    *
-   * @note: The post processor only supports dim > 1.
+   * @note The post processor only supports dim > 1.
    */
   template <int dim>
   class SliceCreator : public PostProcessorBase<dim>

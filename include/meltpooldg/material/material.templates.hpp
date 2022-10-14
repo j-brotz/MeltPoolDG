@@ -231,7 +231,7 @@ namespace MeltPoolDG
               {
                 t.liquid_fraction = 1. - temperature_dependent_solid_fraction;
                 t.solid_fraction  = temperature_dependent_solid_fraction;
-                // @note: gas_fraction = 0
+                // @note gas_fraction = 0
               }
             break;
           }
