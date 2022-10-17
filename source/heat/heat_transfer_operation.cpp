@@ -2,7 +2,6 @@
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
 namespace MeltPoolDG::Heat
 {

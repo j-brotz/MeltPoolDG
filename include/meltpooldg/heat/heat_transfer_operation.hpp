@@ -14,9 +14,9 @@
 #include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
-#include <meltpooldg/utilities/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
