@@ -34,6 +34,14 @@ namespace TimeIntegration
     }
 
     void
+    apply_old(std::function<void(VectorType &)> f)
+    {
+      for (unsigned int i = 1; i < solutions.size(); ++i)
+        f(solutions[i]);
+    }
+
+
+    void
     update_ghost_values(const bool check = false) const
     {
       for (unsigned int i = 0; i < solutions.size(); ++i)

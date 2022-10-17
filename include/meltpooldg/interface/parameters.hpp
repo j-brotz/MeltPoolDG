@@ -5,6 +5,7 @@
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
@@ -121,17 +122,6 @@ namespace MeltPoolDG
 
   template <typename number>
   std::vector<PredictorData<number> *> PredictorData<number>::all;
-
-  template <typename number = double>
-  struct NonlinearSolverData
-  {
-    int    max_nonlinear_iterations       = 10;
-    number field_correction_tolerance     = 1e-10;
-    number residual_tolerance             = 1e-9;
-    int    max_nonlinear_iterations_alt   = 0;
-    number field_correction_tolerance_alt = 1e-9;
-    number residual_tolerance_alt         = 1e-8;
-  };
 
   template <typename number = double>
   struct BaseData
