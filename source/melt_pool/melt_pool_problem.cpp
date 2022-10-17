@@ -251,12 +251,11 @@ namespace MeltPoolDG::MeltPool
         }
 
 
-        {
-          TimerOutput::Scope scope(scratch_data->get_timer(), "AMR");
-
-          if (base_in->parameters.amr.do_amr)
+        if (base_in->parameters.amr.do_amr)
+          {
+            TimerOutput::Scope scope(scratch_data->get_timer(), "AMR");
             refine_mesh(base_in);
-        }
+          }
 
         //@todo: adapt in case of adaptive time stepping
         if (!(n % base_in->parameters.profiling.write_frequency) &&
