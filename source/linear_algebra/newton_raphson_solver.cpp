@@ -1,7 +1,7 @@
 #include <deal.II/numerics/data_out.h>
 
+#include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/newton_raphson_solver.hpp>
 
 namespace MeltPoolDG
 {
@@ -75,11 +75,7 @@ namespace MeltPoolDG
     //
     if (!is_converged())
       {
-        DataOutBase::VtkFlags flags;
-        flags.write_higher_order_cells = true;
-
         DataOut<dim> data_out;
-        data_out.set_flags(flags);
 
         data_out.add_data_vector(scratch_data.get_dof_handler(dof_idx), solution, "solution");
         data_out.add_data_vector(scratch_data.get_dof_handler(dof_idx),

@@ -485,6 +485,8 @@ namespace MeltPoolDG
       prm.add_parameter("heat temperature infinity",
                         heat.temperature_infinity,
                         "Infinity temperature for the conductive and radiative boundary condition");
+
+      // TODO: use heat.nlsolve.add_parameters() routine
       prm.add_parameter("heat nlsolve max nonlinear iterations",
                         heat.nlsolve.max_nonlinear_iterations,
                         "Set the number of maximum nonlinear iterations with standard tolerances.");
