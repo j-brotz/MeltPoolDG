@@ -11,7 +11,7 @@
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
-#include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 
 namespace MeltPoolDG
 {

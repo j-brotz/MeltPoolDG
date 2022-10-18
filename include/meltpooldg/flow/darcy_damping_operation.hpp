@@ -4,7 +4,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Flow

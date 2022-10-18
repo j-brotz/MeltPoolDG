@@ -12,7 +12,7 @@
 #include <meltpooldg/interface/field_conditions.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
-#include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 // c++
 #include <memory>
 

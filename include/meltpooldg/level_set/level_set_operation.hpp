@@ -9,8 +9,8 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/curvature/curvature_operation_base.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
-#include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::LevelSet
