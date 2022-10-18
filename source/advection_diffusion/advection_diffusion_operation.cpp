@@ -74,8 +74,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, advec_diff_dof_idx); });
 
-    if (this->advec_diff_data.predictor.type == PredictorType::linear_extrapolation)
-      scratch_data.initialize_dof_vector(solution_advected_field_extrapolated, advec_diff_dof_idx);
+    scratch_data.initialize_dof_vector(solution_advected_field_extrapolated, advec_diff_dof_idx);
 
     scratch_data.initialize_dof_vector(user_rhs, advec_diff_dof_idx);
     scratch_data.initialize_dof_vector(rhs, advec_diff_dof_idx);

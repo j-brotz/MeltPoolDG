@@ -112,8 +112,6 @@ namespace MeltPoolDG::Heat
                                                                      temp_hanging_nodes_dof_idx);
 
     scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
-    // TODO: set to zero
-    solution_history.set_recent_old_solution(solution_history.get_current_solution());
   }
 
   template <int dim>
@@ -127,9 +125,9 @@ namespace MeltPoolDG::Heat
     scratch_data.initialize_dof_vector(user_rhs, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(heat_source, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(temperature_interface, temp_hanging_nodes_dof_idx);
-    if (heat_data.predictor.type == PredictorType::linear_extrapolation)
-      scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
-    else if (heat_data.predictor.type == PredictorType::least_squares_projection)
+    scratch_data.initialize_dof_vector(temperature_extrapolated, temp_dof_idx);
+
+    if (heat_data.predictor.type == PredictorType::least_squares_projection)
       scratch_data.initialize_dof_vector(temp, temp_hanging_nodes_dof_idx);
 
     /*
