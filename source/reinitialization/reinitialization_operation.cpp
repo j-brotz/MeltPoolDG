@@ -77,7 +77,8 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::reinit()
   {
-    solution_history.apply([this](VectorType &v) { scratch_data.initialize_dof_vector(v); });
+    solution_history.apply(
+      [this](VectorType &v) { scratch_data.initialize_dof_vector(v, reinit_dof_idx); });
 
     scratch_data.initialize_dof_vector(solution_level_set, ls_dof_idx);
     scratch_data.initialize_dof_vector(delta_psi_extrapolated, reinit_dof_idx);

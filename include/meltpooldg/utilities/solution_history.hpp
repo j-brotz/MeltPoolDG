@@ -34,6 +34,16 @@ namespace TimeIntegration
     }
 
     void
+    apply_old(std::function<void(VectorType &)> f)
+    {
+      Assert(solutions.size() > 1, ExcInternalError());
+
+      for (unsigned int i = 1; i < solutions.size(); ++i)
+        f(solutions[i]);
+    }
+
+
+    void
     update_ghost_values(const bool check = false) const
     {
       for (unsigned int i = 0; i < solutions.size(); ++i)
@@ -52,14 +62,17 @@ namespace TimeIntegration
     void
     commit_old_solutions()
     {
+      //@note we don't use swap for now since in the HeatOperation
+      // solutions[0] is initialized with a different DoFHandler
+      // than solutions[1]
       for (int i = solutions.size() - 1; i >= 1; --i)
-        solutions[i].swap(solutions[i - 1]);
+        solutions[i] = solutions[i - 1];
     }
 
     void
     set_recent_old_solution(const VectorType &src)
     {
-      Assert(solutions.size() >= 1, ExcInternalError());
+      Assert(solutions.size() > 1, ExcInternalError());
 
       solutions[1] = src;
     }
