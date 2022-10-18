@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  *
- * Author: Magdalena Schreter, TUM, Oktober 2022
+ * Author: Magdalena Schreter, TUM, October 2022
  *
  * ---------------------------------------------------------------------*/
 #pragma once
@@ -10,9 +10,11 @@
 namespace MeltPoolDG::PostProcessingTools
 {
   /**
-   * Create a (dim-1,dim) slice through a (dim,dim) triangulation.
+   * Compute the integral of the divergence over the domain Ω of
+   * a vector, e.g. for the velocity u
    *
-   * @note The post processor only supports dim > 1.
+   *   ∫ ∇·u dΩ
+   *  Ω
    */
   template <int dim>
   class DivergenceCalculator : public PostProcessorBase<dim>
@@ -29,12 +31,22 @@ namespace MeltPoolDG::PostProcessingTools
       , request_variable(request_variable)
     {}
 
+    /**
+     * Main result of this postprocessor.
+     */
     double
     get_divergence() const
     {
       return diver;
     }
 
+    /**
+     * Process current vector requested by @p request_variable within
+     * @p generic_data_out.
+     *
+     * TODO: We could do this calculation matrix-free, if GenericDataOut has a matrix-free
+     * object.
+     */
     void
     process(const unsigned int /*n_time_step*/) override
     {
@@ -73,6 +85,9 @@ namespace MeltPoolDG::PostProcessingTools
       generic_data_out->get_vector(request_variable).zero_out_ghost_values();
     }
 
+    /**
+     * Reinit with new GenericDataOut object.
+     */
     void
     reinit(const GenericDataOut<dim> &generic_data_out_in) override
     {
