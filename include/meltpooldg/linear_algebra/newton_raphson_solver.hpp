@@ -17,44 +17,52 @@ namespace MeltPoolDG
   template <int dim, typename VectorType = LinearAlgebra::distributed::Vector<double>>
   class NewtonRaphsonSolver
   {
-  private:
-    const ScratchData<dim> &           scratch_data;
-    const NonlinearSolverData<double> &nlsolve_data;
+  public:
+    std::function<void(const VectorType &evaluation_point, VectorType &residual)> residual = {};
+    std::function<int(const VectorType &rhs, VectorType &dst)> solve_with_jacobian         = {};
+    std::function<void(VectorType &v)>                         reinit_vector               = {};
+    std::function<void(VectorType &v)>                         distribute_constraints      = {};
 
-    const unsigned int dof_idx;
-    const unsigned int quad_idx;
-    const VectorType & solution_old;
-    VectorType &       solution;
+    // TODO: remove and replace by standard l2_norm() (?)
+    std::function<double()> norm_of_solution_vector = {};
+
+  private:
+    const NonlinearSolverData<double> nlsolve_data;
+
+    dealii::ConditionalOStream pcout;
 
     const int max_number_of_iterations;
     double    residual_tolerance;
     double    field_correction_tolerance;
 
-    const std::function<void(VectorType &rhs)> &create_rhs;
-    const std::function<int(VectorType &solution_update, const VectorType &rhs)>
-      &solve_linear_system;
+    VectorType rhs;
+    VectorType solution_update;
 
-
-    VectorType         rhs;
-    VectorType         solution_update;
     int                iteration_counter = 0;
     std::ostringstream str_;
 
   public:
-    NewtonRaphsonSolver(const ScratchData<dim> &                    scratch_data,
-                        const NonlinearSolverData<double> &         nlsolve_data,
-                        const unsigned int                          dof_idx,
-                        const unsigned int                          quad_idx,
-                        const VectorType &                          solution_old,
-                        VectorType &                                solution,
-                        const std::function<void(VectorType &rhs)> &create_rhs,
-                        const std::function<int(VectorType &solution_update, const VectorType &rhs)>
-                          &solve_linear_system);
+    NewtonRaphsonSolver(const NonlinearSolverData<double> &nlsolve_data);
 
     void
-    solve();
+    solve(VectorType &solution);
 
-  public:
+    const VectorType &
+    get_residual()
+    {
+      return rhs;
+    }
+
+    const VectorType &
+    get_solution_update()
+    {
+      return solution_update;
+    }
+
+  private:
+    void
+    solve_increment();
+
     double
     suggest_new_time_increment();
 
@@ -64,11 +72,11 @@ namespace MeltPoolDG
     bool
     is_converged();
 
+    void
+    print_header();
+
     std::string
     print_checkmark(bool is_converged);
-
-    void
-    solve_increment();
   };
 
 } // namespace MeltPoolDG

@@ -15,8 +15,10 @@
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
+#include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -48,12 +50,13 @@ namespace MeltPoolDG::Heat
      *    This are the primary solution variables of this module, which will be also publically
      *    accessible for output_results.
      */
-    VectorType temperature;
-    VectorType temperature_old;
     VectorType temperature_extrapolated;
     VectorType heat_source;
     VectorType user_rhs;
+    VectorType temp;
     VectorType temperature_interface;
+
+    std::unique_ptr<Predictor<VectorType, double>> predictor;
 
     // optional flow velocity for internal convection
     const unsigned int vel_dof_idx;
@@ -62,6 +65,8 @@ namespace MeltPoolDG::Heat
     // optional level-set heaviside field for two phase flow
     const unsigned int ls_dof_idx;
     VectorType *       level_set_as_heaviside;
+
+    TimeIntegration::SolutionHistory<VectorType> solution_history;
 
     std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
 

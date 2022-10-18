@@ -163,7 +163,8 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::reinit()
   {
-    solution_history.apply([this](VectorType &v) { scratch_data.initialize_dof_vector(v); });
+    solution_history.apply(
+      [this](VectorType &v) { scratch_data.initialize_dof_vector(v, curv_dof_idx); });
 
     scratch_data.initialize_dof_vector(rhs, curv_dof_idx);
     scratch_data.initialize_dof_vector(solution_curvature_predictor, curv_dof_idx);

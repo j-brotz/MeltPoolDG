@@ -606,6 +606,7 @@ namespace MeltPoolDG::Heat
             evapor_vals->evaluate(EvaluationFlags::values);
           }
 
+
         for (unsigned int q_index = 0; q_index < temp_vals.n_q_points; ++q_index)
           {
             const auto [rho_cp, conductivity] =
@@ -992,10 +993,7 @@ namespace MeltPoolDG::Heat
             temp_old_vals.reinit(temp_vals.get_current_cell_index());
             temp_old_vals.read_dof_values_plain(temperature_old);
             temp_old_vals.evaluate(EvaluationFlags::values);
-          }
 
-        if (data.solidification)
-          {
             temp_lin_vals.reinit(temp_vals.get_current_cell_index());
             temp_lin_vals.read_dof_values_plain(temperature);
             temp_lin_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
@@ -1078,7 +1076,7 @@ namespace MeltPoolDG::Heat
     // evaluate the evaporative heat loss term as surface integral
     if (evaporative_mass_flux && surface_mesh_info && do_phenomenological_recoil_pressure)
       {
-        // @todo
+        // TODO
       }
   }
 

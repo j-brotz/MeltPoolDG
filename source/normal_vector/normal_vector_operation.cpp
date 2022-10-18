@@ -33,7 +33,8 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::reinit()
   {
-    solution_history.apply([this](BlockVectorType &v) { scratch_data.initialize_dof_vector(v); });
+    solution_history.apply(
+      [this](BlockVectorType &v) { scratch_data.initialize_dof_vector(v, normal_dof_idx); });
 
     scratch_data.initialize_dof_vector(solution_normal_vector_predictor, normal_dof_idx);
     scratch_data.initialize_dof_vector(rhs, normal_dof_idx);
