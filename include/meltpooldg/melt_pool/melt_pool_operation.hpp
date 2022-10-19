@@ -123,6 +123,13 @@ namespace MeltPoolDG
       VectorizedArray<double>
       compute_solid_fraction(const VectorizedArray<double> &current_temperature) const;
 
+      /**
+       * This function returns the solid fraction from a linear interpolation between the solidus
+       * and liquidus temperatures, i.e. 0 (T>=T_liquidus) and 1 (T<=T_solidus).
+       */
+      double
+      compute_solid_fraction(const double temeprature) const;
+
     private:
       void
       make_constraints_in_spatially_fixed_solid_domain();
@@ -175,13 +182,6 @@ namespace MeltPoolDG
         const DoFHandler<dim> &          level_set_dof_handler,
         const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
         AffineConstraints<double> &      reinit_dirichlet_constraints);
-
-      /**
-       * This function returns the solid fraction from a linear interpolation between the solidus
-       * and liquidus temperatures, i.e. 0 (T>=T_liquidus) and 1 (T<=T_solidus).
-       */
-      double
-      compute_solid_fraction(double temeprature) const;
     };
   } // namespace MeltPool
 } // namespace MeltPoolDG

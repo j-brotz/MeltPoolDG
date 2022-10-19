@@ -1,6 +1,8 @@
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 #  include <deal.II/fe/fe_simplex_p.h>
 
+#  include <deal.II/grid/grid_generator.h>
+
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
@@ -714,6 +716,35 @@ namespace MeltPoolDG::Flow
 
     viscosity.update_ghost_values();
     data_out.add_data_vector(dof_handler_parameters, viscosity, "viscosity");
+  }
+
+  template <int dim>
+  void
+  AdafloWrapper<dim>::set_face_average_density(
+    const typename Triangulation<dim>::cell_iterator &cell,
+    const unsigned int                                face,
+    const double                                      density)
+  {
+    navier_stokes->set_face_average_density(cell, face, density);
+  }
+
+  template <int dim>
+  const Quadrature<dim> &
+  AdafloWrapper<dim>::get_face_center_quad()
+  {
+    if (!face_center_quad)
+      {
+        // quadrature rule of face centers
+        std::vector<Point<dim>> face_centers;
+        Triangulation<dim>      tria;
+        GridGenerator::hyper_cube(tria, 0, 1);
+        for (unsigned int f = 0; f < GeometryInfo<dim>::faces_per_cell; ++f)
+          face_centers.push_back(tria.begin()->face(f)->center());
+
+        face_center_quad = std::make_unique<Quadrature<dim>>(face_centers);
+      }
+
+    return *face_center_quad;
   }
 
   template <int dim>

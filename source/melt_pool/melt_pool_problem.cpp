@@ -1085,6 +1085,81 @@ namespace MeltPoolDG::MeltPool
         Journal::print_line(scratch_data->get_pcout(), str.str(), "melt_pool_problem");
       }
 
+#ifdef MELT_POOL_DG_WITH_ADAFLO
+    if (parameters.adaflo_params.params.augmented_taylor_hood == true)
+      {
+        ls_as_heaviside.update_ghost_values();
+
+        FEValues<dim> ls_values(
+          scratch_data->get_mapping(),
+          scratch_data->get_fe(ls_dof_idx),
+          dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->get_face_center_quad(),
+          update_values);
+        FEValues<dim> temp_values(
+          scratch_data->get_mapping(),
+          scratch_data->get_fe(temp_dof_idx),
+          dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->get_face_center_quad(),
+          update_values);
+
+        std::vector<double> hs(ls_values.n_quadrature_points);
+        std::vector<double> temp(ls_values.n_quadrature_points);
+
+        for (const auto &cell : scratch_data->get_triangulation().active_cell_iterators())
+          {
+            if (cell->is_locally_owned())
+              {
+                TriaIterator<DoFCellAccessor<dim, dim, false>> ls_dof_cell(
+                  &scratch_data->get_triangulation(),
+                  cell->level(),
+                  cell->index(),
+                  &scratch_data->get_dof_handler(ls_dof_idx));
+
+                ls_values.reinit(ls_dof_cell);
+                ls_values.get_function_values(ls_as_heaviside, hs);
+
+                const auto indicator = parameters.material.two_phase_properties_transition_type ==
+                                           TwoPhaseFluidPropertiesTransitionType::sharp ?
+                                         UtilityFunctions::heaviside(hs, 0.5) :
+                                         hs;
+
+                std::vector<double> rho_ls(ls_values.n_quadrature_points,
+                                           parameters.material.second.density);
+
+                if (parameters.heat.solidification)
+                  {
+                    TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
+                      &scratch_data->get_triangulation(),
+                      cell->level(),
+                      cell->index(),
+                      &scratch_data->get_dof_handler(temp_dof_idx));
+
+                    temp_values.reinit(temp_dof_cell);
+                    temp_values.get_function_values(heat_operation->get_temperature(), temp);
+
+                    for (unsigned int i = 0; i < rho_ls.size(); ++i)
+                      rho_ls[i] = LevelSet::Tools::interpolate_cubic(
+                        melt_pool_operation->compute_solid_fraction(temp[i]),
+                        parameters.material.second.density,
+                        parameters.material.solid.density);
+                  }
+
+                const double rho_g = parameters.material.first.density;
+
+                for (unsigned int f = 0; f < GeometryInfo<dim>::faces_per_cell; ++f)
+                  dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())
+                    ->set_face_average_density(
+                      cell,
+                      f,
+                      (parameters.material.two_phase_properties_transition_type ==
+                       TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation) ?
+                        LevelSet::Tools::interpolate_reciprocal(indicator[f], rho_g, rho_ls[f]) :
+                        LevelSet::Tools::interpolate(indicator[f], rho_g, rho_ls[f]));
+              }
+          }
+        ls_as_heaviside.zero_out_ghost_values();
+      }
+#endif
+
     if (parameters.heat.solidification)
       heat_operation->get_temperature().zero_out_ghost_values();
   }
