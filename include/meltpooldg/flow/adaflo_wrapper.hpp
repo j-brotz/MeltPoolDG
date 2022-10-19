@@ -13,7 +13,7 @@
 #  include <meltpooldg/flow/flow_base.hpp>
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulation_base.hpp>
-#  include <meltpooldg/utilities/generic_data_out.hpp>
+#  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/utilities/time_iterator.hpp>
 #  include <meltpooldg/utilities/utility_functions.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>

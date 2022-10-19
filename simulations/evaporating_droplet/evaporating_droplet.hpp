@@ -1,6 +1,5 @@
 #pragma once
 
-// deal-specific libraries
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
@@ -11,10 +10,11 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <iostream>
-
-// MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/post_processing/divergence_calc.hpp>
+#include <meltpooldg/utilities/journal.hpp>
+
+#include <iostream>
 
 namespace MeltPoolDG
 {
@@ -35,27 +35,27 @@ namespace MeltPoolDG
       class InitialValuesLS : public Function<dim>
       {
       public:
-        InitialValuesLS(const double eps)
+        InitialValuesLS()
           : Function<dim>()
           , distance_sphere(Point<dim>(), droplet_radius)
-          , eps(eps)
         {}
 
         double
         value(const Point<dim> &p, const unsigned int /*component*/) const
         {
-          return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-            -distance_sphere.value(p), eps);
+          return -distance_sphere.value(p);
         }
 
       private:
         const Functions::SignedDistance::Sphere<dim> distance_sphere;
-        const double                                 eps;
       };
 
       template <int dim>
       class SimulationEvaporatingDroplet : public SimulationBase<dim>
       {
+      private:
+        mutable std::shared_ptr<PostProcessingTools::DivergenceCalculator<dim>> diver;
+
       public:
         SimulationEvaporatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
           : SimulationBase<dim>(parameter_file, mpi_communicator)
@@ -144,18 +144,35 @@ namespace MeltPoolDG
         void
         set_field_conditions() override
         {
-          double eps =
-            UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
-
-          AssertThrow(eps > 0, ExcNotImplemented());
-
-          this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
+          this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(),
+                                         "signed_distance");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
         }
-      };
 
+        void
+        do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
+        {
+          dealii::ConditionalOStream pcout(
+            std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
+          if (!diver)
+            diver = std::make_shared<PostProcessingTools::DivergenceCalculator<dim>>(
+              generic_data_out, "interface_velocity");
+          else
+            // @todo: We need to reinit, since generic_data_out is currently created
+            // for every time step.
+            diver->reinit(generic_data_out);
+
+
+          diver->process(0 /*does not matter*/);
+          std::ostringstream str;
+          str << "∇·uΓ = " << std::setprecision(10) << std::scientific << diver->get_divergence();
+
+          Journal::print_line(pcout, str.str(), "user_defined_postprocess", 4);
+          ;
+        }
+      };
     } // namespace EvaporatingDroplet
   }   // namespace Simulation
 } // namespace MeltPoolDG

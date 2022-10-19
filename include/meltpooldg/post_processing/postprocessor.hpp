@@ -15,8 +15,8 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 

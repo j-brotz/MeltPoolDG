@@ -18,9 +18,9 @@
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
-#include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>

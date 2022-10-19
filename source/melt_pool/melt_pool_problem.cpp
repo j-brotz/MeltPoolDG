@@ -1146,6 +1146,23 @@ namespace MeltPoolDG::MeltPool
         heat_operation->attach_output_vectors(data_out);
       if (darcy_operation)
         darcy_operation->attach_output_vectors(data_out);
+
+      if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump &&
+          base_in->parameters.evapor.level_set_source_term_type ==
+            EvaporationLevelSetSourceTermType::interface_velocity)
+        {
+          /*
+           *  interface velocity
+           */
+          std::vector<DataComponentInterpretation::DataComponentInterpretation>
+            vector_component_interpretation(
+              dim, DataComponentInterpretation::component_is_part_of_vector);
+
+          data_out.add_data_vector(scratch_data->get_dof_handler(vel_dof_idx),
+                                   interface_velocity,
+                                   std::vector<std::string>(dim, "interface_velocity"),
+                                   vector_component_interpretation);
+        }
     };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(), current_time);

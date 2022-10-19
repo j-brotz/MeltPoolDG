@@ -12,9 +12,9 @@
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/heat/laser_heat_source_uniform.hpp>
 #include <meltpooldg/material/material.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/generic_data_out.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Heat

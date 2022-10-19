@@ -13,7 +13,7 @@
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/material/material.hpp>
-#include <meltpooldg/utilities/generic_data_out.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
