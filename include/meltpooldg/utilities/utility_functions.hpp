@@ -143,6 +143,17 @@ namespace MeltPoolDG
     }
 
     template <typename number>
+    std::vector<number>
+    heaviside(const std::vector<number> in, const number limit = 0.0)
+    {
+      std::vector<number> out(in.size());
+      for (unsigned int i = 0; i < in.size(); ++i)
+        out[i] = heaviside(in[i], limit);
+
+      return out;
+    }
+
+    template <typename number>
     VectorizedArray<number>
     heaviside(const VectorizedArray<number> &in, const number limit = 0.0)
     {
@@ -429,7 +440,7 @@ namespace MeltPoolDG
             }
         }
       else if (const FE_Q_DG0<dim> *fe_1 =
-                 dynamic_cast<const FE_Q_DG0<dim> *>(&dof_handler_1.get_fe()))
+                 dynamic_cast<const FE_Q_DG0<dim> *>(&dof_handler_1.get_fe().base_element(0)))
         {
           const std::vector<unsigned int> lexicographic_p =
             fe_1->get_poly_space_numbering_inverse();

@@ -163,7 +163,15 @@ namespace MeltPoolDG::Flow
     distribute_constraints() override;
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out);
+    attach_output_vectors(GenericDataOut<dim> &data_out) override;
+
+    void
+    set_face_average_density(const typename Triangulation<dim>::cell_iterator &cell,
+                             const unsigned int                                face,
+                             const double                                      density);
+
+    const Quadrature<dim> &
+    get_face_center_quad();
 
   private:
     void
@@ -182,6 +190,7 @@ namespace MeltPoolDG::Flow
      * Reference to the actual Navier-Stokes solver from adaflo
      */
     std::unique_ptr<NavierStokes<dim>> navier_stokes;
+    std::unique_ptr<Quadrature<dim>>   face_center_quad;
 
     const FlowParameters &adaflo_params;
 
