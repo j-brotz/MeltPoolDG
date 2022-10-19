@@ -440,7 +440,7 @@ namespace MeltPoolDG
             }
         }
       else if (const FE_Q_DG0<dim> *fe_1 =
-                 dynamic_cast<const FE_Q_DG0<dim> *>(&dof_handler_1.get_fe()))
+                 dynamic_cast<const FE_Q_DG0<dim> *>(&dof_handler_1.get_fe().base_element(0)))
         {
           const std::vector<unsigned int> lexicographic_p =
             fe_1->get_poly_space_numbering_inverse();
