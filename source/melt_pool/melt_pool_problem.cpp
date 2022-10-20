@@ -796,6 +796,10 @@ namespace MeltPoolDG::MeltPool
 
         evaporation_operation->compute_evaporative_mass_flux();
       }
+
+    if (evaporation_operation &&
+        base_in->parameters.evapor.formulation_source_term_heat == InterfaceForceType::sharp)
+      level_set_operation->update_surface_mesh();
   }
 
   template <int dim>
