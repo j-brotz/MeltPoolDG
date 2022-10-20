@@ -693,7 +693,7 @@ namespace MeltPoolDG::LevelSet
     str << "Surface mesh generated, "
         << Utilities::MPI::sum(surface_mesh_info.size(), scratch_data.get_mpi_comm())
         << " cut cells found.";
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "level set", 1);
+    Journal::print_line(scratch_data.get_pcout(), str.str(), "level set", 0);
   }
 
   template class LevelSetOperation<1>;
