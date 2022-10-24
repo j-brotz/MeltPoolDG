@@ -105,10 +105,18 @@ namespace MeltPoolDG::Curvature
 
   template <int dim>
   void
+  CurvatureOperationAdaflo<dim>::update_normal_vector()
+  {
+    advected_field.update_ghost_values();
+    normal_vector_operation_adaflo->solve();
+    advected_field.zero_out_ghost_values();
+  }
+
+  template <int dim>
+  void
   CurvatureOperationAdaflo<dim>::solve()
   {
     advected_field.update_ghost_values();
-    initialize_vectors();
     normal_vector_operation_adaflo->solve();
     curvature_operation->compute_curvature(
       false); // @todo: adaflo does not use the boolean function argument

@@ -18,6 +18,10 @@ namespace MeltPoolDG
     template <int dim>
     class AdvectionDiffusionOperationBase
     {
+    protected:
+      // determine whether solution vectors are prepared for time advance
+      bool ready_for_time_advance = false;
+
     public:
       AdvectionDiffusionData<double> advec_diff_data;
 
@@ -25,7 +29,13 @@ namespace MeltPoolDG
       init_time_advance() = 0;
 
       virtual void
-      solve() = 0;
+      finish_time_advance()
+      {
+        ready_for_time_advance = false;
+      }
+
+      virtual void
+      solve(const bool do_finish_time_step = true) = 0;
 
       virtual void
       reinit() = 0;

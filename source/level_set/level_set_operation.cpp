@@ -271,7 +271,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::update_normal_vector()
   {
-    curvature_operation->solve();
+    curvature_operation->update_normal_vector();
   }
 
   template <int dim>
@@ -286,7 +286,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::solve()
+  LevelSetOperation<dim>::solve(const bool do_finish_time_step)
   {
     if (!ready_for_time_advance)
       init_time_advance();
@@ -295,8 +295,18 @@ namespace MeltPoolDG::LevelSet
      */
     {
       TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::advect");
-      advec_diff_operation->solve();
+      advec_diff_operation->solve(false /*do_finish_time_step; is done as a subsequent step*/);
     }
+
+    if (do_finish_time_step)
+      finish_time_advance();
+  }
+
+  template <int dim>
+  void
+  LevelSetOperation<dim>::finish_time_advance()
+  {
+    advec_diff_operation->finish_time_advance();
     /*
      *  2) solve the reinitialization problem of the level set equation
      */
@@ -327,6 +337,7 @@ namespace MeltPoolDG::LevelSet
 
     ready_for_time_advance = false;
   }
+
 
   template <int dim>
   const LinearAlgebra::distributed::Vector<double> &

@@ -83,6 +83,15 @@ namespace MeltPoolDG::MeltPool
       bool do_melt_pool                  = false;
       bool do_advect_level_set           = true;
       bool do_extrapolate_coupling_terms = false;
+
+      struct
+      {
+        // number of iterations to balance nonlinearity in advection diffusion equation with
+        // evaporation
+        int    n_max_iter = 1;
+        double tol        = 1e-10;
+      } level_set_evapor_coupling;
+
       struct
       {
         AMRStrategy                 strategy = AMRStrategy::generic;

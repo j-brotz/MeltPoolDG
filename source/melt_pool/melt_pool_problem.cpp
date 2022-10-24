@@ -49,46 +49,111 @@ namespace MeltPoolDG::MeltPool
          ******************************************************************************************/
         if (problem_specific_parameters.do_advect_level_set)
           {
-            // TODO: remove; could not be removed since during flow_operation->init_time_advance()
-            // an inconsistency in the DoF vectors is introduced
-            scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
-            interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
+            TableHandler iter_table;
+            VectorType   iter_res;
 
-            if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump)
+            const bool do_ls_iteration =
+              problem_specific_parameters.level_set_evapor_coupling.n_max_iter > 1;
+
+            if (do_ls_iteration)
+              scratch_data->initialize_dof_vector(iter_res, ls_dof_idx);
+
+            for (int i = 0; i < problem_specific_parameters.level_set_evapor_coupling.n_max_iter;
+                 ++i)
               {
-                TimerOutput::Scope scope(scratch_data->get_timer(),
-                                         "Evaporation::level_set_source_term");
-
-                switch (base_in->parameters.evapor.level_set_source_term_type)
+                if (do_ls_iteration)
                   {
-                    default:
-                      case EvaporationLevelSetSourceTermType::interface_velocity: {
-                        // Option 1: compute modified advection velocity due to evaporation
-                        if (problem_specific_parameters.do_extrapolate_coupling_terms)
-                          level_set_operation->update_normal_vector();
+                    iter_res -= level_set_operation->get_level_set();
 
-                        evaporation_operation->compute_evaporation_velocity();
-                        interface_velocity += evaporation_operation->get_velocity();
-                        break;
+                    if (base_in->parameters.base.verbosity_level > 0)
+                      {
+                        iter_table.add_value("i", i);
+                        iter_table.add_value("|res|", iter_res.l2_norm());
+                        iter_table.add_value("|phi|",
+                                             level_set_operation->get_level_set().l2_norm());
                       }
 
-                    case EvaporationLevelSetSourceTermType::rhs:
-                      // Option 2: use source term as rhs in the level set equation
-                      scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
-                      evaporation_operation->compute_level_set_source_term(
-                        level_set_rhs,
-                        ls_dof_idx,
-                        level_set_operation->get_level_set(),
-                        pressure_dof_idx);
-                      level_set_operation->set_level_set_user_rhs(level_set_rhs);
+                    // early return of iteration if norm is already very small
+                    if (iter_res.l2_norm() <
+                        problem_specific_parameters.level_set_evapor_coupling.tol)
                       break;
+
+                    iter_res.copy_locally_owned_data_from(level_set_operation->get_level_set());
+                    Journal::print_decoration_line(scratch_data->get_pcout(1));
+                    Journal::print_line(scratch_data->get_pcout(1),
+                                        "level set - evapor coupling; #iter " + std::to_string(i),
+                                        "MeltPoolProblem");
+                    Journal::print_decoration_line(scratch_data->get_pcout(1));
                   }
+
+                // TODO: remove; could not be removed since during
+                // flow_operation->init_time_advance() an inconsistency in the DoF vectors is
+                // introduced
+                scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
+                interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
+
+                if (evaporation_operation &&
+                    problem_specific_parameters.do_evaporative_velocity_jump)
+                  {
+                    TimerOutput::Scope scope(scratch_data->get_timer(),
+                                             "Evaporation::level_set_source_term");
+
+                    switch (base_in->parameters.evapor.level_set_source_term_type)
+                      {
+                        default:
+                          case EvaporationLevelSetSourceTermType::interface_velocity: {
+                            // Option 1: compute modified advection velocity due to evaporation
+                            if (problem_specific_parameters.do_extrapolate_coupling_terms)
+                              level_set_operation->update_normal_vector();
+
+                            evaporation_operation->compute_evaporation_velocity();
+                            interface_velocity += evaporation_operation->get_velocity();
+                            break;
+                          }
+
+                        case EvaporationLevelSetSourceTermType::rhs:
+                          // Option 2: use source term as rhs in the level set equation
+                          scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
+                          evaporation_operation->compute_level_set_source_term(
+                            level_set_rhs,
+                            ls_dof_idx,
+                            level_set_operation->get_level_set(),
+                            pressure_dof_idx);
+                          level_set_operation->set_level_set_user_rhs(level_set_rhs);
+                          break;
+                      }
+                  }
+
+                // ... solve level-set problem with the given advection field
+                scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
+
+                level_set_operation->solve(false /*finish time step will be called later*/);
+
+                if (do_ls_iteration)
+                  level_set_operation->update_normal_vector();
               }
 
-            // ... solve level-set problem with the given advection field
-            scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
+            if (base_in->parameters.base.verbosity_level > 0)
+              {
+                iter_table.set_precision("|res|", 10);
+                iter_table.set_scientific("|res|", true);
+                iter_table.set_precision("|phi|", 10);
+                iter_table.set_scientific("|phi|", true);
 
-            level_set_operation->solve();
+                Journal::print_decoration_line(scratch_data->get_pcout(1));
+                Journal::print_line(scratch_data->get_pcout(1),
+                                    "level set - evapor coupling; finished",
+                                    "MeltPoolProblem");
+                Journal::print_decoration_line(scratch_data->get_pcout(1));
+
+                if (Utilities::MPI::this_mpi_process(scratch_data->get_mpi_comm()) == 0)
+                  iter_table.write_text(std::cout); // TODO scratch_data->get_pcout() did not work
+
+                Journal::print_decoration_line(scratch_data->get_pcout(1));
+              }
+
+
+            level_set_operation->finish_time_advance();
 
             if (evaporation_operation && base_in->parameters.evapor.formulation_source_term_heat ==
                                            InterfaceForceType::sharp)
@@ -339,6 +404,16 @@ namespace MeltPoolDG::MeltPool
           problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid,
           "Define a fraction of the melting point. Cells in the solid with a higher temperature are enforced "
           "to be refined.");
+      }
+      prm.leave_subsection();
+      prm.enter_subsection("coupling ls evapor");
+      {
+        prm.add_parameter("n max iter",
+                          problem_specific_parameters.level_set_evapor_coupling.n_max_iter,
+                          "Maximum number of iterations for nonlinear solution.");
+        prm.add_parameter("tol",
+                          problem_specific_parameters.level_set_evapor_coupling.tol,
+                          "Tolerance to be satified for nonlinear solution.");
       }
       prm.leave_subsection();
     }

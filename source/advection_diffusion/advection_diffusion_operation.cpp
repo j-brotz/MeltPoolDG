@@ -147,14 +147,14 @@ namespace MeltPoolDG::AdvectionDiffusion
     scratch_data.get_constraint(advec_diff_dof_idx)
       .distribute(solution_history.get_current_solution());
 
-    ready_for_time_advance = true;
+    this->ready_for_time_advance = true;
   }
 
   template <int dim>
   void
-  AdvectionDiffusionOperation<dim>::solve()
+  AdvectionDiffusionOperation<dim>::solve(const bool do_finish_time_step)
   {
-    if (!ready_for_time_advance)
+    if (!this->ready_for_time_advance)
       init_time_advance();
 
     if (!solution_history.get_recent_old_solution().has_ghost_elements())
@@ -276,7 +276,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     if (!advection_velocity.has_ghost_elements())
       advection_velocity.zero_out_ghost_values();
 
-    ready_for_time_advance = false;
+    if (do_finish_time_step)
+      this->finish_time_advance();
   }
 
   template <int dim>

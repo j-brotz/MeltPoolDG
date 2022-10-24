@@ -186,8 +186,7 @@ namespace MeltPoolDG::Evaporation
         for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
           {
             const auto n_phi =
-              MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index),
-                                                      tolerance_normal_vector);
+              MeltPoolDG::VectorTools::normalize<dim>(normal_vec.get_value(q_index), 1e-16);
 
             //              ρ
             // evaluate  ------

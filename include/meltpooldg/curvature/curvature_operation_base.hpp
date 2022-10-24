@@ -20,6 +20,9 @@ namespace MeltPoolDG
       solve() = 0;
 
       virtual void
+      update_normal_vector() = 0;
+
+      virtual void
       reinit() = 0;
 
       /*

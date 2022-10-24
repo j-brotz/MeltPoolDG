@@ -112,7 +112,10 @@ namespace MeltPoolDG::LevelSet
     init_time_advance();
 
     void
-    solve();
+    solve(const bool do_finish_time_step = true);
+
+    void
+    finish_time_advance();
 
     void
     set_level_set_user_rhs(const VectorType &level_set_user_rhs);

@@ -58,7 +58,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      * Solve time step
      */
     void
-    solve() override;
+    solve(const bool do_finish_time_step = true) override;
 
     const LinearAlgebra::distributed::Vector<double> &
     get_advected_field() const override;
@@ -148,9 +148,6 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  dof idx for constraints with dirichlet values (relevant for dirichlet neq 0)
      */
     unsigned int dirichlet_dof_idx;
-
-    // determine whether solution vectors are prepared for time advance
-    bool ready_for_time_advance = false;
   };
 
 } // namespace MeltPoolDG::AdvectionDiffusion

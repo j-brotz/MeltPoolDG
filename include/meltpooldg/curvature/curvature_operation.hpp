@@ -50,6 +50,9 @@ namespace MeltPoolDG::Curvature
     void
     solve() override;
 
+    void
+    update_normal_vector() override;
+
     const LinearAlgebra::distributed::Vector<double> &
     get_curvature() const override;
 

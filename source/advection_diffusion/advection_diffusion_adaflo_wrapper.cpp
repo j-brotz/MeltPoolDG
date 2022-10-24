@@ -104,14 +104,14 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     set_velocity(time_iterator.get_current_time_step_number() == 1 /* is initial step */);
 
-    ready_for_time_advance = true;
+    this->ready_for_time_advance = true;
   }
 
   template <int dim>
   void
-  AdvectionDiffusionOperationAdaflo<dim>::solve()
+  AdvectionDiffusionOperationAdaflo<dim>::solve(const bool do_finish_time_step)
   {
-    if (!ready_for_time_advance)
+    if (!this->ready_for_time_advance)
       init_time_advance();
 
     advected_field.update_ghost_values();
@@ -143,7 +143,8 @@ namespace MeltPoolDG::AdvectionDiffusion
                                              adaflo_params.quad_index);
     Journal::print_line(scratch_data.get_pcout(), str.str(), "advection_diffusion_adaflo");
 
-    ready_for_time_advance = false;
+    if (do_finish_time_step)
+      this->finish_time_advance();
   }
 
   template <int dim>
