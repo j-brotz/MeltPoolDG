@@ -60,8 +60,6 @@
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.78845e-01                newton_raphson_solver |
 |  total mass = 0.00030309504987                                                 melt_pool_problem |
-
-Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06). 
 | || velocity ||L2 = 9.994938709236753e-12                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.365112111924922e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -99,8 +97,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.83057e-01                newton_raphson_solver |
 |  total mass = 0.0003030957336                                                  melt_pool_problem |
-
-Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.224621750573053e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.375430175534919e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -138,8 +134,6 @@ Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.86726e-01                newton_raphson_solver |
 |  total mass = 0.00030309574488                                                 melt_pool_problem |
-
-Time step #3, advancing from t_n-1 = 2e-06 to t = 3e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.232349085197731e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.376802309230120e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -177,8 +171,6 @@ Time step #3, advancing from t_n-1 = 2e-06 to t = 3e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.90075e-01                newton_raphson_solver |
 |  total mass = 0.00030309574506                                                 melt_pool_problem |
-
-Time step #4, advancing from t_n-1 = 3e-06 to t = 4e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.218582856342535e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373899053415824e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -216,8 +208,6 @@ Time step #4, advancing from t_n-1 = 3e-06 to t = 4e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.93192e-01                newton_raphson_solver |
 |  total mass = 0.00030309574296                                                 melt_pool_problem |
-
-Time step #5, advancing from t_n-1 = 4e-06 to t = 5e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.212222457372290e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373552287449532e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -255,8 +245,6 @@ Time step #5, advancing from t_n-1 = 4e-06 to t = 5e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.96128e-01                newton_raphson_solver |
 |  total mass = 0.00030309540758                                                 melt_pool_problem |
-
-Time step #6, advancing from t_n-1 = 5e-06 to t = 6e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.210913338422951e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373746250925023e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -294,8 +282,6 @@ Time step #6, advancing from t_n-1 = 5e-06 to t = 6e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.98914e-01                newton_raphson_solver |
 |  total mass = 0.00030309376704                                                 melt_pool_problem |
-
-Time step #7, advancing from t_n-1 = 6e-06 to t = 7e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.211870341990094e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373724129029008e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -333,8 +319,6 @@ Time step #7, advancing from t_n-1 = 6e-06 to t = 7e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.01575e-01                newton_raphson_solver |
 |  total mass = 0.00030309045961                                                 melt_pool_problem |
-
-Time step #8, advancing from t_n-1 = 7e-06 to t = 8e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.213978675273804e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373326942918497e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -372,8 +356,6 @@ Time step #8, advancing from t_n-1 = 7e-06 to t = 8e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.04129e-01                newton_raphson_solver |
 |  total mass = 0.00030308525065                                                 melt_pool_problem |
-
-Time step #9, advancing from t_n-1 = 8e-06 to t = 9e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.217296922079673e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373573896159098e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -411,8 +393,6 @@ Time step #9, advancing from t_n-1 = 8e-06 to t = 9e-06 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.06589e-01                newton_raphson_solver |
 |  total mass = 0.00030307824172                                                 melt_pool_problem |
-
-Time step #10, advancing from t_n-1 = 9e-06 to t = 1e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.222586427875102e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373812619020599e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -450,8 +430,6 @@ Time step #10, advancing from t_n-1 = 9e-06 to t = 1e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.08965e-01                newton_raphson_solver |
 |  total mass = 0.00030306948494                                                 melt_pool_problem |
-
-Time step #11, advancing from t_n-1 = 1e-05 to t = 1.1e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.230338176585676e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373549202793243e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -489,8 +467,6 @@ Time step #11, advancing from t_n-1 = 1e-05 to t = 1.1e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.11267e-01                newton_raphson_solver |
 |  total mass = 0.00030305908155                                                 melt_pool_problem |
-
-Time step #12, advancing from t_n-1 = 1.1e-05 to t = 1.2e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.241247629922634e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373254401301149e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -528,8 +504,6 @@ Time step #12, advancing from t_n-1 = 1.1e-05 to t = 1.2e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.13501e-01                newton_raphson_solver |
 |  total mass = 0.00030304726619                                                 melt_pool_problem |
-
-Time step #13, advancing from t_n-1 = 1.2e-05 to t = 1.3e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.256432655695568e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373445274754722e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -567,8 +541,6 @@ Time step #13, advancing from t_n-1 = 1.2e-05 to t = 1.3e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.15673e-01                newton_raphson_solver |
 |  total mass = 0.00030303438464                                                 melt_pool_problem |
-
-Time step #14, advancing from t_n-1 = 1.3e-05 to t = 1.4e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.277689504100033e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373782263488975e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -606,8 +578,6 @@ Time step #14, advancing from t_n-1 = 1.3e-05 to t = 1.4e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.17788e-01                newton_raphson_solver |
 |  total mass = 0.00030302058359                                                 melt_pool_problem |
-
-Time step #15, advancing from t_n-1 = 1.4e-05 to t = 1.5e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.306935723917804e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373500840246912e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -645,8 +615,6 @@ Time step #15, advancing from t_n-1 = 1.4e-05 to t = 1.5e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.19850e-01                newton_raphson_solver |
 |  total mass = 0.00030300595101                                                 melt_pool_problem |
-
-Time step #16, advancing from t_n-1 = 1.5e-05 to t = 1.6e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.346694747447814e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373224560997145e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -684,8 +652,6 @@ Time step #16, advancing from t_n-1 = 1.5e-05 to t = 1.6e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.21864e-01                newton_raphson_solver |
 |  total mass = 0.00030299071999                                                 melt_pool_problem |
-
-Time step #17, advancing from t_n-1 = 1.6e-05 to t = 1.7e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.399754042201504e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373343406612952e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -723,8 +689,6 @@ Time step #17, advancing from t_n-1 = 1.6e-05 to t = 1.7e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.23832e-01                newton_raphson_solver |
 |  total mass = 0.00030297512239                                                 melt_pool_problem |
-
-Time step #18, advancing from t_n-1 = 1.7e-05 to t = 1.8e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.468748652744236e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373705604958114e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -762,8 +726,6 @@ Time step #18, advancing from t_n-1 = 1.7e-05 to t = 1.8e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.25757e-01                newton_raphson_solver |
 |  total mass = 0.00030295934983                                                 melt_pool_problem |
-
-Time step #19, advancing from t_n-1 = 1.8e-05 to t = 1.9e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.554353296047826e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373652613894913e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -801,8 +763,6 @@ Time step #19, advancing from t_n-1 = 1.8e-05 to t = 1.9e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.27642e-01                newton_raphson_solver |
 |  total mass = 0.00030294356426                                                 melt_pool_problem |
-
-Time step #20, advancing from t_n-1 = 1.9e-05 to t = 2e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.653764745134174e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373283213077995e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -840,8 +800,6 @@ Time step #20, advancing from t_n-1 = 1.9e-05 to t = 2e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.29490e-01                newton_raphson_solver |
 |  total mass = 0.00030292789553                                                 melt_pool_problem |
-
-Time step #21, advancing from t_n-1 = 2e-05 to t = 2.1e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.759361840785918e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373492093897228e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -879,8 +837,6 @@ Time step #21, advancing from t_n-1 = 2e-05 to t = 2.1e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.31302e-01                newton_raphson_solver |
 |  total mass = 0.00030291241536                                                 melt_pool_problem |
-
-Time step #22, advancing from t_n-1 = 2.1e-05 to t = 2.2e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.861632427762796e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.373884133211197e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -918,8 +874,6 @@ Time step #22, advancing from t_n-1 = 2.1e-05 to t = 2.2e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.33080e-01                newton_raphson_solver |
 |  total mass = 0.00030289712549                                                 melt_pool_problem |
-
-Time step #23, advancing from t_n-1 = 2.2e-05 to t = 2.3e-05 (dt = 1e-06). 
 | || velocity ||L2 = 1.955510244819338e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.374010698723256e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -957,8 +911,6 @@ Time step #23, advancing from t_n-1 = 2.2e-05 to t = 2.3e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.34827e-01                newton_raphson_solver |
 |  total mass = 0.00030288200031                                                 melt_pool_problem |
-
-Time step #24, advancing from t_n-1 = 2.3e-05 to t = 2.4e-05 (dt = 1e-06). 
 | || velocity ||L2 = 2.043522397401709e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.374143950911924e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -996,8 +948,6 @@ Time step #24, advancing from t_n-1 = 2.3e-05 to t = 2.4e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.36543e-01                newton_raphson_solver |
 |  total mass = 0.00030286700478                                                 melt_pool_problem |
-
-Time step #25, advancing from t_n-1 = 2.4e-05 to t = 2.5e-05 (dt = 1e-06). 
 | || velocity ||L2 = 2.129057699557629e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.374308585446877e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -1035,8 +985,6 @@ Time step #25, advancing from t_n-1 = 2.4e-05 to t = 2.5e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.38230e-01                newton_raphson_solver |
 |  total mass = 0.00030285220161                                                 melt_pool_problem |
-
-Time step #26, advancing from t_n-1 = 2.5e-05 to t = 2.6e-05 (dt = 1e-06). 
 | || velocity ||L2 = 2.213277795619192e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.374549882268004e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -1074,8 +1022,6 @@ Time step #26, advancing from t_n-1 = 2.5e-05 to t = 2.6e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.39890e-01                newton_raphson_solver |
 |  total mass = 0.00030283758667                                                 melt_pool_problem |
-
-Time step #27, advancing from t_n-1 = 2.6e-05 to t = 2.7e-05 (dt = 1e-06). 
 | || velocity ||L2 = 2.296114800549045e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.374791692036731e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -1113,8 +1059,6 @@ Time step #27, advancing from t_n-1 = 2.6e-05 to t = 2.7e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.41523e-01                newton_raphson_solver |
 |  total mass = 0.00030282314641                                                 melt_pool_problem |
-
-Time step #28, advancing from t_n-1 = 2.7e-05 to t = 2.8e-05 (dt = 1e-06). 
 | || velocity ||L2 = 2.378023777784768e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.375039160309552e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -1152,8 +1096,6 @@ Time step #28, advancing from t_n-1 = 2.7e-05 to t = 2.8e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.43132e-01                newton_raphson_solver |
 |  total mass = 0.0003028089006                                                  melt_pool_problem |
-
-Time step #29, advancing from t_n-1 = 2.8e-05 to t = 2.9e-05 (dt = 1e-06). 
 | || velocity ||L2 = 2.457559732731110e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.375299491298379e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -1191,8 +1133,6 @@ Time step #29, advancing from t_n-1 = 2.8e-05 to t = 2.9e-05 (dt = 1e-06).
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.44717e-01                newton_raphson_solver |
 |  total mass = 0.00030279488206                                                 melt_pool_problem |
-
-Time step #30, advancing from t_n-1 = 2.9e-05 to t = 3e-05 (dt = 1e-06). 
 | || velocity ||L2 = 2.532750467091232e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.375585032951692e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

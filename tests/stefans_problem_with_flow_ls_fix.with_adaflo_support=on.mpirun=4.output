@@ -36,8 +36,6 @@ POSTPROCESSOR: min pressure: 0 (analytical: 0)
 |  total mass = 0.45254443048                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.6044954247e-02            evaporation_source_terms_continuous |
-
-Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005). 
 | || velocity ||L2 = 6.900025111194090e-01                                    navier_stokes_adaflo |
 | || pressure ||L2 = 8.714985361472674e+00                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
@@ -50,8 +48,6 @@ POSTPROCESSOR: min pressure: 1.51e-10 (analytical: 0)
 |  total mass = 0.45254443048                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.6044954247e-02            evaporation_source_terms_continuous |
-
-Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005). 
 | || velocity ||L2 = 6.900025972195988e-01                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.348623324984668e+00                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
@@ -64,8 +60,6 @@ POSTPROCESSOR: min pressure: 7.89e-10 (analytical: 0)
 |  total mass = 0.45254443048                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.6044954247e-02            evaporation_source_terms_continuous |
-
-Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005). 
 | || velocity ||L2 = 6.900027255437048e-01                                    navier_stokes_adaflo |
 | || pressure ||L2 = 6.582741179212860e-03                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
@@ -78,8 +72,6 @@ POSTPROCESSOR: min pressure: 8.36e-10 (analytical: 0)
 |  total mass = 0.45254443048                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.6044954247e-02            evaporation_source_terms_continuous |
-
-Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005). 
 | || velocity ||L2 = 6.900028542925807e-01                                    navier_stokes_adaflo |
 | || pressure ||L2 = 6.582472326627037e-03                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)

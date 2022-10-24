@@ -141,8 +141,6 @@ POSTPROCESSOR: min pressure: 0 (analytical: 0)
 | || normal_0 ||L2 = 6.12824539364e-16                                               normal_vector |
 | || normal_1 ||L2 = 3.82562226856e+00                                               normal_vector |
 |  total mass = 0.505                                                            melt_pool_problem |
-
-Time step #1, advancing from t_n-1 = 0 to t = 0.0001 (dt = 0.0001). 
 | || velocity ||L2 = 7.015797287103988e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.046061024924344e+00                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
@@ -171,8 +169,6 @@ POSTPROCESSOR: min pressure: -1.48e-11 (analytical: 0)
 | || normal_0 ||L2 = 9.28251485639e-14                                               normal_vector |
 | || normal_1 ||L2 = 3.92334176470e+00                                               normal_vector |
 |  total mass = 0.505                                                            melt_pool_problem |
-
-Time step #2, advancing from t_n-1 = 0.0001 to t = 0.0002 (dt = 0.0001). 
 | || velocity ||L2 = 7.008827507465837e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.023196563194003e+00                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
@@ -201,8 +197,6 @@ POSTPROCESSOR: min pressure: 8.11e-11 (analytical: 0)
 | || normal_0 ||L2 = 1.51424929814e-13                                               normal_vector |
 | || normal_1 ||L2 = 4.59076739564e+00                                               normal_vector |
 |  total mass = 0.505                                                            melt_pool_problem |
-
-Time step #3, advancing from t_n-1 = 0.0002 to t = 0.0003 (dt = 0.0001). 
 | || velocity ||L2 = 7.008618979744360e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 5.998583517366843e-03                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
@@ -231,8 +225,6 @@ POSTPROCESSOR: min pressure: 4.21e-11 (analytical: 0)
 | || normal_0 ||L2 = 2.37994291731e-13                                               normal_vector |
 | || normal_1 ||L2 = 4.60438705751e+00                                               normal_vector |
 |  total mass = 0.505                                                            melt_pool_problem |
-
-Time step #4, advancing from t_n-1 = 0.0003 to t = 0.0004 (dt = 0.0001). 
 | || velocity ||L2 = 7.008431268498203e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 5.422130554677116e-03                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
@@ -261,8 +253,6 @@ POSTPROCESSOR: min pressure: 2.24e-11 (analytical: 0)
 | || normal_0 ||L2 = 3.20304553342e-13                                               normal_vector |
 | || normal_1 ||L2 = 4.60983313440e+00                                               normal_vector |
 |  total mass = 0.505                                                            melt_pool_problem |
-
-Time step #5, advancing from t_n-1 = 0.0004 to t = 0.0005 (dt = 0.0001). 
 | || velocity ||L2 = 7.008333345212509e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 5.388128807999313e-03                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)

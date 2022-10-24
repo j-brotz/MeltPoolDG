@@ -31,8 +31,6 @@
 |  total mass = 3.495123762e-08                                                  melt_pool_problem |
 | evaporation: jump in the velocity field = -6.87244e-06       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 5.7385062919e-07            evaporation_source_terms_continuous |
-
-Time step #1, advancing from t_n-1 = 0 to t = 1e-05 (dt = 1e-05). 
 | || velocity ||L2 = 1.980873096365048e-07                                    navier_stokes_adaflo |
 | || pressure ||L2 = 7.991191429158341e-06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -55,8 +53,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-05 (dt = 1e-05).
 |  total mass = 3.4878553037e-08                                                 melt_pool_problem |
 | evaporation: jump in the velocity field = -9.03815e-06       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 7.5365011360e-07            evaporation_source_terms_continuous |
-
-Time step #2, advancing from t_n-1 = 1e-05 to t = 2e-05 (dt = 1e-05). 
 | || velocity ||L2 = 3.042717697644107e-07                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.245791761982230e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -79,8 +75,6 @@ Time step #2, advancing from t_n-1 = 1e-05 to t = 2e-05 (dt = 1e-05).
 |  total mass = 3.4867035192e-08                                                 melt_pool_problem |
 | evaporation: jump in the velocity field = -1.04178e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 8.6864044407e-07            evaporation_source_terms_continuous |
-
-Time step #3, advancing from t_n-1 = 2e-05 to t = 3e-05 (dt = 1e-05). 
 | || velocity ||L2 = 3.675476255357823e-07                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.539437334448867e-05                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

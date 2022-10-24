@@ -28,8 +28,6 @@
 | || normal_0 ||L2 = 2.99256265604e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.99037425961e+00                                               normal_vector |
 | || curvature ||L2 = 6.42506168750e+00                                                  curvature |
-
-Time step #1, advancing from t_n-1 = 0 to t = 0.02 (dt = 0.02). 
 | || velocity ||L2 = 7.534958933507323e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.324997878242306e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

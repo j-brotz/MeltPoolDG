@@ -259,7 +259,7 @@ namespace MeltPoolDG::Flow
   {
     navier_stokes->time_stepping.set_time_step(time_iterator.get_current_time_increment());
 
-    navier_stokes->init_time_advance(true /*print time information; TODO: disable and introduce assert if time stepping is aligned*/);
+    navier_stokes->init_time_advance(false);
 
     ready_for_time_advance = true;
 

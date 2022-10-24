@@ -19,8 +19,6 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 4.43605327606e+00                                               normal_vector |
 | || normal_1 ||L2 = 8.17743444443e+00                                               normal_vector |
-
-Time step #1, advancing from t_n-1 = 0 to t = 1e-07 (dt = 1e-07). 
 | || velocity ||L2 = 1.441264572576984e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.600857496261597e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -37,8 +35,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-07 (dt = 1e-07).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 4.44158673286e+00                                               normal_vector |
 | || normal_1 ||L2 = 8.18727684021e+00                                               normal_vector |
-
-Time step #2, advancing from t_n-1 = 1e-07 to t = 2e-07 (dt = 1e-07). 
 | || velocity ||L2 = 2.877559154512710e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.601515293121338e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -55,8 +51,6 @@ Time step #2, advancing from t_n-1 = 1e-07 to t = 2e-07 (dt = 1e-07).
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 4.44464683533e+00                                               normal_vector |
 | || normal_1 ||L2 = 8.19318580627e+00                                               normal_vector |
-
-Time step #3, advancing from t_n-1 = 2e-07 to t = 3e-07 (dt = 1e-07). 
 | || velocity ||L2 = 4.310466010792879e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.602006673812866e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

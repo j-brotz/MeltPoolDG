@@ -32,8 +32,6 @@
 |  total mass = 0.16214509432                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14878           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6672023561e-01            evaporation_source_terms_continuous |
-
-Time step #1, advancing from t_n-1 = 0 to t = 0.001 (dt = 0.001). 
 | || velocity ||L2 = 1.438125678511196e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.274563057683407e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -54,8 +52,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.001 (dt = 0.001).
 |  total mass = 0.16250416106                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14993           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6719189567e-01            evaporation_source_terms_continuous |
-
-Time step #2, advancing from t_n-1 = 0.001 to t = 0.002 (dt = 0.001). 
 | || velocity ||L2 = 1.438862808293756e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 6.227142815324956e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -76,8 +72,6 @@ Time step #2, advancing from t_n-1 = 0.001 to t = 0.002 (dt = 0.001).
 |  total mass = 0.16247075321                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.15007           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6741093744e-01            evaporation_source_terms_continuous |
-
-Time step #3, advancing from t_n-1 = 0.002 to t = 0.003 (dt = 0.001). 
 | || velocity ||L2 = 1.439130140684631e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.229309221634999e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -98,8 +92,6 @@ Time step #3, advancing from t_n-1 = 0.002 to t = 0.003 (dt = 0.001).
 |  total mass = 0.16228970898                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14973           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6750514191e-01            evaporation_source_terms_continuous |
-
-Time step #4, advancing from t_n-1 = 0.003 to t = 0.004 (dt = 0.001). 
 | || velocity ||L2 = 1.439173605616624e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.228141948142437e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -120,8 +112,6 @@ Time step #4, advancing from t_n-1 = 0.003 to t = 0.004 (dt = 0.001).
 |  total mass = 0.16203402493                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14918           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6753961446e-01            evaporation_source_terms_continuous |
-
-Time step #5, advancing from t_n-1 = 0.004 to t = 0.005 (dt = 0.001). 
 | || velocity ||L2 = 1.439117486821013e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.226470484765211e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -142,8 +132,6 @@ Time step #5, advancing from t_n-1 = 0.004 to t = 0.005 (dt = 0.001).
 |  total mass = 0.16173928138                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14854           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6754633958e-01            evaporation_source_terms_continuous |
-
-Time step #6, advancing from t_n-1 = 0.005 to t = 0.006 (dt = 0.001). 
 | || velocity ||L2 = 1.439021846080990e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.225325021014032e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -164,8 +152,6 @@ Time step #6, advancing from t_n-1 = 0.005 to t = 0.006 (dt = 0.001).
 |  total mass = 0.1614225448                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14788           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6754089748e-01            evaporation_source_terms_continuous |
-
-Time step #7, advancing from t_n-1 = 0.006 to t = 0.007 (dt = 0.001). 
 | || velocity ||L2 = 1.438915185599729e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.224534528269754e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -186,8 +172,6 @@ Time step #7, advancing from t_n-1 = 0.006 to t = 0.007 (dt = 0.001).
 |  total mass = 0.16109175391                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14722           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6753070716e-01            evaporation_source_terms_continuous |
-
-Time step #8, advancing from t_n-1 = 0.007 to t = 0.008 (dt = 0.001). 
 | || velocity ||L2 = 1.438811024635567e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.223930573294219e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -208,8 +192,6 @@ Time step #8, advancing from t_n-1 = 0.007 to t = 0.008 (dt = 0.001).
 |  total mass = 0.16075051426                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14657           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6751923103e-01            evaporation_source_terms_continuous |
-
-Time step #9, advancing from t_n-1 = 0.008 to t = 0.009 (dt = 0.001). 
 | || velocity ||L2 = 1.438715247114330e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.223442130305518e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -230,8 +212,6 @@ Time step #9, advancing from t_n-1 = 0.008 to t = 0.009 (dt = 0.001).
 |  total mass = 0.16040040814                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14594           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6750806139e-01            evaporation_source_terms_continuous |
-
-Time step #10, advancing from t_n-1 = 0.009 to t = 0.01 (dt = 0.001). 
 | || velocity ||L2 = 1.438630438910281e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.223034614916088e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -252,8 +232,6 @@ Time step #10, advancing from t_n-1 = 0.009 to t = 0.01 (dt = 0.001).
 |  total mass = 0.16004209617                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14534           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6749792260e-01            evaporation_source_terms_continuous |
-
-Time step #11, advancing from t_n-1 = 0.01 to t = 0.011 (dt = 0.001). 
 | || velocity ||L2 = 1.438557768146560e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.222687121455308e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -274,8 +252,6 @@ Time step #11, advancing from t_n-1 = 0.01 to t = 0.011 (dt = 0.001).
 |  total mass = 0.15967583592                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14476           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6748914199e-01            evaporation_source_terms_continuous |
-
-Time step #12, advancing from t_n-1 = 0.011 to t = 0.012 (dt = 0.001). 
 | || velocity ||L2 = 1.438497626232982e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.222385387784631e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -296,8 +272,6 @@ Time step #12, advancing from t_n-1 = 0.011 to t = 0.012 (dt = 0.001).
 |  total mass = 0.1593017224                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = -3.1442            evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6748186449e-01            evaporation_source_terms_continuous |
-
-Time step #13, advancing from t_n-1 = 0.012 to t = 0.013 (dt = 0.001). 
 | || velocity ||L2 = 1.438449929356711e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.222120645977886e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -318,8 +292,6 @@ Time step #13, advancing from t_n-1 = 0.012 to t = 0.013 (dt = 0.001).
 |  total mass = 0.15891979779                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14367           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6747614985e-01            evaporation_source_terms_continuous |
-
-Time step #14, advancing from t_n-1 = 0.013 to t = 0.014 (dt = 0.001). 
 | || velocity ||L2 = 1.438414660026972e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.221886874926952e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -340,8 +312,6 @@ Time step #14, advancing from t_n-1 = 0.013 to t = 0.014 (dt = 0.001).
 |  total mass = 0.15853010029                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14317           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6747201679e-01            evaporation_source_terms_continuous |
-
-Time step #15, advancing from t_n-1 = 0.014 to t = 0.015 (dt = 0.001). 
 | || velocity ||L2 = 1.438391619806161e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.221680018809415e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -362,8 +332,6 @@ Time step #15, advancing from t_n-1 = 0.014 to t = 0.015 (dt = 0.001).
 |  total mass = 0.1581326849                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14269           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6746946299e-01            evaporation_source_terms_continuous |
-
-Time step #16, advancing from t_n-1 = 0.015 to t = 0.016 (dt = 0.001). 
 | || velocity ||L2 = 1.438380471995070e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.221496805970898e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -384,8 +352,6 @@ Time step #16, advancing from t_n-1 = 0.015 to t = 0.016 (dt = 0.001).
 |  total mass = 0.15772763149                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14223           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6746847425e-01            evaporation_source_terms_continuous |
-
-Time step #17, advancing from t_n-1 = 0.016 to t = 0.017 (dt = 0.001). 
 | || velocity ||L2 = 1.438381070834827e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.221334487638893e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -406,8 +372,6 @@ Time step #17, advancing from t_n-1 = 0.016 to t = 0.017 (dt = 0.001).
 |  total mass = 0.157315047                                                      melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14179           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6746902882e-01            evaporation_source_terms_continuous |
-
-Time step #18, advancing from t_n-1 = 0.017 to t = 0.018 (dt = 0.001). 
 | || velocity ||L2 = 1.438393052705057e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.221190707543418e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -428,8 +392,6 @@ Time step #18, advancing from t_n-1 = 0.017 to t = 0.018 (dt = 0.001).
 |  total mass = 0.15689506512                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14138           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6747109964e-01            evaporation_source_terms_continuous |
-
-Time step #19, advancing from t_n-1 = 0.018 to t = 0.019 (dt = 0.001). 
 | || velocity ||L2 = 1.438416104760758e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.221063502054322e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -450,8 +412,6 @@ Time step #19, advancing from t_n-1 = 0.018 to t = 0.019 (dt = 0.001).
 |  total mass = 0.1564678448                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = -3.14099           evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.6747465564e-01            evaporation_source_terms_continuous |
-
-Time step #20, advancing from t_n-1 = 0.019 to t = 0.02 (dt = 0.001). 
 | || velocity ||L2 = 1.438449926184730e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.220950642222905e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
