@@ -64,19 +64,28 @@ namespace MeltPoolDG::MeltPool
                 if (do_ls_iteration)
                   {
                     iter_res -= level_set_operation->get_level_set();
+                    const double res_norm = iter_res.l2_norm();
 
                     if (base_in->parameters.base.verbosity_level > 0)
                       {
                         iter_table.add_value("i", i);
-                        iter_table.add_value("|res|", iter_res.l2_norm());
+                        iter_table.add_value("|res|", res_norm);
                         iter_table.add_value("|phi|",
                                              level_set_operation->get_level_set().l2_norm());
                       }
 
                     // early return of iteration if norm is already very small
-                    if (iter_res.l2_norm() <
-                        problem_specific_parameters.level_set_evapor_coupling.tol)
-                      break;
+                    if (res_norm <= problem_specific_parameters.level_set_evapor_coupling.tol)
+                      {
+                        Journal::print_decoration_line(scratch_data->get_pcout(0));
+                        Journal::print_line(scratch_data->get_pcout(0),
+                                            "level set - evapor coupling; finished after " +
+                                              std::to_string(i) + " iter at residual " +
+                                              UtilityFunctions::to_string_with_precision(res_norm),
+                                            "MeltPoolProblem");
+                        Journal::print_decoration_line(scratch_data->get_pcout(0));
+                        break;
+                      }
 
                     iter_res.copy_locally_owned_data_from(level_set_operation->get_level_set());
                     Journal::print_decoration_line(scratch_data->get_pcout(1));
@@ -139,12 +148,6 @@ namespace MeltPoolDG::MeltPool
                 iter_table.set_scientific("|res|", true);
                 iter_table.set_precision("|phi|", 10);
                 iter_table.set_scientific("|phi|", true);
-
-                Journal::print_decoration_line(scratch_data->get_pcout(1));
-                Journal::print_line(scratch_data->get_pcout(1),
-                                    "level set - evapor coupling; finished",
-                                    "MeltPoolProblem");
-                Journal::print_decoration_line(scratch_data->get_pcout(1));
 
                 if (Utilities::MPI::this_mpi_process(scratch_data->get_mpi_comm()) == 0)
                   iter_table.write_text(std::cout); // TODO scratch_data->get_pcout() did not work
