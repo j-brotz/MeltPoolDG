@@ -28,8 +28,6 @@
 | || normal_0 ||L2 = 5.28052660878e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.28052656984e+00                                               normal_vector |
 | || curvature ||L2 = 1.27822817783e+01                                                  curvature |
-
-Time step #1, advancing from t_n-1 = 0 to t = 0.02 (dt = 0.02). 
 | || velocity ||L2 = 7.575835286521330e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.323611065893717e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -47,8 +45,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.02 (dt = 0.02).
 | || normal_0 ||L2 = 5.30013716857e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.30001544332e+00                                               normal_vector |
 | || curvature ||L2 = 1.33598743629e+01                                                  curvature |
-
-Time step #2, advancing from t_n-1 = 0.02 to t = 0.04 (dt = 0.02). 
 | || velocity ||L2 = 1.505140794037141e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.328605983899838e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -66,8 +62,6 @@ Time step #2, advancing from t_n-1 = 0.02 to t = 0.04 (dt = 0.02).
 | || normal_0 ||L2 = 5.31054295511e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.31018981107e+00                                               normal_vector |
 | || curvature ||L2 = 1.33897405200e+01                                                  curvature |
-
-Time step #3, advancing from t_n-1 = 0.04 to t = 0.06 (dt = 0.02). 
 | || velocity ||L2 = 2.241930068141279e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.332315870218807e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

@@ -34,8 +34,6 @@
 | || normal_1 ||L2 = 5.32785367966e+00                                               normal_vector |
 | || curvature ||L2 = 1.29002075195e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-
-Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005). 
 | || velocity ||L2 = 1.387102265048096e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.346022088975284e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -60,8 +58,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.0005 (dt = 0.0005).
 | || normal_1 ||L2 = 5.33747267785e+00                                               normal_vector |
 | || curvature ||L2 = 1.28937516274e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-
-Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005). 
 | || velocity ||L2 = 2.557736321106604e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.346269704659044e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -86,8 +82,6 @@ Time step #2, advancing from t_n-1 = 0.0005 to t = 0.001 (dt = 0.0005).
 | || normal_1 ||L2 = 5.33894109971e+00                                               normal_vector |
 | || curvature ||L2 = 1.28927157469e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-
-Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005). 
 | || velocity ||L2 = 3.548472414859358e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.346245397736859e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -112,8 +106,6 @@ Time step #3, advancing from t_n-1 = 0.001 to t = 0.0015 (dt = 0.0005).
 | || normal_1 ||L2 = 5.33914208918e+00                                               normal_vector |
 | || curvature ||L2 = 1.28922755442e+01                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.67372e+00                newton_raphson_solver |
-
-Time step #4, advancing from t_n-1 = 0.0015 to t = 0.002 (dt = 0.0005). 
 | || velocity ||L2 = 4.410513916825995e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.346164080131483e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

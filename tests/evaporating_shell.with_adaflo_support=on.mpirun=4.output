@@ -2,80 +2,60 @@
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #1, advancing from t_n-1 = 0 to t = 0.0001 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.592460347046850e+01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-04 to 2.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #2, advancing from t_n-1 = 0.0001 to t = 0.0002 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 7.962300567250027e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-04 to 3.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #3, advancing from t_n-1 = 0.0002 to t = 0.0003 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138176058174e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.182667750393607e-06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-04 to 4.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #4, advancing from t_n-1 = 0.0003 to t = 0.0004 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138176058174e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.175415290721672e-06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-04 to 5.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #5, advancing from t_n-1 = 0.0004 to t = 0.0005 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138179185753e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.180563275259787e-06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 5.0000e-04 to 6.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #6, advancing from t_n-1 = 0.0005 to t = 0.0006 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138176058174e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.178530694753337e-06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 6.0000e-04 to 7.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #7, advancing from t_n-1 = 0.0006 to t = 0.0007 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138206683750e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.178681982156459e-06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 7.0000e-04 to 8.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #8, advancing from t_n-1 = 0.0007 to t = 0.0008 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138148560176e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.178574041250471e-06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 8.0000e-04 to 9.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #9, advancing from t_n-1 = 0.0008 to t = 0.0009 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138179185753e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.178458180143041e-06                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 9.0000e-04 to 1.0000e-03 ( dt = 1.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
-
-Time step #10, advancing from t_n-1 = 0.0009 to t = 0.001 (dt = 0.0001). 
 | || velocity ||L2 = 1.475138151687756e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.178348381950922e-06                                    navier_stokes_adaflo |
 

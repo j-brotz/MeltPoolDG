@@ -90,8 +90,6 @@
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00042020187231                                                 melt_pool_problem |
-
-Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.383964541615721e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.110974526637132e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -118,8 +116,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06).
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00042022016313                                                 melt_pool_problem |
-
-Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06). 
 | || velocity ||L2 = 2.777162908122764e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.107885043165933e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -146,8 +142,6 @@ Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06).
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00042032458704                                                 melt_pool_problem |
-
-Time step #3, advancing from t_n-1 = 2e-06 to t = 3e-06 (dt = 1e-06). 
 | || velocity ||L2 = 4.408292092494932e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.107823277813718e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

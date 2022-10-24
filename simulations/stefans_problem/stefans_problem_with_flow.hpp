@@ -148,6 +148,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
       if (!(n_time_step % this->parameters.paraview.write_frequency) ||
           generic_data_out.get_time() == this->parameters.time_stepping.end_time)
         {
+          std::cout.precision(3);
           generic_data_out.get_vector("velocity").update_ghost_values();
           generic_data_out.get_vector("heaviside").update_ghost_values();
           generic_data_out.get_vector("pressure").update_ghost_values();

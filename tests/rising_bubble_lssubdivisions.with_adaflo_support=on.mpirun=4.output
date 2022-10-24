@@ -28,8 +28,6 @@
 | || normal_0 ||L2 = 3.71891578990e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.71873350359e+00                                               normal_vector |
 | || curvature ||L2 = 6.34787243514e+00                                                  curvature |
-
-Time step #1, advancing from t_n-1 = 0 to t = 0.02 (dt = 0.02). 
 | || velocity ||L2 = 7.539040675945003e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.324689412547589e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -47,8 +45,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 0.02 (dt = 0.02).
 | || normal_0 ||L2 = 3.71934970982e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.71912438949e+00                                               normal_vector |
 | || curvature ||L2 = 6.34813795627e+00                                                  curvature |
-
-Time step #2, advancing from t_n-1 = 0.02 to t = 0.04 (dt = 0.02). 
 | || velocity ||L2 = 1.497565506528632e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.329468807810560e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -66,8 +62,6 @@ Time step #2, advancing from t_n-1 = 0.02 to t = 0.04 (dt = 0.02).
 | || normal_0 ||L2 = 3.71959193016e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.71928106628e+00                                               normal_vector |
 | || curvature ||L2 = 6.34870942781e+00                                                  curvature |
-
-Time step #3, advancing from t_n-1 = 0.04 to t = 0.06 (dt = 0.02). 
 | || velocity ||L2 = 2.230495072119296e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.332840754076014e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -85,8 +79,6 @@ Time step #3, advancing from t_n-1 = 0.04 to t = 0.06 (dt = 0.02).
 | || normal_0 ||L2 = 3.71972653387e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.71932799921e+00                                               normal_vector |
 | || curvature ||L2 = 6.34962559331e+00                                                  curvature |
-
-Time step #4, advancing from t_n-1 = 0.06 to t = 0.08 (dt = 0.02). 
 | || velocity ||L2 = 2.951125909876335e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.336053297667959e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -104,8 +96,6 @@ Time step #4, advancing from t_n-1 = 0.06 to t = 0.08 (dt = 0.02).
 | || normal_0 ||L2 = 3.71978065739e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.71935018857e+00                                               normal_vector |
 | || curvature ||L2 = 6.35076955837e+00                                                  curvature |
-
-Time step #5, advancing from t_n-1 = 0.08 to t = 0.1 (dt = 0.02). 
 | || velocity ||L2 = 3.658226682600056e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.339103589572441e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -123,8 +113,6 @@ Time step #5, advancing from t_n-1 = 0.08 to t = 0.1 (dt = 0.02).
 | || normal_0 ||L2 = 3.71975607102e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.71939732419e+00                                               normal_vector |
 | || curvature ||L2 = 6.35219943203e+00                                                  curvature |
-
-Time step #6, advancing from t_n-1 = 0.1 to t = 0.12 (dt = 0.02). 
 | || velocity ||L2 = 4.353500991529364e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.342773485078733e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -142,8 +130,6 @@ Time step #6, advancing from t_n-1 = 0.1 to t = 0.12 (dt = 0.02).
 | || normal_0 ||L2 = 3.71963952704e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.71951231457e+00                                               normal_vector |
 | || curvature ||L2 = 6.35397240661e+00                                                  curvature |
-
-Time step #7, advancing from t_n-1 = 0.12 to t = 0.14 (dt = 0.02). 
 | || velocity ||L2 = 5.038643672124021e-02                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.343842097919993e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

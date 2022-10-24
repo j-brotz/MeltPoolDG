@@ -27,8 +27,6 @@
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00042115128378                                                 melt_pool_problem |
-
-Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06). 
 | || velocity ||L2 = 1.068628771793720e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.522194770627765e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -49,8 +47,6 @@ Time step #1, advancing from t_n-1 = 0 to t = 1e-06 (dt = 1e-06).
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00042108922006                                                 melt_pool_problem |
-
-Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06). 
 | || velocity ||L2 = 2.120440354661836e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.806768769054400e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -71,8 +67,6 @@ Time step #2, advancing from t_n-1 = 1e-06 to t = 2e-06 (dt = 1e-06).
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00042112025192                                                 melt_pool_problem |
-
-Time step #3, advancing from t_n-1 = 2e-06 to t = 3e-06 (dt = 1e-06). 
 | || velocity ||L2 = 3.135579435140348e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 9.961989755293453e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -93,8 +87,6 @@ Time step #3, advancing from t_n-1 = 2e-06 to t = 3e-06 (dt = 1e-06).
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00042108922006                                                 melt_pool_problem |
-
-Time step #4, advancing from t_n-1 = 3e-06 to t = 4e-06 (dt = 1e-06). 
 | || velocity ||L2 = 4.115481979687489e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.008967649031142e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -115,8 +107,6 @@ Time step #4, advancing from t_n-1 = 3e-06 to t = 4e-06 (dt = 1e-06).
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00042108922006                                                 melt_pool_problem |
-
-Time step #5, advancing from t_n-1 = 4e-06 to t = 5e-06 (dt = 1e-06). 
 | || velocity ||L2 = 5.085704129085869e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.025326170730472e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
