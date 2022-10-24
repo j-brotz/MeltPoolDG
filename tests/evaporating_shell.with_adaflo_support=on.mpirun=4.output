@@ -58,10 +58,12 @@
 | || advected field ||L2 = 3.4311169286e+00                                    advection_diffusion |
 | || velocity ||L2 = 1.475138151687756e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.178348381950922e-06                                    navier_stokes_adaflo |
+
 analytical pressure analytical radial velocity  pressure   radial velocity 
         -7.1875e-07                 1.0000e-03 -1.2551e-06      1.0000e-03 
         -2.9875e-07                 4.0000e-04 -2.8778e-07      4.0178e-04 
         -2.5000e-07                 2.5000e-04 -2.3300e-07      2.5107e-04 
+
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
