@@ -56,7 +56,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     init_time_advance() override;
 
     void
-    solve() override;
+    solve(const bool do_finish_time_step = true) override;
 
     const LinearAlgebra::distributed::Vector<double> &
     get_advected_field() const override;
@@ -121,8 +121,5 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     VectorType rhs;
     VectorType user_rhs;
-
-    // determine whether solution vectors are prepared for time advance
-    bool ready_for_time_advance = false;
   };
 } // namespace MeltPoolDG::AdvectionDiffusion

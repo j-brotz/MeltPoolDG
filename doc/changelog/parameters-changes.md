@@ -1,6 +1,21 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-10-24
+- Add parameter for iteration of nonlinear evaporation-induced coupling term
+in the level set equation
+```json
+{
+  "problem type": "melt_pool",
+  "problem specific": {
+    "coupling ls evapor": 
+    {
+      "n max iter": "",
+      "tol"
+    }
+  }
+```
+
 ## 2022-10-10
 - Add a parameter to enable user-defined postprocessing
 ```json

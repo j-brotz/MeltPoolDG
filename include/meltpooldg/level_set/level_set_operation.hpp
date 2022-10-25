@@ -112,7 +112,10 @@ namespace MeltPoolDG::LevelSet
     init_time_advance();
 
     void
-    solve();
+    solve(const bool do_finish_time_step = true);
+
+    void
+    finish_time_advance();
 
     void
     set_level_set_user_rhs(const VectorType &level_set_user_rhs);
@@ -164,6 +167,9 @@ namespace MeltPoolDG::LevelSet
     void
     update_surface_mesh();
 
+    void
+    transform_level_set_to_smooth_heaviside();
+
   private:
     void
     do_reinitialization();
@@ -213,9 +219,6 @@ namespace MeltPoolDG::LevelSet
      */
     void
     transform_distance_to_level_set();
-
-    void
-    transform_level_set_to_smooth_heaviside();
 
     /// To avoid high-frequency errors in the curvature (spurious currents) the curvature is
     /// corrected to represent the value of the interface (zero level set). The approach by Zahedi

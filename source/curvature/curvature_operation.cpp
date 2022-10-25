@@ -38,6 +38,13 @@ namespace MeltPoolDG::Curvature
 
   template <int dim>
   void
+  CurvatureOperation<dim>::update_normal_vector()
+  {
+    normal_vector_operation.solve();
+  }
+
+  template <int dim>
+  void
   CurvatureOperation<dim>::solve()
   {
     /*
