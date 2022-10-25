@@ -26,6 +26,7 @@ namespace MeltPoolDG
 
       static double droplet_radius = 0.5;
       static double domain_length  = 4;
+      static double bc_pressure    = 0;
 
       BETTER_ENUM(DomainType, char, rectangle, ball)
 
@@ -71,6 +72,9 @@ namespace MeltPoolDG
                               domain_length,
                               "Set the characteristic length of the domain.");
             prm.add_parameter("domain type", domain_type, "Set the type of the domain.");
+            prm.add_parameter("bc pressure",
+                              bc_pressure,
+                              "Set the normal stress component on the outflow boundary.");
           }
           prm.leave_subsection();
         }
@@ -138,7 +142,8 @@ namespace MeltPoolDG
         set_boundary_conditions() override
         {
           // zero normal stress component
-          this->attach_open_boundary_condition(0, "navier_stokes_u");
+          this->attach_open_boundary_condition(
+            0, std::make_shared<Functions::ConstantFunction<dim>>(bc_pressure), "navier_stokes_p");
         }
 
         void

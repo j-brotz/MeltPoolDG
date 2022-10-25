@@ -220,11 +220,25 @@ namespace MeltPoolDG
       if (!boundary_conditions_map[operation_name])
         boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
 
-      auto &bc = boundary_conditions_map[operation_name]->open_boundary_bc;
+      AssertThrow(boundary_conditions_map[operation_name]->open_boundary_bc.count(id) == 0,
+                  ExcBCAlreadyAssigned("open BC"));
 
-      AssertThrow(std::find(bc.begin(), bc.end(), id) == bc.end(), ExcBCAlreadyAssigned("open"));
+      boundary_conditions_map[operation_name]->open_boundary_bc[id] =
+        std::make_shared<Functions::ZeroFunction<dim>>();
+    }
 
-      bc.push_back(id);
+    void
+    attach_open_boundary_condition(types::boundary_id             id,
+                                   std::shared_ptr<Function<dim>> boundary_function,
+                                   const std::string              operation_name)
+    {
+      if (!boundary_conditions_map[operation_name])
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+
+      AssertThrow(boundary_conditions_map[operation_name]->open_boundary_bc.count(id) == 0,
+                  ExcBCAlreadyAssigned("open BC"));
+
+      boundary_conditions_map[operation_name]->open_boundary_bc[id] = boundary_function;
     }
 
     /**
@@ -456,6 +470,18 @@ namespace MeltPoolDG
       return boundary_conditions_map[operation_name]->neumann_bc;
     }
 
+    const auto &
+    get_open_boundary_bc(const std::string operation_name)
+    {
+      AssertThrow(
+        boundary_conditions_map[operation_name],
+        ExcMessage(
+          "BC for " + operation_name +
+          "not found. "
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
+      return boundary_conditions_map[operation_name]->open_boundary_bc;
+    }
+
     const std::vector<types::boundary_id> &
     get_no_slip_id(const std::string operation_name)
     {
@@ -497,13 +523,6 @@ namespace MeltPoolDG
     {
       return periodic_boundary_conditions;
     }
-
-    const std::vector<types::boundary_id> &
-    get_open_boundary_id(const std::string operation_name)
-    {
-      return boundary_conditions_map[operation_name]->open_boundary_bc;
-    }
-
     const std::vector<types::boundary_id> &
     get_radiation_id(const std::string operation_name)
     {
