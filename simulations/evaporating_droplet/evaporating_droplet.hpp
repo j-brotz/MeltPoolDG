@@ -151,7 +151,7 @@ namespace MeltPoolDG
         {
           // prescribe pressure dirichlet BC
           this->attach_open_boundary_condition(
-            0, std::make_shared<Functions::ConstantFunction<dim>>(bc_pressure), "navier_stokes_p");
+            0, std::make_shared<Functions::ConstantFunction<dim>>(bc_pressure), "navier_stokes_u");
         }
 
         void
