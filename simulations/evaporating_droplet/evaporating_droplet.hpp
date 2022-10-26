@@ -27,7 +27,7 @@ namespace MeltPoolDG
       static double droplet_radius = 0.5;
       static double domain_length  = 4;
       static double bc_pressure    = 0.0;
-      static double droplet_phi    = -1.0;
+      static double droplet_phi    = 1.0;
 
       BETTER_ENUM(DomainType, char, rectangle, ball)
 
