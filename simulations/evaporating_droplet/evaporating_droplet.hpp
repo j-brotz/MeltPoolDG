@@ -26,6 +26,8 @@ namespace MeltPoolDG
 
       static double droplet_radius = 0.5;
       static double domain_length  = 4;
+      static double bc_pressure    = 0.0;
+      static double droplet_phi    = 1.0;
 
       BETTER_ENUM(DomainType, char, rectangle, ball)
 
@@ -43,7 +45,7 @@ namespace MeltPoolDG
         double
         value(const Point<dim> &p, const unsigned int /*component*/) const
         {
-          return -distance_sphere.value(p);
+          return -droplet_phi * distance_sphere.value(p);
         }
 
       private:
@@ -59,7 +61,11 @@ namespace MeltPoolDG
       public:
         SimulationEvaporatingDroplet(std::string parameter_file, const MPI_Comm mpi_communicator)
           : SimulationBase<dim>(parameter_file, mpi_communicator)
-        {}
+        {
+          AssertThrow(std::abs(droplet_phi) - 1.0 < 1e-10,
+                      ExcMessage("'droplet phi' must be either 1 or"
+                                 "-1."));
+        }
 
         void
         add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
@@ -71,6 +77,12 @@ namespace MeltPoolDG
                               domain_length,
                               "Set the characteristic length of the domain.");
             prm.add_parameter("domain type", domain_type, "Set the type of the domain.");
+            prm.add_parameter("bc pressure",
+                              bc_pressure,
+                              "Set the normal stress component on the outflow boundary.");
+            prm.add_parameter("droplet phi",
+                              droplet_phi,
+                              "Set the level set value inside the droplet, either -1 or 1.");
           }
           prm.leave_subsection();
         }
@@ -137,8 +149,9 @@ namespace MeltPoolDG
         void
         set_boundary_conditions() override
         {
-          // zero normal stress component
-          this->attach_open_boundary_condition(0, "navier_stokes_u");
+          // prescribe pressure dirichlet BC
+          this->attach_open_boundary_condition(
+            0, std::make_shared<Functions::ConstantFunction<dim>>(bc_pressure), "navier_stokes_u");
         }
 
         void

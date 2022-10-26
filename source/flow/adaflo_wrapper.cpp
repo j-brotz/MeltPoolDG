@@ -42,8 +42,8 @@ namespace MeltPoolDG::Flow
       navier_stokes->set_no_slip_boundary(no_slip_id);
     for (const auto &dirichlet_bc : base_in->get_dirichlet_bc("navier_stokes_u").get_data())
       navier_stokes->set_velocity_dirichlet_boundary(dirichlet_bc.first, dirichlet_bc.second);
-    for (const auto &open_id : base_in->get_open_boundary_id("navier_stokes_u"))
-      navier_stokes->set_open_boundary(open_id);
+    for (const auto &open_bc : base_in->get_open_boundary_bc("navier_stokes_u"))
+      navier_stokes->set_open_boundary(open_bc.first, open_bc.second);
     /*
      * Boundary conditions for the pressure field
      */

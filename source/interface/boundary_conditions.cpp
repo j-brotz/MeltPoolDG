@@ -19,8 +19,7 @@ namespace MeltPoolDG
       return BoundaryTypes::fix_pressure_constant;
     else if (std::find(symmetry_bc.begin(), symmetry_bc.end(), id) != symmetry_bc.end())
       return BoundaryTypes::symmetry_bc;
-    else if (std::find(open_boundary_bc.begin(), open_boundary_bc.end(), id) !=
-             open_boundary_bc.end())
+    else if (open_boundary_bc.find(id) != open_boundary_bc.end())
       return BoundaryTypes::open_boundary_bc;
     else if (std::find(radiation_bc.begin(), radiation_bc.end(), id) != radiation_bc.end())
       return BoundaryTypes::radiation_bc;

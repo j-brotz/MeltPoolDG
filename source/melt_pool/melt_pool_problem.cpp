@@ -151,7 +151,7 @@ namespace MeltPoolDG::MeltPool
                   }
               }
 
-            if (base_in->parameters.base.verbosity_level > 0)
+            if (base_in->parameters.base.verbosity_level > 0 && do_ls_iteration)
               {
                 iter_table.set_precision("|res|", 10);
                 iter_table.set_scientific("|res|", true);
