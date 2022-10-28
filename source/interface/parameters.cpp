@@ -148,6 +148,14 @@ namespace MeltPoolDG
                  material.solidus_temperature); //@todo: move to new material class
       }
 
+    // check if curvature computation is enabled in case of surface tension
+    const bool do_compute_surface_tension =
+      std::abs(surface_tension.surface_tension_coefficient) > 1e-10 ||
+      std::abs(surface_tension.temperature_dependent_surface_tension_coefficient) > 1e-10;
+    AssertThrow(!do_compute_surface_tension || curv.enable,
+                ExcMessage("Curvature computation must be enabled in case of surface tension."));
+
+
     // sync verbosity level with base verbosity if not set
     if (heat.nlsolve.verbosity_level == -1)
       heat.nlsolve.verbosity_level = base.verbosity_level;
