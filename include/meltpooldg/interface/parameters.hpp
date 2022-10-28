@@ -202,7 +202,7 @@ namespace MeltPoolDG
   template <typename number = double>
   struct CurvatureData
   {
-    bool                     compute_curvature    = false;
+    bool                     enable               = true;
     number                   damping_scale_factor = 0.0;
     std::string              implementation       = "meltpooldg";
     unsigned int             verbosity_level      = 0;

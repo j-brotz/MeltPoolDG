@@ -185,12 +185,6 @@ namespace MeltPoolDG::Reinitialization
             normal_vector.read_dof_values_plain(this->normal_vec);
             normal_vector.evaluate(EvaluationFlags::values);
 
-            const VectorizedArray<number> thickness_parameter =
-              reinit_data.constant_epsilon > 0 ?
-                VectorizedArray<number>(
-                  std::max(reinit_data.constant_epsilon, scratch_data.get_min_cell_size())) :
-                scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
-
             for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
               {
                 const scalar val = psi_old.get_value(q_index);
@@ -199,7 +193,7 @@ namespace MeltPoolDG::Reinitialization
                                                           tolerance_normal_vector);
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
-                                      this->time_increment * thickness_parameter *
+                                      this->time_increment * diffusion_length[cell] *
                                         scalar_product(psi_old.get_gradient(q_index), n_phi) *
                                         n_phi,
                                     q_index);
@@ -301,25 +295,39 @@ namespace MeltPoolDG::Reinitialization
         normal_vector.evaluate(EvaluationFlags::values);
       }
 
-    const VectorizedArray<number> thickness_parameter =
-      reinit_data.constant_epsilon > 0 ?
-        VectorizedArray<number>(
-          std::max(reinit_data.constant_epsilon,
-                   scratch_data.get_min_cell_size() / scratch_data.get_degree(ls_dof_idx))) :
-        scratch_data.get_cell_sizes()[delta_psi.get_current_cell_index()] * thickness_scale_factor;
-
     for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
       {
         const auto n_phi = MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                                    tolerance_normal_vector);
 
         delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
-        delta_psi.submit_gradient(this->time_increment * thickness_parameter *
+        delta_psi.submit_gradient(this->time_increment *
+                                    diffusion_length[delta_psi.get_current_cell_index()] *
                                     scalar_product(delta_psi.get_gradient(q_index), n_phi) * n_phi,
                                   q_index);
       }
 
     delta_psi.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+  }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::reinit()
+  {
+    if (reinit_data.linear_solver.do_matrix_free)
+      {
+        diffusion_length.resize(scratch_data.get_matrix_free().n_cell_batches());
+
+        for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
+          {
+            diffusion_length[cell] =
+              reinit_data.constant_epsilon > 0 ?
+                VectorizedArray<number>(std::max(reinit_data.constant_epsilon,
+                                                 scratch_data.get_min_cell_size() /
+                                                   scratch_data.get_degree(ls_dof_idx))) :
+                scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
+          }
+      }
   }
 
 

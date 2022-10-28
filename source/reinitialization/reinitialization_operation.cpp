@@ -87,6 +87,7 @@ namespace MeltPoolDG::Reinitialization
 
     update_operator();
     normal_vector_operation->reinit();
+    reinit_operator->reinit();
 
     if (reinit_data.linear_solver.do_matrix_free)
       {

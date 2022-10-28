@@ -75,6 +75,9 @@ namespace MeltPoolDG
       void
       compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
 
+      void
+      reinit() final;
+
     private:
       void
       tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  delta_psi,
@@ -91,6 +94,8 @@ namespace MeltPoolDG
 
       const double thickness_scale_factor;
       const double tolerance_normal_vector;
+
+      std::vector<VectorizedArray<double>> diffusion_length;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG

@@ -447,6 +447,11 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("curvature");
     {
+      prm.add_parameter(
+        "enable",
+        curv.enable,
+        "Set this parameter to true if curvature should be computed. This is required in case of "
+        "surface tension.");
       prm.add_parameter("curv damping scale factor",
                         curv.damping_scale_factor,
                         "curvature computation: damping = cell_size * curv_damping_scale_factor");
