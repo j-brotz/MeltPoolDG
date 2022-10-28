@@ -1377,11 +1377,12 @@ namespace MeltPoolDG::MeltPool
           // solution variables
           std::vector<std::vector<double>> ls_gradients(dim,
                                                         std::vector<double>(quadrature.size()));
-          const double diffusion_length = (base_in->parameters.reinit.constant_epsilon > 0) ?
-                                            base_in->parameters.reinit.constant_epsilon :
-                                            scratch_data->get_min_cell_size() *
-                                              base_in->parameters.reinit.scale_factor_epsilon /
-                                              scratch_data->get_degree(ls_dof_idx);
+          const double                     diffusion_length =
+            (base_in->parameters.reinit.constant_epsilon > 0) ?
+                                  std::max(base_in->parameters.reinit.constant_epsilon,
+                       scratch_data->get_min_cell_size() / scratch_data->get_degree(ls_dof_idx)) :
+                                  scratch_data->get_min_cell_size() * base_in->parameters.reinit.scale_factor_epsilon /
+                scratch_data->get_degree(ls_dof_idx);
 
           std::vector<double> ls_vals(quadrature.size());
 
@@ -1593,11 +1594,14 @@ namespace MeltPoolDG::MeltPool
               // solution variables
               std::vector<std::vector<double>> ls_gradients(dim,
                                                             std::vector<double>(quadrature.size()));
-              const double diffusion_length = (base_in->parameters.reinit.constant_epsilon > 0) ?
-                                                base_in->parameters.reinit.constant_epsilon :
-                                                scratch_data->get_min_cell_size() *
-                                                  base_in->parameters.reinit.scale_factor_epsilon /
-                                                  scratch_data->get_degree(ls_dof_idx);
+              const double                     diffusion_length =
+                (base_in->parameters.reinit.constant_epsilon > 0) ?
+                                      std::max(base_in->parameters.reinit.constant_epsilon,
+                           scratch_data->get_min_cell_size() /
+                             scratch_data->get_degree(ls_dof_idx)) :
+                                      scratch_data->get_min_cell_size() *
+                    base_in->parameters.reinit.scale_factor_epsilon /
+                    scratch_data->get_degree(ls_dof_idx);
 
               std::vector<double> ls_vals(quadrature.size());
 

@@ -571,7 +571,8 @@ namespace MeltPoolDG::LevelSet
 
             const double epsilon_cell =
               reinit_data.constant_epsilon > 0.0 ?
-                reinit_data.constant_epsilon :
+                std::max(reinit_data.constant_epsilon,
+                         scratch_data.get_min_cell_size() / scratch_data.get_degree(ls_dof_idx)) :
                 UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
                   cell, reinit_data.scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
 
@@ -623,7 +624,8 @@ namespace MeltPoolDG::LevelSet
 
           const double epsilon_cell =
             reinit_data.constant_epsilon > 0.0 ?
-              reinit_data.constant_epsilon :
+              std::max(reinit_data.constant_epsilon,
+                       scratch_data.get_min_cell_size() / scratch_data.get_degree(ls_dof_idx)) :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
                 cell, reinit_data.scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
 

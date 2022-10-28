@@ -65,7 +65,7 @@ namespace MeltPoolDG::Reinitialization
 
           const double epsilon_cell =
             reinit_data.constant_epsilon > 0.0 ?
-              reinit_data.constant_epsilon :
+              std::max(reinit_data.constant_epsilon, scratch_data.get_min_cell_size()) :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
                 cell, thickness_scale_factor);
 
@@ -187,7 +187,8 @@ namespace MeltPoolDG::Reinitialization
 
             const VectorizedArray<number> thickness_parameter =
               reinit_data.constant_epsilon > 0 ?
-                make_vectorized_array<number>(reinit_data.constant_epsilon) :
+                VectorizedArray<number>(
+                  std::max(reinit_data.constant_epsilon, scratch_data.get_min_cell_size())) :
                 scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
 
             for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
@@ -302,7 +303,9 @@ namespace MeltPoolDG::Reinitialization
 
     const VectorizedArray<number> thickness_parameter =
       reinit_data.constant_epsilon > 0 ?
-        make_vectorized_array<number>(reinit_data.constant_epsilon) :
+        VectorizedArray<number>(
+          std::max(reinit_data.constant_epsilon,
+                   scratch_data.get_min_cell_size() / scratch_data.get_degree(ls_dof_idx))) :
         scratch_data.get_cell_sizes()[delta_psi.get_current_cell_index()] * thickness_scale_factor;
 
     for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
