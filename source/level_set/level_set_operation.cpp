@@ -199,7 +199,6 @@ namespace MeltPoolDG::LevelSet
 
         // set the values in the advection operation
         advec_diff_operation->get_advected_field() = get_level_set();
-        very_first_step                            = false;
       }
     // do reinitialization of the initial field only if it is not a signed distance function
     else
