@@ -80,9 +80,7 @@ namespace MeltPoolDG
 
     private:
       void
-      tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  delta_psi,
-                                   FECellIntegrator<dim, dim, number> &normal_vector,
-                                   const bool                          do_reinit_cells) const;
+      tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &delta_psi) const;
 
     private:
       const ScratchData<dim> &            scratch_data;
@@ -95,7 +93,8 @@ namespace MeltPoolDG
       const double thickness_scale_factor;
       const double tolerance_normal_vector;
 
-      std::vector<VectorizedArray<double>> diffusion_length;
+      std::vector<VectorizedArray<double>>                                      diffusion_length;
+      mutable std::vector<std::vector<Tensor<1, dim, VectorizedArray<double>>>> unit_normal;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG

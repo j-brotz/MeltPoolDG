@@ -130,18 +130,15 @@ namespace MeltPoolDG::Reinitialization
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, 1, number>   delta_psi(scratch_data.get_matrix_free(),
+        FECellIntegrator<dim, 1, number> delta_psi(scratch_data.get_matrix_free(),
                                                    this->dof_idx,
                                                    reinit_quad_idx);
-        FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                         normal_dof_idx,
-                                                         reinit_quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             delta_psi.reinit(cell);
             delta_psi.read_dof_values(src);
 
-            tangent_local_cell_operation(delta_psi, normal_vector, true);
+            tangent_local_cell_operation(delta_psi);
 
             delta_psi.distribute_local_to_global(dst);
           }
@@ -173,6 +170,9 @@ namespace MeltPoolDG::Reinitialization
                                                          normal_dof_idx,
                                                          reinit_quad_idx);
 
+        unit_normal.resize(scratch_data.get_matrix_free().n_cell_batches(),
+                           std::vector<Tensor<1, dim, VectorizedArray<double>>>(rhs.n_q_points));
+
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             rhs.reinit(cell);
@@ -191,6 +191,7 @@ namespace MeltPoolDG::Reinitialization
                 const auto   n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
+                unit_normal[cell][q_index] = n_phi;
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
                                       this->time_increment * diffusion_length[cell] *
@@ -215,10 +216,7 @@ namespace MeltPoolDG::Reinitialization
     system_matrix = 0.0;
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                     normal_dof_idx,
-                                                     reinit_quad_idx);
+    const auto &matrix_free = scratch_data.get_matrix_free();
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -230,9 +228,7 @@ namespace MeltPoolDG::Reinitialization
       [&](auto &delta_psi) {
         const unsigned int current_cell_index = delta_psi.get_current_cell_index();
 
-        tangent_local_cell_operation(delta_psi,
-                                     normal_vector,
-                                     old_cell_index != current_cell_index);
+        tangent_local_cell_operation(delta_psi);
 
         old_cell_index = current_cell_index;
       },
@@ -249,10 +245,7 @@ namespace MeltPoolDG::Reinitialization
     scratch_data.initialize_dof_vector(diagonal, this->dof_idx);
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                     normal_dof_idx,
-                                                     reinit_quad_idx);
+    const auto &matrix_free = scratch_data.get_matrix_free();
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -263,9 +256,7 @@ namespace MeltPoolDG::Reinitialization
       [&](auto &delta_psi) {
         const unsigned int current_cell_index = delta_psi.get_current_cell_index();
 
-        tangent_local_cell_operation(delta_psi,
-                                     normal_vector,
-                                     old_cell_index != current_cell_index);
+        tangent_local_cell_operation(delta_psi);
 
         old_cell_index = current_cell_index;
       },
@@ -282,23 +273,13 @@ namespace MeltPoolDG::Reinitialization
   template <int dim, typename number>
   void
   OlssonOperator<dim, number>::tangent_local_cell_operation(
-    FECellIntegrator<dim, 1, number> &  delta_psi,
-    FECellIntegrator<dim, dim, number> &normal_vector,
-    const bool                          do_reinit_cells) const
+    FECellIntegrator<dim, 1, number> &delta_psi) const
   {
     delta_psi.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
-    if (do_reinit_cells)
-      {
-        normal_vector.reinit(delta_psi.get_current_cell_index());
-        normal_vector.read_dof_values_plain(this->normal_vec);
-        normal_vector.evaluate(EvaluationFlags::values);
-      }
-
     for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
       {
-        const auto n_phi = MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
-                                                                   tolerance_normal_vector);
+        const auto n_phi = unit_normal[delta_psi.get_current_cell_index()][q_index];
 
         delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
         delta_psi.submit_gradient(this->time_increment *
