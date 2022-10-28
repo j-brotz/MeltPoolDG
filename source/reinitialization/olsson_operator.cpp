@@ -65,7 +65,7 @@ namespace MeltPoolDG::Reinitialization
 
           const double epsilon_cell =
             reinit_data.constant_epsilon > 0.0 ?
-              std::max(reinit_data.constant_epsilon, scratch_data.get_min_cell_size()) :
+              reinit_data.constant_epsilon :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
                 cell, thickness_scale_factor);
 
@@ -170,9 +170,6 @@ namespace MeltPoolDG::Reinitialization
                                                          normal_dof_idx,
                                                          reinit_quad_idx);
 
-        unit_normal.resize(scratch_data.get_matrix_free().n_cell_batches(),
-                           std::vector<Tensor<1, dim, VectorizedArray<double>>>(rhs.n_q_points));
-
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             rhs.reinit(cell);
@@ -187,11 +184,11 @@ namespace MeltPoolDG::Reinitialization
 
             for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
               {
-                const scalar val = psi_old.get_value(q_index);
-                const auto   n_phi =
+                const scalar                                  val = psi_old.get_value(q_index);
+                const Tensor<1, dim, VectorizedArray<double>> n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
-                unit_normal[cell][q_index] = n_phi;
+                unit_normal[cell * rhs.n_q_points + q_index] = n_phi;
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
                                       this->time_increment * diffusion_length[cell] *
@@ -279,7 +276,8 @@ namespace MeltPoolDG::Reinitialization
 
     for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
       {
-        const auto n_phi = unit_normal[delta_psi.get_current_cell_index()][q_index];
+        const auto n_phi =
+          unit_normal[delta_psi.get_current_cell_index() * delta_psi.n_q_points + q_index];
 
         delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
         delta_psi.submit_gradient(this->time_increment *
@@ -297,16 +295,16 @@ namespace MeltPoolDG::Reinitialization
   {
     if (reinit_data.linear_solver.do_matrix_free)
       {
-        diffusion_length.resize(scratch_data.get_matrix_free().n_cell_batches());
+        diffusion_length.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
+
+        unit_normal.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
+                                scratch_data.get_n_q_points(reinit_quad_idx));
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
-            diffusion_length[cell] =
-              reinit_data.constant_epsilon > 0 ?
-                VectorizedArray<number>(std::max(reinit_data.constant_epsilon,
-                                                 scratch_data.get_min_cell_size() /
-                                                   scratch_data.get_degree(ls_dof_idx))) :
-                scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
+            diffusion_length[cell] = reinit_data.constant_epsilon > 0 ?
+                                       reinit_data.constant_epsilon :
+                                       scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
           }
       }
   }

@@ -155,7 +155,6 @@ namespace MeltPoolDG
     AssertThrow(!do_compute_surface_tension || curv.enable,
                 ExcMessage("Curvature computation must be enabled in case of surface tension."));
 
-
     // sync verbosity level with base verbosity if not set
     if (heat.nlsolve.verbosity_level == -1)
       heat.nlsolve.verbosity_level = base.verbosity_level;

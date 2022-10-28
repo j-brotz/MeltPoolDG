@@ -1,16 +1,4 @@
 +--------------------------------------------------------------------------------------------------+
-|  τ = 9.375e-06                                                                  reinitialization |
-| || delta phi ||L2 = 4.809511576989848e-05                                       reinitialization |
-|  τ = 1.875e-05                                                                  reinitialization |
-| || delta phi ||L2 = 4.092333198150164e-05                                       reinitialization |
-|  τ = 2.8125e-05                                                                 reinitialization |
-| || delta phi ||L2 = 3.633316614563772e-05                                       reinitialization |
-|  τ = 3.75e-05                                                                   reinitialization |
-| || delta phi ||L2 = 3.120153009566554e-05                                       reinitialization |
-|  τ = 4.6875e-05                                                                 reinitialization |
-| || delta phi ||L2 = 2.566040284840435e-05                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-+--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 1.28646e+01                newton_raphson_solver |

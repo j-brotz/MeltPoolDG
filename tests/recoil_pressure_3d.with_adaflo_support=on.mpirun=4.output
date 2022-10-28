@@ -2,26 +2,21 @@
 | current laser intensity: 1                                                                 laser |
 | || normal_0 ||L2 = 2.02201582198e-16                                               normal_vector |
 | || normal_1 ||L2 = 3.04815888177e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 1.57044e-05                                                                reinitialization |
-| || delta phi ||L2 = 6.146893518100312e-07                                       reinitialization |
-| || normal_0 ||L2 = 2.08626175957e-16                                               normal_vector |
-| || normal_1 ||L2 = 3.05167874820e+00                                               normal_vector |
-|  τ = 3.14088e-05                                                                reinitialization |
-| || delta phi ||L2 = 4.220446102310951e-07                                       reinitialization |
-| || normal_0 ||L2 = 2.84642004317e-16                                               normal_vector |
-| || normal_1 ||L2 = 3.05534519143e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.84639299777e-16                                               normal_vector |
-| || normal_1 ||L2 = 3.05534519143e+00                                               normal_vector |
 | || curvature ||L2 = 2.99397253990e+00                                                  curvature |
 |  total mass = 0.000410414625                                                   melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.0706010911e-04                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
-| || normal_0 ||L2 = 2.84645886967e-16                                               normal_vector |
+| || advected field ||L2 = 3.0644049112e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 2.02201582198e-16                                               normal_vector |
+| || normal_1 ||L2 = 3.04815888177e+00                                               normal_vector |
++--------------------------------------------------------------------------------------------------+
+|  τ = 1.57044e-05                                                                reinitialization |
+| || delta phi ||L2 = 6.146893518100312e-07                                       reinitialization |
+|  τ = 3.14088e-05                                                                reinitialization |
+| || delta phi ||L2 = 4.220446102310951e-07                                       reinitialization |
++--------------------------------------------------------------------------------------------------+
+| || normal_0 ||L2 = 2.84640683447e-16                                               normal_vector |
 | || normal_1 ||L2 = 3.05534519143e+00                                               normal_vector |
 | || curvature ||L2 = 2.99397253990e+00                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |

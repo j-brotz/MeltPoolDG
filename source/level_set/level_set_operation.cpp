@@ -42,15 +42,14 @@ namespace MeltPoolDG::LevelSet
     , ls_quad_idx(ls_quad_idx_in)
     , curv_dof_idx(curv_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
-    , reinit_time_iterator(
-        TimeSteppingData<double>{0.0,
-                                 std::numeric_limits<double>::max(),
-                                 level_set_data.reinit_time_step_size > 0.0 ?
-                                   level_set_data.reinit_time_step_size :
-                                   scratch_data.get_min_cell_size() *
-                                     reinit_data.scale_factor_epsilon /
-                                     scratch_data.get_degree(ls_dof_idx),
-                                 (unsigned int)level_set_data.n_initial_reinit_steps})
+    , reinit_time_iterator(TimeSteppingData<double>{0.0,
+                                                    std::numeric_limits<double>::max(),
+                                                    level_set_data.reinit_time_step_size > 0.0 ?
+                                                      level_set_data.reinit_time_step_size :
+                                                      scratch_data.get_min_cell_size() *
+                                                        reinit_data.scale_factor_epsilon /
+                                                        scratch_data.get_degree(ls_dof_idx),
+                                                    (unsigned int)reinit_data.max_n_steps})
   {
     /*
      *    initialize the advection diffusion operation
@@ -200,13 +199,17 @@ namespace MeltPoolDG::LevelSet
 
         // set the values in the advection operation
         advec_diff_operation->get_advected_field() = get_level_set();
+        very_first_step                            = false;
       }
-    // do reinitialization of the initial field if requested
-    if (reinit_operation)
+    // do reinitialization of the initial field only if it is not a signed distance function
+    else
       {
-        reinit_time_iterator.reset_max_n_time_steps(level_set_data.n_initial_reinit_steps);
-        do_reinitialization();
-        reinit_time_iterator.reset_max_n_time_steps(reinit_data.max_n_steps);
+        if (reinit_operation)
+          {
+            reinit_time_iterator.reset_max_n_time_steps(level_set_data.n_initial_reinit_steps);
+            do_reinitialization(true /*update normal vector in every cycle*/);
+            reinit_time_iterator.reset_max_n_time_steps(reinit_data.max_n_steps);
+          }
       }
     /*
      *    compute the localized heaviside function
@@ -469,7 +472,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
-  LevelSetOperation<dim>::do_reinitialization()
+  LevelSetOperation<dim>::do_reinitialization(const bool update_normal_vector_in_every_cycle)
   {
     // compute the change in the level set since the last reinit
     VectorType temp;
@@ -517,12 +520,10 @@ namespace MeltPoolDG::LevelSet
             // field might not be computed very accurately from the initial level set
             // field. Thus, in this case we update the normal vector in every reinitialization
             // step.
-            if (very_first_step)
+            if (update_normal_vector_in_every_cycle)
               reinit_operation->set_initial_condition(get_level_set());
           }
         reinit_time_iterator.reset();
-
-        very_first_step = false;
 
         Journal::print_decoration_line(scratch_data.get_pcout());
       }
@@ -571,8 +572,7 @@ namespace MeltPoolDG::LevelSet
 
             const double epsilon_cell =
               reinit_data.constant_epsilon > 0.0 ?
-                std::max(reinit_data.constant_epsilon,
-                         scratch_data.get_min_cell_size() / scratch_data.get_degree(ls_dof_idx)) :
+                reinit_data.constant_epsilon :
                 UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
                   cell, reinit_data.scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
 
@@ -624,8 +624,7 @@ namespace MeltPoolDG::LevelSet
 
           const double epsilon_cell =
             reinit_data.constant_epsilon > 0.0 ?
-              std::max(reinit_data.constant_epsilon,
-                       scratch_data.get_min_cell_size() / scratch_data.get_degree(ls_dof_idx)) :
+              reinit_data.constant_epsilon :
               UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
                 cell, reinit_data.scale_factor_epsilon / scratch_data.get_degree(ls_dof_idx));
 

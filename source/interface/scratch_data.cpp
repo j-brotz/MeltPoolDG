@@ -397,6 +397,14 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  unsigned int
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_n_q_points(
+    const unsigned int quad_idx) const
+  {
+    return get_quadrature(quad_idx).get_points().size();
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   const double &
   ScratchData<dim, spacedim, number, VectorizedArrayType>::get_min_cell_size() const
   {

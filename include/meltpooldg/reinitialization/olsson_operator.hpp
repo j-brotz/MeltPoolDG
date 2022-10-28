@@ -93,8 +93,8 @@ namespace MeltPoolDG
       const double thickness_scale_factor;
       const double tolerance_normal_vector;
 
-      std::vector<VectorizedArray<double>>                                      diffusion_length;
-      mutable std::vector<std::vector<Tensor<1, dim, VectorizedArray<double>>>> unit_normal;
+      AlignedVector<VectorizedArray<double>>                         diffusion_length;
+      mutable AlignedVector<Tensor<1, dim, VectorizedArray<double>>> unit_normal;
     };
   } // namespace Reinitialization
 } // namespace MeltPoolDG
