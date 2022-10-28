@@ -42,14 +42,15 @@ namespace MeltPoolDG::LevelSet
     , ls_quad_idx(ls_quad_idx_in)
     , curv_dof_idx(curv_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
-    , reinit_time_iterator(TimeSteppingData<double>{0.0,
-                                                    std::numeric_limits<double>::max(),
-                                                    level_set_data.reinit_time_step_size > 0.0 ?
-                                                      level_set_data.reinit_time_step_size :
-                                                      scratch_data.get_min_cell_size() *
-                                                        reinit_data.scale_factor_epsilon /
-                                                        scratch_data.get_degree(ls_dof_idx),
-                                                    (unsigned int)reinit_data.max_n_steps})
+    , reinit_time_iterator(
+        TimeSteppingData<double>{0.0,
+                                 std::numeric_limits<double>::max(),
+                                 level_set_data.reinit_time_step_size > 0.0 ?
+                                   level_set_data.reinit_time_step_size :
+                                   scratch_data.get_min_cell_size() *
+                                     reinit_data.scale_factor_epsilon /
+                                     scratch_data.get_degree(ls_dof_idx),
+                                 static_cast<unsigned int>(reinit_data.max_n_steps)})
   {
     /*
      *    initialize the advection diffusion operation
