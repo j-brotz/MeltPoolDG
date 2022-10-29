@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-10-28
+- Add parameter to enable curvature computation
+```json
+{
+  "curvature":
+  {
+    "enable": "true|false"
+  }
+```
+
 ## 2022-10-24
 - Add parameter for iteration of nonlinear evaporation-induced coupling term
 in the level set equation

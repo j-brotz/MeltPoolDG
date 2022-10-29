@@ -1,17 +1,16 @@
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
+|  total mass = 0.75789903586                                                    melt_pool_problem |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 1.7170514649e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1.17187e-06                                                                reinitialization |
 | || delta phi ||L2 = 2.418862641207020e-05                                       reinitialization |
 |  τ = 2.34375e-06                                                                reinitialization |
 | || delta phi ||L2 = 1.553792571939999e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-|  total mass = 0.75791330871                                                    melt_pool_problem |
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.7175867830e-02                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.06230e+01                newton_raphson_solver |

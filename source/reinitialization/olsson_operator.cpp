@@ -130,18 +130,15 @@ namespace MeltPoolDG::Reinitialization
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, 1, number>   delta_psi(scratch_data.get_matrix_free(),
+        FECellIntegrator<dim, 1, number> delta_psi(scratch_data.get_matrix_free(),
                                                    this->dof_idx,
                                                    reinit_quad_idx);
-        FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                         normal_dof_idx,
-                                                         reinit_quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             delta_psi.reinit(cell);
             delta_psi.read_dof_values(src);
 
-            tangent_local_cell_operation(delta_psi, normal_vector, true);
+            tangent_local_cell_operation(delta_psi);
 
             delta_psi.distribute_local_to_global(dst);
           }
@@ -185,20 +182,16 @@ namespace MeltPoolDG::Reinitialization
             normal_vector.read_dof_values_plain(this->normal_vec);
             normal_vector.evaluate(EvaluationFlags::values);
 
-            const VectorizedArray<number> thickness_parameter =
-              reinit_data.constant_epsilon > 0 ?
-                make_vectorized_array<number>(reinit_data.constant_epsilon) :
-                scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
-
             for (unsigned int q_index = 0; q_index < rhs.n_q_points; ++q_index)
               {
-                const scalar val = psi_old.get_value(q_index);
-                const auto   n_phi =
+                const scalar                                  val = psi_old.get_value(q_index);
+                const Tensor<1, dim, VectorizedArray<double>> n_phi =
                   MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
                                                           tolerance_normal_vector);
+                unit_normal[cell * rhs.n_q_points + q_index] = n_phi;
 
                 rhs.submit_gradient(this->time_increment * compressive_flux(val) * n_phi -
-                                      this->time_increment * thickness_parameter *
+                                      this->time_increment * diffusion_length[cell] *
                                         scalar_product(psi_old.get_gradient(q_index), n_phi) *
                                         n_phi,
                                     q_index);
@@ -220,10 +213,7 @@ namespace MeltPoolDG::Reinitialization
     system_matrix = 0.0;
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                     normal_dof_idx,
-                                                     reinit_quad_idx);
+    const auto &matrix_free = scratch_data.get_matrix_free();
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -235,9 +225,7 @@ namespace MeltPoolDG::Reinitialization
       [&](auto &delta_psi) {
         const unsigned int current_cell_index = delta_psi.get_current_cell_index();
 
-        tangent_local_cell_operation(delta_psi,
-                                     normal_vector,
-                                     old_cell_index != current_cell_index);
+        tangent_local_cell_operation(delta_psi);
 
         old_cell_index = current_cell_index;
       },
@@ -254,10 +242,7 @@ namespace MeltPoolDG::Reinitialization
     scratch_data.initialize_dof_vector(diagonal, this->dof_idx);
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> normal_vector(scratch_data.get_matrix_free(),
-                                                     normal_dof_idx,
-                                                     reinit_quad_idx);
+    const auto &matrix_free = scratch_data.get_matrix_free();
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
@@ -268,9 +253,7 @@ namespace MeltPoolDG::Reinitialization
       [&](auto &delta_psi) {
         const unsigned int current_cell_index = delta_psi.get_current_cell_index();
 
-        tangent_local_cell_operation(delta_psi,
-                                     normal_vector,
-                                     old_cell_index != current_cell_index);
+        tangent_local_cell_operation(delta_psi);
 
         old_cell_index = current_cell_index;
       },
@@ -287,36 +270,43 @@ namespace MeltPoolDG::Reinitialization
   template <int dim, typename number>
   void
   OlssonOperator<dim, number>::tangent_local_cell_operation(
-    FECellIntegrator<dim, 1, number> &  delta_psi,
-    FECellIntegrator<dim, dim, number> &normal_vector,
-    const bool                          do_reinit_cells) const
+    FECellIntegrator<dim, 1, number> &delta_psi) const
   {
     delta_psi.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
-    if (do_reinit_cells)
-      {
-        normal_vector.reinit(delta_psi.get_current_cell_index());
-        normal_vector.read_dof_values_plain(this->normal_vec);
-        normal_vector.evaluate(EvaluationFlags::values);
-      }
-
-    const VectorizedArray<number> thickness_parameter =
-      reinit_data.constant_epsilon > 0 ?
-        make_vectorized_array<number>(reinit_data.constant_epsilon) :
-        scratch_data.get_cell_sizes()[delta_psi.get_current_cell_index()] * thickness_scale_factor;
-
     for (unsigned int q_index = 0; q_index < delta_psi.n_q_points; q_index++)
       {
-        const auto n_phi = MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
-                                                                   tolerance_normal_vector);
+        const auto n_phi =
+          unit_normal[delta_psi.get_current_cell_index() * delta_psi.n_q_points + q_index];
 
         delta_psi.submit_value(delta_psi.get_value(q_index), q_index);
-        delta_psi.submit_gradient(this->time_increment * thickness_parameter *
+        delta_psi.submit_gradient(this->time_increment *
+                                    diffusion_length[delta_psi.get_current_cell_index()] *
                                     scalar_product(delta_psi.get_gradient(q_index), n_phi) * n_phi,
                                   q_index);
       }
 
     delta_psi.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+  }
+
+  template <int dim, typename number>
+  void
+  OlssonOperator<dim, number>::reinit()
+  {
+    if (reinit_data.linear_solver.do_matrix_free)
+      {
+        diffusion_length.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
+
+        unit_normal.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
+                                scratch_data.get_n_q_points(reinit_quad_idx));
+
+        for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
+          {
+            diffusion_length[cell] = reinit_data.constant_epsilon > 0 ?
+                                       reinit_data.constant_epsilon :
+                                       scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
+          }
+      }
   }
 
 

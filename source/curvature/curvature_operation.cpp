@@ -52,6 +52,9 @@ namespace MeltPoolDG::Curvature
      */
     normal_vector_operation.solve();
 
+    if (!curvature_data.enable)
+      return;
+
     solution_levelset.update_ghost_values();
     normal_vector_operation.get_solution_normal_vector().update_ghost_values();
 

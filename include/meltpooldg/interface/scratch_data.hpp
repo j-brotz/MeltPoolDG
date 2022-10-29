@@ -151,6 +151,9 @@ namespace MeltPoolDG
     unsigned int
     get_degree(const unsigned int dof_idx = 0) const;
 
+    unsigned int
+    get_n_q_points(const unsigned int dof_idx = 0) const;
+
     const double &
     get_min_cell_size() const;
 

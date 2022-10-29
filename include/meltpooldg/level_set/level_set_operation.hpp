@@ -61,7 +61,6 @@ namespace MeltPoolDG::LevelSet
      */
     TimeIterator<double> reinit_time_iterator;
 
-    bool very_first_step        = true;
     bool ready_for_time_advance = false;
     /*
      *    This is the surface_tension vector calculated after level set and reinitialization
@@ -172,7 +171,7 @@ namespace MeltPoolDG::LevelSet
 
   private:
     void
-    do_reinitialization();
+    do_reinitialization(const bool update_normal_vector_in_every_cycle = false);
 
     inline double
     approximate_distance_from_level_set(const double phi, const double eps, const double cutoff)
