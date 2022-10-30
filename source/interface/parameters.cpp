@@ -82,8 +82,6 @@ namespace MeltPoolDG
           time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
 
-    // set default write time step size for profiling to the end time
-    profiling.write_time_step_size = time_stepping.end_time - time_stepping.start_time;
     /*
      * calculate the profiling output frequency if a time step size
      */

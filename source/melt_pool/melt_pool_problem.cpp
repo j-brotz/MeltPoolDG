@@ -335,7 +335,7 @@ namespace MeltPoolDG::MeltPool
           }
 
         //@todo: adapt in case of adaptive time stepping
-        if (!(n % base_in->parameters.profiling.write_frequency) &&
+        if ((n % base_in->parameters.profiling.write_frequency == 0) &&
             base_in->parameters.profiling.enable)
           scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
       }
