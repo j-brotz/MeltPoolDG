@@ -13,6 +13,7 @@
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -291,13 +292,17 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::solve(const bool do_finish_time_step)
   {
+    ScopedName         sc("ls::solve");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     if (!ready_for_time_advance)
       init_time_advance();
     /*
      *  1) solve the advection step of the level set function
      */
     {
-      TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::advect");
+      ScopedName         sc("advect");
+      TimerOutput::Scope scope(scratch_data.get_timer(), sc);
       advec_diff_operation->solve(false /*do_finish_time_step; is done as a subsequent step*/);
     }
 
@@ -309,13 +314,17 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::finish_time_advance()
   {
+    ScopedName         sc("ls::finish_time_advance");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     advec_diff_operation->finish_time_advance();
     /*
      *  2) solve the reinitialization problem of the level set equation
      */
     if (reinit_operation)
       {
-        TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::reinit");
+        ScopedName         sc("reinit");
+        TimerOutput::Scope scope(scratch_data.get_timer(), sc);
         do_reinitialization();
       }
     /*
@@ -326,7 +335,8 @@ namespace MeltPoolDG::LevelSet
      *    ... the curvature
      */
     {
-      TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::curvature");
+      ScopedName         sc("curvature");
+      TimerOutput::Scope scope(scratch_data.get_timer(), sc);
       curvature_operation->solve();
     }
     /*
@@ -334,7 +344,8 @@ namespace MeltPoolDG::LevelSet
      */
     if (level_set_data.do_curvature_correction)
       {
-        TimerOutput::Scope scope(scratch_data.get_timer(), "LevelSet::curvature_correction");
+        ScopedName         sc("curvature_correction");
+        TimerOutput::Scope scope(scratch_data.get_timer(), sc);
         correct_curvature_values();
       }
 
