@@ -11,6 +11,7 @@
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 
 namespace MeltPoolDG::MeltPool
 {
@@ -19,6 +20,9 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     initialize(base_in); // no timing needed, since the function does it self
+
+    auto sc    = std::make_unique<ScopedName>("mp::run");
+    auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
     while (!time_iterator->is_finished())
       {
@@ -108,8 +112,8 @@ namespace MeltPoolDG::MeltPool
                 if (evaporation_operation &&
                     problem_specific_parameters.do_evaporative_velocity_jump)
                   {
-                    TimerOutput::Scope scope(scratch_data->get_timer(),
-                                             "Evaporation::level_set_source_term");
+                    ScopedName         sc("evaporation::level_set_source_term");
+                    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
                     switch (base_in->parameters.evapor.level_set_source_term_type)
                       {
@@ -176,7 +180,8 @@ namespace MeltPoolDG::MeltPool
          * HEAT TRANSFER
          ******************************************************************************************/
         {
-          TimerOutput::Scope scope(scratch_data->get_timer(), "HeatTransfer");
+          ScopedName         sc("heat");
+          TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
           if (melt_pool_operation)
             melt_pool_operation->compute_heat_source(
@@ -222,7 +227,8 @@ namespace MeltPoolDG::MeltPool
         // compute the evaporative mass flux from the temperature field
         if (evaporation_operation)
           {
-            TimerOutput::Scope scope(scratch_data->get_timer(), "Evaporation::mass_flux");
+            ScopedName         sc("evaporation::mass_flux");
+            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
             evaporation_operation->compute_evaporative_mass_flux();
           }
 
@@ -230,7 +236,8 @@ namespace MeltPoolDG::MeltPool
          * NAVIER - STOKES
          ******************************************************************************************/
         {
-          TimerOutput::Scope scope(scratch_data->get_timer(), "NavierStokes::rhs");
+          ScopedName         sc("evaporation::mass_flux");
+          TimerOutput::Scope scope(scratch_data->get_timer(), sc);
           // update the phases for the flow solver considering the updated level set and temperature
           update_phases(level_set_operation->get_level_set_as_heaviside(), base_in->parameters);
 
@@ -309,7 +316,8 @@ namespace MeltPoolDG::MeltPool
         }
 
         {
-          TimerOutput::Scope scope(scratch_data->get_timer(), "NavierStokes::solve");
+          ScopedName         sc("ns::solve");
+          TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
           if (evaporation_fluid_material)
             evaporation_fluid_material->update_ghost_values();
@@ -321,7 +329,8 @@ namespace MeltPoolDG::MeltPool
         }
 
         {
-          TimerOutput::Scope scope(scratch_data->get_timer(), "Output");
+          ScopedName         sc("output");
+          TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
           // ... and output the results to vtk files.
           output_results(n, time_iterator->get_current_time(), base_in);
@@ -330,7 +339,8 @@ namespace MeltPoolDG::MeltPool
 
         if (base_in->parameters.amr.do_amr)
           {
-            TimerOutput::Scope scope(scratch_data->get_timer(), "AMR");
+            ScopedName         sc("arm");
+            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
             refine_mesh(base_in);
           }
 
@@ -340,6 +350,9 @@ namespace MeltPoolDG::MeltPool
           scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
       }
     Journal::print_end(scratch_data->get_pcout());
+
+    scope.reset();
+    sc.reset();
 
     //... always print timing statistics
     if (base_in->parameters.profiling.enable)
@@ -492,7 +505,8 @@ namespace MeltPoolDG::MeltPool
                                                       base_in->parameters.base.verbosity_level,
                                                       /*do_matrix_free*/ true);
 
-    TimerOutput::Scope scope(scratch_data->get_timer(), "Initialization");
+    ScopedName         sc("mp::output");
+    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
     /*
      *  setup mapping
      */
