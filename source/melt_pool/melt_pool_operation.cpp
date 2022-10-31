@@ -257,8 +257,7 @@ namespace MeltPoolDG::MeltPool
   MeltPoolOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    solid.update_ghost_values();
-    liquid.update_ghost_values();
+    // TODO: remove -- not needed
     vectors.push_back(&solid);
     vectors.push_back(&liquid);
   }

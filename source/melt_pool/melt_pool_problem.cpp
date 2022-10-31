@@ -1362,10 +1362,10 @@ namespace MeltPoolDG::MeltPool
   {
     const auto &amr_data = base_in->parameters.amr;
 
-    level_set_operation->get_level_set().update_ghost_values();
-    level_set_operation->get_normal_vector().update_ghost_values();
-
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
+      level_set_operation->get_level_set().update_ghost_values();
+      level_set_operation->get_normal_vector().update_ghost_values();
+
       if (problem_specific_parameters.amr.do_auto_detect_frequency)
         {
           // Check whether the interface changed that much such that refinement is needed.
@@ -1459,7 +1459,6 @@ namespace MeltPoolDG::MeltPool
               locally_relevant_solution.copy_locally_owned_data_from(
                 level_set_operation->get_level_set());
               ls_constraints_dirichlet.distribute(locally_relevant_solution);
-              locally_relevant_solution.update_ghost_values();
 
               for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
                 locally_relevant_solution.local_element(i) =
@@ -1620,6 +1619,8 @@ namespace MeltPoolDG::MeltPool
               typename DoFHandler<dim>::active_cell_iterator vel_cell =
                 scratch_data->get_dof_handler(vel_dof_idx).begin_active();
 
+              flow_operation->get_velocity().update_ghost_values();
+
               for (auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
                 {
                   if (cell->is_locally_owned())
@@ -1668,6 +1669,8 @@ namespace MeltPoolDG::MeltPool
                     }
                   vel_cell++;
                 }
+
+              flow_operation->get_velocity().zero_out_ghost_values();
               break;
             }
         }
@@ -1746,7 +1749,6 @@ namespace MeltPoolDG::MeltPool
 
       level_set_operation->get_level_set().zero_out_ghost_values();
       level_set_operation->get_normal_vector().zero_out_ghost_values();
-
       return true;
     };
 

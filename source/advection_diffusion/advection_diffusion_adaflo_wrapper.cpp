@@ -185,8 +185,6 @@ namespace MeltPoolDG::AdvectionDiffusion
   AdvectionDiffusionOperationAdaflo<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    advected_field.update_ghost_values();
-    advected_field_old.update_ghost_values();
     vectors.push_back(&advected_field);
     vectors.push_back(&advected_field_old);
   }

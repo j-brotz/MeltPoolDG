@@ -569,9 +569,6 @@ namespace MeltPoolDG::Flow
   AdafloWrapper<dim>::attach_vectors_u(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    navier_stokes->solution.block(0).update_ghost_values();
-    navier_stokes->solution_old.block(0).update_ghost_values();
-    navier_stokes->solution_old_old.block(0).update_ghost_values();
     vectors.push_back(&navier_stokes->solution.block(0));
     vectors.push_back(&navier_stokes->solution_old.block(0));
     vectors.push_back(&navier_stokes->solution_old_old.block(0));
@@ -582,9 +579,6 @@ namespace MeltPoolDG::Flow
   AdafloWrapper<dim>::attach_vectors_p(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    navier_stokes->solution.block(1).update_ghost_values();
-    navier_stokes->solution_old.block(1).update_ghost_values();
-    navier_stokes->solution_old_old.block(1).update_ghost_values();
     vectors.push_back(&navier_stokes->solution.block(1));
     vectors.push_back(&navier_stokes->solution_old.block(1));
     vectors.push_back(&navier_stokes->solution_old_old.block(1));

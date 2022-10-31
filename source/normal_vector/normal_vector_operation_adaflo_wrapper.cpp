@@ -141,7 +141,6 @@ namespace MeltPoolDG::NormalVector
   NormalVectorOperationAdaflo<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    normal_vector_field.update_ghost_values();
     for (unsigned int d = 0; d < dim; ++d)
       vectors.push_back(&normal_vector_field.block(d));
   }
