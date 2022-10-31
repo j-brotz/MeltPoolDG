@@ -1,5 +1,6 @@
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
+#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -157,6 +158,8 @@ namespace MeltPoolDG::NormalVector
     Journal::print_line(scratch_data.get_pcout(1),
                         "     * CG: i = " + std::to_string(iter),
                         "normal_vector");
+
+    IterationMonitor::add_linear_iterations(sc, iter);
   }
 
   template <int dim>

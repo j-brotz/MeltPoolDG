@@ -10,6 +10,7 @@
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
@@ -357,7 +358,11 @@ namespace MeltPoolDG::MeltPool
         //@todo: adapt in case of adaptive time stepping
         if ((n % base_in->parameters.profiling.write_frequency == 0) &&
             base_in->parameters.profiling.enable)
-          scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+          {
+            scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+            scratch_data->get_pcout() << std::endl;
+            IterationMonitor::print(scratch_data->get_pcout());
+          }
       }
     Journal::print_end(scratch_data->get_pcout());
 
@@ -366,7 +371,11 @@ namespace MeltPoolDG::MeltPool
 
     //... always print timing statistics
     if (base_in->parameters.profiling.enable)
-      scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+      {
+        scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+        scratch_data->get_pcout() << std::endl;
+        IterationMonitor::print(scratch_data->get_pcout());
+      }
   }
 
   template <int dim>
