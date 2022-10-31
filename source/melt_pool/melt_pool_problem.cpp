@@ -1747,49 +1747,56 @@ namespace MeltPoolDG::MeltPool
       level_set_operation->get_level_set().zero_out_ghost_values();
       level_set_operation->get_normal_vector().zero_out_ghost_values();
 
-
       return true;
     };
+
+    // Early return if AMR is not needed according to auto detection
+    if (problem_specific_parameters.amr.do_auto_detect_frequency)
+      {
+        auto triangulation = const_cast<Triangulation<dim> *>(&scratch_data->get_triangulation());
+        if (!mark_cells_for_refinement(*triangulation))
+          return;
+      }
 
     /*
      * add DoFHandler and DoF-vector pairs to data
      */
-    std::vector<
-      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
-      data;
-
-    data.emplace_back(&dof_handler_ls, [&](std::vector<VectorType *> &vectors) {
-      level_set_operation->attach_vectors(vectors); // ls + heaviside
-    });
-    data.emplace_back(&flow_operation->get_dof_handler_velocity(),
-                      [&](std::vector<VectorType *> &vectors) {
-                        flow_operation->attach_vectors_u(vectors);
-                      });
-    data.emplace_back(&flow_operation->get_dof_handler_pressure(),
-                      [&](std::vector<VectorType *> &vectors) {
-                        flow_operation->attach_vectors_p(vectors);
-                      });
-
-    if (melt_pool_operation)
-      data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
-        melt_pool_operation->attach_vectors(vectors); // temperature + solid + liquid
-      });
-
-    if (evaporation_operation)
-      {
+    const auto attach_vectors =
+      [&](std::vector<std::pair<const DoFHandler<dim> *,
+                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+        data.emplace_back(&dof_handler_ls, [&](std::vector<VectorType *> &vectors) {
+          level_set_operation->attach_vectors(vectors); // ls + heaviside
+        });
         data.emplace_back(&flow_operation->get_dof_handler_velocity(),
                           [&](std::vector<VectorType *> &vectors) {
-                            evaporation_operation->attach_dim_vectors(vectors);
+                            flow_operation->attach_vectors_u(vectors);
                           });
-        data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
-          evaporation_operation->attach_vectors(vectors);
-        });
-      }
+        data.emplace_back(&flow_operation->get_dof_handler_pressure(),
+                          [&](std::vector<VectorType *> &vectors) {
+                            flow_operation->attach_vectors_p(vectors);
+                          });
 
-    if (heat_operation)
-      data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
-        heat_operation->attach_vectors(vectors);
-      });
+        if (melt_pool_operation)
+          data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+            melt_pool_operation->attach_vectors(vectors); // temperature + solid + liquid
+          });
+
+        if (evaporation_operation)
+          {
+            data.emplace_back(&flow_operation->get_dof_handler_velocity(),
+                              [&](std::vector<VectorType *> &vectors) {
+                                evaporation_operation->attach_dim_vectors(vectors);
+                              });
+            data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+              evaporation_operation->attach_vectors(vectors);
+            });
+          }
+
+        if (heat_operation)
+          data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+            heat_operation->attach_vectors(vectors);
+          });
+      };
 
     const auto post = [&]() {
       /**
@@ -1823,7 +1830,7 @@ namespace MeltPoolDG::MeltPool
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
 
     refine_grid<dim, VectorType>(mark_cells_for_refinement,
-                                 data,
+                                 attach_vectors,
                                  post,
                                  setup_dof_system,
                                  amr_data,
