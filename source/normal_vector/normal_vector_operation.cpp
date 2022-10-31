@@ -1,6 +1,7 @@
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -67,6 +68,9 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::solve()
   {
+    ScopedName         sc("normal::solve");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     solution_level_set.update_ghost_values();
 
     // compute predictor

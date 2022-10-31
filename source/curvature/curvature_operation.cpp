@@ -1,5 +1,6 @@
 #include <meltpooldg/curvature/curvature_operation.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 
 namespace MeltPoolDG::Curvature
 {
@@ -40,6 +41,9 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::update_normal_vector()
   {
+    ScopedName         sc("curvature::update_normal_vector");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     normal_vector_operation.solve();
   }
 
@@ -47,6 +51,9 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperation<dim>::solve()
   {
+    ScopedName         sc("curvature::solve");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     /*
      *    compute and solve the normal vector field for the given level set
      */

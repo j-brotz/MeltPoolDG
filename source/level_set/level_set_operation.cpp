@@ -282,6 +282,8 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::init_time_advance()
   {
+    ScopedName         sc("init_time_advance");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
     advec_diff_operation->init_time_advance();
     transform_level_set_to_smooth_heaviside();
 
@@ -292,7 +294,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::solve(const bool do_finish_time_step)
   {
-    ScopedName         sc("ls::solve");
+    ScopedName         sc("solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
     if (!ready_for_time_advance)
@@ -314,7 +316,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::finish_time_advance()
   {
-    ScopedName         sc("ls::finish_time_advance");
+    ScopedName         sc("finish_time_advance");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
     advec_diff_operation->finish_time_advance();
@@ -322,11 +324,8 @@ namespace MeltPoolDG::LevelSet
      *  2) solve the reinitialization problem of the level set equation
      */
     if (reinit_operation)
-      {
-        ScopedName         sc("reinit");
-        TimerOutput::Scope scope(scratch_data.get_timer(), sc);
-        do_reinitialization();
-      }
+      do_reinitialization();
+
     /*
      *  3) compute the smoothened heaviside function ...
      */
@@ -334,20 +333,12 @@ namespace MeltPoolDG::LevelSet
     /*
      *    ... the curvature
      */
-    {
-      ScopedName         sc("curvature");
-      TimerOutput::Scope scope(scratch_data.get_timer(), sc);
-      curvature_operation->solve();
-    }
+    curvature_operation->solve();
     /*
      *    ... and correct the curvature value far away from the zero level set
      */
     if (level_set_data.do_curvature_correction)
-      {
-        ScopedName         sc("curvature_correction");
-        TimerOutput::Scope scope(scratch_data.get_timer(), sc);
-        correct_curvature_values();
-      }
+      correct_curvature_values();
 
     ready_for_time_advance = false;
   }
@@ -485,6 +476,9 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::do_reinitialization(const bool update_normal_vector_in_every_cycle)
   {
+    ScopedName         sc("do_reinitialization");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     // compute the change in the level set since the last reinit
     VectorType temp;
     scratch_data.initialize_dof_vector(temp, ls_dof_idx);
@@ -662,6 +656,9 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::correct_curvature_values()
   {
+    ScopedName         sc("curvature_correction");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     // new approach: use curvature values at the interface
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, false /*unique mapping*/);
