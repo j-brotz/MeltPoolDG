@@ -95,7 +95,7 @@ namespace MeltPoolDG
       const bool        do_narrow_band;
       const VectorType *solution_level_set;
 
-      std::vector<VectorizedArray<double>> damping;
+      AlignedVector<VectorizedArray<double>> damping;
     };
 
     /**

@@ -57,7 +57,7 @@ namespace MeltPoolDG::Curvature
     const unsigned int ls_dof_idx;
     const VectorType * solution_level_set;
 
-    std::vector<VectorizedArray<double>> damping;
+    AlignedVector<VectorizedArray<double>> damping;
 
   public:
     CurvatureOperator(const ScratchData<dim> &     scratch_data_in,

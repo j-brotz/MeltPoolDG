@@ -151,14 +151,14 @@ namespace MeltPoolDG::Heat
      * contribution to heat source due to evaporation;
      * just for output purposes
      */
-    mutable VectorType                                        evapor_heat_source;
-    mutable std::vector<std::vector<VectorizedArray<double>>> q_vapor;
+    mutable VectorType                             evapor_heat_source;
+    mutable AlignedVector<VectorizedArray<double>> q_vapor;
 
     // phase weighted delta functin, only used for evaporative heat loss
     std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
 
-    mutable std::vector<std::vector<VectorizedArray<double>>> conductivity_at_q;
-    mutable VectorType                                        conductivity_vec;
+    mutable AlignedVector<VectorizedArray<double>> conductivity_at_q;
+    mutable VectorType                             conductivity_vec;
 
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
