@@ -282,6 +282,8 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::init_time_advance()
   {
+    ScopedName         sc("init_time_advance");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
     advec_diff_operation->init_time_advance();
     transform_level_set_to_smooth_heaviside();
 
@@ -292,7 +294,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::solve(const bool do_finish_time_step)
   {
-    ScopedName         sc("ls::solve");
+    ScopedName         sc("solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
     if (!ready_for_time_advance)
@@ -314,7 +316,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::finish_time_advance()
   {
-    ScopedName         sc("ls::finish_time_advance");
+    ScopedName         sc("finish_time_advance");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
     advec_diff_operation->finish_time_advance();
