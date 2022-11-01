@@ -241,7 +241,7 @@ namespace MeltPoolDG::Evaporation
   EvaporationOperation<dim>::attach_dim_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    evaporation_velocity.update_ghost_values();
+    // TODO: delete -- not needed
     vectors.push_back(&evaporation_velocity);
   }
 
@@ -250,7 +250,6 @@ namespace MeltPoolDG::Evaporation
   EvaporationOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
-    evaporative_mass_flux.update_ghost_values();
     vectors.push_back(&evaporative_mass_flux);
   }
 

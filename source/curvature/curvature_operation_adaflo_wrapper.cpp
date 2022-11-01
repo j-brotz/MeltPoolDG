@@ -169,8 +169,6 @@ namespace MeltPoolDG::Curvature
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
     normal_vector_operation_adaflo->attach_vectors(vectors);
-
-    curvature_field.update_ghost_values();
     vectors.push_back(&curvature_field);
   }
 
