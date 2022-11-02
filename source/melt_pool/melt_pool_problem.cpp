@@ -1091,9 +1091,8 @@ namespace MeltPoolDG::MeltPool
                                                      flow_operation->get_quad_idx_velocity());
 
         if (darcy_operation)
-          darcy_operation->get_damping_at_q().resize(matrix_free.n_cell_batches(),
-                                                     std::vector<VectorizedArray<double>>(
-                                                       temp_values.n_q_points));
+          darcy_operation->get_damping_at_q().resize_fast(matrix_free.n_cell_batches() *
+                                                          ls_values.n_q_points);
 
         const auto &material    = parameters.material;
         const auto  rho_g       = VectorizedArray<double>(material.first.density);

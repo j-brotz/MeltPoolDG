@@ -313,7 +313,7 @@ namespace MeltPoolDG::Curvature
   {
     if (curvature_data.linear_solver.do_matrix_free)
       {
-        damping.resize(scratch_data.get_matrix_free().n_cell_batches());
+        damping.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {

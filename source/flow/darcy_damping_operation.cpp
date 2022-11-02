@@ -47,8 +47,8 @@ namespace MeltPoolDG::Flow
                                                                flow_vel_hanging_nodes_dof_idx,
                                                                flow_quad_idx);
 
-        damping_at_q.resize(scratch_data.get_matrix_free().n_cell_batches(),
-                            std::vector<VectorizedArray<double>>(solid.n_q_points));
+        damping_at_q.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
+                                 darcy_damping_force.n_q_points);
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
@@ -64,12 +64,13 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q_index = 0; q_index < darcy_damping_force.n_q_points; ++q_index)
               {
-                damping_at_q[cell][q_index] =
+                damping_at_q[cell * darcy_damping_force.n_q_points + q_index] =
                   get_darcy_damping_coefficient(solid.get_value(q_index));
 
-                darcy_damping_force.submit_value(damping_at_q[cell][q_index] *
-                                                   velocity.get_value(q_index),
-                                                 q_index);
+                darcy_damping_force.submit_value(
+                  damping_at_q[cell * darcy_damping_force.n_q_points + q_index] *
+                    velocity.get_value(q_index),
+                  q_index);
               }
             darcy_damping_force.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
@@ -98,8 +99,9 @@ namespace MeltPoolDG::Flow
                                                                flow_quad_idx);
 
         // check if damping_at_q has its correct size
-        AssertDimension(damping_at_q.size(), scratch_data.get_matrix_free().n_cell_batches());
-        AssertDimension(damping_at_q[0].size(), velocity.n_q_points);
+        AssertDimension(damping_at_q.size(),
+                        scratch_data.get_matrix_free().n_cell_batches() *
+                          darcy_damping_force.n_q_points);
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
@@ -111,9 +113,10 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q_index = 0; q_index < darcy_damping_force.n_q_points; ++q_index)
               {
-                darcy_damping_force.submit_value(damping_at_q[cell][q_index] *
-                                                   velocity.get_value(q_index),
-                                                 q_index);
+                darcy_damping_force.submit_value(
+                  damping_at_q[cell * darcy_damping_force.n_q_points + q_index] *
+                    velocity.get_value(q_index),
+                  q_index);
               }
             darcy_damping_force.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
@@ -153,7 +156,7 @@ namespace MeltPoolDG::Flow
           solid_dof_idx,
           flow_quad_idx,
           [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-            return damping_at_q[cell][quad];
+            return damping_at_q[cell * scratch_data.get_n_q_points(flow_quad_idx) + quad];
           });
 
         scratch_data.get_constraint(solid_dof_idx).distribute(damping);
@@ -166,18 +169,18 @@ namespace MeltPoolDG::Flow
   VectorizedArray<double> &
   DarcyDampingOperation<dim>::get_damping(const unsigned int cell, const unsigned int q)
   {
-    return damping_at_q[cell][q];
+    return damping_at_q[cell * scratch_data.get_n_q_points(flow_quad_idx) + q];
   }
 
   template <int dim>
   const VectorizedArray<double> &
   DarcyDampingOperation<dim>::get_damping(const unsigned int cell, const unsigned int q) const
   {
-    return damping_at_q[cell][q];
+    return damping_at_q[cell * scratch_data.get_n_q_points(flow_quad_idx) + q];
   }
 
   template <int dim>
-  std::vector<std::vector<VectorizedArray<double>>> &
+  AlignedVector<VectorizedArray<double>> &
   DarcyDampingOperation<dim>::get_damping_at_q()
   {
     return damping_at_q;
