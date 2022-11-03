@@ -75,9 +75,9 @@ namespace MeltPoolDG
 
     private:
       void
-      tangent_local_cell_operation(FECellIntegrator<dim, dim, number> &normal_vals,
-                                   FECellIntegrator<dim, 1, number> &  level_set_vals,
-                                   const bool                          do_reinit_cells) const;
+      tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &normal_vals,
+                                   FECellIntegrator<dim, 1, number> &level_set_vals,
+                                   const bool                        do_reinit_cells) const;
 
     private:
       void
