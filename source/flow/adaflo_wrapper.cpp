@@ -5,7 +5,9 @@
 
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
+#  include <meltpooldg/utilities/dof_monitor.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
+#  include <meltpooldg/utilities/scoped_name.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
 
@@ -208,6 +210,15 @@ namespace MeltPoolDG::Flow
     DoFTools::make_hanging_node_constraints(dof_handler_parameters, constraints_parameters);
     constraints_parameters.close();
     UtilityFunctions::check_constraints(dof_handler_parameters, constraints_parameters);
+
+    {
+      ScopedName sc("ns::n_dofs_u");
+      DoFMonitor::add_n_dofs(sc, get_dof_handler_velocity().n_dofs());
+    }
+    {
+      ScopedName sc2("ns::n_dofs_p");
+      DoFMonitor::add_n_dofs(sc2, get_dof_handler_pressure().n_dofs());
+    }
   }
 
   template <int dim>
