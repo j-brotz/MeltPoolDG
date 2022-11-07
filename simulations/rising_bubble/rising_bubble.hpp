@@ -28,22 +28,22 @@ namespace MeltPoolDG
       class InitialValuesLS : public Function<dim>
       {
       public:
-        InitialValuesLS(const double eps)
+        InitialValuesLS()
           : Function<dim>()
-          , distance_sphere(dim == 2 ? Point<dim>(0.5, 0.5) : Point<dim>(0.5, 0.5, 0.5), 0.25)
-          , eps(eps)
+          , distance_sphere(dim == 1 ? Point<dim>(0.5) :
+                            dim == 2 ? Point<dim>(0.5, 0.5) :
+                                       Point<dim>(0.5, 0.5, 0.5),
+                            0.25)
         {}
 
         double
         value(const Point<dim> &p, const unsigned int /*component*/) const
         {
-          return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-            -distance_sphere.value(p), eps);
+          return -distance_sphere.value(p);
         }
 
       private:
         const Functions::SignedDistance::Sphere<dim> distance_sphere;
-        const double                                 eps;
       };
 
       /*
@@ -136,10 +136,8 @@ namespace MeltPoolDG
         void
         set_field_conditions() override
         {
-          double eps =
-            UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
-
-          this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
+          this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(),
+                                         "signed_distance");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");
