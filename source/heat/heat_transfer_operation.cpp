@@ -2,6 +2,8 @@
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/dof_monitor.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -118,6 +120,10 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperation<dim>::reinit()
   {
+    {
+      ScopedName sc("heat::n_dofs");
+      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(temp_dof_idx).n_dofs());
+    }
     scratch_data.initialize_dof_vector(solution_history.get_current_solution(), temp_dof_idx);
     solution_history.apply_old(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_hanging_nodes_dof_idx); });

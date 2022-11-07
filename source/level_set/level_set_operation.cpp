@@ -12,6 +12,7 @@
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
+#include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
@@ -231,6 +232,11 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::reinit()
   {
+    {
+      ScopedName sc("ls::n_dofs");
+      DoFMonitor::add_n_dofs(sc, scratch_data.get_dof_handler(ls_dof_idx).n_dofs());
+    }
+
     advec_diff_operation->reinit();
     if (reinit_operation)
       reinit_operation->reinit();
