@@ -23,7 +23,8 @@ namespace MeltPoolDG::MeltPool
     const std::function<
       void(std::vector<std::pair<const DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &data)>
-      &attach_vectors)
+      &                attach_vectors,
+    const std::string &prefix)
   {
     std::vector<
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
@@ -63,7 +64,7 @@ namespace MeltPoolDG::MeltPool
             solution_transfer[j]->prepare_for_serialization(old_grid_solutions[j]);
           }
 
-        tria->save("restart_tria");
+        tria->save(prefix + "_tria");
       }
     else
       {
@@ -79,7 +80,8 @@ namespace MeltPoolDG::MeltPool
                                  std::function<void(std::vector<VectorType *> &)>>> &data)>
       &                          attach_vectors,
     const std::function<void()> &post,
-    const std::function<void()> &setup_dof_system)
+    const std::function<void()> &setup_dof_system,
+    const std::string &          prefix)
   {
     std::vector<
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
@@ -98,7 +100,7 @@ namespace MeltPoolDG::MeltPool
       {
         auto tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation);
 
-        tria->load("restart_tria");
+        tria->load(prefix + "_tria");
 
         setup_dof_system();
 
@@ -488,10 +490,10 @@ namespace MeltPoolDG::MeltPool
             DoFMonitor::print(scratch_data->get_pcout());
           }
 
-        if ((n % base_in->parameters.restart.write_frequency == 0) &&
-            base_in->parameters.restart.save)
+        if (restart_monitor->now(n))
           {
             Journal::print_line(scratch_data->get_pcout(), "save restart data");
+            restart_monitor->prepare_save();
             save(base_in);
           }
       }
@@ -523,7 +525,7 @@ namespace MeltPoolDG::MeltPool
         this->attach_vectors(data);
       };
 
-    serialize_internal<dim, VectorType>(attach_vectors);
+    serialize_internal<dim, VectorType>(attach_vectors, base_in->parameters.restart.prefix + "_0");
   }
 
   template <int dim>
@@ -540,7 +542,10 @@ namespace MeltPoolDG::MeltPool
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
 
-    deserialize_internal<dim, VectorType>(attach_vectors, post, setup_dof_system);
+    deserialize_internal<dim, VectorType>(attach_vectors,
+                                          post,
+                                          setup_dof_system,
+                                          base_in->parameters.restart.prefix);
   }
 
   template <int dim>
@@ -971,6 +976,14 @@ namespace MeltPoolDG::MeltPool
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(vel_dof_idx),
                                            scratch_data->get_pcout(1));
+    /*
+     *  initialize restart
+     */
+    if (base_in->parameters.restart.load || base_in->parameters.restart.save)
+      {
+        restart_monitor = std::make_shared<RestartMonitor<double>>(base_in->parameters.restart);
+      }
+
     /*
      *    Do initial refinement steps if requested
      */

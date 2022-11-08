@@ -113,6 +113,11 @@ namespace MeltPoolDG
           time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
     /*
+     * set default value of restart prefix
+     */
+    if (restart.prefix == "")
+      restart.prefix = paraview.directory + "/restart";
+    /*
      *  set the number of initial reinitialization steps equal to the number of reinit steps
      *  if no value is provided
      */
@@ -187,7 +192,6 @@ namespace MeltPoolDG
 
       if (!fs::exists(paraview.directory))
         fs::create_directory(paraview.directory);
-
 
       try
         {
@@ -890,7 +894,8 @@ namespace MeltPoolDG
                         restart.write_time_step_size,
                         "Write restart output every given time step size. If this parameter is "
                         "set, the specified parameter for write frequency is overwritten.");
-      prm.add_parameter("filename", restart.filename, "Write filename prefix");
+      prm.add_parameter("prefix", restart.prefix, "Write restart prefix");
+      prm.add_parameter("keep", restart.keep, "Number of restart files to keep.");
     }
     prm.leave_subsection();
     /*
