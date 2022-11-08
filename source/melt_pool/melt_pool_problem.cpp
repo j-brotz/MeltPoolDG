@@ -135,7 +135,7 @@ namespace MeltPoolDG::MeltPool
     auto sc    = std::make_unique<ScopedName>("mp::run");
     auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
-    // load(base_in);
+    load(base_in);
 
     while (!time_iterator->is_finished())
       {
