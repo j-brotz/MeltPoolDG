@@ -200,9 +200,38 @@ namespace MeltPoolDG::NormalVector
   NormalVectorOperator<dim, number>::compute_system_matrix_from_matrixfree(
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
-    (void)system_matrix;
+    system_matrix = 0.0;
 
-    AssertThrow(false, ExcNotImplemented());
+    if (solution_level_set)
+      solution_level_set->update_ghost_values();
+
+    // note: not thread safe!!!
+    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, normal_quad_idx);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    // compute matrix (only cell contributions)
+    MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+      matrix_free,
+      scratch_data.get_constraint(normal_dof_idx),
+      system_matrix,
+      [&](auto &normal_vals) {
+        const unsigned int current_cell_index = normal_vals.get_current_cell_index();
+
+        tangent_local_cell_operation(normal_vals,
+                                     level_set_vals,
+                                     old_cell_index != current_cell_index);
+
+        old_cell_index = current_cell_index;
+      },
+      normal_dof_idx,
+      normal_quad_idx);
+
+    system_matrix.compress(VectorOperation::add);
+
+    if (solution_level_set)
+      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>
