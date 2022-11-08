@@ -17,6 +17,115 @@
 
 namespace MeltPoolDG::MeltPool
 {
+  template <int dim, typename VectorType>
+  void
+  serialize_internal(
+    const std::function<
+      void(std::vector<std::pair<const DoFHandler<dim> *,
+                                 std::function<void(std::vector<VectorType *> &)>>> &data)>
+      &attach_vectors)
+  {
+    std::vector<
+      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
+      data;
+    attach_vectors(data);
+
+    const unsigned int n = data.size();
+
+    Assert(n > 0, ExcNotImplemented());
+
+    auto triangulation = const_cast<Triangulation<dim> *>(&data[0].first->get_triangulation());
+
+    Assert(triangulation, ExcNotImplemented());
+
+    if (dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation))
+      {
+        auto tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation);
+
+        std::vector<std::shared_ptr<parallel::distributed::SolutionTransfer<dim, VectorType>>>
+          solution_transfer(n);
+
+        std::vector<std::vector<VectorType *>>       new_grid_solutions(n);
+        std::vector<std::vector<const VectorType *>> old_grid_solutions(n);
+
+        for (unsigned int j = 0; j < n; ++j)
+          {
+            data[j].second(new_grid_solutions[j]);
+
+            for (const auto &i : new_grid_solutions[j])
+              {
+                i->update_ghost_values();
+                old_grid_solutions[j].push_back(i);
+              }
+            solution_transfer[j] =
+              std::make_shared<parallel::distributed::SolutionTransfer<dim, VectorType>>(
+                *data[j].first);
+            solution_transfer[j]->prepare_for_serialization(old_grid_solutions[j]);
+          }
+
+        tria->save("restart_tria");
+      }
+    else
+      {
+        AssertThrow(false, ExcNotImplemented());
+      }
+  }
+
+  template <int dim, typename VectorType>
+  void
+  deserialize_internal(
+    const std::function<
+      void(std::vector<std::pair<const DoFHandler<dim> *,
+                                 std::function<void(std::vector<VectorType *> &)>>> &data)>
+      &                          attach_vectors,
+    const std::function<void()> &post,
+    const std::function<void()> &setup_dof_system)
+  {
+    std::vector<
+      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
+      data;
+    attach_vectors(data);
+
+    const unsigned int n = data.size();
+
+    Assert(n > 0, ExcNotImplemented());
+
+    auto triangulation = const_cast<Triangulation<dim> *>(&data[0].first->get_triangulation());
+
+    Assert(triangulation, ExcNotImplemented());
+
+    if (dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation))
+      {
+        auto tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation);
+
+        tria->load("restart_tria");
+
+        setup_dof_system();
+
+        std::vector<std::shared_ptr<parallel::distributed::SolutionTransfer<dim, VectorType>>>
+          solution_transfer(n);
+
+        std::vector<std::vector<VectorType *>> new_grid_solutions(n);
+
+        for (unsigned int j = 0; j < n; ++j)
+          {
+            data[j].second(new_grid_solutions[j]);
+
+            solution_transfer[j] =
+              std::make_shared<parallel::distributed::SolutionTransfer<dim, VectorType>>(
+                *data[j].first);
+            solution_transfer[j]->deserialize(new_grid_solutions[j]);
+          }
+
+        post();
+      }
+    else
+      {
+        AssertThrow(false, ExcNotImplemented());
+      }
+  }
+
+
   template <int dim>
   void
   MeltPoolProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
@@ -25,6 +134,8 @@ namespace MeltPoolDG::MeltPool
 
     auto sc    = std::make_unique<ScopedName>("mp::run");
     auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
+
+    save();
 
     while (!time_iterator->is_finished())
       {
@@ -366,6 +477,8 @@ namespace MeltPoolDG::MeltPool
             scratch_data->get_pcout() << std::endl;
             DoFMonitor::print(scratch_data->get_pcout());
           }
+
+        load();
       }
     Journal::print_end(scratch_data->get_pcout());
 
@@ -381,6 +494,33 @@ namespace MeltPoolDG::MeltPool
         scratch_data->get_pcout() << std::endl;
         DoFMonitor::print(scratch_data->get_pcout());
       }
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::save() const
+  {
+    std::function<void(std::vector<std::pair<const DoFHandler<dim> *,
+                                             std::function<void(std::vector<VectorType *> &)>>> &
+                       data)>
+      attach_vectors;
+
+    serialize_internal(attach_vectors);
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::load()
+  {
+    const std::function<void(
+      std::vector<
+        std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &
+      data)>
+                                attach_vectors;
+    const std::function<void()> post;
+    const std::function<void()> setup_dof_system;
+
+    deserialize_internal(attach_vectors, post, setup_dof_system);
   }
 
   template <int dim>

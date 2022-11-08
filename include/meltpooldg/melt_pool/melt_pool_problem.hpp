@@ -73,6 +73,12 @@ namespace MeltPoolDG::MeltPool
     check_input_parameters(Parameters<double> &) final;
 
   private:
+    void
+    save() const;
+
+    void
+    load();
+
     struct
     {
       bool do_heat_transfer = false;
