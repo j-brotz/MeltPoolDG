@@ -25,7 +25,7 @@ namespace MeltPoolDG::Preconditioner
     /*
      * select the relevant DoFHandlers
      */
-    const unsigned int curv_dof_idx;
+    const unsigned int dof_idx;
     /*
      * type of preconditioner
      */

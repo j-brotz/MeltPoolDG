@@ -8,11 +8,11 @@ namespace MeltPoolDG::Preconditioner
   template <int dim, typename OperatorType>
   PreconditionerMatrixFreeGeneric<dim, OperatorType>::PreconditionerMatrixFreeGeneric(
     const ScratchData<dim> &  scratch_data_in,
-    const unsigned int        curv_dof_idx_in,
+    const unsigned int        dof_idx,
     const PreconditionerType &preconditioner_type_in,
     const OperatorType &      operator_base_in)
     : scratch_data(scratch_data_in)
-    , curv_dof_idx(curv_dof_idx_in)
+    , dof_idx(dof_idx)
     , preconditioner_type(preconditioner_type_in)
     , operator_base(operator_base_in)
   {
@@ -32,20 +32,19 @@ namespace MeltPoolDG::Preconditioner
       {
         const MPI_Comm mpi_communicator = scratch_data.get_mpi_comm();
 
-        dsp.reinit(scratch_data.get_dof_handler(curv_dof_idx).n_dofs(),
-                   scratch_data.get_dof_handler(curv_dof_idx).n_dofs());
-        DoFTools::make_sparsity_pattern(scratch_data.get_dof_handler(curv_dof_idx),
+        dsp.reinit(scratch_data.get_dof_handler(dof_idx).n_dofs(),
+                   scratch_data.get_dof_handler(dof_idx).n_dofs());
+        DoFTools::make_sparsity_pattern(scratch_data.get_dof_handler(dof_idx),
                                         dsp,
-                                        scratch_data.get_constraint(curv_dof_idx));
+                                        scratch_data.get_constraint(dof_idx));
 
-        SparsityTools::distribute_sparsity_pattern(
-          dsp,
-          scratch_data.get_locally_owned_dofs(curv_dof_idx),
-          scratch_data.get_mpi_comm(),
-          scratch_data.get_locally_relevant_dofs(curv_dof_idx));
+        SparsityTools::distribute_sparsity_pattern(dsp,
+                                                   scratch_data.get_locally_owned_dofs(dof_idx),
+                                                   scratch_data.get_mpi_comm(),
+                                                   scratch_data.get_locally_relevant_dofs(dof_idx));
 
-        preconditioner_system_matrix.reinit(scratch_data.get_locally_owned_dofs(curv_dof_idx),
-                                            scratch_data.get_locally_owned_dofs(curv_dof_idx),
+        preconditioner_system_matrix.reinit(scratch_data.get_locally_owned_dofs(dof_idx),
+                                            scratch_data.get_locally_owned_dofs(dof_idx),
                                             dsp,
                                             mpi_communicator);
       }
