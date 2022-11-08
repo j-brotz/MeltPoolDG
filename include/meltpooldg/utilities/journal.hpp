@@ -43,6 +43,15 @@ namespace MeltPoolDG::Journal
                        const std::string &       norm_suffix = "L2",
                        const unsigned int        extra_size  = 0);
 
+  void
+  print_formatted_norm(const ConditionalOStream &     pcout,
+                       const std::function<double()> &compute_norm,
+                       const std::string &            norm_id,
+                       const std::string &            operation_name,
+                       const unsigned int             precision   = 6,
+                       const std::string &            norm_suffix = "L2",
+                       const unsigned int             extra_size  = 0);
+
   template <int dim>
   void
   print_mesh_information(const ScratchData<dim> &scratch_data,

@@ -20,9 +20,13 @@ namespace MeltPoolDG
 
     ~ConditionalOStream();
 
+    bool
+    now() const;
+
   private:
     std::ostream &          output_stream;
     std::ios_base::fmtflags f;
+    const bool              any_is_active = false;
   };
 
 } // namespace MeltPoolDG

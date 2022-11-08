@@ -163,13 +163,16 @@ namespace MeltPoolDG::AdvectionDiffusion
     if (!advection_velocity.has_ghost_elements())
       advection_velocity.update_ghost_values();
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(1),
-                                  VectorTools::compute_L2_norm<dim>(advection_velocity,
-                                                                    scratch_data,
-                                                                    velocity_dof_idx,
-                                                                    advec_diff_quad_idx),
-                                  "velocity",
-                                  "advection_diffusion");
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(1),
+      [&]() -> double {
+        return VectorTools::compute_L2_norm<dim>(advection_velocity,
+                                                 scratch_data,
+                                                 velocity_dof_idx,
+                                                 advec_diff_quad_idx);
+      },
+      "velocity",
+      "advection_diffusion");
 
     int iter = 0;
 
@@ -235,32 +238,38 @@ namespace MeltPoolDG::AdvectionDiffusion
     scratch_data.get_constraint(advec_diff_dof_idx)
       .distribute(solution_history.get_current_solution());
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(2),
-                                  advec_diff_operator->get_system_matrix().frobenius_norm(),
-                                  "matrix",
-                                  "advection_diffusion",
-                                  6 /*precision*/,
-                                  "F");
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(2),
+      [&]() -> double { return advec_diff_operator->get_system_matrix().frobenius_norm(); },
+      "matrix",
+      "advection_diffusion",
+      6 /*precision*/,
+      "F");
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(2),
-                                  rhs.l2_norm(),
-                                  "rhs",
-                                  "advection_diffusion",
-                                  6 /*precision*/,
-                                  "l2");
-    Journal::print_formatted_norm(scratch_data.get_pcout(2),
-                                  solution_history.get_current_solution().l2_norm(),
-                                  "src",
-                                  "advection_diffusion",
-                                  6 /*precision*/,
-                                  "l2");
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(2),
+      [&]() -> double { return rhs.l2_norm(); },
+      "rhs",
+      "advection_diffusion",
+      6 /*precision*/,
+      "l2");
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(2),
+      [&]() -> double { return solution_history.get_current_solution().l2_norm(); },
+      "src",
+      "advection_diffusion",
+      6 /*precision*/,
+      "l2");
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(0),
-      MeltPoolDG::VectorTools::compute_L2_norm<dim>(solution_history.get_current_solution(),
-                                                    scratch_data,
-                                                    advec_diff_dof_idx,
-                                                    advec_diff_quad_idx),
+      [&]() -> double {
+        return MeltPoolDG::VectorTools::compute_L2_norm<dim>(
+          solution_history.get_current_solution(),
+          scratch_data,
+          advec_diff_dof_idx,
+          advec_diff_quad_idx);
+      },
       "advected field",
       "advection_diffusion",
       10 /*precision*/
