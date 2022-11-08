@@ -43,12 +43,16 @@ namespace MeltPoolDG
       switch (data.solver_type)
         {
             case (LinearSolverType::CG): {
-              auto solver = SolverCG<VectorType>(solver_control);
+              SolverCG<VectorType> solver(solver_control);
+
               solver.solve(system_matrix, solution, rhs, preconditioner);
               break;
             }
             case (LinearSolverType::GMRES): {
-              auto solver = SolverGMRES<VectorType>(solver_control);
+              typename SolverGMRES<VectorType>::AdditionalData additional_data;
+              additional_data.right_preconditioning = true;
+
+              SolverGMRES<VectorType> solver(solver_control, additional_data);
               solver.solve(system_matrix, solution, rhs, preconditioner);
               break;
             }
