@@ -51,19 +51,44 @@ namespace MeltPoolDG::NormalVector
         /*
          * precompute preconditioner
          */
+        solution_level_set.update_ghost_values();
+        solution_history.get_current_solution().update_ghost_values();
+
+        preconditioner_matrixfree->reinit();
+
         if (normal_vector_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          {
-            solution_level_set.update_ghost_values();
-            solution_history.get_current_solution().update_ghost_values();
+          diag_preconditioner_matrixfree =
+            preconditioner_matrixfree->compute_block_diagonal_preconditioner();
+        else
+          trilinos_preconditioner_matrixfree =
+            preconditioner_matrixfree->compute_trilinos_preconditioner();
 
-            diag_preconditioner_matrixfree =
-              preconditioner_matrixfree->compute_block_diagonal_preconditioner();
 
-            solution_history.get_current_solution().zero_out_ghost_values();
-            solution_level_set.zero_out_ghost_values();
-          }
+        solution_history.get_current_solution().zero_out_ghost_values();
+        solution_level_set.zero_out_ghost_values();
       }
   }
+
+  template <typename PreconditionerType>
+  class BlockPreconditionerWrapper
+  {
+  public:
+    BlockPreconditionerWrapper(const PreconditionerType &precon)
+      : precon(precon)
+    {}
+
+    template <typename Number>
+    void
+    vmult(LinearAlgebra::distributed::BlockVector<Number> &      dst,
+          const LinearAlgebra::distributed::BlockVector<Number> &src) const
+    {
+      for (unsigned int b = 0; b < dst.n_blocks(); ++b)
+        precon.vmult(dst.block(b), src.block(b));
+    }
+
+  private:
+    const PreconditionerType &precon;
+  };
 
   template <int dim>
   void
@@ -106,14 +131,14 @@ namespace MeltPoolDG::NormalVector
                                                       rhs,
                                                       normal_vector_data.linear_solver,
                                                       *diag_preconditioner_matrixfree);
-        else if (normal_vector_data.linear_solver.preconditioner_type ==
-                 PreconditionerType::Identity)
-          iter = LinearSolver::solve<BlockVectorType>(*normal_vector_operator,
-                                                      solution_history.get_current_solution(),
-                                                      rhs,
-                                                      normal_vector_data.linear_solver);
         else
-          AssertThrow(false, ExcNotImplemented());
+          iter = LinearSolver::solve<BlockVectorType>(
+            *normal_vector_operator,
+            solution_history.get_current_solution(),
+            rhs,
+            normal_vector_data.linear_solver,
+            BlockPreconditionerWrapper<TrilinosWrappers::PreconditionBase>(
+              *trilinos_preconditioner_matrixfree));
       }
     else
       {

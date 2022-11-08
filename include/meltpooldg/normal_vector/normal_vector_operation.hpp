@@ -116,6 +116,10 @@ namespace MeltPoolDG
        * Cache for diagonal preconditioner matrix-free
        */
       std::shared_ptr<DiagonalMatrix<BlockVectorType>> diag_preconditioner_matrixfree;
+      /*
+       * Cache for trilinos preconditioner matrix-free
+       */
+      std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
     };
   } // namespace NormalVector
 } // namespace MeltPoolDG
