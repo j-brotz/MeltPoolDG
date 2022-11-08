@@ -31,63 +31,61 @@ namespace MeltPoolDG
               const std::function<void()> &post,
               const std::function<void()> &setup_dof_system,
               const AdaptiveMeshingData &  amr,
+              Triangulation<dim> &         tria,
               const int                    n_time_step)
   {
     if (!now(amr, n_time_step))
       return;
 
+    if (mark_cells_for_refinement(tria) == false)
+      return;
+
     std::vector<
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
       data;
+
     attach_vectors(data);
 
     const unsigned int n = data.size();
 
     Assert(n > 0, ExcNotImplemented());
 
-    auto triangulation = const_cast<Triangulation<dim> *>(&data[0].first->get_triangulation());
+    /*
+     *  Limit the maximum and minimum refinement levels of cells of the grid.
+     */
+    if (tria.n_levels() > amr.max_grid_refinement_level)
+      for (auto &cell : tria.active_cell_iterators_on_level(amr.max_grid_refinement_level))
+        cell->clear_refine_flag();
 
-    Assert(triangulation, ExcNotImplemented());
-
-    if (dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation))
+    for (auto &cell : tria.active_cell_iterators())
       {
-        auto tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation);
-
-        if (mark_cells_for_refinement(*tria) == false)
-          return;
-        /*
-         *  Limit the maximum and minimum refinement levels of cells of the grid.
-         */
-        if (tria->n_levels() > amr.max_grid_refinement_level)
-          for (auto &cell : tria->active_cell_iterators_on_level(amr.max_grid_refinement_level))
-            cell->clear_refine_flag();
-
-        for (auto &cell : tria->active_cell_iterators())
+        if (cell->is_locally_owned())
           {
-            if (cell->is_locally_owned())
+            if (cell->level() <= amr.min_grid_refinement_level)
+              cell->clear_coarsen_flag();
+            /*
+             *  do not coarsen/refine cells along boundary
+             */
+            if (amr.do_not_modify_boundary_cells)
               {
-                if (cell->level() <= amr.min_grid_refinement_level)
-                  cell->clear_coarsen_flag();
-                /*
-                 *  do not coarsen/refine cells along boundary
-                 */
-                if (amr.do_not_modify_boundary_cells)
-                  {
-                    for (auto &face : cell->face_iterators())
-                      if (face->at_boundary())
-                        {
-                          if (cell->refine_flag_set())
-                            cell->clear_refine_flag();
-                          else
-                            cell->clear_coarsen_flag();
-                        }
-                  }
+                for (auto &face : cell->face_iterators())
+                  if (face->at_boundary())
+                    {
+                      if (cell->refine_flag_set())
+                        cell->clear_refine_flag();
+                      else
+                        cell->clear_coarsen_flag();
+                    }
               }
           }
+      }
+
+    if (dynamic_cast<parallel::distributed::Triangulation<dim> *>(&tria))
+      {
         /*
          *  Initialize the triangulation change from the old grid to the new grid
          */
-        tria->prepare_coarsening_and_refinement();
+        tria.prepare_coarsening_and_refinement();
         /*
          *  Initialize the solution transfer from the old grid to the new grid
          */
@@ -114,7 +112,7 @@ namespace MeltPoolDG
         /*
          *  Execute the grid refinement
          */
-        tria->execute_coarsening_and_refinement();
+        tria.execute_coarsening_and_refinement();
         /*
          *  update dof-related scratch data to match the current triangulation
          */
@@ -131,43 +129,10 @@ namespace MeltPoolDG
       }
     else
       {
-        auto tria = triangulation;
-
-        if (mark_cells_for_refinement(*tria) == false)
-          return;
-        /*
-         *  Limit the maximum and minimum refinement levels of cells of the grid.
-         */
-        if (tria->n_levels() > amr.max_grid_refinement_level)
-          for (auto &cell : tria->active_cell_iterators_on_level(amr.max_grid_refinement_level))
-            cell->clear_refine_flag();
-
-        for (auto &cell : tria->active_cell_iterators())
-          {
-            if (cell->is_locally_owned())
-              {
-                if (cell->level() <= amr.min_grid_refinement_level)
-                  cell->clear_coarsen_flag();
-                /*
-                 *  do not coarsen/refine cells along boundary
-                 */
-                if (amr.do_not_modify_boundary_cells)
-                  {
-                    for (auto &face : cell->face_iterators())
-                      if (face->at_boundary())
-                        {
-                          if (cell->refine_flag_set())
-                            cell->clear_refine_flag();
-                          else
-                            cell->clear_coarsen_flag();
-                        }
-                  }
-              }
-          }
         /*
          *  Initialize the triangulation change from the old grid to the new grid
          */
-        tria->prepare_coarsening_and_refinement();
+        tria.prepare_coarsening_and_refinement();
         /*
          *  Initialize the solution transfer from the old grid to the new grid
          */
@@ -211,7 +176,7 @@ namespace MeltPoolDG
         /*
          *  Execute the grid refinement
          */
-        tria->execute_coarsening_and_refinement();
+        tria.execute_coarsening_and_refinement();
         /*
          *  update dof-related scratch data to match the current triangulation
          */
@@ -250,7 +215,7 @@ namespace MeltPoolDG
               const std::function<void()> &                           post,
               const std::function<void()> &                           setup_dof_system,
               const AdaptiveMeshingData &                             amr,
-              const DoFHandler<dim> &                                 dof_handler,
+              DoFHandler<dim> &                                       dof_handler,
               const int                                               n_time_step)
   {
     refine_grid<dim, VectorType>(
@@ -262,6 +227,7 @@ namespace MeltPoolDG
       post,
       setup_dof_system,
       amr,
+      const_cast<Triangulation<dim> &>(dof_handler.get_triangulation()),
       n_time_step);
   }
 
