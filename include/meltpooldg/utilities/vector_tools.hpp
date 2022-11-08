@@ -180,7 +180,7 @@ namespace MeltPoolDG
     }
 
     template <int dim, typename number>
-    static Tensor<1, dim, VectorizedArray<number>>
+    Tensor<1, dim, VectorizedArray<number>>
     normalize(const VectorizedArray<number> &in, const double zero = 1e-16)
     {
       Tensor<1, dim, VectorizedArray<number>> vec;
@@ -192,7 +192,7 @@ namespace MeltPoolDG
     }
 
     template <int dim, typename number>
-    static Tensor<1, dim, VectorizedArray<number>>
+    Tensor<1, dim, VectorizedArray<number>>
     normalize(const Tensor<1, dim, VectorizedArray<number>> &in, const double zero = 1e-16)
     {
       Tensor<1, dim, VectorizedArray<number>> vec;
@@ -210,7 +210,7 @@ namespace MeltPoolDG
     }
 
     template <int dim, typename number = double>
-    static Tensor<1, dim, VectorizedArray<number>>
+    Tensor<1, dim, VectorizedArray<number>>
     evaluate_function_at_vectorized_points(const Function<dim> &                      func,
                                            const Point<dim, VectorizedArray<double>> &points)
     {
