@@ -1849,9 +1849,6 @@ namespace MeltPoolDG::MeltPool
       return this->mark_cells_for_refinement(base_in, tria);
     };
 
-    /*
-     * add DoFHandler and DoF-vector pairs to data
-     */
     const auto attach_vectors =
       [&](std::vector<std::pair<const DoFHandler<dim> *,
                                 std::function<void(std::vector<VectorType *> &)>>> &data) {
