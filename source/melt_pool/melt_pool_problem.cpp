@@ -135,7 +135,7 @@ namespace MeltPoolDG::MeltPool
     auto sc    = std::make_unique<ScopedName>("mp::run");
     auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
-    save();
+    // load();
 
     while (!time_iterator->is_finished())
       {
@@ -478,7 +478,7 @@ namespace MeltPoolDG::MeltPool
             DoFMonitor::print(scratch_data->get_pcout());
           }
 
-        load();
+        save();
       }
     Journal::print_end(scratch_data->get_pcout());
 
