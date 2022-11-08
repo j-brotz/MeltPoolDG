@@ -1379,408 +1379,475 @@ namespace MeltPoolDG::MeltPool
   }
 
   template <int dim>
+  bool
+  MeltPoolProblem<dim>::mark_cells_for_refinement(std::shared_ptr<SimulationBase<dim>> base_in,
+                                                  Triangulation<dim> &                 tria)
+  {
+    const auto &amr_data = base_in->parameters.amr;
+
+    level_set_operation->get_level_set().update_ghost_values();
+    level_set_operation->get_normal_vector().update_ghost_values();
+
+    if (problem_specific_parameters.amr.do_auto_detect_frequency)
+      {
+        // Check whether the interface changed that much such that refinement is needed.
+        //
+        // To this end, it is proved, if a cell K located within 3.5 cell layers around
+        // the interface determined by
+        //
+        //          -log(max |∇Φ|ε) < 3.5
+        //               K
+        //
+        // is at the maximum refinement level or not.
+        std::vector<Point<1>> point(2);
+        // For the level set gradient, look towards the end of the elements to find extrema in the
+        // error indicator (= level set gradient).
+        point[0][0] = 0.05;
+        point[1][0] = 0.95;
+        Quadrature<1>   quadrature_1d(point);
+        Quadrature<dim> quadrature(quadrature_1d);
+
+        FEValues<dim> ls_values(scratch_data->get_fe(ls_dof_idx), quadrature, update_values);
+        FEValues<dim> vel_values(scratch_data->get_fe(vel_dof_idx), quadrature, update_values);
+
+        // solution variables
+        std::vector<std::vector<double>> ls_gradients(dim, std::vector<double>(quadrature.size()));
+        const double diffusion_length = (base_in->parameters.reinit.constant_epsilon > 0) ?
+                                          base_in->parameters.reinit.constant_epsilon :
+                                          scratch_data->get_min_cell_size() *
+                                            base_in->parameters.reinit.scale_factor_epsilon /
+                                            scratch_data->get_degree(ls_dof_idx);
+
+        std::vector<double> ls_vals(quadrature.size());
+
+        bool needs_refinement_or_coarsening = false;
+
+        for (auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
+          {
+            if (cell->is_locally_owned())
+              {
+                cell->clear_coarsen_flag();
+                cell->clear_refine_flag();
+
+                ls_values.reinit(cell);
+
+                for (unsigned int d = 0; d < dim; ++d)
+                  ls_values.get_function_values(level_set_operation->get_normal_vector().block(d),
+                                                ls_gradients[d]);
+                double distance_in_cells = 0;
+                for (unsigned int q = 0; q < quadrature.size(); ++q)
+                  {
+                    Tensor<1, dim> ls_gradient;
+                    for (unsigned int d = 0; d < dim; ++d)
+                      ls_gradient[d] = ls_gradients[d][q];
+                    distance_in_cells = std::max(distance_in_cells, ls_gradient.norm());
+                  }
+
+                distance_in_cells = -std::log(distance_in_cells * diffusion_length);
+
+                if ((cell->level() < static_cast<int>(amr_data.max_grid_refinement_level) &&
+                     distance_in_cells < 3.5) ||
+                    (time_iterator->get_current_time_step_number() == 0 &&
+                     cell->level() > amr_data.min_grid_refinement_level && distance_in_cells > 8))
+                  {
+                    needs_refinement_or_coarsening = true;
+                    break;
+                  }
+              }
+          }
+
+        const unsigned int do_refine =
+          Utilities::MPI::max(static_cast<unsigned int>(needs_refinement_or_coarsening),
+                              scratch_data->get_mpi_comm());
+
+        if (!do_refine)
+          return false;
+      }
+
+    /*
+     * different refinement strategies
+     */
+
+    switch (problem_specific_parameters.amr.strategy)
+      {
+          // Compute the error based on (1-level_set^2).
+          case AMRStrategy::generic: {
+            Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
+
+            VectorType locally_relevant_solution;
+            locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
+
+            locally_relevant_solution.copy_locally_owned_data_from(
+              level_set_operation->get_level_set());
+            ls_constraints_dirichlet.distribute(locally_relevant_solution);
+
+            for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
+              locally_relevant_solution.local_element(i) =
+                (1.0 - locally_relevant_solution.local_element(i) *
+                         locally_relevant_solution.local_element(i));
+
+            locally_relevant_solution.update_ghost_values();
+
+            dealii::VectorTools::integrate_difference(scratch_data->get_dof_handler(ls_dof_idx),
+                                                      locally_relevant_solution,
+                                                      Functions::ZeroFunction<dim>(),
+                                                      estimated_error_per_cell,
+                                                      scratch_data->get_quadrature(ls_quad_idx),
+                                                      dealii::VectorTools::L2_norm);
+
+            switch (problem_specific_parameters.amr.automatic_grid_refinement_type)
+              {
+                default: // this is the default case, since it was determined to be robust for CI
+                         // testing
+                  case AutomaticGridRefinementType::fixed_number: {
+                    parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+                      tria,
+                      estimated_error_per_cell,
+                      amr_data.upper_perc_to_refine,
+                      amr_data.lower_perc_to_coarsen);
+                    break;
+                  }
+                  case AutomaticGridRefinementType::fixed_fraction: {
+                    parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+                      tria,
+                      estimated_error_per_cell,
+                      amr_data.upper_perc_to_refine,
+                      amr_data.lower_perc_to_coarsen);
+                    break;
+                  }
+              }
+
+            break;
+          }
+          case AMRStrategy::KellyErrorEstimator: {
+            AssertThrow(base_in->parameters.ls.n_subdivisions <= 1,
+                        ExcMessage(
+                          "For the KellyErrorEstimator n_subdivisions must not be larger than 1."));
+
+            // 1) copy the solution
+            VectorType locally_relevant_solution;
+            locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
+            locally_relevant_solution.copy_locally_owned_data_from(
+              level_set_operation->get_level_set());
+            scratch_data->get_constraint(ls_dof_idx).distribute(locally_relevant_solution);
+            locally_relevant_solution.update_ghost_values();
+
+            Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
+
+            // 2) estimate errors from the level set field
+            KellyErrorEstimator<dim>::estimate(
+              scratch_data->get_dof_handler(ls_dof_idx),
+              scratch_data->get_face_quadrature(ls_dof_idx),
+              std::map<types::boundary_id, const Function<dim> *>(),
+              locally_relevant_solution,
+              estimated_error_per_cell);
+
+            // 3) optional: incorporate interface to solid in error estimator
+            if (problem_specific_parameters.do_melt_pool)
+              {
+                // 3a) copy the solution
+                locally_relevant_solution.reinit(
+                  scratch_data->get_partitioner(temp_hanging_nodes_dof_idx));
+                locally_relevant_solution.copy_locally_owned_data_from(
+                  melt_pool_operation->get_solid());
+                scratch_data->get_constraint(temp_hanging_nodes_dof_idx)
+                  .distribute(locally_relevant_solution);
+                locally_relevant_solution.update_ghost_values();
+
+                // 3b) estimate errors from the solid
+                Vector<float> estimated_error_per_cell_solid(
+                  base_in->triangulation->n_active_cells());
+                KellyErrorEstimator<dim>::estimate(
+                  scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
+                  scratch_data->get_face_quadrature(temp_hanging_nodes_dof_idx),
+                  {},
+                  locally_relevant_solution,
+                  estimated_error_per_cell_solid);
+                // 3c) merge two error indicators
+                for (unsigned int i = 0; i < estimated_error_per_cell.size(); ++i)
+                  estimated_error_per_cell[i] =
+                    std::max(estimated_error_per_cell[i], estimated_error_per_cell_solid[i]);
+              }
+
+            // 4) mark cells for refinement/coarsening
+            switch (problem_specific_parameters.amr.automatic_grid_refinement_type)
+              {
+                default: // this is the default case, since it was determined to be robust for CI
+                         // testing
+                  case AutomaticGridRefinementType::fixed_number: {
+                    parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+                      tria,
+                      estimated_error_per_cell,
+                      amr_data.upper_perc_to_refine,
+                      amr_data.lower_perc_to_coarsen);
+                    break;
+                  }
+                  case AutomaticGridRefinementType::fixed_fraction: {
+                    parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
+                      tria,
+                      estimated_error_per_cell,
+                      amr_data.upper_perc_to_refine,
+                      amr_data.lower_perc_to_coarsen);
+                    break;
+                  }
+              }
+            break;
+          }
+        case AMRStrategy::adaflo:
+          // AMR strategy adopted from adaflo.
+          //
+          // Refine cell K if it is within four cell layers around the interface
+          //
+          //          -log(max |∇Φ|ε) < 4
+          //                K
+          //
+          // or biased towards the flow direction
+          //
+          //                                 u*∇Φ
+          //          -log(max |∇Φ|ε) - 4Δt ------  < 7
+          //                K                |∇Φ|ε
+          //
+          // resulting in additional three cell layers, to reduce the re-meshing frequency.
+          //
+          // @todo: incorporate solid
+          {
+            std::vector<Point<1>> point(2);
+            point[0][0] = 0.05;
+            point[1][0] = 0.95;
+            Quadrature<1>   quadrature_1d(point);
+            Quadrature<dim> quadrature(quadrature_1d);
+
+            FEValues<dim> ls_values(scratch_data->get_fe(ls_dof_idx), quadrature, update_values);
+            FEValues<dim> vel_values(scratch_data->get_fe(vel_dof_idx), quadrature, update_values);
+            std::vector<Tensor<1, dim>> vel_vals(quadrature.size());
+
+            // solution variables
+            std::vector<std::vector<double>> ls_gradients(dim,
+                                                          std::vector<double>(quadrature.size()));
+            const double diffusion_length = (base_in->parameters.reinit.constant_epsilon > 0) ?
+                                              base_in->parameters.reinit.constant_epsilon :
+                                              scratch_data->get_min_cell_size() *
+                                                base_in->parameters.reinit.scale_factor_epsilon /
+                                                scratch_data->get_degree(ls_dof_idx);
+
+            std::vector<double> ls_vals(quadrature.size());
+
+            const FEValuesExtractors::Vector velocity(0);
+
+            typename DoFHandler<dim>::active_cell_iterator vel_cell =
+              scratch_data->get_dof_handler(vel_dof_idx).begin_active();
+
+            flow_operation->get_velocity().update_ghost_values();
+
+            for (auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
+              {
+                if (cell->is_locally_owned())
+                  {
+                    ls_values.reinit(cell);
+                    vel_values.reinit(vel_cell);
+
+                    ls_values.get_function_values(level_set_operation->get_level_set(), ls_vals);
+
+                    for (unsigned int d = 0; d < dim; ++d)
+                      ls_values.get_function_values(
+                        level_set_operation->get_normal_vector().block(d), ls_gradients[d]);
+
+                    double         distance_in_cells = 0;
+                    Tensor<1, dim> ls_gradient;
+
+                    for (unsigned int q = 0; q < quadrature.size(); ++q)
+                      {
+                        for (unsigned int d = 0; d < dim; ++d)
+                          ls_gradient[d] = ls_gradients[d][q];
+                        distance_in_cells = std::max(distance_in_cells, ls_gradient.norm());
+                      }
+
+                    distance_in_cells = -std::log(distance_in_cells * diffusion_length);
+
+
+                    vel_values[velocity].get_function_values(flow_operation->get_velocity(),
+                                                             vel_vals);
+
+                    // try to look ahead and bias the error towards the flow direction
+                    const double direction = 4. * time_iterator->get_current_time_increment() *
+                                             (ls_gradient * vel_vals[0]) / ls_gradient.norm() /
+                                             diffusion_length;
+                    const double advected_distance_in_cells =
+                      distance_in_cells - direction * ls_vals[0];
+
+                    bool refine_cell =
+                      ((cell->level() < static_cast<int>(amr_data.max_grid_refinement_level)) &&
+                       (advected_distance_in_cells < 7 || distance_in_cells < 4));
+
+                    if (refine_cell == true)
+                      cell->set_refine_flag();
+                    else if ((cell->level() > amr_data.min_grid_refinement_level) &&
+                             (advected_distance_in_cells > 8 || distance_in_cells > 5))
+                      cell->set_coarsen_flag();
+                  }
+                vel_cell++;
+              }
+
+            flow_operation->get_velocity().zero_out_ghost_values();
+            break;
+          }
+      }
+
+    if (melt_pool_operation)
+      {
+        melt_pool_operation->get_liquid().update_ghost_values();
+        melt_pool_operation->get_solid().update_ghost_values();
+        heat_operation->get_temperature().update_ghost_values();
+        Vector<double> liq_vals(scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
+        Vector<double> solid_vals(
+          scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
+        Vector<double> temp_vals(
+          scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
+
+        for (const auto &cell :
+             scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
+          {
+            if (cell->is_locally_owned() == false)
+              continue;
+
+            cell->get_dof_values(melt_pool_operation->get_liquid(), liq_vals);
+            cell->get_dof_values(melt_pool_operation->get_solid(), solid_vals);
+            cell->get_dof_values(heat_operation->get_temperature(), temp_vals);
+
+            for (unsigned int i = 0; i < liq_vals.size(); ++i)
+              // ensure that the entire liquid region is refined
+              if (liq_vals[i] > 0.0 && liq_vals[i] <= 1.0)
+                {
+                  cell->clear_coarsen_flag();
+                  cell->set_refine_flag();
+
+                  break;
+                }
+              // ensure that solid regions at high temperatures are refined
+              else if (solid_vals[i] > 0.0 &&
+                       temp_vals[i] >= problem_specific_parameters.amr
+                                           .fraction_of_melting_point_refined_in_solid *
+                                         base_in->parameters.material.melting_point)
+                {
+                  cell->clear_coarsen_flag();
+                  cell->set_refine_flag();
+                  break;
+                }
+          }
+        melt_pool_operation->get_liquid().zero_out_ghost_values();
+        melt_pool_operation->get_solid().zero_out_ghost_values();
+        heat_operation->get_temperature().zero_out_ghost_values();
+      }
+
+
+    if (problem_specific_parameters.amr.do_refine_all_interface_cells)
+      {
+        // make sure that cells close to the interfaces are refined
+        Vector<double> ls_vals(scratch_data->get_fe(ls_dof_idx).n_dofs_per_cell());
+        for (const auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
+          {
+            if (cell->is_locally_owned() == false)
+              continue;
+
+            cell->get_dof_values(level_set_operation->get_level_set(), ls_vals);
+
+            for (unsigned int i = 0; i < ls_vals.size(); ++i)
+              // Ensure that values at -0.975<=phi<=0.975 are refined.
+              // This includes cells in a maximum distance of ~4*epsilon to the interface.
+              if (-0.975 <= ls_vals[i] && ls_vals[i] <= 0.975)
+                {
+                  cell->clear_coarsen_flag();
+                  cell->set_refine_flag();
+
+                  break;
+                }
+          }
+      }
+
+    level_set_operation->get_level_set().zero_out_ghost_values();
+    level_set_operation->get_normal_vector().zero_out_ghost_values();
+    return true;
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::attach_vectors(
+    std::vector<
+      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &data)
+  {
+    data.emplace_back(&dof_handler_ls, [&](std::vector<VectorType *> &vectors) {
+      level_set_operation->attach_vectors(vectors); // ls + heaviside
+    });
+    data.emplace_back(&flow_operation->get_dof_handler_velocity(),
+                      [&](std::vector<VectorType *> &vectors) {
+                        flow_operation->attach_vectors_u(vectors);
+                      });
+    data.emplace_back(&flow_operation->get_dof_handler_pressure(),
+                      [&](std::vector<VectorType *> &vectors) {
+                        flow_operation->attach_vectors_p(vectors);
+                      });
+
+    if (melt_pool_operation)
+      data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+        melt_pool_operation->attach_vectors(vectors); // temperature + solid + liquid
+      });
+
+    if (evaporation_operation)
+      {
+        data.emplace_back(&flow_operation->get_dof_handler_velocity(),
+                          [&](std::vector<VectorType *> &vectors) {
+                            evaporation_operation->attach_dim_vectors(vectors);
+                          });
+        data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+          evaporation_operation->attach_vectors(vectors);
+        });
+      }
+
+    if (heat_operation)
+      data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
+        heat_operation->attach_vectors(vectors);
+      });
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::post()
+  {
+    /**
+     * level set
+     */
+    ls_constraints_dirichlet.distribute(level_set_operation->get_level_set());
+    ls_hanging_node_constraints.distribute(level_set_operation->get_level_set_as_heaviside());
+
+    /**
+     * flow
+     */
+    flow_operation->distribute_constraints();
+
+    /**
+     * melt pool
+     */
+    if (melt_pool_operation)
+      melt_pool_operation->distribute_constraints();
+    /**
+     * evaporation
+     */
+    if (evaporation_operation)
+      evaporation_operation->distribute_constraints();
+    /**
+     * heat
+     */
+    if (heat_operation)
+      heat_operation->distribute_constraints();
+  }
+
+  template <int dim>
   void
   MeltPoolProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
-      const auto &amr_data = base_in->parameters.amr;
-
-      level_set_operation->get_level_set().update_ghost_values();
-      level_set_operation->get_normal_vector().update_ghost_values();
-
-      if (problem_specific_parameters.amr.do_auto_detect_frequency)
-        {
-          // Check whether the interface changed that much such that refinement is needed.
-          //
-          // To this end, it is proved, if a cell K located within 3.5 cell layers around
-          // the interface determined by
-          //
-          //          -log(max |∇Φ|ε) < 3.5
-          //               K
-          //
-          // is at the maximum refinement level or not.
-          std::vector<Point<1>> point(2);
-          // For the level set gradient, look towards the end of the elements to find extrema in the
-          // error indicator (= level set gradient).
-          point[0][0] = 0.05;
-          point[1][0] = 0.95;
-          Quadrature<1>   quadrature_1d(point);
-          Quadrature<dim> quadrature(quadrature_1d);
-
-          FEValues<dim> ls_values(scratch_data->get_fe(ls_dof_idx), quadrature, update_values);
-          FEValues<dim> vel_values(scratch_data->get_fe(vel_dof_idx), quadrature, update_values);
-
-          // solution variables
-          std::vector<std::vector<double>> ls_gradients(dim,
-                                                        std::vector<double>(quadrature.size()));
-          const double diffusion_length = (base_in->parameters.reinit.constant_epsilon > 0) ?
-                                            base_in->parameters.reinit.constant_epsilon :
-                                            scratch_data->get_min_cell_size() *
-                                              base_in->parameters.reinit.scale_factor_epsilon /
-                                              scratch_data->get_degree(ls_dof_idx);
-
-          std::vector<double> ls_vals(quadrature.size());
-
-          bool needs_refinement_or_coarsening = false;
-
-          for (auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
-            {
-              if (cell->is_locally_owned())
-                {
-                  cell->clear_coarsen_flag();
-                  cell->clear_refine_flag();
-
-                  ls_values.reinit(cell);
-
-                  for (unsigned int d = 0; d < dim; ++d)
-                    ls_values.get_function_values(level_set_operation->get_normal_vector().block(d),
-                                                  ls_gradients[d]);
-                  double distance_in_cells = 0;
-                  for (unsigned int q = 0; q < quadrature.size(); ++q)
-                    {
-                      Tensor<1, dim> ls_gradient;
-                      for (unsigned int d = 0; d < dim; ++d)
-                        ls_gradient[d] = ls_gradients[d][q];
-                      distance_in_cells = std::max(distance_in_cells, ls_gradient.norm());
-                    }
-
-                  distance_in_cells = -std::log(distance_in_cells * diffusion_length);
-
-                  if ((cell->level() < static_cast<int>(amr_data.max_grid_refinement_level) &&
-                       distance_in_cells < 3.5) ||
-                      (time_iterator->get_current_time_step_number() == 0 &&
-                       cell->level() > amr_data.min_grid_refinement_level && distance_in_cells > 8))
-                    {
-                      needs_refinement_or_coarsening = true;
-                      break;
-                    }
-                }
-            }
-
-          const unsigned int do_refine =
-            Utilities::MPI::max(static_cast<unsigned int>(needs_refinement_or_coarsening),
-                                scratch_data->get_mpi_comm());
-
-          if (!do_refine)
-            return false;
-        }
-
-      /*
-       * different refinement strategies
-       */
-
-      switch (problem_specific_parameters.amr.strategy)
-        {
-            // Compute the error based on (1-level_set^2).
-            case AMRStrategy::generic: {
-              Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
-
-              VectorType locally_relevant_solution;
-              locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
-
-              locally_relevant_solution.copy_locally_owned_data_from(
-                level_set_operation->get_level_set());
-              ls_constraints_dirichlet.distribute(locally_relevant_solution);
-
-              for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
-                locally_relevant_solution.local_element(i) =
-                  (1.0 - locally_relevant_solution.local_element(i) *
-                           locally_relevant_solution.local_element(i));
-
-              locally_relevant_solution.update_ghost_values();
-
-              dealii::VectorTools::integrate_difference(scratch_data->get_dof_handler(ls_dof_idx),
-                                                        locally_relevant_solution,
-                                                        Functions::ZeroFunction<dim>(),
-                                                        estimated_error_per_cell,
-                                                        scratch_data->get_quadrature(ls_quad_idx),
-                                                        dealii::VectorTools::L2_norm);
-
-              switch (problem_specific_parameters.amr.automatic_grid_refinement_type)
-                {
-                  default: // this is the default case, since it was determined to be robust for CI
-                           // testing
-                    case AutomaticGridRefinementType::fixed_number: {
-                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-                        tria,
-                        estimated_error_per_cell,
-                        amr_data.upper_perc_to_refine,
-                        amr_data.lower_perc_to_coarsen);
-                      break;
-                    }
-                    case AutomaticGridRefinementType::fixed_fraction: {
-                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
-                        tria,
-                        estimated_error_per_cell,
-                        amr_data.upper_perc_to_refine,
-                        amr_data.lower_perc_to_coarsen);
-                      break;
-                    }
-                }
-
-              break;
-            }
-            case AMRStrategy::KellyErrorEstimator: {
-              AssertThrow(
-                base_in->parameters.ls.n_subdivisions <= 1,
-                ExcMessage(
-                  "For the KellyErrorEstimator n_subdivisions must not be larger than 1."));
-
-              // 1) copy the solution
-              VectorType locally_relevant_solution;
-              locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
-              locally_relevant_solution.copy_locally_owned_data_from(
-                level_set_operation->get_level_set());
-              scratch_data->get_constraint(ls_dof_idx).distribute(locally_relevant_solution);
-              locally_relevant_solution.update_ghost_values();
-
-              Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
-
-              // 2) estimate errors from the level set field
-              KellyErrorEstimator<dim>::estimate(
-                scratch_data->get_dof_handler(ls_dof_idx),
-                scratch_data->get_face_quadrature(ls_dof_idx),
-                std::map<types::boundary_id, const Function<dim> *>(),
-                locally_relevant_solution,
-                estimated_error_per_cell);
-
-              // 3) optional: incorporate interface to solid in error estimator
-              if (problem_specific_parameters.do_melt_pool)
-                {
-                  // 3a) copy the solution
-                  locally_relevant_solution.reinit(
-                    scratch_data->get_partitioner(temp_hanging_nodes_dof_idx));
-                  locally_relevant_solution.copy_locally_owned_data_from(
-                    melt_pool_operation->get_solid());
-                  scratch_data->get_constraint(temp_hanging_nodes_dof_idx)
-                    .distribute(locally_relevant_solution);
-                  locally_relevant_solution.update_ghost_values();
-
-                  // 3b) estimate errors from the solid
-                  Vector<float> estimated_error_per_cell_solid(
-                    base_in->triangulation->n_active_cells());
-                  KellyErrorEstimator<dim>::estimate(
-                    scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx),
-                    scratch_data->get_face_quadrature(temp_hanging_nodes_dof_idx),
-                    {},
-                    locally_relevant_solution,
-                    estimated_error_per_cell_solid);
-                  // 3c) merge two error indicators
-                  for (unsigned int i = 0; i < estimated_error_per_cell.size(); ++i)
-                    estimated_error_per_cell[i] =
-                      std::max(estimated_error_per_cell[i], estimated_error_per_cell_solid[i]);
-                }
-
-              // 4) mark cells for refinement/coarsening
-              switch (problem_specific_parameters.amr.automatic_grid_refinement_type)
-                {
-                  default: // this is the default case, since it was determined to be robust for CI
-                           // testing
-                    case AutomaticGridRefinementType::fixed_number: {
-                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-                        tria,
-                        estimated_error_per_cell,
-                        amr_data.upper_perc_to_refine,
-                        amr_data.lower_perc_to_coarsen);
-                      break;
-                    }
-                    case AutomaticGridRefinementType::fixed_fraction: {
-                      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_fraction(
-                        tria,
-                        estimated_error_per_cell,
-                        amr_data.upper_perc_to_refine,
-                        amr_data.lower_perc_to_coarsen);
-                      break;
-                    }
-                }
-              break;
-            }
-          case AMRStrategy::adaflo:
-            // AMR strategy adopted from adaflo.
-            //
-            // Refine cell K if it is within four cell layers around the interface
-            //
-            //          -log(max |∇Φ|ε) < 4
-            //                K
-            //
-            // or biased towards the flow direction
-            //
-            //                                 u*∇Φ
-            //          -log(max |∇Φ|ε) - 4Δt ------  < 7
-            //                K                |∇Φ|ε
-            //
-            // resulting in additional three cell layers, to reduce the re-meshing frequency.
-            //
-            // @todo: incorporate solid
-            {
-              std::vector<Point<1>> point(2);
-              point[0][0] = 0.05;
-              point[1][0] = 0.95;
-              Quadrature<1>   quadrature_1d(point);
-              Quadrature<dim> quadrature(quadrature_1d);
-
-              FEValues<dim> ls_values(scratch_data->get_fe(ls_dof_idx), quadrature, update_values);
-              FEValues<dim> vel_values(scratch_data->get_fe(vel_dof_idx),
-                                       quadrature,
-                                       update_values);
-              std::vector<Tensor<1, dim>> vel_vals(quadrature.size());
-
-              // solution variables
-              std::vector<std::vector<double>> ls_gradients(dim,
-                                                            std::vector<double>(quadrature.size()));
-              const double diffusion_length = (base_in->parameters.reinit.constant_epsilon > 0) ?
-                                                base_in->parameters.reinit.constant_epsilon :
-                                                scratch_data->get_min_cell_size() *
-                                                  base_in->parameters.reinit.scale_factor_epsilon /
-                                                  scratch_data->get_degree(ls_dof_idx);
-
-              std::vector<double> ls_vals(quadrature.size());
-
-              const FEValuesExtractors::Vector velocity(0);
-
-              typename DoFHandler<dim>::active_cell_iterator vel_cell =
-                scratch_data->get_dof_handler(vel_dof_idx).begin_active();
-
-              flow_operation->get_velocity().update_ghost_values();
-
-              for (auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
-                {
-                  if (cell->is_locally_owned())
-                    {
-                      ls_values.reinit(cell);
-                      vel_values.reinit(vel_cell);
-
-                      ls_values.get_function_values(level_set_operation->get_level_set(), ls_vals);
-
-                      for (unsigned int d = 0; d < dim; ++d)
-                        ls_values.get_function_values(
-                          level_set_operation->get_normal_vector().block(d), ls_gradients[d]);
-
-                      double         distance_in_cells = 0;
-                      Tensor<1, dim> ls_gradient;
-
-                      for (unsigned int q = 0; q < quadrature.size(); ++q)
-                        {
-                          for (unsigned int d = 0; d < dim; ++d)
-                            ls_gradient[d] = ls_gradients[d][q];
-                          distance_in_cells = std::max(distance_in_cells, ls_gradient.norm());
-                        }
-
-                      distance_in_cells = -std::log(distance_in_cells * diffusion_length);
-
-
-                      vel_values[velocity].get_function_values(flow_operation->get_velocity(),
-                                                               vel_vals);
-
-                      // try to look ahead and bias the error towards the flow direction
-                      const double direction = 4. * time_iterator->get_current_time_increment() *
-                                               (ls_gradient * vel_vals[0]) / ls_gradient.norm() /
-                                               diffusion_length;
-                      const double advected_distance_in_cells =
-                        distance_in_cells - direction * ls_vals[0];
-
-                      bool refine_cell =
-                        ((cell->level() < static_cast<int>(amr_data.max_grid_refinement_level)) &&
-                         (advected_distance_in_cells < 7 || distance_in_cells < 4));
-
-                      if (refine_cell == true)
-                        cell->set_refine_flag();
-                      else if ((cell->level() > amr_data.min_grid_refinement_level) &&
-                               (advected_distance_in_cells > 8 || distance_in_cells > 5))
-                        cell->set_coarsen_flag();
-                    }
-                  vel_cell++;
-                }
-
-              flow_operation->get_velocity().zero_out_ghost_values();
-              break;
-            }
-        }
-
-      if (melt_pool_operation)
-        {
-          melt_pool_operation->get_liquid().update_ghost_values();
-          melt_pool_operation->get_solid().update_ghost_values();
-          heat_operation->get_temperature().update_ghost_values();
-          Vector<double> liq_vals(
-            scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
-          Vector<double> solid_vals(
-            scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
-          Vector<double> temp_vals(
-            scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
-
-          for (const auto &cell :
-               scratch_data->get_dof_handler(temp_hanging_nodes_dof_idx).active_cell_iterators())
-            {
-              if (cell->is_locally_owned() == false)
-                continue;
-
-              cell->get_dof_values(melt_pool_operation->get_liquid(), liq_vals);
-              cell->get_dof_values(melt_pool_operation->get_solid(), solid_vals);
-              cell->get_dof_values(heat_operation->get_temperature(), temp_vals);
-
-              for (unsigned int i = 0; i < liq_vals.size(); ++i)
-                // ensure that the entire liquid region is refined
-                if (liq_vals[i] > 0.0 && liq_vals[i] <= 1.0)
-                  {
-                    cell->clear_coarsen_flag();
-                    cell->set_refine_flag();
-
-                    break;
-                  }
-                // ensure that solid regions at high temperatures are refined
-                else if (solid_vals[i] > 0.0 &&
-                         temp_vals[i] >= problem_specific_parameters.amr
-                                             .fraction_of_melting_point_refined_in_solid *
-                                           base_in->parameters.material.melting_point)
-                  {
-                    cell->clear_coarsen_flag();
-                    cell->set_refine_flag();
-                    break;
-                  }
-            }
-          melt_pool_operation->get_liquid().zero_out_ghost_values();
-          melt_pool_operation->get_solid().zero_out_ghost_values();
-          heat_operation->get_temperature().zero_out_ghost_values();
-        }
-
-
-      if (problem_specific_parameters.amr.do_refine_all_interface_cells)
-        {
-          // make sure that cells close to the interfaces are refined
-          Vector<double> ls_vals(scratch_data->get_fe(ls_dof_idx).n_dofs_per_cell());
-          for (const auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
-            {
-              if (cell->is_locally_owned() == false)
-                continue;
-
-              cell->get_dof_values(level_set_operation->get_level_set(), ls_vals);
-
-              for (unsigned int i = 0; i < ls_vals.size(); ++i)
-                // Ensure that values at -0.975<=phi<=0.975 are refined.
-                // This includes cells in a maximum distance of ~4*epsilon to the interface.
-                if (-0.975 <= ls_vals[i] && ls_vals[i] <= 0.975)
-                  {
-                    cell->clear_coarsen_flag();
-                    cell->set_refine_flag();
-
-                    break;
-                  }
-            }
-        }
-
-      level_set_operation->get_level_set().zero_out_ghost_values();
-      level_set_operation->get_normal_vector().zero_out_ghost_values();
-      return true;
+      return this->mark_cells_for_refinement(base_in, tria);
     };
-
-    // Early return if AMR is not needed according to auto detection
-    if (problem_specific_parameters.amr.do_auto_detect_frequency)
-      {
-        auto triangulation = const_cast<Triangulation<dim> *>(&scratch_data->get_triangulation());
-        if (!mark_cells_for_refinement(*triangulation))
-          return;
-      }
 
     /*
      * add DoFHandler and DoF-vector pairs to data
@@ -1788,68 +1855,10 @@ namespace MeltPoolDG::MeltPool
     const auto attach_vectors =
       [&](std::vector<std::pair<const DoFHandler<dim> *,
                                 std::function<void(std::vector<VectorType *> &)>>> &data) {
-        data.emplace_back(&dof_handler_ls, [&](std::vector<VectorType *> &vectors) {
-          level_set_operation->attach_vectors(vectors); // ls + heaviside
-        });
-        data.emplace_back(&flow_operation->get_dof_handler_velocity(),
-                          [&](std::vector<VectorType *> &vectors) {
-                            flow_operation->attach_vectors_u(vectors);
-                          });
-        data.emplace_back(&flow_operation->get_dof_handler_pressure(),
-                          [&](std::vector<VectorType *> &vectors) {
-                            flow_operation->attach_vectors_p(vectors);
-                          });
-
-        if (melt_pool_operation)
-          data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
-            melt_pool_operation->attach_vectors(vectors); // temperature + solid + liquid
-          });
-
-        if (evaporation_operation)
-          {
-            data.emplace_back(&flow_operation->get_dof_handler_velocity(),
-                              [&](std::vector<VectorType *> &vectors) {
-                                evaporation_operation->attach_dim_vectors(vectors);
-                              });
-            data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
-              evaporation_operation->attach_vectors(vectors);
-            });
-          }
-
-        if (heat_operation)
-          data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
-            heat_operation->attach_vectors(vectors);
-          });
+        this->attach_vectors(data);
       };
 
-    const auto post = [&]() {
-      /**
-       * level set
-       */
-      ls_constraints_dirichlet.distribute(level_set_operation->get_level_set());
-      ls_hanging_node_constraints.distribute(level_set_operation->get_level_set_as_heaviside());
-
-      /**
-       * flow
-       */
-      flow_operation->distribute_constraints();
-
-      /**
-       * melt pool
-       */
-      if (melt_pool_operation)
-        melt_pool_operation->distribute_constraints();
-      /**
-       * evaporation
-       */
-      if (evaporation_operation)
-        evaporation_operation->distribute_constraints();
-      /**
-       * heat
-       */
-      if (heat_operation)
-        heat_operation->distribute_constraints();
-    };
+    const auto post = [&]() { this->post(); };
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
 

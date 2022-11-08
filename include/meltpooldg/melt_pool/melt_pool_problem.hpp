@@ -146,6 +146,23 @@ namespace MeltPoolDG::MeltPool
     void
     refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
 
+    /*
+     *  perform mesh refinement
+     */
+    void
+    attach_vectors(std::vector<std::pair<const DoFHandler<dim> *,
+                                         std::function<void(std::vector<VectorType *> &)>>> &data);
+
+    /*
+     *  perform mesh refinement
+     */
+    void
+    post();
+
+    bool
+    mark_cells_for_refinement(std::shared_ptr<SimulationBase<dim>> base_in,
+                              Triangulation<dim> &                 tria);
+
     std::shared_ptr<TimeIterator<double>> time_iterator;
 
     DoFHandler<dim> dof_handler_ls;
