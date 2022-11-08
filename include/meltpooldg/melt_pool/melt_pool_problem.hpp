@@ -74,10 +74,10 @@ namespace MeltPoolDG::MeltPool
 
   private:
     void
-    save() const;
+    save(std::shared_ptr<SimulationBase<dim>> base_in);
 
     void
-    load();
+    load(std::shared_ptr<SimulationBase<dim>> base_in);
 
     struct
     {

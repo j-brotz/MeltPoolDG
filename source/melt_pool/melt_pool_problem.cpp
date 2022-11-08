@@ -135,7 +135,7 @@ namespace MeltPoolDG::MeltPool
     auto sc    = std::make_unique<ScopedName>("mp::run");
     auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
-    // load();
+    // load(base_in);
 
     while (!time_iterator->is_finished())
       {
@@ -478,7 +478,7 @@ namespace MeltPoolDG::MeltPool
             DoFMonitor::print(scratch_data->get_pcout());
           }
 
-        save();
+        save(base_in);
       }
     Journal::print_end(scratch_data->get_pcout());
 
@@ -498,29 +498,34 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::save() const
+  MeltPoolProblem<dim>::save(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    std::function<void(std::vector<std::pair<const DoFHandler<dim> *,
-                                             std::function<void(std::vector<VectorType *> &)>>> &
-                       data)>
-      attach_vectors;
+    (void)base_in;
 
-    serialize_internal(attach_vectors);
+    const auto attach_vectors =
+      [&](std::vector<std::pair<const DoFHandler<dim> *,
+                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+        this->attach_vectors(data);
+      };
+
+    serialize_internal<dim, VectorType>(attach_vectors);
   }
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::load()
+  MeltPoolProblem<dim>::load(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    const std::function<void(
-      std::vector<
-        std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &
-      data)>
-                                attach_vectors;
-    const std::function<void()> post;
-    const std::function<void()> setup_dof_system;
+    const auto attach_vectors =
+      [&](std::vector<std::pair<const DoFHandler<dim> *,
+                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+        this->attach_vectors(data);
+      };
 
-    deserialize_internal(attach_vectors, post, setup_dof_system);
+    const auto post = [&]() { this->post(); };
+
+    const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
+
+    deserialize_internal<dim, VectorType>(attach_vectors, post, setup_dof_system);
   }
 
   template <int dim>
