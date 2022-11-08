@@ -178,6 +178,9 @@ namespace MeltPoolDG
         this->matrix_free.clear();
 
         typename MatrixFree<dim, double, VectorizedArray<double>>::AdditionalData additional_data;
+
+        additional_data.overlap_communication_computation = false;
+
         additional_data.mapping_update_flags =
           update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
 

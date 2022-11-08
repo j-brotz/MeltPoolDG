@@ -129,20 +129,24 @@ namespace MeltPoolDG::NormalVector
 
     scratch_data.get_matrix_free().template cell_loop<BlockVectorType, BlockVectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, dim, number> normal(scratch_data.get_matrix_free(),
-                                                  normal_dof_idx,
-                                                  normal_quad_idx);
-        FECellIntegrator<dim, 1, number>   level_set(scratch_data.get_matrix_free(),
+        FECellIntegrator<dim, 1, number> normal(scratch_data.get_matrix_free(),
+                                                normal_dof_idx,
+                                                normal_quad_idx);
+        FECellIntegrator<dim, 1, number> level_set(scratch_data.get_matrix_free(),
                                                    ls_dof_idx,
                                                    normal_quad_idx);
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             normal.reinit(cell);
-            normal.read_dof_values(src);
 
-            tangent_local_cell_operation(normal, level_set, true);
+            for (unsigned int b = 0; b < dim; ++b)
+              {
+                normal.read_dof_values(src.block(b));
 
-            normal.distribute_local_to_global(dst);
+                tangent_local_cell_operation(normal, level_set, b == 0);
+
+                normal.distribute_local_to_global(dst.block(b));
+              }
           }
       },
       dst,
@@ -196,38 +200,9 @@ namespace MeltPoolDG::NormalVector
   NormalVectorOperator<dim, number>::compute_system_matrix_from_matrixfree(
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
-    system_matrix = 0.0;
+    (void)system_matrix;
 
-    if (solution_level_set)
-      solution_level_set->update_ghost_values();
-
-    // note: not thread safe!!!
-    const auto &                     matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, normal_quad_idx);
-
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
-
-    // compute matrix (only cell contributions)
-    MatrixFreeTools::template compute_matrix<dim, -1, 0, dim, number, VectorizedArray<number>>(
-      matrix_free,
-      scratch_data.get_constraint(normal_dof_idx),
-      system_matrix,
-      [&](auto &normal_vals) {
-        const unsigned int current_cell_index = normal_vals.get_current_cell_index();
-
-        tangent_local_cell_operation(normal_vals,
-                                     level_set_vals,
-                                     old_cell_index != current_cell_index);
-
-        old_cell_index = current_cell_index;
-      },
-      normal_dof_idx,
-      normal_quad_idx);
-
-    system_matrix.compress(VectorOperation::add);
-
-    if (solution_level_set)
-      solution_level_set->zero_out_ghost_values();
+    AssertThrow(false, ExcNotImplemented());
   }
 
   template <int dim, typename number>
@@ -249,21 +224,22 @@ namespace MeltPoolDG::NormalVector
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
     // compute diagonal ...
-    MatrixFreeTools::
-      template compute_diagonal<dim, -1, 0, dim, number, VectorizedArray<number>, BlockVectorType>(
-        matrix_free,
-        diagonal,
-        [&](auto &normal_vals) {
-          const unsigned int current_cell_index = normal_vals.get_current_cell_index();
+    for (unsigned int b = 0; b < dim; ++b)
+      MatrixFreeTools::
+        template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>, VectorType>(
+          matrix_free,
+          diagonal.block(b),
+          [&](auto &normal_vals) {
+            const unsigned int current_cell_index = normal_vals.get_current_cell_index();
 
-          tangent_local_cell_operation(normal_vals,
-                                       level_set_vals,
-                                       old_cell_index != current_cell_index);
+            tangent_local_cell_operation(normal_vals,
+                                         level_set_vals,
+                                         old_cell_index != current_cell_index);
 
-          old_cell_index = current_cell_index;
-        },
-        normal_dof_idx,
-        normal_quad_idx);
+            old_cell_index = current_cell_index;
+          },
+          normal_dof_idx,
+          normal_quad_idx);
 
 
     if (solution_level_set)
@@ -280,9 +256,9 @@ namespace MeltPoolDG::NormalVector
   template <int dim, typename number>
   void
   NormalVectorOperator<dim, number>::tangent_local_cell_operation(
-    FECellIntegrator<dim, dim, number> &normal_vector_vals,
-    FECellIntegrator<dim, 1, number> &  level_set_vals,
-    const bool                          do_reinit_cells) const
+    FECellIntegrator<dim, 1, number> &normal_vector_vals,
+    FECellIntegrator<dim, 1, number> &level_set_vals,
+    const bool                        do_reinit_cells) const
   {
     normal_vector_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
