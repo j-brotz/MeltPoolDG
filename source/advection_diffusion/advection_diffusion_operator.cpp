@@ -62,7 +62,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                              scratch_data.get_quadrature(advec_diff_quad_idx),
                              update_values);
 
-    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell();
+    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(this->dof_idx);
 
     FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
     Vector<double>     cell_rhs(dofs_per_cell);

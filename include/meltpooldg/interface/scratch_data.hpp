@@ -84,16 +84,16 @@ namespace MeltPoolDG
      * initialize vectors
      */
     void
-    initialize_dof_vector(VectorType &vec, const unsigned int dof_idx = 0) const;
+    initialize_dof_vector(VectorType &vec, const unsigned int dof_idx) const;
 
     void
-    initialize_dof_vector(BlockVectorType &vec, const unsigned int dof_idx = 0) const;
+    initialize_dof_vector(BlockVectorType &vec, const unsigned int dof_idx) const;
 
     void
-    initialize_bc_vector(VectorType &vec, const unsigned int dof_idx = 0) const;
+    initialize_bc_vector(VectorType &vec, const unsigned int dof_idx) const;
 
     void
-    initialize_bc_vector(BlockVectorType &vec, const unsigned int dof_idx = 0) const;
+    initialize_bc_vector(BlockVectorType &vec, const unsigned int dof_idx) const;
     /*
      * clear all member variables
      */
@@ -107,25 +107,25 @@ namespace MeltPoolDG
     get_mapping() const;
 
     const FiniteElement<dim, spacedim> &
-    get_fe(const unsigned int fe_index = 0) const;
+    get_fe(const unsigned int fe_index) const;
 
     const AffineConstraints<number> &
-    get_constraint(const unsigned int constraint_index = 0) const;
+    get_constraint(const unsigned int constraint_index) const;
 
     AffineConstraints<number> &
-    get_constraint(const unsigned int constraint_index = 0);
+    get_constraint(const unsigned int constraint_index);
 
     const std::vector<const AffineConstraints<number> *> &
     get_constraints() const;
 
     const Quadrature<dim> &
-    get_quadrature(const unsigned int quad_index = 0) const;
+    get_quadrature(const unsigned int quad_index) const;
 
     const std::vector<Quadrature<dim>> &
     get_quadratures() const;
 
     const Quadrature<dim - 1> &
-    get_face_quadrature(const unsigned int quad_index = 0) const;
+    get_face_quadrature(const unsigned int quad_index) const;
 
     const std::vector<Quadrature<dim - 1>> &
     get_face_quadratures() const;
@@ -137,7 +137,7 @@ namespace MeltPoolDG
     get_matrix_free() const;
 
     const DoFHandler<dim, spacedim> &
-    get_dof_handler(const unsigned int dof_idx = 0) const;
+    get_dof_handler(const unsigned int dof_idx) const;
 
     const std::vector<const DoFHandler<dim, spacedim> *> &
     get_dof_handlers() const;
@@ -146,13 +146,13 @@ namespace MeltPoolDG
     get_triangulation(const unsigned int dof_idx = 0) const;
 
     unsigned int
-    get_n_dofs_per_cell(const unsigned int dof_idx = 0) const;
+    get_n_dofs_per_cell(const unsigned int dof_idx) const;
 
     unsigned int
-    get_degree(const unsigned int dof_idx = 0) const;
+    get_degree(const unsigned int dof_idx) const;
 
     unsigned int
-    get_n_q_points(const unsigned int dof_idx = 0) const;
+    get_n_q_points(const unsigned int dof_idx) const;
 
     const double &
     get_min_cell_size() const;
@@ -170,13 +170,13 @@ namespace MeltPoolDG
     get_mpi_comm(const unsigned int dof_idx = 0) const;
 
     const IndexSet &
-    get_locally_owned_dofs(const unsigned int dof_idx = 0) const;
+    get_locally_owned_dofs(const unsigned int dof_idx) const;
 
     const IndexSet &
-    get_locally_relevant_dofs(const unsigned int dof_idx = 0) const;
+    get_locally_relevant_dofs(const unsigned int dof_idx) const;
 
     const std::shared_ptr<Utilities::MPI::Partitioner> &
-    get_partitioner(const unsigned int dof_idx = 0) const;
+    get_partitioner(const unsigned int dof_idx) const;
 
     const ConditionalOStream
     get_pcout(const unsigned int level = 0) const;
@@ -185,7 +185,7 @@ namespace MeltPoolDG
     is_hex_mesh(const unsigned int dof_idx = 0) const;
 
     bool
-    is_FE_Q_iso_Q_1(const unsigned int dof_idx = 0) const;
+    is_FE_Q_iso_Q_1(const unsigned int dof_idx) const;
 
     TimerOutput &
     get_timer() const;
