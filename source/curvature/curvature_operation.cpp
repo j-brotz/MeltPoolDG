@@ -137,8 +137,12 @@ namespace MeltPoolDG::Curvature
 
     Journal::print_formatted_norm(
       pcout,
-      VectorTools::compute_L2_norm<dim>(
-        solution_history.get_current_solution(), scratch_data, curv_dof_idx, curv_quad_idx),
+      [&]() -> double {
+        return VectorTools::compute_L2_norm<dim>(solution_history.get_current_solution(),
+                                                 scratch_data,
+                                                 curv_dof_idx,
+                                                 curv_quad_idx);
+      },
       "curvature",
       "curvature",
       11 /*precision*/
