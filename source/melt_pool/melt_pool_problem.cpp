@@ -135,7 +135,17 @@ namespace MeltPoolDG::MeltPool
     auto sc    = std::make_unique<ScopedName>("mp::run");
     auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
-    load(base_in);
+    if (base_in->parameters.restart.load)
+      {
+        Journal::print_line(scratch_data->get_pcout(0), "load restart data");
+        load(base_in);
+      }
+    /*
+     *  output results of initialization
+     *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
+     *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
+     */
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
 
     while (!time_iterator->is_finished())
       {
@@ -478,7 +488,12 @@ namespace MeltPoolDG::MeltPool
             DoFMonitor::print(scratch_data->get_pcout());
           }
 
-        save(base_in);
+        if ((n % base_in->parameters.restart.write_frequency == 0) &&
+            base_in->parameters.restart.save)
+          {
+            Journal::print_line(scratch_data->get_pcout(), "save restart data");
+            save(base_in);
+          }
       }
     Journal::print_end(scratch_data->get_pcout());
 
@@ -980,12 +995,6 @@ namespace MeltPoolDG::MeltPool
            */
           set_initial_condition(base_in);
         }
-    /*
-     *  output results of initialization
-     *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
-     *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
-     */
-    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
   }
 
   template <int dim>

@@ -81,6 +81,7 @@ namespace MeltPoolDG
               // least squares projection (WIP)
               least_squares_projection)
 
+
   template <typename number = double>
   class PredictorData
   {
@@ -334,6 +335,16 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct RestartData
+  {
+    bool        load                 = false;
+    bool        save                 = false;
+    std::string filename             = "";
+    int         write_frequency      = 1;
+    double      write_time_step_size = 0.0;
+  };
+
+  template <typename number = double>
   struct ParaviewData
   {
     bool                     do_output                      = false;
@@ -407,6 +418,7 @@ namespace MeltPoolDG
     MaterialData<number>           material;
     ParaviewData<number>           paraview;
     ProfilingData<number>          profiling;
+    RestartData<number>            restart;
     OutputData<number>             output;
     Flow::AdafloWrapperParameters  adaflo_params;
   };
