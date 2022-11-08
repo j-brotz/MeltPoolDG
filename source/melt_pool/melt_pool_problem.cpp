@@ -1382,9 +1382,9 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    const auto &amr_data = base_in->parameters.amr;
-
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
+      const auto &amr_data = base_in->parameters.amr;
+
       level_set_operation->get_level_set().update_ghost_values();
       level_set_operation->get_normal_vector().update_ghost_values();
 
@@ -1857,7 +1857,7 @@ namespace MeltPoolDG::MeltPool
                                  attach_vectors,
                                  post,
                                  setup_dof_system,
-                                 amr_data,
+                                 base_in->parameters.amr,
                                  time_iterator->get_current_time_step_number());
   }
 
