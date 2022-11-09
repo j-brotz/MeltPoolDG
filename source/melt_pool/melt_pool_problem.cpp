@@ -30,7 +30,7 @@ namespace MeltPoolDG::MeltPool
     auto sc    = std::make_unique<ScopedName>("mp::run");
     auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
-    if (restart_monitor->do_load())
+    if (restart_monitor && restart_monitor->do_load())
       {
         Journal::print_line(scratch_data->get_pcout(0), "load restart data");
         load(base_in);
@@ -383,7 +383,7 @@ namespace MeltPoolDG::MeltPool
             DoFMonitor::print(scratch_data->get_pcout());
           }
 
-        if (restart_monitor->do_save(n))
+        if (restart_monitor && restart_monitor->do_save(n))
           {
             Journal::print_line(scratch_data->get_pcout(), "save restart data");
             restart_monitor->prepare_save();
