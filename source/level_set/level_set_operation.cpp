@@ -621,7 +621,7 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::transform_level_set_to_smooth_heaviside()
   {
-    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell();
+    const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(ls_dof_idx);
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
