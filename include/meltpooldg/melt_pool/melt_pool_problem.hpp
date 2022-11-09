@@ -36,9 +36,9 @@
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
-#include <meltpooldg/restart/restart_monitor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
+#include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -218,6 +218,6 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>   darcy_operation;
     std::shared_ptr<Flow::SurfaceTensionOperation<dim>> surface_tension_operation;
     std::shared_ptr<Postprocessor<dim>>                 post_processor;
-    std::shared_ptr<RestartMonitor<double>>             restart_monitor;
+    std::shared_ptr<Restart::RestartMonitor<double>>    restart_monitor;
   };
 } // namespace MeltPoolDG::MeltPool

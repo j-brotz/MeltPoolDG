@@ -13,123 +13,14 @@
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+
 namespace MeltPoolDG::MeltPool
 {
-  template <int dim, typename VectorType>
-  void
-  serialize_internal(
-    const std::function<
-      void(std::vector<std::pair<const DoFHandler<dim> *,
-                                 std::function<void(std::vector<VectorType *> &)>>> &data)>
-      &                attach_vectors,
-    const std::string &prefix)
-  {
-    std::vector<
-      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
-      data;
-    attach_vectors(data);
-
-    const unsigned int n = data.size();
-
-    Assert(n > 0, ExcNotImplemented());
-
-    auto triangulation = const_cast<Triangulation<dim> *>(&data[0].first->get_triangulation());
-
-    Assert(triangulation, ExcNotImplemented());
-
-    if (dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation))
-      {
-        auto tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation);
-
-        std::vector<std::shared_ptr<parallel::distributed::SolutionTransfer<dim, VectorType>>>
-          solution_transfer(n);
-
-        std::vector<std::vector<VectorType *>>       new_grid_solutions(n);
-        std::vector<std::vector<const VectorType *>> old_grid_solutions(n);
-
-        for (unsigned int j = 0; j < n; ++j)
-          {
-            data[j].second(new_grid_solutions[j]);
-
-            for (const auto &i : new_grid_solutions[j])
-              {
-                i->update_ghost_values();
-                old_grid_solutions[j].push_back(i);
-              }
-            solution_transfer[j] =
-              std::make_shared<parallel::distributed::SolutionTransfer<dim, VectorType>>(
-                *data[j].first);
-            solution_transfer[j]->prepare_for_serialization(old_grid_solutions[j]);
-          }
-
-        tria->save(prefix + "_tria");
-      }
-    else
-      {
-        AssertThrow(false, ExcNotImplemented());
-      }
-  }
-
-  template <int dim, typename VectorType>
-  void
-  deserialize_internal(
-    const std::function<
-      void(std::vector<std::pair<const DoFHandler<dim> *,
-                                 std::function<void(std::vector<VectorType *> &)>>> &data)>
-      &                          attach_vectors,
-    const std::function<void()> &post,
-    const std::function<void()> &setup_dof_system,
-    const std::string &          prefix)
-  {
-    std::vector<
-      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>
-      data;
-    attach_vectors(data);
-
-    const unsigned int n = data.size();
-
-    Assert(n > 0, ExcNotImplemented());
-
-    auto triangulation = const_cast<Triangulation<dim> *>(&data[0].first->get_triangulation());
-
-    Assert(triangulation, ExcNotImplemented());
-
-    if (dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation))
-      {
-        auto tria = dynamic_cast<parallel::distributed::Triangulation<dim> *>(triangulation);
-
-        tria->load(prefix + "_tria");
-
-        setup_dof_system();
-
-        std::vector<std::shared_ptr<parallel::distributed::SolutionTransfer<dim, VectorType>>>
-          solution_transfer(n);
-
-        std::vector<std::vector<VectorType *>> new_grid_solutions(n);
-
-        for (unsigned int j = 0; j < n; ++j)
-          {
-            data[j].second(new_grid_solutions[j]);
-
-            solution_transfer[j] =
-              std::make_shared<parallel::distributed::SolutionTransfer<dim, VectorType>>(
-                *data[j].first);
-            solution_transfer[j]->deserialize(new_grid_solutions[j]);
-          }
-
-        post();
-      }
-    else
-      {
-        AssertThrow(false, ExcNotImplemented());
-      }
-  }
-
-
   template <int dim>
   void
   MeltPoolProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
@@ -139,7 +30,7 @@ namespace MeltPoolDG::MeltPool
     auto sc    = std::make_unique<ScopedName>("mp::run");
     auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
-    if (base_in->parameters.restart.load)
+    if (restart_monitor->do_load())
       {
         Journal::print_line(scratch_data->get_pcout(0), "load restart data");
         load(base_in);
@@ -492,7 +383,7 @@ namespace MeltPoolDG::MeltPool
             DoFMonitor::print(scratch_data->get_pcout());
           }
 
-        if (restart_monitor->now(n))
+        if (restart_monitor->do_save(n))
           {
             Journal::print_line(scratch_data->get_pcout(), "save restart data");
             restart_monitor->prepare_save();
@@ -531,14 +422,17 @@ namespace MeltPoolDG::MeltPool
         this->attach_vectors(data);
       };
 
-    serialize_internal<dim, VectorType>(attach_vectors, base_in->parameters.restart.prefix + "_0");
+    Restart::serialize_internal<dim, VectorType>(attach_vectors,
+                                                 base_in->parameters.restart.prefix + "_0");
   }
 
   template <int dim>
   void
   MeltPoolProblem<dim>::load(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    std::ifstream ifs(base_in->parameters.restart.prefix + "_problem.restart");
+    const std::string load_prefix =
+      base_in->parameters.restart.prefix + "_" + std::to_string(base_in->parameters.restart.load);
+    std::ifstream ifs(load_prefix + "_problem.restart");
     {
       boost::archive::text_iarchive ia(ifs);
       ia >> *time_iterator;
@@ -554,10 +448,10 @@ namespace MeltPoolDG::MeltPool
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
 
-    deserialize_internal<dim, VectorType>(attach_vectors,
-                                          post,
-                                          setup_dof_system,
-                                          base_in->parameters.restart.prefix);
+    Restart::deserialize_internal<dim, VectorType>(attach_vectors,
+                                                   post,
+                                                   setup_dof_system,
+                                                   load_prefix);
   }
 
   template <int dim>
@@ -991,9 +885,10 @@ namespace MeltPoolDG::MeltPool
     /*
      *  initialize restart
      */
-    if (base_in->parameters.restart.load || base_in->parameters.restart.save)
+    if (base_in->parameters.restart.load >= 0 || base_in->parameters.restart.save >= 0)
       {
-        restart_monitor = std::make_shared<RestartMonitor<double>>(base_in->parameters.restart);
+        restart_monitor =
+          std::make_shared<Restart::RestartMonitor<double>>(base_in->parameters.restart);
       }
 
     /*

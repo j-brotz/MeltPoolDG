@@ -337,12 +337,11 @@ namespace MeltPoolDG
   template <typename number = double>
   struct RestartData
   {
-    bool        load                 = false;
-    bool        save                 = false;
+    int         load                 = -1;
+    int         save                 = -1;
     std::string prefix               = "";
     int         write_frequency      = 1;
     double      write_time_step_size = 0.0;
-    int         keep                 = 2;
   };
 
   template <typename number = double>

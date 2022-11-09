@@ -116,7 +116,14 @@ namespace MeltPoolDG
      * set default value of restart prefix
      */
     if (restart.prefix == "")
-      restart.prefix = paraview.directory + "/restart";
+      {
+        restart.prefix = paraview.directory + "/restart";
+      }
+    /*
+     * do not allow initial refinement cycles in case of restart load
+     */
+    if (restart.load >= 0)
+      amr.n_initial_refinement_cycles = 0;
     /*
      *  set the number of initial reinitialization steps equal to the number of reinit steps
      *  if no value is provided
@@ -881,12 +888,14 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("restart");
     {
-      prm.add_parameter("save",
-                        restart.save,
-                        "Set this parameter to true if restart should be saved.");
-      prm.add_parameter("load",
-                        restart.load,
-                        "Set this parameter to true if restart should be loaded.");
+      prm.add_parameter(
+        "save",
+        restart.save,
+        "Set this parameter to any number >= 0 to specify how many restart files should be kept.");
+      prm.add_parameter(
+        "load",
+        restart.load,
+        "Set this parameter to any number >= 0 to specify which restart file should be loaded.");
       prm.add_parameter("write frequency",
                         restart.write_frequency,
                         "Every n timestep that should be written");
@@ -895,7 +904,6 @@ namespace MeltPoolDG
                         "Write restart output every given time step size. If this parameter is "
                         "set, the specified parameter for write frequency is overwritten.");
       prm.add_parameter("prefix", restart.prefix, "Write restart prefix");
-      prm.add_parameter("keep", restart.keep, "Number of restart files to keep.");
     }
     prm.leave_subsection();
     /*
