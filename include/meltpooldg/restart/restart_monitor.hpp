@@ -54,7 +54,7 @@ namespace MeltPoolDG
 
                   // TODO
                   //// copy parameter file (workaround since overwrite_existing complains with
-                  ///certain / compilers)
+                  /// certain / compilers)
                   // const auto path_orig = fs::path(parameter_filename);
                   // const auto path_dest =
                   // fs::path(paraview.directory) / fs::path(parameter_filename).filename();
@@ -75,6 +75,9 @@ namespace MeltPoolDG
     const RestartData<double> &data;
     fs::path                   dir;
     fs::path                   prefix;
-    std::vector<std::string>   suffices = {"_tria", "_tria.info", "_tria_fixed.data"};
+    std::vector<std::string>   suffices = {"_tria",
+                                         "_tria.info",
+                                         "_tria_fixed.data",
+                                         "_problem.restart"};
   };
 } // namespace MeltPoolDG

@@ -60,6 +60,18 @@ namespace MeltPoolDG
     bool
     check_time_step_limit(const number &time_step_limit);
 
+    template <class Archive>
+    void
+    serialize(Archive &ar, const unsigned int /*version*/)
+    {
+      ar &old_time;
+      ar &current_time;
+      ar &current_time_increment;
+      ar &old_time_increment;
+      ar &n_time_steps;
+      ar &time_step_size_function;
+    }
+
   private:
     TimeSteppingData<number>  time_data;
     number                    old_time;

@@ -15,6 +15,8 @@
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 namespace MeltPoolDG::MeltPool
 {
   template <int dim, typename VectorType>
@@ -517,7 +519,11 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolProblem<dim>::save(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    (void)base_in;
+    std::ofstream ofs(base_in->parameters.restart.prefix + "_0_problem.restart");
+    {
+      boost::archive::text_oarchive oa(ofs);
+      oa << *time_iterator;
+    }
 
     const auto attach_vectors =
       [&](std::vector<std::pair<const DoFHandler<dim> *,
@@ -532,6 +538,12 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolProblem<dim>::load(std::shared_ptr<SimulationBase<dim>> base_in)
   {
+    std::ifstream ifs(base_in->parameters.restart.prefix + "_problem.restart");
+    {
+      boost::archive::text_iarchive ia(ifs);
+      ia >> *time_iterator;
+    }
+
     const auto attach_vectors =
       [&](std::vector<std::pair<const DoFHandler<dim> *,
                                 std::function<void(std::vector<VectorType *> &)>>> &data) {
