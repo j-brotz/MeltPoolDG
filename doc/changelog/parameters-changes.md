@@ -1,14 +1,29 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-11-09
+- Add restart parameters
+``diff`
+{
++  "restart":
++  {
++    "load": "",
++    "save": "",
++    "prefix": "",
++    "write frequency": "",
++    "write time step size": "",
++  }
+}
+```
 ## 2022-10-28
-- Add parameter to enable curvature computation
+-- Add parameter to enable curvature computation
 ```json
 {
   "curvature":
   {
     "enable": "true|false"
   }
+}
 ```
 
 ## 2022-10-24

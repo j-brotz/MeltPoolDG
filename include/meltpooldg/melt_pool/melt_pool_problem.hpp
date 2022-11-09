@@ -38,6 +38,7 @@
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
+#include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -73,6 +74,12 @@ namespace MeltPoolDG::MeltPool
     check_input_parameters(Parameters<double> &) final;
 
   private:
+    void
+    save(std::shared_ptr<SimulationBase<dim>> base_in);
+
+    void
+    load(std::shared_ptr<SimulationBase<dim>> base_in);
+
     struct
     {
       bool do_heat_transfer = false;
@@ -211,5 +218,6 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>   darcy_operation;
     std::shared_ptr<Flow::SurfaceTensionOperation<dim>> surface_tension_operation;
     std::shared_ptr<Postprocessor<dim>>                 post_processor;
+    std::shared_ptr<Restart::RestartMonitor<double>>    restart_monitor;
   };
 } // namespace MeltPoolDG::MeltPool

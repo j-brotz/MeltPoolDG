@@ -13,7 +13,11 @@
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 namespace MeltPoolDG::MeltPool
 {
@@ -25,6 +29,18 @@ namespace MeltPoolDG::MeltPool
 
     auto sc    = std::make_unique<ScopedName>("mp::run");
     auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
+
+    if (restart_monitor && restart_monitor->do_load())
+      {
+        Journal::print_line(scratch_data->get_pcout(0), "load restart data");
+        load(base_in);
+      }
+    /*
+     *  output results of initialization
+     *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
+     *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
+     */
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
 
     while (!time_iterator->is_finished())
       {
@@ -366,6 +382,13 @@ namespace MeltPoolDG::MeltPool
             scratch_data->get_pcout() << std::endl;
             DoFMonitor::print(scratch_data->get_pcout());
           }
+
+        if (restart_monitor && restart_monitor->do_save(n))
+          {
+            Journal::print_line(scratch_data->get_pcout(), "save restart data");
+            restart_monitor->prepare_save();
+            save(base_in);
+          }
       }
     Journal::print_end(scratch_data->get_pcout());
 
@@ -381,6 +404,54 @@ namespace MeltPoolDG::MeltPool
         scratch_data->get_pcout() << std::endl;
         DoFMonitor::print(scratch_data->get_pcout());
       }
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::save(std::shared_ptr<SimulationBase<dim>> base_in)
+  {
+    std::ofstream ofs(base_in->parameters.restart.prefix + "_0_problem.restart");
+    {
+      boost::archive::text_oarchive oa(ofs);
+      oa << *time_iterator;
+    }
+
+    const auto attach_vectors =
+      [&](std::vector<std::pair<const DoFHandler<dim> *,
+                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+        this->attach_vectors(data);
+      };
+
+    Restart::serialize_internal<dim, VectorType>(attach_vectors,
+                                                 base_in->parameters.restart.prefix + "_0");
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::load(std::shared_ptr<SimulationBase<dim>> base_in)
+  {
+    const std::string load_prefix =
+      base_in->parameters.restart.prefix + "_" + std::to_string(base_in->parameters.restart.load);
+    std::ifstream ifs(load_prefix + "_problem.restart");
+    {
+      boost::archive::text_iarchive ia(ifs);
+      ia >> *time_iterator;
+    }
+
+    const auto attach_vectors =
+      [&](std::vector<std::pair<const DoFHandler<dim> *,
+                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+        this->attach_vectors(data);
+      };
+
+    const auto post = [&]() { this->post(); };
+
+    const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
+
+    Restart::deserialize_internal<dim, VectorType>(attach_vectors,
+                                                   post,
+                                                   setup_dof_system,
+                                                   load_prefix);
   }
 
   template <int dim>
@@ -812,6 +883,15 @@ namespace MeltPoolDG::MeltPool
                                            scratch_data->get_triangulation(vel_dof_idx),
                                            scratch_data->get_pcout(1));
     /*
+     *  initialize restart
+     */
+    if (base_in->parameters.restart.load >= 0 || base_in->parameters.restart.save >= 0)
+      {
+        restart_monitor =
+          std::make_shared<Restart::RestartMonitor<double>>(base_in->parameters.restart);
+      }
+
+    /*
      *    Do initial refinement steps if requested
      */
 
@@ -835,12 +915,6 @@ namespace MeltPoolDG::MeltPool
            */
           set_initial_condition(base_in);
         }
-    /*
-     *  output results of initialization
-     *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
-     *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
-     */
-    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
   }
 
   template <int dim>
