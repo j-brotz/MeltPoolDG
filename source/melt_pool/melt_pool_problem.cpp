@@ -1938,6 +1938,7 @@ namespace MeltPoolDG::MeltPool
                                  post,
                                  setup_dof_system,
                                  base_in->parameters.amr,
+                                 *base_in->triangulation,
                                  time_iterator->get_current_time_step_number());
   }
 
