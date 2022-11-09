@@ -891,11 +891,13 @@ namespace MeltPoolDG
       prm.add_parameter(
         "save",
         restart.save,
-        "Set this parameter to any number >= 0 to specify how many restart files should be kept.");
+        "Set this parameter to any number >= 0 to specify how many restart files should be kept. "
+        "-1 means no restart save.");
       prm.add_parameter(
         "load",
         restart.load,
-        "Set this parameter to any number >= 0 to specify which restart file should be loaded.");
+        "Set this parameter to any number >= 0 to specify which restart file should be loaded. "
+        "-1 means no restart load.");
       prm.add_parameter("write frequency",
                         restart.write_frequency,
                         "Every n timestep that should be written");
