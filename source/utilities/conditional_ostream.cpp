@@ -1,3 +1,5 @@
+#include <deal.II/base/mpi.h>
+
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 
 namespace MeltPoolDG
@@ -10,10 +12,18 @@ namespace MeltPoolDG
     : dealii::ConditionalOStream(stream, active)
     , output_stream(stream)
     , f(stream.flags())
+    , any_is_active(
+        static_cast<bool>(Utilities::MPI::max(static_cast<int>(active), MPI_COMM_WORLD)))
   {}
 
   ConditionalOStream::~ConditionalOStream()
   {
     output_stream.flags(f);
+  }
+
+  bool
+  ConditionalOStream::now() const
+  {
+    return any_is_active;
   }
 } // namespace MeltPoolDG

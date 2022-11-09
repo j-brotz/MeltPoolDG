@@ -239,14 +239,17 @@ namespace MeltPoolDG::Evaporation
 
     scratch_data.get_constraint(evapor_vel_dof_idx).distribute(evaporation_velocity);
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(1),
-                                  VectorTools::compute_L2_norm<dim>(evaporation_velocity,
-                                                                    scratch_data,
-                                                                    evapor_vel_dof_idx,
-                                                                    ls_quad_idx),
-                                  "evaporative_velocity",
-                                  "evaporation_operation",
-                                  10);
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(1),
+      [&]() -> double {
+        return VectorTools::compute_L2_norm<dim>(evaporation_velocity,
+                                                 scratch_data,
+                                                 evapor_vel_dof_idx,
+                                                 ls_quad_idx);
+      },
+      "evaporative_velocity",
+      "evaporation_operation",
+      10);
 
     evaporation_velocity.zero_out_ghost_values();
   }

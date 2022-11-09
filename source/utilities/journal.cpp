@@ -35,4 +35,22 @@ namespace MeltPoolDG::Journal
 
     print_line(pcout, str.str(), operation_name, extra_size);
   }
+
+  void
+  print_formatted_norm(const ConditionalOStream &     pcout,
+                       const std::function<double()> &compute_norm,
+                       const std::string &            norm_id,
+                       const std::string &            operation_name,
+                       const unsigned int             precision,
+                       const std::string &            norm_suffix,
+                       const unsigned int             extra_size)
+  {
+    if (pcout.now() == false)
+      return;
+    else
+      {
+        print_formatted_norm(
+          pcout, compute_norm(), norm_id, operation_name, precision, norm_suffix, extra_size);
+      }
+  }
 } // namespace MeltPoolDG::Journal

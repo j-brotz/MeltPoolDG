@@ -222,12 +222,13 @@ namespace MeltPoolDG::Reinitialization
                                                reinit_data.linear_solver,
                                                *preconditioner);
 
-        Journal::print_formatted_norm(scratch_data.get_pcout(0),
-                                      reinit_operator->get_system_matrix().frobenius_norm(),
-                                      "matrix",
-                                      "reinitialization",
-                                      15 /*precision*/,
-                                      "F");
+        Journal::print_formatted_norm(
+          scratch_data.get_pcout(0),
+          [&]() -> double { return reinit_operator->get_system_matrix().frobenius_norm(); },
+          "matrix",
+          "reinitialization",
+          15 /*precision*/,
+          "F");
       }
     scratch_data.get_constraint(reinit_dof_idx).distribute(solution_history.get_current_solution());
 
@@ -244,17 +245,26 @@ namespace MeltPoolDG::Reinitialization
 
     max_change_level_set = solution_history.get_current_solution().linfty_norm();
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(1),
-                                  MeltPoolDG::VectorTools::compute_L2_norm<dim>(
-                                    rhs, scratch_data, reinit_dof_idx, reinit_quad_idx),
-                                  "RHS",
-                                  "reinitialization",
-                                  15 /*precision*/
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(1),
+      [&]() -> double {
+        return MeltPoolDG::VectorTools::compute_L2_norm<dim>(rhs,
+                                                             scratch_data,
+                                                             reinit_dof_idx,
+                                                             reinit_quad_idx);
+      },
+      "RHS",
+      "reinitialization",
+      15 /*precision*/
     );
     Journal::print_formatted_norm(
       scratch_data.get_pcout(0),
-      VectorTools::compute_L2_norm<dim>(
-        solution_history.get_current_solution(), scratch_data, reinit_dof_idx, reinit_quad_idx),
+      [&]() -> double {
+        return VectorTools::compute_L2_norm<dim>(solution_history.get_current_solution(),
+                                                 scratch_data,
+                                                 reinit_dof_idx,
+                                                 reinit_quad_idx);
+      },
       "delta phi",
       "reinitialization",
       15 /*precision*/
@@ -267,14 +277,17 @@ namespace MeltPoolDG::Reinitialization
                                   15 /*precision*/,
                                   "∞ ",
                                   2);
-    Journal::print_formatted_norm(scratch_data.get_pcout(1),
-                                  VectorTools::compute_L2_norm<dim>(solution_level_set,
-                                                                    scratch_data,
-                                                                    reinit_dof_idx,
-                                                                    reinit_quad_idx),
-                                  "phi",
-                                  "reinitialization",
-                                  15 /*precision*/
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(1),
+      [&]() -> double {
+        return VectorTools::compute_L2_norm<dim>(solution_level_set,
+                                                 scratch_data,
+                                                 reinit_dof_idx,
+                                                 reinit_quad_idx);
+      },
+      "phi",
+      "reinitialization",
+      15 /*precision*/
     );
 
     Journal::print_line(scratch_data.get_pcout(1),

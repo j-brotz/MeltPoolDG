@@ -169,15 +169,18 @@ namespace MeltPoolDG::NormalVector
       scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
 
     for (unsigned int d = 0; d < dim; ++d)
-      Journal::print_formatted_norm(pcout,
-                                    MeltPoolDG::VectorTools::compute_L2_norm<dim>(
-                                      solution_history.get_current_solution().block(d),
-                                      scratch_data,
-                                      normal_dof_idx,
-                                      normal_quad_idx),
-                                    "normal_" + std::to_string(d),
-                                    "normal_vector",
-                                    11 /*precision*/
+      Journal::print_formatted_norm(
+        pcout,
+        [&]() -> double {
+          return MeltPoolDG::VectorTools::compute_L2_norm<dim>(
+            solution_history.get_current_solution().block(d),
+            scratch_data,
+            normal_dof_idx,
+            normal_quad_idx);
+        },
+        "normal_" + std::to_string(d),
+        "normal_vector",
+        11 /*precision*/
       );
 
     Journal::print_line(scratch_data.get_pcout(1),

@@ -138,10 +138,12 @@ namespace MeltPoolDG::Reinitialization
                                   2);
     Journal::print_formatted_norm(
       scratch_data.get_pcout(0),
-      VectorTools::compute_L2_norm<dim>(increment,
-                                        scratch_data,
-                                        reinit_params_adaflo.dof_index_ls,
-                                        reinit_params_adaflo.quad_index),
+      [&]() -> double {
+        return VectorTools::compute_L2_norm<dim>(increment,
+                                                 scratch_data,
+                                                 reinit_params_adaflo.dof_index_ls,
+                                                 reinit_params_adaflo.quad_index);
+      },
       "delta phi",
       "reinitialization_adaflo",
       10 /*precision*/

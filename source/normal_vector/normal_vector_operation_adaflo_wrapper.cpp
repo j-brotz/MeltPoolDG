@@ -105,10 +105,13 @@ namespace MeltPoolDG::NormalVector
     for (unsigned int d = 0; d < dim; ++d)
       Journal::print_formatted_norm(
         scratch_data.get_pcout(verbosity_l2_norm),
-        MeltPoolDG::VectorTools::compute_L2_norm<dim>(get_solution_normal_vector().block(d),
-                                                      scratch_data,
-                                                      normal_vec_adaflo_params.dof_index_normal,
-                                                      normal_vec_adaflo_params.quad_index),
+        [&]() -> double {
+          return MeltPoolDG::VectorTools::compute_L2_norm<dim>(
+            get_solution_normal_vector().block(d),
+            scratch_data,
+            normal_vec_adaflo_params.dof_index_normal,
+            normal_vec_adaflo_params.quad_index);
+        },
         "normal_" + std::to_string(d),
         "normal_vector_adaflo",
         10 /*precision*/

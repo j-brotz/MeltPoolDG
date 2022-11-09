@@ -336,24 +336,30 @@ namespace MeltPoolDG::Flow
 
     distribute_constraints();
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(0),
-                                  VectorTools::compute_L2_norm<dim>(get_velocity(),
-                                                                    scratch_data,
-                                                                    get_dof_handler_idx_velocity(),
-                                                                    get_quad_idx_velocity()),
-                                  "velocity",
-                                  "navier_stokes_adaflo",
-                                  15 /*precision*/
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(0),
+      [&]() -> double {
+        return VectorTools::compute_L2_norm<dim>(get_velocity(),
+                                                 scratch_data,
+                                                 get_dof_handler_idx_velocity(),
+                                                 get_quad_idx_velocity());
+      },
+      "velocity",
+      "navier_stokes_adaflo",
+      15 /*precision*/
     );
 
-    Journal::print_formatted_norm(scratch_data.get_pcout(0),
-                                  VectorTools::compute_L2_norm<dim>(get_pressure(),
-                                                                    scratch_data,
-                                                                    get_dof_handler_idx_pressure(),
-                                                                    get_quad_idx_pressure()),
-                                  "pressure",
-                                  "navier_stokes_adaflo",
-                                  15 /*precision*/
+    Journal::print_formatted_norm(
+      scratch_data.get_pcout(0),
+      [&]() -> double {
+        return VectorTools::compute_L2_norm<dim>(get_pressure(),
+                                                 scratch_data,
+                                                 get_dof_handler_idx_pressure(),
+                                                 get_quad_idx_pressure());
+      },
+      "pressure",
+      "navier_stokes_adaflo",
+      15 /*precision*/
     );
 
     ready_for_time_advance = false;
