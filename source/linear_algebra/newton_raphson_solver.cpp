@@ -2,7 +2,9 @@
 
 #include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
+#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 
 namespace MeltPoolDG
 {
@@ -26,7 +28,8 @@ namespace MeltPoolDG
     reinit_vector(rhs);
     reinit_vector(solution_update);
 
-    int i = 0;
+    int i           = 0;
+    linear_iter_acc = 0;
     while (i < max_number_of_iterations)
       {
         solve_increment();
@@ -41,6 +44,17 @@ namespace MeltPoolDG
 
                 Journal::print_line(pcout, str_sol.str(), "newton_raphson_solver");
               }
+
+            {
+              ScopedName sc("nonlinear_solve");
+              IterationMonitor::add_linear_iterations(sc, i);
+            }
+
+            {
+              ScopedName sc("linear_solve_acc");
+              IterationMonitor::add_linear_iterations(sc, linear_iter_acc);
+            }
+
             return;
           }
 
@@ -130,6 +144,11 @@ namespace MeltPoolDG
 
     // solve linear system
     int iter = solve_with_jacobian(rhs, solution_update);
+    {
+      ScopedName sc("linear_solve");
+      IterationMonitor::add_linear_iterations(sc, iter);
+    }
+    linear_iter_acc += iter;
 
     str_ << std::string(10, ' ') << std::right << std::setw(15) << std::setprecision(0) << iter;
   }

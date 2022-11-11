@@ -39,6 +39,7 @@ namespace MeltPoolDG
     VectorType solution_update;
 
     int                iteration_counter = 0;
+    int                linear_iter_acc   = 0;
     std::ostringstream str_;
 
   public:

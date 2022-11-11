@@ -6,6 +6,7 @@
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/dof_monitor.hpp>
+#  include <meltpooldg/utilities/iteration_monitor.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 #  include <meltpooldg/utilities/scoped_name.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
@@ -288,9 +289,19 @@ namespace MeltPoolDG::Flow
     navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
     navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
 
-    const auto n_newton_steps = navier_stokes->evaluate_time_step();
+    const auto iter = navier_stokes->evaluate_time_step();
 
-    if (n_newton_steps >= adaflo_params.max_nl_iteration)
+    {
+      ScopedName sc("nonlinear_solve");
+      IterationMonitor::add_linear_iterations(sc, iter.first);
+    }
+
+    {
+      ScopedName sc("linear_solve");
+      IterationMonitor::add_linear_iterations(sc, iter.second);
+    }
+
+    if (iter.first > adaflo_params.max_nl_iteration)
       {
         DataOutBase::VtkFlags flags;
         flags.write_higher_order_cells = true;
@@ -330,7 +341,7 @@ namespace MeltPoolDG::Flow
         data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
       }
 
-    AssertThrow(n_newton_steps < adaflo_params.max_nl_iteration,
+    AssertThrow(iter.first <= adaflo_params.max_nl_iteration,
                 ExcMessage(
                   "Newton Raphson solver for the Navier-Stokes equations did not converge."));
 
