@@ -47,6 +47,20 @@ namespace MeltPoolDG::MeltPool
         const auto dt = time_iterator->compute_next_time_increment();
         const int  n  = time_iterator->get_current_time_step_number();
 
+        const auto finalize = [&]() {
+          output_results(n, time_iterator->get_current_time(), base_in);
+
+          //... always print timing statistics
+          if (base_in->parameters.profiling.enable)
+            {
+              scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+              scratch_data->get_pcout() << std::endl;
+              IterationMonitor::print(scratch_data->get_pcout());
+              scratch_data->get_pcout() << std::endl;
+              DoFMonitor::print(scratch_data->get_pcout());
+            }
+        };
+
         time_iterator->print_me(scratch_data->get_pcout());
 
         // use extrapolated solution values in the coupling terms
@@ -223,7 +237,16 @@ namespace MeltPoolDG::MeltPool
               (melt_pool_operation &&
                !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
             {
-              heat_operation->solve();
+              try
+                {
+                  heat_operation->solve();
+                }
+              catch (const ExcNewtonDidNotConverge &e)
+                {
+                  finalize();
+
+                  AssertThrow(false, ExcNewtonDidNotConverge());
+                }
             }
 
           if (melt_pool_operation)
@@ -348,13 +371,30 @@ namespace MeltPoolDG::MeltPool
 
             if (evaporation_fluid_material)
               evaporation_fluid_material->update_ghost_values();
+
             // solver Navier-Stokes problem
-            flow_operation->solve();
+            try
+              {
+                flow_operation->solve();
+              }
+            catch (const ExcNavierStokesNoConvergence &e)
+              {
+                finalize();
+
+                AssertThrow(false, ExcNavierStokesNoConvergence());
+              }
 
             if (evaporation_fluid_material)
               evaporation_fluid_material->zero_out_ghost_values();
           }
         }
+
+        if (base_in->parameters.amr.do_amr)
+          {
+            ScopedName         sc("amr");
+            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+            refine_mesh(base_in);
+          }
 
         {
           ScopedName         sc("output");
@@ -363,14 +403,6 @@ namespace MeltPoolDG::MeltPool
           // ... and output the results to vtk files.
           output_results(n, time_iterator->get_current_time(), base_in);
         }
-
-
-        if (base_in->parameters.amr.do_amr)
-          {
-            ScopedName         sc("amr");
-            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-            refine_mesh(base_in);
-          }
 
         //@todo: adapt in case of adaptive time stepping
         if ((n % base_in->parameters.profiling.write_frequency == 0) &&
