@@ -27,386 +27,403 @@ namespace MeltPoolDG::MeltPool
   {
     initialize(base_in); // no timing needed, since the function does it self
 
-    auto sc    = std::make_unique<ScopedName>("mp::run");
-    auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
+    const auto finalize = [&]() {
+      output_results(time_iterator->get_current_time_step_number(),
+                     time_iterator->get_current_time(),
+                     base_in);
 
-    if (restart_monitor && restart_monitor->do_load())
+      //... always print timing statistics
+      if (base_in->parameters.profiling.enable)
+        {
+          scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+          scratch_data->get_pcout() << std::endl;
+          IterationMonitor::print(scratch_data->get_pcout());
+          scratch_data->get_pcout() << std::endl;
+          DoFMonitor::print(scratch_data->get_pcout());
+        }
+    };
+
+    try
       {
-        Journal::print_line(scratch_data->get_pcout(0), "load restart data");
-        load(base_in);
-      }
-    /*
-     *  output results of initialization
-     *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for output
-     *  and which must not be transferred to the new mesh everytime refine_mesh() is called.
-     */
-    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
+        auto sc    = std::make_unique<ScopedName>("mp::run");
+        auto scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
 
-    while (!time_iterator->is_finished())
-      {
-        const auto dt = time_iterator->compute_next_time_increment();
-        const int  n  = time_iterator->get_current_time_step_number();
-
-        const auto finalize = [&]() {
-          output_results(n, time_iterator->get_current_time(), base_in);
-
-          //... always print timing statistics
-          if (base_in->parameters.profiling.enable)
-            {
-              scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-              scratch_data->get_pcout() << std::endl;
-              IterationMonitor::print(scratch_data->get_pcout());
-              scratch_data->get_pcout() << std::endl;
-              DoFMonitor::print(scratch_data->get_pcout());
-            }
-        };
-
-        time_iterator->print_me(scratch_data->get_pcout());
-
-        // use extrapolated solution values in the coupling terms
-        if (problem_specific_parameters.do_extrapolate_coupling_terms)
+        if (restart_monitor && restart_monitor->do_load())
           {
-            if (flow_operation)
-              flow_operation->init_time_advance();
-            if (heat_operation)
-              heat_operation->init_time_advance();
-            if (level_set_operation)
-              level_set_operation->init_time_advance();
+            Journal::print_line(scratch_data->get_pcout(0), "load restart data");
+            load(base_in);
           }
+        /*
+         *  output results of initialization
+         *  @todo: find a way to plot vectors on the refined mesh, which are only relevant for
+         * output and which must not be transferred to the new mesh everytime refine_mesh() is
+         * called.
+         */
+        output_results(0, base_in->parameters.time_stepping.start_time, base_in);
 
-        // Only if a spatially constant evaporative mass flux is given as an analytical function,
-        // the time is needed to evaluate the function.
-        if (evaporation_operation &&
-            base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
-          evaporation_operation->set_time(time_iterator->get_current_time());
-
-        /******************************************************************************************
-         * LEVEL SET
-         ******************************************************************************************/
-        if (problem_specific_parameters.do_advect_level_set)
+        while (!time_iterator->is_finished())
           {
-            ScopedName         sc("ls");
-            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+            const auto dt = time_iterator->compute_next_time_increment();
+            const int  n  = time_iterator->get_current_time_step_number();
 
-            TableHandler iter_table;
-            VectorType   iter_res;
+            time_iterator->print_me(scratch_data->get_pcout());
 
-            const bool do_ls_iteration =
-              problem_specific_parameters.level_set_evapor_coupling.n_max_iter > 1;
-
-            if (do_ls_iteration)
+            // use extrapolated solution values in the coupling terms
+            if (problem_specific_parameters.do_extrapolate_coupling_terms)
               {
-                scratch_data->initialize_dof_vector(iter_res, ls_dof_idx);
-                iter_res = 1e10; // any large number
+                if (flow_operation)
+                  flow_operation->init_time_advance();
+                if (heat_operation)
+                  heat_operation->init_time_advance();
+                if (level_set_operation)
+                  level_set_operation->init_time_advance();
               }
 
-            for (int i = 0; i < problem_specific_parameters.level_set_evapor_coupling.n_max_iter;
-                 ++i)
+            // Only if a spatially constant evaporative mass flux is given as an analytical
+            // function, the time is needed to evaluate the function.
+            if (evaporation_operation &&
+                base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
+              evaporation_operation->set_time(time_iterator->get_current_time());
+
+            /******************************************************************************************
+             * LEVEL SET
+             ******************************************************************************************/
+            if (problem_specific_parameters.do_advect_level_set)
               {
+                ScopedName         sc("ls");
+                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+
+                TableHandler iter_table;
+                VectorType   iter_res;
+
+                const bool do_ls_iteration =
+                  problem_specific_parameters.level_set_evapor_coupling.n_max_iter > 1;
+
                 if (do_ls_iteration)
                   {
-                    iter_res -= level_set_operation->get_level_set();
-                    const double res_norm = iter_res.l2_norm();
-
-                    if (base_in->parameters.base.verbosity_level > 0)
-                      {
-                        iter_table.add_value("i", i);
-                        iter_table.add_value("|res|", res_norm);
-                        iter_table.add_value("|phi|",
-                                             level_set_operation->get_level_set().l2_norm());
-                      }
-
-                    // early return of iteration if l2-norm of the change of the level set field is
-                    // already very small
-                    if (res_norm <= problem_specific_parameters.level_set_evapor_coupling.tol)
-                      {
-                        Journal::print_decoration_line(scratch_data->get_pcout(0));
-                        Journal::print_line(scratch_data->get_pcout(0),
-                                            "level set - evapor coupling; finished after " +
-                                              std::to_string(i) + " iter at residual " +
-                                              UtilityFunctions::to_string_with_precision(res_norm),
-                                            "MeltPoolProblem");
-                        Journal::print_decoration_line(scratch_data->get_pcout(0));
-                        break;
-                      }
-
-                    iter_res.copy_locally_owned_data_from(level_set_operation->get_level_set());
-                    Journal::print_decoration_line(scratch_data->get_pcout(1));
-                    Journal::print_line(scratch_data->get_pcout(1),
-                                        "level set - evapor coupling; #iter " + std::to_string(i),
-                                        "MeltPoolProblem");
-                    Journal::print_decoration_line(scratch_data->get_pcout(1));
+                    scratch_data->initialize_dof_vector(iter_res, ls_dof_idx);
+                    iter_res = 1e10; // any large number
                   }
 
-                // TODO: remove; could not be removed since during
-                // flow_operation->init_time_advance() an inconsistency in the DoF vectors is
-                // introduced
-                scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
-                interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
-
-                if (evaporation_operation &&
-                    problem_specific_parameters.do_evaporative_velocity_jump)
+                for (int i = 0;
+                     i < problem_specific_parameters.level_set_evapor_coupling.n_max_iter;
+                     ++i)
                   {
-                    ScopedName         sc("evaporation::level_set_source_term");
-                    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-
-                    switch (base_in->parameters.evapor.level_set_source_term_type)
+                    if (do_ls_iteration)
                       {
-                        default:
-                          case EvaporationLevelSetSourceTermType::interface_velocity: {
-                            // Option 1: compute modified advection velocity due to evaporation
-                            if (problem_specific_parameters.do_extrapolate_coupling_terms)
-                              {
-                                level_set_operation->update_normal_vector();
-                              }
+                        iter_res -= level_set_operation->get_level_set();
+                        const double res_norm = iter_res.l2_norm();
 
-                            evaporation_operation->compute_evaporation_velocity();
-                            interface_velocity += evaporation_operation->get_velocity();
+                        if (base_in->parameters.base.verbosity_level > 0)
+                          {
+                            iter_table.add_value("i", i);
+                            iter_table.add_value("|res|", res_norm);
+                            iter_table.add_value("|phi|",
+                                                 level_set_operation->get_level_set().l2_norm());
+                          }
+
+                        // early return of iteration if l2-norm of the change of the level set field
+                        // is already very small
+                        if (res_norm <= problem_specific_parameters.level_set_evapor_coupling.tol)
+                          {
+                            Journal::print_decoration_line(scratch_data->get_pcout(0));
+                            Journal::print_line(scratch_data->get_pcout(0),
+                                                "level set - evapor coupling; finished after " +
+                                                  std::to_string(i) + " iter at residual " +
+                                                  UtilityFunctions::to_string_with_precision(
+                                                    res_norm),
+                                                "MeltPoolProblem");
+                            Journal::print_decoration_line(scratch_data->get_pcout(0));
                             break;
                           }
 
-                        case EvaporationLevelSetSourceTermType::rhs:
-                          // Option 2: use source term as rhs in the level set equation
-                          scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
-                          evaporation_operation->compute_level_set_source_term(
-                            level_set_rhs,
-                            ls_dof_idx,
-                            level_set_operation->get_level_set(),
-                            pressure_dof_idx);
-                          level_set_operation->set_level_set_user_rhs(level_set_rhs);
-                          break;
+                        iter_res.copy_locally_owned_data_from(level_set_operation->get_level_set());
+                        Journal::print_decoration_line(scratch_data->get_pcout(1));
+                        Journal::print_line(scratch_data->get_pcout(1),
+                                            "level set - evapor coupling; #iter " +
+                                              std::to_string(i),
+                                            "MeltPoolProblem");
+                        Journal::print_decoration_line(scratch_data->get_pcout(1));
+                      }
+
+                    // TODO: remove; could not be removed since during
+                    // flow_operation->init_time_advance() an inconsistency in the DoF vectors is
+                    // introduced
+                    scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
+                    interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
+
+                    if (evaporation_operation &&
+                        problem_specific_parameters.do_evaporative_velocity_jump)
+                      {
+                        ScopedName         sc("evaporation::level_set_source_term");
+                        TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+
+                        switch (base_in->parameters.evapor.level_set_source_term_type)
+                          {
+                            default:
+                              case EvaporationLevelSetSourceTermType::interface_velocity: {
+                                // Option 1: compute modified advection velocity due to evaporation
+                                if (problem_specific_parameters.do_extrapolate_coupling_terms)
+                                  {
+                                    level_set_operation->update_normal_vector();
+                                  }
+
+                                evaporation_operation->compute_evaporation_velocity();
+                                interface_velocity += evaporation_operation->get_velocity();
+                                break;
+                              }
+
+                            case EvaporationLevelSetSourceTermType::rhs:
+                              // Option 2: use source term as rhs in the level set equation
+                              scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
+                              evaporation_operation->compute_level_set_source_term(
+                                level_set_rhs,
+                                ls_dof_idx,
+                                level_set_operation->get_level_set(),
+                                pressure_dof_idx);
+                              level_set_operation->set_level_set_user_rhs(level_set_rhs);
+                              break;
+                          }
+                      }
+
+                    // ... solve level-set problem with the given advection field
+                    scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
+
+                    level_set_operation->solve(false /*finish time step will be called later*/);
+
+                    if (do_ls_iteration)
+                      {
+                        level_set_operation->update_normal_vector();
+                        level_set_operation->transform_level_set_to_smooth_heaviside();
                       }
                   }
 
-                // ... solve level-set problem with the given advection field
-                scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
-
-                level_set_operation->solve(false /*finish time step will be called later*/);
-
-                if (do_ls_iteration)
+                if (base_in->parameters.base.verbosity_level > 0 && do_ls_iteration)
                   {
-                    level_set_operation->update_normal_vector();
-                    level_set_operation->transform_level_set_to_smooth_heaviside();
+                    iter_table.set_precision("|res|", 10);
+                    iter_table.set_scientific("|res|", true);
+                    iter_table.set_precision("|phi|", 10);
+                    iter_table.set_scientific("|phi|", true);
+
+                    if (scratch_data->get_pcout(1).is_active())
+                      iter_table.write_text(scratch_data->get_pcout(1).get_stream());
+
+                    Journal::print_decoration_line(scratch_data->get_pcout(1));
                   }
+
+
+                level_set_operation->finish_time_advance();
+
+                if (evaporation_operation &&
+                    base_in->parameters.evapor.formulation_source_term_heat ==
+                      InterfaceForceType::sharp)
+                  level_set_operation->update_surface_mesh();
               }
 
-            if (base_in->parameters.base.verbosity_level > 0 && do_ls_iteration)
-              {
-                iter_table.set_precision("|res|", 10);
-                iter_table.set_scientific("|res|", true);
-                iter_table.set_precision("|phi|", 10);
-                iter_table.set_scientific("|phi|", true);
-
-                if (scratch_data->get_pcout(1).is_active())
-                  iter_table.write_text(scratch_data->get_pcout(1).get_stream());
-
-                Journal::print_decoration_line(scratch_data->get_pcout(1));
-              }
-
-
-            level_set_operation->finish_time_advance();
-
-            if (evaporation_operation && base_in->parameters.evapor.formulation_source_term_heat ==
-                                           InterfaceForceType::sharp)
-              level_set_operation->update_surface_mesh();
-          }
-
-        /******************************************************************************************
-         * HEAT TRANSFER
-         ******************************************************************************************/
-        {
-          ScopedName         sc("heat");
-          TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-
-          if (melt_pool_operation)
-            melt_pool_operation->compute_heat_source(
-              heat_operation->get_heat_source(),
-              heat_operation->get_user_rhs(),
-              level_set_operation->get_level_set_as_heaviside(),
-              level_set_operation->get_normal_vector(),
-              normal_dof_idx,
-              dt,
-              true /* zero_out */);
-
-          // the heat equation will NOT be solved if
-          //    * the evaporative mass flux is given as a constant (temperature-independent) value
-          //    * the temperature field is prescribed analytically
-          if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
-              (evaporation_operation &&
-               !(base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)) ||
-              (melt_pool_operation &&
-               !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
+            /******************************************************************************************
+             * HEAT TRANSFER
+             ******************************************************************************************/
             {
-              try
+              ScopedName         sc("heat");
+              TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+
+              if (melt_pool_operation)
+                melt_pool_operation->compute_heat_source(
+                  heat_operation->get_heat_source(),
+                  heat_operation->get_user_rhs(),
+                  level_set_operation->get_level_set_as_heaviside(),
+                  level_set_operation->get_normal_vector(),
+                  normal_dof_idx,
+                  dt,
+                  true /* zero_out */);
+
+              // the heat equation will NOT be solved if
+              //    * the evaporative mass flux is given as a constant (temperature-independent)
+              //    value
+              //    * the temperature field is prescribed analytically
+              if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
+                  (evaporation_operation && !(base_in->parameters.evapor.evaporation_model ==
+                                              EvaporationModelType::constant)) ||
+                  (melt_pool_operation && !(base_in->parameters.laser.heat_source_model ==
+                                            LaserHeatSourceModel::Analytical)))
                 {
                   heat_operation->solve();
                 }
-              catch (const ExcNewtonDidNotConverge &e)
+
+              if (melt_pool_operation)
                 {
-                  finalize();
+                  ScopedName         sc("melt_front_propagation");
+                  TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                  melt_pool_operation->compute_melt_front_propagation(
+                    level_set_operation->get_level_set_as_heaviside());
 
-                  AssertThrow(false, ExcNewtonDidNotConverge());
-                }
-            }
-
-          if (melt_pool_operation)
-            {
-              ScopedName         sc("melt_front_propagation");
-              TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-              melt_pool_operation->compute_melt_front_propagation(
-                level_set_operation->get_level_set_as_heaviside());
-
-              if (base_in->parameters.mp.solid.set_velocity_to_zero ||
-                  base_in->parameters.mp.solid.do_not_reinitialize)
-                {
+                  if (base_in->parameters.mp.solid.set_velocity_to_zero ||
+                      base_in->parameters.mp.solid.do_not_reinitialize)
+                    {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-                  dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
+                      dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
 #else
-                  AssertThrow(false, ExcNotImplemented());
+                      AssertThrow(false, ExcNotImplemented());
 #endif
+                    }
+                  // TODO zero_out only
+                  scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
                 }
-              // TODO zero_out only
-              scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
             }
-        }
 
-        // compute the evaporative mass flux from the temperature field
-        if (evaporation_operation)
-          {
-            ScopedName         sc("evaporation::mass_flux");
-            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-            evaporation_operation->compute_evaporative_mass_flux();
-          }
-
-        /******************************************************************************************
-         * NAVIER - STOKES
-         ******************************************************************************************/
-        {
-          ScopedName         sc("ns");
-          TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-          {
-            ScopedName         sc("compute_fluxes");
-            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-            // update the phases for the flow solver considering the updated level set and
-            // temperature
-            update_phases(level_set_operation->get_level_set_as_heaviside(), base_in->parameters);
-
-            // ... a) gravity force
-            compute_gravity_force(vel_force_rhs,
-                                  base_in->parameters.base.gravity,
-                                  true /* true means force vector is zeroed out before */);
-
-            // ... b) (temperature-dependent) surface tension
-            surface_tension_operation->compute_surface_tension(vel_force_rhs,
-                                                               false /*do not zero out*/);
-
-            if (base_in->parameters.surface_tension.time_step_limit.enable)
+            // compute the evaporative mass flux from the temperature field
+            if (evaporation_operation)
               {
-                const auto dt_lim = surface_tension_operation->compute_time_step_limit(
-                  base_in->parameters.material.first.density,
-                  base_in->parameters.material.second.density);
-
-                AssertThrow(time_iterator->check_time_step_limit(dt_lim),
-                            ExcMessage("The time step limit for surface tension (dt=" +
-                                       UtilityFunctions::to_string_with_precision(dt_lim) +
-                                       ") is exceeded. Try to choose a smaller "
-                                       "time step size. Abort..."));
+                ScopedName         sc("evaporation::mass_flux");
+                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                evaporation_operation->compute_evaporative_mass_flux();
               }
 
-
-            // .... d) evaporative mass fluxes
-            if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump)
+            /******************************************************************************************
+             * NAVIER - STOKES
+             ******************************************************************************************/
+            {
+              ScopedName         sc("ns");
+              TimerOutput::Scope scope(scratch_data->get_timer(), sc);
               {
-                evaporation_operation->compute_mass_balance_source_term(
-                  mass_balance_rhs,
-                  flow_operation->get_dof_handler_idx_pressure(),
-                  flow_operation->get_quad_idx_pressure(),
-                  true /* zero out rhs */);
-              }
+                ScopedName         sc("compute_fluxes");
+                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                // update the phases for the flow solver considering the updated level set and
+                // temperature
+                update_phases(level_set_operation->get_level_set_as_heaviside(),
+                              base_in->parameters);
 
-            // ... e) recoil pressure forces
-            if (melt_pool_operation)
-              {
-                if (base_in->parameters.recoil.interface_distributed_flux_type ==
-                    InterfaceDistributedFluxType::interface_value)
+                // ... a) gravity force
+                compute_gravity_force(vel_force_rhs,
+                                      base_in->parameters.base.gravity,
+                                      true /* true means force vector is zeroed out before */);
+
+                // ... b) (temperature-dependent) surface tension
+                surface_tension_operation->compute_surface_tension(vel_force_rhs,
+                                                                   false /*do not zero out*/);
+
+                if (base_in->parameters.surface_tension.time_step_limit.enable)
                   {
-                    heat_operation->compute_interface_temperature(
-                      level_set_operation->get_distance_to_level_set(),
-                      level_set_operation->get_normal_vector());
-                    melt_pool_operation->compute_force_flow_rhs(
-                      vel_force_rhs,
-                      level_set_operation->get_level_set_as_heaviside(),
-                      heat_operation->get_temperature_interface(),
-                      false);
+                    const auto dt_lim = surface_tension_operation->compute_time_step_limit(
+                      base_in->parameters.material.first.density,
+                      base_in->parameters.material.second.density);
+
+                    AssertThrow(time_iterator->check_time_step_limit(dt_lim),
+                                ExcMessage("The time step limit for surface tension (dt=" +
+                                           UtilityFunctions::to_string_with_precision(dt_lim) +
+                                           ") is exceeded. Try to choose a smaller "
+                                           "time step size. Abort..."));
                   }
-                else
+
+
+                // .... d) evaporative mass fluxes
+                if (evaporation_operation &&
+                    problem_specific_parameters.do_evaporative_velocity_jump)
                   {
-                    melt_pool_operation->compute_force_flow_rhs(
-                      vel_force_rhs,
-                      level_set_operation->get_level_set_as_heaviside(),
-                      heat_operation->get_temperature(),
-                      evaporation_operation->get_evaporative_mass_flux(),
-                      false);
+                    evaporation_operation->compute_mass_balance_source_term(
+                      mass_balance_rhs,
+                      flow_operation->get_dof_handler_idx_pressure(),
+                      flow_operation->get_quad_idx_pressure(),
+                      true /* zero out rhs */);
                   }
+
+                // ... e) recoil pressure forces
+                if (melt_pool_operation)
+                  {
+                    if (base_in->parameters.recoil.interface_distributed_flux_type ==
+                        InterfaceDistributedFluxType::interface_value)
+                      {
+                        heat_operation->compute_interface_temperature(
+                          level_set_operation->get_distance_to_level_set(),
+                          level_set_operation->get_normal_vector());
+                        melt_pool_operation->compute_force_flow_rhs(
+                          vel_force_rhs,
+                          level_set_operation->get_level_set_as_heaviside(),
+                          heat_operation->get_temperature_interface(),
+                          false);
+                      }
+                    else
+                      {
+                        melt_pool_operation->compute_force_flow_rhs(
+                          vel_force_rhs,
+                          level_set_operation->get_level_set_as_heaviside(),
+                          heat_operation->get_temperature(),
+                          evaporation_operation->get_evaporative_mass_flux(),
+                          false);
+                      }
+                  }
+
+                // ... f) explicit Darcy damping force
+                if (darcy_operation && base_in->parameters.darcy.formulation ==
+                                         DarcyDampingFormulation::explicit_formulation)
+                  darcy_operation->compute_darcy_damping(vel_force_rhs,
+                                                         flow_operation->get_velocity(),
+                                                         false /*zero_out*/);
+
+                //  ... and set the resulting forces within the Navier-Stokes solver
+                flow_operation->set_force_rhs(vel_force_rhs);
+                // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
+                // the mass balance equation
+                if (evaporation_operation &&
+                    problem_specific_parameters.do_evaporative_velocity_jump)
+                  flow_operation->set_mass_balance_rhs(mass_balance_rhs);
               }
 
-            // ... f) explicit Darcy damping force
-            if (darcy_operation && base_in->parameters.darcy.formulation ==
-                                     DarcyDampingFormulation::explicit_formulation)
-              darcy_operation->compute_darcy_damping(vel_force_rhs,
-                                                     flow_operation->get_velocity(),
-                                                     false /*zero_out*/);
-
-            //  ... and set the resulting forces within the Navier-Stokes solver
-            flow_operation->set_force_rhs(vel_force_rhs);
-            // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
-            // the mass balance equation
-            if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump)
-              flow_operation->set_mass_balance_rhs(mass_balance_rhs);
-          }
-
-          {
-            ScopedName         sc("solve");
-            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-
-            if (evaporation_fluid_material)
-              evaporation_fluid_material->update_ghost_values();
-
-            // solver Navier-Stokes problem
-            try
               {
+                ScopedName         sc("solve");
+                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+
+                if (evaporation_fluid_material)
+                  evaporation_fluid_material->update_ghost_values();
+
+                // solver Navier-Stokes problem
                 flow_operation->solve();
+                if (evaporation_fluid_material)
+                  evaporation_fluid_material->zero_out_ghost_values();
               }
-            catch (const ExcNavierStokesNoConvergence &e)
+            }
+
+            if (base_in->parameters.amr.do_amr)
               {
-                finalize();
-
-                AssertThrow(false, ExcNavierStokesNoConvergence());
+                ScopedName         sc("amr");
+                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                refine_mesh(base_in);
               }
 
-            if (evaporation_fluid_material)
-              evaporation_fluid_material->zero_out_ghost_values();
+            {
+              ScopedName         sc("output");
+              TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+
+              // ... and output the results to vtk files.
+              output_results(n, time_iterator->get_current_time(), base_in);
+            }
+
+            //@todo: adapt in case of adaptive time stepping
+            if ((n % base_in->parameters.profiling.write_frequency == 0) &&
+                base_in->parameters.profiling.enable)
+              {
+                scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+                scratch_data->get_pcout() << std::endl;
+                IterationMonitor::print(scratch_data->get_pcout());
+                scratch_data->get_pcout() << std::endl;
+                DoFMonitor::print(scratch_data->get_pcout());
+              }
+
+            if (restart_monitor && restart_monitor->do_save(n))
+              {
+                Journal::print_line(scratch_data->get_pcout(), "save restart data");
+                restart_monitor->prepare_save();
+                save(base_in);
+              }
           }
-        }
 
-        if (base_in->parameters.amr.do_amr)
-          {
-            ScopedName         sc("amr");
-            TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-            refine_mesh(base_in);
-          }
+        Journal::print_end(scratch_data->get_pcout());
 
-        {
-          ScopedName         sc("output");
-          TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+        scope.reset();
+        sc.reset();
 
-          // ... and output the results to vtk files.
-          output_results(n, time_iterator->get_current_time(), base_in);
-        }
-
-        //@todo: adapt in case of adaptive time stepping
-        if ((n % base_in->parameters.profiling.write_frequency == 0) &&
-            base_in->parameters.profiling.enable)
+        //... always print timing statistics
+        if (base_in->parameters.profiling.enable)
           {
             scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
             scratch_data->get_pcout() << std::endl;
@@ -414,27 +431,18 @@ namespace MeltPoolDG::MeltPool
             scratch_data->get_pcout() << std::endl;
             DoFMonitor::print(scratch_data->get_pcout());
           }
-
-        if (restart_monitor && restart_monitor->do_save(n))
-          {
-            Journal::print_line(scratch_data->get_pcout(), "save restart data");
-            restart_monitor->prepare_save();
-            save(base_in);
-          }
       }
-    Journal::print_end(scratch_data->get_pcout());
-
-    scope.reset();
-    sc.reset();
-
-    //... always print timing statistics
-    if (base_in->parameters.profiling.enable)
+    catch (const ExcNewtonDidNotConverge &e)
       {
-        scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-        scratch_data->get_pcout() << std::endl;
-        IterationMonitor::print(scratch_data->get_pcout());
-        scratch_data->get_pcout() << std::endl;
-        DoFMonitor::print(scratch_data->get_pcout());
+        finalize();
+
+        AssertThrow(false, ExcNewtonDidNotConverge());
+      }
+    catch (const ExcNavierStokesNoConvergence &e)
+      {
+        finalize();
+
+        AssertThrow(false, ExcNavierStokesNoConvergence());
       }
   }
 
