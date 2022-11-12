@@ -299,8 +299,7 @@ namespace MeltPoolDG::Flow
 
     {
       ScopedName sc("linear_solve");
-      IterationMonitor::add_linear_iterations(
-        sc, iter.second == numbers::invalid_unsigned_int ? 0 : iter.second);
+      IterationMonitor::add_linear_iterations(iter.second);
     }
 
     // TODO: remove
