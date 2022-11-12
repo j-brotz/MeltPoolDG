@@ -438,12 +438,14 @@ namespace MeltPoolDG::MeltPool
 
         AssertThrow(false, ExcNewtonDidNotConverge());
       }
+#ifdef MELT_POOL_DG_WITH_ADAFLO
     catch (const ExcNavierStokesNoConvergence &e)
       {
         finalize();
 
         AssertThrow(false, ExcNavierStokesNoConvergence());
       }
+#endif
   }
 
   template <int dim>
