@@ -55,7 +55,7 @@ namespace MeltPoolDG::Curvature
     FEValues<dim> normal_values(scratch_data.get_mapping(),
                                 scratch_data.get_dof_handler(normal_dof_idx).get_fe(),
                                 scratch_data.get_quadrature(curv_quad_idx),
-                                update_values | update_gradients);
+                                update_gradients);
 
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(curv_dof_idx);
 
@@ -65,101 +65,92 @@ namespace MeltPoolDG::Curvature
 
     const unsigned int n_q_points = curv_values.get_quadrature().size();
 
-    std::vector<Tensor<1, dim>> unit_normal_at_q(n_q_points, Tensor<1, dim>());
-    std::vector<double>         div_n_at_q(n_q_points);
-
     matrix = 0.0;
     rhs    = 0.0;
 
-    typename DoFHandler<dim>::active_cell_iterator normal_cell =
-      scratch_data.get_dof_handler(normal_dof_idx).begin_active();
-
     for (const auto &cell : scratch_data.get_dof_handler(curv_dof_idx).active_cell_iterators())
-      {
-        if (cell->is_locally_owned())
-          {
-            curv_values.reinit(cell);
-            cell->get_dof_indices(local_dof_indices);
+      if (cell->is_locally_owned())
+        {
+          curv_values.reinit(cell);
+          cell->get_dof_indices(local_dof_indices);
 
-            curvature_cell_matrix = 0.0;
-            curvature_cell_rhs    = 0.0;
+          curvature_cell_matrix = 0.0;
+          curvature_cell_rhs    = 0.0;
 
-            const double damping = NormalVector::compute_cell_size_dependent_filter_parameter<dim>(
-              scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
+          const double damping = NormalVector::compute_cell_size_dependent_filter_parameter<dim>(
+            scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
 
-            // set unit normal vector at DoFs to compute the RHS of the curvature operator
-            //
-            // (N, -∇*n)
-            //
-            // 1) gather (componentwise)
-            std::vector<Vector<double>> normal_vector_at_cell(dim, Vector<double>(dofs_per_cell));
+          // set unit normal vector at DoFs to compute the RHS of the curvature operator
+          //
+          // (N, -∇*n)
+          //
+          // 1) gather (componentwise)
+          std::vector<Vector<double>> normal_vector_at_cell(dim, Vector<double>(dofs_per_cell));
+          for (unsigned int d = 0; d < dim; ++d)
+            cell->get_dof_values(solution_normal_vector_in.block(d), normal_vector_at_cell[d]);
+
+          std::vector<Tensor<1, dim>> unit_normal_at_cell(dofs_per_cell, Tensor<1, dim>());
+          for (unsigned int k = 0; k < dofs_per_cell; ++k)
             for (unsigned int d = 0; d < dim; ++d)
-              cell->get_dof_values(solution_normal_vector_in.block(d), normal_vector_at_cell[d]);
+              unit_normal_at_cell[k][d] = normal_vector_at_cell[d][k];
 
-            std::vector<Tensor<1, dim>> unit_normal_at_cell(dofs_per_cell, Tensor<1, dim>());
-            for (unsigned int k = 0; k < dofs_per_cell; ++k)
-              for (unsigned int d = 0; d < dim; ++d)
-                unit_normal_at_cell[k][d] = normal_vector_at_cell[d][k];
+          // 2) normalize
+          for (unsigned int k = 0; k < dofs_per_cell; ++k)
+            {
+              const double n_norm = unit_normal_at_cell[k].norm();
+              if (n_norm > tolerance_normal_vector)
+                unit_normal_at_cell[k] /= n_norm;
+              else
+                unit_normal_at_cell[k] = 0.0;
+            }
 
-            // 2) normalize
-            for (unsigned int k = 0; k < dofs_per_cell; ++k)
-              {
-                const double n_norm = unit_normal_at_cell[k].norm();
-                if (n_norm > tolerance_normal_vector)
-                  unit_normal_at_cell[k] /= n_norm;
-                else
-                  unit_normal_at_cell[k] = 0.0;
-              }
-
-            // 3) scatter
-            for (unsigned int k = 0; k < dofs_per_cell; ++k)
-              for (unsigned int d = 0; d < dim; ++d)
-                normal_vector_at_cell[d][k] = unit_normal_at_cell[k][d];
-
+          // 3) scatter (componentwise)
+          for (unsigned int k = 0; k < dofs_per_cell; ++k)
             for (unsigned int d = 0; d < dim; ++d)
-              cell->set_dof_values(normal_vector_at_cell[d], unit_normal.block(d));
+              normal_vector_at_cell[d][k] = unit_normal_at_cell[k][d];
 
-            // 4) evaluate divergence
-            normal_values.reinit(cell);
-            std::vector<double> div_n_at_q(n_q_points);
-            for (unsigned int d = 0; d < dim; ++d)
-              {
-                std::vector<Tensor<1, dim>> temp(n_q_points, Tensor<1, dim>());
-                normal_values.get_function_gradients(unit_normal.block(d), temp);
-                for (unsigned int k = 0; k < n_q_points; ++k)
-                  div_n_at_q[k] += temp[k][d];
-              }
+          for (unsigned int d = 0; d < dim; ++d)
+            cell->set_dof_values(normal_vector_at_cell[d], unit_normal.block(d));
 
-            for (const unsigned int q_index : curv_values.quadrature_point_indices())
-              {
-                for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                  {
-                    const double         phi_i      = curv_values.shape_value(i, q_index);
-                    const Tensor<1, dim> grad_phi_i = curv_values.shape_grad(i, q_index);
+          // 4) evaluate divergence at quadrature points
+          normal_values.reinit(cell);
+          std::vector<double> div_n_at_q(n_q_points);
 
-                    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                      {
-                        const double         phi_j      = curv_values.shape_value(j, q_index);
-                        const Tensor<1, dim> grad_phi_j = curv_values.shape_grad(j, q_index);
+          for (unsigned int d = 0; d < dim; ++d)
+            {
+              std::vector<Tensor<1, dim>> temp(n_q_points, Tensor<1, dim>());
+              normal_values.get_function_gradients(unit_normal.block(d), temp);
+              for (unsigned int q = 0; q < n_q_points; ++q)
+                div_n_at_q[q] += temp[q][d];
+            }
 
-                        curvature_cell_matrix(i, j) +=
-                          (phi_i * phi_j + damping * grad_phi_i * grad_phi_j) *
-                          curv_values.JxW(q_index);
-                      }
-                    curvature_cell_rhs(i) -=
-                      (phi_i * div_n_at_q[q_index] * curv_values.JxW(q_index));
-                  }
-              }
+          for (const unsigned int q_index : curv_values.quadrature_point_indices())
+            {
+              for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                {
+                  const double         phi_i      = curv_values.shape_value(i, q_index);
+                  const Tensor<1, dim> grad_phi_i = curv_values.shape_grad(i, q_index);
 
-            // assembly
-            cell->get_dof_indices(local_dof_indices);
-            scratch_data.get_constraint(curv_dof_idx)
-              .distribute_local_to_global(
-                curvature_cell_matrix, curvature_cell_rhs, local_dof_indices, matrix, rhs);
+                  for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                    {
+                      const double         phi_j      = curv_values.shape_value(j, q_index);
+                      const Tensor<1, dim> grad_phi_j = curv_values.shape_grad(j, q_index);
 
-          } // end of cell loop
-        ++normal_cell;
-      }
+                      curvature_cell_matrix(i, j) +=
+                        (phi_i * phi_j + damping * grad_phi_i * grad_phi_j) *
+                        curv_values.JxW(q_index);
+                    }
+                  curvature_cell_rhs(i) -= (phi_i * div_n_at_q[q_index] * curv_values.JxW(q_index));
+                }
+            }
+
+          // assembly
+          cell->get_dof_indices(local_dof_indices);
+          scratch_data.get_constraint(curv_dof_idx)
+            .distribute_local_to_global(
+              curvature_cell_matrix, curvature_cell_rhs, local_dof_indices, matrix, rhs);
+
+        } // end of cell loop
     matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
   }
@@ -229,7 +220,6 @@ namespace MeltPoolDG::Curvature
                     const Tensor<1, dim, VectorizedArray<double>> n_phi =
                       MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_dof_value(i),
                                                               tolerance_normal_vector);
-                    // tolerance_normal_vector);
                     normal_vector.submit_dof_value(n_phi, i);
                   }
                 else
