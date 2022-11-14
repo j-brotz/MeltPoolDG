@@ -289,7 +289,8 @@ namespace MeltPoolDG::Flow
     navier_stokes->get_constraints_u().set_zero(navier_stokes->user_rhs.block(0));
     navier_stokes->get_constraints_p().set_zero(navier_stokes->user_rhs.block(1));
 
-    const auto iter = navier_stokes->evaluate_time_step();
+    const auto iter =
+      navier_stokes->solve_nonlinear_system(navier_stokes->compute_initial_residual(true));
 
     {
       ScopedName sc("nonlinear_solve");
@@ -301,7 +302,8 @@ namespace MeltPoolDG::Flow
       IterationMonitor::add_linear_iterations(sc, iter.second);
     }
 
-    if (iter.first > adaflo_params.max_nl_iteration)
+    // TODO: remove
+    if (false)
       {
         DataOutBase::VtkFlags flags;
         flags.write_higher_order_cells = true;
@@ -340,10 +342,6 @@ namespace MeltPoolDG::Flow
                                navier_stokes->get_dof_handler_u().get_fe().tensor_degree());
         data_out.write_vtu_in_parallel("newton_raphson_failed.vtu", scratch_data.get_mpi_comm());
       }
-
-    AssertThrow(iter.first <= adaflo_params.max_nl_iteration,
-                ExcMessage(
-                  "Newton Raphson solver for the Navier-Stokes equations did not converge."));
 
     distribute_constraints();
 
