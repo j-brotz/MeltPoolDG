@@ -78,7 +78,7 @@
   "reinitialization": {
     "reinit max n steps": "10",
     "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "0.7107",
+    "reinit scale factor epsilon": "1.5",
     "linear solver": {
       "do matrix free": "true"
     }
