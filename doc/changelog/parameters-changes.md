@@ -3,7 +3,7 @@ All notable changes of the input parameters will be documented in this file.
 
 ## 2022-11-09
 - Add restart parameters
-``diff`
+``diff
 {
 +  "restart":
 +  {
@@ -16,7 +16,7 @@ All notable changes of the input parameters will be documented in this file.
 }
 ```
 ## 2022-10-28
--- Add parameter to enable curvature computation
+- Add parameter to enable curvature computation
 ```json
 {
   "curvature":
@@ -48,13 +48,14 @@ in the level set equation
   "paraview": {
     "do user defined postprocessing": "true"
   },
-
+```
 - Add a parameter to enable profiling
 ```json
 {
   "profiling": {
     "enable": "true"
   },
+```
 
 ## 2022-10-04
 - Add a parameter to enable extrapolation of solution vectors for coupling terms
@@ -64,6 +65,8 @@ in the level set equation
   "problem specific": {
     "do extrapolate coupling terms": "true|false"
   },
+}
+```
 - Add parameter for monitoring
 ```json
 {
@@ -102,6 +105,7 @@ in the level set equation
       "predictor": "none|linear_extrapolation"
     }
 }
+```
 
 ## 2022-10-03
 - Add a parameter for prescribing an analytical function for the time step size
@@ -111,6 +115,7 @@ in the level set equation
     "time step size function": "0.01*t"
   }
 }
+```
 
 ## 2022-09-14
 - Add parameter to distinguish between sharp (surface integral) and diffuse
@@ -121,6 +126,18 @@ in the level set equation
     "evapor formulation source term heat": "sharp|diffuse"
   },
 }
+```
+
+## 2022-09-14
+- Add parameter to distinguish between sharp (surface integral) and diffuse
+  (volume integral) of the evaporative heat loss term at the vapor surface
+```json
+{
+  "evaporation": {
+    "evapor formulation source term heat": "sharp|diffuse"
+  },
+}
+```
 
 ## 2022-09-12
 - Add parameters to control write frequency of profiling output 
@@ -130,6 +147,7 @@ in the level set equation
     "write frequency": "",
     "write time step size": "",
 }
+```
 - Add new option `interface_sharp` for Gaussian laser heat source
 ```json
 {
