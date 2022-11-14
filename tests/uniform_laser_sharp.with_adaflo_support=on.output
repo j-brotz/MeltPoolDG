@@ -2,7 +2,7 @@
 | current laser intensity: 1                                                                 laser |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 1.14495858550e-01                                               normal_vector |
-| || curvature ||L2 = 3.20820629597e-01                                                  curvature |
+| || curvature ||L2 = 0.00000000000e+00                                                  curvature |
 |  total mass = 4.091087e-08                                                     melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-07 ( dt = 1.0000e-07 )          time_iterator |

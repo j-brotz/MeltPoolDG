@@ -1,43 +1,43 @@
 | || normal_0 ||L2 = 4.08449280657e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.08470957450e+00                                               normal_vector |
+| || normal_1 ||L2 = 4.08470957451e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 4.240600168307208e-02                                       reinitialization |
+| || delta phi ||L2 = 4.240600036598310e-02                                       reinitialization |
 | || normal_0 ||L2 = 3.77713214001e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.77760968719e+00                                               normal_vector |
 |  τ = 0.03125                                                                    reinitialization |
 | || delta phi ||L2 = 2.142010062487244e-02                                       reinitialization |
-| || normal_0 ||L2 = 3.64192917956e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.64257663262e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.64192934815e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.64257663261e+00                                               normal_vector |
 |  τ = 0.046875                                                                   reinitialization |
 | || delta phi ||L2 = 1.092151826950571e-02                                       reinitialization |
-| || normal_0 ||L2 = 3.57566622881e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.57641750060e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.57566606023e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.57641750059e+00                                               normal_vector |
 |  τ = 0.0625                                                                     reinitialization |
 | || delta phi ||L2 = 5.835242513679003e-03                                       reinitialization |
-| || normal_0 ||L2 = 3.53980594110e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.53980610968e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.54062445258e+00                                               normal_vector |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 3.339923335643867e-03                                       reinitialization |
-| || normal_0 ||L2 = 3.51896473405e+00                                               normal_vector |
+| || delta phi ||L2 = 3.339923335643856e-03                                       reinitialization |
+| || normal_0 ||L2 = 3.51896456546e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.51982745672e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.51896473405e+00                                               normal_vector |
+| || normal_0 ||L2 = 3.51896456546e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.51982745672e+00                                               normal_vector |
-| || curvature ||L2 = 1.20351408340e+01                                                  curvature |
+| || curvature ||L2 = 7.55185096122e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.7222741032e-01                                    advection_diffusion |
+| || advected field ||L2 = 9.7222739500e-01                                    advection_diffusion |
 | || normal_0 ||L2 = 3.52221411119e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.51752256062e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 2.332564346656617e-03                                       reinitialization |
+| || delta phi ||L2 = 2.332564346656336e-03                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 1.485227271110818e-03                                       reinitialization |
+| || delta phi ||L2 = 1.485227359659474e-03                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 1.029044053443907e-03                                       reinitialization |
+| || delta phi ||L2 = 1.029044053444030e-03                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
 | || delta phi ||L2 = 7.646024425318756e-04                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
@@ -45,62 +45,62 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.49068818771e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.48660421391e+00                                               normal_vector |
-| || curvature ||L2 = 1.19874569064e+01                                                  curvature |
+| || curvature ||L2 = 7.52427457319e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-02 to 2.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.7134127223e-01                                    advection_diffusion |
+| || advected field ||L2 = 9.7134130291e-01                                    advection_diffusion |
 | || normal_0 ||L2 = 3.50022250025e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.47975476864e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.47975476866e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 1.060803527085528e-03                                       reinitialization |
+| || delta phi ||L2 = 1.060803570598969e-03                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 6.657502414358787e-04                                       reinitialization |
+| || delta phi ||L2 = 6.657502414360543e-04                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
 | || delta phi ||L2 = 4.873077844734946e-04                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 3.871012636479479e-04                                       reinitialization |
+| || delta phi ||L2 = 3.871012636478323e-04                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 3.225829872486913e-04                                       reinitialization |
+| || delta phi ||L2 = 3.225829872486635e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.49597428567e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.47700322383e+00                                               normal_vector |
-| || curvature ||L2 = 1.19282291949e+01                                                  curvature |
+| || normal_1 ||L2 = 3.47700322385e+00                                               normal_vector |
+| || curvature ||L2 = 7.53974874723e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-02 to 3.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 9.7124684240e-01                                    advection_diffusion |
 | || normal_0 ||L2 = 3.51167187469e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.46566807044e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.46566807043e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 1.011759858249913e-03                                       reinitialization |
+| || delta phi ||L2 = 1.011759897889871e-03                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 6.249358453151570e-04                                       reinitialization |
+| || delta phi ||L2 = 6.249358453150742e-04                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 4.485068095433919e-04                                       reinitialization |
+| || delta phi ||L2 = 4.485068095433286e-04                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
-| || delta phi ||L2 = 3.490874054446044e-04                                       reinitialization |
+| || delta phi ||L2 = 3.490874151806345e-04                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
-| || delta phi ||L2 = 2.858177028683877e-04                                       reinitialization |
+| || delta phi ||L2 = 2.858177028682732e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.50973206920e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.46597918263e+00                                               normal_vector |
-| || curvature ||L2 = 1.20639545372e+01                                                  curvature |
+| || normal_1 ||L2 = 3.46597936859e+00                                               normal_vector |
+| || curvature ||L2 = 7.52380209941e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-02 to 4.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.7122442867e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 3.53142450509e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.45024804838e+00                                               normal_vector |
+| || advected field ||L2 = 9.7122442944e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 3.53142433973e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.45024804836e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
 | || delta phi ||L2 = 9.919090691481985e-04                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
 | || delta phi ||L2 = 6.214486107234886e-04                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
-| || delta phi ||L2 = 4.428800070849953e-04                                       reinitialization |
+| || delta phi ||L2 = 4.428800070850972e-04                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
 | || delta phi ||L2 = 3.409675566264371e-04                                       reinitialization |
 |  τ = 0.078125                                                                   reinitialization |
@@ -108,18 +108,18 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.52921488347e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.45076380488e+00                                               normal_vector |
-| || curvature ||L2 = 1.21770218677e+01                                                  curvature |
+| || curvature ||L2 = 7.51248087031e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-02 to 5.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.7119732739e-01                                    advection_diffusion |
+| || advected field ||L2 = 9.7119732812e-01                                    advection_diffusion |
 | || normal_0 ||L2 = 3.55666667256e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.43076847913e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.015625                                                                   reinitialization |
-| || delta phi ||L2 = 9.970346458443408e-04                                       reinitialization |
+| || delta phi ||L2 = 9.970346458449697e-04                                       reinitialization |
 |  τ = 0.03125                                                                    reinitialization |
-| || delta phi ||L2 = 6.227743355518120e-04                                       reinitialization |
+| || delta phi ||L2 = 6.227743355520936e-04                                       reinitialization |
 |  τ = 0.046875                                                                   reinitialization |
 | || delta phi ||L2 = 4.429745574303958e-04                                       reinitialization |
 |  τ = 0.0625                                                                     reinitialization |
@@ -128,8 +128,8 @@
 | || delta phi ||L2 = 2.764607180624776e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.55383078124e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.43123102094e+00                                               normal_vector |
-| || curvature ||L2 = 1.20028010859e+01                                                  curvature |
+| || normal_1 ||L2 = 3.43123102095e+00                                               normal_vector |
+| || curvature ||L2 = 7.60233453398e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
