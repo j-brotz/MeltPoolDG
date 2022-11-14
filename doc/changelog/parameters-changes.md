@@ -3,7 +3,7 @@ All notable changes of the input parameters will be documented in this file.
 
 ## 2022-11-09
 - Add restart parameters
-``diff
+```diff
 {
 +  "restart":
 +  {
@@ -376,7 +376,7 @@ set function should be calculated localized or not
 ## 2022-03-09
 - Add parameter to distinguish how to consider evaporative mass flux in the 
   level set equation
-```json
+```diff
 {
   "evaporation": {
 +   "evapor level set source term type": "interface_velocity|rhs" 
