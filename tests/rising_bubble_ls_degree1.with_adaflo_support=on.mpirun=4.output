@@ -1,6 +1,6 @@
 | || normal_0 ||L2 = 5.20622287709e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.20622287753e+00                                               normal_vector |
-| || curvature ||L2 = 1.26357395259e+01                                                  curvature |
+| || curvature ||L2 = 9.68676681553e+00                                                  curvature |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 2.0000e-02 ( dt = 2.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -15,43 +15,43 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 5.24777909089e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.24777866296e+00                                               normal_vector |
-| || curvature ||L2 = 1.22226659581e+01                                                  curvature |
-| || velocity ||L2 = 7.575664963431449e-03                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.323594898976150e+00                                    navier_stokes_adaflo |
+| || curvature ||L2 = 9.74524124033e+00                                                  curvature |
+| || velocity ||L2 = 7.576225231086407e-03                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.323548828409009e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 2.0000e-02 to 4.0000e-02 ( dt = 2.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.3729846838e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 5.24782132453e+00                                               normal_vector |
-| || normal_1 ||L2 = 5.24769980597e+00                                               normal_vector |
+| || advected field ||L2 = 1.3729847140e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 5.24782535577e+00                                               normal_vector |
+| || normal_1 ||L2 = 5.24770322689e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.0177675                                                                  reinitialization |
-| || delta phi ||L2 = 1.203489497172267e-03                                       reinitialization |
+| || delta phi ||L2 = 1.203814461995098e-03                                       reinitialization |
 |  τ = 0.035535                                                                   reinitialization |
-| || delta phi ||L2 = 9.394109768529429e-04                                       reinitialization |
+| || delta phi ||L2 = 9.394994902314850e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.28058774872e+00                                               normal_vector |
-| || normal_1 ||L2 = 5.28046616280e+00                                               normal_vector |
-| || curvature ||L2 = 1.27032289923e+01                                                  curvature |
-| || velocity ||L2 = 1.505137391876294e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.328597117419860e+00                                    navier_stokes_adaflo |
+| || normal_0 ||L2 = 5.28058909610e+00                                               normal_vector |
+| || normal_1 ||L2 = 5.28046736770e+00                                               normal_vector |
+| || curvature ||L2 = 9.73798039329e+00                                                  curvature |
+| || velocity ||L2 = 1.505229638841691e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.328548916212792e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 4.0000e-02 to 6.0000e-02 ( dt = 2.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 1.3735705234e+00                                    advection_diffusion |
-| || normal_0 ||L2 = 5.28068978738e+00                                               normal_vector |
-| || normal_1 ||L2 = 5.28034312084e+00                                               normal_vector |
+| || advected field ||L2 = 1.3735705545e+00                                    advection_diffusion |
+| || normal_0 ||L2 = 5.28069588459e+00                                               normal_vector |
+| || normal_1 ||L2 = 5.28034832708e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 0.0177675                                                                  reinitialization |
-| || delta phi ||L2 = 7.316015187208840e-04                                       reinitialization |
+| || delta phi ||L2 = 7.314451395205735e-04                                       reinitialization |
 |  τ = 0.035535                                                                   reinitialization |
-| || delta phi ||L2 = 5.350985550298946e-04                                       reinitialization |
+| || delta phi ||L2 = 5.350666094994043e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 5.30025376351e+00                                               normal_vector |
-| || normal_1 ||L2 = 5.29990078578e+00                                               normal_vector |
-| || curvature ||L2 = 1.33171862461e+01                                                  curvature |
-| || velocity ||L2 = 2.241939906397223e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.332311519326214e+00                                    navier_stokes_adaflo |
+| || normal_0 ||L2 = 5.30025970699e+00                                               normal_vector |
+| || normal_1 ||L2 = 5.29990600527e+00                                               normal_vector |
+| || curvature ||L2 = 9.68597540200e+00                                                  curvature |
+| || velocity ||L2 = 2.242040559929402e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.332266300662606e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

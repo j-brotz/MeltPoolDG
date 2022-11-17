@@ -197,7 +197,8 @@ namespace MeltPoolDG
     {
       Tensor<1, dim, VectorizedArray<number>> vec;
 
-      auto n_norm = in.norm();
+      const auto n_norm = in.norm();
+
       for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
         if (n_norm[v] > zero)
           for (unsigned int d = 0; d < dim; ++d)

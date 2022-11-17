@@ -1,6 +1,6 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.86185073853e+00                                               normal_vector |
-| || curvature ||L2 = 1.05285921097e+01                                                  curvature |
+| || curvature ||L2 = 6.36980199814e+00                                                  curvature |
 |  total mass = 0.45246305521                                                    melt_pool_problem |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0 (analytical: 0.99)
@@ -24,7 +24,7 @@ POSTPROCESSOR: min pressure: 1.52e-10 (analytical: 0)
 |  total mass = 0.45246305521                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.5910899096e-02            evaporation_source_terms_continuous |
-| || velocity ||L2 = 6.899664980299407e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.899665400402195e-01                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.349062572867854e+00                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0.99 (analytical: 0.99)
@@ -36,7 +36,7 @@ POSTPROCESSOR: min pressure: 7.88e-10 (analytical: 0)
 |  total mass = 0.45246305521                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.5910899096e-02            evaporation_source_terms_continuous |
-| || velocity ||L2 = 6.899666269143858e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.899666271262761e-01                                    navier_stokes_adaflo |
 | || pressure ||L2 = 6.582703755330768e-03                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0.99 (analytical: 0.99)

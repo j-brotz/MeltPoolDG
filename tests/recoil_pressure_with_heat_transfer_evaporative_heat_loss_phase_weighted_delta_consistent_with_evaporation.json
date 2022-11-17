@@ -6,7 +6,8 @@
     "dimension": "2",
     "degree": "1",
     "gravity": "0.0",
-    "do print parameters": "false"
+    "do print parameters": "false",
+    "verbosity level": "0"
   },
   "time stepping": {
     "start time": "0.0",
@@ -75,7 +76,7 @@
   "reinitialization": {
     "reinit max n steps": "10",
     "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "0.7107",
+    "reinit scale factor epsilon": "1.5",
     "linear solver": {
       "do matrix free": "true"
     }
@@ -124,7 +125,7 @@
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
           "NL max iterations": "10",
-          "NL tolerance": "1.e-9",
+          "NL tolerance": "1.e-11",
           "lin max iterations": "30",
           "lin tolerance": "1.e-4",
           "lin relative tolerance": "1",

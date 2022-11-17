@@ -44,6 +44,8 @@ namespace MeltPoolDG::Curvature
     CurvatureOperator::SparseMatrixType &     matrix,
     VectorType &                              rhs) const
   {
+    BlockVectorType unit_normal(solution_normal_vector_in);
+
     FEValues<dim> curv_values(scratch_data.get_mapping(),
                               scratch_data.get_dof_handler(curv_dof_idx).get_fe(),
                               scratch_data.get_quadrature(curv_quad_idx),
@@ -53,7 +55,7 @@ namespace MeltPoolDG::Curvature
     FEValues<dim> normal_values(scratch_data.get_mapping(),
                                 scratch_data.get_dof_handler(normal_dof_idx).get_fe(),
                                 scratch_data.get_quadrature(curv_quad_idx),
-                                update_values);
+                                update_gradients);
 
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(curv_dof_idx);
 
@@ -63,8 +65,6 @@ namespace MeltPoolDG::Curvature
 
     const unsigned int n_q_points = curv_values.get_quadrature().size();
 
-    std::vector<Tensor<1, dim>> normal_at_q(n_q_points, Tensor<1, dim>());
-
     matrix = 0.0;
     rhs    = 0.0;
 
@@ -72,17 +72,57 @@ namespace MeltPoolDG::Curvature
       if (cell->is_locally_owned())
         {
           curv_values.reinit(cell);
-          normal_values.reinit(cell);
           cell->get_dof_indices(local_dof_indices);
 
           curvature_cell_matrix = 0.0;
           curvature_cell_rhs    = 0.0;
 
-          NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
-            normal_values, solution_normal_vector_in, normal_at_q, tolerance_normal_vector);
-
           const double damping = NormalVector::compute_cell_size_dependent_filter_parameter<dim>(
             scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
+
+          // set unit normal vector at DoFs to compute the RHS of the curvature operator
+          //
+          // (N, -∇*n)
+          //
+          // 1) gather (componentwise)
+          std::vector<Vector<double>> normal_vector_at_cell(dim, Vector<double>(dofs_per_cell));
+          for (unsigned int d = 0; d < dim; ++d)
+            cell->get_dof_values(solution_normal_vector_in.block(d), normal_vector_at_cell[d]);
+
+          std::vector<Tensor<1, dim>> unit_normal_at_cell(dofs_per_cell, Tensor<1, dim>());
+          for (unsigned int k = 0; k < dofs_per_cell; ++k)
+            for (unsigned int d = 0; d < dim; ++d)
+              unit_normal_at_cell[k][d] = normal_vector_at_cell[d][k];
+
+          // 2) normalize
+          for (unsigned int k = 0; k < dofs_per_cell; ++k)
+            {
+              const double n_norm = unit_normal_at_cell[k].norm();
+              if (n_norm > tolerance_normal_vector)
+                unit_normal_at_cell[k] /= n_norm;
+              else
+                unit_normal_at_cell[k] = 0.0;
+            }
+
+          // 3) scatter (componentwise)
+          for (unsigned int k = 0; k < dofs_per_cell; ++k)
+            for (unsigned int d = 0; d < dim; ++d)
+              normal_vector_at_cell[d][k] = unit_normal_at_cell[k][d];
+
+          for (unsigned int d = 0; d < dim; ++d)
+            cell->set_dof_values(normal_vector_at_cell[d], unit_normal.block(d));
+
+          // 4) evaluate divergence at quadrature points
+          normal_values.reinit(cell);
+          std::vector<double> div_n_at_q(n_q_points);
+
+          for (unsigned int d = 0; d < dim; ++d)
+            {
+              std::vector<Tensor<1, dim>> temp(n_q_points, Tensor<1, dim>());
+              normal_values.get_function_gradients(unit_normal.block(d), temp);
+              for (unsigned int q = 0; q < n_q_points; ++q)
+                div_n_at_q[q] += temp[q][d];
+            }
 
           for (const unsigned int q_index : curv_values.quadrature_point_indices())
             {
@@ -100,8 +140,7 @@ namespace MeltPoolDG::Curvature
                         (phi_i * phi_j + damping * grad_phi_i * grad_phi_j) *
                         curv_values.JxW(q_index);
                     }
-                  curvature_cell_rhs(i) +=
-                    (grad_phi_i * normal_at_q[q_index] * curv_values.JxW(q_index));
+                  curvature_cell_rhs(i) -= (phi_i * div_n_at_q[q_index] * curv_values.JxW(q_index));
                 }
             }
 
@@ -171,6 +210,30 @@ namespace MeltPoolDG::Curvature
                 level_set.evaluate(EvaluationFlags::values);
               }
 
+            // submit unit normal vector as DoF value
+            for (unsigned int i = 0; i < normal_vector.dofs_per_component; ++i)
+              {
+                // We need to distinguish dim==1 and dim>1 since two different data types
+                // need to be submitted.
+                if constexpr (dim > 1)
+                  {
+                    const Tensor<1, dim, VectorizedArray<double>> n_phi =
+                      MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_dof_value(i),
+                                                              tolerance_normal_vector);
+                    normal_vector.submit_dof_value(n_phi, i);
+                  }
+                else
+                  {
+                    const VectorizedArray<double> n_phi =
+                      compare_and_apply_mask<SIMDComparison::greater_than>(
+                        normal_vector.get_dof_value(i), tolerance_normal_vector, 1.0, -1.0);
+
+                    normal_vector.submit_dof_value(n_phi, i);
+                  }
+              }
+
+            normal_vector.evaluate(EvaluationFlags::gradients);
+
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {
                 const VectorizedArray<number> narrow_band_mask =
@@ -178,13 +241,10 @@ namespace MeltPoolDG::Curvature
                     VectorTools::compute_mask_narrow_band<dim>(
                       level_set.get_value(q_index), curvature_data.narrow_band_threshold) :
                     1.0;
-                const auto n_phi =
-                  MeltPoolDG::VectorTools::normalize<dim>(normal_vector.get_value(q_index),
-                                                          tolerance_normal_vector);
-                curvature.submit_gradient(narrow_band_mask * n_phi, q_index);
+                curvature.submit_value(-narrow_band_mask * normal_vector.get_divergence(q_index),
+                                       q_index);
               }
-
-            curvature.integrate_scatter(EvaluationFlags::gradients, dst);
+            curvature.integrate_scatter(EvaluationFlags::values, dst);
           }
       },
       dst,
