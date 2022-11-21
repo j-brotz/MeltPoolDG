@@ -44,15 +44,17 @@ namespace MeltPoolDG::LevelSet
     , ls_quad_idx(ls_quad_idx_in)
     , curv_dof_idx(curv_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
-    , reinit_time_iterator(
-        TimeSteppingData<double>{0.0,
-                                 std::numeric_limits<double>::max(),
-                                 level_set_data.reinit_time_step_size > 0.0 ?
-                                   level_set_data.reinit_time_step_size :
-                                   scratch_data.get_min_cell_size() *
-                                     reinit_data.scale_factor_epsilon /
-                                     scratch_data.get_degree(ls_dof_idx),
-                                 static_cast<unsigned int>(reinit_data.max_n_steps)})
+    , reinit_time_iterator(TimeSteppingData<double>{
+        0.0,
+        std::numeric_limits<double>::max(),
+        level_set_data.reinit_time_step_size > 0.0 ?
+          level_set_data.reinit_time_step_size :
+          std::min(reinit_data.constant_epsilon > 0 ?
+                     reinit_data.constant_epsilon :
+                     scratch_data.get_min_cell_size() * reinit_data.scale_factor_epsilon /
+                       scratch_data.get_degree(ls_dof_idx),
+                   time_stepping.get_current_time_increment()),
+        static_cast<unsigned int>(reinit_data.max_n_steps)})
   {
     /*
      *    initialize the advection diffusion operation
@@ -245,11 +247,14 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
 
-    reinit_time_iterator.set_current_time_increment(level_set_data.reinit_time_step_size > 0.0 ?
-                                                      level_set_data.reinit_time_step_size :
-                                                      scratch_data.get_min_cell_size() *
-                                                        reinit_data.scale_factor_epsilon /
-                                                        scratch_data.get_degree(ls_dof_idx));
+    reinit_time_iterator.set_current_time_increment(
+      level_set_data.reinit_time_step_size > 0.0 ?
+        level_set_data.reinit_time_step_size :
+        std::min(reinit_data.constant_epsilon > 0 ?
+                   reinit_data.constant_epsilon :
+                   scratch_data.get_min_cell_size() * reinit_data.scale_factor_epsilon /
+                     scratch_data.get_degree(ls_dof_idx),
+                 time_stepping.get_current_time_increment()));
   }
 
   template <int dim>

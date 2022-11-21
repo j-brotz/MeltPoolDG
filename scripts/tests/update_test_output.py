@@ -4,6 +4,7 @@ import numpy as np
 import os
 import argparse
 import glob
+from difflib import SequenceMatcher
 
 
 def get_arguments():
@@ -55,6 +56,7 @@ def create_output_path(name):
     output_file = name.split(
         "/")[-1].replace(".debug", "").replace(".release", "")+".output"
     output_file = output_file.replace(".", ".*", 1)
+    output_file = output_file.replace(".output", "*.output", 1)
     return os.path.join(folder, output_file)
 
 
@@ -106,9 +108,35 @@ def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
                 "ERROR: output to the test >>> {:} <<< not found. Abort ...".format(n))
             exit()
         elif len(test_found) > 1:
+            # based on a similarity measure find corresponding files
+            o_idx = []
+            for t in test_found:
+                similarity = 0.0
+                o_idx.append(-1)
+                for j, c in enumerate(o):
+                    curr = SequenceMatcher(None, t, c).ratio()
+                    if (SequenceMatcher(None, t, c).ratio() > similarity):
+                        similarity = SequenceMatcher(None, t, c).ratio()
+                        o_idx[-1] = j
+
+            # check if list is unique
+            assert len(set(o_idx)) == len(o_idx)
+
             print(
-                "ERROR: multiple outputs to the test >>> {:} <<< found. Abort ...".format(n))
-            exit()
+                "multiple outputs to the test >>> {:} <<< found. Copy files:".format(n))
+
+            # copy files
+            for i in range(len(test_found)):
+                if do_overwrite:
+                    copy_command = "yes | cp -rf {:} {:}".format(
+                        o[o_idx[i]], test_found[i])
+                else:
+                    copy_command = "cp {:} {:}".format(
+                        o[o_idx[i]], test_found[i])
+                print(5*" "+copy_command)
+                os.system(copy_command)
+
+            print("")
         else:
             if do_overwrite:
                 copy_command = "yes | cp -rf {:} {:}".format(
