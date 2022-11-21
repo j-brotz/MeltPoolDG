@@ -78,6 +78,9 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
+  static double factor_height = 1.0;
+  static double delta_T       = 5;
+
   /**
    *  Create a signed distance function, which is used to compute the initial
    *  level set field.
@@ -168,8 +171,25 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     {}
 
     void
+    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    {
+      prm.enter_subsection("simulation specific");
+      {
+        prm.add_parameter("factor height",
+                          factor_height,
+                          "Set a factor multiplied with the height.");
+        prm.add_parameter("delta T",
+                          delta_T,
+                          "Set the delta of the wall temperature to the boiling temperature.");
+      }
+      prm.leave_subsection();
+    }
+
+    void
     create_spatial_discretization() override
     {
+      y_max *= factor_height;
+
       if (this->parameters.base.do_simplex || dim == 1)
         {
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -279,7 +299,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
 
       // assign initial temperature such that at the interface the boiling temperature is met
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(
-                                       this->parameters.material.boiling_temperature + 5,
+                                       this->parameters.material.boiling_temperature + delta_T,
                                        this->parameters.material.boiling_temperature,
                                        9. * lambda0 / 128.,
                                        lambda0),
@@ -336,7 +356,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   private:
     const double                               lambda0 = 0.0;
     const double                               x_max;
-    const double                               y_max;
+    double                                     y_max;
     const double                               x_min;
     const double                               y_min               = 0.0;
     mutable unsigned int                       n_written_time_step = 0;
