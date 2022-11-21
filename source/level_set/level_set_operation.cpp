@@ -45,13 +45,9 @@ namespace MeltPoolDG::LevelSet
     , curv_dof_idx(curv_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_time_iterator(
-        TimeSteppingData<double>{0.0,
-                                 std::numeric_limits<double>::max(),
-                                 level_set_data.reinit_time_step_size > 0.0 ?
-                                   level_set_data.reinit_time_step_size :
-                                   scratch_data.get_min_cell_size() *
-                                     reinit_data.scale_factor_epsilon /
-                                     scratch_data.get_degree(ls_dof_idx),
+        TimeSteppingData<double>{0.0 /*start_time*/,
+                                 std::numeric_limits<double>::max() /*end_time*/,
+                                 -1.0 /*time step size --> will be set before each cycle*/,
                                  static_cast<unsigned int>(reinit_data.max_n_steps)})
   {
     /*
@@ -244,12 +240,6 @@ namespace MeltPoolDG::LevelSet
 
     scratch_data.initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
-
-    reinit_time_iterator.set_current_time_increment(level_set_data.reinit_time_step_size > 0.0 ?
-                                                      level_set_data.reinit_time_step_size :
-                                                      scratch_data.get_min_cell_size() *
-                                                        reinit_data.scale_factor_epsilon /
-                                                        scratch_data.get_degree(ls_dof_idx));
   }
 
   template <int dim>
@@ -491,6 +481,21 @@ namespace MeltPoolDG::LevelSet
     // do reinitialization only if the level set has changed more than a certain tolerance
     if (max_d_level_set_since_last_reinit > level_set_data.tol_reinit)
       {
+        // Compute time increment for reinitialization...
+        reinit_time_iterator.set_current_time_increment(
+          //
+          // ... either use prescribed time step size or
+          //
+          level_set_data.reinit_time_step_size > 0.0 ? level_set_data.reinit_time_step_size :
+                                                       //
+                                                       // ... compute min(epsilon, dt)
+                                                       //
+                                                       std::min(reinit_data.constant_epsilon > 0 ?
+                                                                  reinit_data.constant_epsilon :
+                                                                  scratch_data.get_min_cell_size() * reinit_data.scale_factor_epsilon /
+                         scratch_data.get_degree(ls_dof_idx),
+                     time_stepping.get_current_time_increment()));
+
         reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
 
         Journal::print_decoration_line(scratch_data.get_pcout());
