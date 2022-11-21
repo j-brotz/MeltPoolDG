@@ -6,7 +6,9 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
+#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -154,6 +156,9 @@ namespace MeltPoolDG::AdvectionDiffusion
   void
   AdvectionDiffusionOperation<dim>::solve(const bool do_finish_time_step)
   {
+    ScopedName         sc("advection_diffusion::solve");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     if (!this->ready_for_time_advance)
       init_time_advance();
 
@@ -287,6 +292,8 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (do_finish_time_step)
       this->finish_time_advance();
+
+    IterationMonitor::add_linear_iterations(sc, iter);
   }
 
   template <int dim>
