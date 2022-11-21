@@ -17,65 +17,64 @@ namespace MeltPoolDG
     void
     run_simulation(const std::string parameter_file, const MPI_Comm mpi_communicator)
     {
-      Parameters<number> parameters;
-      parameters.process_parameters_file(parameter_file);
+      unsigned int dim          = 0;
+      ProblemType  problem_type = ProblemType::none;
+      std::string  app          = "";
 
-      // print GIT hashes if verbosity level >= 1
-      if (parameters.base.verbosity_level >= 1)
-        {
-          dealii::ConditionalOStream pcout(std::cout,
-                                           Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0);
+      {
+        // The parameters will be read here to get information on the selection variables, i.e.,
+        // the dimension, the application_name and the problem_name.
+        ParameterHandler   prm;
+        Parameters<number> parameters;
+        parameters.process_parameters_file(prm, parameter_file);
 
-          Journal::print_decoration_line(pcout);
-          pcout << "  - deal.II ("
-                << "branch: " << DEAL_II_GIT_BRANCH << "; "
-                << "revision: " << DEAL_II_GIT_REVISION << "; short: " << DEAL_II_GIT_SHORTREV
-                << ")" << std::endl;
-          pcout << "  - MeltPoolDG ("
-                << "branch: " << LOCAL_GIT_BRANCH "; "
-                << "revision: " << LOCAL_GIT_REVISION << "; short: " << LOCAL_GIT_SHORTREV << ")"
-                << std::endl;
-          Journal::print_decoration_line(pcout);
-        }
+        // print GIT hashes if verbosity level >= 1
+        if (parameters.base.verbosity_level >= 1)
+          {
+            dealii::ConditionalOStream pcout(std::cout,
+                                             Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0);
 
-      const auto dim = parameters.base.dimension;
+            Journal::print_decoration_line(pcout);
+            pcout << "  - deal.II ("
+                  << "branch: " << DEAL_II_GIT_BRANCH << "; "
+                  << "revision: " << DEAL_II_GIT_REVISION << "; short: " << DEAL_II_GIT_SHORTREV
+                  << ")" << std::endl;
+            pcout << "  - MeltPoolDG ("
+                  << "branch: " << LOCAL_GIT_BRANCH "; "
+                  << "revision: " << LOCAL_GIT_REVISION << "; short: " << LOCAL_GIT_SHORTREV << ")"
+                  << std::endl;
+            Journal::print_decoration_line(pcout);
+          }
+
+        dim          = parameters.base.dimension;
+        problem_type = parameters.base.problem_name;
+        app          = parameters.base.application_name;
+      }
 
       try
         {
           if (dim == 1)
             {
-              auto sim = SimulationSelector<1>::get_simulation(parameters.base.application_name,
-                                                               parameter_file,
-                                                               mpi_communicator);
+              auto sim =
+                SimulationSelector<1>::get_simulation(app, parameter_file, mpi_communicator);
               sim->create();
-              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
-                  parameters.base.do_print_parameters)
-                parameters.print_parameters(std::cout, false /*print_details*/);
-              auto problem = ProblemSelector<1>::get_problem(parameters.base.problem_name);
+              auto problem = ProblemSelector<1>::get_problem(problem_type);
               problem->run(sim);
             }
           else if (dim == 2)
             {
-              auto sim = SimulationSelector<2>::get_simulation(parameters.base.application_name,
-                                                               parameter_file,
-                                                               mpi_communicator);
+              auto sim =
+                SimulationSelector<2>::get_simulation(app, parameter_file, mpi_communicator);
               sim->create();
-              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
-                  parameters.base.do_print_parameters)
-                parameters.print_parameters(std::cout, false /*print_details*/);
-              auto problem = ProblemSelector<2>::get_problem(parameters.base.problem_name);
+              auto problem = ProblemSelector<2>::get_problem(problem_type);
               problem->run(sim);
             }
           else if (dim == 3)
             {
-              auto sim = SimulationSelector<3>::get_simulation(parameters.base.application_name,
-                                                               parameter_file,
-                                                               mpi_communicator);
+              auto sim =
+                SimulationSelector<3>::get_simulation(app, parameter_file, mpi_communicator);
               sim->create();
-              if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
-                  parameters.base.do_print_parameters)
-                parameters.print_parameters(std::cout, false /*print_details*/);
-              auto problem = ProblemSelector<3>::get_problem(parameters.base.problem_name);
+              auto problem = ProblemSelector<3>::get_problem(problem_type);
               problem->run(sim);
             }
           else
@@ -135,12 +134,12 @@ main(int argc, char *argv[])
     {
       input_file = std::string(argv[argc - 1]);
 
+      ParameterHandler   prm;
       Parameters<double> parameters;
-      parameters.process_parameters_file(input_file);
+      parameters.process_parameters_file(prm, input_file);
 
       if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
-        parameters.print_parameters(std::cout,
-                                    std::string(argv[1]) == "--help-detail" /*print_details*/);
+        print_parameters(prm, std::cout, std::string(argv[1]) == "--help-detail" /*print_details*/);
       return 0;
     }
   else

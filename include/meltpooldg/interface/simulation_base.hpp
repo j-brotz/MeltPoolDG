@@ -41,6 +41,7 @@ namespace MeltPoolDG
     virtual void
     add_simulation_specific_parameters(dealii::ParameterHandler &)
     {
+      return;
       // default: do nothing
     }
 
@@ -50,7 +51,16 @@ namespace MeltPoolDG
       /*
        * read parameters defined in parameters.hpp
        */
-      this->parameters.process_parameters_file(this->parameter_file);
+      {
+        dealii::ParameterHandler prm;
+        this->parameters.process_parameters_file(prm, this->parameter_file);
+
+        if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+            this->parameters.base.do_print_parameters)
+          {
+            print_parameters(prm, std::cout, false /*print_details*/);
+          }
+      }
     }
 
     virtual void
@@ -100,6 +110,8 @@ namespace MeltPoolDG
       /*
        * read user-defined parameters
        */
+      dealii::ParameterHandler prm_simulation_specific;
+      prm_simulation_specific.clear();
       add_simulation_specific_parameters(prm_simulation_specific);
 
       std::ifstream file;
@@ -111,6 +123,13 @@ namespace MeltPoolDG
         prm_simulation_specific.parse_input(parameter_file);
       else
         AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
+
+      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+          this->parameters.base.do_print_parameters)
+        {
+          std::cout << "Simulation-specific paramters:" << std::endl;
+          print_parameters(prm_simulation_specific, std::cout, false /*print_details*/);
+        }
     }
 
     /**
@@ -540,7 +559,6 @@ namespace MeltPoolDG
     const MPI_Comm                                mpi_communicator;
     Parameters<double>                            parameters;
     std::shared_ptr<Triangulation<dim, spacedim>> triangulation;
-    ParameterHandler                              prm_simulation_specific;
 
   private:
     std::map<std::string, std::shared_ptr<FieldConditions<dim>>>    field_conditions_map;
