@@ -30,8 +30,8 @@
     "material specific enthalpy reference temperature": "663.731"
   },
   "recoil pressure": {
-    "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000.",
+    "recoil pressure constant": "10.",
+    "recoil temperature constant": "10.",
     "interface distributed flux type": "interface_value"
   },
   "evaporation": {
