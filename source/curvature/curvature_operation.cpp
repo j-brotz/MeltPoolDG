@@ -29,9 +29,6 @@ namespace MeltPoolDG::Curvature
                               ls_dof_idx_in)
     , solution_history(curvature_data.predictor.n_old_solution_vectors)
   {
-    AssertThrow(curvature_data.linear_solver.solver_type == LinearSolverType::CG,
-                ExcMessage("The curvature operation only supports the CG solver type."));
-
     if (!curvature_operator)
       create_operator(solution_levelset);
 
