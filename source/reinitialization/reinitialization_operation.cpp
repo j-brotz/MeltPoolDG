@@ -1,6 +1,8 @@
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
+#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 
 namespace MeltPoolDG::Reinitialization
 {
@@ -163,6 +165,9 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperation<dim>::solve()
   {
+    ScopedName         sc("reinitialization::solve");
+    TimerOutput::Scope scope(scratch_data.get_timer(), sc);
+
     get_normal_vector().update_ghost_values();
     solution_level_set.update_ghost_values();
 
@@ -293,6 +298,8 @@ namespace MeltPoolDG::Reinitialization
     Journal::print_line(scratch_data.get_pcout(1),
                         "     * CG: i = " + std::to_string(iter),
                         "reinitialization");
+
+    IterationMonitor::add_linear_iterations(sc, iter);
   }
 
   template <int dim>

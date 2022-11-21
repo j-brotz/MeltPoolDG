@@ -308,11 +308,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  1) solve the advection step of the level set function
      */
-    {
-      ScopedName         sc("advect");
-      TimerOutput::Scope scope(scratch_data.get_timer(), sc);
-      advec_diff_operation->solve(false /*do_finish_time_step; is done as a subsequent step*/);
-    }
+    advec_diff_operation->solve(false /*do_finish_time_step; is done as a subsequent step*/);
 
     if (do_finish_time_step)
       finish_time_advance();
