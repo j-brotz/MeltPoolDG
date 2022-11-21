@@ -25,10 +25,6 @@ namespace MeltPoolDG::Reinitialization
     , normal_dof_idx(normal_dof_idx_in)
     , solution_history(reinit_data.predictor.n_old_solution_vectors)
   {
-    AssertThrow(reinit_data.linear_solver.solver_type == LinearSolverType::CG ||
-                  reinit_data.linear_solver.do_matrix_free == false,
-                ExcMessage(
-                  "The matrix-free reinitialization_operation only supports the CG solver type."));
     /*
      *    initialize normal_vector_field
      */
