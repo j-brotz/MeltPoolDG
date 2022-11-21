@@ -24,9 +24,6 @@ namespace MeltPoolDG::NormalVector
     , ls_dof_idx(ls_dof_idx_in)
     , solution_history(normal_vector_data.predictor.n_old_solution_vectors)
   {
-    AssertThrow(normal_vector_data.linear_solver.solver_type == LinearSolverType::CG,
-                ExcMessage("The normal vector operation only supports the CG solver type."));
-
     if (!normal_vector_operator)
       create_operator();
   }
