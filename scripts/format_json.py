@@ -22,7 +22,8 @@ def main():
         datastore = json.load(f, object_pairs_hook=collections.OrderedDict)
 
     with open(args.file_out, 'w') as f:
-        json.dump(datastore, f, indent=2, separators=(',', ': '),sort_keys=args.sort)
+        json.dump(datastore, f, indent=2, separators=(
+            ',', ': '), sort_keys=args.sort)
 
 
 if __name__ == "__main__":
