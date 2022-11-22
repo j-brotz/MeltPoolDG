@@ -150,11 +150,6 @@ namespace MeltPoolDG
       PredictorData<number>::all[i]->set_default_values();
 
     /************************************************************************************
-     * update overriden default values into ParameterHandler
-     ************************************************************************************/
-    add_parameters(prm);
-
-    /************************************************************************************
      * check input parameters for validity
      ************************************************************************************/
     check_input_parameters();
@@ -924,6 +919,19 @@ namespace MeltPoolDG
                         "Sets the base name for the volume fraction file output.");
     }
     prm.leave_subsection();
+  }
+
+  template <typename number>
+  void
+  Parameters<number>::print_parameters(ParameterHandler &prm,
+                                       std::ostream &    pcout,
+                                       const bool        print_details)
+  {
+    // Set the written variable values to the ParameterHandler.
+    //
+    // @note: Here, potential rounding errors are introduced.
+    add_parameters(prm);
+    print_parameters(prm, pcout, print_details);
   }
 
   template struct Parameters<double>;

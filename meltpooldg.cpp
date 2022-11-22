@@ -46,6 +46,12 @@ namespace MeltPoolDG
             Journal::print_decoration_line(pcout);
           }
 
+        if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+            parameters.base.do_print_parameters)
+          {
+            parameters.print_parameters(prm, std::cout, false /*print_details*/);
+          }
+
         dim          = parameters.base.dimension;
         problem_type = parameters.base.problem_name;
         app          = parameters.base.application_name;
@@ -139,7 +145,10 @@ main(int argc, char *argv[])
       parameters.process_parameters_file(prm, input_file);
 
       if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
-        print_parameters(prm, std::cout, std::string(argv[1]) == "--help-detail" /*print_details*/);
+        parameters.print_parameters(prm,
+                                    std::cout,
+                                    std::string(argv[1]) == "--help-detail" /*print_details*/);
+
       return 0;
     }
   else

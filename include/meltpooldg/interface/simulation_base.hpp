@@ -51,16 +51,8 @@ namespace MeltPoolDG
       /*
        * read parameters defined in parameters.hpp
        */
-      {
-        dealii::ParameterHandler prm;
-        this->parameters.process_parameters_file(prm, this->parameter_file);
-
-        if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
-            this->parameters.base.do_print_parameters)
-          {
-            print_parameters(prm, std::cout, false /*print_details*/);
-          }
-      }
+      dealii::ParameterHandler prm;
+      this->parameters.process_parameters_file(prm, this->parameter_file);
     }
 
     virtual void

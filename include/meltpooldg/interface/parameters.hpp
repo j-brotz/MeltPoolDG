@@ -430,6 +430,9 @@ namespace MeltPoolDG
     void
     process_parameters_file(ParameterHandler &prm, const std::string &parameter_filename);
 
+    void
+    print_parameters(ParameterHandler &prm, std::ostream &pcout, const bool print_details);
+
   private:
     void
     check_input_parameters() const;
