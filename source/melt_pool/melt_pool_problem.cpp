@@ -1488,7 +1488,8 @@ namespace MeltPoolDG::MeltPool
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
-    base_in->do_postprocessing(generic_data_out);
+    if (base_in->parameters.paraview.do_user_defined_postprocessing)
+      base_in->do_postprocessing(generic_data_out);
 
     // paraview postprocessing
     post_processor->process(n_time_step, attach_output_vectors, current_time);

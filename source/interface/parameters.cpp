@@ -1,4 +1,5 @@
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <filesystem>
 
@@ -6,24 +7,34 @@ namespace MeltPoolDG
 {
   template <typename number>
   void
-  Parameters<number>::process_parameters_file(const std::string &parameter_filename)
+  Parameters<number>::process_parameters_file(ParameterHandler & prm,
+                                              const std::string &parameter_filename)
   {
     AssertThrow(!parameters_read, ExcMessage("The parameters are already read once."));
 
-    ParameterHandler prm;
+    /************************************************************************************
+     * read *.json or *.prm file
+     ************************************************************************************/
+
     add_parameters(prm);
 
     check_for_file(parameter_filename);
 
-    std::ifstream file;
-    file.open(parameter_filename);
+    {
+      std::ifstream file;
+      file.open(parameter_filename);
 
-    if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "json")
-      prm.parse_input_from_json(file, true);
-    else if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "prm")
-      prm.parse_input(parameter_filename);
-    else
-      AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
+      if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "json")
+        prm.parse_input_from_json(file, true);
+      else if (parameter_filename.substr(parameter_filename.find_last_of(".") + 1) == "prm")
+        prm.parse_input(parameter_filename);
+      else
+        AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
+    }
+
+    /************************************************************************************
+     * set input-file-dependent default parameters
+     ************************************************************************************/
     /*
      *  set the number of quadrature points in 1d
      */
@@ -34,37 +45,6 @@ namespace MeltPoolDG
     if (amr.min_grid_refinement_level == 1)
       amr.min_grid_refinement_level = base.global_refinements;
 
-    /*
-     * The level set problem for simplices can only be solved when no subdivision of the
-     * finite element is undertaken.
-     */
-    AssertThrow((!base.do_simplex || ls.n_subdivisions == 1),
-                ExcMessage(
-                  "If you use a simplex mesh, n_subdivisions for the level set must be 1."));
-    AssertThrow((ls.n_subdivisions == 1 || base.degree == 1),
-                ExcMessage("If you use n_subdivisions for the level set, degree must be 1."));
-
-
-    AssertThrow((ls.n_subdivisions == 1 ||
-                 evapor.formulation_evaporative_mass_flux_over_interface != "line integral"),
-                ExcMessage(
-                  "If you use the formulation of the evaporative mass flux over the interface "
-                  "using the value at the interface or a line integral, n_subdivisions for the "
-                  "level set must be 1."));
-
-    switch (base.problem_name)
-      {
-        case ProblemType::advection_diffusion:
-        case ProblemType::reinitialization:
-        case ProblemType::heat_transfer:
-          AssertThrow(
-            ls.n_subdivisions == 1,
-            ExcMessage(
-              "n_subdivisions for the level set is not supported for your requested problem_type."));
-          break;
-        default:
-          break;
-      }
     /*
      * calculate the paraview write frequency if a time step for producing the output
      * is specified
@@ -81,7 +61,6 @@ namespace MeltPoolDG
           paraview.write_time_step_size /
           time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
-
     /*
      * calculate the profiling output frequency if a time step size
      */
@@ -115,10 +94,9 @@ namespace MeltPoolDG
     /*
      * set default value of restart prefix
      */
+    namespace fs = std::filesystem;
     if (restart.prefix == "")
-      {
-        restart.prefix = paraview.directory + "/restart";
-      }
+      restart.prefix = fs::path(paraview.directory) / fs::path("restart");
     /*
      * do not allow initial refinement cycles in case of restart load
      */
@@ -134,7 +112,8 @@ namespace MeltPoolDG
      *  set the maximum temperature of the melt pool if not specified
      */
     if (laser.analytical.max_temperature < material.boiling_temperature)
-      laser.analytical.max_temperature = material.boiling_temperature + 500;
+      laser.analytical.max_temperature =
+        material.boiling_temperature + 500; // TODO: move to simulation
 
     /*
      *  set the laser center if it is not specified
@@ -144,13 +123,6 @@ namespace MeltPoolDG
         laser.center.resize(base.dimension);
         std::fill(laser.center.begin(), laser.center.end(), 0);
       }
-    /*
-     *  check if level set assignment of gaseous/liquid phase is done correctly
-     */
-    if (evapor.ls_value_liquid == evapor.ls_value_gas)
-      AssertThrow(
-        false, ExcMessage("Parameterhandler: ls value liquid must not be equal to ls value gas."));
-
     /*
      *  recoil pressure: set default value of activation temperature equal to the boiling
      * temperature
@@ -170,14 +142,6 @@ namespace MeltPoolDG
           1.0 / (material.liquidus_temperature -
                  material.solidus_temperature); //@todo: move to new material class
       }
-
-    // check if curvature computation is enabled in case of surface tension
-    const bool do_compute_surface_tension =
-      std::abs(surface_tension.surface_tension_coefficient) > 1e-10 ||
-      std::abs(surface_tension.temperature_dependent_surface_tension_coefficient) > 1e-10;
-    AssertThrow(!do_compute_surface_tension || curv.enable,
-                ExcMessage("Curvature computation must be enabled in case of surface tension."));
-
     // sync verbosity level with base verbosity if not set
     if (heat.nlsolve.verbosity_level == -1)
       heat.nlsolve.verbosity_level = base.verbosity_level;
@@ -186,9 +150,15 @@ namespace MeltPoolDG
     for (unsigned int i = 0; i < PredictorData<number>::all.size(); ++i)
       PredictorData<number>::all[i]->set_default_values();
 
-    // create output directory and copy parameter file
+    /************************************************************************************
+     * check input parameters for validity
+     ************************************************************************************/
+    check_input_parameters();
+
+    /************************************************************************************
+     * create output directory and copy parameter file to output directory
+     ************************************************************************************/
     {
-      namespace fs = std::filesystem;
       // check if the requested paraview directory exists and if not create the directory
       AssertThrow(!fs::exists(paraview.directory) || fs::is_directory(paraview.directory),
                   ExcMessage("You are trying to create a folder with the name <" +
@@ -221,20 +191,56 @@ namespace MeltPoolDG
             }
         }
     }
-
     parameters_read = true;
   }
 
   template <typename number>
   void
-  Parameters<number>::print_parameters(std::ostream &pcout, const bool print_details)
+  Parameters<number>::check_input_parameters() const
   {
-    ParameterHandler prm;
-    add_parameters(prm);
-    prm.print_parameters(pcout,
-                         print_details ? ParameterHandler::OutputStyle::JSON |
-                                           ParameterHandler::OutputStyle::KeepDeclarationOrder :
-                                         ParameterHandler::OutputStyle::ShortJSON);
+    /*
+     * The level set problem for simplices can only be solved when no subdivision of the
+     * finite element is undertaken.
+     */
+    AssertThrow((!base.do_simplex || ls.n_subdivisions == 1),
+                ExcMessage(
+                  "If you use a simplex mesh, n_subdivisions for the level set must be 1."));
+    AssertThrow((ls.n_subdivisions == 1 || base.degree == 1),
+                ExcMessage("If you use n_subdivisions for the level set, degree must be 1."));
+
+
+    AssertThrow((ls.n_subdivisions == 1 ||
+                 evapor.formulation_evaporative_mass_flux_over_interface != "line integral"),
+                ExcMessage(
+                  "If you use the formulation of the evaporative mass flux over the interface "
+                  "using the value at the interface or a line integral, n_subdivisions for the "
+                  "level set must be 1."));
+
+    switch (base.problem_name)
+      {
+        case ProblemType::advection_diffusion:
+        case ProblemType::reinitialization:
+        case ProblemType::heat_transfer:
+          AssertThrow(
+            ls.n_subdivisions == 1,
+            ExcMessage(
+              "n_subdivisions for the level set is not supported for your requested problem_type."));
+          break;
+        default:
+          break;
+      }
+    /*
+     *  check if level set assignment of gaseous/liquid phase is done correctly
+     */
+    AssertThrow(evapor.ls_value_liquid != evapor.ls_value_gas,
+                ExcMessage("Parameterhandler: ls value liquid must not be equal to ls value gas."));
+
+    // check if curvature computation is enabled in case of surface tension
+    const bool do_compute_surface_tension =
+      std::abs(surface_tension.surface_tension_coefficient) > 1e-10 ||
+      std::abs(surface_tension.temperature_dependent_surface_tension_coefficient) > 1e-10;
+    AssertThrow(!do_compute_surface_tension || curv.enable,
+                ExcMessage("Curvature computation must be enabled in case of surface tension."));
   }
 
   template <typename number>
@@ -345,9 +351,6 @@ namespace MeltPoolDG
         "Choose the corresponding implementation of the advection diffusion operation.",
         Patterns::Selection("meltpooldg|adaflo"));
       advec_diff.predictor.add_parameters(prm);
-      // default value
-      advec_diff.linear_solver.solver_type         = LinearSolverType::GMRES;
-      advec_diff.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       advec_diff.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
@@ -430,9 +433,6 @@ namespace MeltPoolDG
         "Choose the corresponding implementation of the reinitialization operation.",
         Patterns::Selection("meltpooldg|adaflo"));
       reinit.predictor.add_parameters(prm);
-      // default value
-      reinit.linear_solver.solver_type         = LinearSolverType::CG;
-      reinit.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       reinit.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
@@ -464,10 +464,6 @@ namespace MeltPoolDG
         "If >> normal vec do narrow band << is set to true this parameter determines the level set "
         "treshold for the narrow band.");
       normal_vec.predictor.add_parameters(prm);
-
-      // default parameter
-      normal_vec.linear_solver.solver_type         = LinearSolverType::CG;
-      normal_vec.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       normal_vec.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
@@ -503,9 +499,6 @@ namespace MeltPoolDG
         "If >> curv do narrow band << is set to true this parameter determines the level set "
         "treshold for the narrow band.");
       curv.predictor.add_parameters(prm);
-      // default parameter
-      curv.linear_solver.solver_type         = LinearSolverType::CG;
-      curv.linear_solver.preconditioner_type = PreconditionerType::Diagonal;
       curv.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
@@ -565,8 +558,6 @@ namespace MeltPoolDG
         heat.interpolate_rho_times_cp,
         "Set this parameter to true to interpolate the product of density and capacity instead of both separately.");
       heat.delta_approximation_phase_weighted.add_parameters(prm);
-      heat.linear_solver.solver_type         = LinearSolverType::GMRES;
-      heat.linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
       heat.linear_solver.add_parameters(prm);
     }
     prm.leave_subsection();
@@ -929,6 +920,19 @@ namespace MeltPoolDG
                         "Sets the base name for the volume fraction file output.");
     }
     prm.leave_subsection();
+  }
+
+  template <typename number>
+  void
+  Parameters<number>::print_parameters(ParameterHandler &prm,
+                                       std::ostream &    pcout,
+                                       const bool        print_details)
+  {
+    // Set the written variable values to the ParameterHandler.
+    //
+    // @note: Here, potential rounding errors are introduced.
+    add_parameters(prm);
+    print_parameters_external(prm, pcout, print_details);
   }
 
   template struct Parameters<double>;

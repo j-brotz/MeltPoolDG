@@ -28,7 +28,8 @@ namespace MeltPoolDG
               level_set,
               melt_pool,
               level_set_with_evaporation,
-              heat_transfer)
+              heat_transfer,
+              none)
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
   BETTER_ENUM(
     LaserHeatSourceModel,
@@ -169,6 +170,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct ReinitializationData
   {
+    ReinitializationData()
+    {
+      linear_solver.solver_type         = LinearSolverType::CG;
+      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
+    }
+
     unsigned int             max_n_steps          = 5; //@todo: move to LevelSetData
     number                   constant_epsilon     = -1.0;
     number                   scale_factor_epsilon = 0.5;
@@ -181,6 +188,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct AdvectionDiffusionData
   {
+    AdvectionDiffusionData()
+    {
+      linear_solver.solver_type         = LinearSolverType::GMRES;
+      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
+    }
+
     number                   diffusivity             = 0.0;
     std::string              time_integration_scheme = "crank_nicolson";
     std::string              implementation          = "meltpooldg";
@@ -191,6 +204,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct NormalVectorData
   {
+    NormalVectorData()
+    {
+      linear_solver.solver_type         = LinearSolverType::CG;
+      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
+    }
+
     number                   damping_scale_factor = 0.5;
     std::string              implementation       = "meltpooldg";
     unsigned int             verbosity_level      = 0;
@@ -203,6 +222,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct CurvatureData
   {
+    CurvatureData()
+    {
+      linear_solver.solver_type         = LinearSolverType::CG;
+      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
+    }
+
     bool                     enable               = true;
     number                   damping_scale_factor = 0.0;
     std::string              implementation       = "meltpooldg";
@@ -216,6 +241,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct HeatData
   {
+    HeatData()
+    {
+      linear_solver.solver_type         = LinearSolverType::GMRES;
+      linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
+    }
+
     number                                      emissivity               = 0.0;
     number                                      convection_coefficient   = 0.0;
     number                                      temperature_infinity     = 0.0;
@@ -373,6 +404,20 @@ namespace MeltPoolDG
   };
 
   /**
+   * Utility function to print parameters from a given ParameterHandler object.
+   */
+  inline void
+  print_parameters_external(const ParameterHandler &prm,
+                            std::ostream &          pcout,
+                            const bool              print_details)
+  {
+    prm.print_parameters(pcout,
+                         print_details ? ParameterHandler::OutputStyle::JSON |
+                                           ParameterHandler::OutputStyle::KeepDeclarationOrder :
+                                         ParameterHandler::OutputStyle::ShortJSON);
+  }
+
+  /**
    * Collection of all parameters of MeltPoolDG.
    *
    * @warning Parameters are read in order they are specified in the parameter
@@ -385,18 +430,20 @@ namespace MeltPoolDG
   struct Parameters
   {
     void
-    process_parameters_file(const std::string &parameter_filename);
+    process_parameters_file(ParameterHandler &prm, const std::string &parameter_filename);
 
     void
-    print_parameters(std::ostream &pcout, const bool print_details);
+    print_parameters(ParameterHandler &prm, std::ostream &pcout, const bool print_details);
 
   private:
+    void
+    check_input_parameters() const;
+
     void
     check_for_file(const std::string &parameter_filename) const;
 
     void
-    add_parameters(ParameterHandler &prm);
-
+         add_parameters(ParameterHandler &prm);
     bool parameters_read = false;
 
   public:
