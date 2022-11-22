@@ -404,10 +404,12 @@ namespace MeltPoolDG
   };
 
   /**
-   * Utility function to print parameters.
+   * Utility function to print parameters from a given ParameterHandler object.
    */
   inline void
-  print_parameters(const ParameterHandler &prm, std::ostream &pcout, const bool print_details)
+  print_parameters_external(const ParameterHandler &prm,
+                            std::ostream &          pcout,
+                            const bool              print_details)
   {
     prm.print_parameters(pcout,
                          print_details ? ParameterHandler::OutputStyle::JSON |
@@ -441,8 +443,7 @@ namespace MeltPoolDG
     check_for_file(const std::string &parameter_filename) const;
 
     void
-    add_parameters(ParameterHandler &prm);
-
+         add_parameters(ParameterHandler &prm);
     bool parameters_read = false;
 
   public:

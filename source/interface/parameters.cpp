@@ -1,4 +1,5 @@
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <filesystem>
 
@@ -931,7 +932,7 @@ namespace MeltPoolDG
     //
     // @note: Here, potential rounding errors are introduced.
     add_parameters(prm);
-    print_parameters(prm, pcout, print_details);
+    print_parameters_external(prm, pcout, print_details);
   }
 
   template struct Parameters<double>;

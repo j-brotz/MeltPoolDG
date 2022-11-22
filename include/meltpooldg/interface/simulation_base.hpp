@@ -120,7 +120,7 @@ namespace MeltPoolDG
           this->parameters.base.do_print_parameters)
         {
           std::cout << "Simulation-specific paramters:" << std::endl;
-          print_parameters(prm_simulation_specific, std::cout, false /*print_details*/);
+          print_parameters_external(prm_simulation_specific, std::cout, false /*print_details*/);
         }
     }
 
