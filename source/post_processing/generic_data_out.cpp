@@ -102,6 +102,7 @@ namespace MeltPoolDG
   bool
   GenericDataOut<dim>::is_requested(const std::string &name) const
   {
+    // TODO: create map of request variables to speed-up find process
     if (req_vars.size() == 1 && req_vars[0] == "all")
       return true;
     else if (std::find(req_vars.begin(), req_vars.end(), name) != req_vars.end())
