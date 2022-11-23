@@ -33,6 +33,33 @@ namespace MeltPoolDG
    */
   template <int dim>
   void
+  Postprocessor<dim>::process(const int                    n_time_step,
+                              const GenericDataOut<dim> &  data_out,
+                              const double                 time,
+                              const std::function<void()> &post_operation)
+  {
+    if (now(n_time_step, time))
+      {
+        Journal::print_line(pcout, "write paraview files", "postprocessor");
+
+        write_paraview_files(n_time_step, time, data_out);
+
+        if (pv_data.print_boundary_id)
+          print_boundary_ids();
+
+        // record written output time
+        time_at_last_output = time;
+      }
+
+    if (post_operation)
+      post_operation();
+  }
+
+  /*
+   *  This function collects and performs all relevant postprocessing steps.
+   */
+  template <int dim>
+  void
   Postprocessor<dim>::process(
     const int                                         n_time_step,
     const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
@@ -41,7 +68,7 @@ namespace MeltPoolDG
   {
     if (now(n_time_step, time))
       {
-        GenericDataOut<dim> data_out(mapping);
+        GenericDataOut<dim> data_out(mapping, time, pv_data.output_variables);
 
         attach_output_vectors(data_out);
 
@@ -62,9 +89,9 @@ namespace MeltPoolDG
 
   template <int dim>
   void
-  Postprocessor<dim>::write_paraview_files(const unsigned int   n_time_step,
-                                           const double         time,
-                                           GenericDataOut<dim> &generic_data_out)
+  Postprocessor<dim>::write_paraview_files(const unsigned int         n_time_step,
+                                           const double               time,
+                                           const GenericDataOut<dim> &generic_data_out)
   {
     DataOut<dim> data_out;
 

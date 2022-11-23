@@ -1484,7 +1484,9 @@ namespace MeltPoolDG::MeltPool
         }
     };
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(), current_time);
+    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
+                                         current_time,
+                                         base_in->parameters.paraview.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
@@ -1492,7 +1494,7 @@ namespace MeltPoolDG::MeltPool
       base_in->do_postprocessing(generic_data_out);
 
     // paraview postprocessing
-    post_processor->process(n_time_step, attach_output_vectors, current_time);
+    post_processor->process(n_time_step, generic_data_out, current_time);
   }
 
   template <int dim>

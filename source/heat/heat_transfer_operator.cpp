@@ -895,46 +895,53 @@ namespace MeltPoolDG::Heat
     /**
      * write conductivity vector to dof vector
      */
-    scratch_data.initialize_dof_vector(conductivity_vec, temp_hanging_nodes_dof_idx);
-
-    if (!q_vapor.empty() && scratch_data.is_hex_mesh())
-      MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
-        conductivity_vec,
-        scratch_data.get_matrix_free(),
-        temp_hanging_nodes_dof_idx,
-        temp_quad_idx,
-        [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-          return conductivity_at_q[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
-        });
-
-    scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(conductivity_vec);
-
-    data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                             conductivity_vec,
-                             "conductivity");
-
-    /**
-     * write evaporative mass flux to dof vector
-     */
-    if (evaporative_mass_flux && !surface_mesh_info)
+    if (data_out.is_requested("conductivity"))
       {
-        scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
+        scratch_data.initialize_dof_vector(conductivity_vec, temp_hanging_nodes_dof_idx);
+
         if (!q_vapor.empty() && scratch_data.is_hex_mesh())
           MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
-            evapor_heat_source,
+            conductivity_vec,
             scratch_data.get_matrix_free(),
             temp_hanging_nodes_dof_idx,
             temp_quad_idx,
             [&](const unsigned int cell,
                 const unsigned int quad) -> const VectorizedArray<double> & {
-              return q_vapor[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
+              return conductivity_at_q[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
             });
 
-        scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(evapor_heat_source);
+        scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(conductivity_vec);
 
         data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                                 evapor_heat_source,
-                                 "evporative_heat_source");
+                                 conductivity_vec,
+                                 "conductivity");
+      }
+
+    /**
+     * write evaporative mass flux to dof vector
+     */
+    if (data_out.is_requested("evapor_heat_source"))
+      {
+        if (evaporative_mass_flux && !surface_mesh_info)
+          {
+            scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
+            if (!q_vapor.empty() && scratch_data.is_hex_mesh())
+              MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
+                evapor_heat_source,
+                scratch_data.get_matrix_free(),
+                temp_hanging_nodes_dof_idx,
+                temp_quad_idx,
+                [&](const unsigned int cell,
+                    const unsigned int quad) -> const VectorizedArray<double> & {
+                  return q_vapor[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
+                });
+
+            scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(evapor_heat_source);
+
+            data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                                     evapor_heat_source,
+                                     "evporative_heat_source");
+          }
       }
   }
 

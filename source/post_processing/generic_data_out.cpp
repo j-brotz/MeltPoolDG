@@ -3,9 +3,12 @@
 namespace MeltPoolDG
 {
   template <int dim>
-  GenericDataOut<dim>::GenericDataOut(const Mapping<dim> &mapping, const double current_time)
+  GenericDataOut<dim>::GenericDataOut(const Mapping<dim> &           mapping,
+                                      const double                   current_time,
+                                      const std::vector<std::string> req_vars)
     : mapping(mapping)
     , current_time(current_time)
+    , req_vars(req_vars)
   {}
 
   template <int dim>
@@ -17,6 +20,9 @@ namespace MeltPoolDG
     const std::vector<DataComponentInterpretation::DataComponentInterpretation>
       &data_component_interpretation)
   {
+    if (!is_requested(names[0]))
+      return;
+
     entries.emplace_back(&dof_handler, &data, names, data_component_interpretation);
     entry_id[names[0]] = entries.size() - 1;
   }
@@ -27,6 +33,9 @@ namespace MeltPoolDG
                                        const VectorType &     data,
                                        const std::string &    name)
   {
+    if (!is_requested(name))
+      return;
+
     entries.emplace_back(&dof_handler,
                          &data,
                          std::vector<std::string>{name},
@@ -87,6 +96,18 @@ namespace MeltPoolDG
   GenericDataOut<dim>::get_time() const
   {
     return current_time;
+  }
+
+  template <int dim>
+  bool
+  GenericDataOut<dim>::is_requested(const std::string &name) const
+  {
+    if (req_vars.size() == 1 && req_vars[0] == "all")
+      return true;
+    else if (std::find(req_vars.begin(), req_vars.end(), name) != req_vars.end())
+      return true;
+    else
+      return false;
   }
 
   template <int dim>

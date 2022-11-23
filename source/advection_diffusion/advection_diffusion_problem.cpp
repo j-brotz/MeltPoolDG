@@ -255,14 +255,17 @@ namespace MeltPoolDG::AdvectionDiffusion
                                vector_component_interpretation);
     };
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping());
+    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
+                                         current_time,
+                                         base_in->parameters.paraview.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
-    base_in->do_postprocessing(generic_data_out);
+    if (base_in->parameters.paraview.do_user_defined_postprocessing)
+      base_in->do_postprocessing(generic_data_out);
 
     // paraview postprocessing
-    post_processor->process(time_step, attach_output_vectors, current_time);
+    post_processor->process(time_step, generic_data_out, current_time);
   }
 
   template <int dim>
