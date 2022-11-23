@@ -111,9 +111,15 @@ namespace MeltPoolDG
                                                                           pv_data.n_groups);
 
     // write a pvd file relating the pvtu-file with a simulation time
+    if (const unsigned int len = times_and_names.size())
+      {
+        // avoid duplicate names
+        if (times_and_names[len - 1].first != time &&
+            times_and_names[len - 1].second != pvtu_filename)
+          times_and_names.emplace_back(time, pvtu_filename);
+      }
     if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
       {
-        times_and_names.emplace_back(time, pvtu_filename);
         std::ofstream pvd_output(pv_data.directory + "/" + pv_data.filename + ".pvd");
         DataOutBase::write_pvd_record(pvd_output, times_and_names);
       }

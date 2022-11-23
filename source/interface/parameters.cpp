@@ -95,8 +95,11 @@ namespace MeltPoolDG
      * set default value of restart prefix
      */
     namespace fs = std::filesystem;
-    if (restart.prefix == "")
-      restart.prefix = fs::path(paraview.directory) / fs::path("restart");
+    if (restart.directory == "")
+      restart.directory = fs::path(fs::current_path()) / fs::path(paraview.directory);
+
+    // modify the value of prefix for easy internal access
+    restart.prefix = fs::path(restart.directory) / fs::path(restart.prefix);
     /*
      * do not allow initial refinement cycles in case of restart load
      */
@@ -159,28 +162,28 @@ namespace MeltPoolDG
      * create output directory and copy parameter file to output directory
      ************************************************************************************/
     {
+      const fs::path dir = fs::current_path() / paraview.directory;
       // check if the requested paraview directory exists and if not create the directory
-      AssertThrow(!fs::exists(paraview.directory) || fs::is_directory(paraview.directory),
+      AssertThrow(!fs::exists(dir) || fs::is_directory(dir),
                   ExcMessage("You are trying to create a folder with the name <" +
-                             std::string(paraview.directory) +
+                             std::string(dir) +
                              ">. However, a file with the same name already exists! "
                              "Possible solutions could be to either rename the output "
                              "folder in the parameter file or to rename/move the existing file."));
 
-      if (!fs::exists(paraview.directory))
-        fs::create_directory(paraview.directory);
+      if (!fs::exists(dir))
+        fs::create_directory(dir);
 
       try
         {
-          fs::copy(parameter_filename, paraview.directory, fs::copy_options::overwrite_existing);
+          fs::copy(parameter_filename, dir, fs::copy_options::overwrite_existing);
         }
       catch (...)
         {
           // copy parameter file (workaround since overwrite_existing complains with certain
           // compilers)
           const auto path_orig = fs::path(parameter_filename);
-          const auto path_dest =
-            fs::path(paraview.directory) / fs::path(parameter_filename).filename();
+          const auto path_dest = fs::path(dir) / fs::path(parameter_filename).filename();
 
           if (!fs::equivalent(path_orig, path_dest))
             {
@@ -896,6 +899,7 @@ namespace MeltPoolDG
                         restart.write_time_step_size,
                         "Write restart output every given time step size. If this parameter is "
                         "set, the specified parameter for write frequency is overwritten.");
+      prm.add_parameter("directory", restart.directory, "Write restart directory");
       prm.add_parameter("prefix", restart.prefix, "Write restart prefix");
     }
     prm.leave_subsection();
