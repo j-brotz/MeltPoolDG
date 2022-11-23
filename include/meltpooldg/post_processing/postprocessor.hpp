@@ -87,11 +87,22 @@ namespace MeltPoolDG
                                     !(n_time_step % pv_data.write_frequency);
     }
 
+    template <class Archive>
+    void
+    serialize(Archive &ar, const unsigned int /*version*/)
+    {
+      ar &times_and_names;
+      ar &time_at_last_output;
+    }
+
   private:
     void
-    write_paraview_files(const unsigned int         n_time_step,
-                         const double               time,
-                         const GenericDataOut<dim> &generic_data_out);
+    clean_pvd();
+
+    void
+    write_paraview_files(const unsigned int   n_time_step,
+                         const double         time,
+                         GenericDataOut<dim> &generic_data_out);
 
     void
     print_boundary_ids();

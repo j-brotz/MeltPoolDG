@@ -59,7 +59,9 @@ namespace MeltPoolDG::MeltPool
          * output and which must not be transferred to the new mesh everytime refine_mesh() is
          * called.
          */
-        output_results(0, base_in->parameters.time_stepping.start_time, base_in);
+        output_results(time_iterator->get_current_time_step_number(),
+                       time_iterator->get_current_time(),
+                       base_in);
 
         while (!time_iterator->is_finished())
           {
@@ -456,6 +458,7 @@ namespace MeltPoolDG::MeltPool
     {
       boost::archive::text_oarchive oa(ofs);
       oa << *time_iterator;
+      oa << *post_processor;
     }
 
     const auto attach_vectors =
@@ -478,6 +481,7 @@ namespace MeltPoolDG::MeltPool
     {
       boost::archive::text_iarchive ia(ifs);
       ia >> *time_iterator;
+      ia >> *post_processor;
     }
 
     const auto attach_vectors =
