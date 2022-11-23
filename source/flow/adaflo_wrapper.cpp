@@ -662,17 +662,20 @@ namespace MeltPoolDG::Flow
     /**
      *  force (projected)
      */
-    scratch_data.initialize_dof_vector(force_rhs_velocity_projected, dof_index_u);
-    VectorTools::project_vector<dim>(scratch_data.get_mapping(),
-                                     get_dof_handler_velocity(),
-                                     scratch_data.get_constraint(dof_index_u),
-                                     scratch_data.get_quadrature(quad_index_u),
-                                     navier_stokes->user_rhs.block(0),
-                                     force_rhs_velocity_projected);
-    data_out.add_data_vector(get_dof_handler_velocity(),
-                             force_rhs_velocity_projected,
-                             std::vector<std::string>(dim, "force_rhs_velocity_projected"),
-                             vector_component_interpretation);
+    if (data_out.is_requested("force_rhs_velocity_projected"))
+      {
+        scratch_data.initialize_dof_vector(force_rhs_velocity_projected, dof_index_u);
+        VectorTools::project_vector<dim>(scratch_data.get_mapping(),
+                                         get_dof_handler_velocity(),
+                                         scratch_data.get_constraint(dof_index_u),
+                                         scratch_data.get_quadrature(quad_index_u),
+                                         navier_stokes->user_rhs.block(0),
+                                         force_rhs_velocity_projected);
+        data_out.add_data_vector(get_dof_handler_velocity(),
+                                 force_rhs_velocity_projected,
+                                 std::vector<std::string>(dim, "force_rhs_velocity_projected"),
+                                 vector_component_interpretation);
+      }
 
     /**
      *  mass balance source term (raw)
@@ -684,58 +687,65 @@ namespace MeltPoolDG::Flow
     /**
      *  mass balance source term (projected)
      */
-    scratch_data.initialize_dof_vector(mass_balance_source_term_projected, dof_index_p);
-    VectorTools::project_vector<1>(scratch_data.get_mapping(),
-                                   get_dof_handler_pressure(),
-                                   scratch_data.get_constraint(dof_index_p),
-                                   scratch_data.get_quadrature(quad_index_p),
-                                   navier_stokes->user_rhs.block(1),
-                                   mass_balance_source_term_projected);
-    data_out.add_data_vector(get_dof_handler_pressure(),
-                             mass_balance_source_term_projected,
-                             "mass_balance_source_term_projected");
+    if (data_out.is_requested("mass_balance_source_term_projected"))
+      {
+        scratch_data.initialize_dof_vector(mass_balance_source_term_projected, dof_index_p);
+        VectorTools::project_vector<1>(scratch_data.get_mapping(),
+                                       get_dof_handler_pressure(),
+                                       scratch_data.get_constraint(dof_index_p),
+                                       scratch_data.get_quadrature(quad_index_p),
+                                       navier_stokes->user_rhs.block(1),
+                                       mass_balance_source_term_projected);
+        data_out.add_data_vector(get_dof_handler_pressure(),
+                                 mass_balance_source_term_projected,
+                                 "mass_balance_source_term_projected");
+      }
 
     /**
      *  density
      */
-    scratch_data.initialize_dof_vector(density, dof_index_parameters);
-
-    if (scratch_data.is_hex_mesh())
+    if (data_out.is_requested("density"))
       {
-        MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
-          density,
-          scratch_data.get_matrix_free(),
-          dof_index_parameters,
-          quad_index_u,
-          [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-            return get_density(cell, quad);
-          });
-        scratch_data.get_constraint(dof_index_parameters).distribute(density);
+        scratch_data.initialize_dof_vector(density, dof_index_parameters);
+
+        if (scratch_data.is_hex_mesh())
+          {
+            MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
+              density,
+              scratch_data.get_matrix_free(),
+              dof_index_parameters,
+              quad_index_u,
+              [&](const unsigned int cell, const unsigned int quad)
+                -> const VectorizedArray<double> & { return get_density(cell, quad); });
+            scratch_data.get_constraint(dof_index_parameters).distribute(density);
+          }
+
+
+        density.update_ghost_values();
+        data_out.add_data_vector(dof_handler_parameters, density, "density");
       }
-
-
-    density.update_ghost_values();
-    data_out.add_data_vector(dof_handler_parameters, density, "density");
 
     /**
      *  viscosity
      */
-    scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
-    if (scratch_data.is_hex_mesh())
+    if (data_out.is_requested("viscosity"))
       {
-        MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
-          viscosity,
-          scratch_data.get_matrix_free(),
-          dof_index_parameters,
-          quad_index_u,
-          [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-            return get_viscosity(cell, quad);
-          });
-        scratch_data.get_constraint(dof_index_parameters).distribute(viscosity);
-      }
+        scratch_data.initialize_dof_vector(viscosity, dof_index_parameters);
+        if (scratch_data.is_hex_mesh())
+          {
+            MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
+              viscosity,
+              scratch_data.get_matrix_free(),
+              dof_index_parameters,
+              quad_index_u,
+              [&](const unsigned int cell, const unsigned int quad)
+                -> const VectorizedArray<double> & { return get_viscosity(cell, quad); });
+            scratch_data.get_constraint(dof_index_parameters).distribute(viscosity);
+          }
 
-    viscosity.update_ghost_values();
-    data_out.add_data_vector(dof_handler_parameters, viscosity, "viscosity");
+        viscosity.update_ghost_values();
+        data_out.add_data_vector(dof_handler_parameters, viscosity, "viscosity");
+      }
   }
 
   template <int dim>

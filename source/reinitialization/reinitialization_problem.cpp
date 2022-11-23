@@ -240,14 +240,17 @@ namespace MeltPoolDG::Reinitialization
       reinit_operation->attach_output_vectors(data_out);
     };
 
-    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(), time);
+    GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
+                                         time,
+                                         base_in->parameters.paraview.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
-    base_in->do_postprocessing(generic_data_out);
+    if (base_in->parameters.paraview.do_user_defined_postprocessing)
+      base_in->do_postprocessing(generic_data_out);
 
     // paraview postprocessing
-    post_processor->process(time_step, attach_output_vectors, time);
+    post_processor->process(time_step, generic_data_out, time);
   }
 
 

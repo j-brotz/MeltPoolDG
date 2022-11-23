@@ -3,9 +3,13 @@
 namespace MeltPoolDG
 {
   template <int dim>
-  GenericDataOut<dim>::GenericDataOut(const Mapping<dim> &mapping, const double current_time)
+  GenericDataOut<dim>::GenericDataOut(const Mapping<dim> &           mapping,
+                                      const double                   current_time,
+                                      const std::vector<std::string> req_vars)
     : mapping(mapping)
     , current_time(current_time)
+    , req_vars(req_vars)
+    , req_all(req_vars.size() == 1 && req_vars[0] == "all")
   {}
 
   template <int dim>
@@ -17,6 +21,9 @@ namespace MeltPoolDG
     const std::vector<DataComponentInterpretation::DataComponentInterpretation>
       &data_component_interpretation)
   {
+    if (!is_requested(names[0]))
+      return;
+
     entries.emplace_back(&dof_handler, &data, names, data_component_interpretation);
     entry_id[names[0]] = entries.size() - 1;
   }
@@ -27,6 +34,9 @@ namespace MeltPoolDG
                                        const VectorType &     data,
                                        const std::string &    name)
   {
+    if (!is_requested(name))
+      return;
+
     entries.emplace_back(&dof_handler,
                          &data,
                          std::vector<std::string>{name},
@@ -90,6 +100,33 @@ namespace MeltPoolDG
   }
 
   template <int dim>
+  bool
+  GenericDataOut<dim>::is_requested(const std::string &name) const
+  {
+    if (req_all)
+      return true;
+
+    try
+      {
+        return req_vars_info.at(name);
+      }
+    catch (...)
+      {
+        // setup dict containing the request names for a faster search
+        if (std::find(req_vars.begin(), req_vars.end(), name) != req_vars.end())
+          {
+            req_vars_info[name] = true;
+            return true;
+          }
+        else
+          {
+            req_vars_info[name] = false;
+            return false;
+          }
+      }
+  }
+
+  template <int dim>
   std::vector<unsigned int>
   GenericDataOut<dim>::get_indices_data_request(const std::vector<std::string> req_var) const
   {
@@ -109,7 +146,7 @@ namespace MeltPoolDG
       {
         names.emplace_back(name);
 
-        if (req_var[0] == "all" || std::find(req_var.begin(), req_var.end(), name) != req_var.end())
+        if (is_requested(name))
           req_idx.emplace_back(i);
       }
 

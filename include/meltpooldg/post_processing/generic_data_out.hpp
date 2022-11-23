@@ -16,7 +16,9 @@ namespace MeltPoolDG
   public:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    GenericDataOut(const Mapping<dim> &mapping, const double current_time = 0.0);
+    GenericDataOut(const Mapping<dim> &           mapping,
+                   const double                   current_time,
+                   const std::vector<std::string> req_var = {"all"});
 
     void
     add_data_vector(const DoFHandler<dim> &         dof_handler,
@@ -49,6 +51,9 @@ namespace MeltPoolDG
     const double &
     get_time() const;
 
+    bool
+    is_requested(const std::string &var) const;
+
     std::vector<unsigned int>
     get_indices_data_request(const std::vector<std::string> req_var) const;
 
@@ -56,5 +61,8 @@ namespace MeltPoolDG
     std::map<std::string, unsigned int> entry_id;
     const Mapping<dim> &                mapping;
     double                              current_time;
+    const std::vector<std::string>      req_vars;
+    mutable std::map<std::string, bool> req_vars_info;
+    const bool                          req_all = false;
   };
 } // namespace MeltPoolDG

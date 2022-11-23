@@ -59,6 +59,15 @@ namespace MeltPoolDG
      *  This function collects and performs all relevant postprocessing steps.
      */
     void
+    process(const int                    n_time_step,
+            const GenericDataOut<dim> &  generic_data_out,
+            const double                 time           = -1.0,
+            const std::function<void()> &post_operation = {});
+
+    /**
+     *  This function collects and performs all relevant postprocessing steps.
+     */
+    void
     process(const int                                         n_time_step,
             const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
             const double                                      time           = -1.0,
@@ -91,9 +100,9 @@ namespace MeltPoolDG
     clean_pvd();
 
     void
-    write_paraview_files(const unsigned int   n_time_step,
-                         const double         time,
-                         GenericDataOut<dim> &generic_data_out);
+    write_paraview_files(const unsigned int         n_time_step,
+                         const double               time,
+                         const GenericDataOut<dim> &generic_data_out);
 
     void
     print_boundary_ids();

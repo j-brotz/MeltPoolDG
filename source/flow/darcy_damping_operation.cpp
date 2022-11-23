@@ -143,26 +143,32 @@ namespace MeltPoolDG::Flow
   void
   DarcyDampingOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
-    /**
-     * write conductivity vector to dof vector
-     */
-    scratch_data.initialize_dof_vector(damping, solid_dof_idx);
-
-    if (!damping_at_q.empty() && scratch_data.is_hex_mesh())
+    if (data_out.is_requested("Darcy_damping"))
       {
-        MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
-          damping,
-          scratch_data.get_matrix_free(),
-          solid_dof_idx,
-          flow_quad_idx,
-          [&](const unsigned int cell, const unsigned int quad) -> const VectorizedArray<double> & {
-            return damping_at_q[cell * scratch_data.get_n_q_points(flow_quad_idx) + quad];
-          });
+        /**
+         * write conductivity vector to dof vector
+         */
+        scratch_data.initialize_dof_vector(damping, solid_dof_idx);
 
-        scratch_data.get_constraint(solid_dof_idx).distribute(damping);
+        if (!damping_at_q.empty() && scratch_data.is_hex_mesh())
+          {
+            MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
+              damping,
+              scratch_data.get_matrix_free(),
+              solid_dof_idx,
+              flow_quad_idx,
+              [&](const unsigned int cell,
+                  const unsigned int quad) -> const VectorizedArray<double> & {
+                return damping_at_q[cell * scratch_data.get_n_q_points(flow_quad_idx) + quad];
+              });
+
+            scratch_data.get_constraint(solid_dof_idx).distribute(damping);
+          }
+
+        data_out.add_data_vector(scratch_data.get_dof_handler(solid_dof_idx),
+                                 damping,
+                                 "Darcy_damping");
       }
-
-    data_out.add_data_vector(scratch_data.get_dof_handler(solid_dof_idx), damping, "Darcy_damping");
   }
 
   template <int dim>
