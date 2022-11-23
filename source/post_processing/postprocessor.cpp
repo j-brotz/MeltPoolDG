@@ -1,6 +1,8 @@
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
+#include <filesystem>
+
 namespace MeltPoolDG
 {
   template <int dim>
@@ -66,6 +68,7 @@ namespace MeltPoolDG
                                            const double         time,
                                            GenericDataOut<dim> &generic_data_out)
   {
+    namespace fs = std::filesystem;
     DataOut<dim> data_out;
 
     // do search algorithm only once
@@ -110,19 +113,39 @@ namespace MeltPoolDG
                                                                           pv_data.n_digits_timestep,
                                                                           pv_data.n_groups);
 
-    // write a pvd file relating the pvtu-file with a simulation time
+    // write a pvd file relating the pvtu-file to a simulation time
     if (const unsigned int len = times_and_names.size())
       {
-        // avoid duplicate names
+        // Only append the *.pvtu-file to the *.pvd file, if the to be appended *.pvtu-file has not
+        // been written before. This might happen in case of a restart, when the time of the last
+        // written simulation output corresponds to the one in the initial state of the restart.
         if (times_and_names[len - 1].first != time &&
             times_and_names[len - 1].second != pvtu_filename)
           times_and_names.emplace_back(time, pvtu_filename);
       }
     if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
       {
-        std::ofstream pvd_output(pv_data.directory + "/" + pv_data.filename + ".pvd");
+        clean_pvd();
+
+        std::ofstream pvd_output(fs::path(pv_data.directory) / fs::path(pv_data.filename + ".pvd"));
         DataOutBase::write_pvd_record(pvd_output, times_and_names);
       }
+  }
+
+  template <int dim>
+  void
+  Postprocessor<dim>::clean_pvd()
+  {
+    namespace fs = std::filesystem;
+
+    // Clean non-existing *.pvtu-files from *.pvd.
+    //
+    // This is used if we perform a restart and write the output to a different directory
+    // compared to the original simulation.
+    //
+    std::erase_if(times_and_names, [this](const std::pair<double, std::string> &x) {
+      return !fs::exists(fs::path(pv_data.directory) / fs::path(x.second));
+    });
   }
 
   template <int dim>

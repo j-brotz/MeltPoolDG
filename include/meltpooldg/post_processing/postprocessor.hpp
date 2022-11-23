@@ -88,6 +88,9 @@ namespace MeltPoolDG
 
   private:
     void
+    clean_pvd();
+
+    void
     write_paraview_files(const unsigned int   n_time_step,
                          const double         time,
                          GenericDataOut<dim> &generic_data_out);
