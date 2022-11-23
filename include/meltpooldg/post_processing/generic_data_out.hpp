@@ -62,5 +62,7 @@ namespace MeltPoolDG
     const Mapping<dim> &                mapping;
     double                              current_time;
     const std::vector<std::string>      req_vars;
+    mutable std::map<std::string, bool> req_vars_info;
+    const bool                          req_all = false;
   };
 } // namespace MeltPoolDG
