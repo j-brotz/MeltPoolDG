@@ -477,6 +477,14 @@ namespace MeltPoolDG::MeltPool
   {
     const std::string load_prefix =
       base_in->parameters.restart.prefix + "_" + std::to_string(base_in->parameters.restart.load);
+
+    AssertThrow(std::filesystem::exists(load_prefix + "_problem.restart"),
+                ExcMessage("You tried to load the following "
+                           "restart prefix '" +
+                           load_prefix +
+                           "'. However, it could not be found. Did you specify a wrong value "
+                           "for the parameter 'load'?"));
+
     std::ifstream ifs(load_prefix + "_problem.restart");
     {
       boost::archive::text_iarchive ia(ifs);
