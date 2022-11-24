@@ -63,8 +63,42 @@ namespace MeltPoolDG::MeltPool
                        time_iterator->get_current_time(),
                        base_in);
 
+        bool heat_up_finished = false;
+
+        const auto heat_up_modify_time_step = [&]() {
+          // check heat up
+          if (heat_operation && problem_specific_parameters.mp_heat_up.time_step_size > 0 &&
+              !heat_up_finished)
+            {
+              const double       T_max = heat_operation->get_temperature().linfty_norm();
+              std::ostringstream s;
+              s << "heat up period: T_max=" << std::setprecision(5) << std::scientific << T_max;
+              Journal::print_line(scratch_data->get_pcout(0), s.str(), "melt_pool_problem");
+
+              // start to decrease time step size if T > T_heat_up
+              if (T_max > problem_specific_parameters.mp_heat_up.max_temperature)
+                {
+                  time_iterator->set_current_time_increment(
+                    base_in->parameters.time_stepping.time_step_size,
+                    problem_specific_parameters.mp_heat_up.max_change_factor_time_step_size);
+
+                  // If time step size has decreased to the standard time stepping parameters, the
+                  // heat up phase is finished.
+                  heat_up_finished =
+                    (std::abs(time_iterator->get_current_time_increment() -
+                              base_in->parameters.time_stepping.time_step_size) < 1e-16);
+                  if (heat_up_finished)
+                    Journal::print_line(scratch_data->get_pcout(0),
+                                        "Heat up period is finished.",
+                                        "melt_pool_problem");
+                }
+            }
+        };
+
         while (!time_iterator->is_finished())
           {
+            heat_up_modify_time_step();
+
             const auto dt = time_iterator->compute_next_time_increment();
             const int  n  = time_iterator->get_current_time_step_number();
 
@@ -591,6 +625,20 @@ namespace MeltPoolDG::MeltPool
                           "the iteration is stopped.");
       }
       prm.leave_subsection();
+      prm.enter_subsection("mp heat up");
+      {
+        prm.add_parameter("time step size",
+                          problem_specific_parameters.mp_heat_up.time_step_size,
+                          "Time step size until heat up is finished.");
+        prm.add_parameter(
+          "max change factor time step size",
+          problem_specific_parameters.mp_heat_up.max_change_factor_time_step_size,
+          "Maximum allowed factor of changing the time step size between two time steps.");
+        prm.add_parameter("max temperature",
+                          problem_specific_parameters.mp_heat_up.max_temperature,
+                          "Temperature at which heat up is finished.");
+      }
+      prm.leave_subsection();
     }
     prm.leave_subsection();
   }
@@ -704,6 +752,11 @@ namespace MeltPoolDG::MeltPool
 
     // initialize the time stepping scheme
     time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
+
+    if (problem_specific_parameters.mp_heat_up.time_step_size > 0)
+      time_iterator->set_current_time_increment(
+        problem_specific_parameters.mp_heat_up.time_step_size);
+
 
     /*
      * initialize material

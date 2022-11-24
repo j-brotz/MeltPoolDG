@@ -1,6 +1,22 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-11-28
+- Allow larger time step size during heat up phase in the melt pool problem
+```diff
+{
+  "problem type": "melt_pool",
+  "problem specific": {
++    "mp heat up": 
++    {
++      "max temperature": "",
++      "time step size": "",
++      "max change factor time step size": ""
++    }
+  }
+}
+```
+
 ## 2022-11-09
 - Add restart parameters
 ```diff
@@ -39,6 +55,7 @@ in the level set equation
       "tol"
     }
   }
+}
 ```
 
 ## 2022-10-10

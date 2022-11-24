@@ -109,6 +109,13 @@ namespace MeltPoolDG::MeltPool
         double fraction_of_melting_point_refined_in_solid = 1.0;
       } amr;
 
+      struct
+      {
+        double time_step_size                   = -1;
+        double max_temperature                  = -1;
+        double max_change_factor_time_step_size = 1.5;
+      } mp_heat_up;
+
     } problem_specific_parameters;
 
     /*
