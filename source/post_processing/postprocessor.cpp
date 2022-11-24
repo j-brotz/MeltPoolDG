@@ -143,16 +143,13 @@ namespace MeltPoolDG
     // write a pvd file relating the pvtu-file to a simulation time
     //
     // if times_and_names is not empty
-    if (const unsigned int len = times_and_names.size())
-      {
-        // Only append the *.pvtu-file to the *.pvd file, if the to be appended *.pvtu-file has not
-        // been written before. This might happen in case of a restart, when the time of the last
-        // written simulation output corresponds to the one in the initial state of the restart.
-        if (times_and_names[len - 1].first != time &&
-            times_and_names[len - 1].second != pvtu_filename)
-          times_and_names.emplace_back(time, pvtu_filename);
-      }
-    else
+    const unsigned int len = times_and_names.size();
+
+    // Only append the *.pvtu-file to the *.pvd file, if the to be appended *.pvtu-file has not
+    // been written before. This might happen in case of a restart, when the time of the last
+    // written simulation output corresponds to the one in the initial state of the restart.
+    if (times_and_names.empty() || (times_and_names[len - 1].first != time &&
+                                    times_and_names[len - 1].second != pvtu_filename))
       times_and_names.emplace_back(time, pvtu_filename);
 
     if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
