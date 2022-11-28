@@ -386,13 +386,6 @@ namespace MeltPoolDG::MeltPool
               }
             }
 
-            if (base_in->parameters.amr.do_amr)
-              {
-                ScopedName         sc("amr");
-                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-                refine_mesh(base_in);
-              }
-
             {
               ScopedName         sc("output");
               TimerOutput::Scope scope(scratch_data->get_timer(), sc);
@@ -400,6 +393,13 @@ namespace MeltPoolDG::MeltPool
               // ... and output the results to vtk files.
               output_results(n, time_iterator->get_current_time(), base_in);
             }
+
+            if (base_in->parameters.amr.do_amr)
+              {
+                ScopedName         sc("amr");
+                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                refine_mesh(base_in);
+              }
 
             //@todo: adapt in case of adaptive time stepping
             if ((n % base_in->parameters.profiling.write_frequency == 0) &&
@@ -1300,8 +1300,10 @@ namespace MeltPoolDG::MeltPool
 
                 if (material.two_phase_properties_transition_type ==
                     TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
-                  flow_operation->get_density(cell, q) =
-                    LevelSet::Tools::interpolate_reciprocal(indicator, rho_g, rho_l);
+                  {
+                    flow_operation->get_density(cell, q) =
+                      LevelSet::Tools::interpolate_reciprocal(indicator, rho_g, rho_l);
+                  }
                 else
                   flow_operation->get_density(cell, q) =
                     LevelSet::Tools::interpolate(indicator, rho_g, rho_l);
@@ -1320,6 +1322,7 @@ namespace MeltPoolDG::MeltPool
                               << std::endl;
 #endif
 
+                // TODO: move to postprocesser
                 // compute overall mass
                 const auto mass_contrib = flow_operation->get_density(cell, q) * ls_values.JxW(q);
                 for (unsigned int v = 0;

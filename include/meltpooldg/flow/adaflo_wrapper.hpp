@@ -163,7 +163,7 @@ namespace MeltPoolDG::Flow
     distribute_constraints() override;
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) override;
+    attach_output_vectors(GenericDataOut<dim> &data_out) const override;
 
     void
     set_face_average_density(const typename Triangulation<dim>::cell_iterator &cell,
@@ -210,10 +210,10 @@ namespace MeltPoolDG::Flow
     AffineConstraints<double> constraints_parameters;
 
     // temporal vectors for output
-    VectorType force_rhs_velocity_projected;
-    VectorType mass_balance_source_term_projected;
-    VectorType density;
-    VectorType viscosity;
+    mutable VectorType force_rhs_velocity_projected;
+    mutable VectorType mass_balance_source_term_projected;
+    mutable VectorType density;
+    mutable VectorType viscosity;
 
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;
