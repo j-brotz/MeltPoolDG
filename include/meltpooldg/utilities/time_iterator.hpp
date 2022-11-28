@@ -66,10 +66,11 @@ namespace MeltPoolDG
     {
       ar &old_time;
       ar &current_time;
-      ar &current_time_increment;
       ar &old_time_increment;
       ar &n_time_steps;
       ar &time_step_size_function;
+
+      // @note: we don't archive current_time_increment, since we want to set it during the restart.
     }
 
   private:
