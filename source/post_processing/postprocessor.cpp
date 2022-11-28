@@ -38,9 +38,10 @@ namespace MeltPoolDG
   Postprocessor<dim>::process(const int                    n_time_step,
                               const GenericDataOut<dim> &  data_out,
                               const double                 time,
+                              const bool                   force_output,
                               const std::function<void()> &post_operation)
   {
-    if (now(n_time_step, time))
+    if (now(n_time_step, time) || force_output)
       {
         Journal::print_line(pcout, "write paraview files", "postprocessor");
 

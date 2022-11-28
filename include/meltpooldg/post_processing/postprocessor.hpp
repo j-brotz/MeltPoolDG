@@ -62,6 +62,7 @@ namespace MeltPoolDG
     process(const int                    n_time_step,
             const GenericDataOut<dim> &  generic_data_out,
             const double                 time           = -1.0,
+            const bool                   force_output   = false,
             const std::function<void()> &post_operation = {});
 
     /**

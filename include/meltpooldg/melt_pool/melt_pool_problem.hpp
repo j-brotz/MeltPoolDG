@@ -146,7 +146,8 @@ namespace MeltPoolDG::MeltPool
     void
     output_results(const unsigned int                   time_step,
                    const double                         current_time,
-                   std::shared_ptr<SimulationBase<dim>> base_in);
+                   std::shared_ptr<SimulationBase<dim>> base_in,
+                   const bool                           force_output = false);
     /*
      *  perform mesh refinement
      */
