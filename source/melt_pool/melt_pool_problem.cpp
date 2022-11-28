@@ -1918,7 +1918,8 @@ namespace MeltPoolDG::MeltPool
                   break;
                 }
               // ensure that solid regions at high temperatures are refined
-              else if (solid_vals[i] > 0.0 &&
+              else if ((solid_vals[i] > 0.0 ||
+                        problem_specific_parameters.do_evaporative_velocity_jump) &&
                        temp_vals[i] >= problem_specific_parameters.amr
                                            .fraction_of_melting_point_refined_in_solid *
                                          base_in->parameters.material.melting_point)
