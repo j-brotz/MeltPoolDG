@@ -632,7 +632,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  AdafloWrapper<dim>::attach_output_vectors(GenericDataOut<dim> &data_out)
+  AdafloWrapper<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
       vector_component_interpretation(dim,
@@ -719,7 +719,6 @@ namespace MeltPoolDG::Flow
                 -> const VectorizedArray<double> & { return get_density(cell, quad); });
             scratch_data.get_constraint(dof_index_parameters).distribute(density);
           }
-
 
         density.update_ghost_values();
         data_out.add_data_vector(dof_handler_parameters, density, "density");
