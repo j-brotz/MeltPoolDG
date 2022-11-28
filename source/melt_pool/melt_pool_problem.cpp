@@ -27,10 +27,11 @@ namespace MeltPoolDG::MeltPool
   {
     initialize(base_in); // no timing needed, since the function does it self
 
-    const auto finalize = [&]() {
+    const auto finalize = [&](const bool force_output) {
       output_results(time_iterator->get_current_time_step_number(),
                      time_iterator->get_current_time(),
-                     base_in);
+                     base_in,
+                     force_output);
 
       //... always print timing statistics
       if (base_in->parameters.profiling.enable)
@@ -436,14 +437,14 @@ namespace MeltPoolDG::MeltPool
       }
     catch (const ExcNewtonDidNotConverge &e)
       {
-        finalize();
+        finalize(true /*force_output*/);
 
         AssertThrow(false, ExcNewtonDidNotConverge());
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     catch (const ExcNavierStokesNoConvergence &e)
       {
-        finalize();
+        finalize(true /*force_output*/);
 
         AssertThrow(false, ExcNavierStokesNoConvergence());
       }
@@ -1455,9 +1456,10 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolProblem<dim>::output_results(const unsigned int                   n_time_step,
                                        const double                         current_time,
-                                       std::shared_ptr<SimulationBase<dim>> base_in)
+                                       std::shared_ptr<SimulationBase<dim>> base_in,
+                                       const bool                           force_output)
   {
-    if (!post_processor->now(n_time_step, current_time) &&
+    if (!post_processor->now(n_time_step, current_time) && !force_output &&
         !base_in->parameters.paraview.do_user_defined_postprocessing)
       return;
     /**
@@ -1510,7 +1512,7 @@ namespace MeltPoolDG::MeltPool
       ScopedName         sc("process");
       TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
-      post_processor->process(n_time_step, generic_data_out, current_time);
+      post_processor->process(n_time_step, generic_data_out, current_time, force_output);
     }
   }
 
