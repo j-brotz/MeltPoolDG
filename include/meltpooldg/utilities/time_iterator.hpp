@@ -28,7 +28,7 @@ namespace MeltPoolDG
     resize_current_time_increment(const number factor);
 
     void
-    set_current_time_increment(const number value);
+    set_current_time_increment(const number value, const number factor = 1.0);
 
     void
     reset_max_n_time_steps(const int time_steps_in);

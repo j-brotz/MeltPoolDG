@@ -66,9 +66,22 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  TimeIterator<number>::set_current_time_increment(const number value)
+  TimeIterator<number>::set_current_time_increment(const number value,
+                                                   const number max_allowed_change_factor)
   {
-    current_time_increment = value;
+    if (old_time_increment < 1e-16)
+      current_time_increment = value;
+    // equal values
+    else if (std::abs(value - old_time_increment) < 1e-16)
+      current_time_increment = value;
+    // increasing time step size
+    else if (old_time_increment < value)
+      current_time_increment = std::min(max_allowed_change_factor * old_time_increment, value);
+    // decreasing time step size
+    else if (old_time_increment >= value)
+      current_time_increment = std::max(old_time_increment / max_allowed_change_factor, value);
+    else
+      AssertThrow(false, ExcNotImplemented());
   }
 
   template <typename number>
