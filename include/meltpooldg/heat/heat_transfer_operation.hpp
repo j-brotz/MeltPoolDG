@@ -114,7 +114,10 @@ namespace MeltPoolDG::Heat
     init_time_advance();
 
     void
-    solve();
+    solve(const bool do_finish_time_step = true);
+
+    void
+    finish_time_advance();
 
     void
     compute_interface_temperature(const VectorType &distance, const BlockVectorType &normal_vector);
