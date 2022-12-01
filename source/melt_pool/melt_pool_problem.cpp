@@ -259,136 +259,132 @@ namespace MeltPoolDG::MeltPool
             /******************************************************************************************
              * HEAT TRANSFER
              ******************************************************************************************/
-            {
-              if (heat_operation)
-                {
-                  ScopedName         sc("heat");
-                  TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+            if (heat_operation)
+              {
+                ScopedName         sc("heat");
+                TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
-                  if (melt_pool_operation)
-                    melt_pool_operation->compute_heat_source(
-                      heat_operation->get_heat_source(),
-                      heat_operation->get_user_rhs(),
-                      level_set_operation->get_level_set_as_heaviside(),
-                      level_set_operation->get_normal_vector(),
-                      normal_dof_idx,
-                      dt,
-                      true /* zero_out */);
+                if (melt_pool_operation)
+                  melt_pool_operation->compute_heat_source(
+                    heat_operation->get_heat_source(),
+                    heat_operation->get_user_rhs(),
+                    level_set_operation->get_level_set_as_heaviside(),
+                    level_set_operation->get_normal_vector(),
+                    normal_dof_idx,
+                    dt,
+                    true /* zero_out */);
 
-                  TableHandler iter_table;
-                  VectorType   iter_res;
+                TableHandler iter_table;
+                VectorType   iter_res;
 
-                  const bool do_heat_iteration =
-                    problem_specific_parameters.heat_evapor_coupling.n_max_iter > 1 &&
-                    evaporation_operation;
+                const bool do_heat_iteration =
+                  problem_specific_parameters.heat_evapor_coupling.n_max_iter > 1 &&
+                  evaporation_operation;
 
-                  if (do_heat_iteration)
-                    {
-                      scratch_data->initialize_dof_vector(iter_res, ls_dof_idx);
-                      iter_res = 1e10; // any large number
-                    }
+                if (do_heat_iteration)
+                  {
+                    scratch_data->initialize_dof_vector(iter_res, ls_dof_idx);
+                    iter_res = 1e10; // any large number
+                  }
 
-                  for (int i = 0; i < problem_specific_parameters.heat_evapor_coupling.n_max_iter;
-                       ++i)
-                    {
-                      if (do_heat_iteration)
-                        {
-                          iter_res -= heat_operation->get_temperature();
-                          const double res_norm = iter_res.l2_norm();
+                for (int i = 0; i < problem_specific_parameters.heat_evapor_coupling.n_max_iter;
+                     ++i)
+                  {
+                    if (do_heat_iteration)
+                      {
+                        iter_res -= heat_operation->get_temperature();
+                        const double res_norm = iter_res.l2_norm();
 
-                          if (base_in->parameters.base.verbosity_level > 0)
-                            {
-                              iter_table.add_value("i", i);
-                              iter_table.add_value("|res|", res_norm);
-                              iter_table.add_value("|T|",
-                                                   heat_operation->get_temperature().l2_norm());
-                            }
+                        if (base_in->parameters.base.verbosity_level > 0)
+                          {
+                            iter_table.add_value("i", i);
+                            iter_table.add_value("|res|", res_norm);
+                            iter_table.add_value("|T|",
+                                                 heat_operation->get_temperature().l2_norm());
+                          }
 
-                          // early return of iteration if l2-norm of the change of the level set
-                          // field is already very small
-                          if (res_norm <= problem_specific_parameters.heat_evapor_coupling.tol)
-                            {
-                              Journal::print_decoration_line(scratch_data->get_pcout(0));
-                              Journal::print_line(scratch_data->get_pcout(0),
-                                                  "level set - evapor coupling; finished after " +
-                                                    std::to_string(i) + " iter at residual " +
-                                                    UtilityFunctions::to_string_with_precision(
-                                                      res_norm),
-                                                  "MeltPoolProblem");
-                              Journal::print_decoration_line(scratch_data->get_pcout(0));
-                              break;
-                            }
+                        // early return of iteration if l2-norm of the change of the level set
+                        // field is already very small
+                        if (res_norm <= problem_specific_parameters.heat_evapor_coupling.tol)
+                          {
+                            Journal::print_decoration_line(scratch_data->get_pcout(0));
+                            Journal::print_line(scratch_data->get_pcout(0),
+                                                "level set - evapor coupling; finished after " +
+                                                  std::to_string(i) + " iter at residual " +
+                                                  UtilityFunctions::to_string_with_precision(
+                                                    res_norm),
+                                                "MeltPoolProblem");
+                            Journal::print_decoration_line(scratch_data->get_pcout(0));
+                            break;
+                          }
 
-                          iter_res.copy_locally_owned_data_from(heat_operation->get_temperature());
-                          Journal::print_decoration_line(scratch_data->get_pcout(1));
-                          Journal::print_line(scratch_data->get_pcout(1),
-                                              "level set - evapor coupling; #iter " +
-                                                std::to_string(i),
-                                              "MeltPoolProblem");
-                          Journal::print_decoration_line(scratch_data->get_pcout(1));
-                        }
+                        iter_res.copy_locally_owned_data_from(heat_operation->get_temperature());
+                        Journal::print_decoration_line(scratch_data->get_pcout(1));
+                        Journal::print_line(scratch_data->get_pcout(1),
+                                            "level set - evapor coupling; #iter " +
+                                              std::to_string(i),
+                                            "MeltPoolProblem");
+                        Journal::print_decoration_line(scratch_data->get_pcout(1));
+                      }
 
 
-                      // the heat equation will NOT be solved if
-                      //    * the evaporative mass flux is given as a constant
-                      //    (temperature-independent) value
-                      //    * the temperature field is prescribed analytically
-                      if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
-                          (evaporation_operation &&
-                           !(base_in->parameters.evapor.evaporation_model ==
-                             EvaporationModelType::constant)) ||
-                          (melt_pool_operation && !(base_in->parameters.laser.heat_source_model ==
-                                                    LaserHeatSourceModel::Analytical)))
-                        {
-                          heat_operation->solve(false);
-                        }
+                    // the heat equation will NOT be solved if
+                    //    * the evaporative mass flux is given as a constant
+                    //    (temperature-independent) value
+                    //    * the temperature field is prescribed analytically
+                    if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
+                        (evaporation_operation && !(base_in->parameters.evapor.evaporation_model ==
+                                                    EvaporationModelType::constant)) ||
+                        (melt_pool_operation && !(base_in->parameters.laser.heat_source_model ==
+                                                  LaserHeatSourceModel::Analytical)))
+                      {
+                        heat_operation->solve(false);
+                      }
 
-                      if (do_heat_iteration)
-                        {
-                          evaporation_operation->compute_evaporative_mass_flux();
-                        }
-                    }
+                    if (do_heat_iteration)
+                      {
+                        evaporation_operation->compute_evaporative_mass_flux();
+                      }
+                  }
 
-                  if (base_in->parameters.base.verbosity_level > 0 && do_heat_iteration)
-                    {
-                      iter_table.set_precision("|res|", 10);
-                      iter_table.set_scientific("|res|", true);
-                      iter_table.set_precision("|T|", 10);
-                      iter_table.set_scientific("|T|", true);
+                if (base_in->parameters.base.verbosity_level > 0 && do_heat_iteration)
+                  {
+                    iter_table.set_precision("|res|", 10);
+                    iter_table.set_scientific("|res|", true);
+                    iter_table.set_precision("|T|", 10);
+                    iter_table.set_scientific("|T|", true);
 
-                      if (scratch_data->get_pcout(1).is_active() &&
-                          Utilities::MPI::this_mpi_process(scratch_data->get_mpi_comm()) == 0)
-                        iter_table.write_text(std::cout);
+                    if (scratch_data->get_pcout(1).is_active() &&
+                        Utilities::MPI::this_mpi_process(scratch_data->get_mpi_comm()) == 0)
+                      iter_table.write_text(std::cout);
 
-                      Journal::print_decoration_line(scratch_data->get_pcout(1));
-                    }
+                    Journal::print_decoration_line(scratch_data->get_pcout(1));
+                  }
 
-                  heat_operation->finish_time_advance();
+                heat_operation->finish_time_advance();
 
 
 
-                  if (melt_pool_operation)
-                    {
-                      ScopedName         sc("melt_front_propagation");
-                      TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-                      melt_pool_operation->compute_melt_front_propagation(
-                        level_set_operation->get_level_set_as_heaviside());
+                if (melt_pool_operation)
+                  {
+                    ScopedName         sc("melt_front_propagation");
+                    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+                    melt_pool_operation->compute_melt_front_propagation(
+                      level_set_operation->get_level_set_as_heaviside());
 
-                      if (base_in->parameters.mp.solid.set_velocity_to_zero ||
-                          base_in->parameters.mp.solid.do_not_reinitialize)
-                        {
+                    if (base_in->parameters.mp.solid.set_velocity_to_zero ||
+                        base_in->parameters.mp.solid.do_not_reinitialize)
+                      {
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-                          dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())
-                            ->reinit_3();
+                        dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->reinit_3();
 #else
-                          AssertThrow(false, ExcNotImplemented());
+                        AssertThrow(false, ExcNotImplemented());
 #endif
-                        }
-                      // TODO zero_out only
-                      scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
-                    }
-                }
-            }
+                      }
+                    // TODO zero_out only
+                    scratch_data->initialize_dof_vector(vel_force_rhs, vel_dof_idx);
+                  }
+              }
 
             // compute the evaporative mass flux from the temperature field
             if (evaporation_operation)
