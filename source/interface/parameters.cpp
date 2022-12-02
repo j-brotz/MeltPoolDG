@@ -140,7 +140,7 @@ namespace MeltPoolDG
     recoil.delta_approximation_phase_weighted.set_parameters(material);
 
     // set heat degree equal to base degree if it is not set
-    if (heat.degree < 0)
+    if (heat.degree < 1)
       heat.degree = base.degree;
 
     if (heat.n_q_points_1d < 1)
