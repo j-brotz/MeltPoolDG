@@ -714,41 +714,35 @@ namespace MeltPoolDG::MeltPool
     scratch_data->attach_dof_handler(dof_handler_ls);
     scratch_data->attach_dof_handler(dof_handler_ls);
     scratch_data->attach_dof_handler(dof_handler_ls);
-    scratch_data->attach_dof_handler(dof_handler_heat);
-    scratch_data->attach_dof_handler(dof_handler_heat);
 
     ls_hanging_nodes_dof_idx = scratch_data->attach_constraint_matrix(ls_hanging_node_constraints);
     ls_dof_idx               = scratch_data->attach_constraint_matrix(ls_constraints_dirichlet);
     reinit_dof_idx           = scratch_data->attach_constraint_matrix(reinit_constraints_dirichlet);
     reinit_no_solid_dof_idx =
       scratch_data->attach_constraint_matrix(reinit_no_solid_constraints_dirichlet);
-    temp_dof_idx = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
-    temp_hanging_nodes_dof_idx =
-      scratch_data->attach_constraint_matrix(temp_hanging_node_constraints);
+    if (problem_specific_parameters.do_heat_transfer)
+      {
+        scratch_data->attach_dof_handler(dof_handler_heat);
+        scratch_data->attach_dof_handler(dof_handler_heat);
+
+        temp_dof_idx = scratch_data->attach_constraint_matrix(temp_constraints_dirichlet);
+        temp_hanging_nodes_dof_idx =
+          scratch_data->attach_constraint_matrix(temp_hanging_node_constraints);
+      }
 
     /*
      *  create quadrature rule
      */
-    if (base_in->parameters.base.do_simplex)
+    ls_quad_idx = scratch_data->attach_quadrature(
+      UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.do_simplex,
+                                               base_in->parameters.base.n_q_points_1d,
+                                               base_in->parameters.ls.n_subdivisions));
+    if (problem_specific_parameters.do_heat_transfer)
       {
-        ls_quad_idx = scratch_data->attach_quadrature(
-          QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
         temp_quad_idx = scratch_data->attach_quadrature(
-          QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
-      }
-    else if (base_in->parameters.ls.n_subdivisions > 1)
-      {
-        ls_quad_idx = scratch_data->attach_quadrature(
-          QIterated<dim>(QGauss<1>(2), base_in->parameters.ls.n_subdivisions));
-        temp_quad_idx =
-          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
-      }
-    else
-      {
-        ls_quad_idx =
-          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
-        temp_quad_idx =
-          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+          UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.do_simplex,
+                                                   base_in->parameters.heat.n_q_points_1d,
+                                                   base_in->parameters.heat.n_subdivisions));
       }
 
     // initialize the time stepping scheme
@@ -1114,19 +1108,17 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                          const bool                           do_reinit)
   {
-    if (base_in->parameters.base.do_simplex)
-      {
-        dof_handler_heat.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
-        dof_handler_ls.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
-      }
-    else
-      {
-        if (base_in->parameters.ls.n_subdivisions > 1)
-          dof_handler_ls.distribute_dofs(FE_Q_iso_Q1<dim>(base_in->parameters.ls.n_subdivisions));
-        else
-          dof_handler_ls.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
+    UtilityFunctions::distribute_dofs<dim>(base_in->parameters.base.do_simplex,
+                                           base_in->parameters.base.degree,
+                                           base_in->parameters.ls.n_subdivisions,
+                                           dof_handler_ls);
 
-        dof_handler_heat.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
+    if (problem_specific_parameters.do_heat_transfer)
+      {
+        UtilityFunctions::distribute_dofs<dim>(base_in->parameters.base.do_simplex,
+                                               base_in->parameters.heat.degree,
+                                               base_in->parameters.heat.n_subdivisions,
+                                               dof_handler_heat);
       }
 
       /*
@@ -1148,7 +1140,8 @@ namespace MeltPoolDG::MeltPool
     //@todo move to a more central place
     base_in->attach_boundary_condition("level_set");
     base_in->attach_boundary_condition("reinitialization");
-    base_in->attach_boundary_condition("heat_transfer");
+    if (problem_specific_parameters.do_heat_transfer)
+      base_in->attach_boundary_condition("heat_transfer");
 
     MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
                                                          base_in->get_dirichlet_bc("level_set"),
@@ -1179,11 +1172,13 @@ namespace MeltPoolDG::MeltPool
     reinit_constraints_dirichlet.close();
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
-    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
-                                                         base_in->get_dirichlet_bc("heat_transfer"),
-                                                         base_in->get_periodic_bc(),
-                                                         temp_dof_idx,
-                                                         temp_hanging_nodes_dof_idx);
+    if (problem_specific_parameters.do_heat_transfer)
+      MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
+                                                           base_in->get_dirichlet_bc(
+                                                             "heat_transfer"),
+                                                           base_in->get_periodic_bc(),
+                                                           temp_dof_idx,
+                                                           temp_hanging_nodes_dof_idx);
 
     scratch_data->build();
 
@@ -1233,7 +1228,7 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::update_phases(const VectorType &        ls_as_heaviside,
                                       const Parameters<double> &parameters) const
   {
-    if (parameters.heat.solidification)
+    if (heat_operation && parameters.heat.solidification)
       heat_operation->get_temperature().update_ghost_values();
 
     double dummy;
@@ -1273,9 +1268,12 @@ namespace MeltPoolDG::MeltPool
         FECellIntegrator<dim, 1, double> ls_values(matrix_free,
                                                    ls_hanging_nodes_dof_idx,
                                                    flow_operation->get_quad_idx_velocity());
-        FECellIntegrator<dim, 1, double> temp_values(matrix_free,
-                                                     temp_dof_idx,
-                                                     flow_operation->get_quad_idx_velocity());
+
+        std::unique_ptr<FECellIntegrator<dim, 1, double>> temp_values;
+
+        if (heat_operation && parameters.heat.solidification)
+          temp_values = std::make_unique<FECellIntegrator<dim, 1, double>>(
+            matrix_free, temp_dof_idx, flow_operation->get_quad_idx_velocity());
 
         if (darcy_operation)
           darcy_operation->get_damping_at_q().resize_fast(matrix_free.n_cell_batches() *
@@ -1291,11 +1289,11 @@ namespace MeltPoolDG::MeltPool
             ls_values.read_dof_values_plain(ls_as_heaviside);
             ls_values.evaluate(EvaluationFlags::values);
 
-            if (parameters.heat.solidification)
+            if (temp_values)
               {
-                temp_values.reinit(cell);
-                temp_values.read_dof_values_plain(heat_operation->get_temperature());
-                temp_values.evaluate(EvaluationFlags::values);
+                temp_values->reinit(cell);
+                temp_values->read_dof_values_plain(heat_operation->get_temperature());
+                temp_values->evaluate(EvaluationFlags::values);
               }
 
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
@@ -1312,10 +1310,10 @@ namespace MeltPoolDG::MeltPool
                 auto rho_l       = VectorizedArray<double>(material.second.density);
                 auto viscosity_l = VectorizedArray<double>(material.second.viscosity);
 
-                if (parameters.heat.solidification)
+                if (temp_values)
                   {
                     const auto solid_fraction =
-                      melt_pool_operation->compute_solid_fraction(temp_values.get_value(q));
+                      melt_pool_operation->compute_solid_fraction(temp_values->get_value(q));
 
                     rho_l = LevelSet::Tools::interpolate_cubic(solid_fraction,
                                                                material.second.density,
@@ -1408,11 +1406,14 @@ namespace MeltPoolDG::MeltPool
           scratch_data->get_fe(ls_dof_idx),
           dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->get_face_center_quad(),
           update_values);
-        FEValues<dim> temp_values(
-          scratch_data->get_mapping(),
-          scratch_data->get_fe(temp_dof_idx),
-          dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->get_face_center_quad(),
-          update_values);
+
+        std::unique_ptr<FEValues<dim>> temp_values;
+        if (heat_operation && parameters.heat.solidification)
+          temp_values = std::make_unique<FEValues<dim>>(
+            scratch_data->get_mapping(),
+            scratch_data->get_fe(temp_dof_idx),
+            dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->get_face_center_quad(),
+            update_values);
 
         std::vector<double> hs(ls_values.n_quadrature_points);
         std::vector<double> temp(ls_values.n_quadrature_points);
@@ -1438,7 +1439,7 @@ namespace MeltPoolDG::MeltPool
                 std::vector<double> rho_ls(ls_values.n_quadrature_points,
                                            parameters.material.second.density);
 
-                if (parameters.heat.solidification)
+                if (temp_values)
                   {
                     TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
                       &scratch_data->get_triangulation(),
@@ -1446,8 +1447,8 @@ namespace MeltPoolDG::MeltPool
                       cell->index(),
                       &scratch_data->get_dof_handler(temp_dof_idx));
 
-                    temp_values.reinit(temp_dof_cell);
-                    temp_values.get_function_values(heat_operation->get_temperature(), temp);
+                    temp_values->reinit(temp_dof_cell);
+                    temp_values->get_function_values(heat_operation->get_temperature(), temp);
 
                     for (unsigned int i = 0; i < rho_ls.size(); ++i)
                       rho_ls[i] = LevelSet::Tools::interpolate_cubic(
@@ -1473,7 +1474,7 @@ namespace MeltPoolDG::MeltPool
       }
 #endif
 
-    if (parameters.heat.solidification)
+    if (heat_operation && parameters.heat.solidification)
       heat_operation->get_temperature().zero_out_ghost_values();
   }
 

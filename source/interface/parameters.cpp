@@ -139,6 +139,13 @@ namespace MeltPoolDG
     surface_tension.delta_approximation_phase_weighted.set_parameters(material);
     recoil.delta_approximation_phase_weighted.set_parameters(material);
 
+    // set heat degree equal to base degree if it is not set
+    if (heat.degree < 0)
+      heat.degree = base.degree;
+
+    if (heat.n_q_points_1d < 1)
+      heat.n_q_points_1d = heat.degree + 1;
+
     if (heat.solidification)
       {
         material.inv_mushy_interval =
@@ -205,11 +212,15 @@ namespace MeltPoolDG
      * The level set problem for simplices can only be solved when no subdivision of the
      * finite element is undertaken.
      */
-    AssertThrow((!base.do_simplex || ls.n_subdivisions == 1),
-                ExcMessage(
-                  "If you use a simplex mesh, n_subdivisions for the level set must be 1."));
+    AssertThrow(
+      (!base.do_simplex || (ls.n_subdivisions == 1 && heat.n_subdivisions == 1)),
+      ExcMessage(
+        "If you use a simplex mesh, n_subdivisions for the level set and the heat equation must be 1."));
     AssertThrow((ls.n_subdivisions == 1 || base.degree == 1),
                 ExcMessage("If you use n_subdivisions for the level set, degree must be 1."));
+
+    AssertThrow((heat.n_subdivisions == 1 || heat.degree == 1),
+                ExcMessage("If you use n_subdivisions for the heat equation, degree must be 1."));
 
 
     AssertThrow((ls.n_subdivisions == 1 ||
@@ -510,6 +521,14 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("heat");
     {
+      prm.add_parameter("degree", heat.degree, "Defines the interpolation degree");
+      prm.add_parameter("n q points 1d",
+                        heat.n_q_points_1d,
+                        "Defines the number of quadrature points");
+      prm.add_parameter(
+        "n subdivisions",
+        heat.n_subdivisions,
+        "Set the number of subdivisions for the finite element of the level set operation.");
       prm.add_parameter("heat convection coefficient",
                         heat.convection_coefficient,
                         "Convection coefficient for the radiative boundary condition");

@@ -1,6 +1,19 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-11-02
+- Add specification for FE interpolation of heat equation in melt pool problem
+```diff
+{
+  "problem type": "melt_pool",
+  "heat": {
++   "degree": "",
++   "n q points 1d": "",
++   "n subdivisions": ""
+  }
+}
+```
+
 ## 2022-11-28
 - Allow larger time step size during heat up phase in the melt pool problem
 ```diff
