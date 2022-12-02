@@ -1,6 +1,7 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+
 ## 2022-11-02
 - Add specification for FE interpolation of heat equation in melt pool problem
 ```diff
@@ -10,6 +11,22 @@ All notable changes of the input parameters will be documented in this file.
 +   "degree": "",
 +   "n q points 1d": "",
 +   "n subdivisions": ""
+  }
+}
+```
+
+## 2022-11-29
+- Add parameter for iteration of nonlinear evaporation-induced coupling term
+in the heat equation
+```diff
+{
+  "problem type": "melt_pool",
+  "problem specific": {
++    "coupling temp evapor": 
++    {
++      "n max iter": "",
++      "tol": ""
++    }
   }
 }
 ```

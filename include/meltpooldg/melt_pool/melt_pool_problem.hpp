@@ -101,6 +101,14 @@ namespace MeltPoolDG::MeltPool
 
       struct
       {
+        // number of iterations to balance nonlinearity in heat equation with
+        // evaporation
+        int    n_max_iter = 1;
+        double tol        = 1e-10;
+      } heat_evapor_coupling;
+
+      struct
+      {
         AMRStrategy                 strategy = AMRStrategy::generic;
         AutomaticGridRefinementType automatic_grid_refinement_type =
           AutomaticGridRefinementType::fixed_number;

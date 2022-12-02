@@ -184,7 +184,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferOperation<dim>::solve()
+  HeatTransferOperation<dim>::solve(const bool do_finish_time_step)
   {
     if (!ready_for_time_advance)
       init_time_advance();
@@ -276,6 +276,14 @@ namespace MeltPoolDG::Heat
         AssertThrow(false, ExcNewtonDidNotConverge());
       }
 
+    if (do_finish_time_step)
+      finish_time_advance();
+  }
+
+  template <int dim>
+  void
+  HeatTransferOperation<dim>::finish_time_advance()
+  {
     ready_for_time_advance = false;
   }
 
