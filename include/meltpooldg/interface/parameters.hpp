@@ -247,6 +247,9 @@ namespace MeltPoolDG
       linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
     }
 
+    int                                         degree                   = -1;
+    int                                         n_subdivisions           = 1;
+    int                                         n_q_points_1d            = -1;
     number                                      emissivity               = 0.0;
     number                                      convection_coefficient   = 0.0;
     number                                      temperature_infinity     = 0.0;

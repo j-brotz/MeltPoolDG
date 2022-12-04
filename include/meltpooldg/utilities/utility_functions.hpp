@@ -13,6 +13,7 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_q_dg0.h>
 #include <deal.II/fe/fe_q_iso_q1.h>
+#include <deal.II/fe/fe_simplex_p.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_tools.h>
 
@@ -120,6 +121,47 @@ namespace MeltPoolDG
 
   namespace UtilityFunctions
   {
+    template <int dim>
+    void
+    distribute_dofs(const bool         do_simplex,
+                    const unsigned int degree,
+                    const unsigned int n_subdivisions,
+                    DoFHandler<dim> &  dof_handler)
+    {
+      if (do_simplex)
+        {
+          dof_handler.distribute_dofs(FE_SimplexP<dim>(degree));
+        }
+      // hex mesh
+      else
+        {
+          if (n_subdivisions > 1)
+            dof_handler.distribute_dofs(FE_Q_iso_Q1<dim>(n_subdivisions));
+          else
+            dof_handler.distribute_dofs(FE_Q<dim>(degree));
+        }
+    }
+
+    template <int dim>
+    Quadrature<dim>
+    create_quadrature(const bool         do_simplex,
+                      const unsigned int n_q_points_1d,
+                      const unsigned int n_subdivisions)
+    {
+      if (do_simplex)
+        {
+          return QGaussSimplex<dim>(n_q_points_1d);
+        }
+      else if (n_subdivisions > 1)
+        {
+          return QIterated<dim>(QGauss<1>(2), n_subdivisions);
+        }
+      else
+        {
+          return QGauss<dim>(n_q_points_1d);
+        }
+    }
+
     template <typename T>
     std::string
     to_string_with_precision(const T a_value, const int n = 6)
