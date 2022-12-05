@@ -1,8 +1,17 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2022-12-05
+- Add new Dirac delta function type
+```diff
+{
+  "dirac delta function approximation": {
++    "type": "heavy_phase_only"
+  }
+}
+```
 
-## 2022-11-02
+## 2022-12-02
 - Add specification for FE interpolation of heat equation in melt pool problem
 ```diff
 {
