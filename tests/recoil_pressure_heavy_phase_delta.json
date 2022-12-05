@@ -24,14 +24,14 @@
     "material second density": "7074.3",
     "material second viscosity": "0.006",
     "material two phase properties transition type": "smooth",
-    "material boiling temperature": "499.",
+    "material boiling temperature": "499.99",
     "material latent heat of evaporation": "1.e6",
     "material molar mass": "0.05224130936",
     "material specific enthalpy reference temperature": "663.731"
   },
   "recoil pressure": {
-    "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000.",
+    "recoil pressure constant": "100.",
+    "recoil temperature constant": "100.",
     "dirac delta function approximation": {
       "type": "heavy_phase_only"
     }
@@ -50,13 +50,13 @@
   },
   "levelset": {
     "ls do reinitialization": "true",
-    "ls artificial diffusivity": "0.0",
-    "ls time integration scheme": "crank_nicolson"
+    "ls time integration scheme": "crank_nicolson",
+    "ls n subdivisions": "2"
   },
   "reinitialization": {
     "reinit max n steps": "1",
     "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.5",
+    "reinit scale factor epsilon": "3",
     "linear solver": {
       "do matrix free": "true"
     }
