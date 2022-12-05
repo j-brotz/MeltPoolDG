@@ -1,0 +1,106 @@
+{
+  "base": {
+    "application name": "recoil_pressure",
+    "degree": "1",
+    "dimension": "1",
+    "do print parameters": "false",
+    "global refinements": "0",
+    "gravity": "0.0",
+    "problem name": "melt_pool",
+    "verbosity level": "0"
+  },
+  "time stepping": {
+    "time step size": "1.e-8",
+    "start time": "0.0",
+    "end time": "2e-05",
+    "max n steps": "120"
+  },
+  "levelset": {
+    "ls n subdivisions": "1",
+    "ls n initial reinit steps": "0"
+  },
+  "reinitialization": {
+    "reinit scale factor epsilon": "1.5"
+  },
+  "heat": {
+    "heat nlsolve field correction tolerance": "1.e-9",
+    "heat nlsolve max nonlinear iterations": "15",
+    "heat nlsolve residual tolerance": "1e0",
+    "heat solidification": "false",
+    "heat two phase": "true",
+    "interpolate rho times cp": "false"
+  },
+  "laser": {
+    "laser gauss absorptivity gas": "1.0",
+    "laser gauss absorptivity liquid": "1.0",
+    "laser heat source model": "uniform",
+    "laser impact type": "interface_sharp",
+    "laser power": "1000000000.0"
+  },
+  "material": {
+    "material template": "Ti64",
+    "material boiling temperature": "600",
+    "material two phase properties transition type": "sharp"
+  },
+  "simulation specific domain": {
+    "domain y max": "0.0001",
+    "domain y min": "-0.0001",
+    "cell repetitions": "500,1",
+    "evaporation boundary": "true",
+    "periodic boundary": "false",
+    "slip boundary": "true"
+  },
+  "problem specific": {
+    "do evaporative heat flux": "true",
+    "do evaporative velocity jump": "true",
+    "do melt pool": "true",
+    "do recoil pressure": "false",
+    "do heat transfer": "true",
+    "do advect level set": "true"
+  },
+  "evaporation": {
+    "evapor evaporation model": "recoil_pressure",
+    "evapor formulation evaporative mass flux over interface": "continuous",
+    "evapor formulation source term continuity": "sharp",
+    "evapor formulation source term heat": "sharp"
+  },
+  "recoil pressure": {
+    "interface distributed flux type": "continuous",
+    "recoil pressure constant": "2e3",
+    "recoil temperature constant": "2e3",
+    "activation temperature": "0"
+  },
+  "Navier-Stokes": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "Solver": {
+          "NL max iterations": "15",
+          "NL tolerance": "1e-9",
+          "lin relative tolerance": "1",
+          "lin tolerance": "1e-9",
+          "linearization scheme": "coupled implicit Newton"
+        },
+        "formulation convective term momentum balance": "convective",
+        "global refinements": "0",
+        "physical type": "incompressible",
+        "velocity degree": "2"
+      },
+      "Output options": {
+        "output verbosity": "0",
+        "output walltimes": "0"
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      }
+    }
+  },
+  "curvature": {
+    "enable": "false"
+  },
+  "normal vector": {
+    "normal vec damping scale factor": "2"
+  },
+  "paraview": {
+    "paraview do output": "false"
+  }
+}

@@ -444,14 +444,13 @@ namespace MeltPoolDG::LevelSet::Tools
     const unsigned int                                              n_subdivisions = 1,
     const bool                                                      use_mca        = true)
   {
-    AssertThrow(dim > 1, ExcNotImplemented());
-
     // data structures for marching-cube algorithm
-    const QGauss<dim - 1> surface_quad(dof_handler.get_fe().degree + 1);
+    const QGauss<dim == 1 ? 1 : dim - 1> surface_quad(dof_handler.get_fe().degree + 1);
 
     GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(mapping,
                                                          dof_handler.get_fe(), // todo
-                                                         n_subdivisions);
+                                                         n_subdivisions,
+                                                         1e-16);
 
     const bool is_ghosted = level_set_vector.has_ghost_elements();
 
@@ -510,12 +509,15 @@ namespace MeltPoolDG::LevelSet::Tools
             const auto fu_mca = [&]()
               -> std::tuple<std::vector<Point<dim>>, std::vector<Point<dim>>, std::vector<double>> {
               // determine points and cells of aux surface triangulation
-              std::vector<Point<dim>>        surface_vertices;
-              std::vector<CellData<dim - 1>> surface_cells;
+              std::vector<Point<dim>>                       surface_vertices;
+              std::vector<CellData<dim == 1 ? 1 : dim - 1>> surface_cells;
 
               // run marching cube algorithm
-              mc.process_cell(
-                cell, level_set_vector, contour_value, surface_vertices, surface_cells);
+              if (dim > 1)
+                mc.process_cell(
+                  cell, level_set_vector, contour_value, surface_vertices, surface_cells);
+              else
+                mc.process_cell(cell, level_set_vector, contour_value, surface_vertices);
 
               if (surface_vertices.size() == 0)
                 return {}; // cell is not cut by interface -> no quadrature points have the be
@@ -525,27 +527,39 @@ namespace MeltPoolDG::LevelSet::Tools
               std::vector<Point<dim>> points;
               std::vector<double>     weights;
 
-              // create aux triangulation of subcells
-              Triangulation<dim - 1, dim> surface_triangulation;
-              surface_triangulation.create_triangulation(surface_vertices, surface_cells, {});
-
-              FE_Nothing<dim - 1, dim> fe;
-              FEValues<dim - 1, dim>   fe_eval(fe,
-                                             surface_quad,
-                                             update_quadrature_points | update_JxW_values);
-
-              // loop over all cells ...
-              for (const auto &sub_cell : surface_triangulation.active_cell_iterators())
+              if (dim == 1)
                 {
-                  fe_eval.reinit(sub_cell);
+                  points_real = surface_vertices;
 
-                  // ... and collect quadrature points and weights
-                  for (const auto &q : fe_eval.quadrature_point_indices())
+                  for (unsigned int i = 0; i < points_real.size(); ++i)
                     {
-                      points_real.emplace_back(fe_eval.quadrature_point(q));
-                      points.emplace_back(
-                        mapping.transform_real_to_unit_cell(cell, fe_eval.quadrature_point(q)));
-                      weights.emplace_back(fe_eval.JxW(q));
+                      points.emplace_back(Point<dim>(1.));
+                      weights.emplace_back(1.);
+                    }
+                }
+              else
+                {
+                  // create aux triangulation of subcells
+                  Triangulation<dim == 1 ? 1 : dim - 1, dim> surface_triangulation;
+                  surface_triangulation.create_triangulation(surface_vertices, surface_cells, {});
+
+                  FE_Nothing<dim == 1 ? 1 : dim - 1, dim> fe;
+                  FEValues<dim == 1 ? 1 : dim - 1, dim>   fe_eval(
+                    fe, surface_quad, update_quadrature_points | update_JxW_values);
+
+                  // loop over all cells ...
+                  for (const auto &sub_cell : surface_triangulation.active_cell_iterators())
+                    {
+                      fe_eval.reinit(sub_cell);
+
+                      // ... and collect quadrature points and weights
+                      for (const auto &q : fe_eval.quadrature_point_indices())
+                        {
+                          points_real.emplace_back(fe_eval.quadrature_point(q));
+                          points.emplace_back(
+                            mapping.transform_real_to_unit_cell(cell, fe_eval.quadrature_point(q)));
+                          weights.emplace_back(fe_eval.JxW(q));
+                        }
                     }
                 }
               return {points_real, points, weights};
@@ -601,31 +615,17 @@ namespace MeltPoolDG::LevelSet::Tools
                            >>
       surface_mesh_info;
 
-    if constexpr (dim > 1)
-      {
-        evaluate_at_interface<dim>(
-          dof_handler,
-          mapping,
-          level_set_as_heaviside,
-          [&](const auto &cell, const auto &, const auto &unit_points, const auto &weights) {
-            if (unit_points.size() > 0)
-              surface_mesh_info.emplace_back(cell, unit_points, weights);
-          },
-          contour_value,
-          n_subdivisions,
-          use_mca);
-      }
-    else
-      {
-        (void)dof_handler;
-        (void)mapping;
-        (void)level_set_as_heaviside;
-        (void)contour_value;
-        (void)n_subdivisions;
-        (void)use_mca;
-
-        AssertThrow(false, ExcNotImplemented());
-      }
+    evaluate_at_interface<dim>(
+      dof_handler,
+      mapping,
+      level_set_as_heaviside,
+      [&](const auto &cell, const auto &, const auto &unit_points, const auto &weights) {
+        if (unit_points.size() > 0)
+          surface_mesh_info.emplace_back(cell, unit_points, weights);
+      },
+      contour_value,
+      n_subdivisions,
+      use_mca);
 
     return surface_mesh_info;
   }
