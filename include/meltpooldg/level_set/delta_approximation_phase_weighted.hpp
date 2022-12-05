@@ -20,12 +20,26 @@ namespace MeltPoolDG
   };
 
 
+  /**
+   * Dirac delta approximation function with a restriction towards the predominantely
+   * heavy material phase:
+   *
+   *            /
+   *            | 2 * δ(φ)   if φ > 0.5
+   * δ_w(φ) =   |
+   *            | 0          else.
+   *            \
+   *
+   * The function is dependent only on the heaviside representation of the level set φ (=indicator).
+   * The symmetric delta function δ(φ) is defined as the norm of the indicator gradient ∇φ:
+   *
+   * δ = ||∇φ||
+   */
   template <typename number>
   class DeltaApproximationHeavyPhaseOnly : public DeltaApproximationBase<number>
   {
   public:
-    DeltaApproximationHeavyPhaseOnly()
-    {}
+    DeltaApproximationHeavyPhaseOnly() = default;
 
     inline number
     compute_weight(const number level_set_heaviside) const override

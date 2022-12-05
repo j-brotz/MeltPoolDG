@@ -17,7 +17,7 @@ namespace MeltPoolDG
     // see DeltaApproximationHeavisideTimesHeavisidePhaseWeighted
     reciprocal_phase_weighted, // see DeltaApproximationReciprocalPhaseWeighted
     reciprocal_times_heaviside_phase_weighted,
-    // see DeltaApproximationReciprocalTimesHeavisidePhaseWeighted
+    // see DeltaApproximationHeavyPhaseOnly
     heavy_phase_only)
 
   template <typename number = double>
