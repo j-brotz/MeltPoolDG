@@ -553,6 +553,12 @@ namespace MeltPoolDG::MeltPool
 
         AssertThrow(false, ExcNewtonDidNotConverge());
       }
+    catch (const SolverControl::NoConvergence &e)
+      {
+        finalize(true /*force_output*/);
+
+        AssertThrow(false, e);
+      }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     catch (const ExcNavierStokesNoConvergence &e)
       {
