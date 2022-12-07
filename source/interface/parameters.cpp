@@ -83,13 +83,16 @@ namespace MeltPoolDG
      */
     if (restart.write_time_step_size > 0.0)
       {
-        AssertThrow(restart.write_time_step_size >= time_stepping.time_step_size,
+        AssertThrow(restart.time_type == RestartTimeType::real ||
+                      restart.write_time_step_size >= time_stepping.time_step_size,
                     ExcMessage(
                       "The time step size for restartmust be equal or larger than the simulation "
                       "time step size."));
-        restart.write_frequency =
-          restart.write_time_step_size /
-          time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
+      }
+    else
+      {
+        restart.time_type            = RestartTimeType::real;
+        restart.write_time_step_size = 3600; // 1 hour
       }
     /*
      * set default value of restart prefix
@@ -911,13 +914,13 @@ namespace MeltPoolDG
         restart.load,
         "Set this parameter to any number >= 0 to specify which restart file should be loaded. "
         "-1 means no restart load.");
-      prm.add_parameter("write frequency",
-                        restart.write_frequency,
-                        "Every n timestep that should be written");
       prm.add_parameter("write time step size",
                         restart.write_time_step_size,
                         "Write restart output every given time step size. If this parameter is "
                         "set, the specified parameter for write frequency is overwritten.");
+      prm.add_parameter("time type",
+                        restart.time_type,
+                        "Choose the type of time measure to write restart.");
       prm.add_parameter("directory", restart.directory, "Write restart directory");
       prm.add_parameter("prefix", restart.prefix, "Write restart prefix");
     }

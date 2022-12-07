@@ -524,7 +524,7 @@ namespace MeltPoolDG::MeltPool
                 DoFMonitor::print(scratch_data->get_pcout());
               }
 
-            if (restart_monitor && restart_monitor->do_save(n))
+            if (restart_monitor && restart_monitor->do_save())
               {
                 Journal::print_line(scratch_data->get_pcout(), "save restart data");
                 restart_monitor->prepare_save();
@@ -1085,7 +1085,8 @@ namespace MeltPoolDG::MeltPool
     if (base_in->parameters.restart.load >= 0 || base_in->parameters.restart.save >= 0)
       {
         restart_monitor =
-          std::make_shared<Restart::RestartMonitor<double>>(base_in->parameters.restart);
+          std::make_shared<Restart::RestartMonitor<double>>(base_in->parameters.restart,
+                                                            *time_iterator);
       }
 
     /*
