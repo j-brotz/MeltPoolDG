@@ -19,6 +19,56 @@ namespace MeltPoolDG
     compute_weight(const VectorizedArray<number> &ls_heaviside) const = 0;
   };
 
+
+  /**
+   * Dirac delta approximation function with a restriction towards the predominantely
+   * heavy material phase:
+   *
+   *            /
+   *            | 2 * δ(φ)   if φ > 0.5
+   * δ_w(φ) =   |
+   *            | 0          else.
+   *            \
+   *
+   * The function is dependent only on the heaviside representation of the level set φ (=indicator).
+   * The symmetric delta function δ(φ) is defined as the norm of the indicator gradient ∇φ:
+   *
+   * δ = ||∇φ||
+   */
+  template <typename number>
+  class DeltaApproximationHeavyPhaseOnly : public DeltaApproximationBase<number>
+  {
+  public:
+    DeltaApproximationHeavyPhaseOnly() = default;
+
+    inline number
+    compute_weight(const number level_set_heaviside) const override
+    {
+      return compute_weight_internal(level_set_heaviside);
+    }
+
+    inline VectorizedArray<number>
+    compute_weight(const VectorizedArray<number> &level_set_heaviside) const override
+    {
+      VectorizedArray<number> temp(0.0);
+      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
+        temp = compute_weight_internal(level_set_heaviside[v]);
+      return temp;
+    }
+
+  private:
+    template <typename value_type>
+    inline value_type
+    compute_weight_internal(const value_type &level_set_heaviside) const
+    {
+      if (level_set_heaviside > 0.5)
+        return 2.0;
+      else
+        return 0.0;
+    }
+  };
+
+
   /**
    * Asymmetric, phase weighted Dirac delta approximation function, as proposed in
    *
@@ -519,6 +569,8 @@ namespace MeltPoolDG
           return nullptr;
         case DiracDeltaFunctionApproximationType::heaviside_phase_weighted:
           return std::make_unique<DeltaApproximationHeavisidePhaseWeighted<number>>(data);
+        case DiracDeltaFunctionApproximationType::heavy_phase_only:
+          return std::make_unique<DeltaApproximationHeavyPhaseOnly<number>>();
         case DiracDeltaFunctionApproximationType::quad_heaviside_phase_weighted:
           return std::make_unique<DeltaApproximationQuadHeavisidePhaseWeighted<number>>(data);
         case DiracDeltaFunctionApproximationType::heaviside_times_heaviside_phase_weighted:
