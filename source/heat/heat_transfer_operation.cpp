@@ -366,6 +366,22 @@ namespace MeltPoolDG::Heat
     data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                              user_rhs,
                              "heat_user_rhs");
+    /*
+     *  user rhs projected
+     */
+    if (data_out.is_requested("heat_user_rhs_projected"))
+      {
+        scratch_data.initialize_dof_vector(user_rhs_projected, temp_hanging_nodes_dof_idx);
+        VectorTools::project_vector<1>(scratch_data.get_mapping(),
+                                       scratch_data.get_dof_handler(temp_dof_idx),
+                                       scratch_data.get_constraint(temp_dof_idx),
+                                       scratch_data.get_quadrature(temp_quad_idx),
+                                       user_rhs,
+                                       user_rhs_projected);
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_dof_idx),
+                                 user_rhs_projected,
+                                 "heat_user_rhs_projected");
+      }
   }
 
   template <int dim>

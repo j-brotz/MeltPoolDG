@@ -56,6 +56,9 @@ namespace MeltPoolDG::Heat
     VectorType temp;
     VectorType temperature_interface;
 
+    // for output only
+    mutable VectorType user_rhs_projected;
+
     std::unique_ptr<Predictor<VectorType, double>> predictor;
 
     // optional flow velocity for internal convection
