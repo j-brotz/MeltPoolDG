@@ -137,6 +137,10 @@ namespace MeltPoolDG::Heat
     double rho_cp_gas;
     double rho_cp_heavy;
 
+    // optional: conductivity
+    double conductivity_gas;
+    double conductivity_heavy;
+
     // optional: two phase flow with evaporation
     VectorType * evaporative_mass_flux      = nullptr;
     unsigned int evapor_mass_flux_dof_idx   = 0;

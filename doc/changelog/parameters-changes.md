@@ -3,6 +3,18 @@ All notable changes of the input parameters will be documented in this file.
 
 
 ## 2022-12-08
+- Add parameter to the heat operator for individual parameter interpolation 
+of the conductivity (k) and/or the volumetric heat capacity (rho times cp)
+```diff
+{
+  "heat": {
+~    "interpolate rho times cp": "none|sharp|smooth|reciprocal"
++    "interpolate k": "none|sharp|smooth|reciprocal"
+  }
+}
+```
+
+## 2022-12-08
 - Add parameter to specify outlet pressure
 ```diff
 {

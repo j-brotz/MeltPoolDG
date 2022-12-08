@@ -84,6 +84,18 @@ namespace MeltPoolDG
 
   BETTER_ENUM(RestartTimeType, char, real, simulation)
 
+  BETTER_ENUM(InterpolateMaterialParameterType,
+              char,
+              // no parameter interpolation typre specified; use the interpolation type specified
+              // in MaterialData
+              none,
+              // sharp interpolation using a Heaviside function
+              sharp,
+              // interpolation using a smooth Heaviside function
+              smooth,
+              // reciprocal interpolation using a smooth Heaviside function
+              reciprocal)
+
   template <typename number = double>
   class PredictorData
   {
@@ -261,8 +273,10 @@ namespace MeltPoolDG
     NonlinearSolverData<number>                 nlsolve;
     LinearSolverData<number>                    linear_solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
-    bool                                        interpolate_rho_times_cp = false;
-    PredictorData<number>                       predictor;
+    InterpolateMaterialParameterType            interpolate_rho_times_cp =
+      InterpolateMaterialParameterType::none;
+    InterpolateMaterialParameterType interpolate_k = InterpolateMaterialParameterType::none;
+    PredictorData<number>            predictor;
   };
 
 
