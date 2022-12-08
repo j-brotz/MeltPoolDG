@@ -82,6 +82,7 @@ namespace MeltPoolDG
               // least squares projection (WIP)
               least_squares_projection)
 
+  BETTER_ENUM(RestartTimeType, char, real, simulation)
 
   template <typename number = double>
   class PredictorData
@@ -371,12 +372,12 @@ namespace MeltPoolDG
   template <typename number = double>
   struct RestartData
   {
-    int         load                 = -1;
-    int         save                 = -1;
-    std::string directory            = "";
-    std::string prefix               = "restart";
-    int         write_frequency      = 1;
-    double      write_time_step_size = 0.0;
+    int             load                 = -1;
+    int             save                 = -1;
+    std::string     directory            = "";
+    std::string     prefix               = "restart";
+    double          write_time_step_size = 0.0;
+    RestartTimeType time_type            = RestartTimeType::real;
   };
 
   template <typename number = double>

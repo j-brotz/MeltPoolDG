@@ -1,6 +1,18 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+
+## 2022-12-07
+- Modify restart parameters
+```diff
+{
+  "restart":
+  {
+-   "write frequency": "",
+    "time type": "real|simulation",
+  }
+}
+
 ## 2022-12-05
 - Add new Dirac delta function type
 ```diff

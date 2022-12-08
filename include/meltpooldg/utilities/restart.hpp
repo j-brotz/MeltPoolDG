@@ -22,11 +22,14 @@ namespace MeltPoolDG::Restart
   {
     // TODO: take TimeIterator
   public:
-    RestartMonitor(const RestartData<number> &data)
+    RestartMonitor(const RestartData<number> &data, const TimeIterator<number> &time)
       : data(data)
       , dir(fs::path(data.prefix).parent_path())
       , prefix(fs::path(data.prefix).filename())
+      , time(time)
+      , real_time_start(std::chrono::system_clock::now())
     {
+      last_written_time = compute_current_time();
       if (!fs::exists(dir) && data.save)
         fs::create_directory(dir);
     }
@@ -38,9 +41,19 @@ namespace MeltPoolDG::Restart
     }
 
     bool
-    do_save(const unsigned int n_time_step) const
+    do_save() const
     {
-      return (n_time_step % data.write_frequency == 0 && data.save >= 0);
+      if (data.save < 0)
+        return false;
+
+      const number current_time = compute_current_time();
+
+      const bool do_output = (current_time - last_written_time) >= data.write_time_step_size;
+
+      if (do_output)
+        last_written_time = current_time;
+
+      return do_output;
     }
 
     /**
@@ -87,13 +100,28 @@ namespace MeltPoolDG::Restart
     }
 
   private:
-    const RestartData<double> &data;
-    fs::path                   dir;
-    fs::path                   prefix;
-    std::vector<std::string>   suffices = {"_tria",
+    const RestartData<number> &                        data;
+    fs::path                                           dir;
+    fs::path                                           prefix;
+    const TimeIterator<number> &                       time;
+    mutable number                                     last_written_time = 0.0;
+    std::chrono::time_point<std::chrono::system_clock> real_time_start;
+    std::vector<std::string>                           suffices = {"_tria",
                                          "_tria.info",
                                          "_tria_fixed.data",
                                          "_problem.restart"};
+
+    number
+    compute_current_time() const
+    {
+      // note: we use nanoseconds to increase the precision of the real time in seconds
+      return (data.time_type == RestartTimeType::real ?
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                  std::chrono::system_clock::now() - real_time_start)
+                    .count() /
+                  1e9 :
+                time.get_current_time());
+    }
   };
 
   /***************************************************************************************
