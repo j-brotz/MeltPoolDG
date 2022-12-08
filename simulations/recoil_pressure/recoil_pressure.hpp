@@ -71,6 +71,7 @@ namespace MeltPoolDG
 
         bool         periodic_boundary    = false;
         bool         evaporation_boundary = false;
+        double       outlet_pressure      = 0.0;
         bool         slip_boundary        = false;
         unsigned int n_local_refinement   = 0;
         double       T_initial_top        = 500;
@@ -153,6 +154,9 @@ namespace MeltPoolDG
               evaporation_boundary,
               "Set this Parameter to true if the upper boundary of the domain should be open "
               "to enable an outward mass flow.");
+            prm.add_parameter("outlet pressure",
+                              outlet_pressure,
+                              "If evaporation boundary is enabled, set the outlet pressure.");
             prm.add_parameter(
               "slip boundary",
               slip_boundary,
@@ -490,7 +494,10 @@ namespace MeltPoolDG
               add_slip_or_no_slip_boundary(lower_bc);
               if (evaporation_boundary)
                 {
-                  this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
+                  this->attach_open_boundary_condition(
+                    upper_bc,
+                    std::make_shared<Functions::ConstantFunction<dim>>(outlet_pressure),
+                    "navier_stokes_u");
                   if (!periodic_boundary)
                     {
                       this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");

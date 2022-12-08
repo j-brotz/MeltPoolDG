@@ -2,6 +2,20 @@
 All notable changes of the input parameters will be documented in this file.
 
 
+## 2022-12-08
+- Add parameter to specify outlet pressure
+```diff
+{
+  "base": {
+    "application name": "recoil_pressure"
+  },
+  "simulation specific domain": {
+    "evaporation boundary": "true"
++   "outlet pressure": ""
+  }
+}
+
+```
 ## 2022-12-07
 - Modify restart parameters
 ```diff
