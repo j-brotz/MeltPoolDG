@@ -162,11 +162,12 @@ namespace MeltPoolDG::MeltPool
      * function computed from the level set.
      */
     void
-    compute_recoil_pressure_force(VectorType &      force_rhs,
-                                  const VectorType &level_set_as_heaviside,
-                                  const VectorType &temperature,
-                                  const VectorType &evaporative_mass_flux,
-                                  bool              zero_out = true) const;
+    compute_recoil_pressure_force(VectorType &       force_rhs,
+                                  const VectorType & level_set_as_heaviside,
+                                  const VectorType & temperature,
+                                  const VectorType & evaporative_mass_flux,
+                                  const unsigned int evapor_dof_idx,
+                                  bool               zero_out = true) const;
   };
 
 } // namespace MeltPoolDG::MeltPool
