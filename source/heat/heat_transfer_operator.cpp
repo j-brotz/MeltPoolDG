@@ -1149,9 +1149,6 @@ namespace MeltPoolDG::Heat
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
   {
-    VectorizedArray<number> rho_cp;
-    VectorizedArray<number> conductivity;
-
     if (data.interpolate_rho_times_cp == InterpolateMaterialParameterType::none &&
         data.interpolate_k == InterpolateMaterialParameterType::none)
       {
@@ -1161,15 +1158,19 @@ namespace MeltPoolDG::Heat
           MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
             MaterialUpdateFlags::density,
           q_index);
-        rho_cp       = material_values.capacity * material_values.density;
-        conductivity = material_values.conductivity;
-
-        return {rho_cp, conductivity};
+        return {material_values.capacity * material_values.density, material_values.conductivity};
       }
+
+
+    VectorizedArray<number> rho_cp;
+    VectorizedArray<number> conductivity;
 
     // default interpolation of parameters for the heat equation
     if (data.interpolate_rho_times_cp != InterpolateMaterialParameterType::none)
       {
+        Assert(InterpolateMaterialParameterType::none || (rho_cp_gas >= 0 && rho_cp_heavy >= 0),
+               ExcMessage("Volumetric heat capacity not set. Abort..."));
+
         switch (data.interpolate_rho_times_cp)
           {
             case InterpolateMaterialParameterType::smooth:
@@ -1205,6 +1206,8 @@ namespace MeltPoolDG::Heat
 
     if (data.interpolate_k != InterpolateMaterialParameterType::none)
       {
+        Assert((conductivity_gas >= 0 && conductivity_heavy >= 0),
+               ExcMessage("Conductivity not set. Abort..."));
         switch (data.interpolate_k)
           {
             case InterpolateMaterialParameterType::smooth:

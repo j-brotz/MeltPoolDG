@@ -134,12 +134,12 @@ namespace MeltPoolDG::Heat
     const VectorType * level_set_as_heaviside;
 
     // optional: rho times cp
-    double rho_cp_gas;
-    double rho_cp_heavy;
+    double rho_cp_gas   = -1;
+    double rho_cp_heavy = -1;
 
     // optional: conductivity
-    double conductivity_gas;
-    double conductivity_heavy;
+    double conductivity_gas   = -1;
+    double conductivity_heavy = -1;
 
     // optional: two phase flow with evaporation
     VectorType * evaporative_mass_flux      = nullptr;

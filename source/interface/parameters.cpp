@@ -587,7 +587,7 @@ namespace MeltPoolDG
         "interpolate k",
         heat.interpolate_k,
         "Specify the interpolation type of the conductivity. The default value is the one specified "
-        "within the material dict.");
+        "within the material section.");
       heat.delta_approximation_phase_weighted.add_parameters(prm);
       heat.linear_solver.add_parameters(prm);
     }
