@@ -22,14 +22,6 @@
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.13585e-10
-points_reference0.999716
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07165e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.258445652253629e-04                                    navier_stokes_adaflo |
@@ -54,14 +46,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.30503e-10
-points_reference0.999674
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07226e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.350203713913643e-04                                    navier_stokes_adaflo |
@@ -86,14 +70,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.38203e-10
-points_reference0.999654
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07288e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.418689901565744e-04                                    navier_stokes_adaflo |
@@ -118,14 +94,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.42962e-10
-points_reference0.999643
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07350e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.475651602579424e-04                                    navier_stokes_adaflo |
@@ -150,14 +118,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.46561e-10
-points_reference0.999634
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07412e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.525686065003131e-04                                    navier_stokes_adaflo |
@@ -182,14 +142,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.49447e-10
-points_reference0.999626
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07475e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.570993694668193e-04                                    navier_stokes_adaflo |
@@ -214,14 +166,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.51796e-10
-points_reference0.999621
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07537e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.612806193591444e-04                                    navier_stokes_adaflo |
@@ -246,14 +190,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.53717e-10
-points_reference0.999616
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07600e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.651895763955127e-04                                    navier_stokes_adaflo |
@@ -278,14 +214,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.55283e-10
-points_reference0.999612
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07662e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.688785367733988e-04                                    navier_stokes_adaflo |
@@ -310,14 +238,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.56549e-10
-points_reference0.999609
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07725e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.723848181633217e-04                                    navier_stokes_adaflo |
@@ -342,14 +262,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.57552e-10
-points_reference0.999606
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07788e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.757362070169539e-04                                    navier_stokes_adaflo |
@@ -374,14 +286,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.58324e-10
-points_reference0.999604
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07851e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.789541144243030e-04                                    navier_stokes_adaflo |
@@ -406,14 +310,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.58886e-10
-points_reference0.999603
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07913e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.820554344639153e-04                                    navier_stokes_adaflo |
@@ -438,14 +334,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.59259e-10
-points_reference0.999602
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.07976e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.850537091629427e-04                                    navier_stokes_adaflo |
@@ -470,14 +358,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.59458e-10
-points_reference0.999601
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08039e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.879600878295618e-04                                    navier_stokes_adaflo |
@@ -502,14 +382,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.59497e-10
-points_reference0.999601
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08102e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.907838012962922e-04                                    navier_stokes_adaflo |
@@ -534,14 +406,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.59387e-10
-points_reference0.999602
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08165e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.935326363715785e-04                                    navier_stokes_adaflo |
@@ -566,14 +430,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.5914e-10
-points_reference0.999602
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08229e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.962133382022065e-04                                    navier_stokes_adaflo |
@@ -598,14 +454,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.58763e-10
-points_reference0.999603
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08292e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 2.988314765735902e-04                                    navier_stokes_adaflo |
@@ -630,14 +478,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.58266e-10
-points_reference0.999604
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08355e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.013921153443715e-04                                    navier_stokes_adaflo |
@@ -662,14 +502,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.57655e-10
-points_reference0.999606
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08418e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.038995037428481e-04                                    navier_stokes_adaflo |
@@ -694,14 +526,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.56938e-10
-points_reference0.999608
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08481e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.063574686580652e-04                                    navier_stokes_adaflo |
@@ -726,14 +550,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.5612e-10
-points_reference0.99961
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08545e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.087694643799933e-04                                    navier_stokes_adaflo |
@@ -758,14 +574,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.55208e-10
-points_reference0.999612
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08608e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.111384000075673e-04                                    navier_stokes_adaflo |
@@ -790,14 +598,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.54205e-10
-points_reference0.999614
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08672e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.134669883571468e-04                                    navier_stokes_adaflo |
@@ -822,14 +622,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.53118e-10
-points_reference0.999617
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08735e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.157576937904482e-04                                    navier_stokes_adaflo |
@@ -854,14 +646,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.51949e-10
-points_reference0.99962
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08799e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.180126719133724e-04                                    navier_stokes_adaflo |
@@ -886,14 +670,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.50704e-10
-points_reference0.999623
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08862e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.202338933160216e-04                                    navier_stokes_adaflo |
@@ -918,14 +694,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.49387e-10
-points_reference0.999627
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08926e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.224232138403013e-04                                    navier_stokes_adaflo |
@@ -950,14 +718,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.48e-10
-points_reference0.99963
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.08989e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.245822630093465e-04                                    navier_stokes_adaflo |
@@ -982,14 +742,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.46547e-10
-points_reference0.999634
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09053e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.267124649866694e-04                                    navier_stokes_adaflo |
@@ -1014,14 +766,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.45031e-10
-points_reference0.999637
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09116e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.288153247788115e-04                                    navier_stokes_adaflo |
@@ -1046,14 +790,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.43455e-10
-points_reference0.999641
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09180e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.308921315390511e-04                                    navier_stokes_adaflo |
@@ -1078,14 +814,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.41822e-10
-points_reference0.999645
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09244e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.329439792625457e-04                                    navier_stokes_adaflo |
@@ -1110,14 +838,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.40134e-10
-points_reference0.99965
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09308e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.349720019729757e-04                                    navier_stokes_adaflo |
@@ -1142,14 +862,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.38394e-10
-points_reference0.999654
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09371e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.369772107070316e-04                                    navier_stokes_adaflo |
@@ -1174,14 +886,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.36604e-10
-points_reference0.999658
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09435e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.389605846943270e-04                                    navier_stokes_adaflo |
@@ -1206,14 +910,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.34767e-10
-points_reference0.999663
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09499e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.409229805024344e-04                                    navier_stokes_adaflo |
@@ -1238,14 +934,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.32884e-10
-points_reference0.999668
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09563e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.428652027341215e-04                                    navier_stokes_adaflo |
@@ -1270,14 +958,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.30957e-10
-points_reference0.999673
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09627e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.447880759013138e-04                                    navier_stokes_adaflo |
@@ -1302,14 +982,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.28989e-10
-points_reference0.999678
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09691e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.466922606710506e-04                                    navier_stokes_adaflo |
@@ -1334,14 +1006,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.2698e-10
-points_reference0.999683
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09755e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.485784886858661e-04                                    navier_stokes_adaflo |
@@ -1366,14 +1030,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.24933e-10
-points_reference0.999688
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09819e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.504474000377815e-04                                    navier_stokes_adaflo |
@@ -1398,14 +1054,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.2285e-10
-points_reference0.999693
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09883e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.522995003512008e-04                                    navier_stokes_adaflo |
@@ -1430,14 +1078,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.20731e-10
-points_reference0.999698
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.09947e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.541354691351293e-04                                    navier_stokes_adaflo |
@@ -1462,14 +1102,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.18579e-10
-points_reference0.999704
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10011e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.559558229906991e-04                                    navier_stokes_adaflo |
@@ -1494,14 +1126,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.16394e-10
-points_reference0.999709
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10075e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.577610361556432e-04                                    navier_stokes_adaflo |
@@ -1526,14 +1150,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.14179e-10
-points_reference0.999715
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10139e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.595515830522322e-04                                    navier_stokes_adaflo |
@@ -1558,14 +1174,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.11934e-10
-points_reference0.99972
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10203e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.613279177886057e-04                                    navier_stokes_adaflo |
@@ -1590,14 +1198,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.0966e-10
-points_reference0.999726
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10267e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.630904937669420e-04                                    navier_stokes_adaflo |
@@ -1622,14 +1222,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.07359e-10
-points_reference0.999732
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10331e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.648397234952414e-04                                    navier_stokes_adaflo |
@@ -1654,14 +1246,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.05032e-10
-points_reference0.999737
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10396e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.665759374687217e-04                                    navier_stokes_adaflo |
@@ -1686,14 +1270,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -1.0268e-10
-points_reference0.999743
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10460e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.682996508109682e-04                                    navier_stokes_adaflo |
@@ -1718,14 +1294,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -1.00304e-10
-points_reference0.999749
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10524e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.700110493513697e-04                                    navier_stokes_adaflo |
@@ -1750,14 +1318,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -9.79048e-11
-points_reference0.999755
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10588e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.717105461627778e-04                                    navier_stokes_adaflo |
@@ -1782,14 +1342,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -9.54835e-11
-points_reference0.999761
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10653e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.733984499003072e-04                                    navier_stokes_adaflo |
@@ -1814,14 +1366,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -9.30412e-11
-points_reference0.999767
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10717e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.750750500308258e-04                                    navier_stokes_adaflo |
@@ -1846,14 +1390,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -9.05785e-11
-points_reference0.999774
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10781e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.767407584400362e-04                                    navier_stokes_adaflo |
@@ -1878,14 +1414,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -8.80965e-11
-points_reference0.99978
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10846e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.783956787865827e-04                                    navier_stokes_adaflo |
@@ -1910,14 +1438,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -8.55958e-11
-points_reference0.999786
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10910e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.800401614781288e-04                                    navier_stokes_adaflo |
@@ -1942,14 +1462,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -8.30773e-11
-points_reference0.999792
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.10975e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.816745363129488e-04                                    navier_stokes_adaflo |
@@ -1974,14 +1486,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -8.05417e-11
-points_reference0.999799
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11039e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.832988867395506e-04                                    navier_stokes_adaflo |
@@ -2006,14 +1510,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -7.79898e-11
-points_reference0.999805
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11103e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.849136036967995e-04                                    navier_stokes_adaflo |
@@ -2038,14 +1534,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -7.54223e-11
-points_reference0.999811
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11168e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.865188114945652e-04                                    navier_stokes_adaflo |
@@ -2070,14 +1558,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -7.28397e-11
-points_reference0.999818
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11232e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.881147985795519e-04                                    navier_stokes_adaflo |
@@ -2102,14 +1582,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -7.02429e-11
-points_reference0.999824
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11297e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.897017508125800e-04                                    navier_stokes_adaflo |
@@ -2134,14 +1606,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -6.76325e-11
-points_reference0.999831
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11361e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.912798538508446e-04                                    navier_stokes_adaflo |
@@ -2166,14 +1630,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -6.50089e-11
-points_reference0.999837
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11426e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.928493138033192e-04                                    navier_stokes_adaflo |
@@ -2198,14 +1654,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -6.23729e-11
-points_reference0.999844
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11491e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.944103575954523e-04                                    navier_stokes_adaflo |
@@ -2230,14 +1678,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -5.97249e-11
-points_reference0.999851
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11555e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.959630680655947e-04                                    navier_stokes_adaflo |
@@ -2262,14 +1702,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -5.70656e-11
-points_reference0.999857
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11620e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.975076923804091e-04                                    navier_stokes_adaflo |
@@ -2294,14 +1726,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -5.43955e-11
-points_reference0.999864
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11684e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 3.990444163239800e-04                                    navier_stokes_adaflo |
@@ -2326,14 +1750,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -5.17151e-11
-points_reference0.999871
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11749e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.005733637491340e-04                                    navier_stokes_adaflo |
@@ -2358,14 +1774,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -4.90248e-11
-points_reference0.999877
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11814e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.020947198995877e-04                                    navier_stokes_adaflo |
@@ -2390,14 +1798,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -4.63252e-11
-points_reference0.999884
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11878e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.036085884319066e-04                                    navier_stokes_adaflo |
@@ -2422,14 +1822,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -4.36167e-11
-points_reference0.999891
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.11943e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.051151343036454e-04                                    navier_stokes_adaflo |
@@ -2454,14 +1846,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -4.08998e-11
-points_reference0.999898
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12008e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.066145428000038e-04                                    navier_stokes_adaflo |
@@ -2486,14 +1870,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -3.81749e-11
-points_reference0.999905
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12072e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.081069173690721e-04                                    navier_stokes_adaflo |
@@ -2518,14 +1894,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -3.54424e-11
-points_reference0.999911
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12137e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.095923611706191e-04                                    navier_stokes_adaflo |
@@ -2550,14 +1918,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -3.27028e-11
-points_reference0.999918
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12202e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.110710183366921e-04                                    navier_stokes_adaflo |
@@ -2582,14 +1942,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -2.99564e-11
-points_reference0.999925
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12267e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.125431156344198e-04                                    navier_stokes_adaflo |
@@ -2614,14 +1966,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real -2.72036e-11
-points_reference0.999932
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12332e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.140085919232263e-04                                    navier_stokes_adaflo |
@@ -2646,14 +1990,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -2.44448e-11
-points_reference0.999939
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12396e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.154677351474503e-04                                    navier_stokes_adaflo |
@@ -2678,14 +2014,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -2.16804e-11
-points_reference0.999946
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12461e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.169205049498317e-04                                    navier_stokes_adaflo |
@@ -2710,14 +2038,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.89106e-11
-points_reference0.999953
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12526e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.183671274232976e-04                                    navier_stokes_adaflo |
@@ -2742,14 +2062,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.61359e-11
-points_reference0.99996
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12591e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.198076442216232e-04                                    navier_stokes_adaflo |
@@ -2774,14 +2086,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.33565e-11
-points_reference0.999967
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12656e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.212422404598948e-04                                    navier_stokes_adaflo |
@@ -2806,14 +2110,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -1.05729e-11
-points_reference0.999974
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12721e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.226709170055390e-04                                    navier_stokes_adaflo |
@@ -2838,14 +2134,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real -7.78523e-12
-points_reference0.999981
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12786e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.240938384489565e-04                                    navier_stokes_adaflo |
@@ -2870,14 +2158,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -4.99387e-12
-points_reference0.999988
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12851e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.255111075709742e-04                                    navier_stokes_adaflo |
@@ -2902,14 +2182,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real -2.1991e-12
-points_reference0.999995
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12916e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.269227455722191e-04                                    navier_stokes_adaflo |
@@ -2934,14 +2206,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 5.99014e-13
-points_reference1.49754e-06
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.12981e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.283287489671495e-04                                    navier_stokes_adaflo |
@@ -2966,14 +2230,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 3.39294e-12
-points_reference8.48236e-06
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13046e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.297289234884980e-04                                    navier_stokes_adaflo |
@@ -2998,14 +2254,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 6.14888e-12
-points_reference1.53722e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13112e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.311237344653957e-04                                    navier_stokes_adaflo |
@@ -3030,14 +2278,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 8.85073e-12
-points_reference2.21268e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13178e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.325132649014568e-04                                    navier_stokes_adaflo |
@@ -3062,14 +2302,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 1.14901e-11
-points_reference2.87254e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13244e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.338975979046227e-04                                    navier_stokes_adaflo |
@@ -3094,14 +2326,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 1.40623e-11
-points_reference3.51559e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13310e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.352768975318682e-04                                    navier_stokes_adaflo |
@@ -3126,14 +2350,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 1.65644e-11
-points_reference4.14111e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13377e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.366511643619219e-04                                    navier_stokes_adaflo |
@@ -3158,14 +2374,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 1.89947e-11
-points_reference4.74867e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13443e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.380205219589287e-04                                    navier_stokes_adaflo |
@@ -3190,14 +2398,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real 2.13521e-11
-points_reference5.33803e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13510e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.393849913115469e-04                                    navier_stokes_adaflo |
@@ -3222,14 +2422,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 2.36363e-11
-points_reference5.90906e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13577e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.407446340575117e-04                                    navier_stokes_adaflo |
@@ -3254,14 +2446,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 2.58471e-11
-points_reference6.46177e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13644e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.420996358073286e-04                                    navier_stokes_adaflo |
@@ -3286,14 +2470,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 2.79849e-11
-points_reference6.99623e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13710e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.434499348900872e-04                                    navier_stokes_adaflo |
@@ -3318,14 +2494,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 3.00502e-11
-points_reference7.51255e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13777e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.447956752328471e-04                                    navier_stokes_adaflo |
@@ -3350,14 +2518,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 3.20437e-11
-points_reference8.01093e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13844e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.461368780309908e-04                                    navier_stokes_adaflo |
@@ -3382,14 +2542,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 3.39663e-11
-points_reference8.49157e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13911e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.474736667235219e-04                                    navier_stokes_adaflo |
@@ -3414,14 +2566,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real 3.58189e-11
-points_reference8.95473e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.13978e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.488060412271189e-04                                    navier_stokes_adaflo |
@@ -3446,14 +2590,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 3.76027e-11
-points_reference9.40067e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14046e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.499916489421089e-04                                    navier_stokes_adaflo |
@@ -3478,14 +2614,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 3.92979e-11
-points_reference9.82448e-05
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14113e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.509692666167417e-04                                    navier_stokes_adaflo |
@@ -3510,14 +2638,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 4.08598e-11
-points_reference0.00010215
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14180e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.519430499142043e-04                                    navier_stokes_adaflo |
@@ -3542,14 +2662,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 4.22602e-11
-points_reference0.000105651
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14247e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.529129154676063e-04                                    navier_stokes_adaflo |
@@ -3574,14 +2686,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 4.34891e-11
-points_reference0.000108723
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14314e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.538788424639367e-04                                    navier_stokes_adaflo |
@@ -3606,14 +2710,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 4.45431e-11
-points_reference0.000111358
-JxW1
-result1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14381e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.548409951530916e-04                                    navier_stokes_adaflo |
@@ -3638,14 +2734,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real 4.54216e-11
-points_reference0.000113554
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14448e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.557992501897718e-04                                    navier_stokes_adaflo |
@@ -3670,14 +2758,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 4.61256e-11
-points_reference0.000115314
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14516e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.567537311678196e-04                                    navier_stokes_adaflo |
@@ -3702,14 +2782,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 4.67174e-11
-points_reference0.000116793
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14583e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.577045615349261e-04                                    navier_stokes_adaflo |
@@ -3734,14 +2806,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-points_real 4.72278e-11
-points_reference0.000118069
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14650e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.586516381766297e-04                                    navier_stokes_adaflo |
@@ -3766,14 +2830,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-heat rhs norm1e+09
-heat rhs norm1e+09
-points_real 4.76605e-11
-points_reference0.000119151
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14716e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.595950434690392e-04                                    navier_stokes_adaflo |
@@ -3798,14 +2854,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 4.80142e-11
-points_reference0.000120036
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14783e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.605348802797962e-04                                    navier_stokes_adaflo |
@@ -3830,14 +2878,6 @@ heat rhs norm1e+09
 | Surface mesh generated, 1 cut cells found.                                             level set |
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-points_real 4.8287e-11
-points_reference0.000120718
-JxW1
-result1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
-heat rhs norm1e+09
 | Newton Raphson solver converged: ||solution|| = 7.14850e+00                newton_raphson_solver |
 |  total mass = 0.41311                                                          melt_pool_problem |
 | || velocity ||L2 = 4.614711491841173e-04                                    navier_stokes_adaflo |
