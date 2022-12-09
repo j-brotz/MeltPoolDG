@@ -529,11 +529,15 @@ namespace MeltPoolDG::LevelSet::Tools
 
               if (dim == 1)
                 {
+                  AssertThrow(surface_vertices.size() == 1,
+                              ExcMessage("The MCA in 1D found too many points."));
+
                   points_real = surface_vertices;
 
                   for (unsigned int i = 0; i < points_real.size(); ++i)
                     {
-                      points.emplace_back(Point<dim>(1.));
+                      points.emplace_back(
+                        mapping.transform_real_to_unit_cell(cell, points_real[i]));
                       weights.emplace_back(1.);
                     }
                 }
