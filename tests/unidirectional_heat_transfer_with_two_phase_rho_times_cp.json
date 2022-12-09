@@ -20,7 +20,7 @@
     "heat temperature infinity": "300.0",
     "heat velocity": "0.01",
     "heat two phase": "true",
-    "interpolate rho times cp": "true",
+    "interpolate rho times cp": "smooth",
     "heat nlsolve residual tolerance": "1e-6",
     "linear solver": {
       "rel tolerance": "1e-12"

@@ -581,7 +581,13 @@ namespace MeltPoolDG
       prm.add_parameter(
         "interpolate rho times cp",
         heat.interpolate_rho_times_cp,
-        "Set this parameter to true to interpolate the product of density and capacity instead of both separately.");
+        "Specify the interpolation type of the product of density and capacity instead of default interpolating "
+        "both individually.");
+      prm.add_parameter(
+        "interpolate k",
+        heat.interpolate_k,
+        "Specify the interpolation type of the conductivity. The default value is the one specified "
+        "within the material section.");
       heat.delta_approximation_phase_weighted.add_parameters(prm);
       heat.linear_solver.add_parameters(prm);
     }
