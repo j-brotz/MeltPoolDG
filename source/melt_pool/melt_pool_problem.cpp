@@ -451,10 +451,13 @@ namespace MeltPoolDG::MeltPool
                         heat_operation->compute_interface_temperature(
                           level_set_operation->get_distance_to_level_set(),
                           level_set_operation->get_normal_vector());
+
                         melt_pool_operation->compute_force_flow_rhs(
                           vel_force_rhs,
                           level_set_operation->get_level_set_as_heaviside(),
                           heat_operation->get_temperature_interface(),
+                          evaporation_operation->get_evaporative_mass_flux(),
+                          evapor_mass_flux_dof_idx,
                           false);
                       }
                     else
@@ -464,6 +467,7 @@ namespace MeltPoolDG::MeltPool
                           level_set_operation->get_level_set_as_heaviside(),
                           heat_operation->get_temperature(),
                           evaporation_operation->get_evaporative_mass_flux(),
+                          evapor_mass_flux_dof_idx,
                           false);
                       }
                   }

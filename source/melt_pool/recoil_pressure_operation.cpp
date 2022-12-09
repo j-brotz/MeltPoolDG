@@ -148,11 +148,12 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   RecoilPressureOperation<dim>::compute_recoil_pressure_force(
-    VectorType &      force_rhs,
-    const VectorType &level_set_as_heaviside,
-    const VectorType &temperature,
-    const VectorType &evaporative_mass_flux,
-    bool              zero_out) const
+    VectorType &       force_rhs,
+    const VectorType & level_set_as_heaviside,
+    const VectorType & temperature,
+    const VectorType & evaporative_mass_flux,
+    const unsigned int evapor_dof_idx,
+    bool               zero_out) const
   {
     temperature.update_ghost_values();
     if (model_type == RecoilPressureModelType::hybrid)
@@ -180,7 +181,7 @@ namespace MeltPoolDG::MeltPool
 
         if (model_type == RecoilPressureModelType::hybrid)
           evapor_flux_val = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
-                                                                               temp_dof_idx,
+                                                                               evapor_dof_idx,
                                                                                flow_vel_quad_idx);
 
         auto &used_level_set = do_level_set_pressure_gradient_interpolation ?

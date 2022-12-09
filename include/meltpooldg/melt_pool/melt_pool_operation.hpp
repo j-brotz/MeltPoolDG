@@ -90,11 +90,12 @@ namespace MeltPoolDG
       compute_melt_front_propagation(const VectorType &level_set_as_heaviside);
 
       void
-      compute_force_flow_rhs(VectorType &      vel_force_rhs,
-                             const VectorType &level_set_as_heaviside,
-                             const VectorType &temperature_interface,
-                             const VectorType &evaporative_mass_flux,
-                             const bool        zero_out = false) const;
+      compute_force_flow_rhs(VectorType &       vel_force_rhs,
+                             const VectorType & level_set_as_heaviside,
+                             const VectorType & temperature_interface,
+                             const VectorType & evaporative_mass_flux,
+                             const unsigned int evapor_dof_idx,
+                             const bool         zero_out = false) const;
 
       void
       reinit();
