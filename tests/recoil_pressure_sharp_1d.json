@@ -44,7 +44,7 @@
   "simulation specific domain": {
     "domain y max": "0.0001",
     "domain y min": "-0.0001",
-    "cell repetitions": "500,1",
+    "cell repetitions": "500",
     "evaporation boundary": "true",
     "periodic boundary": "false",
     "slip boundary": "true"
