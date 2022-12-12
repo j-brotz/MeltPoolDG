@@ -104,6 +104,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
       {
         prm.add_parameter("domain x min", x_min, "minimum x coordinate of simulation domain");
         prm.add_parameter("domain x max", x_max, "maximum x coordinate of simulation domain");
+
         prm.add_parameter("domain z min", z_min, "minimum z coordinate of simulation domain");
         prm.add_parameter("domain z max", z_max, "maximum z coordinate of simulation domain");
         if constexpr (dim == 3)
@@ -120,7 +121,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     create_spatial_discretization() override
     {
       AssertThrow(
-        x_min < x_max,
+        dim == 1 || x_min < x_max,
         ExcMessage("The upper bound of the domain must be greater than the lower bound! Abort..."));
       AssertThrow(
         z_min < z_max,
@@ -139,8 +140,8 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
             false,
             parallel::shared::Triangulation<dim>::Settings::partition_metis);
           // create mesh
-          const Point<1> left(0);
-          const Point<1> right(x_max);
+          const Point<1> left(z_min);
+          const Point<1> right(z_max);
           GridGenerator::hyper_rectangle(*this->triangulation, left, right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
@@ -238,8 +239,6 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
         }
       else if (this->parameters.base.problem_name == ProblemType::melt_pool)
         {
-          if (!(this->parameters.base.dimension == 2 || this->parameters.base.dimension == 3))
-            throw ExcNotImplemented();
           const types::boundary_id                  lower_bc = 1;
           const types::boundary_id                  upper_bc = 2;
           const types::boundary_id                  left_bc  = 3;
@@ -250,27 +249,38 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
             for (auto &face : cell->face_iterators())
               if (face->at_boundary())
                 {
-                  if (face->center()[0] == x_max)
-                    face->set_boundary_id(right_bc);
-                  if (face->center()[0] == 0.0)
-                    face->set_boundary_id(left_bc);
-                  if constexpr (dim == 2)
+                  if constexpr (dim == 1)
                     {
-                      if (face->center()[1] == -z_max)
+                      if (face->center()[0] == z_max)
                         face->set_boundary_id(lower_bc);
-                      if (face->center()[1] == z_max)
+                      else if (face->center()[0] == z_min)
                         face->set_boundary_id(upper_bc);
                     }
-                  if constexpr (dim == 3)
+                  else
                     {
-                      if (face->center()[1] == -y_max)
-                        face->set_boundary_id(lower_bc);
-                      if (face->center()[1] == y_max)
-                        face->set_boundary_id(upper_bc);
-                      if (face->center()[2] == -z_max)
-                        face->set_boundary_id(front_bc);
-                      if (face->center()[2] == z_max)
-                        face->set_boundary_id(back_bc);
+                      if (face->center()[0] == x_max)
+                        face->set_boundary_id(right_bc);
+                      else if (face->center()[0] == x_min)
+                        face->set_boundary_id(left_bc);
+
+                      if constexpr (dim == 2)
+                        {
+                          if (face->center()[1] == -z_max)
+                            face->set_boundary_id(lower_bc);
+                          if (face->center()[1] == z_max)
+                            face->set_boundary_id(upper_bc);
+                        }
+                      if constexpr (dim == 3)
+                        {
+                          if (face->center()[1] == -y_max)
+                            face->set_boundary_id(lower_bc);
+                          if (face->center()[1] == y_max)
+                            face->set_boundary_id(upper_bc);
+                          if (face->center()[2] == -z_max)
+                            face->set_boundary_id(front_bc);
+                          if (face->center()[2] == z_max)
+                            face->set_boundary_id(back_bc);
+                        }
                     }
                 }
           this->attach_no_slip_boundary_condition(left_bc, "navier_stokes_u");

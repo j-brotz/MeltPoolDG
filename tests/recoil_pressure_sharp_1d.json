@@ -27,8 +27,7 @@
     "heat nlsolve max nonlinear iterations": "15",
     "heat nlsolve residual tolerance": "1e0",
     "heat solidification": "false",
-    "heat two phase": "true",
-    "interpolate rho times cp": "false"
+    "heat two phase": "true"
   },
   "laser": {
     "laser gauss absorptivity gas": "1.0",
