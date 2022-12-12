@@ -180,6 +180,25 @@ namespace MeltPoolDG
     }
 
     template <int dim, typename number>
+    Tensor<1, dim, number>
+    to_vector(const Tensor<1, dim, number> &in)
+    {
+      return in;
+    }
+
+    template <int dim, typename number>
+    Tensor<1, dim, number>
+    to_vector(const number &in)
+    {
+      Tensor<1, dim, number> vec;
+
+      vec[0] = in;
+
+      return vec;
+    }
+
+
+    template <int dim, typename number>
     Tensor<1, dim, VectorizedArray<number>>
     normalize(const VectorizedArray<number> &in, const double zero = 1e-16)
     {
