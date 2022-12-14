@@ -156,6 +156,7 @@ namespace MeltPoolDG::Heat
      * just for output purposes
      */
     mutable VectorType                             evapor_heat_source;
+    mutable VectorType                             evapor_heat_source_projected;
     mutable AlignedVector<VectorizedArray<double>> q_vapor;
 
     // phase weighted delta functin, only used for evaporative heat loss
