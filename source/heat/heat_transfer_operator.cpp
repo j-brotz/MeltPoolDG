@@ -725,8 +725,7 @@ namespace MeltPoolDG::Heat
       {
         scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
 
-        evapor_heat_source = 0.0;
-        evapor_heat_source -= dst;
+        evapor_heat_source.sadd(0.0, -1, dst);
 
         FEPointEvaluation<1, dim> evapor_vals_surf(scratch_data.get_mapping(),
                                                    scratch_data.get_fe(evapor_mass_flux_dof_idx),
