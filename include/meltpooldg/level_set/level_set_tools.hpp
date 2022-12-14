@@ -622,9 +622,10 @@ namespace MeltPoolDG::LevelSet::Tools
     // check if total nodal weights are equal to 1
     if (dim == 1)
       for (const auto &[k, w] : total_nodal_weights)
-        AssertThrow(std::abs(w - 1) < 1e-16,
+        AssertThrow(std::abs(w - 1) < 1e-10,
                     ExcMessage("The MCA delivered only one cell corresponding to the corner node " +
-                               std::to_string(k) + ". Abort..."));
+                               std::to_string(k) + ". The total nodal weight is " +
+                               std::to_string(w) + ". Abort..."));
 
     if (!is_ghosted)
       level_set_vector.zero_out_ghost_values();
