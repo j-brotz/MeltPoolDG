@@ -344,11 +344,11 @@ namespace MeltPoolDG::Heat
     std::vector<types::global_dof_index> local_dof_indices;
 
     LevelSet::Tools::evaluate_at_interface<dim>(
-      scratch_data.get_dof_handler(temp_dof_idx),
+      scratch_data.get_dof_handler(ls_dof_idx),
       scratch_data.get_mapping(),
       level_set_heaviside,
       [&](const auto &cell, const auto &points_real, const auto &points, const auto &weights) {
-        // evaluate rhs term
+        // dof indices level set
         local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
         buffer.resize(cell->get_fe().n_dofs_per_cell());
         cell->get_dof_indices(local_dof_indices);
@@ -357,9 +357,6 @@ namespace MeltPoolDG::Heat
 
         const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
         const ArrayView<const double>     JxW(weights.data(), n_points);
-
-        ls.reinit(cell, unit_points);
-        heat_source_vals.reinit(cell, unit_points);
 
         // gather evaluate level set for the points at the interface
         ls.reinit(cell, unit_points);
@@ -401,6 +398,18 @@ namespace MeltPoolDG::Heat
               }
             normal_vals->evaluate(make_array_view(buffer_dim), EvaluationFlags::values);
           }
+
+        TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
+          &scratch_data.get_triangulation(),
+          cell->level(),
+          cell->index(),
+          &scratch_data.get_dof_handler(temp_dof_idx));
+
+        local_dof_indices.resize(temp_dof_cell->get_fe().n_dofs_per_cell());
+        temp_dof_cell->get_dof_indices(local_dof_indices);
+        buffer.resize(temp_dof_cell->get_fe().n_dofs_per_cell());
+
+        heat_source_vals.reinit(temp_dof_cell, unit_points);
 
         for (unsigned int q = 0; q < n_points; ++q)
           {
