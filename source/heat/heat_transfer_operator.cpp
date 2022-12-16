@@ -7,6 +7,7 @@
 
 #include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/material/material.templates.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -722,6 +723,10 @@ namespace MeltPoolDG::Heat
     // evaluate the evaporative heat loss term as surface integral
     if (evaporative_mass_flux && surface_mesh_info)
       {
+        scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
+
+        evapor_heat_source.equ(-1.0, dst);
+
         FEPointEvaluation<1, dim> evapor_vals_surf(scratch_data.get_mapping(),
                                                    scratch_data.get_fe(evapor_mass_flux_dof_idx),
                                                    update_values);
@@ -809,6 +814,8 @@ namespace MeltPoolDG::Heat
           }
         dst.compress(VectorOperation::add);
         scratch_data.get_constraint(temp_dof_idx).set_zero(dst);
+
+        evapor_heat_source += dst;
       }
   }
 
@@ -930,28 +937,58 @@ namespace MeltPoolDG::Heat
     /**
      * write evaporative mass flux to dof vector
      */
-    if (data_out.is_requested("evapor_heat_source"))
+    if (data_out.is_requested("evaporative_heat_source_projected"))
       {
-        if (evaporative_mass_flux && !surface_mesh_info)
+        if (evaporative_mass_flux)
           {
-            scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
-            if (!q_vapor.empty() && scratch_data.is_hex_mesh())
-              MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
-                evapor_heat_source,
-                scratch_data.get_matrix_free(),
-                temp_hanging_nodes_dof_idx,
-                temp_quad_idx,
-                [&](const unsigned int cell,
-                    const unsigned int quad) -> const VectorizedArray<double> & {
-                  return q_vapor[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
-                });
+            if (surface_mesh_info)
+              {
+                scratch_data.initialize_dof_vector(evapor_heat_source_projected,
+                                                   temp_hanging_nodes_dof_idx);
+                VectorTools::project_vector<dim>(
+                  scratch_data.get_mapping(),
+                  scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                  scratch_data.get_constraint(temp_hanging_nodes_dof_idx),
+                  scratch_data.get_quadrature(temp_quad_idx),
+                  evapor_heat_source,
+                  evapor_heat_source_projected);
+              }
+            else
+              {
+                scratch_data.initialize_dof_vector(evapor_heat_source_projected,
+                                                   temp_hanging_nodes_dof_idx);
+                if (!q_vapor.empty() && scratch_data.is_hex_mesh())
+                  MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
+                    evapor_heat_source_projected,
+                    scratch_data.get_matrix_free(),
+                    temp_hanging_nodes_dof_idx,
+                    temp_quad_idx,
+                    [&](const unsigned int cell,
+                        const unsigned int quad) -> const VectorizedArray<double> & {
+                      return q_vapor[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
+                    });
+              }
 
-            scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(evapor_heat_source);
-
-            data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                                     evapor_heat_source,
-                                     "evporative_heat_source");
+            Journal::print_formatted_norm(
+              scratch_data.get_pcout(2),
+              [&]() -> double {
+                return VectorTools::compute_L2_norm<dim>(evapor_heat_source_projected,
+                                                         scratch_data,
+                                                         temp_hanging_nodes_dof_idx,
+                                                         temp_quad_idx);
+              },
+              "int(mDot*hV)",
+              "heat_transfer_operator",
+              15 /*precision*/
+            );
           }
+
+        scratch_data.get_constraint(temp_hanging_nodes_dof_idx)
+          .distribute(evapor_heat_source_projected);
+
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                                 evapor_heat_source_projected,
+                                 "evporative_heat_source_projected");
       }
   }
 

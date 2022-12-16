@@ -503,7 +503,8 @@ namespace MeltPoolDG::LevelSet::Tools
                                                        nm_locally_relevant_level_set_vector);
       }
 
-    for (const auto &cell : dof_handler.active_cell_iterators())
+    for (const auto &cell : dof_handler.active_cell_iterators_on_level(
+           dof_handler.get_triangulation().n_global_levels() - 1))
       {
         if (cell->is_locally_owned())
           {
