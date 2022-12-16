@@ -450,7 +450,7 @@ namespace MeltPoolDG::LevelSet::Tools
     GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(mapping,
                                                          dof_handler.get_fe(), // todo
                                                          n_subdivisions,
-                                                         1e-16);
+                                                         1e-10);
 
     const bool is_ghosted = level_set_vector.has_ghost_elements();
 
@@ -469,6 +469,9 @@ namespace MeltPoolDG::LevelSet::Tools
 
     std::unique_ptr<NonMatching::MeshClassifier<dim>> nm_mesh_classifier;
     std::unique_ptr<NonMatching::FEValues<dim>>       nm_non_matching_fe_values;
+
+    // only for dim == 1
+    std::map<double, double> total_nodal_weights; // TODO: also necessary for other dimensions?
 
     if (use_mca == false) // this is an expensive step; execute only if needed
       {
@@ -528,17 +531,35 @@ namespace MeltPoolDG::LevelSet::Tools
               std::vector<Point<dim>> points;
               std::vector<double>     weights;
 
-              if (dim == 1)
+              if constexpr (dim == 1)
                 {
                   AssertThrow(surface_vertices.size() == 1,
                               ExcMessage("The MCA in 1D found too many points."));
 
-                  points_real = surface_vertices;
+                  points_real.emplace_back(surface_vertices[0]);
+                  points.emplace_back(mapping.transform_real_to_unit_cell(cell, points_real[0]));
 
-                  for (unsigned int i = 0; i < points_real.size(); ++i)
+                  const auto p = points_real[0][0];
+
+                  // check if point is vertex
+                  if (points_real[0].distance(cell->vertex(0)) < 1e-16 ||
+                      points_real[0].distance(cell->vertex(cell->n_vertices() - 1)) < 1e-16)
                     {
-                      points.emplace_back(
-                        mapping.transform_real_to_unit_cell(cell, points_real[i]));
+                      // consistency check, if MCA returns 2 cells if a corner node is found
+                      if (total_nodal_weights.find(p) == total_nodal_weights.end())
+                        total_nodal_weights[p] = 0.5;
+                      else
+                        total_nodal_weights[p] += 0.5;
+
+                      weights.emplace_back(0.5);
+                    }
+                  else
+                    {
+                      if (total_nodal_weights.find(p) == total_nodal_weights.end())
+                        total_nodal_weights[p] = 1.0;
+                      else
+                        AssertThrow(false, ExcMessage("Inconsistency found with MCA. Abort..."));
+
                       weights.emplace_back(1.);
                     }
                 }
@@ -598,6 +619,14 @@ namespace MeltPoolDG::LevelSet::Tools
             evaluate_at_interface_points(cell, points_real, points, weights);
           }
       }
+
+    // check if total nodal weights are equal to 1
+    if (dim == 1)
+      for (const auto &[k, w] : total_nodal_weights)
+        AssertThrow(std::abs(w - 1) < 1e-10,
+                    ExcMessage("The MCA delivered only one cell corresponding to the corner node " +
+                               std::to_string(k) + ". The total nodal weight is " +
+                               std::to_string(w) + ". Abort..."));
 
     if (!is_ghosted)
       level_set_vector.zero_out_ghost_values();
