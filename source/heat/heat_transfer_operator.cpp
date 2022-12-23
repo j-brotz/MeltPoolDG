@@ -631,7 +631,8 @@ namespace MeltPoolDG::Heat
 
             if (velocity)
               {
-                val += rho_cp * temp_vals.get_gradient(q_index) * velocity_vals.get_value(q_index);
+                val += rho_cp * scalar_product(temp_vals.get_gradient(q_index),
+                                               velocity_vals.get_value(q_index));
               }
 
             if (evapor_vals)
@@ -716,6 +717,7 @@ namespace MeltPoolDG::Heat
         temp_vals.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
       }
   }
+
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
@@ -1071,7 +1073,8 @@ namespace MeltPoolDG::Heat
 
         if (velocity)
           {
-            val += rho_cp * temp_vals.get_gradient(q_index) * velocity_vals.get_value(q_index);
+            val += rho_cp * scalar_product(temp_vals.get_gradient(q_index),
+                                           velocity_vals.get_value(q_index));
             // todo: add term containing ∇·u  in case of evaporation
           }
 
@@ -1120,7 +1123,6 @@ namespace MeltPoolDG::Heat
                    material_data.second.capacity * ls_vals_used.get_gradient(q_index).norm() *
                    weight;
           }
-
 
         temp_vals.submit_value(val, q_index);
         temp_vals.submit_gradient(val_grad, q_index);
