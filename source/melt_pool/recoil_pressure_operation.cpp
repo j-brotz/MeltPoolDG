@@ -70,8 +70,7 @@ namespace MeltPoolDG::MeltPool
 
     const VectorizedArray<number> scaling_coeff = internal::compute_scaling_coeff(T, T_ac, T_v);
 
-    return compare_and_apply_mask<SIMDComparison::less_than>(
-      T, T_ac, 0.0, scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v)));
+    return scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v));
   }
 
   template <typename number>
@@ -110,15 +109,8 @@ namespace MeltPoolDG::MeltPool
     const number m_dot,
     const number delta_coefficient) const
   {
-    const number T_ac = recoil_data.activation_temperature;
-
-    if (T < T_ac)
-      return 0.0;
-
-    const number scaling_coeff = internal::compute_scaling_coeff(T, T_ac, boiling_temperature);
-
     return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
-           scaling_coeff * std::pow(m_dot, 2.) * density_coeff * delta_coefficient;
+           std::pow(m_dot, 2.) * density_coeff * delta_coefficient;
   }
 
   template <typename number>
@@ -128,17 +120,8 @@ namespace MeltPoolDG::MeltPool
     const VectorizedArray<number> &m_dot,
     const VectorizedArray<number> &delta_coefficient) const
   {
-    const number T_ac = recoil_data.activation_temperature;
-
-    const VectorizedArray<number> scaling_coeff =
-      internal::compute_scaling_coeff(T, T_ac, boiling_temperature);
-
-    return compare_and_apply_mask<SIMDComparison::less_than>(
-      T,
-      T_ac,
-      0.0,
-      recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
-        scaling_coeff * std::pow(m_dot, 2.) * density_coeff * delta_coefficient);
+    return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
+           std::pow(m_dot, 2.) * density_coeff * delta_coefficient;
   }
 
 
