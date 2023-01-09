@@ -24,8 +24,24 @@ namespace MeltPoolDG::MeltPool
       AssertThrow(false, ExcNotImplemented());
     };
 
+    virtual VectorizedArray<number>
+    compute_recoil_pressure_coefficient(const VectorizedArray<number> & /*T*/) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    };
+
     virtual number
-    compute_recoil_pressure_coefficient(const number /*T*/, const number /*m_dot*/) const
+    compute_recoil_pressure_coefficient(const number /*T*/,
+                                        const number /*m_dot*/,
+                                        const number /*delta_coefficient*/) const
+    {
+      AssertThrow(false, ExcNotImplemented());
+    };
+
+    virtual VectorizedArray<number>
+    compute_recoil_pressure_coefficient(const VectorizedArray<number> & /*T*/,
+                                        const VectorizedArray<number> & /*m_dot*/,
+                                        const VectorizedArray<number> & /*delta_coefficient*/) const
     {
       AssertThrow(false, ExcNotImplemented());
     };
@@ -79,6 +95,9 @@ namespace MeltPoolDG::MeltPool
      */
     number
     compute_recoil_pressure_coefficient(const number T) const final;
+
+    VectorizedArray<number>
+    compute_recoil_pressure_coefficient(const VectorizedArray<number> &T) const final;
   };
 
   template <typename number>
@@ -110,9 +129,20 @@ namespace MeltPoolDG::MeltPool
      *                           .
      * the evaporative mass flux m (@p m_dot), the density of the gas (vapor) phase ρ_g and the
      * density of the liquid phase ρ_l.
+     *
+     * The @p delta_coefficient takes into account potentially different delta function between the
+     * evaporative flux term in the continuity equation and the momentum balance equation.
      */
     number
-    compute_recoil_pressure_coefficient(const number T, const number m_dot) const final;
+    compute_recoil_pressure_coefficient(const number T,
+                                        const number m_dot,
+                                        const number delta_coefficient) const final;
+
+    VectorizedArray<number>
+    compute_recoil_pressure_coefficient(
+      const VectorizedArray<number> &T,
+      const VectorizedArray<number> &m_dot,
+      const VectorizedArray<number> &delta_coefficient) const final;
   };
 
   /**

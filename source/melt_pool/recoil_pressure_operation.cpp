@@ -2,6 +2,46 @@
 
 namespace MeltPoolDG::MeltPool
 {
+  namespace internal
+  {
+    // In order to smoothly activate the recoil pressure, a scaling coefficient is computed and
+    // multiplied with the recoil pressure coefficient
+    //
+    //                  -
+    //                 |     0         if T <= T_ac
+    //                 |
+    //                 |  T - T_ac
+    // scaling_coeff = |  --------     if T_ac < T < T_v
+    //                 |  T_v - T_ac
+    //                 |
+    //                 |     1         if T >= T_v
+    //                  -
+    //
+    // with @p T_ac the activation temperature of the recoil pressure and @p T_v the boiling temperature.
+
+    template <typename number>
+    VectorizedArray<number>
+    compute_scaling_coeff(const VectorizedArray<number> &T, const number T_ac, const number T_v)
+    {
+      return compare_and_apply_mask<SIMDComparison::less_than>(
+        T,
+        T_ac,
+        0.0,
+        compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+          T, T_v, 1., (T - T_ac) / (T_v - T_ac)));
+    }
+
+    template <typename number>
+    number
+    compute_scaling_coeff(const number T, const number T_ac, const number T_v)
+    {
+      return (T < T_ac) ? 0.0 : (T >= T_v) ? 1. : (T - T_ac) / (T_v - T_ac);
+    }
+  } // namespace internal
+
+  /*******************************************************************
+   * Phenomenological model
+   *******************************************************************/
   template <typename number>
   RecoilPressurePhenomenologicalModel<number>::RecoilPressurePhenomenologicalModel(
     const RecoilPressureData<number> &recoil_data,
@@ -19,42 +59,39 @@ namespace MeltPoolDG::MeltPool
   }
 
   template <typename number>
+  VectorizedArray<number>
+  RecoilPressurePhenomenologicalModel<number>::compute_recoil_pressure_coefficient(
+    const VectorizedArray<number> &T) const
+  {
+    const number T_ac = recoil_data.activation_temperature;
+    const number T_v  = boiling_temperature;
+    const number c_p  = recoil_data.pressure_constant;
+    const number c_T  = recoil_data.temperature_constant;
+
+    const VectorizedArray<number> scaling_coeff = internal::compute_scaling_coeff(T, T_ac, T_v);
+
+    return scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v));
+  }
+
+  template <typename number>
   number
   RecoilPressurePhenomenologicalModel<number>::compute_recoil_pressure_coefficient(
     const number T) const
   {
     const number T_ac = recoil_data.activation_temperature;
+    const number T_v  = boiling_temperature;
 
-    if (T < T_ac)
-      return 0.0;
+    const number scaling_coeff = internal::compute_scaling_coeff(T, T_ac, T_v);
 
-    // In order to smoothly activate the recoil pressure, a scaling coefficient is computed and
-    // multiplied with the recoil pressure coefficient
-    //
-    //                  -
-    //                 |     0         if T <= T_ac
-    //                 |
-    //                 |  T - T_ac
-    // scaling_coeff = |  --------     if T_ac < T < T_v
-    //                 |  T_v - T_ac
-    //                 |
-    //                 |     1         if T >= T_v
-    //                  -
-    //
-    // with T_ac the activation temperature of the recoil pressure and T_v the boiling temperature.
-
-    const number T_v = boiling_temperature;
     const number c_p = recoil_data.pressure_constant;
     const number c_T = recoil_data.temperature_constant;
-
-    const number scaling_coeff =
-      (T >= T_v || std::abs(T_v - T_ac) < 1e-10) ? 1. : (T - T_ac) / (T_v - T_ac);
 
     return scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v));
   }
 
-
-
+  /*******************************************************************
+   * Hybrid model
+   *******************************************************************/
   template <typename number>
   RecoilPressureHybridModel<number>::RecoilPressureHybridModel(
     const RecoilPressureData<number> &recoil_data,
@@ -67,38 +104,25 @@ namespace MeltPoolDG::MeltPool
 
   template <typename number>
   number
-  RecoilPressureHybridModel<number>::compute_recoil_pressure_coefficient(const number T,
-                                                                         const number m_dot) const
+  RecoilPressureHybridModel<number>::compute_recoil_pressure_coefficient(
+    const number T,
+    const number m_dot,
+    const number delta_coefficient) const
   {
-    const number T_ac = recoil_data.activation_temperature;
-
-    if (T < T_ac)
-      return 0.0;
-
-    // In order to smoothly activate the recoil pressure, a scaling coefficient is computed and
-    // multiplied with the recoil pressure coefficient
-    //
-    //                  -
-    //                 |     0         if T <= T_ac
-    //                 |
-    //                 |  T - T_ac
-    // scaling_coeff = |  --------     if T_ac < T < T_v
-    //                 |  T_v - T_ac
-    //                 |
-    //                 |     1         if T >= T_v
-    //                  -
-    //
-    // with T_ac the activation temperature of the recoil pressure and T_v the boiling temperature.
-
-    const number T_v = boiling_temperature;
-
-    const number scaling_coeff =
-      (T >= T_v || std::abs(T_v - T_ac) < 1e-10) ? 1. : (T - T_ac) / (T_v - T_ac);
-
     return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
-           scaling_coeff * std::pow(m_dot, 2) * density_coeff;
+           std::pow(m_dot, 2.) * density_coeff * delta_coefficient;
   }
 
+  template <typename number>
+  VectorizedArray<number>
+  RecoilPressureHybridModel<number>::compute_recoil_pressure_coefficient(
+    const VectorizedArray<number> &T,
+    const VectorizedArray<number> &m_dot,
+    const VectorizedArray<number> &delta_coefficient) const
+  {
+    return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
+           std::pow(m_dot, 2.) * density_coeff * delta_coefficient;
+  }
 
 
   template <int dim>
@@ -229,18 +253,18 @@ namespace MeltPoolDG::MeltPool
                 if (evapor_flux_val)
                   m_dot = evapor_flux_val->get_value(q_index);
 
-                VectorizedArray<double> recoil_pressure_coefficient = 0.0;
-
-                for (unsigned int v = 0; v < matrix_free.n_active_entries_per_cell_batch(cell); ++v)
-                  recoil_pressure_coefficient[v] =
-                    evapor_flux_val ?
-                      recoil_pressure_model->compute_recoil_pressure_coefficient(t[v], m_dot[v]) :
-                      recoil_pressure_model->compute_recoil_pressure_coefficient(t[v]);
-
                 VectorizedArray<double> weight = 1.0;
 
                 if (delta_phase_weighted)
                   weight = delta_phase_weighted->compute_weight(used_level_set.get_value(q_index));
+
+                const VectorizedArray<double> recoil_pressure_coefficient =
+                  evapor_flux_val ?
+                    recoil_pressure_model->compute_recoil_pressure_coefficient(t,
+                                                                               m_dot,
+                                                                               1. / weight) :
+                    recoil_pressure_model->compute_recoil_pressure_coefficient(t);
+
 
                 recoil_pressure.submit_value(recoil_pressure_coefficient *
                                                used_level_set.get_gradient(q_index) * weight,
