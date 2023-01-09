@@ -299,7 +299,6 @@ namespace MeltPoolDG::Heat
       scratch_data.get_mapping(),
       scratch_data.get_dof_handler(ls_dof_idx),
       scratch_data.get_dof_handler(temp_dof_idx),
-      *level_set_as_heaviside,
       distance,
       normal_vector,
       solution_history.get_current_solution(),

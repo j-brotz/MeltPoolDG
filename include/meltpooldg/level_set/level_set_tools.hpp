@@ -77,8 +77,9 @@ namespace MeltPoolDG::LevelSet::Tools
 
   /**
    * This utility function computes the projection of nodal points from a given @p dof_handler_req
-   * within the interfacial region (0 < level_set_as_heaviside < 1) on the interface, the latter
-   * represented by @p level_set_as_heaviside = 0. To this end, by means of the @p distance vector,
+   * within the interfacial region (-max_distance < distance < max_distance) on the interface, the
+   * latter
+   * represented by @p distance = 0. To this end, by means of the @p distance vector,
    * holding the distance to the interface, for a given point an iterative procedure computes the
    * projected point (adjustable by @p max_iterations), ideally characterized by zero
    * distance. The result consists of a vector of projected points @return
@@ -91,17 +92,22 @@ namespace MeltPoolDG::LevelSet::Tools
     const Mapping<dim> &                             mapping,
     const DoFHandler<dim> &                          dof_handler_ls,
     const DoFHandler<dim> &                          dof_handler_req,
-    const VectorType &                               level_set_as_heaviside,
     const VectorType &                               distance,
     const BlockVectorType &                          normal_vector,
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
-    const unsigned int max_iterations   = 5,
-    const double       rel_tol_distance = 1e-5)
+    const unsigned int max_iterations    = 5,
+    const double       rel_tol_distance  = 1e-5,
+    const double       max_distance_user = -1)
   {
-    /*
-     * tolerance to be reached for the distance to the level set = 0 isosurface
-     */
+    // note: In the default case, we limit the interval for closest point projection to
+    // max(distance)*0.9999 to avoid projection in regions, where the distance is constant at
+    // max(distance).
+    const double max_distance_to_consider =
+      max_distance_user > 0 ? max_distance_user : distance.linfty_norm() * 0.9999;
+
+    // tolerance to be reached for the distance of the projected points to the distance = 0
+    // isosurface
     const double tol_distance = distance.linfty_norm() * rel_tol_distance;
 
     /*
@@ -113,13 +119,12 @@ namespace MeltPoolDG::LevelSet::Tools
      */
     distance.update_ghost_values();
     normal_vector.update_ghost_values();
-    level_set_as_heaviside.update_ghost_values();
 
-    FEValues<dim> ls_values(mapping,
-                            dof_handler_ls.get_fe(),
-                            Quadrature<dim>(
-                              dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
-                            update_values);
+    FEValues<dim> distance_values(
+      mapping,
+      dof_handler_ls.get_fe(),
+      Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
+      update_values);
 
     FEValues<dim> req_values(mapping,
                              dof_handler_req.get_fe(),
@@ -136,13 +141,12 @@ namespace MeltPoolDG::LevelSet::Tools
     /*
      * temporary values at cell nodes
      */
-    const unsigned int                   n_q_points = ls_values.get_quadrature().size();
-    std::vector<double>                  hs_temp(n_q_points);
+    const unsigned int                   n_q_points = distance_values.get_quadrature().size();
+    std::vector<double>                  temp_distance(n_q_points);
     std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points);
 
     const auto bounding_box = GridTools::compute_bounding_box(dof_handler_ls.get_triangulation());
     const auto boundary_points = bounding_box.get_boundary_points();
-
     /*
      * fill initial evaluation points with node coordinates
      */
@@ -152,8 +156,8 @@ namespace MeltPoolDG::LevelSet::Tools
       {
         if (cell->is_locally_owned())
           {
-            ls_values.reinit(cell);
-            ls_values.get_function_values(level_set_as_heaviside, hs_temp);
+            distance_values.reinit(cell);
+            distance_values.get_function_values(distance, temp_distance);
 
             req_values.reinit(req_cell);
             req_cell->get_dof_indices(temp_local_dof_indices);
@@ -161,7 +165,7 @@ namespace MeltPoolDG::LevelSet::Tools
             for (const auto q : req_values.quadrature_point_indices())
               {
                 // consider only points in narrow band
-                if (hs_temp[q] < 1.0 && hs_temp[q] > 0.0)
+                if (std::abs(temp_distance[q]) < max_distance_to_consider)
                   {
                     projected_points_at_interface.push_back(req_values.quadrature_point(q));
                     dof_indices.push_back(temp_local_dof_indices[q]);
@@ -283,7 +287,6 @@ namespace MeltPoolDG::LevelSet::Tools
 
     distance.zero_out_ghost_values();
     normal_vector.zero_out_ghost_values();
-    level_set_as_heaviside.zero_out_ghost_values();
     /*
      * debug
      */
@@ -319,15 +322,15 @@ namespace MeltPoolDG::LevelSet::Tools
     const Mapping<dim> &                             mapping,
     const DoFHandler<dim> &                          dof_handler_ls,
     const DoFHandler<dim> &                          dof_handler_req,
-    const VectorType &                               level_set_as_heaviside,
     const VectorType &                               distance,
     const BlockVectorType &                          normal_vector,
     const VectorType &                               solution_in,
     VectorType &                                     solution_out,
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
-    const unsigned int max_iterations   = 5,
-    const double       rel_tol_distance = 1e-5)
+    const unsigned int max_iterations    = 5,
+    const double       rel_tol_distance  = 1e-5,
+    const double       max_distance_user = -1)
   {
     AssertThrow(n_components == 1, ExcNotImplemented());
 
@@ -335,12 +338,12 @@ namespace MeltPoolDG::LevelSet::Tools
       compute_projected_points_at_interface<dim>(mapping,
                                                  dof_handler_ls,
                                                  dof_handler_req,
-                                                 level_set_as_heaviside,
                                                  distance,
                                                  normal_vector,
                                                  remote_point_evaluation,
                                                  max_iterations,
-                                                 rel_tol_distance);
+                                                 rel_tol_distance,
+                                                 max_distance_user);
 
     remote_point_evaluation.reinit(evaluation_points, dof_handler_req.get_triangulation(), mapping);
 
@@ -350,9 +353,7 @@ namespace MeltPoolDG::LevelSet::Tools
       dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler_req, solution_in);
     solution_in.zero_out_ghost_values();
 
-    /*
-     * compute evaporative mass flux from the temperature value at the interface
-     */
+    // store interface values to vector
     solution_out = 0.0;
 
     for (unsigned int i = 0; i < evaluation_points.size(); ++i)

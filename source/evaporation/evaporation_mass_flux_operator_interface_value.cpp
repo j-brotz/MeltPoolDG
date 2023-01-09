@@ -50,7 +50,6 @@ namespace MeltPoolDG::Evaporation
         scratch_data.get_mapping(),
         scratch_data.get_dof_handler(ls_dof_idx),
         scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-        level_set_as_heaviside,
         distance,
         normal_vector,
         remote_point_evaluation,

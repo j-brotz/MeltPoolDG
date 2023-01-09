@@ -51,45 +51,6 @@ public:
   }
 };
 
-double
-heaviside(double phi, double eps)
-{
-  const double d = eps * std::log((1. + phi) / (1. - phi));
-
-  if (d <= -3 * eps)
-    return 0;
-  else if (d >= 3 * eps)
-    return 1;
-  else
-    return 0.5 + d / (6 * eps) + 1 / (numbers::PI * 2) * std::sin(numbers::PI * d / (3 * eps));
-}
-
-template <int dim>
-class InitializePhi : public Function<dim>
-{
-public:
-  InitializePhi(const double eps)
-    : Function<dim>()
-    , eps(eps)
-  {}
-  virtual double
-  value(const Point<dim> &p, const unsigned int component = 0) const
-  {
-    (void)component;
-
-    // set radius of bubble to 0.5, slightly shifted away from the center
-    Point<dim> center;
-    for (unsigned int d = 0; d < dim; ++d)
-      center[d] = 0.5;
-
-    return heaviside(UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-                       DistanceFunctions::spherical_manifold<dim>(p, center, 0.25), eps),
-                     eps);
-  }
-
-  double eps = 0.0;
-};
-
 template <int dim>
 class InitializeDistance : public Function<dim>
 {
@@ -158,8 +119,7 @@ main(int argc, char *argv[])
     locally_owned_dofs = dof_handler.locally_owned_dofs();
     DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
 
-    VectorType solution_ls, solution_distance;
-    solution_ls.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
+    VectorType solution_distance;
     solution_distance.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
     /*
      * compute normals
@@ -202,10 +162,6 @@ main(int argc, char *argv[])
         }
     }
     /*
-     * interpolate levelset onto quadrature points
-     */
-    VectorTools::interpolate(mapping, dof_handler, InitializePhi<dim>(epsilon), solution_ls);
-    /*
      * interpolate distance onto quadrature points
      */
     VectorTools::interpolate(mapping, dof_handler, InitializeDistance<dim>(), solution_distance);
@@ -238,16 +194,18 @@ main(int argc, char *argv[])
 
 
     timer_total.start();
-    LevelSet::Tools::broadcast_interface_value_to_vector<dim>(mapping,
-                                                              dof_handler,
-                                                              dof_handler_temp,
-                                                              solution_ls,
-                                                              solution_distance,
-                                                              solution_normal,
-                                                              solution_temp,
-                                                              solution_temp_interface,
-                                                              remote_point_evaluation,
-                                                              n_iter);
+    LevelSet::Tools::broadcast_interface_value_to_vector<dim>(
+      mapping,
+      dof_handler,
+      dof_handler_temp,
+      solution_distance,
+      solution_normal,
+      solution_temp,
+      solution_temp_interface,
+      remote_point_evaluation,
+      n_iter,
+      1e-5 /*rel_tol_distance*/,
+      0.125 /*distance interval for projection*/);
     timer_total.stop();
     /*
      * ------------------------------------------------------------------------------------
@@ -272,7 +230,6 @@ main(int argc, char *argv[])
         DataOut<dim> data_out;
         data_out.set_flags(flags);
 
-        data_out.add_data_vector(dof_handler, solution_ls, "solution_ls");
         data_out.add_data_vector(dof_handler, solution_distance, "solution_distance");
         for (unsigned int d = 0; d < dim; ++d)
           data_out.add_data_vector(dof_handler,
