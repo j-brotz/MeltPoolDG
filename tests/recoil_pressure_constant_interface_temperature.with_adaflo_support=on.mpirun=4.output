@@ -21,8 +21,8 @@
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.74072e-01                newton_raphson_solver |
 |  total mass = 0.00028891277854                                                 melt_pool_problem |
-| || velocity ||L2 = 2.354974159370206e-11                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.790154193765115e-03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 4.446925749535991e-13                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.803059994877871e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

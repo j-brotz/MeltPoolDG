@@ -626,7 +626,6 @@ namespace MeltPoolDG::LevelSet
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    const double cut_off_level_set = std::tanh(2);
 
     for (const auto &cell :
          scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
@@ -642,14 +641,21 @@ namespace MeltPoolDG::LevelSet
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
-              const double distance = approximate_distance_from_level_set(
+              distance_to_level_set(local_dof_indices[i]) = approximate_distance_from_level_set(
                 advec_diff_operation->get_advected_field()[local_dof_indices[i]],
                 epsilon_cell,
-                cut_off_level_set);
-              distance_to_level_set(local_dof_indices[i]) = distance;
+                std::tanh(4) /*cut off value*/);
+
               if (level_set_data.do_localized_heaviside)
-                level_set_as_heaviside(local_dof_indices[i]) =
-                  smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
+                {
+                  const double distance = approximate_distance_from_level_set(
+                    advec_diff_operation->get_advected_field()[local_dof_indices[i]],
+                    epsilon_cell,
+                    std::tanh(2) /*cut off value*/);
+
+                  level_set_as_heaviside(local_dof_indices[i]) =
+                    smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
+                }
               else
                 level_set_as_heaviside(local_dof_indices[i]) =
                   (get_level_set()(local_dof_indices[i]) + 1.) * 0.5;
@@ -674,7 +680,6 @@ namespace MeltPoolDG::LevelSet
       scratch_data.get_mapping(),
       scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
       scratch_data.get_dof_handler(curv_dof_idx),
-      level_set_as_heaviside,
       distance_to_level_set,
       get_normal_vector(),
       curvature_operation->get_curvature(),
