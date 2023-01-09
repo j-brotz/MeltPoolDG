@@ -1,7 +1,7 @@
 --------------------------------------------------------
  START TEST: n_iter=1
 --------------------------------------------------------
-WARNING: The tolerance of 3599 points is not yet attained. Max distance value: 0.124514
+WARNING: The tolerance of 14396 points is not yet attained. Max distance value: 0.124514
 norm of interface vals: 21232.5
 --------------------------------------------------------
  START TEST: n_iter=16

@@ -281,7 +281,7 @@ namespace MeltPoolDG::LevelSet::Tools
       {
         dealii::ConditionalOStream pcout(std::cout,
                                          Utilities::MPI::this_mpi_process(mpi_comm) == 0);
-        pcout << "WARNING: The tolerance of " << processed_points.size()
+        pcout << "WARNING: The tolerance of " << n_processed_points
               << " points is not yet attained. Max distance value: " << max_distance << std::endl;
       }
 
