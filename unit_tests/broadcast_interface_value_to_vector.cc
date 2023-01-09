@@ -89,8 +89,6 @@ main(int argc, char *argv[])
     const int degree      = 1;
     const int degree_temp = 2;
 
-    const double epsilon = 0.02;
-
     parallel::distributed::Triangulation<dim> triangulation(mpi_comm);
 
     GridGenerator::hyper_cube(triangulation, 0, 1);
