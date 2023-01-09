@@ -86,6 +86,7 @@ namespace MeltPoolDG::Evaporation
           evaporation_model.local_compute_evaporative_mass_flux(temperature_evaluation_values[i]);
       }
 
+    scratch_data.get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
     evaporative_mass_flux.update_ghost_values(); //@todo: zero out ghost values
 
     distance.zero_out_ghost_values();
