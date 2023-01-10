@@ -309,7 +309,7 @@ namespace MeltPoolDG::MeltPool
                           {
                             Journal::print_decoration_line(scratch_data->get_pcout(0));
                             Journal::print_line(scratch_data->get_pcout(0),
-                                                "level set - evapor coupling; finished after " +
+                                                "heat - evapor coupling; finished after " +
                                                   std::to_string(i) + " iter at residual " +
                                                   UtilityFunctions::to_string_with_precision(
                                                     res_norm),
@@ -321,8 +321,7 @@ namespace MeltPoolDG::MeltPool
                         iter_res.copy_locally_owned_data_from(heat_operation->get_temperature());
                         Journal::print_decoration_line(scratch_data->get_pcout(1));
                         Journal::print_line(scratch_data->get_pcout(1),
-                                            "level set - evapor coupling; #iter " +
-                                              std::to_string(i),
+                                            "heat - evapor coupling; #iter " + std::to_string(i),
                                             "MeltPoolProblem");
                         Journal::print_decoration_line(scratch_data->get_pcout(1));
                       }
