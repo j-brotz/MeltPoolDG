@@ -565,6 +565,7 @@ namespace MeltPoolDG::Heat
     q_vapor.resize_fast(scratch_data.get_matrix_free().n_cell_batches() * temp_vals.n_q_points);
     conductivity_at_q.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
                                   temp_vals.n_q_points);
+    rho_cp_at_q.resize_fast(scratch_data.get_matrix_free().n_cell_batches() * temp_vals.n_q_points);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -622,6 +623,7 @@ namespace MeltPoolDG::Heat
               get_material_parameters(temp_vals, ls_vals_used, q_index);
 
             conductivity_at_q[cell * temp_vals.n_q_points + q_index] = conductivity;
+            rho_cp_at_q[cell * temp_vals.n_q_points + q_index]       = rho_cp;
 
             auto val = this->time_increment_inv * rho_cp *
                          (temp_vals.get_value(q_index) - temp_vals_old.get_value(q_index)) -
@@ -934,6 +936,28 @@ namespace MeltPoolDG::Heat
         data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                                  conductivity_vec,
                                  "conductivity");
+      }
+
+    if (data_out.is_requested("rho_cp"))
+      {
+        scratch_data.initialize_dof_vector(rho_cp_vec, temp_hanging_nodes_dof_idx);
+
+        if (!q_vapor.empty() && scratch_data.is_hex_mesh())
+          MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
+            rho_cp_vec,
+            scratch_data.get_matrix_free(),
+            temp_hanging_nodes_dof_idx,
+            temp_quad_idx,
+            [&](const unsigned int cell,
+                const unsigned int quad) -> const VectorizedArray<double> & {
+              return rho_cp_at_q[cell * scratch_data.get_n_q_points(temp_quad_idx) + quad];
+            });
+
+        scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(rho_cp_vec);
+
+        data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                                 rho_cp_vec,
+                                 "rho_cp");
       }
 
     /**
