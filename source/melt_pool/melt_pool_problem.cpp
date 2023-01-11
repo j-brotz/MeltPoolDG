@@ -1663,8 +1663,10 @@ namespace MeltPoolDG::MeltPool
         darcy_operation->attach_output_vectors(data_out);
 
       if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump &&
-          base_in->parameters.evapor.level_set_source_term_type ==
-            EvaporationLevelSetSourceTermType::interface_velocity)
+          (base_in->parameters.evapor.level_set_source_term_type ==
+             EvaporationLevelSetSourceTermType::interface_velocity ||
+           base_in->parameters.evapor.level_set_source_term_type ==
+             EvaporationLevelSetSourceTermType::interface_velocity_sharp))
         {
           /*
            *  interface velocity
