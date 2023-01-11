@@ -87,7 +87,7 @@ namespace MeltPoolDG::LevelSet::Tools
    * dof_handler_requested.
    */
   template <int dim>
-  std::pair<std::vector<types::global_dof_index>, std::vector<Point<dim>>>
+  std::pair<std::vector<std::vector<types::global_dof_index>>, std::vector<Point<dim>>>
   compute_projected_points_at_interface(
     const Mapping<dim> &                             mapping,
     const DoFHandler<dim> &                          dof_handler_ls,
@@ -100,6 +100,8 @@ namespace MeltPoolDG::LevelSet::Tools
     const double       rel_tol_distance  = 1e-5,
     const double       max_distance_user = -1)
   {
+    const int n_components = dof_handler_req.get_fe().n_components();
+
     // note: In the default case, we limit the interval for closest point projection to
     // max(distance)*0.9999 to avoid projection in regions, where the distance is constant at
     // max(distance).
@@ -135,8 +137,8 @@ namespace MeltPoolDG::LevelSet::Tools
     /*
      * vectors to be filled: projected points to the interface corresponding to DoF indices
      */
-    std::vector<Point<dim>>              projected_points_at_interface;
-    std::vector<types::global_dof_index> dof_indices;
+    std::vector<Point<dim>>                           projected_points_at_interface;
+    std::vector<std::vector<types::global_dof_index>> dof_indices;
 
     /*
      * temporary values at cell nodes
@@ -162,13 +164,22 @@ namespace MeltPoolDG::LevelSet::Tools
             req_values.reinit(req_cell);
             req_cell->get_dof_indices(temp_local_dof_indices);
 
+            std::vector<types::global_dof_index> dofs_at_q;
+
             for (const auto q : req_values.quadrature_point_indices())
               {
                 // consider only points in narrow band
                 if (std::abs(temp_distance[q]) < max_distance_to_consider)
                   {
-                    projected_points_at_interface.push_back(req_values.quadrature_point(q));
-                    dof_indices.push_back(temp_local_dof_indices[q]);
+                    if (dofs_at_q.size() == 0)
+                      projected_points_at_interface.push_back(req_values.quadrature_point(q));
+
+                    dofs_at_q.push_back(temp_local_dof_indices[q]);
+                    if (dofs_at_q.size() == n_components)
+                      {
+                        dof_indices.push_back(dofs_at_q);
+                        dofs_at_q.clear();
+                      }
                   }
               }
           }
@@ -332,8 +343,6 @@ namespace MeltPoolDG::LevelSet::Tools
     const double       rel_tol_distance  = 1e-5,
     const double       max_distance_user = -1)
   {
-    AssertThrow(n_components == 1, ExcNotImplemented());
-
     const auto [dof_indices, evaluation_points] =
       compute_projected_points_at_interface<dim>(mapping,
                                                  dof_handler_ls,
@@ -347,17 +356,31 @@ namespace MeltPoolDG::LevelSet::Tools
 
     remote_point_evaluation.reinit(evaluation_points, dof_handler_req.get_triangulation(), mapping);
 
-    solution_in.update_ghost_values();
+    const bool update_ghosts = !solution_in.has_ghost_elements();
+    if (update_ghosts)
+      solution_in.update_ghost_values();
 
-    const auto vals =
-      dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler_req, solution_in);
+    const auto vals = dealii::VectorTools::point_values<n_components>(remote_point_evaluation,
+                                                                      dof_handler_req,
+                                                                      solution_in);
     solution_in.zero_out_ghost_values();
+
+    if (update_ghosts)
+      solution_in.zero_out_ghost_values();
 
     // store interface values to vector
     solution_out = 0.0;
 
     for (unsigned int i = 0; i < evaluation_points.size(); ++i)
-      solution_out[dof_indices[i]] = vals[i];
+      {
+        if constexpr (n_components > 1)
+          {
+            for (unsigned int d = 0; d < dof_indices[i].size(); ++d)
+              solution_out[dof_indices[i][d]] = vals[i][d];
+          }
+        else
+          solution_out[dof_indices[i][0]] = vals[i];
+      }
   }
 
 
