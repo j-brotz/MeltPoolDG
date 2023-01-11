@@ -100,7 +100,7 @@ namespace MeltPoolDG::LevelSet::Tools
     const double       rel_tol_distance  = 1e-5,
     const double       max_distance_user = -1)
   {
-    const int n_components = dof_handler_req.get_fe().n_components();
+    const unsigned int n_components = dof_handler_req.get_fe().n_components();
 
     // note: In the default case, we limit the interval for closest point projection to
     // max(distance)*0.9999 to avoid projection in regions, where the distance is constant at
@@ -122,16 +122,15 @@ namespace MeltPoolDG::LevelSet::Tools
     distance.update_ghost_values();
     normal_vector.update_ghost_values();
 
-    FEValues<dim> distance_values(
-      mapping,
-      dof_handler_ls.get_fe(),
-      Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
-      update_values);
+    FEValues<dim> distance_values(mapping,
+                                  dof_handler_ls.get_fe(),
+                                  Quadrature<dim>(
+                                    dof_handler_req.get_fe().get_unit_support_points()),
+                                  update_values);
 
     FEValues<dim> req_values(mapping,
                              dof_handler_req.get_fe(),
-                             Quadrature<dim>(
-                               dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
+                             Quadrature<dim>(dof_handler_req.get_fe().get_unit_support_points()),
                              update_quadrature_points);
 
     /*
