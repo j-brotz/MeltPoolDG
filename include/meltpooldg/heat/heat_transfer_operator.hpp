@@ -165,6 +165,9 @@ namespace MeltPoolDG::Heat
     mutable AlignedVector<VectorizedArray<double>> conductivity_at_q;
     mutable VectorType                             conductivity_vec;
 
+    mutable AlignedVector<VectorizedArray<double>> rho_cp_at_q;
+    mutable VectorType                             rho_cp_vec;
+
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
                          const ScratchData<dim> &                        scratch_data_in,
