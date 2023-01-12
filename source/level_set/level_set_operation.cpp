@@ -704,7 +704,6 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::set_level_set_parameters()
   {
-    advec_diff_operation->advec_diff_data.diffusivity = level_set_data.artificial_diffusivity;
     advec_diff_operation->advec_diff_data.time_integration_scheme =
       level_set_data.time_integration_scheme;
   }

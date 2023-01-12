@@ -19,15 +19,22 @@ import collections.abc
 #          USER INPUT
 ##############################################################################
 
-old_parameter_names = [["old", "my age"],
-                       # ... add old parameter names
-                       ]
-new_parameter_names = [["new", "new", "my new age"],
-                       # ... add new parameter names
-                       ]
+old_parameter_names = [
+    # ... add old parameter names
+    #["old", "my age"],
+]
+new_parameter_names = [
+    # ... add new parameter names
+    #["new", "new", "my new age"],
+]
+delete_parameter_names = [
+    # ... add parameter names to be deleted
+    #["del", "my deleted param"],
+]
 
-new_categories = [{'new': {'new': {'new': {}}}},
-                  ]  # optional: add entirely new parameter categories
+new_categories = [
+    #{'new': {'new': {'new': {}}}},
+]  # optional: add entirely new parameter categories
 
 root_dir = "."
 
@@ -91,6 +98,7 @@ def remove_empty_nested_items(d):
 def modify_json(json_f, appendix=""):
     assert len(json_f) > 0
     assert len(old_parameter_names) == len(new_parameter_names)
+
     for j in json_f:
         with open(j, 'r') as f:
             print(70*"-")
@@ -99,6 +107,7 @@ def modify_json(json_f, appendix=""):
 
             val = datastore
 
+            # process parameters to be renamed
             for i, o in enumerate(old_parameter_names):
                 # get value of old parameter
                 try:
@@ -116,6 +125,16 @@ def modify_json(json_f, appendix=""):
                 delete_nested_item(datastore, o, val)
                 print("    Rename OLD {:} to NEW {:}".format(
                     o, new_parameter_names[i]))
+
+            # process parameters to be deleted
+            for i, o in enumerate(delete_parameter_names):
+                try:
+                    val = get_nested_value(datastore, o)
+                except:
+                    print("Value {:} not found.".format(o))
+                    continue
+                delete_nested_item(datastore, o, val)
+                print("Delete parameter '{:}'".format(o))
 
             # delete potentially empty items
             datastore = remove_empty_nested_items(datastore)

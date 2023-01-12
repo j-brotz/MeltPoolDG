@@ -63,7 +63,6 @@
     "material melting point": "1700"
   },
   "levelset": {
-    "ls artificial diffusivity": "0.0",
     "ls do reinitialization": "true",
     "ls theta": "0.5"
   },

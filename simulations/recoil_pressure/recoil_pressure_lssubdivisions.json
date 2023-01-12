@@ -82,7 +82,6 @@
     "laser scan speed": "0.003"
   },
   "levelset": {
-    "ls artificial diffusivity": "0.0",
     "ls do curvature correction": "false",
     "ls do reinitialization": "true",
     "ls n initial reinit steps": "1",

@@ -377,10 +377,6 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("levelset");
     {
-      prm.add_parameter("ls artificial diffusivity",
-                        ls.artificial_diffusivity,
-                        "Defines the artificial diffusivity for the level set transport equation");
-
       prm.add_parameter("ls do reinitialization",
                         ls.do_reinitialization,
                         "Defines if reinitialization of level set function is activated");

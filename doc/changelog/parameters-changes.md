@@ -1,6 +1,14 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-01-13
+- Remove redundant parameter
+```diff
+  "levelset": {
+-   "ls artificial diffusivity": ""
+  }
+}
+```
 
 ## 2022-12-08
 - Add parameter to the heat operator for individual parameter interpolation 
