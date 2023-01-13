@@ -170,7 +170,6 @@ namespace MeltPoolDG
   {
     bool        do_reinitialization     = true;
     int         n_initial_reinit_steps  = -1.0;
-    number      artificial_diffusivity  = 0.0;
     std::string time_integration_scheme = "crank_nicolson";
     bool        do_curvature_correction = false;
     int         n_subdivisions          = 1;

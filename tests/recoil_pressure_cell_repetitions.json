@@ -48,7 +48,6 @@
     "material two phase properties transition type": "smooth"
   },
   "levelset": {
-    "ls artificial diffusivity": "0.0",
     "ls do reinitialization": "true",
     "ls time integration scheme": "crank_nicolson",
     "ls n initial reinit steps": "0"

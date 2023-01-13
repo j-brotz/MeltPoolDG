@@ -15,7 +15,6 @@
   },
   "levelset": {
     "ls do reinitialization": "true",
-    "ls artificial diffusivity": "0.0",
     "ls time integration scheme": "crank_nicolson",
     "ls n subdivisions": "2"
   },
