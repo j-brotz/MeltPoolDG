@@ -81,7 +81,7 @@ namespace MeltPoolDG::Evaporation
 
     for (unsigned int i = 0; i < evaluation_points.size(); ++i)
       {
-        evaporative_mass_flux[dof_indices[i]] =
+        evaporative_mass_flux[dof_indices[i][0]] =
           evaporation_model.local_compute_evaporative_mass_flux(temperature_evaluation_values[i]);
       }
 
