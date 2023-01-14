@@ -122,15 +122,16 @@ namespace MeltPoolDG::LevelSet::Tools
     distance.update_ghost_values();
     normal_vector.update_ghost_values();
 
-    FEValues<dim> distance_values(mapping,
-                                  dof_handler_ls.get_fe(),
-                                  Quadrature<dim>(
-                                    dof_handler_req.get_fe().get_unit_support_points()),
-                                  update_values);
+    FEValues<dim> distance_values(
+      mapping,
+      dof_handler_ls.get_fe(),
+      Quadrature<dim>(dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
+      update_values);
 
     FEValues<dim> req_values(mapping,
                              dof_handler_req.get_fe(),
-                             Quadrature<dim>(dof_handler_req.get_fe().get_unit_support_points()),
+                             Quadrature<dim>(
+                               dof_handler_req.get_fe().base_element(0).get_unit_support_points()),
                              update_quadrature_points);
 
     /*
@@ -144,7 +145,7 @@ namespace MeltPoolDG::LevelSet::Tools
      */
     const unsigned int                   n_q_points = distance_values.get_quadrature().size();
     std::vector<double>                  temp_distance(n_q_points);
-    std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points);
+    std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points * n_components);
 
     const auto bounding_box = GridTools::compute_bounding_box(dof_handler_ls.get_triangulation());
     const auto boundary_points = bounding_box.get_boundary_points();
@@ -163,22 +164,21 @@ namespace MeltPoolDG::LevelSet::Tools
             req_values.reinit(req_cell);
             req_cell->get_dof_indices(temp_local_dof_indices);
 
-            std::vector<types::global_dof_index> dofs_at_q;
-
             for (const auto q : req_values.quadrature_point_indices())
               {
+                std::vector<types::global_dof_index> dofs_at_q;
+
                 // consider only points in narrow band
                 if (std::abs(temp_distance[q]) < max_distance_to_consider)
                   {
-                    if (dofs_at_q.size() == 0)
-                      projected_points_at_interface.push_back(req_values.quadrature_point(q));
+                    projected_points_at_interface.push_back(req_values.quadrature_point(q));
 
-                    dofs_at_q.push_back(temp_local_dof_indices[q]);
-                    if (dofs_at_q.size() == n_components)
-                      {
-                        dof_indices.push_back(dofs_at_q);
-                        dofs_at_q.clear();
-                      }
+                    for (unsigned int c = 0; c < n_components; ++c)
+                      dofs_at_q.emplace_back(
+                        temp_local_dof_indices[dof_handler_req.get_fe().component_to_system_index(
+                          c, q)]);
+
+                    dof_indices.emplace_back(dofs_at_q);
                   }
               }
           }

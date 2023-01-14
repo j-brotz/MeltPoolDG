@@ -279,9 +279,6 @@ int
 main(int argc, char *argv[])
 {
   Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
-  /*
-   * run test
-   */
 
   run_test<1, 6, 1>();
   run_test<1, 6, 16>();
