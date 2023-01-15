@@ -198,6 +198,7 @@ namespace MeltPoolDG::MeltPool
                         switch (base_in->parameters.evapor.level_set_source_term_type)
                           {
                             default:
+                            case EvaporationLevelSetSourceTermType::interface_velocity_sharp:
                               case EvaporationLevelSetSourceTermType::interface_velocity: {
                                 // Option 1: compute modified advection velocity due to evaporation
                                 if (problem_specific_parameters.do_extrapolate_coupling_terms)
@@ -207,6 +208,31 @@ namespace MeltPoolDG::MeltPool
 
                                 evaporation_operation->compute_evaporation_velocity();
                                 interface_velocity += evaporation_operation->get_velocity();
+
+                                if (base_in->parameters.evapor.level_set_source_term_type ==
+                                    EvaporationLevelSetSourceTermType::interface_velocity_sharp)
+                                  {
+                                    Utilities::MPI::RemotePointEvaluation<dim, dim>
+                                      remote_point_evaluation(1e-6 /*tolerance*/,
+                                                              true /*unique mapping*/);
+
+                                    VectorType interface_velocity_interface;
+                                    scratch_data->initialize_dof_vector(
+                                      interface_velocity_interface, vel_dof_idx);
+                                    LevelSet::Tools::broadcast_interface_value_to_vector<dim, dim>(
+                                      scratch_data->get_mapping(),
+                                      scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
+                                      scratch_data->get_dof_handler(vel_dof_idx),
+                                      level_set_operation->get_distance_to_level_set(),
+                                      level_set_operation->get_normal_vector(),
+                                      interface_velocity,
+                                      interface_velocity_interface,
+                                      remote_point_evaluation,
+                                      5 /*n_iter*/);
+
+                                    interface_velocity.swap(interface_velocity_interface);
+                                  }
+
                                 break;
                               }
 
@@ -1637,8 +1663,10 @@ namespace MeltPoolDG::MeltPool
         darcy_operation->attach_output_vectors(data_out);
 
       if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump &&
-          base_in->parameters.evapor.level_set_source_term_type ==
-            EvaporationLevelSetSourceTermType::interface_velocity)
+          (base_in->parameters.evapor.level_set_source_term_type ==
+             EvaporationLevelSetSourceTermType::interface_velocity ||
+           base_in->parameters.evapor.level_set_source_term_type ==
+             EvaporationLevelSetSourceTermType::interface_velocity_sharp))
         {
           /*
            *  interface velocity
