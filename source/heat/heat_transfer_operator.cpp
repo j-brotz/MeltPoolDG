@@ -729,8 +729,6 @@ namespace MeltPoolDG::Heat
       {
         scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
 
-        evapor_heat_source.equ(-1.0, dst);
-
         FEPointEvaluation<1, dim> evapor_vals_surf(scratch_data.get_mapping(),
                                                    scratch_data.get_fe(evapor_mass_flux_dof_idx),
                                                    update_values);
@@ -813,13 +811,14 @@ namespace MeltPoolDG::Heat
                                          EvaluationFlags::values); //
 
                 scratch_data.get_constraint(temp_dof_idx)
-                  .distribute_local_to_global(buffer, local_dof_indices, dst);
+                  .distribute_local_to_global(buffer, local_dof_indices, evapor_heat_source);
               }
           }
-        dst.compress(VectorOperation::add);
-        scratch_data.get_constraint(temp_dof_idx).set_zero(dst);
 
-        evapor_heat_source += dst;
+        evapor_heat_source.compress(VectorOperation::add);
+        scratch_data.get_constraint(temp_dof_idx).set_zero(evapor_heat_source);
+
+        dst += evapor_heat_source;
       }
   }
 
