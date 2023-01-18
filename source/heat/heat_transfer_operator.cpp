@@ -1013,7 +1013,7 @@ namespace MeltPoolDG::Heat
 
         data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                                  evapor_heat_source_projected,
-                                 "evporative_heat_source_projected");
+                                 "evaporative_heat_source_projected");
       }
   }
 
