@@ -1273,9 +1273,9 @@ namespace MeltPoolDG::Heat
         switch (data.interpolate_k)
           {
             case InterpolateMaterialParameterType::smooth:
-              rho_cp = LevelSet::Tools::interpolate(ls_heaviside_val.get_value(q_index),
-                                                    conductivity_gas,
-                                                    conductivity_heavy);
+              conductivity = LevelSet::Tools::interpolate(ls_heaviside_val.get_value(q_index),
+                                                          conductivity_gas,
+                                                          conductivity_heavy);
               break;
             case InterpolateMaterialParameterType::sharp:
               conductivity = LevelSet::Tools::interpolate(
@@ -1284,9 +1284,10 @@ namespace MeltPoolDG::Heat
                 conductivity_heavy);
               break;
             case InterpolateMaterialParameterType::reciprocal:
-              rho_cp = LevelSet::Tools::interpolate_reciprocal(ls_heaviside_val.get_value(q_index),
-                                                               conductivity_gas,
-                                                               conductivity_heavy);
+              conductivity =
+                LevelSet::Tools::interpolate_reciprocal(ls_heaviside_val.get_value(q_index),
+                                                        conductivity_gas,
+                                                        conductivity_heavy);
               break;
             default:
               AssertThrow(false, ExcNotImplemented());
