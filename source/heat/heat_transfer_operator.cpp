@@ -1006,14 +1006,14 @@ namespace MeltPoolDG::Heat
               "heat_transfer_operator",
               15 /*precision*/
             );
+
+            scratch_data.get_constraint(temp_hanging_nodes_dof_idx)
+              .distribute(evapor_heat_source_projected);
+
+            data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                                     evapor_heat_source_projected,
+                                     "evaporative_heat_source_projected");
           }
-
-        scratch_data.get_constraint(temp_hanging_nodes_dof_idx)
-          .distribute(evapor_heat_source_projected);
-
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                                 evapor_heat_source_projected,
-                                 "evaporative_heat_source_projected");
       }
   }
 
