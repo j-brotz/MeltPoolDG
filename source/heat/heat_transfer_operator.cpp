@@ -966,11 +966,11 @@ namespace MeltPoolDG::Heat
       {
         if (evaporative_mass_flux)
           {
+            scratch_data.initialize_dof_vector(evapor_heat_source_projected,
+                                               temp_hanging_nodes_dof_idx);
             if (surface_mesh_info)
               {
-                scratch_data.initialize_dof_vector(evapor_heat_source_projected,
-                                                   temp_hanging_nodes_dof_idx);
-                VectorTools::project_vector<dim>(
+                VectorTools::project_vector<1, dim>(
                   scratch_data.get_mapping(),
                   scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
                   scratch_data.get_constraint(temp_hanging_nodes_dof_idx),
@@ -980,8 +980,6 @@ namespace MeltPoolDG::Heat
               }
             else
               {
-                scratch_data.initialize_dof_vector(evapor_heat_source_projected,
-                                                   temp_hanging_nodes_dof_idx);
                 if (!q_vapor.empty() && scratch_data.is_hex_mesh())
                   MeltPoolDG::VectorTools::fill_dof_vector_from_cell_operation<dim, 1>(
                     evapor_heat_source_projected,
@@ -1006,14 +1004,14 @@ namespace MeltPoolDG::Heat
               "heat_transfer_operator",
               15 /*precision*/
             );
+
+            scratch_data.get_constraint(temp_hanging_nodes_dof_idx)
+              .distribute(evapor_heat_source_projected);
+
+            data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+                                     evapor_heat_source_projected,
+                                     "evaporative_heat_source_projected");
           }
-
-        scratch_data.get_constraint(temp_hanging_nodes_dof_idx)
-          .distribute(evapor_heat_source_projected);
-
-        data_out.add_data_vector(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                                 evapor_heat_source_projected,
-                                 "evaporative_heat_source_projected");
       }
   }
 
