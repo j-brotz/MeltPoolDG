@@ -1,6 +1,17 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-02-08
+- Add option for calculating transport velocity of level set
+```diff
+{
+  "evaporation": {
++   "evapor level set source term type": "interface_velocity_sharp_heavy" 
+  }
+}
+
+```
+
 ## 2023-01-14
 - Add option for calculating transport velocity of level set
 ```diff
