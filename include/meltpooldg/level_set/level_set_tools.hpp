@@ -98,7 +98,8 @@ namespace MeltPoolDG::LevelSet::Tools
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
     const unsigned int max_iterations    = 5,
     const double       rel_tol_distance  = 1e-5,
-    const double       max_distance_user = -1)
+    const double       max_distance_user = -1,
+    const bool         shift_heavy       = false)
   {
     const unsigned int n_components = dof_handler_req.get_fe().n_components();
 
@@ -211,6 +212,16 @@ namespace MeltPoolDG::LevelSet::Tools
 
         evaluation_values_distance =
           dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler_ls, distance);
+
+        if (shift_heavy == true)
+          {
+            // tanh(1.5): where H(phi) == 1
+            // tanh(4): maximum distance calculated
+            const double shift = distance.linfty_norm() * std::tanh(1.5) / std::tanh(4);
+
+            for (auto &e : evaluation_values_distance)
+              e -= shift;
+          }
 
         std::array<std::vector<double>, dim> evaluation_values_normal;
 
@@ -340,7 +351,8 @@ namespace MeltPoolDG::LevelSet::Tools
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
     const unsigned int max_iterations    = 5,
     const double       rel_tol_distance  = 1e-5,
-    const double       max_distance_user = -1)
+    const double       max_distance_user = -1,
+    const bool         shift_heavy       = false)
   {
     const auto [dof_indices, evaluation_points] =
       compute_projected_points_at_interface<dim>(mapping,
@@ -351,7 +363,8 @@ namespace MeltPoolDG::LevelSet::Tools
                                                  remote_point_evaluation,
                                                  max_iterations,
                                                  rel_tol_distance,
-                                                 max_distance_user);
+                                                 max_distance_user,
+                                                 shift_heavy);
 
     remote_point_evaluation.reinit(evaluation_points, dof_handler_req.get_triangulation(), mapping);
 

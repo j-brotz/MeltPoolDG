@@ -65,8 +65,11 @@ namespace MeltPoolDG
 
   BETTER_ENUM(EvaporationLevelSetSourceTermType,
               char,
-              // calculate a divergence-free interface velocity and use it to advect the level set
+              // calculate the interface velocity by using the liquid velocity (H(phi)=1)
+              interface_velocity_sharp_heavy,
+              // calculate the interface velocity by using the value at the level set 0 iso contour
               interface_velocity_sharp,
+              // calculate a divergence-free interface velocity and use it to advect the level set
               interface_velocity,
               // use the source term due to evaporation as right hand-side term
               rhs)
