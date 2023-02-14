@@ -233,7 +233,7 @@ namespace MeltPoolDG::MeltPool
                                       interface_velocity,
                                       interface_velocity_interface,
                                       remote_point_evaluation,
-                                      5 /*n_iter*/,
+                                      10 /*n_iter*/,
                                       1e-5,
                                       -1,
                                       base_in->parameters.evapor.level_set_source_term_type ==
@@ -302,6 +302,13 @@ namespace MeltPoolDG::MeltPool
                       {
                         level_set_operation->update_normal_vector();
                         level_set_operation->transform_level_set_to_smooth_heaviside();
+
+                        // update evaporative mass flux if it is extrapolated from quantities at the
+                        // interface
+                        if (evaporation_operation &&
+                            base_in->parameters.evapor
+                                .formulation_evaporative_mass_flux_over_interface != "continuous")
+                          evaporation_operation->compute_evaporative_mass_flux();
                       }
                   }
 
