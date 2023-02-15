@@ -1,6 +1,20 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-02-15
+- Add SUPG to advection diffusion
+```diff
+{
+  "advection diffusion": {
+     "convection stabilization":
+     {
+        "type": "SUPG|none",
+        "coefficient"
+     }
+  }
+```
+
+
 ## 2023-02-08
 - Add option for calculating transport velocity of level set
 ```diff

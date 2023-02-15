@@ -88,6 +88,12 @@ namespace MeltPoolDG
 
   BETTER_ENUM(RestartTimeType, char, real, simulation)
 
+  BETTER_ENUM(ConvectionStabilizationType,
+              char,
+              none,
+              // streamline upwind Petrov-Galerkin stabilization
+              SUPG)
+
   BETTER_ENUM(InterpolateMaterialParameterType,
               char,
               // no parameter interpolation typre specified; use the interpolation type specified
@@ -210,9 +216,16 @@ namespace MeltPoolDG
       linear_solver.preconditioner_type = PreconditionerType::Diagonal;
     }
 
-    number                   diffusivity             = 0.0;
-    std::string              time_integration_scheme = "crank_nicolson";
-    std::string              implementation          = "meltpooldg";
+    number      diffusivity             = 0.0;
+    std::string time_integration_scheme = "crank_nicolson";
+    std::string implementation          = "meltpooldg";
+
+    struct ConvectionStabilizationData
+    {
+      ConvectionStabilizationType type        = ConvectionStabilizationType::none;
+      double                      coefficient = -1.0;
+    } conv_stab;
+
     PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
   };
