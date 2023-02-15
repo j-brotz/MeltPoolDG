@@ -137,6 +137,10 @@ namespace MeltPoolDG
       time_increment_inv = 1. / time_increment;
     }
 
+    virtual void
+    finish()
+    {}
+
   protected:
     /*
      * matrix-based system matrix and sparsity pattern
