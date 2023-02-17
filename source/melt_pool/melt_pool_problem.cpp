@@ -360,7 +360,7 @@ namespace MeltPoolDG::MeltPool
 
                 if (do_heat_iteration)
                   {
-                    scratch_data->initialize_dof_vector(iter_res, ls_dof_idx);
+                    scratch_data->initialize_dof_vector(iter_res, temp_dof_idx);
                     iter_res = 1e10; // any large number
                   }
 
