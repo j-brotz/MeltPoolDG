@@ -124,6 +124,12 @@ namespace MeltPoolDG
       AssertThrow(false, ExcNotImplemented());
     }
 
+    virtual void
+    prepare()
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
     inline void
     reset_dof_index(const unsigned int dof_idx_in)
     {
@@ -136,10 +142,6 @@ namespace MeltPoolDG
       time_increment     = dt;
       time_increment_inv = 1. / time_increment;
     }
-
-    virtual void
-    finish()
-    {}
 
   protected:
     /*

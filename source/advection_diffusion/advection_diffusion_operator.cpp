@@ -157,13 +157,11 @@ namespace MeltPoolDG::AdvectionDiffusion
   {
     if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
       stab_param.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
-
-    do_update_stab_param = true;
   }
 
   template <int dim, typename number>
   void
-  AdvectionDiffusionOperator<dim, number>::finish()
+  AdvectionDiffusionOperator<dim, number>::prepare()
   {
     do_update_stab_param = true;
   }
@@ -250,10 +248,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                   {
                     res_val +=
                       (1. - theta) * data.diffusivity * advected_field_vals.get_laplacian(q_index);
-                    res_grad +=
-                      stab_param[cell] *
-                      scratch_data.get_cell_sizes()[advected_field_vals.get_current_cell_index()] *
-                      vel * res_val;
+                    res_grad += stab_param[cell] * vel * res_val;
                   }
 
                 advected_field_vals.submit_gradient(res_grad, q_index);
@@ -267,7 +262,7 @@ namespace MeltPoolDG::AdvectionDiffusion
       dst,
       src,
       false); // rhs should not be zeroed out in order to consider inhomogeneous dirichlet BC
-              //
+
     do_update_stab_param = false;
   }
 
@@ -380,10 +375,7 @@ namespace MeltPoolDG::AdvectionDiffusion
         if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
           {
             res_val -= theta * data.diffusivity * advected_field_vals.get_laplacian(q_index);
-            res_grad +=
-              stab_param[advected_field_vals.get_current_cell_index()] *
-              scratch_data.get_cell_sizes()[advected_field_vals.get_current_cell_index()] * vel *
-              res_val;
+            res_grad += stab_param[advected_field_vals.get_current_cell_index()] * vel * res_val;
           }
 
         advected_field_vals.submit_gradient(res_grad, q_index);
@@ -416,6 +408,7 @@ namespace MeltPoolDG::AdvectionDiffusion
           {
             stab_param[cell] = data.conv_stab.coefficient;
           }
+        stab_param[cell] *= scratch_data.get_cell_sizes()[velocity_vals.get_current_cell_index()];
       }
   }
 

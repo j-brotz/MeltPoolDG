@@ -78,7 +78,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     reinit() final;
 
     void
-    finish() final;
+    prepare() final;
 
   private:
     void
