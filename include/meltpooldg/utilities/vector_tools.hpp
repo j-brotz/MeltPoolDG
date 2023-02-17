@@ -91,42 +91,6 @@ namespace MeltPoolDG
       return indicator;
     }
 
-    // template <int dim, int spacedim=dim, typename Number=double>
-    // Number
-    // compute_linfty_norm(const LinearAlgebra::distributed::Vector<Number> &in,
-    // const DoFHandler<dim, spacedim>                  &dof_handler_fe_system)
-    //{
-    // in.update_ghost_values();
-
-    // Number max_magnitude = 0;
-    // for (const auto &cell_fe_system : dof_handler_fe_system.active_cell_iterators())
-    // if (cell_fe_system->is_locally_owned())
-    //{
-    // Vector<double> local(dof_handler_fe_system.get_fe().n_dofs_per_cell());
-    // cell_fe_system->get_dof_values(in, local);
-
-    // const unsigned int n_dofs_per_component =
-    // dof_handler_fe_system.get_fe().base_element(0).n_dofs_per_cell();
-
-    // for (unsigned int c = 0; c < n_dofs_per_component; ++c)
-    //{
-    // number magnitude = 0;
-    // for (unsigned int d = 0; d < dim; ++d)
-    // magnitude += std::pow(local[dof_handler_fe_system.get_fe().component_to_system_index(d,
-    // c)],2);
-
-    // max_magnitude = std::max(max_magnitude, std::sqrt(magnitude));
-    //}
-    //}
-
-    // in.zero_out_ghost_values();
-    // Number global_max = 0;
-
-    // Utility::MPI::max(max_magnitude, dof_handler_fe_system.get_communicator(), global_max);
-
-    // return global_max;
-    //}
-
     template <int dim, int spacedim, typename Number>
     void
     convert_fe_system_vector_to_block_vector(const LinearAlgebra::distributed::Vector<Number> &in,

@@ -152,7 +152,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     scratch_data.get_constraint(advec_diff_dof_idx)
       .distribute(solution_history.get_current_solution());
 
-    advec_diff_operator->finish();
     this->ready_for_time_advance = true;
   }
 
@@ -184,6 +183,8 @@ namespace MeltPoolDG::AdvectionDiffusion
       "advection_diffusion");
 
     int iter = 0;
+
+    advec_diff_operator->prepare();
 
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
