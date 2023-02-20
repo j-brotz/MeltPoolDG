@@ -1,6 +1,22 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-02-20
+- Add parameters for closest point projection
+```diff
+{
+  "levelset": {
++    "closest point projection":
++    {
++        "max iter": "",
++        "rel tol": "",
++    }
+  }
+  "evaporation": {
+-    "evapor interface value n iterations": "",
+  }
+```
+
 ## 2023-02-15
 - Add SUPG to advection diffusion
 ```diff
@@ -9,7 +25,7 @@ All notable changes of the input parameters will be documented in this file.
      "convection stabilization":
      {
         "type": "SUPG|none",
-        "coefficient"
+        "coefficient": "",
      }
   }
 ```

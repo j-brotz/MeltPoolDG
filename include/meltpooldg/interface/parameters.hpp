@@ -176,17 +176,25 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
+  struct ClosestPointProjectionData
+  {
+    number rel_tol  = 1e-6;
+    int    max_iter = 20;
+  };
+
+  template <typename number = double>
   struct LevelSetData
   {
-    bool        do_reinitialization     = true;
-    int         n_initial_reinit_steps  = -1.0;
-    std::string time_integration_scheme = "crank_nicolson";
-    bool        do_curvature_correction = false;
-    int         n_subdivisions          = 1;
-    bool        do_localized_heaviside  = true;
-    std::string implementation          = "meltpooldg";
-    number      reinit_time_step_size   = -1.;
-    number      tol_reinit              = std::numeric_limits<number>::min();
+    bool                               do_reinitialization     = true;
+    int                                n_initial_reinit_steps  = -1.0;
+    std::string                        time_integration_scheme = "crank_nicolson";
+    bool                               do_curvature_correction = false;
+    int                                n_subdivisions          = 1;
+    bool                               do_localized_heaviside  = true;
+    std::string                        implementation          = "meltpooldg";
+    number                             reinit_time_step_size   = -1.;
+    number                             tol_reinit              = std::numeric_limits<number>::min();
+    ClosestPointProjectionData<number> cpp;
   };
 
   template <typename number = double>
@@ -381,9 +389,8 @@ namespace MeltPoolDG
     InterfaceForceType formulation_source_term_heat       = InterfaceForceType::diffuse;
     std::string        formulation_evaporative_mass_flux_over_interface =
       "continuous"; // not needed if evaporation_model == "constant"
-    EvaporationModelType              evaporation_model            = EvaporationModelType::constant;
-    number                            coefficient                  = 0.0;
-    unsigned int                      interface_value_n_iterations = 3;
+    EvaporationModelType              evaporation_model = EvaporationModelType::constant;
+    number                            coefficient       = 0.0;
     unsigned int                      line_integral_n_subdivisions_per_side = 10;
     unsigned int                      line_integral_n_subdivisions_MCA      = 1;
     EvaporationLevelSetSourceTermType level_set_source_term_type =

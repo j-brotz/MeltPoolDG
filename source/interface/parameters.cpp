@@ -434,6 +434,17 @@ namespace MeltPoolDG
                         "Set the tolerance for reinitialization. If the "
                         "maximum change of the level set field, i.e. ||ΔФ||∞, exceeds the "
                         "tolerance, reinitialization steps will be performed.");
+      prm.enter_subsection("closest point projection");
+      {
+        prm.add_parameter(
+          "max iter",
+          ls.cpp.max_iter,
+          "Maximum number of corrections of the point projection towards the interface.");
+        prm.add_parameter("rel tol",
+                          ls.cpp.rel_tol,
+                          "Relative tolerance to be achieved within the projection.");
+      }
+      prm.leave_subsection();
     }
     prm.leave_subsection();
 
@@ -815,9 +826,6 @@ namespace MeltPoolDG
                         "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) "
                         "will be calculated.");
       prm.add_parameter("evapor coefficient", evapor.coefficient, "Evaporation coefficient.");
-      prm.add_parameter("evapor interface value n iterations",
-                        evapor.interface_value_n_iterations,
-                        "Number of corrections of the point projection towards the interface.");
       prm.add_parameter("evapor line integral n subdivisions per side",
                         evapor.line_integral_n_subdivisions_per_side,
                         "Number of subdivisions per side to compute the points perpendicular to "

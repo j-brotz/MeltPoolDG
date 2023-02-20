@@ -95,8 +95,7 @@
   "evaporation": {
     "evapor evaporation model": "hardt_wondra",
     "evapor formulation evaporative mass flux over interface": "interface value",
-    "evapor coefficient": "1.0",
-    "evapor interface value n iterations": "10"
+    "evapor coefficient": "1.0"
   },
   "heat": {
     "heat two phase": "true",

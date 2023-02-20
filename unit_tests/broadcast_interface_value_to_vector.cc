@@ -196,6 +196,7 @@ run_test()
   Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(1e-6 /*tolerance*/,
                                                                           true /*unique mapping*/);
 
+  const double min_cell_size = GridTools::minimal_cell_diameter(triangulation) / std::sqrt(dim);
 
   timer_total.start();
   LevelSet::Tools::broadcast_interface_value_to_vector<dim, n_components>(
@@ -206,6 +207,7 @@ run_test()
     solution_normal,
     solution_temp,
     solution_temp_interface,
+    min_cell_size,
     remote_point_evaluation,
     n_iter,
     1e-5,   // rel_tol_distance,

@@ -157,6 +157,9 @@ namespace MeltPoolDG
     const double &
     get_min_cell_size() const;
 
+    double
+    get_min_cell_size(const unsigned int dof_idx) const;
+
     const double &
     get_max_cell_size() const;
 

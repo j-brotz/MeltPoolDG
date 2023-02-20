@@ -289,8 +289,10 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferOperation<dim>::compute_interface_temperature(const VectorType &     distance,
-                                                            const BlockVectorType &normal_vector)
+  HeatTransferOperation<dim>::compute_interface_temperature(
+    const VectorType &                        distance,
+    const BlockVectorType &                   normal_vector,
+    const ClosestPointProjectionData<double> &data)
   {
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, true /*unique mapping*/);
@@ -303,7 +305,10 @@ namespace MeltPoolDG::Heat
       normal_vector,
       solution_history.get_current_solution(),
       temperature_interface,
-      remote_point_evaluation);
+      scratch_data.get_min_cell_size(ls_dof_idx),
+      remote_point_evaluation,
+      data.max_iter,
+      data.rel_tol);
 
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature_interface);
   }

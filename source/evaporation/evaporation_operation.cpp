@@ -24,16 +24,17 @@ namespace MeltPoolDG::Evaporation
   EvaporationOperation<dim>::EvaporationOperation(const ScratchData<dim> &scratch_data_in,
                                                   const VectorType &      level_set_as_heaviside_in,
                                                   const BlockVectorType & normal_vector_in,
-                                                  std::shared_ptr<SimulationBase<dim>> base_in,
-                                                  const unsigned int normal_dof_idx_in,
+                                                  const EvaporationData<double> &evapor_data,
+                                                  const MaterialData<double> &   material_data,
+                                                  const unsigned int             normal_dof_idx_in,
                                                   const unsigned int evapor_vel_dof_idx_in,
                                                   const unsigned int evapor_mass_flux_dof_idx_in,
                                                   const unsigned int ls_hanging_nodes_dof_idx_in,
                                                   const unsigned int ls_quad_idx_in)
 
     : scratch_data(scratch_data_in)
-    , evaporation_data(base_in->parameters.evapor)
-    , material(base_in->parameters.material)
+    , evaporation_data(evapor_data)
+    , material(material_data)
     , level_set_as_heaviside(level_set_as_heaviside_in)
     , normal_vector(normal_vector_in)
     , normal_dof_idx(normal_dof_idx_in)
@@ -95,12 +96,13 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationOperation<dim>::reinit(const VectorType *                temperature_in,
-                                    const VectorType &                distance,
-                                    const RecoilPressureData<double> &recoil_data,
-                                    const double                      constant_epsilon,
-                                    const double                      scale_factor_epsilon,
-                                    const unsigned int                temp_dof_idx_in)
+  EvaporationOperation<dim>::reinit(const VectorType *                        temperature_in,
+                                    const VectorType &                        distance,
+                                    const RecoilPressureData<double> &        recoil_data,
+                                    const ClosestPointProjectionData<double> &cpp_data,
+                                    const double                              constant_epsilon,
+                                    const double                              scale_factor_epsilon,
+                                    const unsigned int                        temp_dof_idx_in)
   {
     temperature  = temperature_in;
     temp_dof_idx = temp_dof_idx_in;
@@ -131,14 +133,14 @@ namespace MeltPoolDG::Evaporation
         evapor_mass_flux_operator =
           std::make_shared<EvaporationMassFluxOperatorInterfaceValue<dim>>(
             scratch_data,
+            cpp_data,
             *evapor_model,
             level_set_as_heaviside,
             distance,
             normal_vector,
             ls_hanging_nodes_dof_idx,
             temp_dof_idx,
-            evapor_mass_flux_dof_idx,
-            evaporation_data.interface_value_n_iterations);
+            evapor_mass_flux_dof_idx);
       }
     else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "line integral")
       evapor_mass_flux_operator =

@@ -685,7 +685,8 @@ namespace MeltPoolDG::LevelSet
       curvature_operation->get_curvature(),
       curvature_operation->get_curvature(),
       remote_point_evaluation,
-      5 /*n_iterations*/);
+      level_set_data.cpp.max_iter,
+      level_set_data.cpp.rel_tol);
 
     /*
      * old approach --> only kept as back-up [MS]
