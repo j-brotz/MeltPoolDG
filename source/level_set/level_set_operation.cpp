@@ -240,9 +240,6 @@ namespace MeltPoolDG::LevelSet
 
     scratch_data.initialize_dof_vector(level_set_as_heaviside, ls_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(distance_to_level_set, ls_hanging_nodes_dof_idx);
-
-    if (level_set_data.do_curvature_correction)
-      scratch_data.initialize_dof_vector(curvature_corrected, curv_dof_idx);
   }
 
   template <int dim>
@@ -343,28 +340,12 @@ namespace MeltPoolDG::LevelSet
   const LinearAlgebra::distributed::Vector<double> &
   LevelSetOperation<dim>::get_curvature() const
   {
-    return level_set_data.do_curvature_correction ? curvature_corrected :
-                                                    curvature_operation->get_curvature();
-  }
-
-  template <int dim>
-  LinearAlgebra::distributed::Vector<double> &
-  LevelSetOperation<dim>::get_curvature()
-  {
-    return level_set_data.do_curvature_correction ? curvature_corrected :
-                                                    curvature_operation->get_curvature();
-  }
-
-  template <int dim>
-  const LinearAlgebra::distributed::Vector<double> &
-  LevelSetOperation<dim>::get_curvature_plain() const
-  {
     return curvature_operation->get_curvature();
   }
 
   template <int dim>
   LinearAlgebra::distributed::Vector<double> &
-  LevelSetOperation<dim>::get_curvature_plain()
+  LevelSetOperation<dim>::get_curvature()
   {
     return curvature_operation->get_curvature();
   }
@@ -469,11 +450,6 @@ namespace MeltPoolDG::LevelSet
     data_out.add_data_vector(scratch_data.get_dof_handler(ls_dof_idx),
                              get_curvature(),
                              "curvature");
-
-    if (level_set_data.do_curvature_correction)
-      data_out.add_data_vector(scratch_data.get_dof_handler(ls_dof_idx),
-                               curvature_operation->get_curvature(),
-                               "curvature_plain");
     /*
      *  output heaviside
      */
@@ -707,7 +683,7 @@ namespace MeltPoolDG::LevelSet
       distance_to_level_set,
       get_normal_vector(),
       curvature_operation->get_curvature(),
-      curvature_corrected,
+      curvature_operation->get_curvature(),
       remote_point_evaluation,
       5 /*n_iterations*/);
 

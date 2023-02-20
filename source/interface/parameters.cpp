@@ -163,10 +163,6 @@ namespace MeltPoolDG
     for (unsigned int i = 0; i < PredictorData<number>::all.size(); ++i)
       PredictorData<number>::all[i]->set_default_values();
 
-
-    if (evapor.formulation_evaporative_mass_flux_over_interface == "interface_value_curv_corr")
-      ls.do_curvature_correction = true;
-
     /************************************************************************************
      * check input parameters for validity
      ************************************************************************************/
@@ -813,7 +809,7 @@ namespace MeltPoolDG
         evapor.formulation_evaporative_mass_flux_over_interface,
         "Choose the formulation how the (local) evaporative mass flux will be converted to a DoF vector."
         "will be calculated.",
-        Patterns::Selection("continuous|interface value|line integral|interface_value_curv_corr"));
+        Patterns::Selection("continuous|interface value|line integral"));
       prm.add_parameter("evapor evaporation model",
                         evapor.evaporation_model,
                         "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) "
