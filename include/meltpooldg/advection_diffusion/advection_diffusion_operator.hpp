@@ -74,17 +74,28 @@ namespace MeltPoolDG::AdvectionDiffusion
     void
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
 
+    void
+    reinit() final;
+
+    void
+    prepare() final;
+
   private:
     void
     tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  advected_field,
                                  FECellIntegrator<dim, dim, number> &velocity_vals,
                                  const bool                          do_reinit_cells) const;
 
-    const ScratchData<dim> &              scratch_data;
-    const VectorType &                    advection_velocity;
-    const AdvectionDiffusionData<number> &data;
-    const unsigned int                    velocity_dof_idx;
-    const unsigned int                    advec_diff_quad_idx;
-    double                                theta;
+    void
+    compute_stabilization_parameter(const FECellIntegrator<dim, dim, number> &velocity_vals) const;
+
+    const ScratchData<dim> &                       scratch_data;
+    const VectorType &                             advection_velocity;
+    const AdvectionDiffusionData<number> &         data;
+    const unsigned int                             velocity_dof_idx;
+    const unsigned int                             advec_diff_quad_idx;
+    double                                         theta;
+    mutable AlignedVector<VectorizedArray<double>> stab_param;
+    mutable bool                                   do_update_stab_param = true;
   };
 } // namespace MeltPoolDG::AdvectionDiffusion

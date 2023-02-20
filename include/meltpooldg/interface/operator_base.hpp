@@ -124,6 +124,12 @@ namespace MeltPoolDG
       AssertThrow(false, ExcNotImplemented());
     }
 
+    virtual void
+    prepare()
+    {
+      AssertThrow(false, ExcNotImplemented());
+    }
+
     inline void
     reset_dof_index(const unsigned int dof_idx_in)
     {

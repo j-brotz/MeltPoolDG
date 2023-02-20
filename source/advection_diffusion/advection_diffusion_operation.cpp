@@ -95,6 +95,9 @@ namespace MeltPoolDG::AdvectionDiffusion
          */
         preconditioner_matrixfree->reinit();
       }
+
+    if (advec_diff_operator)
+      advec_diff_operator->reinit();
   }
 
 
@@ -180,6 +183,8 @@ namespace MeltPoolDG::AdvectionDiffusion
       "advection_diffusion");
 
     int iter = 0;
+
+    advec_diff_operator->prepare();
 
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
@@ -372,6 +377,8 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
      *  apply it to the system matrix. This functionality is part of the OperatorBase class.
      */
+
+    advec_diff_operator->reinit();
     if (!this->advec_diff_data.linear_solver.do_matrix_free)
       advec_diff_operator->initialize_matrix_based(scratch_data);
     /*

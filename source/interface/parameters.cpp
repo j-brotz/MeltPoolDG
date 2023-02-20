@@ -163,6 +163,10 @@ namespace MeltPoolDG
     for (unsigned int i = 0; i < PredictorData<number>::all.size(); ++i)
       PredictorData<number>::all[i]->set_default_values();
 
+
+    if (evapor.formulation_evaporative_mass_flux_over_interface == "interface_value_curv_corr")
+      ls.do_curvature_correction = true;
+
     /************************************************************************************
      * check input parameters for validity
      ************************************************************************************/
@@ -258,6 +262,12 @@ namespace MeltPoolDG
       std::abs(surface_tension.temperature_dependent_surface_tension_coefficient) > 1e-10;
     AssertThrow(!do_compute_surface_tension || curv.enable,
                 ExcMessage("Curvature computation must be enabled in case of surface tension."));
+
+    AssertThrow((advec_diff.conv_stab.type == ConvectionStabilizationType::SUPG &&
+                 advec_diff.linear_solver.do_matrix_free &&
+                 advec_diff.implementation == "meltpooldg") ||
+                  advec_diff.conv_stab.type == ConvectionStabilizationType::none,
+                ExcNotImplemented());
   }
 
   template <typename number>
@@ -355,6 +365,18 @@ namespace MeltPoolDG
      */
     prm.enter_subsection("advection diffusion");
     {
+      prm.enter_subsection("convection stabilization");
+      {
+        prm.add_parameter("type",
+                          advec_diff.conv_stab.type,
+                          "Defines the type for convection stabilization.");
+
+        prm.add_parameter(
+          "coefficient",
+          advec_diff.conv_stab.coefficient,
+          "Defines the stabilization coefficient for convection. (default velocity-dependent).");
+      }
+      prm.leave_subsection();
       prm.add_parameter("advec diff diffusivity",
                         advec_diff.diffusivity,
                         "Defines the diffusivity for the advection diffusion equation ");
@@ -791,7 +813,7 @@ namespace MeltPoolDG
         evapor.formulation_evaporative_mass_flux_over_interface,
         "Choose the formulation how the (local) evaporative mass flux will be converted to a DoF vector."
         "will be calculated.",
-        Patterns::Selection("continuous|interface value|line integral"));
+        Patterns::Selection("continuous|interface value|line integral|interface_value_curv_corr"));
       prm.add_parameter("evapor evaporation model",
                         evapor.evaporation_model,
                         "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) "

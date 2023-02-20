@@ -34,7 +34,7 @@ namespace MeltPoolDG::AdvectionDiffusion
       AssertThrow(
         false,
         ExcMessage(
-          "Advection diffusion operator: Requested time integration scheme not supported."))
+          "Advection diffusion operator: Requested time integration scheme not supported."));
   }
 
   template <int dim, typename number>
@@ -153,6 +153,21 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   template <int dim, typename number>
   void
+  AdvectionDiffusionOperator<dim, number>::reinit()
+  {
+    if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
+      stab_param.resize_fast(scratch_data.get_matrix_free().n_cell_batches());
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::prepare()
+  {
+    do_update_stab_param = true;
+  }
+
+  template <int dim, typename number>
+  void
   AdvectionDiffusionOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
@@ -204,7 +219,12 @@ namespace MeltPoolDG::AdvectionDiffusion
           {
             advected_field_vals.reinit(cell);
             advected_field_vals.read_dof_values_plain(src);
-            advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+
+            if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
+              advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients |
+                                           EvaluationFlags::hessians);
+            else
+              advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
             velocity_vals.reinit(cell);
             velocity_vals.read_dof_values_plain(advection_velocity);
@@ -214,15 +234,24 @@ namespace MeltPoolDG::AdvectionDiffusion
               {
                 scalar       phi      = advected_field_vals.get_value(q_index);
                 const vector grad_phi = advected_field_vals.get_gradient(q_index);
+                const vector vel = VectorTools::to_vector<dim>(velocity_vals.get_value(q_index));
 
-                const scalar velocity_grad_phi =
-                  scalar_product(velocity_vals.get_value(q_index), grad_phi);
-                advected_field_vals.submit_value(this->time_increment_inv * phi -
-                                                   (1. - theta) * velocity_grad_phi,
-                                                 q_index);
+                const scalar velocity_grad_phi = scalar_product(vel, grad_phi);
 
-                advected_field_vals.submit_gradient(-(1. - theta) * data.diffusivity * grad_phi,
-                                                    q_index);
+                scalar res_val = this->time_increment_inv * phi - (1. - theta) * velocity_grad_phi;
+
+                vector res_grad = -(1. - theta) * data.diffusivity * grad_phi;
+
+                advected_field_vals.submit_value(res_val, q_index);
+
+                if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
+                  {
+                    res_val +=
+                      (1. - theta) * data.diffusivity * advected_field_vals.get_laplacian(q_index);
+                    res_grad += stab_param[cell] * vel * res_val;
+                  }
+
+                advected_field_vals.submit_gradient(res_grad, q_index);
               }
 
             advected_field_vals.integrate_scatter(EvaluationFlags::values |
@@ -233,6 +262,8 @@ namespace MeltPoolDG::AdvectionDiffusion
       dst,
       src,
       false); // rhs should not be zeroed out in order to consider inhomogeneous dirichlet BC
+
+    do_update_stab_param = false;
   }
 
   template <int dim, typename number>
@@ -307,7 +338,6 @@ namespace MeltPoolDG::AdvectionDiffusion
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
   }
 
-
   template <int dim, typename number>
   void
   AdvectionDiffusionOperator<dim, number>::tangent_local_cell_operation(
@@ -315,7 +345,11 @@ namespace MeltPoolDG::AdvectionDiffusion
     FECellIntegrator<dim, dim, number> &velocity_vals,
     const bool                          do_reinit_cells) const
   {
-    advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
+    if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
+      advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients |
+                                   EvaluationFlags::hessians);
+    else
+      advected_field_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
     if (do_reinit_cells)
       {
@@ -324,19 +358,60 @@ namespace MeltPoolDG::AdvectionDiffusion
         velocity_vals.evaluate(EvaluationFlags::values);
       }
 
+    if (do_update_stab_param)
+      compute_stabilization_parameter(velocity_vals);
+
     for (unsigned int q_index = 0; q_index < advected_field_vals.n_q_points; ++q_index)
       {
         const scalar phi      = advected_field_vals.get_value(q_index);
         const vector grad_phi = advected_field_vals.get_gradient(q_index);
+        const vector vel      = VectorTools::to_vector<dim>(velocity_vals.get_value(q_index));
+        const scalar velocity_grad_phi = scalar_product(vel, grad_phi);
 
-        const scalar velocity_grad_phi = scalar_product(velocity_vals.get_value(q_index), grad_phi);
+        scalar res_val  = this->time_increment_inv * phi + theta * velocity_grad_phi;
+        vector res_grad = theta * data.diffusivity * grad_phi;
 
-        advected_field_vals.submit_value(this->time_increment_inv * phi + theta * velocity_grad_phi,
-                                         q_index);
-        advected_field_vals.submit_gradient(theta * data.diffusivity * grad_phi, q_index);
+        advected_field_vals.submit_value(res_val, q_index);
+        if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
+          {
+            res_val -= theta * data.diffusivity * advected_field_vals.get_laplacian(q_index);
+            res_grad += stab_param[advected_field_vals.get_current_cell_index()] * vel * res_val;
+          }
+
+        advected_field_vals.submit_gradient(res_grad, q_index);
       }
     advected_field_vals.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
   }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::compute_stabilization_parameter(
+    const FECellIntegrator<dim, dim, number> &velocity_vals) const
+  {
+    if (data.conv_stab.type == ConvectionStabilizationType::SUPG)
+      {
+        const unsigned int cell = velocity_vals.get_current_cell_index();
+
+        if (data.conv_stab.coefficient < 0.0)
+          {
+            stab_param[cell] = 0.0;
+
+            for (unsigned int q_index = 0; q_index < velocity_vals.n_q_points; ++q_index)
+              stab_param[cell] =
+                std::max(stab_param[cell],
+                         VectorTools::to_vector<dim>(velocity_vals.get_value(q_index)).norm());
+
+            stab_param[cell] = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+              stab_param[cell], 1e-6, 1. / stab_param[cell], 0.0);
+          }
+        else
+          {
+            stab_param[cell] = data.conv_stab.coefficient;
+          }
+        stab_param[cell] *= scratch_data.get_cell_sizes()[velocity_vals.get_current_cell_index()];
+      }
+  }
+
 
   template class AdvectionDiffusionOperator<1, double>;
   template class AdvectionDiffusionOperator<2, double>;
