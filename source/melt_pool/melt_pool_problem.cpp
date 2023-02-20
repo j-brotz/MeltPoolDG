@@ -232,9 +232,10 @@ namespace MeltPoolDG::MeltPool
                                       level_set_operation->get_normal_vector(),
                                       interface_velocity,
                                       interface_velocity_interface,
+                                      scratch_data->get_min_cell_size(ls_hanging_nodes_dof_idx),
                                       remote_point_evaluation,
-                                      10 /*n_iter*/,
-                                      1e-5,
+                                      base_in->parameters.ls.cpp.max_iter,
+                                      base_in->parameters.ls.cpp.rel_tol,
                                       -1,
                                       base_in->parameters.evapor.level_set_source_term_type ==
                                         EvaporationLevelSetSourceTermType::
@@ -280,9 +281,10 @@ namespace MeltPoolDG::MeltPool
                               level_set_operation->get_normal_vector(),
                               interface_velocity,
                               interface_velocity_interface,
+                              scratch_data->get_min_cell_size(ls_hanging_nodes_dof_idx),
                               remote_point_evaluation,
-                              5 /*n_iter*/,
-                              1e-5,
+                              base_in->parameters.ls.cpp.max_iter,
+                              base_in->parameters.ls.cpp.rel_tol,
                               -1,
                               base_in->parameters.evapor.level_set_source_term_type ==
                                 EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy);
@@ -526,7 +528,8 @@ namespace MeltPoolDG::MeltPool
                       {
                         heat_operation->compute_interface_temperature(
                           level_set_operation->get_distance_to_level_set(),
-                          level_set_operation->get_normal_vector());
+                          level_set_operation->get_normal_vector(),
+                          base_in->parameters.ls.cpp);
 
                         melt_pool_operation->compute_force_flow_rhs(
                           vel_force_rhs,
@@ -1029,7 +1032,8 @@ namespace MeltPoolDG::MeltPool
           *scratch_data,
           level_set_operation->get_level_set_as_heaviside(),
           level_set_operation->get_normal_vector(),
-          base_in,
+          base_in->parameters.evapor,
+          base_in->parameters.material,
           normal_dof_idx,
           evapor_vel_dof_idx,
           evapor_mass_flux_dof_idx,
@@ -1041,6 +1045,7 @@ namespace MeltPoolDG::MeltPool
         evaporation_operation->reinit(&heat_operation->get_temperature(),
                                       level_set_operation->get_distance_to_level_set(),
                                       base_in->parameters.recoil,
+                                      base_in->parameters.ls.cpp,
                                       base_in->parameters.reinit.constant_epsilon,
                                       base_in->parameters.reinit.scale_factor_epsilon,
                                       temp_dof_idx);

@@ -415,6 +415,14 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  double
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_min_cell_size(
+    const unsigned int dof_idx) const
+  {
+    return is_FE_Q_iso_Q_1(dof_idx) ? min_cell_size : min_cell_size / get_degree(dof_idx);
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   const double &
   ScratchData<dim, spacedim, number, VectorizedArrayType>::get_max_cell_size() const
   {

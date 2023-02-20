@@ -684,8 +684,10 @@ namespace MeltPoolDG::LevelSet
       get_normal_vector(),
       curvature_operation->get_curvature(),
       curvature_operation->get_curvature(),
+      scratch_data.get_min_cell_size(ls_hanging_nodes_dof_idx),
       remote_point_evaluation,
-      5 /*n_iterations*/);
+      level_set_data.cpp.max_iter,
+      level_set_data.cpp.rel_tol);
 
     /*
      * old approach --> only kept as back-up [MS]

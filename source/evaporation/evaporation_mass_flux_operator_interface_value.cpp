@@ -12,16 +12,17 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   EvaporationMassFluxOperatorInterfaceValue<dim>::EvaporationMassFluxOperatorInterfaceValue(
-    const ScratchData<dim> &    scratch_data,
-    const EvaporationModelBase &evaporation_model,
-    const VectorType &          level_set_as_heaviside,
-    const VectorType &          distance,
-    const BlockVectorType &     normal_vector,
-    const unsigned int          ls_dof_idx_in,
-    const unsigned int          temp_hanging_nodes_dof_idx_in,
-    const unsigned int          evapor_mass_flux_dof_idx_in,
-    const unsigned int          n_iterations)
+    const ScratchData<dim> &                  scratch_data,
+    const ClosestPointProjectionData<double> &data,
+    const EvaporationModelBase &              evaporation_model,
+    const VectorType &                        level_set_as_heaviside,
+    const VectorType &                        distance,
+    const BlockVectorType &                   normal_vector,
+    const unsigned int                        ls_dof_idx_in,
+    const unsigned int                        temp_hanging_nodes_dof_idx_in,
+    const unsigned int                        evapor_mass_flux_dof_idx_in)
     : scratch_data(scratch_data)
+    , cpp_data(data)
     , evaporation_model(evaporation_model)
     , level_set_as_heaviside(level_set_as_heaviside)
     , distance(distance)
@@ -29,7 +30,6 @@ namespace MeltPoolDG::Evaporation
     , ls_dof_idx(ls_dof_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx_in)
-    , n_iterations(n_iterations)
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
@@ -52,8 +52,10 @@ namespace MeltPoolDG::Evaporation
         scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
         distance,
         normal_vector,
+        scratch_data.get_min_cell_size(ls_dof_idx),
         remote_point_evaluation,
-        n_iterations);
+        cpp_data.max_iter,
+        cpp_data.rel_tol);
     /*
      * get temperature values at projected interface points
      */

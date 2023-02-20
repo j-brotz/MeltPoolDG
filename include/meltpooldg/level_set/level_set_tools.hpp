@@ -94,6 +94,7 @@ namespace MeltPoolDG::LevelSet::Tools
     const DoFHandler<dim> &                          dof_handler_req,
     const VectorType &                               distance,
     const BlockVectorType &                          normal_vector,
+    const double                                     min_cell_size,
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
     const unsigned int max_iterations    = 5,
@@ -111,7 +112,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
     // tolerance to be reached for the distance of the projected points to the distance = 0
     // isosurface
-    const double tol_distance = distance.linfty_norm() * rel_tol_distance;
+    const double tol_distance = rel_tol_distance * min_cell_size;
 
     /*
      * read MPI communicator
@@ -347,6 +348,7 @@ namespace MeltPoolDG::LevelSet::Tools
     const BlockVectorType &                          normal_vector,
     const VectorType &                               solution_in,
     VectorType &                                     solution_out,
+    const double                                     min_cell_size,
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
     const unsigned int max_iterations    = 5,
@@ -360,6 +362,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                                  dof_handler_req,
                                                  distance,
                                                  normal_vector,
+                                                 min_cell_size,
                                                  remote_point_evaluation,
                                                  max_iterations,
                                                  rel_tol_distance,
