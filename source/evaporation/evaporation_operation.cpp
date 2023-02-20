@@ -126,10 +126,7 @@ namespace MeltPoolDG::Evaporation
     if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "continuous")
       evapor_mass_flux_operator =
         std::make_shared<EvaporationMassFluxOperatorContinuous<dim>>(scratch_data, *evapor_model);
-    else if (evaporation_data.formulation_evaporative_mass_flux_over_interface ==
-               "interface value" ||
-             evaporation_data.formulation_evaporative_mass_flux_over_interface ==
-               "interface_value_curv_corr")
+    else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "interface value")
       {
         evapor_mass_flux_operator =
           std::make_shared<EvaporationMassFluxOperatorInterfaceValue<dim>>(
@@ -169,8 +166,7 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationOperation<dim>::compute_evaporative_mass_flux(const VectorType &curvature,
-                                                           const VectorType &curvature_corrected)
+  EvaporationOperation<dim>::compute_evaporative_mass_flux()
   {
     // prescribe spatially constant, potentially time-dependent evaporative mass flux
     if (evaporation_data.evaporation_model == EvaporationModelType::constant)
@@ -186,33 +182,6 @@ namespace MeltPoolDG::Evaporation
         evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux,
                                                                  *temperature);
       }
-
-    if (evaporation_data.formulation_evaporative_mass_flux_over_interface ==
-        "interface_value_curv_corr")
-      {
-        curvature.update_ghost_values();
-        curvature_corrected.update_ghost_values();
-        for (unsigned int i = 0; i < evaporative_mass_flux.locally_owned_size(); ++i)
-          {
-            double scaling = 1.;
-            if (curvature_corrected.local_element(i) > 1e-3)
-              {
-                double r_min = 1. / curvature_corrected.local_element(i) -
-                               4. * 2e-6; // TODO: incorporate epsilon
-                double r_max = 1. / curvature_corrected.local_element(i) +
-                               4. * 2e-6; // TODO: incorporate epsilon
-                double kappa = curvature.local_element(i);
-                kappa        = std::min(1. / r_max, std::max(1. / r_min, kappa));
-                scaling      = kappa / curvature_corrected.local_element(i);
-              }
-            evaporative_mass_flux.local_element(i) *= scaling;
-          }
-        curvature.zero_out_ghost_values();
-        curvature_corrected.zero_out_ghost_values();
-      }
-
-
-
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
       [&]() -> double {

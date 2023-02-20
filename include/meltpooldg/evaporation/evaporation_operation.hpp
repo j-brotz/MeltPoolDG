@@ -117,8 +117,7 @@ namespace MeltPoolDG::Evaporation
      * and the evaporation mass flux operator for computing the distribution across the interface.
      */
     void
-    compute_evaporative_mass_flux(const VectorType &curvature,
-                                  const VectorType &curvature_corrected);
+    compute_evaporative_mass_flux();
 
     void
     compute_evaporation_velocity();

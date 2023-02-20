@@ -68,7 +68,6 @@ namespace MeltPoolDG::LevelSet
      */
     VectorType level_set_as_heaviside;
     VectorType distance_to_level_set;
-    VectorType curvature_corrected;
 
     double max_d_level_set_since_last_reinit = std::numeric_limits<double>::max();
 
@@ -131,12 +130,6 @@ namespace MeltPoolDG::LevelSet
 
     LinearAlgebra::distributed::Vector<double> &
     get_curvature();
-
-    const LinearAlgebra::distributed::Vector<double> &
-    get_curvature_plain() const;
-
-    LinearAlgebra::distributed::Vector<double> &
-    get_curvature_plain();
 
     const LinearAlgebra::distributed::BlockVector<double> &
     get_normal_vector() const;

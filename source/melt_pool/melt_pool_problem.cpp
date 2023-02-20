@@ -308,9 +308,7 @@ namespace MeltPoolDG::MeltPool
                         if (evaporation_operation &&
                             base_in->parameters.evapor
                                 .formulation_evaporative_mass_flux_over_interface != "continuous")
-                          evaporation_operation->compute_evaporative_mass_flux(
-                            level_set_operation->get_curvature_plain(),
-                            level_set_operation->get_curvature());
+                          evaporation_operation->compute_evaporative_mass_flux();
                       }
                   }
 
@@ -421,9 +419,7 @@ namespace MeltPoolDG::MeltPool
 
                     if (do_heat_iteration)
                       {
-                        evaporation_operation->compute_evaporative_mass_flux(
-                          level_set_operation->get_curvature_plain(),
-                          level_set_operation->get_curvature());
+                        evaporation_operation->compute_evaporative_mass_flux();
                       }
                   }
 
@@ -471,8 +467,7 @@ namespace MeltPoolDG::MeltPool
               {
                 ScopedName         sc("evaporation::mass_flux");
                 TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-                evaporation_operation->compute_evaporative_mass_flux(
-                  level_set_operation->get_curvature_plain(), level_set_operation->get_curvature());
+                evaporation_operation->compute_evaporative_mass_flux();
               }
 
             /******************************************************************************************
@@ -1276,8 +1271,7 @@ namespace MeltPoolDG::MeltPool
         if (base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
           evaporation_operation->set_time(time_iterator->get_current_time());
 
-        evaporation_operation->compute_evaporative_mass_flux(
-          level_set_operation->get_curvature_plain(), level_set_operation->get_curvature());
+        evaporation_operation->compute_evaporative_mass_flux();
       }
 
     if (evaporation_operation &&
