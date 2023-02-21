@@ -27,54 +27,28 @@ namespace MeltPoolDG
     namespace RotatingBubble
     {
       using namespace dealii;
-      /*
-       * this function specifies the initial field of the level set equation
-       */
 
       template <int dim>
       class InitializePhi : public Function<dim>
       {
       public:
-        InitializePhi(const double eps)
+        InitializePhi()
           : Function<dim>()
-          , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5), 0.25)
-          , eps(eps)
+          , distance_sphere(dim == 1 ? Point<dim>(0.0) :
+                            dim == 2 ? Point<dim>(0.0, 0.5) :
+                                       Point<dim>(0.0, 0., 0.5),
+                            0.25)
         {}
 
         double
         value(const Point<dim> &p, const unsigned int) const
         {
-          return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-            -distance_sphere.value(p), eps);
+          return -distance_sphere.value(p);
         }
 
       private:
         const Functions::SignedDistance::Sphere<dim> distance_sphere;
-        const double                                 eps;
       };
-
-      template <int dim>
-      class ExactSolution : public Function<dim>
-      {
-      public:
-        ExactSolution(const double eps)
-          : Function<dim>()
-          , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5), 0.25)
-          , eps_interface(eps)
-        {}
-
-        double
-        value(const Point<dim> &p, const unsigned int) const
-        {
-          return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-            -distance_sphere.value(p), eps_interface);
-        }
-
-      private:
-        const Functions::SignedDistance::Sphere<dim> distance_sphere;
-        const double                                 eps_interface;
-      };
-
 
       template <int dim>
       class AdvectionField : public Function<dim>
@@ -97,26 +71,6 @@ namespace MeltPoolDG
             }
           else
             AssertThrow(false, ExcMessage("Advection field for dim!=2 not implemented"));
-        }
-      };
-
-      /* for constant Dirichlet conditions we could also use the ConstantFunction
-       * utility from dealii
-       */
-      template <int dim>
-      class DirichletCondition : public Function<dim>
-      {
-      public:
-        DirichletCondition()
-          : Function<dim>()
-        {}
-
-        double
-        value(const Point<dim> &p, const unsigned int component = 0) const
-        {
-          (void)p;
-          (void)component;
-          return -1.0;
         }
       };
 
@@ -173,9 +127,8 @@ namespace MeltPoolDG
           constexpr types::boundary_id inflow_bc  = 42;
           constexpr types::boundary_id do_nothing = 0;
 
-          this->attach_dirichlet_boundary_condition(inflow_bc,
-                                                    std::make_shared<DirichletCondition<dim>>(),
-                                                    "level_set");
+          this->attach_dirichlet_boundary_condition(
+            inflow_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
           /*
            *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
            *  due to the hyperbolic nature of the analyzed problem
@@ -220,11 +173,8 @@ namespace MeltPoolDG
         void
         set_field_conditions()
         {
-          double eps =
-            UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
-          this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(eps), "level_set");
+          this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "signed_distance");
           this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "level_set");
-          this->attach_exact_solution(std::make_shared<ExactSolution<dim>>(0.01), "level_set");
         }
 
       private:
