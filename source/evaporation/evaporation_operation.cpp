@@ -96,6 +96,18 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
+  EvaporationOperation<dim>::register_surface_mesh(
+    const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                 std::vector<Point<dim>> /*quad_points*/,
+                                 std::vector<double> /*weights*/
+                                 >> &surface_mesh_info_in)
+  {
+    dynamic_cast<EvaporationSourceTermsSharp<dim> *>(evapor_source_terms_operator.get())
+      ->register_surface_mesh(surface_mesh_info_in);
+  }
+
+  template <int dim>
+  void
   EvaporationOperation<dim>::reinit(const VectorType *                        temperature_in,
                                     const VectorType &                        distance,
                                     const RecoilPressureData<double> &        recoil_data,

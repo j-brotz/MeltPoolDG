@@ -43,6 +43,11 @@ namespace MeltPoolDG::Evaporation
     const double       density_vapor;
     const double       density_liquid;
 
+    const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                 std::vector<Point<dim>> /*quad_points*/,
+                                 std::vector<double> /*weights*/
+                                 >> *surface_mesh_info = nullptr;
+
   public:
     EvaporationSourceTermsSharp(const ScratchData<dim> &       scratch_data,
                                 const EvaporationData<double> &evapor_data,
@@ -75,5 +80,12 @@ namespace MeltPoolDG::Evaporation
 
     void
     compute_heat_source_term(VectorType &heat_source_term) final;
+
+    void
+    register_surface_mesh(
+      const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                   std::vector<Point<dim>> /*quad_points*/,
+                                   std::vector<double> /*weights*/
+                                   >> &surface_mesh_info);
   };
 } // namespace MeltPoolDG::Evaporation

@@ -137,6 +137,12 @@ namespace MeltPoolDG::Evaporation
                                      bool               zero_out);
 
     void
+    register_surface_mesh(
+      const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                   std::vector<Point<dim>> /*quad_points*/,
+                                   std::vector<double> /*weights*/
+                                   >> &surface_mesh_info);
+    void
     reinit();
 
     void
