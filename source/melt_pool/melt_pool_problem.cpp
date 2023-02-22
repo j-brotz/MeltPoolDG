@@ -330,8 +330,10 @@ namespace MeltPoolDG::MeltPool
                 level_set_operation->finish_time_advance();
 
                 if (evaporation_operation &&
-                    base_in->parameters.evapor.formulation_source_term_heat ==
-                      InterfaceForceType::sharp)
+                    (base_in->parameters.evapor.formulation_source_term_heat ==
+                       InterfaceForceType::sharp ||
+                     base_in->parameters.evapor.formulation_source_term_continuity ==
+                       InterfaceForceType::sharp))
                   level_set_operation->update_surface_mesh();
               }
 
@@ -1050,11 +1052,16 @@ namespace MeltPoolDG::MeltPool
                                       base_in->parameters.reinit.scale_factor_epsilon,
                                       temp_dof_idx);
 
-        /*
-         *  Create a modified viscous stress-strain relation in case of an existing evaporation mass
-         *  source term, such that div(u)!=0. This material law will be only evaluated if the
-         * parameter "constitutive type" is set to "user defined" in the Navier-Stokes section.
-         */
+        if (base_in->parameters.evapor.formulation_source_term_continuity ==
+            InterfaceForceType::sharp)
+          evaporation_operation->register_surface_mesh(
+            level_set_operation->get_surface_mesh_info());
+
+          /*
+           *  Create a modified viscous stress-strain relation in case of an existing evaporation
+           * mass source term, such that div(u)!=0. This material law will be only evaluated if the
+           * parameter "constitutive type" is set to "user defined" in the Navier-Stokes section.
+           */
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
         if (base_in->parameters.adaflo_params.params.constitutive_type ==
@@ -1280,7 +1287,9 @@ namespace MeltPoolDG::MeltPool
       }
 
     if (evaporation_operation &&
-        base_in->parameters.evapor.formulation_source_term_heat == InterfaceForceType::sharp)
+        (base_in->parameters.evapor.formulation_source_term_heat == InterfaceForceType::sharp ||
+         base_in->parameters.evapor.formulation_source_term_continuity ==
+           InterfaceForceType::sharp))
       level_set_operation->update_surface_mesh();
   }
 

@@ -40,6 +40,17 @@ namespace MeltPoolDG::Evaporation
     , density_liquid(density_liquid)
   {}
 
+  template <int dim>
+  void
+  EvaporationSourceTermsSharp<dim>::register_surface_mesh(
+    const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
+                                 std::vector<Point<dim>> /*quad_points*/,
+                                 std::vector<double> /*weights*/
+                                 >> &surface_mesh_info_in)
+  {
+    surface_mesh_info = &surface_mesh_info_in;
+  }
+
 
   template <int dim>
   void
@@ -158,6 +169,8 @@ namespace MeltPoolDG::Evaporation
     [[maybe_unused]] const unsigned int pressure_quad_idx,
     [[maybe_unused]] bool               zero_out)
   {
+    AssertThrow(surface_mesh_info, ExcNotImplemented());
+
     evaporative_mass_flux.update_ghost_values();
     level_set_as_heaviside.update_ghost_values();
 
@@ -173,63 +186,62 @@ namespace MeltPoolDG::Evaporation
     std::vector<double>                  buffer;
     std::vector<types::global_dof_index> local_dof_indices;
 
-    LevelSet::Tools::evaluate_at_interface<dim>(
-      scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
-      scratch_data.get_mapping(),
-      level_set_as_heaviside,
-      [&](const auto &cell, const auto & /*points_real*/, const auto &points, const auto &weights) {
-        // evaluate rhs term
-        const unsigned int                n_points = points.size();
-        const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
-        const ArrayView<const double>     JxW(weights.data(), n_points);
-
-        // prepare pressure cell
-        TriaIterator<DoFCellAccessor<dim, dim, false>> pressure_dof_cell(
-          &scratch_data.get_triangulation(),
-          cell->level(),
-          cell->index(),
-          &scratch_data.get_dof_handler(pressure_dof_idx));
-        rhs_continuity.reinit(pressure_dof_cell, unit_points);
-
-        // gather evaporative mass flux
-        TriaIterator<DoFCellAccessor<dim, dim, false>> evapor_dof_cell(
-          &scratch_data.get_triangulation(),
-          cell->level(),
-          cell->index(),
-          &scratch_data.get_dof_handler(evapor_mass_flux_dof_idx));
-
-        local_dof_indices.resize(scratch_data.get_fe(evapor_mass_flux_dof_idx).n_dofs_per_cell());
-        evapor_dof_cell->get_dof_indices(local_dof_indices);
-        buffer.resize(scratch_data.get_fe(evapor_mass_flux_dof_idx).n_dofs_per_cell());
-        scratch_data.get_constraint(ls_hanging_nodes_dof_idx)
-          .get_dof_values(evaporative_mass_flux,
-                          local_dof_indices.begin(),
-                          buffer.begin(),
-                          buffer.end());
-
-        // evaluate mass_flux
-        mass_flux.reinit(evapor_dof_cell, unit_points);
-        mass_flux.evaluate(buffer, EvaluationFlags::values);
-
-        for (unsigned int q = 0; q < n_points; ++q)
+    // evaluate rhs term
+    if (surface_mesh_info->size() > 0)
+      {
+        for (const auto &[cell, points, weights] : *(surface_mesh_info))
           {
-            rhs_continuity.submit_value(mass_flux.get_value(q) *
-                                          (1. / density_liquid - 1. / density_vapor) * JxW[q],
-                                        q);
+            const unsigned int                n_points = points.size();
+            const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
+            const ArrayView<const double>     JxW(weights.data(), n_points);
+
+            // prepare pressure cell
+            TriaIterator<DoFCellAccessor<dim, dim, false>> pressure_dof_cell(
+              &scratch_data.get_triangulation(),
+              cell->level(),
+              cell->index(),
+              &scratch_data.get_dof_handler(pressure_dof_idx));
+            rhs_continuity.reinit(pressure_dof_cell, unit_points);
+
+            // gather evaporative mass flux
+            TriaIterator<DoFCellAccessor<dim, dim, false>> evapor_dof_cell(
+              &scratch_data.get_triangulation(),
+              cell->level(),
+              cell->index(),
+              &scratch_data.get_dof_handler(evapor_mass_flux_dof_idx));
+
+            local_dof_indices.resize(
+              scratch_data.get_fe(evapor_mass_flux_dof_idx).n_dofs_per_cell());
+            evapor_dof_cell->get_dof_indices(local_dof_indices);
+            buffer.resize(scratch_data.get_fe(evapor_mass_flux_dof_idx).n_dofs_per_cell());
+            scratch_data.get_constraint(ls_hanging_nodes_dof_idx)
+              .get_dof_values(evaporative_mass_flux,
+                              local_dof_indices.begin(),
+                              buffer.begin(),
+                              buffer.end());
+
+            // evaluate mass_flux
+            mass_flux.reinit(evapor_dof_cell, unit_points);
+            mass_flux.evaluate(buffer, EvaluationFlags::values);
+
+            for (unsigned int q = 0; q < n_points; ++q)
+              {
+                rhs_continuity.submit_value(mass_flux.get_value(q) *
+                                              (1. / density_liquid - 1. / density_vapor) * JxW[q],
+                                            q);
+              }
+
+            // integrate rhs term of the continuity equation
+            buffer.resize(scratch_data.get_fe(pressure_dof_idx).n_dofs_per_cell());
+            rhs_continuity.integrate(buffer, EvaluationFlags::values);
+
+            // scatter
+            local_dof_indices.resize(scratch_data.get_fe(pressure_dof_idx).n_dofs_per_cell());
+            pressure_dof_cell->get_dof_indices(local_dof_indices);
+            scratch_data.get_constraint(pressure_dof_idx)
+              .distribute_local_to_global(buffer, local_dof_indices, mass_balance_source_term);
           }
-
-        // integrate rhs term of the continuity equation
-        buffer.resize(scratch_data.get_fe(pressure_dof_idx).n_dofs_per_cell());
-        rhs_continuity.integrate(buffer, EvaluationFlags::values);
-
-        // scatter
-        local_dof_indices.resize(scratch_data.get_fe(pressure_dof_idx).n_dofs_per_cell());
-        pressure_dof_cell->get_dof_indices(local_dof_indices);
-        scratch_data.get_constraint(pressure_dof_idx)
-          .distribute_local_to_global(buffer, local_dof_indices, mass_balance_source_term);
-      },
-      0.5, /*contour value*/
-      3 /*n_subdivisions*/);
+      }
 
     mass_balance_source_term.compress(VectorOperation::add);
 
