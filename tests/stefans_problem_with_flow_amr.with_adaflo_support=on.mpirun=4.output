@@ -1,181 +1,66 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.64088743925e+00                                               normal_vector |
-|  total mass = 0.505                                                            melt_pool_problem |
-| Surface mesh generated, 32 cut cells found.                                            level set |
+| || normal_1 ||L2 = 4.86185073853e+00                                               normal_vector |
+| || curvature ||L2 = 6.36980199814e+00                                                  curvature |
+|  total mass = 0.45246305521                                                    melt_pool_problem |
 | cycle: 0 n_dofs: 1089(ls) + 8450(vel) + 1089(p) T.size 1089                    melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.81004953384e+00                                               normal_vector |
-|  total mass = 0.505                                                            melt_pool_problem |
-| Surface mesh generated, 64 cut cells found.                                            level set |
+| || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
+| || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45255263258                                                    melt_pool_problem |
 | cycle: 1 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.81004953384e+00                                               normal_vector |
-|  total mass = 0.505                                                            melt_pool_problem |
-| Surface mesh generated, 64 cut cells found.                                            level set |
+| || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
+| || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45255263258                                                    melt_pool_problem |
 | cycle: 2 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.81004953384e+00                                               normal_vector |
-|  total mass = 0.505                                                            melt_pool_problem |
-| Surface mesh generated, 64 cut cells found.                                            level set |
+| || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
+| || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45255263258                                                    melt_pool_problem |
 | cycle: 3 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.81004953384e+00                                               normal_vector |
-|  total mass = 0.505                                                            melt_pool_problem |
-| Surface mesh generated, 64 cut cells found.                                            level set |
+| || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
+| || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45255263258                                                    melt_pool_problem |
 | cycle: 4 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.81004953384e+00                                               normal_vector |
-|  total mass = 0.505                                                            melt_pool_problem |
-| Surface mesh generated, 64 cut cells found.                                            level set |
+| || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
+| || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45255263258                                                    melt_pool_problem |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0 (analytical: 0.099)
 POSTPROCESSOR: max pressure: 0 (analytical: 9.9e-05)
 POSTPROCESSOR: min pressure: 0 (analytical: 0)
 +--------------------------------------------------------------------------------------------------+
-|  Time increment # 1      t = 0.0000e+00 to 1.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
+|  Time increment # 1      t = 0.0000e+00 to 2.0000e-03 ( dt = 2.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || evaporative_velocity ||L2 = 7.0593748599e-02                            evaporation_operation |
-| || advected field ||L2 = 9.5694810154e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 3.15239430316e-16                                               normal_vector |
-| || normal_1 ||L2 = 3.81018013570e+00                                               normal_vector |
+| || advected field ||L2 = 9.5702405855e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 8.94051236455e-16                                               normal_vector |
+| || normal_1 ||L2 = 5.12648817022e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-|  τ = 0.0001                                                                     reinitialization |
-| || delta phi ||L2 = 2.666011416925723e-05                                       reinitialization |
-|  τ = 0.0002                                                                     reinitialization |
-| || delta phi ||L2 = 2.623220964959562e-05                                       reinitialization |
-|  τ = 0.0003                                                                     reinitialization |
-| || delta phi ||L2 = 2.582115144083759e-05                                       reinitialization |
-|  τ = 0.0004                                                                     reinitialization |
-| || delta phi ||L2 = 2.542602957054788e-05                                       reinitialization |
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 2.504598136386250e-05                                       reinitialization |
+|  τ = 0.002                                                                      reinitialization |
+| || delta phi ||L2 = 4.324177542270677e-04                                       reinitialization |
+|  τ = 0.004                                                                      reinitialization |
+| || delta phi ||L2 = 3.617523468611910e-04                                       reinitialization |
+|  τ = 0.006                                                                      reinitialization |
+| || delta phi ||L2 = 3.091897690116719e-04                                       reinitialization |
+|  τ = 0.008                                                                      reinitialization |
+| || delta phi ||L2 = 2.669997212885919e-04                                       reinitialization |
+|  τ = 0.01                                                                       reinitialization |
+| || delta phi ||L2 = 2.320715314651363e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.85731648584e-16                                               normal_vector |
-| || normal_1 ||L2 = 3.81002248138e+00                                               normal_vector |
-| Surface mesh generated, 64 cut cells found.                                            level set |
-|  total mass = 0.505                                                            melt_pool_problem |
-| || velocity ||L2 = 7.015796760511268e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.046080593003611e+00                                    navier_stokes_adaflo |
+| || normal_0 ||L2 = 9.79334492747e-16                                               normal_vector |
+| || normal_1 ||L2 = 5.11610384684e+00                                               normal_vector |
+| || curvature ||L2 = 6.36980187893e+00                                                  curvature |
+|  total mass = 0.45229617988                                                    melt_pool_problem |
+| evaporation: jump in the velocity field = -0.099             evaporation_source_terms_continuous |
+| || evapartive_mass_source ||L2 = 5.7629101381e-03            evaporation_source_terms_continuous |
+| || velocity ||L2 = 6.902860397404927e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.178874409281073e-01                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0.099 (analytical: 0.099)
-POSTPROCESSOR: max pressure: 4.96 (analytical: 9.9e-05)
-POSTPROCESSOR: min pressure: -1.48e-11 (analytical: 0)
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 2      t = 1.0000e-04 to 2.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || evaporative_velocity ||L2 = 7.0701291349e-02                            evaporation_operation |
-| || advected field ||L2 = 9.5695621336e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 7.73786206776e-14                                               normal_vector |
-| || normal_1 ||L2 = 3.84720334775e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.0001                                                                     reinitialization |
-| || delta phi ||L2 = 6.084707452530733e-05                                       reinitialization |
-|  τ = 0.0002                                                                     reinitialization |
-| || delta phi ||L2 = 5.266058407587712e-05                                       reinitialization |
-|  τ = 0.0003                                                                     reinitialization |
-| || delta phi ||L2 = 4.605416165409877e-05                                       reinitialization |
-|  τ = 0.0004                                                                     reinitialization |
-| || delta phi ||L2 = 4.075992832603023e-05                                       reinitialization |
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 3.654695797136438e-05                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 7.73465507446e-14                                               normal_vector |
-| || normal_1 ||L2 = 3.84725423974e+00                                               normal_vector |
-| Surface mesh generated, 128 cut cells found.                                           level set |
-|  total mass = 0.505                                                            melt_pool_problem |
-| || velocity ||L2 = 7.017446863809995e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.977940450080391e+00                                    navier_stokes_adaflo |
-POSTPROCESSOR: min velocity: 0 (analytical: 0)
-POSTPROCESSOR: max velocity: 0.099 (analytical: 0.099)
-POSTPROCESSOR: max pressure: -2.4 (analytical: 9.9e-05)
-POSTPROCESSOR: min pressure: 2.55e-11 (analytical: 0)
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 3      t = 2.0000e-04 to 3.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || evaporative_velocity ||L2 = 7.0653982065e-02                            evaporation_operation |
-| || advected field ||L2 = 9.5696453849e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 2.18716634555e-13                                               normal_vector |
-| || normal_1 ||L2 = 4.40934395606e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.0001                                                                     reinitialization |
-| || delta phi ||L2 = 2.684773044825371e-04                                       reinitialization |
-|  τ = 0.0002                                                                     reinitialization |
-| || delta phi ||L2 = 2.367128853437830e-04                                       reinitialization |
-|  τ = 0.0003                                                                     reinitialization |
-| || delta phi ||L2 = 2.113945382444295e-04                                       reinitialization |
-|  τ = 0.0004                                                                     reinitialization |
-| || delta phi ||L2 = 1.909262257402229e-04                                       reinitialization |
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 1.741142224040806e-04                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 2.08566420085e-13                                               normal_vector |
-| || normal_1 ||L2 = 4.41076496166e+00                                               normal_vector |
-| Surface mesh generated, 128 cut cells found.                                           level set |
-|  total mass = 0.505                                                            melt_pool_problem |
-| || velocity ||L2 = 7.008354323899622e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 5.843586674778308e-02                                    navier_stokes_adaflo |
-POSTPROCESSOR: min velocity: 0 (analytical: 0)
-POSTPROCESSOR: max velocity: 0.099 (analytical: 0.099)
-POSTPROCESSOR: max pressure: -0.0826 (analytical: 9.9e-05)
-POSTPROCESSOR: min pressure: -1.17e-10 (analytical: 0)
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 4      t = 3.0000e-04 to 4.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || evaporative_velocity ||L2 = 7.0653986394e-02                            evaporation_operation |
-| || advected field ||L2 = 9.5697467031e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 3.50983420714e-13                                               normal_vector |
-| || normal_1 ||L2 = 4.54509756728e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.0001                                                                     reinitialization |
-| || delta phi ||L2 = 2.257182743281412e-04                                       reinitialization |
-|  τ = 0.0002                                                                     reinitialization |
-| || delta phi ||L2 = 1.926291492672711e-04                                       reinitialization |
-|  τ = 0.0003                                                                     reinitialization |
-| || delta phi ||L2 = 1.671122044003940e-04                                       reinitialization |
-|  τ = 0.0004                                                                     reinitialization |
-| || delta phi ||L2 = 1.472446343963913e-04                                       reinitialization |
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 1.315739816002013e-04                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.36966200560e-13                                               normal_vector |
-| || normal_1 ||L2 = 4.54520096070e+00                                               normal_vector |
-| Surface mesh generated, 128 cut cells found.                                           level set |
-|  total mass = 0.505                                                            melt_pool_problem |
-| || velocity ||L2 = 7.008499301206546e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 6.006864139101264e-03                                    navier_stokes_adaflo |
-POSTPROCESSOR: min velocity: 0 (analytical: 0)
-POSTPROCESSOR: max velocity: 0.099 (analytical: 0.099)
-POSTPROCESSOR: max pressure: 0.00343 (analytical: 9.9e-05)
-POSTPROCESSOR: min pressure: 1.05e-12 (analytical: 0)
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 5      t = 4.0000e-04 to 5.0000e-04 ( dt = 1.0000e-04 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || evaporative_velocity ||L2 = 7.0653986394e-02                            evaporation_operation |
-| || advected field ||L2 = 9.5698684455e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 3.69855454657e-13                                               normal_vector |
-| || normal_1 ||L2 = 4.54519571896e+00                                               normal_vector |
-+--------------------------------------------------------------------------------------------------+
-|  τ = 0.0001                                                                     reinitialization |
-| || delta phi ||L2 = 1.191453199000498e-04                                       reinitialization |
-|  τ = 0.0002                                                                     reinitialization |
-| || delta phi ||L2 = 1.088401366161906e-04                                       reinitialization |
-|  τ = 0.0003                                                                     reinitialization |
-| || delta phi ||L2 = 1.002963979808586e-04                                       reinitialization |
-|  τ = 0.0004                                                                     reinitialization |
-| || delta phi ||L2 = 9.308224663415035e-05                                       reinitialization |
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 8.688659985148017e-05                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.56680838427e-13                                               normal_vector |
-| || normal_1 ||L2 = 4.54469666697e+00                                               normal_vector |
-| Surface mesh generated, 128 cut cells found.                                           level set |
-|  total mass = 0.505                                                            melt_pool_problem |
-| || velocity ||L2 = 7.008407423942782e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.101371871577901e-02                                    navier_stokes_adaflo |
-POSTPROCESSOR: min velocity: 0 (analytical: 0)
-POSTPROCESSOR: max velocity: 0.099 (analytical: 0.099)
-POSTPROCESSOR: max pressure: 0.0136 (analytical: 9.9e-05)
-POSTPROCESSOR: min pressure: -1.46e-10 (analytical: 0)
+POSTPROCESSOR: max pressure: 0.275 (analytical: 9.9e-05)
+POSTPROCESSOR: min pressure: 1.28e-10 (analytical: 0)
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
