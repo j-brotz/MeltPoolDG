@@ -137,6 +137,9 @@ namespace MeltPoolDG::Heat
     latent_heat_of_evaporation          = latent_heat_of_evaporation_in;
     do_phenomenological_recoil_pressure = do_phenomenological_recoil_pressure_in;
 
+    if (surface_mesh_info)
+      scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
+
     if (do_phenomenological_recoil_pressure)
       {
         const auto &material_data = material.get_data();
@@ -906,6 +909,31 @@ namespace MeltPoolDG::Heat
       false /*zero dst vector*/); // should not be zeroed out in case of boundary conditions
                                   //
     rhs_cut_cell_loop(dst);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::attach_vectors(
+    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+  {
+    if (evaporative_mass_flux && surface_mesh_info)
+      vectors.push_back(&evapor_heat_source);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::distribute_constraints()
+  {
+    if (evaporative_mass_flux && surface_mesh_info)
+      scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(evapor_heat_source);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatTransferOperator<dim, number>::reinit()
+  {
+    if (evaporative_mass_flux && surface_mesh_info)
+      scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
   }
 
   template <int dim, typename number>

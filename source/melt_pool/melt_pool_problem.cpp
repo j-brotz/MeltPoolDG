@@ -1098,6 +1098,10 @@ namespace MeltPoolDG::MeltPool
          */
         if (problem_specific_parameters.do_evaporative_heat_flux)
           {
+            if (base_in->parameters.evapor.formulation_source_term_heat ==
+                InterfaceForceType::sharp)
+              heat_operation->register_surface_mesh(level_set_operation->get_surface_mesh_info());
+
             heat_operation->register_evaporative_mass_flux(
               &evaporation_operation->get_evaporative_mass_flux(),
               evapor_mass_flux_dof_idx,
@@ -1106,11 +1110,6 @@ namespace MeltPoolDG::MeltPool
                 !problem_specific_parameters
                    .do_evaporative_velocity_jump /*do phenomenological recoil pressure model*/); // @todo:
                                                                                                  // clean-up
-            if (base_in->parameters.evapor.formulation_source_term_heat ==
-                InterfaceForceType::sharp)
-              {
-                heat_operation->register_surface_mesh(level_set_operation->get_surface_mesh_info());
-              }
           }
       }
     /*

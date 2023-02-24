@@ -266,6 +266,18 @@ namespace MeltPoolDG::Heat
     void
     create_rhs(VectorType &dst, const VectorType &src /*temperature_old*/) const final;
 
+    /**
+     * attach vector for solution transfer for AMR
+     */
+    void
+    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+
+    void
+    distribute_constraints();
+
+    void
+    reinit();
+
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
