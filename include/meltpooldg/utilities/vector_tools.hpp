@@ -326,14 +326,7 @@ namespace MeltPoolDG
       SolverCG<VectorType>              cg(control);
       const DiagonalMatrix<VectorType> &preconditioner = *mass_matrix.get_matrix_diagonal_inverse();
 
-      VectorType vec_in_copy, vec_out_copy;
-
-      matrix_free->initialize_dof_vector(vec_in_copy);
-      matrix_free->initialize_dof_vector(vec_out_copy);
-
-      vec_in_copy.copy_locally_owned_data_from(vec_in);
-      cg.solve(mass_matrix, vec_out_copy, vec_in_copy, preconditioner);
-      vec_out.copy_locally_owned_data_from(vec_out_copy);
+      cg.solve(mass_matrix, vec_out, vec_in, preconditioner);
     }
 
     /**
