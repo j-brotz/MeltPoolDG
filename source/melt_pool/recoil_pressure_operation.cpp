@@ -126,19 +126,20 @@ namespace MeltPoolDG::MeltPool
 
 
   template <int dim>
-  RecoilPressureOperation<dim>::RecoilPressureOperation(const ScratchData<dim> &  scratch_data_in,
-                                                        const Parameters<double> &data_in,
-                                                        const unsigned int flow_vel_dof_idx_in,
-                                                        const unsigned int flow_vel_quad_idx_in,
-                                                        const unsigned int flow_pressure_dof_idx_in,
-                                                        const unsigned int ls_dof_idx_in,
-                                                        const unsigned int temp_dof_idx_in)
+  RecoilPressureOperation<dim>::RecoilPressureOperation(
+    const ScratchData<dim> &  scratch_data_in,
+    const Parameters<double> &data_in,
+    const unsigned int        flow_vel_dof_idx_in,
+    const unsigned int        flow_vel_quad_idx_in,
+    const unsigned int        flow_pressure_dof_idx_in,
+    const unsigned int        ls_dof_idx_in,
+    const unsigned int        temp_hanging_nodes_dof_idx_in)
     : scratch_data(scratch_data_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , flow_pressure_dof_idx(flow_pressure_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , temp_dof_idx(temp_dof_idx_in)
+    , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in))
     , model_type(data_in.recoil.model_type)
     , delta_phase_weighted(create_phase_weighted_delta_approximation(
@@ -195,7 +196,7 @@ namespace MeltPoolDG::MeltPool
                                                            flow_vel_quad_idx);
 
         FECellIntegrator<dim, 1, double> temperature_val(matrix_free,
-                                                         temp_dof_idx,
+                                                         temp_hanging_nodes_dof_idx,
                                                          flow_vel_quad_idx);
 
         FECellIntegrator<dim, 1, double> interpolated_level_set_to_pressure_space(

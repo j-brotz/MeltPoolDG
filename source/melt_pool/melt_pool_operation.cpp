@@ -24,7 +24,6 @@ namespace MeltPoolDG::MeltPool
                                             const unsigned int        flow_vel_no_solid_dof_idx_in,
                                             const unsigned int        flow_vel_quad_idx_in,
                                             const unsigned int        flow_pressure_dof_idx_in,
-                                            const unsigned int        temp_dof_idx_in,
                                             const unsigned int        temp_hanging_nodes_dof_idx_in,
                                             const double              start_time_in)
     : scratch_data(scratch_data_in)
@@ -62,7 +61,7 @@ namespace MeltPoolDG::MeltPool
                                                          flow_vel_quad_idx_in,
                                                          flow_pressure_dof_idx_in,
                                                          ls_dof_idx_in,
-                                                         temp_dof_idx_in);
+                                                         temp_hanging_nodes_dof_idx);
       }
     /*
      * initialize the dof_vectors
