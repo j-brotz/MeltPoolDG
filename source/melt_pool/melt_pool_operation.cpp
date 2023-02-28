@@ -15,15 +15,12 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   MeltPoolOperation<dim>::MeltPoolOperation(const ScratchData<dim> &  scratch_data_in,
                                             const Parameters<double> &data_in,
-                                            const bool                do_recoil_pressure,
                                             const unsigned int        ls_dof_idx_in,
                                             VectorType *              temperature,
                                             const unsigned int        reinit_dof_idx_in,
                                             const unsigned int        reinit_no_solid_dof_idx_in,
                                             const unsigned int        flow_vel_dof_idx_in,
                                             const unsigned int        flow_vel_no_solid_dof_idx_in,
-                                            const unsigned int        flow_vel_quad_idx_in,
-                                            const unsigned int        flow_pressure_dof_idx_in,
                                             const unsigned int        temp_dof_idx_in,
                                             const unsigned int        temp_hanging_nodes_dof_idx_in,
                                             const double              start_time_in)
@@ -36,7 +33,6 @@ namespace MeltPoolDG::MeltPool
     , reinit_no_solid_dof_idx(reinit_no_solid_dof_idx_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
-    , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , temperature(temperature)
   {
@@ -49,21 +45,6 @@ namespace MeltPoolDG::MeltPool
      *  Initialize the laser operation
      */
     laser_operation->set_initial_condition(start_time_in);
-
-    /*
-     * initialize the recoil pressure operation class
-     */
-    if (do_recoil_pressure)
-      {
-        recoil_pressure_operation =
-          std::make_shared<RecoilPressureOperation<dim>>(scratch_data_in,
-                                                         data_in,
-                                                         flow_vel_dof_idx_in,
-                                                         flow_vel_quad_idx_in,
-                                                         flow_pressure_dof_idx_in,
-                                                         ls_dof_idx_in,
-                                                         temp_dof_idx_in);
-      }
     /*
      * initialize the dof_vectors
      */
@@ -93,12 +74,11 @@ namespace MeltPoolDG::MeltPool
     else if (data_in.laser.heat_source_model == LaserHeatSourceModel::Analytical)
       {
         laser_analytical_temperature_field =
-          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(
-            scratch_data_in,
-            data_in.laser.analytical,
-            data_in.material,
-            data_in.laser.scan_speed,
-            temp_hanging_nodes_dof_idx_in);
+          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(scratch_data_in,
+                                                                       data_in.laser.analytical,
+                                                                       data_in.material,
+                                                                       data_in.laser.scan_speed,
+                                                                       temp_dof_idx_in);
       }
     else
       AssertThrow(false,
@@ -224,26 +204,6 @@ namespace MeltPoolDG::MeltPool
         //@todo:
         // scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
       }
-  }
-
-  template <int dim>
-  void
-  MeltPoolOperation<dim>::compute_force_flow_rhs(VectorType &       vel_force_rhs,
-                                                 const VectorType & level_set_as_heaviside,
-                                                 const VectorType & temperature_interface,
-                                                 const VectorType & evaporative_mass_flux,
-                                                 const unsigned int evapor_dof_idx,
-                                                 const bool         zero_out) const
-  {
-    // compute recoil pressure force
-    if (recoil_pressure_operation)
-      recoil_pressure_operation->compute_recoil_pressure_force(
-        vel_force_rhs,
-        level_set_as_heaviside,
-        temperature_interface,
-        evaporative_mass_flux,
-        evapor_dof_idx,
-        zero_out /*false means add to force vector*/);
   }
 
   template <int dim>

@@ -136,6 +136,8 @@ namespace MeltPoolDG::Heat
     if (heat_data.predictor.type == PredictorType::least_squares_projection)
       scratch_data.initialize_dof_vector(temp, temp_hanging_nodes_dof_idx);
 
+    heat_operator->reinit();
+
     /*
      * setup sparsity pattern of system matrix only if the latter is
      * needed for computing the preconditioner
@@ -320,6 +322,7 @@ namespace MeltPoolDG::Heat
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
     vectors.push_back(&temperature_interface);
+    heat_operator->attach_vectors(vectors);
   }
 
   template <int dim>
@@ -330,6 +333,7 @@ namespace MeltPoolDG::Heat
     solution_history.apply_old([this](VectorType &v) {
       scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(v);
     });
+    heat_operator->distribute_constraints();
   }
 
   template <int dim>

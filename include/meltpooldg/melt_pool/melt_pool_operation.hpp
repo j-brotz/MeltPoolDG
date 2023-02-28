@@ -34,7 +34,6 @@ namespace MeltPoolDG
       const bool                 do_mushy_zone;
 
       std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
-      std::shared_ptr<RecoilPressureOperation<dim>>   recoil_pressure_operation;
       std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
       std::shared_ptr<Heat::LaserAnalyticalTemperatureField<dim>>
         laser_analytical_temperature_field;
@@ -48,7 +47,6 @@ namespace MeltPoolDG
       const unsigned int reinit_no_solid_dof_idx;
       const unsigned int flow_vel_dof_idx;
       const unsigned int flow_vel_no_solid_dof_idx;
-      const unsigned int flow_vel_quad_idx;
       const unsigned int temp_hanging_nodes_dof_idx;
       VectorType *       temperature;
 
@@ -61,15 +59,12 @@ namespace MeltPoolDG
     public:
       MeltPoolOperation(const ScratchData<dim> &  scratch_data_in,
                         const Parameters<double> &data_in,
-                        const bool                do_recoil_pressure,
                         const unsigned int        ls_dof_idx_in,
                         VectorType *              temperature,
                         const unsigned int        reinit_dof_idx_in,
                         const unsigned int        reinit_no_solid_dof_idx_in,
                         const unsigned int        flow_vel_dof_idx_in,
                         const unsigned int        flow_vel_no_solid_dof_idx_in,
-                        const unsigned int        flow_vel_quad_idx_in,
-                        const unsigned int        flow_pressure_hanging_nodes_dof_idx,
                         const unsigned int        temp_dof_idx_in,
                         const unsigned int        temp_hanging_nodes_dof_idx_in,
                         const double              start_time_in);
@@ -88,14 +83,6 @@ namespace MeltPoolDG
 
       void
       compute_melt_front_propagation(const VectorType &level_set_as_heaviside);
-
-      void
-      compute_force_flow_rhs(VectorType &       vel_force_rhs,
-                             const VectorType & level_set_as_heaviside,
-                             const VectorType & temperature_interface,
-                             const VectorType & evaporative_mass_flux,
-                             const unsigned int evapor_dof_idx,
-                             const bool         zero_out = false) const;
 
       void
       reinit();

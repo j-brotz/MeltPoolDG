@@ -233,6 +233,7 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Heat::HeatTransferOperation<dim>>   heat_operation;
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>   darcy_operation;
     std::shared_ptr<Flow::SurfaceTensionOperation<dim>> surface_tension_operation;
+    std::shared_ptr<RecoilPressureOperation<dim>>       recoil_pressure_operation;
     std::shared_ptr<Postprocessor<dim>>                 post_processor;
     std::shared_ptr<Restart::RestartMonitor<double>>    restart_monitor;
   };
