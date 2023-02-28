@@ -31,6 +31,7 @@ using namespace MeltPoolDG;
 using VectorType      = LinearAlgebra::distributed::Vector<double>;
 using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
+
 /**
  * Initial fields
  */
@@ -70,10 +71,31 @@ public:
   }
 };
 
+template <int dim>
+Point<dim>
+compute_projected_point_analytically(const Point<dim> &p,
+                                     const Point<dim> &center,
+                                     const double      radius)
+{
+  const double r       = p.distance(center);
+  const double cos_phi = (p[0] - center[0]) / r;
+  const double sin_phi = (p[1] - center[1]) / r;
+
+  Point<dim> p_proj;
+  if constexpr (dim == 2)
+    {
+      p_proj[0] = radius * cos_phi;
+      p_proj[1] = radius * sin_phi;
+    }
+
+  return p_proj + center;
+}
+
 template <int n_components, int n_refinements, int n_iter>
 void
 run_test()
 {
+  std::cout.precision(8);
   MPI_Comm                   mpi_comm(MPI_COMM_WORLD);
   dealii::ConditionalOStream pcout(std::cout, Utilities::MPI::this_mpi_process(mpi_comm) == 0);
 
@@ -199,6 +221,88 @@ run_test()
   const double min_cell_size = GridTools::minimal_cell_diameter(triangulation) / std::sqrt(dim);
 
   timer_total.start();
+
+  {
+    // 1) compute accuracy of projected points
+    const auto [dof_indices, evaluation_points] =
+      LevelSet::Tools::compute_projected_points_at_interface<dim>(
+        mapping,
+        dof_handler,
+        dof_handler_temp,
+        solution_distance,
+        solution_normal,
+        min_cell_size,
+        remote_point_evaluation,
+        n_iter,
+        1e-10,  // rel_tol_distance,
+        0.125); // distance interval for projection
+
+
+    FEValues<dim> req_values(mapping,
+                             dof_handler_temp.get_fe(),
+                             Quadrature<dim>(dof_handler_temp.get_fe().get_unit_support_points()),
+                             update_quadrature_points);
+
+    const unsigned int n_q_points = req_values.get_quadrature().size();
+
+    std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points * n_components);
+
+    std::map<types::global_dof_index, Point<dim>> quad_points;
+
+    for (const auto &cell : dof_handler_temp.active_cell_iterators())
+      {
+        if (cell->is_locally_owned())
+          {
+            req_values.reinit(cell);
+            cell->get_dof_indices(temp_local_dof_indices);
+
+            for (const auto q : req_values.quadrature_point_indices())
+              quad_points[temp_local_dof_indices[q]] = req_values.quadrature_point(q);
+          }
+      }
+    Point<dim> center;
+    for (unsigned int d = 0; d < dim; ++d)
+      center[d] = 0.5;
+
+
+    double max_dist = 0;
+    for (unsigned int i = 0; i < evaluation_points.size(); ++i)
+      {
+        max_dist = std::max(
+          max_dist,
+          compute_projected_point_analytically<dim>(quad_points[dof_indices[i][0]], center, 0.25)
+            .distance(evaluation_points[i]));
+
+        if (false)
+          {
+            std::cout << "Point: " << quad_points[dof_indices[i][0]] << std::endl;
+            std::cout << "analytical project "
+                      << compute_projected_point_analytically<dim>(quad_points[dof_indices[i][0]],
+                                                                   center,
+                                                                   0.25)
+                      << std::endl;
+            std::cout << "numerical projcet" << evaluation_points[i] << std::endl;
+          }
+      }
+
+    double max_dist_glob = Utilities::MPI::max(max_dist, mpi_comm);
+    pcout << "max distance to analytical solution (relative): " << max_dist_glob / min_cell_size
+          << std::endl;
+    {
+      const auto evaluation_values_distance =
+        dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                             dof_handler,
+                                             solution_distance);
+      double max_distance =
+        evaluation_values_distance.size() == 0 ?
+          0.0 :
+          *std::max_element(evaluation_values_distance.begin(), evaluation_values_distance.end());
+
+      max_distance = Utilities::MPI::max(max_distance, mpi_comm);
+      pcout << "max distance to numerical distance solution (relative): "
+            << max_distance / min_cell_size << std::endl;
+    }
+  }
   LevelSet::Tools::broadcast_interface_value_to_vector<dim, n_components>(
     mapping,
     dof_handler,
@@ -261,7 +365,7 @@ run_test()
         }
       else
         {
-          AssertThrow(n_components == dim, ExcNotImplemented());
+          // AssertThrow(n_components == dim, ExcNotImplemented());
           data_out.add_data_vector(dof_handler_temp,
                                    solution_temp_interface,
                                    "solution_temp_interface");

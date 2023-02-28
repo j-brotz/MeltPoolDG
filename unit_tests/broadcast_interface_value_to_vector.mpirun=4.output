@@ -1,13 +1,21 @@
 --------------------------------------------------------
  START TEST: n_iter=1
 --------------------------------------------------------
-WARNING: The tolerance of 14396 points is not yet attained. Max distance value: 0.124514
-norm of interface vals: 21232.5
+WARNING: The tolerance of 14396 points is not yet attained. Max distance value: 0.12451361
+max distance to analytical solution (relative): 0.016963
+max distance to numerical distance solution (relative): 7.9688711
+WARNING: The tolerance of 14396 points is not yet attained. Max distance value: 0.12451361
+norm of interface vals: 21232.504
 --------------------------------------------------------
  START TEST: n_iter=16
 --------------------------------------------------------
-norm of interface vals: 21232.3
+max distance to analytical solution (relative): 0.015635164
+max distance to numerical distance solution (relative): 7.0647863e-12
+norm of interface vals: 21232.322
 --------------------------------------------------------
  START TEST: n_iter=5
 --------------------------------------------------------
-norm of interface vals: 30027
+WARNING: The tolerance of 8912 points is not yet attained. Max distance value: 3.8346732e-10
+max distance to analytical solution (relative): 0.015635164
+max distance to numerical distance solution (relative): 2.4541908e-08
+norm of interface vals: 30027.038
