@@ -34,7 +34,6 @@ namespace MeltPoolDG
       const bool                 do_mushy_zone;
 
       std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
-      std::shared_ptr<RecoilPressureOperation<dim>>   recoil_pressure_operation;
       std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
       std::shared_ptr<Heat::LaserAnalyticalTemperatureField<dim>>
         laser_analytical_temperature_field;
@@ -83,14 +82,6 @@ namespace MeltPoolDG
 
       void
       compute_melt_front_propagation(const VectorType &level_set_as_heaviside);
-
-      void
-      compute_force_flow_rhs(VectorType &       vel_force_rhs,
-                             const VectorType & level_set_as_heaviside,
-                             const VectorType & temperature_interface,
-                             const VectorType & evaporative_mass_flux,
-                             const unsigned int evapor_dof_idx,
-                             const bool         zero_out = false) const;
 
       void
       reinit();

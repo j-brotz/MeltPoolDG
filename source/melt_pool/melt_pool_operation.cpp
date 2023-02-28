@@ -208,26 +208,6 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::compute_force_flow_rhs(VectorType &       vel_force_rhs,
-                                                 const VectorType & level_set_as_heaviside,
-                                                 const VectorType & temperature_interface,
-                                                 const VectorType & evaporative_mass_flux,
-                                                 const unsigned int evapor_dof_idx,
-                                                 const bool         zero_out) const
-  {
-    // compute recoil pressure force
-    if (recoil_pressure_operation)
-      recoil_pressure_operation->compute_recoil_pressure_force(
-        vel_force_rhs,
-        level_set_as_heaviside,
-        temperature_interface,
-        evaporative_mass_flux,
-        evapor_dof_idx,
-        zero_out /*false means add to force vector*/);
-  }
-
-  template <int dim>
-  void
   MeltPoolOperation<dim>::reinit()
   {
     scratch_data.initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
