@@ -1140,6 +1140,7 @@ namespace MeltPoolDG::MeltPool
           reinit_no_solid_dof_idx,
           flow_operation->get_dof_handler_idx_velocity(),
           flow_vel_no_solid_dof_idx,
+          temp_dof_idx,
           temp_hanging_nodes_dof_idx,
           base_in->parameters.time_stepping.start_time);
         /*

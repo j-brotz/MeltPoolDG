@@ -21,6 +21,7 @@ namespace MeltPoolDG::MeltPool
                                             const unsigned int        reinit_no_solid_dof_idx_in,
                                             const unsigned int        flow_vel_dof_idx_in,
                                             const unsigned int        flow_vel_no_solid_dof_idx_in,
+                                            const unsigned int        temp_dof_idx_in,
                                             const unsigned int        temp_hanging_nodes_dof_idx_in,
                                             const double              start_time_in)
     : scratch_data(scratch_data_in)
@@ -73,12 +74,11 @@ namespace MeltPoolDG::MeltPool
     else if (data_in.laser.heat_source_model == LaserHeatSourceModel::Analytical)
       {
         laser_analytical_temperature_field =
-          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(
-            scratch_data_in,
-            data_in.laser.analytical,
-            data_in.material,
-            data_in.laser.scan_speed,
-            temp_hanging_nodes_dof_idx_in);
+          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(scratch_data_in,
+                                                                       data_in.laser.analytical,
+                                                                       data_in.material,
+                                                                       data_in.laser.scan_speed,
+                                                                       temp_dof_idx_in);
       }
     else
       AssertThrow(false,
