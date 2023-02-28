@@ -1024,6 +1024,22 @@ namespace MeltPoolDG::MeltPool
         &heat_operation->get_temperature(),
         &level_set_operation->get_normal_vector());
 
+
+    // create recoil pressure operation
+    if (problem_specific_parameters.do_recoil_pressure)
+      {
+        recoil_pressure_operation = std::make_shared<RecoilPressureOperation<dim>>(
+          *scratch_data,
+          base_in->parameters,
+          flow_operation->get_dof_handler_idx_velocity(),
+          flow_operation->get_quad_idx_velocity(),
+          flow_operation->get_dof_handler_idx_pressure(),
+          ls_hanging_nodes_dof_idx,
+          (base_in->parameters.recoil.interface_distributed_flux_type ==
+           InterfaceDistributedFluxType::interface_value) ?
+            temp_hanging_nodes_dof_idx :
+            temp_dof_idx);
+      }
     /*
      *    initialize the evaporation class
      */
@@ -1056,20 +1072,6 @@ namespace MeltPoolDG::MeltPool
             InterfaceForceType::sharp)
           evaporation_operation->register_surface_mesh(
             level_set_operation->get_surface_mesh_info());
-
-        // create recoil pressure operation
-        if (problem_specific_parameters.do_recoil_pressure)
-          recoil_pressure_operation = std::make_shared<RecoilPressureOperation<dim>>(
-            *scratch_data,
-            base_in->parameters,
-            flow_operation->get_dof_handler_idx_velocity(),
-            flow_operation->get_quad_idx_velocity(),
-            flow_operation->get_dof_handler_idx_pressure(),
-            ls_hanging_nodes_dof_idx,
-            (base_in->parameters.recoil.interface_distributed_flux_type ==
-             InterfaceDistributedFluxType::interface_value) ?
-              temp_hanging_nodes_dof_idx :
-              temp_dof_idx);
 
           /*
            *  Create a modified viscous stress-strain relation in case of an existing evaporation

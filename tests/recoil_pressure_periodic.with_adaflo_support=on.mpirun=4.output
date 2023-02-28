@@ -22,28 +22,28 @@
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00041884303125                                                 melt_pool_problem |
-| || velocity ||L2 = 2.599185968574394e-11                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.919788765681394e-04                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.390759945650718e-07                                    navier_stokes_adaflo |
+| || pressure ||L2 = 5.022975648052482e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-06 to 2.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.3689839511e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 1.47296522313e-10                                               normal_vector |
-| || normal_1 ||L2 = 6.08632144146e+00                                               normal_vector |
+| || advected field ||L2 = 3.3689836495e-04                                    advection_diffusion |
+| || normal_0 ||L2 = 1.80424773978e-03                                               normal_vector |
+| || normal_1 ||L2 = 6.08631909502e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 7.083020190958617e-08                                       reinitialization |
+| || delta phi ||L2 = 7.090351815985384e-08                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 6.023617676278672e-08                                       reinitialization |
+| || delta phi ||L2 = 6.022856532191535e-08                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.36865231024e-10                                               normal_vector |
-| || normal_1 ||L2 = 6.09041120677e+00                                               normal_vector |
-| || curvature ||L2 = 1.33627775111e-10                                                  curvature |
+| || normal_0 ||L2 = 1.77373529476e-03                                               normal_vector |
+| || normal_1 ||L2 = 6.09040982064e+00                                               normal_vector |
+| || curvature ||L2 = 1.41556584947e-03                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
 |  total mass = 0.00041884303125                                                 melt_pool_problem |
-| || velocity ||L2 = 3.637759036566065e-11                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.938904949508575e-04                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.246521759111352e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 5.325506493490123e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
