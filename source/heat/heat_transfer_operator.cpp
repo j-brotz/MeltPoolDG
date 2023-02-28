@@ -914,24 +914,23 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+    std::vector<LinearAlgebra::distributed::Vector<double> *> & /*vectors*/)
   {
-    if (evaporative_mass_flux && surface_mesh_info)
-      vectors.push_back(&evapor_heat_source);
+    // none
   }
 
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::distribute_constraints()
   {
-    if (evaporative_mass_flux && surface_mesh_info)
-      scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(evapor_heat_source);
+    // none
   }
 
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::reinit()
   {
+    // TODO: only if output variable is requested
     if (evaporative_mass_flux && surface_mesh_info)
       scratch_data.initialize_dof_vector(evapor_heat_source, temp_hanging_nodes_dof_idx);
   }

@@ -48,7 +48,6 @@ namespace MeltPoolDG
       const unsigned int reinit_no_solid_dof_idx;
       const unsigned int flow_vel_dof_idx;
       const unsigned int flow_vel_no_solid_dof_idx;
-      const unsigned int flow_vel_quad_idx;
       const unsigned int temp_hanging_nodes_dof_idx;
       VectorType *       temperature;
 
@@ -61,15 +60,12 @@ namespace MeltPoolDG
     public:
       MeltPoolOperation(const ScratchData<dim> &  scratch_data_in,
                         const Parameters<double> &data_in,
-                        const bool                do_recoil_pressure,
                         const unsigned int        ls_dof_idx_in,
                         VectorType *              temperature,
                         const unsigned int        reinit_dof_idx_in,
                         const unsigned int        reinit_no_solid_dof_idx_in,
                         const unsigned int        flow_vel_dof_idx_in,
                         const unsigned int        flow_vel_no_solid_dof_idx_in,
-                        const unsigned int        flow_vel_quad_idx_in,
-                        const unsigned int        flow_pressure_hanging_nodes_dof_idx,
                         const unsigned int        temp_hanging_nodes_dof_idx_in,
                         const double              start_time_in);
 

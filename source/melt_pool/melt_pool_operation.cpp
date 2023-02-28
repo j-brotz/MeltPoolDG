@@ -15,15 +15,12 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   MeltPoolOperation<dim>::MeltPoolOperation(const ScratchData<dim> &  scratch_data_in,
                                             const Parameters<double> &data_in,
-                                            const bool                do_recoil_pressure,
                                             const unsigned int        ls_dof_idx_in,
                                             VectorType *              temperature,
                                             const unsigned int        reinit_dof_idx_in,
                                             const unsigned int        reinit_no_solid_dof_idx_in,
                                             const unsigned int        flow_vel_dof_idx_in,
                                             const unsigned int        flow_vel_no_solid_dof_idx_in,
-                                            const unsigned int        flow_vel_quad_idx_in,
-                                            const unsigned int        flow_pressure_dof_idx_in,
                                             const unsigned int        temp_hanging_nodes_dof_idx_in,
                                             const double              start_time_in)
     : scratch_data(scratch_data_in)
@@ -35,7 +32,6 @@ namespace MeltPoolDG::MeltPool
     , reinit_no_solid_dof_idx(reinit_no_solid_dof_idx_in)
     , flow_vel_dof_idx(flow_vel_dof_idx_in)
     , flow_vel_no_solid_dof_idx(flow_vel_no_solid_dof_idx_in)
-    , flow_vel_quad_idx(flow_vel_quad_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
     , temperature(temperature)
   {
@@ -48,21 +44,6 @@ namespace MeltPoolDG::MeltPool
      *  Initialize the laser operation
      */
     laser_operation->set_initial_condition(start_time_in);
-
-    /*
-     * initialize the recoil pressure operation class
-     */
-    if (do_recoil_pressure)
-      {
-        recoil_pressure_operation =
-          std::make_shared<RecoilPressureOperation<dim>>(scratch_data_in,
-                                                         data_in,
-                                                         flow_vel_dof_idx_in,
-                                                         flow_vel_quad_idx_in,
-                                                         flow_pressure_dof_idx_in,
-                                                         ls_dof_idx_in,
-                                                         temp_hanging_nodes_dof_idx);
-      }
     /*
      * initialize the dof_vectors
      */

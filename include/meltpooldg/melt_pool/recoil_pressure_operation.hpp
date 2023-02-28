@@ -166,7 +166,7 @@ namespace MeltPoolDG::MeltPool
     const unsigned int flow_vel_quad_idx;
     const unsigned int flow_pressure_dof_idx;
     const unsigned int ls_dof_idx;
-    const unsigned int temp_hanging_nodes_dof_idx;
+    const unsigned int temp_dof_idx;
 
     const bool         do_level_set_pressure_gradient_interpolation;
     FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
@@ -184,7 +184,7 @@ namespace MeltPoolDG::MeltPool
                             const unsigned int        flow_vel_quad_idx_in,
                             const unsigned int        flow_pressure_dof_idx_in,
                             const unsigned int        ls_dof_idx_in,
-                            const unsigned int        temp_hanging_nodes_dof_idx_in);
+                            const unsigned int        temp_dof_idx_in);
 
     /**
      * Compute the contribution of the recoil pressure to the force vector of the Navier-Stokes

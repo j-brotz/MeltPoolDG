@@ -523,7 +523,7 @@ namespace MeltPoolDG::MeltPool
                   }
 
                 // ... e) recoil pressure forces
-                if (melt_pool_operation)
+                if (recoil_pressure_operation)
                   {
                     if (base_in->parameters.recoil.interface_distributed_flux_type ==
                         InterfaceDistributedFluxType::interface_value)
@@ -533,23 +533,23 @@ namespace MeltPoolDG::MeltPool
                           level_set_operation->get_normal_vector(),
                           base_in->parameters.ls.cpp);
 
-                        melt_pool_operation->compute_force_flow_rhs(
+                        recoil_pressure_operation->compute_recoil_pressure_force(
                           vel_force_rhs,
                           level_set_operation->get_level_set_as_heaviside(),
                           heat_operation->get_temperature_interface(),
                           evaporation_operation->get_evaporative_mass_flux(),
                           evapor_mass_flux_dof_idx,
-                          false);
+                          false /*false means add to force vector*/);
                       }
                     else
                       {
-                        melt_pool_operation->compute_force_flow_rhs(
+                        recoil_pressure_operation->compute_recoil_pressure_force(
                           vel_force_rhs,
                           level_set_operation->get_level_set_as_heaviside(),
                           heat_operation->get_temperature(),
                           evaporation_operation->get_evaporative_mass_flux(),
                           evapor_mass_flux_dof_idx,
-                          false);
+                          false /*false means add to force vector*/);
                       }
                   }
 
@@ -1057,6 +1057,20 @@ namespace MeltPoolDG::MeltPool
           evaporation_operation->register_surface_mesh(
             level_set_operation->get_surface_mesh_info());
 
+        // create recoil pressure operation
+        if (problem_specific_parameters.do_recoil_pressure)
+          recoil_pressure_operation = std::make_shared<RecoilPressureOperation<dim>>(
+            *scratch_data,
+            base_in->parameters,
+            flow_operation->get_dof_handler_idx_velocity(),
+            flow_operation->get_quad_idx_velocity(),
+            flow_operation->get_dof_handler_idx_pressure(),
+            ls_hanging_nodes_dof_idx,
+            (base_in->parameters.recoil.interface_distributed_flux_type ==
+             InterfaceDistributedFluxType::interface_value) ?
+              temp_hanging_nodes_dof_idx :
+              temp_dof_idx);
+
           /*
            *  Create a modified viscous stress-strain relation in case of an existing evaporation
            * mass source term, such that div(u)!=0. This material law will be only evaluated if the
@@ -1120,15 +1134,12 @@ namespace MeltPoolDG::MeltPool
         melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
           *scratch_data,
           base_in->parameters,
-          problem_specific_parameters.do_recoil_pressure,
           ls_hanging_nodes_dof_idx,
           &heat_operation->get_temperature(),
           reinit_dof_idx,
           reinit_no_solid_dof_idx,
           flow_operation->get_dof_handler_idx_velocity(),
           flow_vel_no_solid_dof_idx,
-          flow_operation->get_quad_idx_velocity(),
-          flow_operation->get_dof_handler_idx_pressure(),
           temp_hanging_nodes_dof_idx,
           base_in->parameters.time_stepping.start_time);
         /*
