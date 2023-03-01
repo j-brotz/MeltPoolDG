@@ -1,3 +1,4 @@
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/base/vectorization.h>
@@ -53,25 +54,6 @@ public:
 };
 
 template <int dim>
-class InitializeDistance : public Function<dim>
-{
-public:
-  InitializeDistance()
-    : Function<dim>()
-  {}
-  virtual double
-  value(const Point<dim> &p, const unsigned int /*component*/) const
-  {
-    // set radius of bubble to 0.5, slightly shifted away from the center
-    Point<dim> center;
-    for (unsigned int d = 0; d < dim; ++d)
-      center[d] = 0.5;
-
-    return DistanceFunctions::spherical_manifold<dim>(p, center, 0.25);
-  }
-};
-
-template <int dim>
 Point<dim>
 compute_projected_point_analytically(const Point<dim> &p,
                                      const Point<dim> &center,
@@ -103,10 +85,16 @@ run_test()
   pcout << " START TEST: n_iter=" << n_iter << std::endl;
   pcout << "--------------------------------------------------------" << std::endl;
 
-  Timer     timer_total(mpi_comm);
-  const int dim         = 2;
-  const int degree      = 1;
-  const int degree_temp = 2;
+  Timer      timer_total(mpi_comm);
+  const int  dim         = 2;
+  const int  degree      = 1;
+  const int  degree_temp = 2;
+  Point<dim> center;
+  for (unsigned int d = 0; d < dim; ++d)
+    center[d] = 0.5;
+
+  const double radius = 0.25;
+
 
   parallel::distributed::Triangulation<dim> triangulation(mpi_comm);
 
@@ -138,46 +126,45 @@ run_test()
    * compute normals
    */
   BlockVectorType solution_normal(dim);
+
   for (unsigned int d = 0; d < dim; ++d)
     solution_normal.block(d).reinit(locally_owned_dofs, locally_relevant_dofs, mpi_comm);
-  {
-    Point<dim> center;
-    for (unsigned int d = 0; d < dim; ++d)
-      center[d] = 0.5;
 
-    FEValues<dim> normal_eval(mapping,
-                              fe,
-                              Quadrature<dim>(fe.get_unit_support_points()),
-                              update_quadrature_points);
+  FEValues<dim> normal_eval(mapping,
+                            fe,
+                            Quadrature<dim>(fe.get_unit_support_points()),
+                            update_quadrature_points);
 
-    const unsigned int                   dofs_per_cell = fe.n_dofs_per_cell();
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+  const unsigned int                   dofs_per_cell = fe.n_dofs_per_cell();
+  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    for (const auto &cell : dof_handler.active_cell_iterators())
-      {
-        if (cell->is_locally_owned())
-          {
-            cell->get_dof_indices(local_dof_indices);
+  for (const auto &cell : dof_handler.active_cell_iterators())
+    {
+      if (cell->is_locally_owned())
+        {
+          cell->get_dof_indices(local_dof_indices);
 
-            normal_eval.reinit(cell);
+          normal_eval.reinit(cell);
 
-            for (const auto q : normal_eval.quadrature_point_indices())
-              {
-                Point<dim> normal_vec;
-                normal_vec = center - normal_eval.quadrature_point(q);
-                normal_vec /= normal_vec.norm();
+          for (const auto q : normal_eval.quadrature_point_indices())
+            {
+              Point<dim> normal_vec;
+              normal_vec = normal_eval.quadrature_point(q) - center;
+              normal_vec /= normal_vec.norm();
 
-                // auto idx = fe_dim.system_to_component_index(q);
-                for (unsigned int d = 0; d < dim; ++d)
-                  solution_normal.block(d)[local_dof_indices[q]] = normal_vec[d];
-              }
-          }
-      }
-  }
+              // auto idx = fe_dim.system_to_component_index(q);
+              for (unsigned int d = 0; d < dim; ++d)
+                solution_normal.block(d)[local_dof_indices[q]] = normal_vec[d];
+            }
+        }
+    }
   /*
    * interpolate distance onto quadrature points
    */
-  VectorTools::interpolate(mapping, dof_handler, InitializeDistance<dim>(), solution_distance);
+  VectorTools::interpolate(mapping,
+                           dof_handler,
+                           Functions::SignedDistance::Sphere<dim>(center, radius),
+                           solution_distance);
 
   /*
    * setup temperature field
@@ -222,8 +209,8 @@ run_test()
 
   timer_total.start();
 
+  // 1) compute accuracy of projected points
   {
-    // 1) compute accuracy of projected points
     const auto [dof_indices, evaluation_points] =
       LevelSet::Tools::compute_projected_points_at_interface<dim>(
         mapping,
@@ -245,7 +232,7 @@ run_test()
 
     const unsigned int n_q_points = req_values.get_quadrature().size();
 
-    std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points * n_components);
+    std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points);
 
     std::map<types::global_dof_index, Point<dim>> quad_points;
 
@@ -260,11 +247,6 @@ run_test()
               quad_points[temp_local_dof_indices[q]] = req_values.quadrature_point(q);
           }
       }
-    Point<dim> center;
-    for (unsigned int d = 0; d < dim; ++d)
-      center[d] = 0.5;
-
-
     double max_dist = 0;
     for (unsigned int i = 0; i < evaluation_points.size(); ++i)
       {
@@ -285,14 +267,16 @@ run_test()
           }
       }
 
-    double max_dist_glob = Utilities::MPI::max(max_dist, mpi_comm);
-    pcout << "max distance to analytical solution (relative): " << max_dist_glob / min_cell_size
+    max_dist = Utilities::MPI::max(max_dist, mpi_comm);
+    pcout << "max distance to analytical solution (relative): " << max_dist / min_cell_size
           << std::endl;
     {
+      solution_distance.update_ghost_values();
       const auto evaluation_values_distance =
         dealii::VectorTools::point_values<1>(remote_point_evaluation,
                                              dof_handler,
                                              solution_distance);
+      solution_distance.zero_out_ghost_values();
       double max_distance =
         evaluation_values_distance.size() == 0 ?
           0.0 :
@@ -303,6 +287,8 @@ run_test()
             << max_distance / min_cell_size << std::endl;
     }
   }
+
+  // 2) broadcast value from interface
   LevelSet::Tools::broadcast_interface_value_to_vector<dim, n_components>(
     mapping,
     dof_handler,
@@ -365,7 +351,6 @@ run_test()
         }
       else
         {
-          // AssertThrow(n_components == dim, ExcNotImplemented());
           data_out.add_data_vector(dof_handler_temp,
                                    solution_temp_interface,
                                    "solution_temp_interface");

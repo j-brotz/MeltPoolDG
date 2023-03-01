@@ -283,7 +283,6 @@ namespace MeltPoolDG::LevelSet::Tools
         /*
          * If every point is close enough to the interface, we are finished.
          */
-        // n_processed_points = processed_points.size();
         n_processed_points = Utilities::MPI::sum(processed_points.size(), mpi_comm);
 
         if (n_processed_points == 0)
@@ -372,6 +371,7 @@ namespace MeltPoolDG::LevelSet::Tools
     remote_point_evaluation.reinit(evaluation_points, dof_handler_req.get_triangulation(), mapping);
 
     const bool update_ghosts = !solution_in.has_ghost_elements();
+
     if (update_ghosts)
       solution_in.update_ghost_values();
 
