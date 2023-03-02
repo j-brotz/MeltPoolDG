@@ -277,14 +277,13 @@ namespace MeltPoolDG::LevelSet::Tools
         /*
          * remove points from processing that are already at the interface
          */
-        processed_points     = processed_points_new;
-        processed_points_idx = processed_points_idx_new;
+        processed_points.swap(processed_points_new);
+        processed_points_idx.swap(processed_points_idx_new);
 
         /*
          * If every point is close enough to the interface, we are finished.
          */
-        n_processed_points = processed_points.size();
-        n_processed_points = Utilities::MPI::sum(n_processed_points, mpi_comm);
+        n_processed_points = Utilities::MPI::sum(processed_points.size(), mpi_comm);
 
         if (n_processed_points == 0)
           break;
@@ -372,14 +371,13 @@ namespace MeltPoolDG::LevelSet::Tools
     remote_point_evaluation.reinit(evaluation_points, dof_handler_req.get_triangulation(), mapping);
 
     const bool update_ghosts = !solution_in.has_ghost_elements();
+
     if (update_ghosts)
       solution_in.update_ghost_values();
 
     const auto vals = dealii::VectorTools::point_values<n_components>(remote_point_evaluation,
                                                                       dof_handler_req,
                                                                       solution_in);
-    solution_in.zero_out_ghost_values();
-
     if (update_ghosts)
       solution_in.zero_out_ghost_values();
 
