@@ -79,7 +79,8 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
 
       const double radius = p.distance(center);
 
-      if (std::abs(radius - inner_radius) < 1e-6)
+      // if point is not at boundary face
+      if (std::abs(radius - inner_radius) > 1e-6)
         return 0.0;
 
       if constexpr (dim == 1)
