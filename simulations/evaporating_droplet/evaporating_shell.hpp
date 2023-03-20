@@ -76,11 +76,16 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     value(const Point<dim> &p, const unsigned int comp) const
     {
       const double v = velocity;
+
+      const double radius = p.distance(center);
+
+      if (std::abs(radius - inner_radius) < 1e-6)
+        return 0.0;
+
       if constexpr (dim == 1)
         return v;
 
-      const double radius = p.distance(center);
-      const auto   n      = p - center;
+      const auto n = p - center;
 
       if (dim == 2)
         {
@@ -187,7 +192,12 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
       if (shell_type != ShellType::full)
         {
           this->attach_symmetry_boundary_condition(2, "navier_stokes_u");
-          this->attach_symmetry_boundary_condition(3, "navier_stokes_u");
+
+          if ((shell_type == ShellType::half && dim == 2) || shell_type == ShellType::quarter)
+            this->attach_symmetry_boundary_condition(3, "navier_stokes_u");
+
+          if (shell_type == ShellType::quarter && dim == 3)
+            this->attach_symmetry_boundary_condition(4, "navier_stokes_u");
         }
     }
 
@@ -201,9 +211,8 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
       else
         this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(-1),
                                        "level_set");
-      // this->attach_initial_condition(std::make_shared<RadialBoundaryVelocity<dim>>(center),
-      //"navier_stokes_u");
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
+
+      this->attach_initial_condition(std::make_shared<RadialBoundaryVelocity<dim>>(center),
                                      "navier_stokes_u");
     }
 
