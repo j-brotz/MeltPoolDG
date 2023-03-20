@@ -30,12 +30,38 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
 {
   using namespace dealii;
 
+
+  BETTER_ENUM(ShellType, char, full, half, quarter)
+
   // velocity prescribed at the interior edge
   static double velocity = 0.0;
   // inner radius of the circular shell
   static double inner_radius = 0.5;
   // outer radius of the circular shell
   static double outer_radius = 2.0;
+
+  static ShellType shell_type = ShellType::full;
+
+  static bool two_phase = false;
+
+  template <int dim>
+  class SignedDistanceSphereFlipped : public Function<dim>
+  {
+  public:
+    SignedDistanceSphereFlipped(const double radius)
+      : Function<dim>()
+      , distance_sphere(Point<dim>(), radius)
+    {}
+
+    double
+    value(const Point<dim> &p, const unsigned int /*component*/) const
+    {
+      return -distance_sphere.value(p);
+    }
+
+  private:
+    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+  };
 
   template <int dim>
   class RadialBoundaryVelocity : public Function<dim>
@@ -50,11 +76,17 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     value(const Point<dim> &p, const unsigned int comp) const
     {
       const double v = velocity;
+
+      const double radius = p.distance(center);
+
+      // if point is not at boundary face
+      if (std::abs(radius - inner_radius) > 1e-6)
+        return 0.0;
+
       if constexpr (dim == 1)
         return v;
 
-      const double radius = p.distance(center);
-      const auto   n      = p - center;
+      const auto n = p - center;
 
       if (dim == 2)
         {
@@ -102,6 +134,12 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
         prm.add_parameter("velocity",
                           velocity,
                           "Radial velocity on the interior edge of the shell.");
+        prm.add_parameter("inner radius", inner_radius, "inner radius");
+        prm.add_parameter("outer radius", outer_radius, "outer radius");
+        prm.add_parameter("shell type",
+                          shell_type,
+                          "Geometry type of the shell: quarter, half, full.");
+        prm.add_parameter("two phase", two_phase, "two phase");
       }
       prm.leave_subsection();
     }
@@ -120,8 +158,23 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
         }
 
-      GridGenerator::hyper_shell(
-        *this->triangulation, center, inner_radius, outer_radius, 0, true /*colorize*/);
+      if (shell_type == ShellType::full)
+        {
+          GridGenerator::hyper_shell(
+            *this->triangulation, center, inner_radius, outer_radius, 0, true /*colorize*/);
+        }
+      else if (shell_type == ShellType::half)
+        {
+          GridGenerator::half_hyper_shell(
+            *this->triangulation, center, inner_radius, outer_radius, 0, true /*colorize*/);
+        }
+      else if (shell_type == ShellType::quarter)
+        {
+          GridGenerator::quarter_hyper_shell(
+            *this->triangulation, center, inner_radius, outer_radius, 0, true /*colorize*/);
+        }
+      else
+        AssertThrow(false, ExcNotImplemented());
 
       if (this->parameters.base.do_simplex == false)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
@@ -136,13 +189,30 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
       // inner boundary
       const auto dirichlet = std::make_shared<RadialBoundaryVelocity<dim>>(center);
       this->attach_dirichlet_boundary_condition(0, dirichlet, "navier_stokes_u");
+
+      if (shell_type != ShellType::full)
+        {
+          this->attach_symmetry_boundary_condition(2, "navier_stokes_u");
+
+          if ((shell_type == ShellType::half && dim == 2) || shell_type == ShellType::quarter)
+            this->attach_symmetry_boundary_condition(3, "navier_stokes_u");
+
+          if (shell_type == ShellType::quarter && dim == 3)
+            this->attach_symmetry_boundary_condition(4, "navier_stokes_u");
+        }
     }
 
     void
     set_field_conditions() override
     {
-      this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(-1),
-                                     "level_set");
+      if (two_phase)
+        this->attach_initial_condition(std::make_shared<SignedDistanceSphereFlipped<dim>>(
+                                         (inner_radius + outer_radius) * 0.5),
+                                       "signed_distance");
+      else
+        this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(-1),
+                                       "level_set");
+
       this->attach_initial_condition(std::make_shared<RadialBoundaryVelocity<dim>>(center),
                                      "navier_stokes_u");
     }
