@@ -37,7 +37,7 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     {}
 
     void
-    create_spatial_discretization()
+    create_spatial_discretization() override
     {
       if (dim == 1 || this->parameters.base.do_simplex)
         {

@@ -121,7 +121,7 @@ namespace MeltPoolDG
         {}
 
         void
-        create_spatial_discretization()
+        create_spatial_discretization() override
         {
           if (dim == 1 || this->parameters.base.do_simplex)
             {
@@ -153,7 +153,7 @@ namespace MeltPoolDG
         }
 
         void
-        set_boundary_conditions()
+        set_boundary_conditions() override
         {
           /*
            *  create a pair of (boundary_id, dirichlet_function)
@@ -192,7 +192,7 @@ namespace MeltPoolDG
         }
 
         void
-        set_field_conditions()
+        set_field_conditions() override
         {
           this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
           this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "level_set");

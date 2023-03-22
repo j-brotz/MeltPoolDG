@@ -10,7 +10,7 @@ norm of interface vals: 21232.504
  START TEST: n_iter=16
 --------------------------------------------------------
 max distance to analytical solution (relative): 0.015635164
-max distance to numerical distance solution (relative): 8.166623e-12
+max distance to numerical distance solution (relative): 8.1666236e-12
 norm of interface vals: 21232.322
 --------------------------------------------------------
  START TEST: n_iter=5
@@ -18,4 +18,12 @@ norm of interface vals: 21232.322
 WARNING: The tolerance of 8912 points is not yet attained. Max distance value: 5.2369329e-10
 max distance to analytical solution (relative): 0.015635164
 max distance to numerical distance solution (relative): 3.3516371e-08
+norm of interface vals: 30027.038
+--------------------------------------------------------
+ START TEST: n_iter=5
+--------------------------------------------------------
+WARNING: The tolerance of the tangential correction of 1124 points is not yet attained. Max tangential distance value: 1.4994429e-05 max tolerance: 1.5625e-12
+max distance to analytical solution (relative): 0.0078111056
+max distance to numerical distance solution (relative): 5.1767118e-11
+WARNING: The tolerance of the tangential correction of 120 points is not yet attained. Max tangential distance value: 7.5583328e-06 max tolerance: 1.5625e-07
 norm of interface vals: 30027.038

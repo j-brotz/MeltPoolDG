@@ -85,7 +85,7 @@ namespace MeltPoolDG
         {}
 
         void
-        create_spatial_discretization()
+        create_spatial_discretization() override
         {
           if (dim == 1 || this->parameters.base.do_simplex)
             {
@@ -114,11 +114,11 @@ namespace MeltPoolDG
         }
 
         void
-        set_boundary_conditions()
+        set_boundary_conditions() override
         {}
 
         void
-        set_field_conditions()
+        set_field_conditions() override
         {
           this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
           this->attach_exact_solution(std::make_shared<ExactSolution<dim>>(0.01), "level_set");
