@@ -106,7 +106,7 @@ message("-- building executable: meltpooldg")
 add_executable(${projectName} meltpooldg.cpp)
 deal_ii_setup_target(${projectName})
 
-target_link_libraries(${projectName} PUBLIC ${libName})
+target_link_libraries(${projectName} ${libName})
 # rename executable to meltpooldg
 set_target_properties(${projectName} PROPERTIES OUTPUT_NAME ${libName})
 
@@ -119,10 +119,10 @@ if(ADAFLO)
   message("-- Adaflo found: ${ADAFLO}")
   target_compile_definitions(${projectName} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
   target_include_directories(${projectName} PUBLIC ${ADAFLO_INCLUDE})
-  target_link_libraries(${projectName} PUBLIC ${ADAFLO})
+  target_link_libraries(${projectName} ${ADAFLO})
   target_compile_definitions(${libName} PUBLIC MELT_POOL_DG_WITH_ADAFLO)
   target_include_directories(${libName} PUBLIC ${ADAFLO_INCLUDE})
-  target_link_libraries(${libName} PUBLIC ${ADAFLO})
+  target_link_libraries(${libName} ${ADAFLO})
   set(DEAL_II_WITH_ADAFLO_SUPPORT ON)
 endif()
 
