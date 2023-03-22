@@ -45,7 +45,7 @@ public:
   {}
 
   double
-  value(const Point<dim> &p, const unsigned int component) const
+  value(const Point<dim> &p, const unsigned int component) const override
   {
     const double T_max = 500;
     const double T_min = 0;
@@ -73,7 +73,7 @@ compute_projected_point_analytically(const Point<dim> &p,
   return p_proj + center;
 }
 
-template <int n_components, int n_refinements, int n_iter>
+template <int n_components, int n_refinements, int n_iter, bool enforce_colinearity=false>
 void
 run_test()
 {
@@ -299,6 +299,7 @@ run_test()
     solution_temp_interface,
     min_cell_size,
     remote_point_evaluation,
+    enforce_colinearity,
     n_iter,
     1e-5,   // rel_tol_distance,
     0.125); // distance interval for projection
@@ -374,6 +375,7 @@ main(int argc, char *argv[])
   run_test<1, 6, 1>();
   run_test<1, 6, 16>();
   run_test<2, 6, 5>();
+  run_test<2, 6, 5, true>();
 
   return 0;
 }

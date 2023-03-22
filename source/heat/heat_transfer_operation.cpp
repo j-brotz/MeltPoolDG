@@ -309,6 +309,7 @@ namespace MeltPoolDG::Heat
       temperature_interface,
       scratch_data.get_min_cell_size(ls_dof_idx),
       remote_point_evaluation,
+      data.enforce_colinearity,
       data.max_iter,
       data.rel_tol);
 

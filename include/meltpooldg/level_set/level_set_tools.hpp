@@ -97,11 +97,14 @@ namespace MeltPoolDG::LevelSet::Tools
     const double                                     min_cell_size,
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
-    const unsigned int max_iterations    = 5,
-    const double       rel_tol_distance  = 1e-5,
-    const double       max_distance_user = -1,
-    const bool         shift_heavy       = false)
+    const bool         enforce_colinearity = false,
+    const unsigned int max_iterations      = 5,
+    const double       rel_tol_distance    = 1e-5,
+    const double       max_distance_user   = -1,
+    const bool         shift_heavy         = false)
   {
+    AssertThrow(dim <= 2 || !enforce_colinearity, ExcNotImplemented());
+
     const unsigned int n_components = dof_handler_req.get_fe().n_components();
 
     // note: In the default case, we limit the interval for closest point projection to
@@ -140,6 +143,7 @@ namespace MeltPoolDG::LevelSet::Tools
      * vectors to be filled: projected points to the interface corresponding to DoF indices
      */
     std::vector<Point<dim>>                           projected_points_at_interface;
+    std::vector<Point<dim>>                           stencil;
     std::vector<std::vector<types::global_dof_index>> dof_indices;
 
     /*
@@ -151,9 +155,8 @@ namespace MeltPoolDG::LevelSet::Tools
 
     const auto bounding_box = GridTools::compute_bounding_box(dof_handler_ls.get_triangulation());
     const auto boundary_points = bounding_box.get_boundary_points();
-    /*
-     * fill initial evaluation points with node coordinates
-     */
+
+    // fill initial evaluation points with node coordinates (stencil)
     typename DoFHandler<dim>::active_cell_iterator req_cell = dof_handler_req.begin_active();
 
     for (const auto &cell : dof_handler_ls.active_cell_iterators())
@@ -173,7 +176,7 @@ namespace MeltPoolDG::LevelSet::Tools
                 // consider only points in narrow band
                 if (std::abs(temp_distance[q]) < max_distance_to_consider)
                   {
-                    projected_points_at_interface.push_back(req_values.quadrature_point(q));
+                    stencil.push_back(req_values.quadrature_point(q));
 
                     for (unsigned int c = 0; c < n_components; ++c)
                       dofs_at_q.emplace_back(
@@ -187,6 +190,8 @@ namespace MeltPoolDG::LevelSet::Tools
         ++req_cell;
       }
 
+    projected_points_at_interface = stencil;
+
     /*
      * Update evaluation points max_iterations times by iteratively projecting
      * the point to the interface.
@@ -195,119 +200,202 @@ namespace MeltPoolDG::LevelSet::Tools
       UtilityFunctions::compute_numerical_zero_of_norm<dim>(dof_handler_ls.get_triangulation(),
                                                             mapping);
 
-    /*
-     * points that are not (yet) at the interface and still needs to be processed
-     */
-    std::vector<Point<dim>>   processed_points = projected_points_at_interface;
-    std::vector<unsigned int> processed_points_idx(processed_points.size());
-    std::iota(processed_points_idx.begin(), processed_points_idx.end(), 0);
+    const auto cpp = [&](std::vector<Point<dim>> &y,
+                         const bool               enforce_colinearity,
+                         const bool               print_warning) -> bool {
+      /*
+       * points that are not (yet) at the interface and still needs to be processed
+       */
+      std::vector<Point<dim>>   processed_points = y;
+      std::vector<unsigned int> processed_points_idx(processed_points.size());
+      std::iota(processed_points_idx.begin(), processed_points_idx.end(), 0);
 
-    int                 n_processed_points = 0;
-    std::vector<double> evaluation_values_distance;
+      int                 n_processed_points = 0;
+      std::vector<double> evaluation_values_distance;
+
+      double max_omega = 0;
+      int    n_omega   = 0;
+
+      for (unsigned int j = 0; j < max_iterations; ++j)
+        {
+          remote_point_evaluation.reinit(processed_points,
+                                         dof_handler_req.get_triangulation(),
+                                         mapping);
+
+          // TODO: (?) compute distance directly from stencil
+          // evaluation_values_distance.resize(processed_points.size());
+          // for (unsigned int i; i<processed_points.size();++i)
+          //   evaluation_values_distance[i] =
+          //   stencil[processed_points_idx[i]].distance(processed_points[i]);
+
+          evaluation_values_distance =
+            dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler_ls, distance);
+
+          if (shift_heavy == true)
+            {
+              // tanh(1.5): where H(phi) == 1
+              // tanh(4): maximum distance calculated
+              const double shift = distance.linfty_norm() * std::tanh(1.5) / std::tanh(4);
+
+              for (auto &e : evaluation_values_distance)
+                e -= shift;
+            }
+
+          // compute unit normal and tangent
+          std::array<std::vector<double>, dim> evaluation_values_normal;
+          std::vector<Point<dim>>              evaluation_values_unit_normal;
+
+          std::vector<Point<dim>> evaluation_values_unit_tangent;
+
+          for (int comp = 0; comp < dim; ++comp)
+            {
+              evaluation_values_normal[comp] =
+                dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                                     dof_handler_ls,
+                                                     normal_vector.block(comp));
+            }
+
+          for (unsigned int counter = 0; counter < processed_points.size(); ++counter)
+            {
+              Point<dim> unit_normal;
+              for (unsigned int comp = 0; comp < dim; ++comp)
+                unit_normal[comp] = evaluation_values_normal[comp][counter];
+
+              const auto n_norm = unit_normal.norm();
+              unit_normal =
+                (n_norm > tolerance_normal_vector) ? unit_normal / n_norm : Point<dim>();
+
+              evaluation_values_unit_normal.emplace_back(unit_normal);
+
+              if (dim > 1)
+                {
+                  Point<dim> tangent;
+                  // TODO: add 3D tangent
+                  if constexpr (dim == 2)
+                    {
+                      tangent[0] = unit_normal[1];
+                      tangent[1] = -unit_normal[0];
+                      evaluation_values_unit_tangent.emplace_back(tangent);
+                    }
+                }
+            }
+
+          std::vector<Point<dim>>   processed_points_new;
+          std::vector<unsigned int> processed_points_idx_new;
+
+          n_omega = 0;
+
+          for (unsigned int counter = 0; counter < processed_points.size(); ++counter)
+            {
+              // skip point where the distance to the interface is already close enough
+              if (std::abs(evaluation_values_distance[counter]) <= tol_distance)
+                {
+                  if (enforce_colinearity)
+                    {
+                      // correct point by tangential offset
+                      const auto distance_vec =
+                        processed_points[counter] - stencil[processed_points_idx[counter]];
+
+                      const double omega = distance_vec * evaluation_values_unit_tangent[counter];
+
+                      if (omega > tol_distance)
+                        n_omega++;
+
+                      max_omega = std::max(std::abs(omega), max_omega);
+
+                      if constexpr (dim == 2)
+                        {
+                          y[processed_points_idx[counter]] -=
+                            omega * evaluation_values_unit_tangent[counter];
+                        }
+                    }
+                  continue;
+                }
+
+              // compute corresponding point at level set == 0.0
+              processed_points[counter] -=
+                evaluation_values_distance[counter] * evaluation_values_unit_normal[counter];
+
+              for (unsigned int d = 0; d < dim; ++d)
+                {
+                  // check if point is outside domain and if so then project it back to
+                  // the domain
+                  if (processed_points[counter][d] < boundary_points.first[d])
+                    processed_points[counter][d] = boundary_points.first[d];
+                  else if (processed_points[counter][d] > boundary_points.second[d])
+                    processed_points[counter][d] = boundary_points.second[d];
+                }
+
+              y[processed_points_idx[counter]] = processed_points[counter];
+              processed_points_new.emplace_back(processed_points[counter]);
+              processed_points_idx_new.emplace_back(processed_points_idx[counter]);
+            }
+
+          /*
+           * remove points from processing that are already at the interface
+           */
+          processed_points.swap(processed_points_new);
+          processed_points_idx.swap(processed_points_idx_new);
+
+          /*
+           * If every point is close enough to the interface, we are finished.
+           */
+          n_processed_points = Utilities::MPI::sum(processed_points.size(), mpi_comm);
+
+          if (n_processed_points == 0)
+            break;
+        }
+      /*
+       * compute maximum distance of projected points to the level set 0 isosurface
+       */
+      double max_distance =
+        evaluation_values_distance.size() == 0 ?
+          0.0 :
+          *std::max_element(evaluation_values_distance.begin(), evaluation_values_distance.end());
+
+      max_distance = Utilities::MPI::max(max_distance, mpi_comm);
+
+      dealii::ConditionalOStream pcout(std::cout,
+                                       Utilities::MPI::this_mpi_process(mpi_comm) == 0 &&
+                                         print_warning);
+
+      bool is_converged = true;
+
+      if (n_processed_points > 0 && max_distance > tol_distance)
+        {
+          pcout << "WARNING: The tolerance of " << n_processed_points
+                << " points is not yet attained. Max distance value: " << max_distance << std::endl;
+          is_converged = false;
+        }
+
+      if (enforce_colinearity)
+        {
+          max_omega = Utilities::MPI::max(max_omega, mpi_comm);
+          n_omega   = Utilities::MPI::sum(n_omega, mpi_comm);
+
+          if (max_omega > tol_distance)
+            {
+              pcout << "WARNING: The tolerance of the tangential correction of " << n_omega
+                    << " points is not yet attained. Max tangential distance value: " << max_omega
+                    << " max tolerance: " << tol_distance << std::endl;
+              is_converged = false;
+            }
+        }
+
+      return is_converged;
+    };
+
 
     for (unsigned int j = 0; j < max_iterations; ++j)
       {
-        remote_point_evaluation.reinit(processed_points,
-                                       dof_handler_req.get_triangulation(),
-                                       mapping);
-
-        evaluation_values_distance =
-          dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler_ls, distance);
-
-        if (shift_heavy == true)
-          {
-            // tanh(1.5): where H(phi) == 1
-            // tanh(4): maximum distance calculated
-            const double shift = distance.linfty_norm() * std::tanh(1.5) / std::tanh(4);
-
-            for (auto &e : evaluation_values_distance)
-              e -= shift;
-          }
-
-        std::array<std::vector<double>, dim> evaluation_values_normal;
-
-        for (int comp = 0; comp < dim; ++comp)
-          evaluation_values_normal[comp] =
-            dealii::VectorTools::point_values<1>(remote_point_evaluation,
-                                                 dof_handler_ls,
-                                                 normal_vector.block(comp));
-
-        std::vector<Point<dim>>   processed_points_new;
-        std::vector<unsigned int> processed_points_idx_new;
-
-        for (unsigned int counter = 0; counter < processed_points.size(); ++counter)
-          {
-            /*
-             * skip point where the distance to the interface is already close enough
-             */
-            if (std::abs(evaluation_values_distance[counter]) <= tol_distance)
-              continue;
-            /*
-             * compute unit normal vector
-             */
-            Point<dim> unit_normal;
-            for (unsigned int comp = 0; comp < dim; ++comp)
-              unit_normal[comp] = evaluation_values_normal[comp][counter];
-
-            const auto n_norm = unit_normal.norm();
-            unit_normal = (n_norm > tolerance_normal_vector) ? unit_normal / n_norm : Point<dim>();
-
-            /*
-             * compute corresponding point at level set == 0.0
-             */
-            for (unsigned int d = 0; d < dim; ++d)
-              {
-                processed_points[counter][d] -=
-                  evaluation_values_distance[counter] * unit_normal[d];
-
-                // check if point is outside domain and if so then project it back to
-                // the domain
-                if (processed_points[counter][d] < boundary_points.first[d])
-                  processed_points[counter][d] = boundary_points.first[d];
-                else if (processed_points[counter][d] > boundary_points.second[d])
-                  processed_points[counter][d] = boundary_points.second[d];
-              }
-
-            projected_points_at_interface[processed_points_idx[counter]] =
-              processed_points[counter];
-            processed_points_new.emplace_back(processed_points[counter]);
-            processed_points_idx_new.emplace_back(processed_points_idx[counter]);
-          }
-
-        /*
-         * remove points from processing that are already at the interface
-         */
-        processed_points.swap(processed_points_new);
-        processed_points_idx.swap(processed_points_idx_new);
-
-        /*
-         * If every point is close enough to the interface, we are finished.
-         */
-        n_processed_points = Utilities::MPI::sum(processed_points.size(), mpi_comm);
-
-        if (n_processed_points == 0)
+        if (cpp(projected_points_at_interface, enforce_colinearity, j == max_iterations - 1) ||
+            !enforce_colinearity)
           break;
-      }
-    /*
-     * compute maximum distance of projected points to the level set 0 isosurface
-     */
-    double max_distance =
-      evaluation_values_distance.size() == 0 ?
-        0.0 :
-        *std::max_element(evaluation_values_distance.begin(), evaluation_values_distance.end());
-
-    max_distance = Utilities::MPI::max(max_distance, mpi_comm);
-
-    if (n_processed_points > 0 && max_distance > tol_distance)
-      {
-        dealii::ConditionalOStream pcout(std::cout,
-                                         Utilities::MPI::this_mpi_process(mpi_comm) == 0);
-        pcout << "WARNING: The tolerance of " << n_processed_points
-              << " points is not yet attained. Max distance value: " << max_distance << std::endl;
       }
 
     distance.zero_out_ghost_values();
     normal_vector.zero_out_ghost_values();
+
     /*
      * debug
      */
@@ -350,10 +438,11 @@ namespace MeltPoolDG::LevelSet::Tools
     const double                                     min_cell_size,
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
-    const unsigned int max_iterations    = 5,
-    const double       rel_tol_distance  = 1e-5,
-    const double       max_distance_user = -1,
-    const bool         shift_heavy       = false)
+    const bool         enforce_colinearity = false,
+    const unsigned int max_iterations      = 5,
+    const double       rel_tol_distance    = 1e-5,
+    const double       max_distance_user   = -1,
+    const bool         shift_heavy         = false)
   {
     const auto [dof_indices, evaluation_points] =
       compute_projected_points_at_interface<dim>(mapping,
@@ -363,6 +452,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                                  normal_vector,
                                                  min_cell_size,
                                                  remote_point_evaluation,
+                                                 enforce_colinearity,
                                                  max_iterations,
                                                  rel_tol_distance,
                                                  max_distance_user,

@@ -644,7 +644,7 @@ namespace MeltPoolDG::LevelSet
               distance_to_level_set(local_dof_indices[i]) = approximate_distance_from_level_set(
                 advec_diff_operation->get_advected_field()[local_dof_indices[i]],
                 epsilon_cell,
-                std::tanh(4) /*cut off value*/);
+                level_set_data.cpp.max_phi /*cut off value*/);
 
               if (level_set_data.do_localized_heaviside)
                 {
@@ -686,6 +686,7 @@ namespace MeltPoolDG::LevelSet
       curvature_operation->get_curvature(),
       scratch_data.get_min_cell_size(ls_hanging_nodes_dof_idx),
       remote_point_evaluation,
+      level_set_data.cpp.enforce_colinearity,
       level_set_data.cpp.max_iter,
       level_set_data.cpp.rel_tol);
 

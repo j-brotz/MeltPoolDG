@@ -178,8 +178,10 @@ namespace MeltPoolDG
   template <typename number = double>
   struct ClosestPointProjectionData
   {
-    number rel_tol  = 1e-6;
-    int    max_iter = 20;
+    number rel_tol             = 1e-6;
+    int    max_iter            = 20;
+    bool   enforce_colinearity = false;
+    double max_phi             = std::tanh(4);
   };
 
   template <typename number = double>

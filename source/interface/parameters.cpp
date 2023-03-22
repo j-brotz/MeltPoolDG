@@ -443,6 +443,13 @@ namespace MeltPoolDG
         prm.add_parameter("rel tol",
                           ls.cpp.rel_tol,
                           "Relative tolerance to be achieved within the projection.");
+        prm.add_parameter("max phi",
+                          ls.cpp.max_phi,
+                          "Maximum value for the level set for defining narrow band where "
+                          "CPP is performed.");
+        prm.add_parameter("enforce colinearity",
+                          ls.cpp.enforce_colinearity,
+                          "Enforce colinearity with the normal vector at the interface.");
       }
       prm.leave_subsection();
     }
