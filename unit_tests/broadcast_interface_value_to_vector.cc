@@ -73,7 +73,7 @@ compute_projected_point_analytically(const Point<dim> &p,
   return p_proj + center;
 }
 
-template <int n_components, int n_refinements, int n_iter, bool enforce_colinearity=false>
+template <int n_components, int n_refinements, int n_iter, bool enforce_colinearity = false>
 void
 run_test()
 {
