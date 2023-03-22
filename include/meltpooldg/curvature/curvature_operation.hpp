@@ -66,7 +66,7 @@ namespace MeltPoolDG::Curvature
     get_normal_vector() override;
 
     void
-    reinit();
+    reinit() override;
 
     void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) final;

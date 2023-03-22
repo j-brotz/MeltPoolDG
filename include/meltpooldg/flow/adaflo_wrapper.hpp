@@ -39,7 +39,7 @@ namespace MeltPoolDG::Flow
                   const bool                                              do_evaporative_mass_flux);
 
     void
-    set_initial_condition(const Function<dim> &initial_field_function_velocity);
+    set_initial_condition(const Function<dim> &initial_field_function_velocity) override;
 
     void
     reinit_1();

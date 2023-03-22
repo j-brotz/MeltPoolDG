@@ -91,10 +91,10 @@ namespace MeltPoolDG
       get_normal_vector() override;
 
       void
-      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 
       void
-      attach_output_vectors(GenericDataOut<dim> &data_out) const;
+      attach_output_vectors(GenericDataOut<dim> &data_out) const override;
 
 
     private:
