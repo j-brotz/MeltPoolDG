@@ -49,7 +49,7 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       Point<dim> lower_left  = dim == 1 ? Point<dim>(y_min) :
                                dim == 2 ? Point<dim>(x_min, y_min) :
@@ -73,7 +73,7 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       const double T_bottom = 573.15;
       const double T_sat    = 373.15;

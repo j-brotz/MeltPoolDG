@@ -37,7 +37,7 @@ namespace MeltPoolDG
           : Function<dim>()
         {}
         virtual double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+        value(const Point<dim> &p, const unsigned int component = 0) const override
         {
           (void)component;
           // default distances
@@ -132,7 +132,7 @@ namespace MeltPoolDG
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+        value(const Point<dim> &p, const unsigned int component = 0) const override
         {
           (void)component;
           Point<dim>   center  = dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5);
@@ -257,7 +257,7 @@ namespace MeltPoolDG
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+        value(const Point<dim> &p, const unsigned int component = 0) const override
         {
           (void)p;
           (void)component;

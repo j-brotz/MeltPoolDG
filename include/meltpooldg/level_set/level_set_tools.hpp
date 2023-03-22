@@ -388,7 +388,9 @@ namespace MeltPoolDG::LevelSet::Tools
 
     for (unsigned int j = 0; j < max_iterations; ++j)
       {
-        if (cpp(projected_points_at_interface, enforce_colinearity, j == max_iterations - 1) ||
+        if (cpp(projected_points_at_interface,
+                enforce_colinearity,
+                j == max_iterations - 1 || !enforce_colinearity) ||
             !enforce_colinearity)
           break;
       }

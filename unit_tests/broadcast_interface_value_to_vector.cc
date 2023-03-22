@@ -220,6 +220,7 @@ run_test()
         solution_normal,
         min_cell_size,
         remote_point_evaluation,
+        enforce_colinearity,
         n_iter,
         1e-10,  // rel_tol_distance,
         0.125); // distance interval for projection

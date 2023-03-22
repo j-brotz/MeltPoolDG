@@ -112,7 +112,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       Point<dim> center1 = dim == 2 ? Point<dim>(2.9 * radius, 4.0 * radius) :
                                       Point<dim>(2.9 * radius, 0, 4.0 * radius);
@@ -141,7 +141,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       return reference_temperature + p[dim - 1] * temperature_gradient;
     }

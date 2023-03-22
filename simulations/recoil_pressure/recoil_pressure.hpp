@@ -44,7 +44,7 @@ namespace MeltPoolDG
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int /*component*/) const
+        value(const Point<dim> &p, const unsigned int /*component*/) const override
         {
           if (T_initial_top == T_initial_bottom)
             return T_initial_top;

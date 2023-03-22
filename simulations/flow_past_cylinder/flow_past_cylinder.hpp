@@ -33,7 +33,7 @@ namespace MeltPoolDG
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int) const
+        value(const Point<dim> &p, const unsigned int /*component*/) const override
         {
           return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
         }
@@ -86,7 +86,7 @@ namespace MeltPoolDG
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+        value(const Point<dim> &p, const unsigned int component = 0) const override
         {
           (void)p;
           (void)component;

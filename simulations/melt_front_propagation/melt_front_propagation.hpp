@@ -46,7 +46,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(z_level - z,
@@ -69,7 +69,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       const auto z = p[dim - 1];
       return UtilityFunctions::CharacteristicFunctions::heaviside(z_level - z, eps);

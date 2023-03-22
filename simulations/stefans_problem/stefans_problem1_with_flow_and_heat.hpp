@@ -96,7 +96,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
         signed_distance_plane.value(p), eps);
@@ -116,7 +116,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       return T_bottom - (T_bottom - T_sat) / y_interface * p[dim - 1];
     }

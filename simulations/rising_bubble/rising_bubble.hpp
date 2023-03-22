@@ -37,7 +37,7 @@ namespace MeltPoolDG
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int /*component*/) const
+        value(const Point<dim> &p, const unsigned int /*component*/) const override
         {
           return -distance_sphere.value(p);
         }

@@ -54,7 +54,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       return -distance_sphere.value(p);
     }
@@ -73,7 +73,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int comp) const
+    value(const Point<dim> &p, const unsigned int comp) const override
     {
       const double v = velocity;
 
