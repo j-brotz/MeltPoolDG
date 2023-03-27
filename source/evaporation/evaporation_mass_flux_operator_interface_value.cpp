@@ -54,7 +54,7 @@ namespace MeltPoolDG::Evaporation
         normal_vector,
         scratch_data.get_min_cell_size(ls_dof_idx),
         remote_point_evaluation,
-        cpp_data.enforce_colinearity,
+        cpp_data.enforce_collinearity,
         cpp_data.max_iter,
         cpp_data.rel_tol);
     /*

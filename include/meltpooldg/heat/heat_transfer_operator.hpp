@@ -276,7 +276,7 @@ namespace MeltPoolDG::Heat
     distribute_constraints();
 
     void
-    reinit();
+    reinit() final;
 
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;

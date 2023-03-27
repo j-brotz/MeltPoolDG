@@ -97,13 +97,13 @@ namespace MeltPoolDG::LevelSet::Tools
     const double                                     min_cell_size,
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
-    const bool         enforce_colinearity = false,
-    const unsigned int max_iterations      = 5,
-    const double       rel_tol_distance    = 1e-5,
-    const double       max_distance_user   = -1,
-    const bool         shift_heavy         = false)
+    const bool         enforce_collinearity = false,
+    const unsigned int max_iterations       = 5,
+    const double       rel_tol_distance     = 1e-5,
+    const double       max_distance_user    = -1,
+    const bool         shift_heavy          = false)
   {
-    AssertThrow(dim <= 2 || !enforce_colinearity, ExcNotImplemented());
+    AssertThrow(dim <= 2 || !enforce_collinearity, ExcNotImplemented());
 
     const unsigned int n_components = dof_handler_req.get_fe().n_components();
 
@@ -201,7 +201,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                                             mapping);
 
     const auto cpp = [&](std::vector<Point<dim>> &y,
-                         const bool               enforce_colinearity,
+                         const bool               enforce_collinearity,
                          const bool               print_warning) -> bool {
       /*
        * points that are not (yet) at the interface and still needs to be processed
@@ -290,7 +290,7 @@ namespace MeltPoolDG::LevelSet::Tools
               // skip point where the distance to the interface is already close enough
               if (std::abs(evaluation_values_distance[counter]) <= tol_distance)
                 {
-                  if (enforce_colinearity)
+                  if (enforce_collinearity)
                     {
                       // correct point by tangential offset
                       const auto distance_vec =
@@ -368,7 +368,7 @@ namespace MeltPoolDG::LevelSet::Tools
           is_converged = false;
         }
 
-      if (enforce_colinearity)
+      if (enforce_collinearity)
         {
           max_omega = Utilities::MPI::max(max_omega, mpi_comm);
           n_omega   = Utilities::MPI::sum(n_omega, mpi_comm);
@@ -389,9 +389,9 @@ namespace MeltPoolDG::LevelSet::Tools
     for (unsigned int j = 0; j < max_iterations; ++j)
       {
         if (cpp(projected_points_at_interface,
-                enforce_colinearity,
-                j == max_iterations - 1 || !enforce_colinearity) ||
-            !enforce_colinearity)
+                enforce_collinearity,
+                j == max_iterations - 1 || !enforce_collinearity) ||
+            !enforce_collinearity)
           break;
       }
 
@@ -440,11 +440,11 @@ namespace MeltPoolDG::LevelSet::Tools
     const double                                     min_cell_size,
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation =
       Utilities::MPI::RemotePointEvaluation<dim, dim>(1e-6 /*tolerance*/, true /*unique mapping*/),
-    const bool         enforce_colinearity = false,
-    const unsigned int max_iterations      = 5,
-    const double       rel_tol_distance    = 1e-5,
-    const double       max_distance_user   = -1,
-    const bool         shift_heavy         = false)
+    const bool         enforce_collinearity = false,
+    const unsigned int max_iterations       = 5,
+    const double       rel_tol_distance     = 1e-5,
+    const double       max_distance_user    = -1,
+    const bool         shift_heavy          = false)
   {
     const auto [dof_indices, evaluation_points] =
       compute_projected_points_at_interface<dim>(mapping,
@@ -454,7 +454,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                                  normal_vector,
                                                  min_cell_size,
                                                  remote_point_evaluation,
-                                                 enforce_colinearity,
+                                                 enforce_collinearity,
                                                  max_iterations,
                                                  rel_tol_distance,
                                                  max_distance_user,

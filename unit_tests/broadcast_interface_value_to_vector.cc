@@ -73,9 +73,9 @@ compute_projected_point_analytically(const Point<dim> &p,
   return p_proj + center;
 }
 
-template <int n_components, int n_refinements, int n_iter, bool enforce_colinearity = false>
+template <int n_components, int n_refinements, int n_iter>
 void
-run_test()
+run_test(const bool enforce_collinearity = false)
 {
   std::cout.precision(8);
   MPI_Comm                   mpi_comm(MPI_COMM_WORLD);
@@ -220,7 +220,7 @@ run_test()
         solution_normal,
         min_cell_size,
         remote_point_evaluation,
-        enforce_colinearity,
+        enforce_collinearity,
         n_iter,
         1e-10,  // rel_tol_distance,
         0.125); // distance interval for projection
@@ -300,7 +300,7 @@ run_test()
     solution_temp_interface,
     min_cell_size,
     remote_point_evaluation,
-    enforce_colinearity,
+    enforce_collinearity,
     n_iter,
     1e-5,   // rel_tol_distance,
     0.125); // distance interval for projection
@@ -376,7 +376,7 @@ main(int argc, char *argv[])
   run_test<1, 6, 1>();
   run_test<1, 6, 16>();
   run_test<2, 6, 5>();
-  run_test<2, 6, 5, true>();
+  run_test<2, 6, 5>(true);
 
   return 0;
 }

@@ -686,7 +686,7 @@ namespace MeltPoolDG::LevelSet
       curvature_operation->get_curvature(),
       scratch_data.get_min_cell_size(ls_hanging_nodes_dof_idx),
       remote_point_evaluation,
-      level_set_data.cpp.enforce_colinearity,
+      level_set_data.cpp.enforce_collinearity,
       level_set_data.cpp.max_iter,
       level_set_data.cpp.rel_tol);
 
