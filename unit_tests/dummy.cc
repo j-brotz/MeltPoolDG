@@ -1,7 +1,7 @@
 #include <iostream>
 
 int
-main()
+   main()
 {
   std::cout << "This is a dummy MeltPoolDG unit test!" << std::endl;
 }
