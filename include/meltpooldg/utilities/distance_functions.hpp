@@ -67,20 +67,22 @@ namespace dealii::Functions::SignedDistance
           // boundary faces (6 cases)
           for (unsigned int i = 0; i < boundary_faces.size(); ++i)
             {
+              // check if the point has a positive value for the signed distance to
+              // the current face
               if (boundary_faces[i].value(p) >= 1e-16)
                 {
                   // check if all other faces have negative distance values
-                  bool all_faces_are_negative = true;
+                  bool all_other_faces_negative = true;
                   for (unsigned int j = 0; j < boundary_faces.size(); ++j)
                     {
                       if ((i != j) && boundary_faces[j].value(p) > 0)
                         {
-                          all_faces_are_negative = false;
+                          all_other_faces_negative = false;
                           break;
                         }
                     }
 
-                  if (all_faces_are_negative)
+                  if (all_other_faces_negative)
                     return boundary_faces[i].value(p);
                 }
             }
@@ -94,6 +96,8 @@ namespace dealii::Functions::SignedDistance
               std::vector<unsigned int> processed_faces(6);
               std::iota(processed_faces.begin(), processed_faces.end(), 0);
 
+              // check if the point has a positive value for the signed distance to
+              // adjoining faces of the current corner
               for (const auto &f : face_indices)
                 {
                   if (boundary_faces[f].value(p) < 0)
@@ -106,6 +110,8 @@ namespace dealii::Functions::SignedDistance
                     std::find(processed_faces.begin(), processed_faces.end(), f));
                 }
 
+              // check if the point has a negative value for the signed distance to
+              // all remaining faces
               if (found)
                 {
                   for (const auto &f : processed_faces)
@@ -129,6 +135,8 @@ namespace dealii::Functions::SignedDistance
               std::vector<unsigned int> processed_faces(6);
               std::iota(processed_faces.begin(), processed_faces.end(), 0);
 
+              // check if the point has a positive value for the signed distance to
+              // adjoining faces of the current edge
               for (const auto &f : line_to_face.at(i))
                 {
                   if (boundary_faces[f].value(p) < 0)
@@ -141,6 +149,8 @@ namespace dealii::Functions::SignedDistance
                     std::find(processed_faces.begin(), processed_faces.end(), f));
                 }
 
+              // check if the point has a negative value for the signed distance to
+              // all remaining faces
               if (found)
                 {
                   for (const auto &f : processed_faces)
@@ -163,7 +173,7 @@ namespace dealii::Functions::SignedDistance
                       ExcMessage("The distance of your requested point could not be calculated."));
           return 0;
         }
-      if constexpr (dim == 2)
+      else if constexpr (dim == 2)
         {
           // inside
           if (bounding_box.point_inside(p))
@@ -186,27 +196,26 @@ namespace dealii::Functions::SignedDistance
         }
       else if constexpr (dim == 1)
         {
-          /**
-           *        lower left      upper right
-           *    (-)     (0) +--(+)---+ (1)  (-)    --> x
-           */
+          // left
           if (p[0] <= bottom_left[0])
-            return p.distance(bottom_left); /* point is outside of the rectangle */
+            return p.distance(bottom_left);
+          // right
           else if (p[0] >= top_right[0])
-            return p.distance(top_right); /* point is outside of the rectangle */
+            return p.distance(top_right);
+          // inside left
           else if (p[0] <= bounding_box.center()[0])
-            return -p.distance(bottom_left); /* point is inside the left half of the rectangle */
+            return -p.distance(bottom_left);
+          // inside right
           else
-            return -p.distance(top_right); /* point is inside the right half of the rectangle */
+            return -p.distance(top_right);
         }
-      else if constexpr (dim == 3)
-        {}
       else
         return 0;
     }
 
   private:
-    const BoundingBox<dim>                             bounding_box;
+    const BoundingBox<dim> bounding_box;
+    // only used for 3D
     std::vector<Functions::SignedDistance::Plane<dim>> boundary_faces;
 
     // TODO: move to GeometryInfo<dim> (?)
@@ -225,22 +234,14 @@ namespace dealii::Functions::SignedDistance
 
 
 
-    // TODO: move to internal
+    // TODO: move to dealii::internal
     /**
      * Compute the minimal distance between a point @p p and an infinite line described by two support
-     * points @p bottom_left and @p top_right.
+     * points @p bottom_left (a) and @p top_right (b) according to
      *
-     *    f1  x
-     *        |
-     *        |    d
-     *        |--------- x
-     *        |            p
-     *        |
-     *    f2  x
-     *
-     *      || (f2 - f1) x (f1 - p) ||
-     * d = ---------------------------
-     *            || f2 - f1 ||
+     * @f[
+     * d = \frac{|| (b - a) \times (f1 - p)||}{||b-a||}
+     * @f]
      */
     static double
     distance_to_line(const Point<dim> &p,
