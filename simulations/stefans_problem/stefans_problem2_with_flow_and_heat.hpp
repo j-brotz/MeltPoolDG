@@ -37,31 +37,18 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
   class InitialValuesLS : public Function<dim>
   {
   public:
-    InitialValuesLS(const double x_min,
-                    const double x_max,
-                    const double y_min,
-                    const double y_interface)
+    InitialValuesLS(const Point<dim> &lower_left, const Point<dim> &upper_right)
       : Function<dim>()
-      , x_min(x_min)
-      , x_max(x_max)
-      , y_min(y_min)
-      , y_interface(y_interface)
+      , signed_distance(lower_left, upper_right)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
-      Point<dim> lower_left  = dim == 1 ? Point<dim>(y_min) :
-                               dim == 2 ? Point<dim>(x_min, y_min) :
-                                          Point<dim>(x_min, x_min, y_min);
-      Point<dim> upper_right = dim == 1 ? Point<dim>(y_interface) :
-                               dim == 2 ? Point<dim>(x_max, y_interface) :
-                                          Point<dim>(x_max, x_max, y_interface);
-
-      return UtilityFunctions::CharacteristicFunctions::sgn(
-        DistanceFunctions::rectangular_manifold<dim>(p, lower_left, upper_right));
+      return UtilityFunctions::CharacteristicFunctions::sgn(-signed_distance.value(p));
     }
-    double x_min, x_max, y_min, y_interface;
+
+    dealii::Functions::SignedDistance::Rectangle<dim> signed_distance;
   };
 
   template <int dim>
@@ -220,8 +207,15 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(
-        std::make_shared<InitialValuesLS<dim>>(x_min, x_max, y_min, y_interface), "level_set");
+      const Point<dim> lower_left((dim == 1) ? Point<dim>(y_min) :
+                                  (dim == 2) ? Point<dim>(x_min, y_min) :
+                                               Point<dim>(x_min, x_min, y_min));
+      const Point<dim> upper_right((dim == 1) ? Point<dim>(y_interface) :
+                                   (dim == 2) ? Point<dim>(x_max, y_interface) :
+                                                Point<dim>(x_max, x_max, y_interface));
+      this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(lower_left,
+                                                                            upper_right),
+                                     "level_set");
       this->attach_initial_condition(
         std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(),

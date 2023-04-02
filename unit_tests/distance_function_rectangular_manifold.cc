@@ -31,19 +31,17 @@ class Distance : public Function<dim>
 public:
   Distance(const Point<dim> &bottom_left, const Point<dim> &top_right)
     : Function<dim>()
-    , bottom_left(bottom_left)
-    , top_right(top_right)
+    , signed_distance(bottom_left, top_right)
   {}
 
   virtual double
-  value(const Point<dim> &p, const unsigned int component = 0) const override
+  value(const Point<dim> &p, const unsigned int /*component*/) const override
   {
-    (void)component;
-
-    return DistanceFunctions::rectangular_manifold<dim>(p, bottom_left, top_right);
+    return -signed_distance.value(p);
   }
 
-  const Point<dim> &bottom_left, top_right;
+private:
+  Functions::SignedDistance::Rectangle<dim> signed_distance;
 };
 
 template <int dim>
@@ -94,16 +92,18 @@ test(const MPI_Comm &mpi_comm)
 
   // compute distance function of a rectangular manifold
   pcout << "dim= " << dim << " distance: " << distance.l2_norm() << std::endl;
-  distance.update_ghost_values();
 
-  // write paraview output
-  DataOut<dim> data_out;
-  data_out.attach_dof_handler(dof_handler);
+  if (false)
+    {
+      // write paraview output
+      DataOut<dim> data_out;
+      data_out.attach_dof_handler(dof_handler);
 
-  data_out.add_data_vector(distance, "distance");
+      data_out.add_data_vector(distance, "distance");
 
-  data_out.build_patches(mapping);
-  data_out.write_vtu_with_pvtu_record("./", "solution_" + std::to_string(dim), 0, mpi_comm);
+      data_out.build_patches(mapping);
+      data_out.write_vtu_with_pvtu_record("./", "solution_" + std::to_string(dim), 0, mpi_comm);
+    }
 }
 
 int
