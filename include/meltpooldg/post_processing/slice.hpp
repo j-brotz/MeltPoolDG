@@ -47,7 +47,7 @@ namespace MeltPoolDG::PostProcessingTools
      * reinit function passing the new @p generic_data_out_in.
      */
     void
-    reinit(const GenericDataOut<dim> &generic_data_out_in)
+    reinit(const GenericDataOut<dim> &generic_data_out_in) override
     {
       generic_data_out = &generic_data_out_in;
       idx_req_vars     = generic_data_out->get_indices_data_request(request_variables);

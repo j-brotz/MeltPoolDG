@@ -1,6 +1,20 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-03-22
+- Add parameters for closest point projection
+```diff
+{
+  "levelset": {
+    "closest point projection":
+    {
++       "enforce colinearity": "true|false",
++       "max phi": "",
+    }
+  }
+```
+
+
 ## 2023-02-20
 - Add parameters for closest point projection
 ```diff

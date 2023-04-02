@@ -82,7 +82,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
         -distance_sphere.value(p), eps);
@@ -103,7 +103,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       return 290 + grad_T * (p[dim - 1] + 2 * a);
     }

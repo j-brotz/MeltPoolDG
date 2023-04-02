@@ -96,7 +96,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       // compute the projected distance from the symmetry plane characterized by dim-1=0.0
       const double projected_radius = dim == 1 ? 0 :
@@ -137,7 +137,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       double y_interface_disturbed =
         y_interface + lambda0 / 160. * std::cos(2 * numbers::PI * p[0] / lambda0);

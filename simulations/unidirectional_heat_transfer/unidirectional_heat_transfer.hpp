@@ -76,7 +76,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
       return left_temp + (right_temp - left_temp) * (p[0] - x_min) / (x_max - x_min);
     }

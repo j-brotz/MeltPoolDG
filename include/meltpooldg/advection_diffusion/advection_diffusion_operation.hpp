@@ -47,7 +47,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      * Provide a field function for the initial solution of the advected field
      */
     void
-    set_initial_condition(const Function<dim> &initial_field_function);
+    set_initial_condition(const Function<dim> &initial_field_function) override;
 
     void
     reinit() override;
@@ -80,7 +80,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim> &data_out) const override;
 
   private:
     void

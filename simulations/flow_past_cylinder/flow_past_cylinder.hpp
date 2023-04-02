@@ -33,7 +33,7 @@ namespace MeltPoolDG
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int) const
+        value(const Point<dim> &p, const unsigned int /*component*/) const override
         {
           return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
         }
@@ -51,8 +51,8 @@ namespace MeltPoolDG
           , fluctuating(fluctuating)
         {}
 
-        virtual void
-        vector_value(const Point<dim> &p, Vector<double> &values) const
+        void
+        vector_value(const Point<dim> &p, Vector<double> &values) const override
         {
           AssertDimension(values.size(), dim);
 
@@ -86,7 +86,7 @@ namespace MeltPoolDG
         {}
 
         double
-        value(const Point<dim> &p, const unsigned int component = 0) const
+        value(const Point<dim> &p, const unsigned int component = 0) const override
         {
           (void)p;
           (void)component;
@@ -107,7 +107,7 @@ namespace MeltPoolDG
         {}
 
         void
-        create_spatial_discretization()
+        create_spatial_discretization() override
         {
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
@@ -160,7 +160,7 @@ namespace MeltPoolDG
         }
 
         void
-        set_boundary_conditions()
+        set_boundary_conditions() override
         {
           auto dirichlet = std::make_shared<DirichletCondition<dim>>();
 
@@ -181,7 +181,7 @@ namespace MeltPoolDG
         }
 
         void
-        set_field_conditions()
+        set_field_conditions() override
         {
           this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
           this->attach_initial_condition(
