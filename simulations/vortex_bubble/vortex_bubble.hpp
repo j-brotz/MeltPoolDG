@@ -43,14 +43,7 @@ namespace MeltPoolDG
         double
         value(const Point<dim> &p, const unsigned int /*component*/) const override
         {
-          return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
-
-          /*
-           *  Alternatively, a tanh function could be used, corresponding to the
-           *  analytic solution of the reinitialization problem
-           */
-          // return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          // -distance_sphere(p), epsInterface);
+          return -distance_sphere.value(p);
         }
 
       private:
@@ -155,46 +148,13 @@ namespace MeltPoolDG
         void
         set_boundary_conditions() override
         {
-          /*
-           *  create a pair of (boundary_id, dirichlet_function)
-           */
-          constexpr types::boundary_id inflow_bc = 42;
-
-          this->attach_dirichlet_boundary_condition(inflow_bc,
-                                                    std::make_shared<DirichletCondition<dim>>(),
-                                                    "level_set");
-          /*
-           *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
-           *  due to the hyperbolic nature of the analyzed problem)
-           *
-                      in    in
-          (0,1)  +---------------+ (1,1)
-                  |       :       |
-            in    |       :       | in
-                  |_______________|
-                  |       :       |
-            in    |       :       | in
-                  |       :       |
-                  +---------------+
-           * (0,0)  in      in    (1,0)
-           */
-          if constexpr (dim == 2)
-            {
-              for (const auto &cell : this->triangulation->cell_iterators())
-                for (const auto &face : cell->face_iterators())
-                  if ((face->at_boundary()))
-                    face->set_boundary_id(inflow_bc);
-            }
-          else
-            {
-              AssertThrow(false, ExcNotImplemented());
-            }
+          // none
         }
 
         void
         set_field_conditions() override
         {
-          this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
+          this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "signed_distance");
           this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "level_set");
         }
 
