@@ -36,8 +36,8 @@ namespace MeltPoolDG
           : Function<dim>()
           , distance_sphere(dim == 1 ? Point<dim>(0.0) :
                             dim == 2 ? Point<dim>(0.0, 0.5) :
-                                       Point<dim>(0.0, 0., 0.5),
-                            0.25)
+                                       Point<dim>(0.0, 0.5, 0.0),
+                            0.25 /*radius*/)
         {}
 
         double
@@ -61,7 +61,7 @@ namespace MeltPoolDG
         void
         vector_value(const Point<dim> &p, Vector<double> &values) const override
         {
-          if constexpr (dim == 2)
+          if (dim >= 2)
             {
               const double x = p[0];
               const double y = p[1];
@@ -71,6 +71,9 @@ namespace MeltPoolDG
             }
           else
             AssertThrow(false, ExcMessage("Advection field for dim!=2 not implemented"));
+
+          if (dim == 3)
+            values[2] = 0;
         }
       };
 
@@ -144,30 +147,23 @@ namespace MeltPoolDG
                   +---------------+
            * (-1,-1)  in     out   (1,-1)
            */
-          if constexpr (dim == 2)
-            {
-              for (const auto &cell : this->triangulation->cell_iterators())
-                for (const auto &face : cell->face_iterators())
-                  if ((face->at_boundary()))
-                    {
-                      const double half_line = (right_domain + left_domain) / 2;
+          for (const auto &cell : this->triangulation->cell_iterators())
+            for (const auto &face : cell->face_iterators())
+              if ((face->at_boundary()))
+                {
+                  const double half_line = (right_domain + left_domain) / 2;
 
-                      if (face->center()[0] == left_domain && face->center()[1] > half_line)
-                        face->set_boundary_id(inflow_bc);
-                      else if (face->center()[0] == right_domain && face->center()[1] < half_line)
-                        face->set_boundary_id(inflow_bc);
-                      else if (face->center()[1] == right_domain && face->center()[0] > half_line)
-                        face->set_boundary_id(inflow_bc);
-                      else if (face->center()[1] == left_domain && face->center()[0] < half_line)
-                        face->set_boundary_id(inflow_bc);
-                      else
-                        face->set_boundary_id(do_nothing);
-                    }
-            }
-          else
-            {
-              (void)do_nothing; // suppress unused variable for 1D
-            }
+                  if (face->center()[0] == left_domain && face->center()[1] > half_line)
+                    face->set_boundary_id(inflow_bc);
+                  else if (face->center()[0] == right_domain && face->center()[1] < half_line)
+                    face->set_boundary_id(inflow_bc);
+                  else if (face->center()[1] == right_domain && face->center()[0] > half_line)
+                    face->set_boundary_id(inflow_bc);
+                  else if (face->center()[1] == left_domain && face->center()[0] < half_line)
+                    face->set_boundary_id(inflow_bc);
+                  else
+                    face->set_boundary_id(do_nothing);
+                }
         }
 
         void
