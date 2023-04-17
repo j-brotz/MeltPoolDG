@@ -29,6 +29,7 @@ namespace MeltPoolDG
               melt_pool,
               level_set_with_evaporation,
               heat_transfer,
+              radiative_transport,
               none)
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
   BETTER_ENUM(
@@ -306,7 +307,6 @@ namespace MeltPoolDG
   };
 
 
-
   template <typename number = double>
   struct LaserData
   {
@@ -341,6 +341,19 @@ namespace MeltPoolDG
       number max_temperature          = 0.0;
       number ambient_temperature      = 0.0;
     } analytical;
+  };
+
+
+  template <typename number = double>
+  struct RadiativeTransportData
+  {
+    RadiativeTransportData()
+    {
+      linear_solver.solver_type         = LinearSolverType::GMRES;
+      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
+    }
+    LinearSolverData<number> linear_solver;
+    unsigned int             verbosity_level = 0;
   };
 
   template <typename number = double>
@@ -501,6 +514,7 @@ namespace MeltPoolDG
     CurvatureData<number>          curv;
     HeatData<number>               heat;
     LaserData<number>              laser;
+    RadiativeTransportData<number> rte;
     MeltPoolData<number>           mp;
     SurfaceTensionData<number>     surface_tension;
     DarcyDampingData<number>       darcy;

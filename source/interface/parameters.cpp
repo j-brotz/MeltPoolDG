@@ -711,6 +711,19 @@ namespace MeltPoolDG
     }
     prm.leave_subsection();
     /*
+     *   laser
+     */
+    prm.enter_subsection("rte");
+    {
+      prm.add_parameter(
+        "verbosity level",
+        rte.verbosity_level,
+        "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
+        " base value is decisive.");
+      rte.linear_solver.add_parameters(prm);
+    }
+    prm.leave_subsection();
+    /*
      * recoil pressure
      */
     recoil.add_parameters(prm);

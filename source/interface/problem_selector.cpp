@@ -4,6 +4,7 @@
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
+#include <meltpooldg/radiative_transport/rte_problem.hpp>
 #include <meltpooldg/reinitialization/reinitialization_problem.hpp>
 /* add your problem here*/
 
@@ -28,6 +29,9 @@ namespace MeltPoolDG
 
     else if (problem_name == ProblemType::heat_transfer)
       return std::make_shared<Heat::HeatTransferProblem<dim>>();
+
+    else if (problem_name == ProblemType::radiative_transport)
+      return std::make_shared<RadiativeTransport::RadiativeTransportProblem<dim>>();
     /* add your problem here*/
 
     else
