@@ -164,13 +164,13 @@ namespace MeltPoolDG::RadiativeTransport
       {
         dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
         dof_handler_heaviside.distribute_dofs(
-          FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim));
+          FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
       }
     else
       {
         dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
         dof_handler_heaviside.distribute_dofs(
-          FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree), dim));
+          FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree)));
       }
 
     /*
