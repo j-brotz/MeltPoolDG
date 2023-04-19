@@ -54,7 +54,7 @@ namespace MeltPoolDG::RadiativeTransport
 
   private:
     /*
-     *  This function initials the relevant scratch data
+     *  This function initializes the relevant scratch data
      *  for the computation of the RTE problem
      */
     void

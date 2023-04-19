@@ -18,8 +18,7 @@ namespace MeltPoolDG::RadiativeTransport
   using namespace dealii;
 
   /*
-   *     Level set model including advection, reinitialization and curvature computation
-   *     of the level set function.
+   * TODO
    */
   template <int dim>
   class RadiativeTransportOperation
@@ -75,7 +74,7 @@ namespace MeltPoolDG::RadiativeTransport
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
 
     /**
-     * attach vectors for Output
+     * attach vectors for output
      */
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;

@@ -123,8 +123,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     void
     set_field_conditions() final
     {
-      this->template attach_source_field(std::make_shared<HorizontalLevelSetHeaviside<dim>>(),
-                                         "heaviside");
+      this->attach_source_field(std::make_shared<HorizontalLevelSetHeaviside<dim>>(), "heaviside");
 
       this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
                                      "intensity");

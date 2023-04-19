@@ -26,18 +26,6 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim, typename number>
   void
-  RadiativeTransportOperator<dim, number>::assemble_matrixbased(const VectorType &intensity_old,
-                                                                SparseMatrixType &matrix,
-                                                                VectorType &      rhs) const
-  {
-    (void)intensity_old;
-    (void)matrix;
-    (void)rhs;
-    AssertThrow(false, ExcNotImplemented());
-  }
-
-  template <int dim, typename number>
-  void
   RadiativeTransportOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(

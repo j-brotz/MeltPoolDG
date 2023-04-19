@@ -149,10 +149,6 @@ namespace MeltPoolDG::RadiativeTransport
      *  output results of initialization
      */
     output_results(0, base_in->parameters.time_stepping.start_time, base_in);
-
-    /*
-     *    Do initial refinement steps if requested
-     */
   }
 
   template <int dim>

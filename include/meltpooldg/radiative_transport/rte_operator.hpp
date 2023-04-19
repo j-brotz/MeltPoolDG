@@ -49,11 +49,6 @@ namespace MeltPoolDG::RadiativeTransport
                                const unsigned int                    rte_quad_idx_in,
                                const unsigned int                    hs_dof_idx_in);
 
-    void
-    assemble_matrixbased(const VectorType &intensity_old,
-                         SparseMatrixType &matrix,
-                         VectorType &      rhs) const final;
-
     /*
      *  matrix-free utility
      */

@@ -43,14 +43,8 @@ namespace MeltPoolDG::RadiativeTransport
     rte_operator = std::make_shared<RadiativeTransportOperator<dim, double>>(
       scratch_data, rte_data, intensity, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
 
-    /*
-     *  In case of a matrix-based simulation, set up the distributed sparsity pattern and
-     *  apply it to the system matrix. This functionality is part of the OperatorBase class.
-     */
-    if (!rte_data.linear_solver.do_matrix_free)
-      {
-        rte_operator->initialize_matrix_based(scratch_data);
-      }
+    // matrix-based simulation is not supported
+    AssertThrow(rte_data.linear_solver.do_matrix_free, ExcNotImplemented());
 
     /*
      * setup preconditioner for matrix-free computation
@@ -134,12 +128,7 @@ namespace MeltPoolDG::RadiativeTransport
       }
     else
       {
-        rte_operator->assemble_matrixbased(heaviside, rte_operator->get_system_matrix(), rhs);
-
-        iter = LinearSolver::solve<VectorType>(rte_operator->get_system_matrix(),
-                                               intensity,
-                                               rhs,
-                                               rte_data.linear_solver);
+        AssertThrow(false, ExcNotImplemented());
       }
 
     heaviside.zero_out_ghost_values();
@@ -159,9 +148,7 @@ namespace MeltPoolDG::RadiativeTransport
       "RTE",
       11 /*precision*/
     );
-    Journal::print_line(scratch_data.get_pcout(1),
-                        "     * GMRES: i = " + std::to_string(iter),
-                        "RTE");
+
     IterationMonitor::add_linear_iterations(sc, iter);
   }
 
