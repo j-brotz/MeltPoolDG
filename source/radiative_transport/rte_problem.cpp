@@ -26,6 +26,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     while (!time_iterator->is_finished())
       {
+        time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout());
 
         compute_heaviside(*base_in->get_source_field("heaviside"));

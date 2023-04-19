@@ -87,8 +87,8 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
           // create mesh
-          const Point<2> left(x_min, 0.0);
-          const Point<2> right(x_max, 0.1);
+          const Point<2> left(x_min, x_min);
+          const Point<2> right(x_max, x_max);
           GridGenerator::hyper_rectangle(*this->triangulation, left, right);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
@@ -125,8 +125,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     {
       this->attach_source_field(std::make_shared<HorizontalLevelSetHeaviside<dim>>(), "heaviside");
 
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
-                                     "intensity");
+      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(), "intensity");
     }
   };
 } // namespace MeltPoolDG::Simulation::RadiativeTransport
