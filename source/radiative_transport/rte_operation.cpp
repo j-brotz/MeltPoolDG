@@ -21,6 +21,7 @@
 #include <memory>
 
 
+
 namespace MeltPoolDG::RadiativeTransport
 {
   using namespace dealii;
@@ -55,16 +56,8 @@ namespace MeltPoolDG::RadiativeTransport
         preconditioner_matrixfree = std::make_shared<
           Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
           scratch_data, rte_dof_idx, rte_data.linear_solver.preconditioner_type, *rte_operator);
-        /*
-         * precompute system matrix
-         */
-        if (rte_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          diag_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_diagonal_preconditioner();
-        else
-          trilinos_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_trilinos_preconditioner();
       }
+
 
     reinit();
   }
@@ -90,6 +83,9 @@ namespace MeltPoolDG::RadiativeTransport
 
     scratch_data.initialize_dof_vector(intensity, rte_dof_idx);
     scratch_data.initialize_dof_vector(rhs, rte_dof_idx);
+
+    if (rte_data.linear_solver.do_matrix_free)
+      preconditioner_matrixfree->reinit();
   }
 
   template <int dim>
@@ -106,6 +102,7 @@ namespace MeltPoolDG::RadiativeTransport
     ScopedName         sc("rte::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
+    intensity.update_ghost_values();
     heaviside.update_ghost_values();
 
     unsigned int iter = 0;
@@ -117,20 +114,32 @@ namespace MeltPoolDG::RadiativeTransport
         rte_operator->create_rhs(rhs, heaviside);
 
         if (rte_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          iter = LinearSolver::solve<VectorType>(
-            *rte_operator, intensity, rhs, rte_data.linear_solver, *diag_preconditioner_matrixfree);
+          {
+            diag_preconditioner_matrixfree =
+              preconditioner_matrixfree->compute_diagonal_preconditioner();
+            iter = LinearSolver::solve<VectorType>(*rte_operator,
+                                                   intensity,
+                                                   rhs,
+                                                   rte_data.linear_solver,
+                                                   *diag_preconditioner_matrixfree);
+          }
         else
-          iter = LinearSolver::solve<VectorType>(*rte_operator,
-                                                 intensity,
-                                                 rhs,
-                                                 rte_data.linear_solver,
-                                                 *trilinos_preconditioner_matrixfree);
+          {
+            trilinos_preconditioner_matrixfree =
+              preconditioner_matrixfree->compute_trilinos_preconditioner();
+            iter = LinearSolver::solve<VectorType>(*rte_operator,
+                                                   intensity,
+                                                   rhs,
+                                                   rte_data.linear_solver,
+                                                   *trilinos_preconditioner_matrixfree);
+          }
       }
     else
       {
         AssertThrow(false, ExcNotImplemented());
       }
 
+    intensity.zero_out_ghost_values();
     heaviside.zero_out_ghost_values();
 
     scratch_data.get_constraint(rte_dof_idx).distribute(intensity);

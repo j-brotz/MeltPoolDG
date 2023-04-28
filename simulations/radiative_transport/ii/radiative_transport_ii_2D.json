@@ -14,10 +14,11 @@
   },
   "rte": {
     "verbosity level": "3",
-    "power": "0.01",
+    "power": "3",
     "laser direction": "0.0,-1.0",
     "absorptivity gas": "1.5",
     "absorptivity liquid": "15.5",
+
     "linear solver": {
       "do matrix free": "true",
       "abs tolerance": "1e-12"
@@ -26,5 +27,9 @@
   "paraview": {
     "paraview do output": "true"
   },
-  "simulation specific parameters": {}
+  "simulation specific parameters": {
+    "interface case" : "curved",
+    "a": 2.0,
+    "b": 1.0
+  }
 }

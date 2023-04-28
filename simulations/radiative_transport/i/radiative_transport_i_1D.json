@@ -2,7 +2,7 @@
   "base": {
     "problem name": "radiative_transport",
     "application name": "radiative_transport",
-    "dimension": "2",
+    "dimension": "1",
     "global refinements": "5",
     "degree": "1",
     "do print parameters": "false"
@@ -15,7 +15,7 @@
   "rte": {
     "verbosity level": "3",
     "power": "0.01",
-    "laser direction": "0.0,-1.0",
+    "laser direction": "-1.0",
     "absorptivity gas": "1.5",
     "absorptivity liquid": "15.5",
     "linear solver": {

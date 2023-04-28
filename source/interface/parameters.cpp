@@ -721,6 +721,27 @@ namespace MeltPoolDG
         "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
         " base value is decisive.");
       rte.linear_solver.add_parameters(prm);
+      prm.add_parameter("power",
+                        rte.power,
+                        "Sets the intensity scale of the laser source. Is a scalar value");
+      /*resize the laser direction according to the problem dimension*/
+      if (rte.laser_direction.size() == 0)
+        {
+          rte.laser_direction.resize(base.dimension);
+          std::fill(rte.laser_direction.begin(), rte.laser_direction.end(), 0);
+        }
+      prm.add_parameter(
+        "laser direction",
+        rte.laser_direction,
+        "Sets the laser source direction vector. Is a vector. Does not throw if direction vector provided does not match problem dimensions");
+
+
+      prm.add_parameter("absorptivity gas",
+                        rte.absorptivity_gas,
+                        "Sets the absorptivity of the gas");
+      prm.add_parameter("absorptivity liquid",
+                        rte.absorptivity_liquid,
+                        "Sets the absorptivity of the liquid");
     }
     prm.leave_subsection();
     /*
