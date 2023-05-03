@@ -21,6 +21,9 @@ The principal developers are (in chronological order of entering the project):
 
 We gratefully acknowledge the contributions and discussions with Christoph Meier (Technical University of Munich) and Martin Kronbichler (University of Augsburg).
 
-## Documentation
+## Installation
 
-The installation procedure is described in the [WIKI](https://github.com/MeltPoolDG/MeltPoolDG/wiki). The documentation can be found under https://meltpooldg.github.io/MeltPoolDG/.
+A description on the installation procedure including the coniguration scripts can be found in [scripts/config](https://github.com/MeltPoolDG/MeltPoolDG-dev/tree/master/scripts/config) directory. 
+<!---
+The documentation can be found under https://meltpooldg.github.io/MeltPoolDG/.
+-->
