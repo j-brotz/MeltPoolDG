@@ -2,16 +2,17 @@
   "base": {
     "problem name": "melt_pool",
     "application name": "recoil_pressure",
-    "global refinements": "6",
+    "global refinements": "5",
     "dimension": "2",
     "degree": "1",
     "gravity": "0.0",
-    "do print parameters": "false"
+    "do print parameters": "false",
+    "verbosity level": "0"
   },
   "time stepping": {
     "start time": "0.0",
     "end time": "0.0006",
-    "time step size": "1e-7",
+    "time step size": "1e-8",
     "max n steps": "1"
   },
   "material": {
@@ -23,11 +24,11 @@
     "material second conductivity": "35.95",
     "material second density": "7074.3",
     "material second viscosity": "0.006",
-    "material two phase properties transition type": "smooth",
-    "material boiling temperature": "400.",
+    "material boiling temperature": "499.",
     "material latent heat of evaporation": "1.e6",
     "material molar mass": "0.05224130936",
-    "material specific enthalpy reference temperature": "663.731"
+    "material specific enthalpy reference temperature": "663.731",
+    "material two phase properties transition type": "smooth"
   },
   "recoil pressure": {
     "recoil pressure constant": "10.",
@@ -37,10 +38,6 @@
   "evaporation": {
     "evapor evaporation model": "recoil_pressure"
   },
-  "melt pool": {
-    "mp do not reinitialize in solid": "false",
-    "mp set velocity to zero in solid": "false"
-  },
   "simulation specific domain": {
     "domain x min": "-0.0002",
     "domain x max": "0.0002",
@@ -48,7 +45,7 @@
     "domain y max": "0.0002",
     "initial temperature": {
       "top": "500",
-      "bottom": "505"
+      "bottom": "501"
     }
   },
   "laser": {
@@ -67,19 +64,13 @@
     }
   },
   "normal vector": {
-    "normal vec damping scale factor": "4",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "normal vec damping scale factor": "4"
   },
   "curvature": {
-    "curv damping scale factor": "2",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "enable": "false"
   },
   "paraview": {
-    "paraview do output": "false"
+    "paraview do output": "true"
   },
   "heat": {
     "heat two phase": "true",
@@ -126,10 +117,5 @@
     "do recoil pressure": "true",
     "do heat transfer": "true",
     "do evaporative velocity jump": "false"
-  },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
   }
 }

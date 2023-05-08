@@ -10,6 +10,7 @@
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
@@ -644,7 +645,7 @@ namespace MeltPoolDG::LevelSet
               distance_to_level_set(local_dof_indices[i]) = approximate_distance_from_level_set(
                 advec_diff_operation->get_advected_field()[local_dof_indices[i]],
                 epsilon_cell,
-                level_set_data.cpp.max_phi /*cut off value*/);
+                std::tanh(4));
 
               if (level_set_data.do_localized_heaviside)
                 {
@@ -676,19 +677,18 @@ namespace MeltPoolDG::LevelSet
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, false /*unique mapping*/);
 
-    LevelSet::Tools::broadcast_interface_value_to_vector<dim>(
-      scratch_data.get_mapping(),
-      scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
-      scratch_data.get_dof_handler(curv_dof_idx),
-      distance_to_level_set,
-      get_normal_vector(),
-      curvature_operation->get_curvature(),
-      curvature_operation->get_curvature(),
-      scratch_data.get_min_cell_size(ls_hanging_nodes_dof_idx),
-      remote_point_evaluation,
-      level_set_data.cpp.enforce_collinearity,
-      level_set_data.cpp.max_iter,
-      level_set_data.cpp.rel_tol);
+    LevelSet::Tools::NearestPoint<dim> cpp(scratch_data.get_mapping(),
+                                           scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
+                                           distance_to_level_set,
+                                           get_normal_vector(),
+                                           remote_point_evaluation,
+                                           level_set_data.nearest_point);
+
+    cpp.reinit(scratch_data.get_dof_handler(curv_dof_idx));
+
+    cpp.template fill_dof_vector_with_point_values(curvature_operation->get_curvature(),
+                                                   scratch_data.get_dof_handler(curv_dof_idx),
+                                                   curvature_operation->get_curvature());
 
     /*
      * old approach --> only kept as back-up [MS]

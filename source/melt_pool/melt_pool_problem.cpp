@@ -7,6 +7,7 @@
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
@@ -221,26 +222,37 @@ namespace MeltPoolDG::MeltPool
                                                               true /*unique mapping*/);
 
                                     VectorType interface_velocity_interface;
+
                                     scratch_data->initialize_dof_vector(
                                       interface_velocity_interface, vel_dof_idx);
 
-                                    LevelSet::Tools::broadcast_interface_value_to_vector<dim, dim>(
+                                    NearestPointData<double> nearest_point_data =
+                                      base_in->parameters.ls.nearest_point;
+
+                                    nearest_point_data.isocontour =
+                                      (base_in->parameters.evapor.level_set_source_term_type !=
+                                       EvaporationLevelSetSourceTermType::
+                                         interface_velocity_sharp_heavy) ?
+                                        0 :
+                                        level_set_operation->get_distance_to_level_set()
+                                            .linfty_norm() *
+                                          std::tanh(1.5) / std::tanh(4);
+
+                                    LevelSet::Tools::NearestPoint<dim> nearest_point(
                                       scratch_data->get_mapping(),
                                       scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
-                                      scratch_data->get_dof_handler(vel_dof_idx),
                                       level_set_operation->get_distance_to_level_set(),
                                       level_set_operation->get_normal_vector(),
-                                      interface_velocity,
-                                      interface_velocity_interface,
-                                      scratch_data->get_min_cell_size(ls_hanging_nodes_dof_idx),
                                       remote_point_evaluation,
-                                      base_in->parameters.ls.cpp.enforce_collinearity,
-                                      base_in->parameters.ls.cpp.max_iter,
-                                      base_in->parameters.ls.cpp.rel_tol,
-                                      -1,
-                                      base_in->parameters.evapor.level_set_source_term_type ==
-                                        EvaporationLevelSetSourceTermType::
-                                          interface_velocity_sharp_heavy);
+                                      nearest_point_data);
+
+                                    nearest_point.reinit(
+                                      scratch_data->get_dof_handler(vel_dof_idx));
+
+                                    nearest_point.template fill_dof_vector_with_point_values<dim>(
+                                      interface_velocity_interface,
+                                      scratch_data->get_dof_handler(vel_dof_idx),
+                                      interface_velocity);
 
                                     interface_velocity.swap(interface_velocity_interface);
                                   }
@@ -274,22 +286,30 @@ namespace MeltPoolDG::MeltPool
                             scratch_data->initialize_dof_vector(interface_velocity_interface,
                                                                 vel_dof_idx);
 
-                            LevelSet::Tools::broadcast_interface_value_to_vector<dim, dim>(
+                            NearestPointData<double> nearest_point_data =
+                              base_in->parameters.ls.nearest_point;
+
+                            nearest_point_data.isocontour =
+                              (base_in->parameters.evapor.level_set_source_term_type !=
+                               EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy) ?
+                                0 :
+                                level_set_operation->get_distance_to_level_set().linfty_norm() *
+                                  std::tanh(1.5) / std::tanh(4);
+
+                            LevelSet::Tools::NearestPoint<dim> nearest_point(
                               scratch_data->get_mapping(),
                               scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
-                              scratch_data->get_dof_handler(vel_dof_idx),
                               level_set_operation->get_distance_to_level_set(),
                               level_set_operation->get_normal_vector(),
-                              interface_velocity,
-                              interface_velocity_interface,
-                              scratch_data->get_min_cell_size(ls_hanging_nodes_dof_idx),
                               remote_point_evaluation,
-                              base_in->parameters.ls.cpp.enforce_collinearity,
-                              base_in->parameters.ls.cpp.max_iter,
-                              base_in->parameters.ls.cpp.rel_tol,
-                              -1,
-                              base_in->parameters.evapor.level_set_source_term_type ==
-                                EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy);
+                              nearest_point_data);
+
+                            nearest_point.reinit(scratch_data->get_dof_handler(vel_dof_idx));
+
+                            nearest_point.template fill_dof_vector_with_point_values<dim>(
+                              interface_velocity_interface,
+                              scratch_data->get_dof_handler(vel_dof_idx),
+                              interface_velocity);
 
                             interface_velocity.copy_locally_owned_data_from(
                               interface_velocity_interface);
@@ -533,7 +553,7 @@ namespace MeltPoolDG::MeltPool
                         heat_operation->compute_interface_temperature(
                           level_set_operation->get_distance_to_level_set(),
                           level_set_operation->get_normal_vector(),
-                          base_in->parameters.ls.cpp);
+                          base_in->parameters.ls.nearest_point);
 
                         recoil_pressure_operation->compute_recoil_pressure_force(
                           vel_force_rhs,
@@ -1065,7 +1085,7 @@ namespace MeltPoolDG::MeltPool
         evaporation_operation->reinit(&heat_operation->get_temperature(),
                                       level_set_operation->get_distance_to_level_set(),
                                       base_in->parameters.recoil,
-                                      base_in->parameters.ls.cpp,
+                                      base_in->parameters.ls.nearest_point,
                                       base_in->parameters.reinit.constant_epsilon,
                                       base_in->parameters.reinit.scale_factor_epsilon,
                                       temp_dof_idx);

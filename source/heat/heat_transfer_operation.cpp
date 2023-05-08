@@ -1,5 +1,6 @@
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
@@ -291,27 +292,25 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferOperation<dim>::compute_interface_temperature(
-    const VectorType &                        distance,
-    const BlockVectorType &                   normal_vector,
-    const ClosestPointProjectionData<double> &data)
+  HeatTransferOperation<dim>::compute_interface_temperature(const VectorType &     distance,
+                                                            const BlockVectorType &normal_vector,
+                                                            const NearestPointData<double> &data)
   {
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, true /*unique mapping*/);
 
-    LevelSet::Tools::broadcast_interface_value_to_vector<dim>(
-      scratch_data.get_mapping(),
-      scratch_data.get_dof_handler(ls_dof_idx),
-      scratch_data.get_dof_handler(temp_dof_idx),
-      distance,
-      normal_vector,
-      solution_history.get_current_solution(),
-      temperature_interface,
-      scratch_data.get_min_cell_size(ls_dof_idx),
-      remote_point_evaluation,
-      data.enforce_collinearity,
-      data.max_iter,
-      data.rel_tol);
+    LevelSet::Tools::NearestPoint<dim> cpp(scratch_data.get_mapping(),
+                                           scratch_data.get_dof_handler(ls_dof_idx),
+                                           distance,
+                                           normal_vector,
+                                           remote_point_evaluation,
+                                           data);
+
+    cpp.reinit(scratch_data.get_dof_handler(temp_dof_idx));
+
+    cpp.template fill_dof_vector_with_point_values(temperature_interface,
+                                                   scratch_data.get_dof_handler(temp_dof_idx),
+                                                   get_temperature());
 
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(temperature_interface);
   }

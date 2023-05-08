@@ -20,7 +20,8 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
-#include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -75,14 +76,15 @@ compute_projected_point_analytically(const Point<dim> &p,
 
 template <int n_components, int n_refinements, int n_iter>
 void
-run_test(const bool enforce_collinearity = false)
+run_test(const NearestPointType type = NearestPointType::closest_point_normal)
 {
   std::cout.precision(8);
   MPI_Comm                   mpi_comm(MPI_COMM_WORLD);
   dealii::ConditionalOStream pcout(std::cout, Utilities::MPI::this_mpi_process(mpi_comm) == 0);
 
   pcout << "--------------------------------------------------------" << std::endl;
-  pcout << " START TEST: n_iter=" << n_iter << std::endl;
+  pcout << " START TEST: n_iter=" << n_iter << " type " << type << " #comp " << n_components
+        << " #refine " << n_refinements << std::endl;
   pcout << "--------------------------------------------------------" << std::endl;
 
   Timer      timer_total(mpi_comm);
@@ -210,100 +212,90 @@ run_test(const bool enforce_collinearity = false)
   timer_total.start();
 
   // 1) compute accuracy of projected points
-  {
-    const auto [dof_indices, evaluation_points] =
-      LevelSet::Tools::compute_projected_points_at_interface<dim>(
-        mapping,
-        dof_handler,
-        dof_handler_temp,
-        solution_distance,
-        solution_normal,
-        min_cell_size,
-        remote_point_evaluation,
-        enforce_collinearity,
-        n_iter,
-        1e-10,  // rel_tol_distance,
-        0.125); // distance interval for projection
+  NearestPointData<double> nearest_point_data;
 
+  nearest_point_data.rel_tol               = 1e-10;
+  nearest_point_data.narrow_band_threshold = 0.125;
+  nearest_point_data.max_iter              = n_iter;
+  nearest_point_data.type                  = type;
 
-    FEValues<dim> req_values(mapping,
-                             dof_handler_temp.get_fe(),
-                             Quadrature<dim>(dof_handler_temp.get_fe().get_unit_support_points()),
-                             update_quadrature_points);
+  LevelSet::Tools::NearestPoint<dim> cpp(mapping,
+                                         dof_handler,
+                                         solution_distance,
+                                         solution_normal,
+                                         remote_point_evaluation,
+                                         nearest_point_data);
 
-    const unsigned int n_q_points = req_values.get_quadrature().size();
+  cpp.reinit(dof_handler_temp);
 
-    std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points);
+  const auto evaluation_points = cpp.get_points();
+  const auto dof_indices       = cpp.get_dof_indices();
 
-    std::map<types::global_dof_index, Point<dim>> quad_points;
+  FEValues<dim> req_values(mapping,
+                           dof_handler_temp.get_fe(),
+                           Quadrature<dim>(dof_handler_temp.get_fe().get_unit_support_points()),
+                           update_quadrature_points);
 
-    for (const auto &cell : dof_handler_temp.active_cell_iterators())
-      {
-        if (cell->is_locally_owned())
-          {
-            req_values.reinit(cell);
-            cell->get_dof_indices(temp_local_dof_indices);
+  const unsigned int n_q_points = req_values.get_quadrature().size();
 
-            for (const auto q : req_values.quadrature_point_indices())
-              quad_points[temp_local_dof_indices[q]] = req_values.quadrature_point(q);
-          }
-      }
-    double max_dist = 0;
-    for (unsigned int i = 0; i < evaluation_points.size(); ++i)
-      {
-        max_dist = std::max(
-          max_dist,
-          compute_projected_point_analytically<dim>(quad_points[dof_indices[i][0]], center, 0.25)
-            .distance(evaluation_points[i]));
+  std::vector<types::global_dof_index> temp_local_dof_indices(n_q_points);
 
-        if (false)
-          {
-            std::cout << "Point: " << quad_points[dof_indices[i][0]] << std::endl;
-            std::cout << "analytical project "
-                      << compute_projected_point_analytically<dim>(quad_points[dof_indices[i][0]],
-                                                                   center,
-                                                                   0.25)
-                      << std::endl;
-            std::cout << "numerical projcet" << evaluation_points[i] << std::endl;
-          }
-      }
+  std::map<types::global_dof_index, Point<dim>> quad_points;
 
-    max_dist = Utilities::MPI::max(max_dist, mpi_comm);
-    pcout << "max distance to analytical solution (relative): " << max_dist / min_cell_size
-          << std::endl;
+  for (const auto &cell : dof_handler_temp.active_cell_iterators())
     {
-      solution_distance.update_ghost_values();
-      const auto evaluation_values_distance =
-        dealii::VectorTools::point_values<1>(remote_point_evaluation,
-                                             dof_handler,
-                                             solution_distance);
-      solution_distance.zero_out_ghost_values();
-      double max_distance =
-        evaluation_values_distance.size() == 0 ?
-          0.0 :
-          *std::max_element(evaluation_values_distance.begin(), evaluation_values_distance.end());
+      if (cell->is_locally_owned())
+        {
+          req_values.reinit(cell);
+          cell->get_dof_indices(temp_local_dof_indices);
 
-      max_distance = Utilities::MPI::max(max_distance, mpi_comm);
-      pcout << "max distance to numerical distance solution (relative): "
-            << max_distance / min_cell_size << std::endl;
+          for (const auto q : req_values.quadrature_point_indices())
+            quad_points[temp_local_dof_indices[q]] = req_values.quadrature_point(q);
+        }
     }
+  double max_dist = 0;
+  for (unsigned int i = 0; i < evaluation_points.size(); ++i)
+    {
+      max_dist = std::max(max_dist,
+                          compute_projected_point_analytically<dim>(quad_points[dof_indices[i][0]],
+                                                                    center,
+                                                                    0.25)
+                            .distance(evaluation_points[i]));
+
+      if (false)
+        {
+          std::cout << "Point: " << quad_points[dof_indices[i][0]] << std::endl;
+          std::cout << "analytical project "
+                    << compute_projected_point_analytically<dim>(quad_points[dof_indices[i][0]],
+                                                                 center,
+                                                                 0.25)
+                    << std::endl;
+          std::cout << "numerical projcet" << evaluation_points[i] << std::endl;
+        }
+    }
+
+  max_dist = Utilities::MPI::max(max_dist, mpi_comm);
+  pcout << "max distance to analytical solution (relative): " << max_dist / min_cell_size
+        << std::endl;
+  {
+    solution_distance.update_ghost_values();
+    const auto evaluation_values_distance =
+      dealii::VectorTools::point_values<1>(remote_point_evaluation, dof_handler, solution_distance);
+    solution_distance.zero_out_ghost_values();
+    double max_distance =
+      evaluation_values_distance.size() == 0 ?
+        0.0 :
+        *std::max_element(evaluation_values_distance.begin(), evaluation_values_distance.end());
+
+    max_distance = Utilities::MPI::max(max_distance, mpi_comm);
+    pcout << "max distance to numerical distance solution (relative): "
+          << max_distance / min_cell_size << std::endl;
   }
 
-  // 2) broadcast value from interface
-  LevelSet::Tools::broadcast_interface_value_to_vector<dim, n_components>(
-    mapping,
-    dof_handler,
-    dof_handler_temp,
-    solution_distance,
-    solution_normal,
-    solution_temp,
-    solution_temp_interface,
-    min_cell_size,
-    remote_point_evaluation,
-    enforce_collinearity,
-    n_iter,
-    1e-5,   // rel_tol_distance,
-    0.125); // distance interval for projection
+  cpp.fill_dof_vector_with_point_values<n_components>(solution_temp_interface,
+                                                      dof_handler_temp,
+                                                      solution_temp);
+
   timer_total.stop();
   /*
    * ------------------------------------------------------------------------------------
@@ -376,7 +368,8 @@ main(int argc, char *argv[])
   run_test<1, 6, 1>();
   run_test<1, 6, 16>();
   run_test<2, 6, 5>();
-  run_test<2, 6, 5>(true);
+  run_test<2, 6, 5>(NearestPointType::closest_point_normal_collinear);
+  run_test<2, 6, 1>(NearestPointType::nearest_point);
 
   return 0;
 }

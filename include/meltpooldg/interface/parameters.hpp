@@ -107,6 +107,15 @@ namespace MeltPoolDG
               // reciprocal interpolation using a smooth Heaviside function
               reciprocal)
 
+  BETTER_ENUM(NearestPointType,
+              char,
+              // closest point in normal direction
+              closest_point_normal,
+              // closest point in normal direction and enforcing collinearity
+              closest_point_normal_collinear,
+              // nearest point in the point cloud
+              nearest_point)
+
   template <typename number = double>
   class PredictorData
   {
@@ -176,28 +185,32 @@ namespace MeltPoolDG
     int          min_grid_refinement_level    = 1;
   };
 
+  // TODO: rename to NearestPointData
   template <typename number = double>
-  struct ClosestPointProjectionData
+  struct NearestPointData
   {
-    number rel_tol              = 1e-6;
-    int    max_iter             = 20;
-    bool   enforce_collinearity = false;
-    double max_phi              = std::tanh(4);
+    number           rel_tol  = 1e-6;
+    int              max_iter = 20;
+    NearestPointType type     = NearestPointType::closest_point_normal;
+    // TODO: add to parsing
+    double       narrow_band_threshold = -1;
+    double       isocontour            = 0.0;
+    unsigned int verbosity_level       = 0;
   };
 
   template <typename number = double>
   struct LevelSetData
   {
-    bool                               do_reinitialization     = true;
-    int                                n_initial_reinit_steps  = -1.0;
-    std::string                        time_integration_scheme = "crank_nicolson";
-    bool                               do_curvature_correction = false;
-    int                                n_subdivisions          = 1;
-    bool                               do_localized_heaviside  = true;
-    std::string                        implementation          = "meltpooldg";
-    number                             reinit_time_step_size   = -1.;
-    number                             tol_reinit              = std::numeric_limits<number>::min();
-    ClosestPointProjectionData<number> cpp;
+    bool                     do_reinitialization     = true;
+    int                      n_initial_reinit_steps  = -1.0;
+    std::string              time_integration_scheme = "crank_nicolson";
+    bool                     do_curvature_correction = false;
+    int                      n_subdivisions          = 1;
+    bool                     do_localized_heaviside  = true;
+    std::string              implementation          = "meltpooldg";
+    number                   reinit_time_step_size   = -1.;
+    number                   tol_reinit              = std::numeric_limits<number>::min();
+    NearestPointData<number> nearest_point;
   };
 
   template <typename number = double>

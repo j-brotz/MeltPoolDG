@@ -1,6 +1,23 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-05-08
+- Rename and parameters for calculating nearest points to isocontour
+of a level set function
+```diff
+{
+  "levelset": {
++    "nearest point":
+-    "closest point projection":
+    {
+-       "max phi": "",
++       "narrow band threshold": "",
+-       "enforce colinearity": "true|false",
++       "type": "nearest_point|closest_point_normal|closest_point_normal_collinear",
+    }
+  }
+```
+
 ## 2023-03-22
 - Add parameters for closest point projection
 ```diff

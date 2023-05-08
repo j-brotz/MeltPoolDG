@@ -123,9 +123,9 @@ namespace MeltPoolDG::Heat
     finish_time_advance();
 
     void
-    compute_interface_temperature(const VectorType &                        distance,
-                                  const BlockVectorType &                   normal_vector,
-                                  const ClosestPointProjectionData<double> &data);
+    compute_interface_temperature(const VectorType &              distance,
+                                  const BlockVectorType &         normal_vector,
+                                  const NearestPointData<double> &data);
 
     void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
