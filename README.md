@@ -27,7 +27,6 @@ A description on the installation procedure including the coniguration scripts c
 <!---
 The documentation can be found under https://meltpooldg.github.io/MeltPoolDG/.
 -->
-
 ## Run a simulation
 
 To run a simulation case, e.g. `../tests/advection_diffusion.json`, with 6 processes execute
@@ -35,7 +34,6 @@ To run a simulation case, e.g. `../tests/advection_diffusion.json`, with 6 proce
 ```
 mpirun -np 6 meltpooldg `../tests/advection_diffusion.json`
 ```
-
 ## Parameters
 
 A list of available parameters for a certain simulation case, e.g. `../tests/advection_diffusion.json`, can be obtained via
@@ -43,7 +41,7 @@ A list of available parameters for a certain simulation case, e.g. `../tests/adv
 ```
 ./meltpooldg --help `../tests/advection_diffusion.json`
 ```
-or in more detailameters can be obtained via
+or in more detail
 
 ```
 ./meltpooldg --help-detail `../tests/advection_diffusion.json`
