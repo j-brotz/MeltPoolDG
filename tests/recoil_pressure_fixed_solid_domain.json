@@ -64,8 +64,7 @@
     "material melting point": "1700"
   },
   "levelset": {
-    "ls do reinitialization": "true",
-    "ls theta": "0.5"
+    "ls do reinitialization": "true"
   },
   "recoil pressure": {
     "recoil pressure constant": "10000.",
