@@ -10,6 +10,7 @@
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
+#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
@@ -42,6 +43,8 @@ namespace MeltPoolDG::MeltPool
           IterationMonitor::print(scratch_data->get_pcout());
           scratch_data->get_pcout() << std::endl;
           DoFMonitor::print(scratch_data->get_pcout());
+          scratch_data->get_pcout() << std::endl;
+          CellMonitor::print(scratch_data->get_pcout());
         }
     };
 
@@ -622,6 +625,8 @@ namespace MeltPoolDG::MeltPool
                 IterationMonitor::print(scratch_data->get_pcout());
                 scratch_data->get_pcout() << std::endl;
                 DoFMonitor::print(scratch_data->get_pcout());
+                scratch_data->get_pcout() << std::endl;
+                CellMonitor::print(scratch_data->get_pcout());
               }
 
             if (restart_monitor && restart_monitor->do_save())
@@ -645,6 +650,8 @@ namespace MeltPoolDG::MeltPool
             IterationMonitor::print(scratch_data->get_pcout());
             scratch_data->get_pcout() << std::endl;
             DoFMonitor::print(scratch_data->get_pcout());
+            scratch_data->get_pcout() << std::endl;
+            CellMonitor::print(scratch_data->get_pcout());
           }
       }
     catch (const ExcNewtonDidNotConverge &e)
@@ -1424,6 +1431,14 @@ namespace MeltPoolDG::MeltPool
 
     if (do_reinit)
       {
+        {
+          ScopedName sc("mp::cells");
+          CellMonitor::add_info(sc,
+                                scratch_data->get_triangulation().n_global_active_cells(),
+                                scratch_data->get_min_cell_size(),
+                                scratch_data->get_max_cell_size());
+        }
+
         level_set_operation->reinit();
 
         if (evaporation_operation)
@@ -1459,7 +1474,13 @@ namespace MeltPoolDG::MeltPool
     /*
      * print mesh information
      */
-    Journal::print_mesh_information<dim>(*scratch_data, 1);
+    {
+      ScopedName sc("mp::cells");
+      CellMonitor::add_info(sc,
+                            scratch_data->get_triangulation().n_global_active_cells(),
+                            scratch_data->get_min_cell_size(),
+                            scratch_data->get_max_cell_size());
+    }
   }
 
   // todo: clean-up

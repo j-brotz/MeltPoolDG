@@ -9,8 +9,10 @@
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion
 {
@@ -40,6 +42,22 @@ namespace MeltPoolDG::AdvectionDiffusion
           {
             refine_mesh(base_in);
           }
+
+        const int n = time_iterator->get_current_time_step_number();
+        if ((n % base_in->parameters.profiling.write_frequency == 0) &&
+            base_in->parameters.profiling.enable)
+          {
+            scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+            scratch_data->get_pcout() << std::endl;
+            CellMonitor::print(scratch_data->get_pcout());
+          }
+      }
+    //... always print timing statistics
+    if (base_in->parameters.profiling.enable)
+      {
+        scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+        scratch_data->get_pcout() << std::endl;
+        CellMonitor::print(scratch_data->get_pcout());
       }
     Journal::print_end(scratch_data->get_pcout());
   }
@@ -96,7 +114,13 @@ namespace MeltPoolDG::AdvectionDiffusion
     /*
      * print mesh information
      */
-    Journal::print_mesh_information<dim>(*scratch_data, 1);
+    {
+      ScopedName sc("advecDiff::cells");
+      CellMonitor::add_info(sc,
+                            scratch_data->get_triangulation().n_global_active_cells(),
+                            scratch_data->get_min_cell_size(),
+                            scratch_data->get_max_cell_size());
+    }
   }
 
   template <int dim>
