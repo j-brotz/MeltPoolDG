@@ -1,6 +1,25 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-05-09
+- Add parameters for Radiative Transfer Equation
+```json
+  {
+  "rte": {
+    "verbosity level": "",
+    "power": "",
+    "laser direction": ",",
+    "absorptivity gas": "",
+    "absorptivity liquid": "",
+    "linear solver": {
+    "monitor type": "",
+    "do matrix free": "",
+    "abs tolerance": "",
+    "preconditioner type": ""
+    }
+  }
+```
+
 ## 2023-05-08
 - Rename and parameters for calculating nearest points to isocontour
 of a level set function

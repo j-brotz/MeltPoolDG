@@ -3,9 +3,13 @@
     "problem name": "radiative_transport",
     "application name": "radiative_transport",
     "dimension": "3",
-    "global refinements": "5",
+    "global refinements": "3",
     "degree": "1",
-    "do print parameters": "false"
+    "do print parameters": "false",
+    "verbosity level": "3"
+  },
+  "profiling": {
+    "enable": "true"
   },
   "time stepping": {
     "start time": "0.0",
@@ -14,13 +18,15 @@
   },
   "rte": {
     "verbosity level": "3",
-    "power": "10",
+    "power": "1",
     "laser direction": "0.0,0.0,-1.0",
-    "absorptivity gas": "1.5",
-    "absorptivity liquid": "15.5",
+    "absorptivity gas": "0.",
+    "absorptivity liquid": "1.0 ",
     "linear solver": {
+      "monitor type": "reduced",
       "do matrix free": "true",
-      "abs tolerance": "1e-12"
+      "abs tolerance": "1e-16",
+      "preconditioner type": "AMG"
     }
   },
   "paraview": {

@@ -10,6 +10,8 @@
 #include <meltpooldg/radiative_transport/rte_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/dof_monitor.hpp>
+#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <memory>
@@ -39,6 +41,15 @@ namespace MeltPoolDG::RadiativeTransport
                        base_in);
       }
 
+    //... print timing statistics
+    if (base_in->parameters.profiling.enable)
+      {
+        scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+        scratch_data->get_pcout() << std::endl;
+        IterationMonitor::print(scratch_data->get_pcout());
+        scratch_data->get_pcout() << std::endl;
+        DoFMonitor::print(scratch_data->get_pcout());
+      }
     Journal::print_end(scratch_data->get_pcout());
   }
 
@@ -110,14 +121,13 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      * initialize the RTE operation
      */
-    rte_operation = std::make_shared<RadiativeTransportOperation<dim>>(
-      *scratch_data, base_in->parameters.rte, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
-
-    /*
-     * set initial conditions
-     */
-    rte_operation->set_initial_condition(*base_in->get_initial_condition("intensity"));
-
+    rte_operation = std::make_shared<RadiativeTransportOperation<dim>>(*scratch_data,
+                                                                       base_in->parameters.rte,
+                                                                       heaviside,
+                                                                       rte_dof_idx,
+                                                                       rte_hanging_nodes_dof_idx,
+                                                                       rte_quad_idx,
+                                                                       hs_dof_idx);
 
     /*
      *  initialize postprocessor
@@ -140,10 +150,6 @@ namespace MeltPoolDG::RadiativeTransport
           str << " #dofs intensity: " << rte_operation->get_intensity().size();
           Journal::print_line(scratch_data->get_pcout(), str.str(), "RTE");
           refine_mesh(base_in);
-          /*
-           *  set initial conditions after initial AMR
-           */
-          rte_operation->set_initial_condition(*base_in->get_initial_condition("intensity"));
         }
 
     /*

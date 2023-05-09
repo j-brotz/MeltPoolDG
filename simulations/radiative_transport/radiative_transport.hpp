@@ -27,7 +27,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   class IntensityBoundary : public Function<dim>
   {
   public:
-    IntensityBoundary(const double power_in,const double radius_in,const  Point<dim, double> center_in)
+    IntensityBoundary(const double             power_in,
+                      const double             radius_in,
+                      const Point<dim, double> center_in)
       : Function<dim>(1)
       , power(power_in)
       , radius(radius_in)
@@ -57,9 +59,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   class HorizontalLevelSetHeaviside : public Function<dim>
   {
   public:
-    HorizontalLevelSetHeaviside(std::pair<int,Point<dim>> interface_case_info_in)
-      : Function<dim>(1),
-      interface_case_info (interface_case_info_in)
+    HorizontalLevelSetHeaviside(std::pair<int, Point<dim>> interface_case_info_in)
+      : Function<dim>(1)
+      , interface_case_info(interface_case_info_in)
     {}
 
     double
@@ -69,26 +71,38 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
         {
           const auto y = p[dim - 1];
           return UtilityFunctions::CharacteristicFunctions::heaviside(
-                     level +
-                       0.5 * x_max * ((this->get_time() < 10.5) ? this->get_time() : 10) / 10 - y,
-                     eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
+            level + 0.5 * x_max * ((this->get_time() < 10.5) ? this->get_time() : 10) / 10 - y,
+            eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
         }
       else if (interface_case_info.first == 1)
         { // a rough non-template ellipse for the interface, because unlikely to be reused
-          if constexpr (dim ==2)
+          if constexpr (dim == 2)
             {
-              const auto x = p [0];
-              const auto y = p [1];
-              return (( std::pow(x/interface_case_info.second[0],2.) + std::pow((y-x_max/3*((this->get_time() < 10.5) ? this->get_time() : 10))/interface_case_info.second[1],2.) < 1) ? 0.0 : 1.0);
+              const auto x = p[0];
+              const auto y = p[1];
+              return (
+                (std::pow(x / interface_case_info.second[0], 2.) +
+                   std::pow((y - x_max / 3 * ((this->get_time() < 10.5) ? this->get_time() : 10)) /
+                              interface_case_info.second[1],
+                            2.) <
+                 1) ?
+                  0.0 :
+                  1.0);
             }
-          else if constexpr (dim ==3 )
+          else if constexpr (dim == 3)
             {
-              const auto x = p [0];
-              const auto y = p [1];
-              const auto z = p [2];
-              return ( std::pow(x/interface_case_info.second[0],2.) + std::pow(y/interface_case_info.second[1],2.) + std::pow(z/interface_case_info.second[2],2.) < 1) ? 1.0 : 0.0;
+              const auto x = p[0];
+              const auto y = p[1];
+              const auto z = p[2];
+              return (std::pow(x / interface_case_info.second[0], 2.) +
+                        std::pow(y / interface_case_info.second[1], 2.) +
+                        std::pow(z / interface_case_info.second[2], 2.) <
+                      1) ?
+                       1.0 :
+                       0.0;
             }
-          else {
+          else
+            {
               AssertThrow(false, ExcImpossibleInDim(dim));
             }
 
@@ -106,8 +120,8 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     }
 
   private:
-    const double      eps   = 0.1;
-    const double      level = 0.0;
+    const double               eps   = 0.1;
+    const double               level = 0.0;
     std::pair<int, Point<dim>> interface_case_info;
   };
 
@@ -190,9 +204,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
             }
 
       Point<dim> center_in;
-      double     radius_in= x_max / 5;
-      double     power_in = this->parameters.rte.power;
-      center_in[dim-1] = x_max;
+      double     radius_in = x_max / 5.;
+      double     power_in  = this->parameters.rte.power;
+      center_in[dim - 1]   = x_max;
 
       this->attach_dirichlet_boundary_condition(upper_bc,
                                                 std::make_shared<IntensityBoundary<dim>>(power_in,
@@ -204,27 +218,27 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     void
     set_field_conditions() final
     {
-      std::pair<int,Point<dim>> interface_case_info_in;
+      std::pair<int, Point<dim>> interface_case_info_in;
       if (interface_case == InterfaceCase::straight)
         interface_case_info_in.first = 0;
-      else if (interface_case ==  InterfaceCase::curved)
+      else if (interface_case == InterfaceCase::curved)
         {
           interface_case_info_in.first = 1;
-          (dim == 2)?interface_case_info_in.second = Point<dim>(a,b) :interface_case_info_in.second = Point<dim>(a,b,c);
+          (dim == 2) ? interface_case_info_in.second = Point<dim>(a, b) :
+                       interface_case_info_in.second = Point<dim>(a, b, c);
         }
-      else if (interface_case ==  InterfaceCase::particles)
+      else if (interface_case == InterfaceCase::particles)
         interface_case_info_in.first = 2;
 
 
-      this->attach_source_field(std::make_shared<HorizontalLevelSetHeaviside<dim>>(
-                                  interface_case_info_in),
-                                "heaviside");
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(), "intensity");
+      this->attach_source_field(
+        std::make_shared<HorizontalLevelSetHeaviside<dim>>(interface_case_info_in), "heaviside");
     }
+
   private:
     InterfaceCase interface_case = InterfaceCase::straight;
-    double a;
-    double b;
-    double c;
+    double        a;
+    double        b;
+    double        c;
   };
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

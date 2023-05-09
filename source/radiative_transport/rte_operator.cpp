@@ -24,6 +24,9 @@ namespace MeltPoolDG::RadiativeTransport
     , rte_dof_idx(rte_dof_idx_in)
     , rte_quad_idx(rte_quad_idx_in)
     , hs_dof_idx(hs_dof_idx_in)
+  {
+    this->reset_dof_index(rte_dof_idx_in);
+
     for (unsigned int i = 0; i < dim; i++)
       {
         laser_direction[i] = rte_data_in.laser_direction[i];
@@ -36,7 +39,7 @@ namespace MeltPoolDG::RadiativeTransport
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
-        FECellIntegrator<dim, 1, number> intensity_vals(matrix_free, rte_dof_idx, rte_quad_idx);
+        FECellIntegrator<dim, 1, number> intensity_vals(matrix_free, this->dof_idx, rte_quad_idx);
         FECellIntegrator<dim, 1, number> heaviside_vals(scratch_data.get_matrix_free(),
                                                         hs_dof_idx,
                                                         rte_quad_idx);
@@ -59,41 +62,7 @@ namespace MeltPoolDG::RadiativeTransport
   void
   RadiativeTransportOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
   {
-    scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
-      [&](const auto &matrix_free, auto &dst, const auto &src, auto macro_cells) {
-        FECellIntegrator<dim, 1, number> intensity_vals(matrix_free, rte_dof_idx, rte_quad_idx);
-        FECellIntegrator<dim, 1, number> heaviside_vals(scratch_data.get_matrix_free(),
-                                                        hs_dof_idx,
-                                                        rte_quad_idx);
-
-        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
-          {
-            intensity_vals.reinit(cell);
-            intensity_vals.read_dof_values_plain(src);
-            intensity_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
-
-            heaviside_vals.reinit(cell);
-            heaviside_vals.read_dof_values_plain(heaviside);
-            heaviside_vals.evaluate(EvaluationFlags::values);
-
-            for (unsigned int q_index = 0; q_index < intensity_vals.n_q_points; ++q_index)
-              {
-                const scalar I      = intensity_vals.get_value(q_index);
-                const vector grad_I = intensity_vals.get_gradient(q_index);
-                const scalar mu_A   =  rte_data.absorptivity_gas +
-                                    (rte_data.absorptivity_liquid - rte_data.absorptivity_gas) * heaviside_vals.get_value(
-                  q_index); // absorptivity information closes the heaviside function definition
-
-
-                intensity_vals.submit_value(-scalar_product(laser_direction, grad_I) - mu_A * I,
-                                            q_index);
-              }
-            intensity_vals.integrate_scatter(EvaluationFlags::values, dst);
-          }
-      },
-      dst,
-      src,
-      true /*zero out dst*/);
+    return;
   }
 
   template <int dim, typename number>
@@ -112,7 +81,7 @@ namespace MeltPoolDG::RadiativeTransport
     // compute matrix (only cell contributions)
     MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
       matrix_free,
-      scratch_data.get_constraint(rte_dof_idx),
+      scratch_data.get_constraint(this->dof_idx),
       system_matrix,
       [&](auto &intensity_vals) {
         const unsigned int current_cell_index = intensity_vals.get_current_cell_index();
@@ -123,7 +92,7 @@ namespace MeltPoolDG::RadiativeTransport
 
         old_cell_index = current_cell_index;
       },
-      rte_dof_idx,
+      this->dof_idx,
       rte_quad_idx);
 
     system_matrix.compress(VectorOperation::add);
@@ -189,44 +158,23 @@ namespace MeltPoolDG::RadiativeTransport
       {
         const scalar I      = intensity_vals.get_value(q_index);
         const vector grad_I = intensity_vals.get_gradient(q_index);
-        const scalar mu_A   = rte_data.absorptivity_gas +
-                            (rte_data.absorptivity_liquid - rte_data.absorptivity_gas) *heaviside_vals.get_value(
-          q_index); // absorptivity information closes the heaviside function definition
+        // constant mu definition
+//        const scalar mu_A =
+//          rte_data.absorptivity_gas +
+//          (rte_data.absorptivity_liquid - rte_data.absorptivity_gas) *
+//            heaviside_vals.get_value(
+//              q_index); // absorptivity information closes the heaviside function definition
+//        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) + mu_A * I, q_index);
 
-        // tensor scoping
-        //        scalar scoper;
-        //        for (unsigned int v = 0;
-        //             v <
-        //             scratch_data.get_matrix_free().n_active_entries_per_cell_batch(intensity_vals.get_current_cell_index());
-        //             ++v)
-        //          {
-        //              //scalar
-        //            //scoper = I[v]; // prints straight array of data content, flattened. (I is a
-        //            scalar)
-        //            //std::cout << "reading I[v] as: " << scoper <<  std::endl;
-        //
-        //              // vector
-        //            for (unsigned int d = 0;
-        //            d< dim;
-        //            d++)
-        //            {
-        //              scoper = grad_I[d][v]; //Point
-        //              std::cout << "reading gradI[d][v] as: " << scoper <<  std::endl;
-        //
-        //            }
-        //
-        //            }
-        // end tensor scoping
+        // gradient based mu:∇H * laser_dir *1./(1.- H + ϵ)
+        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) +
+                                    scalar_product(heaviside_vals.get_gradient(q_index),
+                                                   laser_direction) *
+                                    1. / (1. - heaviside_vals.get_value(q_index) + 1e-16) * I,
+                                    q_index);
 
 
-        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) + mu_A * I, q_index);
-//        std::cout << "raw echo of what LHS submits:" << scalar_product(laser_direction, grad_I) + mu_A * I << std::endl;
-        if (scalar_product(laser_direction, grad_I) == scalar(intensity_vals.n_q_points))
-          {
-            AssertThrow(false, ExcZero("creating an all-zero matrix. Not invertible"));
-          }
       }
-
     intensity_vals.integrate(EvaluationFlags::values);
   }
 

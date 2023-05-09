@@ -205,7 +205,6 @@ namespace MeltPoolDG
                                                                   0.0);
     }
 
-
     namespace CharacteristicFunctions
     {
       inline double
@@ -225,8 +224,6 @@ namespace MeltPoolDG
           return (distance + eps) / (2. * eps) +
                  1. / (2. * numbers::PI) * std::sin(numbers::PI * distance / eps);
       }
-
-
 
       inline int
       sgn(const double &x)

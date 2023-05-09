@@ -8,6 +8,7 @@
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
+#include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/radiative_transport/rte_operation.hpp>
 #include <meltpooldg/radiative_transport/rte_problem.hpp>
@@ -32,16 +33,18 @@ namespace MeltPoolDG::RadiativeTransport
     const RadiativeTransportData<double> &rte_data_in,
     const VectorType &                    heaviside_in,
     const unsigned int                    rte_dof_idx_in,
+    const unsigned int                    rte_hanging_nodes_dof_idx_in,
     const unsigned int                    rte_quad_idx_in,
     const unsigned int                    hs_dof_idx_in)
     : scratch_data(scratch_data_in)
     , rte_data(rte_data_in)
     , heaviside(heaviside_in)
     , rte_dof_idx(rte_dof_idx_in)
+    , rte_hanging_nodes_dof_idx(rte_hanging_nodes_dof_idx_in)
     , rte_quad_idx(rte_quad_idx_in)
     , hs_dof_idx(hs_dof_idx_in)
   {
-    rte_operator = std::make_shared<RadiativeTransportOperator<dim, double>>(
+    rte_operator = std::make_unique<RadiativeTransportOperator<dim, double>>(
       scratch_data, rte_data, intensity, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
 
     // matrix-based simulation is not supported
@@ -60,16 +63,6 @@ namespace MeltPoolDG::RadiativeTransport
 
 
     reinit();
-  }
-
-  template <int dim>
-  void
-  RadiativeTransportOperation<dim>::set_initial_condition(const Function<dim> &initial_intensity)
-  {
-    dealii::VectorTools::interpolate(scratch_data.get_mapping(),
-                                     scratch_data.get_dof_handler(rte_dof_idx),
-                                     initial_intensity,
-                                     intensity);
   }
 
   template <int dim>
@@ -102,16 +95,23 @@ namespace MeltPoolDG::RadiativeTransport
     ScopedName         sc("rte::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
-    intensity.update_ghost_values();
     heaviside.update_ghost_values();
 
     unsigned int iter = 0;
+    intensity         = 0;
 
     if (rte_data.linear_solver.do_matrix_free)
       {
         AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
 
-        rte_operator->create_rhs(rhs, heaviside);
+        // apply dirichlet boundary values
+        Utilities::MatrixFree::create_rhs_and_apply_dirichlet_matrixfree(*rte_operator,
+                                                                         rhs,
+                                                                         heaviside,
+                                                                         scratch_data,
+                                                                         rte_dof_idx,
+                                                                         rte_hanging_nodes_dof_idx,
+                                                                         true /*zero out rhs*/);
 
         if (rte_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
@@ -139,7 +139,6 @@ namespace MeltPoolDG::RadiativeTransport
         AssertThrow(false, ExcNotImplemented());
       }
 
-    intensity.zero_out_ghost_values();
     heaviside.zero_out_ghost_values();
 
     scratch_data.get_constraint(rte_dof_idx).distribute(intensity);
@@ -188,6 +187,7 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(rte_dof_idx), intensity, "intensity");
+    data_out.add_data_vector(scratch_data.get_dof_handler(rte_dof_idx), rhs, "rte_rhs");
   }
 
   template class RadiativeTransportOperation<1>;
