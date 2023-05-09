@@ -39,10 +39,10 @@ mpirun -np 6 meltpooldg `../tests/advection_diffusion.json`
 A list of available parameters for a certain simulation case, e.g. `../tests/advection_diffusion.json`, can be obtained via
 
 ```
-./meltpooldg --help `../tests/advection_diffusion.json`
+./meltpooldg --help ../tests/advection_diffusion.json
 ```
 or in more detail
 
 ```
-./meltpooldg --help-detail `../tests/advection_diffusion.json`
+./meltpooldg --help-detail ../tests/advection_diffusion.json
 ```
