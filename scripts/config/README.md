@@ -9,6 +9,10 @@ Download the repository via
 git clone git@github.com:MeltPoolDG/MeltPoolDG-dev.git
 ```
 
+### Installation of CMake
+
+Make sure that you install CMake >= 3.17.0 either via the package manager of your linux distribution or downloading from https://cmake.org.
+
 ### Installation of numdiff 
 
 For our testing infrastructure we rely on the tool `numdiff`. Usually, it can installed via the package manager of your linux distribution, e.g. for Ubuntu systems 
