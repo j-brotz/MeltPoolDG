@@ -6,6 +6,21 @@ configDir=$(dirname -- "$0")
 configDir=$(realpath "$configDir")
 
 ##############################################################
+# check proper cmake version
+##############################################################
+cmp=3.17.0
+ver=$(cmake --version | head -1 | cut -f3 -d" ")
+
+mapfile -t sorted < <(printf "%s\n" "$ver" "$cmp" | sort -V)
+
+if [[ ${sorted[0]} == "$cmp" ]]; then
+    echo "cmake version $ver >= $cmp"
+else
+    echo "ERROR: cmake version too low; update to at least $cmp."
+    exit
+fi
+
+##############################################################
 # install metis
 ##############################################################
 ldconfig -p | grep libmetis
