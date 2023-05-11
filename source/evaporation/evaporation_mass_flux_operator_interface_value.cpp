@@ -5,7 +5,6 @@
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/level_set/nearest_point.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -43,25 +42,23 @@ namespace MeltPoolDG::Evaporation
     VectorType &      evaporative_mass_flux,
     const VectorType &temperature) const
   {
-    LevelSet::Tools::NearestPoint<dim> nearest_point_search(
-      scratch_data.get_mapping(),
-      scratch_data.get_dof_handler(ls_dof_idx),
-      distance,
-      normal_vector,
-      scratch_data.get_remote_point_evaluation(evapor_mass_flux_dof_idx),
-      nearest_point_data,
-      scratch_data.get_timer());
+    if (!nearest_point_search)
+      nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim>>(
+        scratch_data.get_mapping(),
+        scratch_data.get_dof_handler(ls_dof_idx),
+        distance,
+        normal_vector,
+        scratch_data.get_remote_point_evaluation(evapor_mass_flux_dof_idx),
+        nearest_point_data,
+        scratch_data.get_timer());
 
-    nearest_point_search.reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));
-
-    const auto evaluation_points = nearest_point_search.get_points();
-    const auto dof_indices       = nearest_point_search.get_dof_indices();
+    nearest_point_search->reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));
 
     // get temperature values at projected interface points
     scratch_data.initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
     evaporative_mass_flux = 0.0;
 
-    nearest_point_search.fill_dof_vector_with_point_values(
+    nearest_point_search->fill_dof_vector_with_point_values(
       evaporative_mass_flux,
       scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
       temperature,

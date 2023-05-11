@@ -673,18 +673,21 @@ namespace MeltPoolDG::LevelSet
     ScopedName         sc("curvature_correction");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
-    LevelSet::Tools::NearestPoint<dim> cpp(scratch_data.get_mapping(),
-                                           scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
-                                           distance_to_level_set,
-                                           get_normal_vector(),
-                                           scratch_data.get_remote_point_evaluation(curv_dof_idx),
-                                           level_set_data.nearest_point);
+    if (!nearest_point_search)
+      nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim>>(
+        scratch_data.get_mapping(),
+        scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
+        distance_to_level_set,
+        get_normal_vector(),
+        scratch_data.get_remote_point_evaluation(curv_dof_idx),
+        level_set_data.nearest_point);
 
-    cpp.reinit(scratch_data.get_dof_handler(curv_dof_idx));
+    nearest_point_search->reinit(scratch_data.get_dof_handler(curv_dof_idx));
 
-    cpp.template fill_dof_vector_with_point_values(curvature_operation->get_curvature(),
-                                                   scratch_data.get_dof_handler(curv_dof_idx),
-                                                   curvature_operation->get_curvature());
+    nearest_point_search->template fill_dof_vector_with_point_values(
+      curvature_operation->get_curvature(),
+      scratch_data.get_dof_handler(curv_dof_idx),
+      curvature_operation->get_curvature());
 
     /*
      * old approach --> only kept as back-up [MS]

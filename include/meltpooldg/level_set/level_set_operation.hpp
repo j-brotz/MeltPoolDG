@@ -9,6 +9,7 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/curvature/curvature_operation_base.hpp>
+#include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
@@ -79,6 +80,8 @@ namespace MeltPoolDG::LevelSet
                              std::vector<double> /*weights*/
                              >>;
     SurfaceMeshInfo surface_mesh_info;
+
+    std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
 
   public:
     LevelSetOperation(const ScratchData<dim> &             scratch_data_in,
