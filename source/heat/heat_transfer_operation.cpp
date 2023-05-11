@@ -297,14 +297,12 @@ namespace MeltPoolDG::Heat
     const BlockVectorType &         normal_vector,
     const NearestPointData<double> &nearest_point_data)
   {
-    Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-      1e-6 /*tolerance*/, true /*unique mapping*/);
-
     LevelSet::Tools::NearestPoint<dim> cpp(scratch_data.get_mapping(),
                                            scratch_data.get_dof_handler(ls_dof_idx),
                                            distance,
                                            normal_vector,
-                                           remote_point_evaluation,
+                                           scratch_data.get_remote_point_evaluation(
+                                             temp_hanging_nodes_dof_idx),
                                            nearest_point_data);
 
     cpp.reinit(scratch_data.get_dof_handler(temp_dof_idx));

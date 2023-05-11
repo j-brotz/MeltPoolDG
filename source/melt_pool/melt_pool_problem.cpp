@@ -217,10 +217,6 @@ namespace MeltPoolDG::MeltPool
                                       EvaporationLevelSetSourceTermType::
                                         interface_velocity_sharp_heavy)
                                   {
-                                    Utilities::MPI::RemotePointEvaluation<dim, dim>
-                                      remote_point_evaluation(1e-6 /*tolerance*/,
-                                                              true /*unique mapping*/);
-
                                     VectorType interface_velocity_interface;
 
                                     scratch_data->initialize_dof_vector(
@@ -243,7 +239,7 @@ namespace MeltPoolDG::MeltPool
                                       scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
                                       level_set_operation->get_distance_to_level_set(),
                                       level_set_operation->get_normal_vector(),
-                                      remote_point_evaluation,
+                                      scratch_data->get_remote_point_evaluation(vel_dof_idx),
                                       nearest_point_data);
 
                                     nearest_point.reinit(
@@ -279,9 +275,6 @@ namespace MeltPoolDG::MeltPool
                             base_in->parameters.evapor.level_set_source_term_type ==
                               EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy)
                           {
-                            Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-                              1e-6 /*tolerance*/, true /*unique mapping*/);
-
                             VectorType interface_velocity_interface;
                             scratch_data->initialize_dof_vector(interface_velocity_interface,
                                                                 vel_dof_idx);
@@ -301,7 +294,7 @@ namespace MeltPoolDG::MeltPool
                               scratch_data->get_dof_handler(ls_hanging_nodes_dof_idx),
                               level_set_operation->get_distance_to_level_set(),
                               level_set_operation->get_normal_vector(),
-                              remote_point_evaluation,
+                              scratch_data->get_remote_point_evaluation(vel_dof_idx),
                               nearest_point_data);
 
                             nearest_point.reinit(scratch_data->get_dof_handler(vel_dof_idx));
@@ -1003,6 +996,9 @@ namespace MeltPoolDG::MeltPool
                                                          normal_dof_idx,
                                                          vel_dof_idx,
                                                          ls_dof_idx /* todo: ls_zero_bc_idx*/);
+    if (base_in->parameters.ls.do_curvature_correction)
+      scratch_data->create_remote_point_evaluation(curv_dof_idx);
+
     /*
      *    initialize the heat operation class
      */
@@ -1061,6 +1057,10 @@ namespace MeltPoolDG::MeltPool
            InterfaceDistributedFluxType::interface_value) ?
             temp_hanging_nodes_dof_idx :
             temp_dof_idx);
+
+        if (base_in->parameters.recoil.interface_distributed_flux_type ==
+            InterfaceDistributedFluxType::interface_value)
+          scratch_data->create_remote_point_evaluation(temp_hanging_nodes_dof_idx);
       }
     /*
      *    initialize the evaporation class
@@ -1079,6 +1079,17 @@ namespace MeltPoolDG::MeltPool
           evapor_mass_flux_dof_idx,
           ls_hanging_nodes_dof_idx,
           ls_quad_idx);
+
+        if (base_in->parameters.evapor.formulation_evaporative_mass_flux_over_interface ==
+            "interface value")
+          scratch_data->create_remote_point_evaluation(evapor_mass_flux_dof_idx);
+        if ((base_in->parameters.evapor.level_set_source_term_type ==
+               EvaporationLevelSetSourceTermType::interface_velocity ||
+             base_in->parameters.evapor.level_set_source_term_type ==
+               EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
+             base_in->parameters.evapor.level_set_source_term_type ==
+               EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy))
+          scratch_data->create_remote_point_evaluation(vel_dof_idx);
         /*
          * register temperature field
          */

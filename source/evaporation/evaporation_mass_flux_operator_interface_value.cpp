@@ -43,17 +43,14 @@ namespace MeltPoolDG::Evaporation
     VectorType &      evaporative_mass_flux,
     const VectorType &temperature) const
   {
-    Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-      1e-6 /*tolerance*/, true /*unique mapping*/);
-
-    LevelSet::Tools::NearestPoint<dim> nearest_point_search(scratch_data.get_mapping(),
-                                                            scratch_data.get_dof_handler(
-                                                              ls_dof_idx),
-                                                            distance,
-                                                            normal_vector,
-                                                            remote_point_evaluation,
-                                                            nearest_point_data,
-                                                            scratch_data.get_timer());
+    LevelSet::Tools::NearestPoint<dim> nearest_point_search(
+      scratch_data.get_mapping(),
+      scratch_data.get_dof_handler(ls_dof_idx),
+      distance,
+      normal_vector,
+      scratch_data.get_remote_point_evaluation(evapor_mass_flux_dof_idx),
+      nearest_point_data,
+      scratch_data.get_timer());
 
     nearest_point_search.reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));
 

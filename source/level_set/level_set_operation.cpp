@@ -673,15 +673,11 @@ namespace MeltPoolDG::LevelSet
     ScopedName         sc("curvature_correction");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
-    // new approach: use curvature values at the interface
-    Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-      1e-6 /*tolerance*/, false /*unique mapping*/);
-
     LevelSet::Tools::NearestPoint<dim> cpp(scratch_data.get_mapping(),
                                            scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
                                            distance_to_level_set,
                                            get_normal_vector(),
-                                           remote_point_evaluation,
+                                           scratch_data.get_remote_point_evaluation(curv_dof_idx),
                                            level_set_data.nearest_point);
 
     cpp.reinit(scratch_data.get_dof_handler(curv_dof_idx));

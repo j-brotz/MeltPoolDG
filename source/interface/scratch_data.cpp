@@ -280,6 +280,17 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  void
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::create_remote_point_evaluation(
+    const unsigned int dof_idx)
+  {
+    if (!rpe.contains(dof_idx))
+      rpe.insert({dof_idx,
+                  std::make_shared<Utilities::MPI::RemotePointEvaluation<dim, dim>>(
+                    1e-6 /*tolerance*/, true /*unique mapping*/)});
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   const Mapping<dim, spacedim> &
   ScratchData<dim, spacedim, number, VectorizedArrayType>::get_mapping() const
   {
@@ -504,6 +515,14 @@ namespace MeltPoolDG
   ScratchData<dim, spacedim, number, VectorizedArrayType>::get_timer() const
   {
     return *timer;
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  Utilities::MPI::RemotePointEvaluation<dim, dim> &
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::get_remote_point_evaluation(
+    const unsigned int dof_idx) const
+  {
+    return *rpe.at(dof_idx);
   }
 
   template class ScratchData<1>;
