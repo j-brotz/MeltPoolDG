@@ -233,7 +233,7 @@ namespace MeltPoolDG::MeltPool
                                       (base_in->parameters.evapor.level_set_source_term_type !=
                                        EvaporationLevelSetSourceTermType::
                                          interface_velocity_sharp_heavy) ?
-                                        0 :
+                                        0 : /*distance at heaviside==1*/
                                         level_set_operation->get_distance_to_level_set()
                                             .linfty_norm() *
                                           std::tanh(1.5) / std::tanh(4);

@@ -292,9 +292,10 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferOperation<dim>::compute_interface_temperature(const VectorType &     distance,
-                                                            const BlockVectorType &normal_vector,
-                                                            const NearestPointData<double> &data)
+  HeatTransferOperation<dim>::compute_interface_temperature(
+    const VectorType &              distance,
+    const BlockVectorType &         normal_vector,
+    const NearestPointData<double> &nearest_point_data)
   {
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, true /*unique mapping*/);
@@ -304,7 +305,7 @@ namespace MeltPoolDG::Heat
                                            distance,
                                            normal_vector,
                                            remote_point_evaluation,
-                                           data);
+                                           nearest_point_data);
 
     cpp.reinit(scratch_data.get_dof_handler(temp_dof_idx));
 

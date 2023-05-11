@@ -645,7 +645,7 @@ namespace MeltPoolDG::LevelSet
               distance_to_level_set(local_dof_indices[i]) = approximate_distance_from_level_set(
                 advec_diff_operation->get_advected_field()[local_dof_indices[i]],
                 epsilon_cell,
-                std::tanh(4));
+                std::tanh(4) /*cut off value*/);
 
               if (level_set_data.do_localized_heaviside)
                 {

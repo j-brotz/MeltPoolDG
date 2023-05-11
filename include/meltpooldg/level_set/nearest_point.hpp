@@ -7,6 +7,9 @@
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
 namespace MeltPoolDG::LevelSet::Tools
 {
   using namespace dealii;
@@ -22,11 +25,11 @@ namespace MeltPoolDG::LevelSet::Tools
    * The stencil is computed considering nodal points of a DoFHandler lying within a narrow band.
    * We support three types of algorithms (@p NearestPointType):
    *    - nearest_point: discretize the surface via the marching cube algorithm and take the closest
-   * point to the surface (cheap!)
+   *      point to the surface (cheap!)
    *    - closest_point_normal: iteratively correct the nearest point following the normal direction
-   *    of the point.
+   *      of the point.
    *    - closest_point_normal_collinear: extension of closest_point_normal to also ensure that the
-   * closest point is collinear to the interface.
+   *      closest point is collinear to the interface.
    */
   template <int dim>
   class NearestPoint
@@ -46,7 +49,7 @@ namespace MeltPoolDG::LevelSet::Tools
                  const VectorType &                               signed_distance,
                  const BlockVectorType &                          normal_vector,
                  Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation,
-                 NearestPointData<double>                         additional_data)
+                 const NearestPointData<double> &                 additional_data)
       : mapping(mapping)
       , dof_handler_ls(dof_handler_signed_distance)
       , signed_distance(signed_distance)
@@ -75,6 +78,7 @@ namespace MeltPoolDG::LevelSet::Tools
     void
     reinit(const DoFHandler<dim> &dof_handler_req)
     {
+      is_reinit_called = true;
       // calculate point cloud corresponding to nodes of the requested DoFHandler
       // located within the narrow band region
       const unsigned int n_components = dof_handler_req.get_fe().n_components();
@@ -176,11 +180,13 @@ namespace MeltPoolDG::LevelSet::Tools
      * Getter function for the nearest points, corresponding to the nodal points of the
      * DoFHandler passed into the reinit() function.
      *
-     * @note: Make sure that you have called reinit() before.
+     * @note Make sure that you have called reinit() before.
      */
     const std::vector<Point<dim>> &
     get_points() const
     {
+      AssertThrow(is_reinit_called, ExcMessage("You need to call reinit() first."));
+
       return projected_points_at_interface;
     }
 
@@ -188,11 +194,13 @@ namespace MeltPoolDG::LevelSet::Tools
      * Getter function for the DoF indices of the nearest points,  corresponding to the nodal points
      * of the DoFHandler passed into the reinit() function.
      *
-     * @note: Make sure that you have called reinit() before.
+     * @note Make sure that you have called reinit() before.
      */
     const std::vector<std::vector<types::global_dof_index>> &
     get_dof_indices() const
     {
+      AssertThrow(is_reinit_called, ExcMessage("You need to call reinit() first."));
+
       return dof_indices;
     }
 
@@ -204,7 +212,7 @@ namespace MeltPoolDG::LevelSet::Tools
      * to store it into @p solution_out.
      * Set @p zero_out to true @p if solution_out should be set to zero in advance.
      *
-     * @note: Make sure that you have called reinit() before.
+     * @note Make sure that you have called reinit() before.
      */
     template <int n_components = 1>
     void
@@ -218,6 +226,8 @@ namespace MeltPoolDG::LevelSet::Tools
       AssertThrow(n_components == dof_handler_req.get_fe().n_components(),
                   ExcMessage("There is a mismatch in the number of components "
                              "between your passed DoFHandler and the template parameter."));
+
+      AssertThrow(is_reinit_called, ExcMessage("You need to call reinit() first."));
 
       const bool update_ghosts = !solution_in.has_ghost_elements();
 
@@ -278,7 +288,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
   private:
     /**
-     * TODO
+     * Perform a closest point projection to the surface.
      */
     bool
     local_compute_normal_correction(std::vector<Point<dim>> &y, const bool print_warning)
@@ -445,7 +455,7 @@ namespace MeltPoolDG::LevelSet::Tools
     }
 
     /**
-     * TODO
+     * Create a surface mesh and find the nearest vertices to the surface mesh.
      */
     void
     local_compute_nearest_point()
@@ -459,43 +469,30 @@ namespace MeltPoolDG::LevelSet::Tools
       std::vector<Point<dim>> surface_points;
       mc.process(dof_handler_ls, signed_distance, additional_data.isocontour, surface_points);
 
-      // all gather surface points
-      const auto surface_points_global = Utilities::MPI::all_gather(mpi_comm, surface_points);
+      const auto used_vertices_rtree = pack_rtree(surface_points);
 
-      // TODO: find a faster way to get a single vector for all processes
-      surface_points.clear();
-      for (unsigned int i = 0; i < surface_points_global.size(); ++i)
-        for (unsigned int j = 0; j < surface_points_global[i].size(); ++j)
-          surface_points.emplace_back(surface_points_global[i][j]);
-
-
-      // search for closest point
-      for (unsigned int i = 0; i < stencil.size(); ++i)
+      if (!used_vertices_rtree.empty())
         {
-          // search min_distance
-          double       min_distance     = std::numeric_limits<double>::max();
-          unsigned int min_distance_idx = 0;
-
-          for (unsigned int p = 0; p < surface_points.size(); ++p)
+          // search for nearest point
+          for (unsigned int i = 0; i < stencil.size(); ++i)
             {
-              if (surface_points[p].distance(stencil[i]) <= min_distance)
-                {
-                  min_distance     = surface_points[p].distance(stencil[i]);
-                  min_distance_idx = p;
-                }
+              std::vector<Point<dim>> closest_vertex_in_domain;
+              used_vertices_rtree.query(boost::geometry::index::nearest(stencil[i], 1),
+                                        std::back_inserter(closest_vertex_in_domain));
 
-              if (min_distance <= tol_distance)
-                break;
+              AssertThrow(closest_vertex_in_domain.size() == 1,
+                          ExcMessage("The number of nearest points is wrong."));
+
+              projected_points_at_interface[i] = closest_vertex_in_domain[0];
             }
-          projected_points_at_interface[i] = surface_points[min_distance_idx];
         }
     }
 
-    const Mapping<dim> &     mapping;
-    const DoFHandler<dim> &  dof_handler_ls;
-    const VectorType &       signed_distance;
-    const BlockVectorType &  normal_vector;
-    NearestPointData<double> additional_data;
+    const Mapping<dim> &            mapping;
+    const DoFHandler<dim> &         dof_handler_ls;
+    const VectorType &              signed_distance;
+    const BlockVectorType &         normal_vector;
+    const NearestPointData<double> &additional_data;
 
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation;
 
@@ -515,5 +512,7 @@ namespace MeltPoolDG::LevelSet::Tools
     std::vector<Point<dim>>                           projected_points_at_interface;
     std::vector<std::vector<types::global_dof_index>> dof_indices;
     std::vector<Point<dim>>                           stencil;
+
+    bool is_reinit_called = false;
   };
 } // namespace MeltPoolDG::LevelSet::Tools

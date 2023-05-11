@@ -29,7 +29,7 @@ namespace MeltPoolDG::Evaporation
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
     const ScratchData<dim> &         scratch_data;
-    mutable NearestPointData<double> cpp_data;
+    mutable NearestPointData<double> nearest_point_data;
     const EvaporationModelBase &     evaporation_model;
     const VectorType &               level_set_as_heaviside;
     const VectorType &               distance;
