@@ -80,9 +80,10 @@ namespace MeltPoolDG::LevelSet::Tools
     void
     reinit(const DoFHandler<dim> &dof_handler_req)
     {
-      ScopedName sc2("nearest_point::reinit");
+      ScopedName                          sc2("nearest_point::reinit");
+      std::unique_ptr<TimerOutput::Scope> timer_scope;
       if (timer_output)
-        TimerOutput::Scope scope(timer_output.value(), sc2);
+        timer_scope = std::make_unique<TimerOutput::Scope>(timer_output.value(), sc2);
 
       is_reinit_called = true;
       // calculate point cloud corresponding to nodes of the requested DoFHandler
@@ -229,9 +230,10 @@ namespace MeltPoolDG::LevelSet::Tools
       const bool                                 zero_out  = false,
       const std::function<double(const double)> &operation = {}) const
     {
-      ScopedName sc("nearest_point::fill_dof_vector");
+      ScopedName                          sc("nearest_point::fill_dof_vector");
+      std::unique_ptr<TimerOutput::Scope> timer_scope;
       if (timer_output)
-        TimerOutput::Scope scope(timer_output.value(), sc);
+        timer_scope = std::make_unique<TimerOutput::Scope>(timer_output.value(), sc);
 
       AssertThrow(n_components == dof_handler_req.get_fe().n_components(),
                   ExcMessage("There is a mismatch in the number of components "
