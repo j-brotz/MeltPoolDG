@@ -134,11 +134,19 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 
       if constexpr (dim == 1)
         {
+#ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<1>>(
             this->mpi_communicator,
             (Triangulation<dim>::none),
             false,
             parallel::shared::Triangulation<dim>::Settings::partition_metis);
+#else
+          AssertThrow(
+            false,
+            ExcMessage(
+              "Missing Metis support of the deal.II installation. "
+              "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
+#endif
           // create mesh
           const Point<1> left(z_min);
           const Point<1> right(z_max);
