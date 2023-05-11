@@ -4,12 +4,13 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <deal.II/numerics/rtree.h>
+
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <boost/geometry/index/rtree.hpp>
-#include <deal.II/numerics/rtree.h>
 
 namespace MeltPoolDG::LevelSet::Tools
 {
@@ -491,7 +492,7 @@ namespace MeltPoolDG::LevelSet::Tools
         for (unsigned int j = 0; j < surface_points_global[i].size(); ++j)
           surface_points.emplace_back(surface_points_global[i][j]);
 
-     const auto used_vertices_rtree = pack_rtree(surface_points);
+      const auto used_vertices_rtree = pack_rtree(surface_points);
 
       if (!used_vertices_rtree.empty())
         {
