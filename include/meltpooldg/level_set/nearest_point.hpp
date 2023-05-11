@@ -9,6 +9,7 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <boost/geometry/index/rtree.hpp>
+#include <deal.II/numerics/rtree.h>
 
 namespace MeltPoolDG::LevelSet::Tools
 {
@@ -481,7 +482,16 @@ namespace MeltPoolDG::LevelSet::Tools
       std::vector<Point<dim>> surface_points;
       mc.process(dof_handler_ls, signed_distance, additional_data.isocontour, surface_points);
 
-      const auto used_vertices_rtree = pack_rtree(surface_points);
+      // all gather surface points
+      const auto surface_points_global = Utilities::MPI::all_gather(mpi_comm, surface_points);
+
+      // TODO: find a faster way to get a single vector for all processes
+      surface_points.clear();
+      for (unsigned int i = 0; i < surface_points_global.size(); ++i)
+        for (unsigned int j = 0; j < surface_points_global[i].size(); ++j)
+          surface_points.emplace_back(surface_points_global[i][j]);
+
+     const auto used_vertices_rtree = pack_rtree(surface_points);
 
       if (!used_vertices_rtree.empty())
         {
