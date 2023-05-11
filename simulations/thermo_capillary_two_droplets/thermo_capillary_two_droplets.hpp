@@ -164,11 +164,19 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     {
       if (this->parameters.base.do_simplex)
         {
+#ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
             this->mpi_communicator,
             (Triangulation<dim>::none),
             false,
             parallel::shared::Triangulation<dim>::Settings::partition_metis);
+#else
+          AssertThrow(
+            false,
+            ExcMessage(
+              "Missing Metis support of the deal.II installation. "
+              "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
+#endif
         }
       else
         {
