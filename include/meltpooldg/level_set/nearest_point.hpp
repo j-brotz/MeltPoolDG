@@ -5,9 +5,9 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
-#include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
 namespace MeltPoolDG::LevelSet::Tools
@@ -44,12 +44,13 @@ namespace MeltPoolDG::LevelSet::Tools
      * @param remote_point_evaluation Cache for MPI::RemotePointEvaluation.
      * @param additional_data Parameters for calculating nearest point.
      */
-    NearestPoint(const Mapping<dim> &                             mapping,
-                 const DoFHandler<dim> &                          dof_handler_signed_distance,
-                 const VectorType &                               signed_distance,
-                 const BlockVectorType &                          normal_vector,
-                 Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation,
-                 const NearestPointData<double> &                 additional_data)
+    NearestPoint(const Mapping<dim> &                               mapping,
+                 const DoFHandler<dim> &                            dof_handler_signed_distance,
+                 const VectorType &                                 signed_distance,
+                 const BlockVectorType &                            normal_vector,
+                 Utilities::MPI::RemotePointEvaluation<dim, dim> &  remote_point_evaluation,
+                 const NearestPointData<double> &                   additional_data,
+                 std::optional<std::reference_wrapper<TimerOutput>> timer_output = {})
       : mapping(mapping)
       , dof_handler_ls(dof_handler_signed_distance)
       , signed_distance(signed_distance)
@@ -66,6 +67,7 @@ namespace MeltPoolDG::LevelSet::Tools
           UtilityFunctions::compute_numerical_zero_of_norm<dim>(dof_handler_ls.get_triangulation(),
                                                                 mapping))
       , mpi_comm(dof_handler_ls.get_communicator())
+      , timer_output(timer_output)
     {
       AssertThrow(dim <= 2 ||
                     additional_data.type != NearestPointType::closest_point_normal_collinear,
@@ -78,6 +80,10 @@ namespace MeltPoolDG::LevelSet::Tools
     void
     reinit(const DoFHandler<dim> &dof_handler_req)
     {
+      ScopedName sc2("nearest_point::reinit");
+      if (timer_output)
+        TimerOutput::Scope scope(timer_output.value(), sc2);
+
       is_reinit_called = true;
       // calculate point cloud corresponding to nodes of the requested DoFHandler
       // located within the narrow band region
@@ -223,6 +229,10 @@ namespace MeltPoolDG::LevelSet::Tools
       const bool                                 zero_out  = false,
       const std::function<double(const double)> &operation = {}) const
     {
+      ScopedName sc("nearest_point::fill_dof_vector");
+      if (timer_output)
+        TimerOutput::Scope scope(timer_output.value(), sc);
+
       AssertThrow(n_components == dof_handler_req.get_fe().n_components(),
                   ExcMessage("There is a mismatch in the number of components "
                              "between your passed DoFHandler and the template parameter."));
@@ -507,6 +517,8 @@ namespace MeltPoolDG::LevelSet::Tools
     const double tolerance_normal_vector;
 
     const MPI_Comm mpi_comm;
+
+    std::optional<std::reference_wrapper<TimerOutput>> timer_output;
 
     // vectors to be filled: projected points to the interface corresponding to DoF indices
     std::vector<Point<dim>>                           projected_points_at_interface;

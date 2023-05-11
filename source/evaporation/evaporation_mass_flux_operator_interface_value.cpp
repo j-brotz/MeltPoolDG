@@ -46,23 +46,25 @@ namespace MeltPoolDG::Evaporation
     Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
       1e-6 /*tolerance*/, true /*unique mapping*/);
 
-    LevelSet::Tools::NearestPoint<dim> cpp(scratch_data.get_mapping(),
-                                           scratch_data.get_dof_handler(ls_dof_idx),
-                                           distance,
-                                           normal_vector,
-                                           remote_point_evaluation,
-                                           nearest_point_data);
+    LevelSet::Tools::NearestPoint<dim> nearest_point_search(scratch_data.get_mapping(),
+                                                            scratch_data.get_dof_handler(
+                                                              ls_dof_idx),
+                                                            distance,
+                                                            normal_vector,
+                                                            remote_point_evaluation,
+                                                            nearest_point_data,
+                                                            scratch_data.get_timer());
 
-    cpp.reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));
+    nearest_point_search.reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));
 
-    const auto evaluation_points = cpp.get_points();
-    const auto dof_indices       = cpp.get_dof_indices();
+    const auto evaluation_points = nearest_point_search.get_points();
+    const auto dof_indices       = nearest_point_search.get_dof_indices();
 
     // get temperature values at projected interface points
     scratch_data.initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
     evaporative_mass_flux = 0.0;
 
-    cpp.fill_dof_vector_with_point_values(
+    nearest_point_search.fill_dof_vector_with_point_values(
       evaporative_mass_flux,
       scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
       temperature,
