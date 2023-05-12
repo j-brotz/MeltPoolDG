@@ -1,29 +1,33 @@
 --------------------------------------------------------
- START TEST: n_iter=1
+ START TEST: n_iter=1 type closest_point_normal #comp 1 #refine 6
 --------------------------------------------------------
 WARNING: The tolerance of 14396 points is not yet attained. Max distance value: 0.1244986
 max distance to analytical solution (relative): 0.016963
-max distance to numerical distance solution (relative): 7.9679103
-WARNING: The tolerance of 14396 points is not yet attained. Max distance value: 0.1244986
+max distance to numerical distance solution (relative): 0.0077833435
 norm of interface vals: 21232.504
 --------------------------------------------------------
- START TEST: n_iter=16
+ START TEST: n_iter=16 type closest_point_normal #comp 1 #refine 6
 --------------------------------------------------------
 max distance to analytical solution (relative): 0.015635164
-max distance to numerical distance solution (relative): 8.1666236e-12
+max distance to numerical distance solution (relative): 9.9948078e-11
 norm of interface vals: 21232.322
 --------------------------------------------------------
- START TEST: n_iter=5
+ START TEST: n_iter=5 type closest_point_normal #comp 2 #refine 6
 --------------------------------------------------------
 WARNING: The tolerance of 8912 points is not yet attained. Max distance value: 5.2369329e-10
 max distance to analytical solution (relative): 0.015635164
-max distance to numerical distance solution (relative): 3.3516371e-08
-norm of interface vals: 30027.038
+max distance to numerical distance solution (relative): 1.7378428e-10
+norm of interface vals: 30027.037
 --------------------------------------------------------
- START TEST: n_iter=5
+ START TEST: n_iter=5 type closest_point_normal_collinear #comp 2 #refine 6
 --------------------------------------------------------
 WARNING: The tolerance of the tangential correction of 1124 points is not yet attained. Max tangential distance value: 1.4994429e-05 max tolerance: 1.5625e-12
 max distance to analytical solution (relative): 0.0078111056
-max distance to numerical distance solution (relative): 5.1767118e-11
-WARNING: The tolerance of the tangential correction of 120 points is not yet attained. Max tangential distance value: 7.5583328e-06 max tolerance: 1.5625e-07
-norm of interface vals: 30027.038
+max distance to numerical distance solution (relative): 1.2139665e-05
+norm of interface vals: 30027.037
+--------------------------------------------------------
+ START TEST: n_iter=1 type nearest_point #comp 2 #refine 6
+--------------------------------------------------------
+max distance to analytical solution (relative): 0.33349596
+max distance to numerical distance solution (relative): 1.047773e-14
+norm of interface vals: 30027.34

@@ -7,6 +7,7 @@
 #pragma once
 // for parallelization
 #include <deal.II/base/index_set.h>
+#include <deal.II/base/mpi_remote_point_evaluation.h>
 #include <deal.II/base/partitioner.h>
 #include <deal.II/base/timer.h>
 
@@ -99,6 +100,13 @@ namespace MeltPoolDG
      */
     void
     clear();
+
+    /*
+     * create a map of RemotePointEvaluation objects corresponding to a DoFHandler
+     * @p dof_idx
+     */
+    void
+    create_remote_point_evaluation(const unsigned int dof_idx);
 
     /**
      * Getter functions.
@@ -193,6 +201,9 @@ namespace MeltPoolDG
     TimerOutput &
     get_timer() const;
 
+    Utilities::MPI::RemotePointEvaluation<dim, dim> &
+    get_remote_point_evaluation(const unsigned int dof_idx) const;
+
   private:
     bool                                           do_matrix_free;
     std::vector<dealii::ConditionalOStream>        pcout;
@@ -208,6 +219,7 @@ namespace MeltPoolDG
     std::vector<IndexSet>                  locally_owned_dofs;
     std::vector<IndexSet>                  locally_relevant_dofs;
     std::vector<std::shared_ptr<Utilities::MPI::Partitioner>> partitioner;
+    std::map<unsigned int, std::shared_ptr<Utilities::MPI::RemotePointEvaluation<dim, dim>>> rpe;
 
     mutable std::shared_ptr<TimerOutput> timer;
 

@@ -261,6 +261,11 @@ namespace MeltPoolDG::Curvature
           curvature_data.linear_solver.preconditioner_type,
           *curvature_operator);
         /*
+         * setup sparsity pattern of system matrix only if the latter is
+         * needed for computing the preconditioner
+         */
+        preconditioner_matrixfree->reinit();
+        /*
          * precompute system matrix
          */
         if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)

@@ -434,22 +434,22 @@ namespace MeltPoolDG
                         "Set the tolerance for reinitialization. If the "
                         "maximum change of the level set field, i.e. ||ΔФ||∞, exceeds the "
                         "tolerance, reinitialization steps will be performed.");
-      prm.enter_subsection("closest point projection");
+      prm.enter_subsection("nearest point");
       {
         prm.add_parameter(
           "max iter",
-          ls.cpp.max_iter,
+          ls.nearest_point.max_iter,
           "Maximum number of corrections of the point projection towards the interface.");
         prm.add_parameter("rel tol",
-                          ls.cpp.rel_tol,
+                          ls.nearest_point.rel_tol,
                           "Relative tolerance to be achieved within the projection.");
-        prm.add_parameter("max phi",
-                          ls.cpp.max_phi,
+        prm.add_parameter("narrow band threshold",
+                          ls.nearest_point.narrow_band_threshold,
                           "Maximum value of the level set for defining narrow band where "
                           "CPP is performed.");
-        prm.add_parameter("enforce collinearity",
-                          ls.cpp.enforce_collinearity,
-                          "Enforce collinearity with the normal vector at the interface.");
+        prm.add_parameter("type",
+                          ls.nearest_point.type,
+                          "Choose the type for calculating the nearest point to the interface.");
       }
       prm.leave_subsection();
     }

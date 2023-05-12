@@ -12,17 +12,17 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   EvaporationMassFluxOperatorInterfaceValue<dim>::EvaporationMassFluxOperatorInterfaceValue(
-    const ScratchData<dim> &                  scratch_data,
-    const ClosestPointProjectionData<double> &data,
-    const EvaporationModelBase &              evaporation_model,
-    const VectorType &                        level_set_as_heaviside,
-    const VectorType &                        distance,
-    const BlockVectorType &                   normal_vector,
-    const unsigned int                        ls_dof_idx_in,
-    const unsigned int                        temp_hanging_nodes_dof_idx_in,
-    const unsigned int                        evapor_mass_flux_dof_idx_in)
+    const ScratchData<dim> &        scratch_data,
+    const NearestPointData<double> &data,
+    const EvaporationModelBase &    evaporation_model,
+    const VectorType &              level_set_as_heaviside,
+    const VectorType &              distance,
+    const BlockVectorType &         normal_vector,
+    const unsigned int              ls_dof_idx_in,
+    const unsigned int              temp_hanging_nodes_dof_idx_in,
+    const unsigned int              evapor_mass_flux_dof_idx_in)
     : scratch_data(scratch_data)
-    , cpp_data(data)
+    , nearest_point_data(data)
     , evaporation_model(evaporation_model)
     , level_set_as_heaviside(level_set_as_heaviside)
     , distance(distance)
@@ -42,51 +42,28 @@ namespace MeltPoolDG::Evaporation
     VectorType &      evaporative_mass_flux,
     const VectorType &temperature) const
   {
-    Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
-      1e-6 /*tolerance*/, true /*unique mapping*/);
-
-    const auto [dof_indices, evaluation_points] =
-      LevelSet::Tools::compute_projected_points_at_interface<dim>(
+    if (!nearest_point_search)
+      nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim>>(
         scratch_data.get_mapping(),
         scratch_data.get_dof_handler(ls_dof_idx),
-        scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
         distance,
         normal_vector,
-        scratch_data.get_min_cell_size(ls_dof_idx),
-        remote_point_evaluation,
-        cpp_data.enforce_collinearity,
-        cpp_data.max_iter,
-        cpp_data.rel_tol);
-    /*
-     * get temperature values at projected interface points
-     */
+        scratch_data.get_remote_point_evaluation(evapor_mass_flux_dof_idx),
+        nearest_point_data,
+        scratch_data.get_timer());
 
-    remote_point_evaluation.reinit(evaluation_points,
-                                   scratch_data.get_triangulation(),
-                                   scratch_data.get_mapping());
+    nearest_point_search->reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));
 
-    temperature.update_ghost_values();
-
-    const auto temperature_evaluation_values =
-      dealii::VectorTools::point_values<1>(remote_point_evaluation,
-                                           scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
-                                           temperature);
-    temperature.zero_out_ghost_values();
-
-    Assert(temperature_evaluation_values.size() == evaluation_points.size(),
-           ExcMessage("The size of vectors must match."));
-
-    /*
-     * compute evaporative mass flux from the temperature value at the interface
-     */
+    // get temperature values at projected interface points
     scratch_data.initialize_dof_vector(evaporative_mass_flux, evapor_mass_flux_dof_idx);
     evaporative_mass_flux = 0.0;
 
-    for (unsigned int i = 0; i < evaluation_points.size(); ++i)
-      {
-        evaporative_mass_flux[dof_indices[i][0]] =
-          evaporation_model.local_compute_evaporative_mass_flux(temperature_evaluation_values[i]);
-      }
+    nearest_point_search->fill_dof_vector_with_point_values(
+      evaporative_mass_flux,
+      scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx),
+      temperature,
+      true /*zero out*/,
+      [&](const double x) { return evaporation_model.local_compute_evaporative_mass_flux(x); });
 
     scratch_data.get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
     evaporative_mass_flux.update_ghost_values(); //@todo: zero out ghost values

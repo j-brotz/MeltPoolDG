@@ -13,6 +13,7 @@
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
+#include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
@@ -80,6 +81,8 @@ namespace MeltPoolDG::Heat
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;
 
+    std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
+
   public:
     HeatTransferOperation(std::shared_ptr<BoundaryConditions<dim>> bc_data,
                           const ScratchData<dim> &                 scratch_data_in,
@@ -123,9 +126,9 @@ namespace MeltPoolDG::Heat
     finish_time_advance();
 
     void
-    compute_interface_temperature(const VectorType &                        distance,
-                                  const BlockVectorType &                   normal_vector,
-                                  const ClosestPointProjectionData<double> &data);
+    compute_interface_temperature(const VectorType &              distance,
+                                  const BlockVectorType &         normal_vector,
+                                  const NearestPointData<double> &nearest_point_data);
 
     void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
