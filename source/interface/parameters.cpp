@@ -721,9 +721,6 @@ namespace MeltPoolDG
         "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
         " base value is decisive.");
       rte.linear_solver.add_parameters(prm);
-      prm.add_parameter("power",
-                        rte.power,
-                        "Sets the intensity scale of the laser source. Is a scalar value");
       /*resize the laser direction according to the problem dimension*/
       if (rte.laser_direction.size() == 0)
         {
@@ -734,14 +731,16 @@ namespace MeltPoolDG
         "laser direction",
         rte.laser_direction,
         "Sets the laser source direction vector. Is a vector. Does not throw if direction vector provided does not match problem dimensions");
-
-
       prm.add_parameter("absorptivity gas",
                         rte.absorptivity_gas,
                         "Sets the absorptivity of the gas");
       prm.add_parameter("absorptivity liquid",
                         rte.absorptivity_liquid,
                         "Sets the absorptivity of the liquid");
+      prm.add_parameter(
+        "mueps",
+        rte.mueps,
+        "Small number in gradient-based absorptivity definition to avoid divide-by-zero");
     }
     prm.leave_subsection();
     /*

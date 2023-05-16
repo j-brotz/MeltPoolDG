@@ -62,6 +62,8 @@ namespace MeltPoolDG::RadiativeTransport
   void
   RadiativeTransportOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
   {
+    (void)dst;
+    (void)src;
     return;
   }
 
@@ -159,21 +161,21 @@ namespace MeltPoolDG::RadiativeTransport
         const scalar I      = intensity_vals.get_value(q_index);
         const vector grad_I = intensity_vals.get_gradient(q_index);
         // constant mu definition
-//        const scalar mu_A =
-//          rte_data.absorptivity_gas +
-//          (rte_data.absorptivity_liquid - rte_data.absorptivity_gas) *
-//            heaviside_vals.get_value(
-//              q_index); // absorptivity information closes the heaviside function definition
-//        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) + mu_A * I, q_index);
+        //        const scalar mu_A =
+        //          rte_data.absorptivity_gas +
+        //          (rte_data.absorptivity_liquid - rte_data.absorptivity_gas) *
+        //            heaviside_vals.get_value(
+        //              q_index); // absorptivity information closes the heaviside function
+        //              definition
+        //        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) + mu_A * I,
+        //        q_index);
 
         // gradient based mu:∇H * laser_dir *1./(1.- H + ϵ)
-        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) +
-                                    scalar_product(heaviside_vals.get_gradient(q_index),
-                                                   laser_direction) *
-                                    1. / (1. - heaviside_vals.get_value(q_index) + 1e-16) * I,
-                                    q_index);
-
-
+        intensity_vals.submit_value(
+          scalar_product(laser_direction, grad_I) +
+            scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
+              (1. - heaviside_vals.get_value(q_index) + rte_data.mueps) * I,
+          q_index);
       }
     intensity_vals.integrate(EvaluationFlags::values);
   }

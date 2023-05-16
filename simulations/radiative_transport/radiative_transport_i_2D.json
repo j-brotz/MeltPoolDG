@@ -2,8 +2,8 @@
   "base": {
     "problem name": "radiative_transport",
     "application name": "radiative_transport",
-    "dimension": "3",
-    "global refinements": "3",
+    "dimension": "2",
+    "global refinements": "5",
     "degree": "1",
     "do print parameters": "false",
     "verbosity level": "3"
@@ -18,10 +18,10 @@
   },
   "rte": {
     "verbosity level": "3",
-    "power": "1",
-    "laser direction": "0.0,0.0,-1.0",
-    "absorptivity gas": "0.",
-    "absorptivity liquid": "1.0 ",
+    "laser direction": "0.0,-1.0",
+    "absorptivity gas": "0",
+    "absorptivity liquid": "10.0 ",
+    "mueps": "1e-16",
     "linear solver": {
       "monitor type": "reduced",
       "do matrix free": "true",
@@ -32,5 +32,7 @@
   "paraview": {
     "paraview do output": "true"
   },
-  "simulation specific parameters": {}
+  "simulation specific parameters": {
+    "power": "0.1"
+  }
 }

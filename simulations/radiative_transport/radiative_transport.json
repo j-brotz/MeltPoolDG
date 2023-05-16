@@ -18,10 +18,10 @@
   },
   "rte": {
     "verbosity level": "3",
-    "power": "1",
     "laser direction": "0.0,-1.0",
     "absorptivity gas": "0",
     "absorptivity liquid": "10.0 ",
+    "mueps": "1e-16",
     "linear solver": {
       "monitor type": "reduced",
       "do matrix free": "true",
@@ -32,5 +32,7 @@
   "paraview": {
     "paraview do output": "true"
   },
-  "simulation specific parameters": {}
+  "simulation specific parameters": {
+    "power": "0.1"
+  }
 }

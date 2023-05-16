@@ -368,9 +368,9 @@ namespace MeltPoolDG
     LinearSolverData<number> linear_solver;
     double                   absorptivity_gas    = 0.1;
     double                   absorptivity_liquid = 0.9;
-    double                   power               = 0.1;
     unsigned int             verbosity_level     = 0;
     std::vector<double>      laser_direction;
+    double                   mueps = 1e-16;
   };
 
   template <typename number = double>

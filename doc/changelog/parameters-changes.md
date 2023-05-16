@@ -7,10 +7,10 @@ All notable changes of the input parameters will be documented in this file.
   {
   "rte": {
     "verbosity level": "",
-    "power": "",
     "laser direction": ",",
     "absorptivity gas": "",
     "absorptivity liquid": "",
+    "mueps": "",
     "linear solver": {
     "monitor type": "",
     "do matrix free": "",

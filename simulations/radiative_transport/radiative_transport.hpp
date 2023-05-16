@@ -14,9 +14,11 @@
 /**
  * TODO: documentation
  */
-BETTER_ENUM(InterfaceCase, char, straight, curved, particles)
+
 namespace MeltPoolDG::Simulation::RadiativeTransport
 {
+  BETTER_ENUM(InterfaceCase, char, straight, curved, particles)
+
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
@@ -59,31 +61,32 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   class HorizontalLevelSetHeaviside : public Function<dim>
   {
   public:
-    HorizontalLevelSetHeaviside(std::pair<int, Point<dim>> interface_case_info_in)
+    HorizontalLevelSetHeaviside(InterfaceCase interface_case_in, Point<dim> interface_case_info_in)
       : Function<dim>(1)
+      , interface_case(interface_case_in)
       , interface_case_info(interface_case_info_in)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int) const override
     {
-      if (interface_case_info.first == 0)
+      if (interface_case == InterfaceCase::straight)
         {
           const auto y = p[dim - 1];
           return UtilityFunctions::CharacteristicFunctions::heaviside(
             level + 0.5 * x_max * ((this->get_time() < 10.5) ? this->get_time() : 10) / 10 - y,
             eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
         }
-      else if (interface_case_info.first == 1)
+      else if (interface_case == InterfaceCase::curved)
         { // a rough non-template ellipse for the interface, because unlikely to be reused
           if constexpr (dim == 2)
             {
               const auto x = p[0];
               const auto y = p[1];
               return (
-                (std::pow(x / interface_case_info.second[0], 2.) +
+                (std::pow(x / interface_case_info[0], 2.) +
                    std::pow((y - x_max / 3 * ((this->get_time() < 10.5) ? this->get_time() : 10)) /
-                              interface_case_info.second[1],
+                              interface_case_info[1],
                             2.) <
                  1) ?
                   0.0 :
@@ -94,9 +97,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
               const auto x = p[0];
               const auto y = p[1];
               const auto z = p[2];
-              return (std::pow(x / interface_case_info.second[0], 2.) +
-                        std::pow(y / interface_case_info.second[1], 2.) +
-                        std::pow(z / interface_case_info.second[2], 2.) <
+              return (std::pow(x / interface_case_info[0], 2.) +
+                        std::pow(y / interface_case_info[1], 2.) +
+                        std::pow(z / interface_case_info[2], 2.) <
                       1) ?
                        1.0 :
                        0.0;
@@ -109,7 +112,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
           AssertThrow(false, ExcNotImplemented());
         }
-      else if (interface_case_info.first == 2)
+      else if (interface_case == InterfaceCase::particles)
         { // TBD: particles
           AssertThrow(false, ExcNotImplemented());
         }
@@ -120,9 +123,10 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     }
 
   private:
-    const double               eps   = 0.1;
-    const double               level = 0.0;
-    std::pair<int, Point<dim>> interface_case_info;
+    const double  eps   = 0.1;
+    const double  level = 0.0;
+    InterfaceCase interface_case;
+    Point<dim>    interface_case_info;
   };
 
 
@@ -138,14 +142,39 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     void
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
+      center_in[dim - 1] = x_max;
       prm.enter_subsection("simulation specific parameters");
       {
-        //        prm.add_parameter("json field - TBD ", private member - TBD, "desc - TBD");
-        prm.add_parameter("a", a, "1st semi-axis of the ellipsoid (curved) heaviside");
-        prm.add_parameter("b", b, "2nd semi-axis of the ellipsoid (curved) heaviside");
-        prm.add_parameter("c", c, "3rd semi-axis of the ellipsoid (curved) heaviside");
+        prm.add_parameter("ellipse-a",
+                          ellipse_a,
+                          "1st semi-axis of the ellipsoid (curved) heaviside");
+        prm.add_parameter("ellipse-b",
+                          ellipse_b,
+                          "2nd semi-axis of the ellipsoid (curved) heaviside");
+        prm.add_parameter("ellipse-c",
+                          ellipse_c,
+                          "3rd semi-axis of the ellipsoid (curved) heaviside");
+        prm.add_parameter("source center", center_in, "location of the heat source center");
+        prm.add_parameter("source radius", radius_in, "heat source radius");
+        prm.add_parameter("interface case",
+                          interface_case,
+                          "kind of interface for this simulation");
+
+        prm.add_parameter("power",
+                          power_in,
+                          "Sets the intensity scale of the laser source. Is a scalar value");
       }
       prm.leave_subsection();
+
+      if (interface_case == InterfaceCase::straight)
+        {}
+      else if (interface_case == InterfaceCase::curved)
+        {
+          (dim == 2) ? interface_case_info_in = Point<dim>(ellipse_a, ellipse_b) :
+                       interface_case_info_in = Point<dim>(ellipse_a, ellipse_b, ellipse_c);
+        }
+      else if (interface_case == InterfaceCase::particles)
+        {}
     }
 
     void
@@ -203,11 +232,6 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                 face->set_boundary_id(upper_bc);
             }
 
-      Point<dim> center_in;
-      double     radius_in = x_max / 5.;
-      double     power_in  = this->parameters.rte.power;
-      center_in[dim - 1]   = x_max;
-
       this->attach_dirichlet_boundary_condition(upper_bc,
                                                 std::make_shared<IntensityBoundary<dim>>(power_in,
                                                                                          radius_in,
@@ -218,27 +242,19 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     void
     set_field_conditions() final
     {
-      std::pair<int, Point<dim>> interface_case_info_in;
-      if (interface_case == InterfaceCase::straight)
-        interface_case_info_in.first = 0;
-      else if (interface_case == InterfaceCase::curved)
-        {
-          interface_case_info_in.first = 1;
-          (dim == 2) ? interface_case_info_in.second = Point<dim>(a, b) :
-                       interface_case_info_in.second = Point<dim>(a, b, c);
-        }
-      else if (interface_case == InterfaceCase::particles)
-        interface_case_info_in.first = 2;
-
-
       this->attach_source_field(
-        std::make_shared<HorizontalLevelSetHeaviside<dim>>(interface_case_info_in), "heaviside");
+        std::make_shared<HorizontalLevelSetHeaviside<dim>>(interface_case, interface_case_info_in),
+        "heaviside");
     }
 
   private:
     InterfaceCase interface_case = InterfaceCase::straight;
-    double        a;
-    double        b;
-    double        c;
+    Point<dim>    interface_case_info_in;
+    double        ellipse_a;
+    double        ellipse_b;
+    double        ellipse_c;
+    Point<dim>    center_in;
+    double        radius_in = x_max / 5.;
+    double        power_in  = 0.1;
   };
 } // namespace MeltPoolDG::Simulation::RadiativeTransport
