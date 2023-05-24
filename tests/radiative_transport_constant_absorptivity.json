@@ -10,15 +10,17 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "20.0",
+    "end time": "4.0",
     "time step size": "1.0"
   },
   "rte": {
     "verbosity level": "0",
     "laser direction": "0.0,-1.0",
-    "absorptivity gas": "0",
-    "absorptivity liquid": "10.0 ",
-    "avoid div zero constant": "1e-16",
+    "absorptivity type": "constant",
+    "absorptivity": {
+      "absorptivity gas": "-10.",
+      "absorptivity liquid": "3.0 "
+    },
     "linear solver": {
       "do matrix free": "true",
       "abs tolerance": "1e-16",

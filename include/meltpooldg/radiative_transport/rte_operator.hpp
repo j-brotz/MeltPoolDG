@@ -11,28 +11,24 @@ using namespace dealii;
 namespace MeltPoolDG::RadiativeTransport
 {
   // clang-format off
-/*
- *  This operator computes the LHS and RHS of the radiative transport equation as described by Lin et al (2020):
- *      ∇ · (s I) + µ_A I = 0
- *      where:  s (/) is the unit direction vector of the laser.
- *                  Taken to be constant and straight downwards facing, it is (0.0,-1.0) in 2D and (0.0,0.0,-1.0) in 3D
- *              I (W/m^2) is the intensity of the laser. Is a field quantity
- *              µ_A (/) is the absorption opacity of the surface.
- *                  It is described as a heaviside function, whose scale and offset is given as input parameters
- *
- *  The RTE cast into a weak formulation (Φ is the test function) reads as follows:
- *  ( Φ , ∇ · (s I)  ) + ( Φ ,  µ_A I ) = 0
- *                    Ω                Ω
- *  The divergence term is rearranged to
- *      ∇ · (s I) = s (∇ · I) + I (∇ · s) = s · ∇I = s*grad(I)
- *  Hence:
- *     /                             \
- *     | Φ, ( s  ∇I   +     µ_A*I   )|  = 0
- *     \                             /
- *                                   Ω
- */
-
-
+  /*
+   *  This operator computes the LHS and RHS of the radiative transport equation as described by Lin et al (2020):
+   *      ∇ · (s I) + µ_A I = 0
+   *      where:  s (/) is the unit direction vector of the laser.
+   *              I (W/m^2) is the intensity of the laser. Is a field quantity.
+   *              µ_A (/) is the absorption opacity of the surface.
+   *              
+   *  The RTE cast into a weak formulation (Φ is the test function) reads as follows:
+   *  ( Φ , ∇ · (s I)  ) + ( Φ ,  µ_A I ) = 0
+   *                    Ω                Ω
+   *  The divergence term is rearranged to:
+   *      ∇ · (s I) = s (∇ · I) + I (∇ · s) = s · ∇I = s*grad(I)
+   *  Hence:
+   *     /                                                         \
+   *     | Φ, ( s · ∇I   +                µ_A        ·        I   )|  = 0
+   *     \                                                         /
+   *                                                                Ω
+   */
   // clang-format on
   template <int dim, typename number = double>
   class RadiativeTransportOperator : public OperatorBase<dim, number>
@@ -53,7 +49,6 @@ namespace MeltPoolDG::RadiativeTransport
 
     const RadiativeTransportData<double> &rte_data;
 
-    const VectorType &intensity;
     const VectorType &heaviside;
 
     const unsigned int rte_dof_idx;
@@ -65,7 +60,6 @@ namespace MeltPoolDG::RadiativeTransport
   public:
     RadiativeTransportOperator(const ScratchData<dim> &              scratch_data_in,
                                const RadiativeTransportData<double> &rte_data,
-                               VectorType &                          intensity_in,
                                const VectorType &                    heaviside_in,
                                const unsigned int                    rte_dof_idx_in,
                                const unsigned int                    rte_quad_idx_in,
@@ -87,9 +81,6 @@ namespace MeltPoolDG::RadiativeTransport
 
     void
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
-
-    void
-    reinit() final;
 
   private:
     void

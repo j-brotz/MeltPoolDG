@@ -17,7 +17,7 @@
 
 namespace MeltPoolDG::Simulation::RadiativeTransport
 {
-  BETTER_ENUM(InterfaceCase, char, straight, curved, particles)
+  BETTER_ENUM(InterfaceCase, char, straight, single_powder_particle, powderbed)
 
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
@@ -62,8 +62,10 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   {
   public:
     LevelSetHeaviside(const InterfaceCase interface_case_in,
-                      const Point<dim> &  interface_case_info_in)
+                      const Point<dim> &  interface_case_info_in,
+                      const double        epsilon_cell_in)
       : Function<dim>(1)
+      , eps(epsilon_cell_in)
       , interface_case(interface_case_in)
       , interface_case_info(interface_case_info_in)
     {}
@@ -78,56 +80,44 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
             level + 0.5 * x_max * ((this->get_time() < 10.5) ? this->get_time() : 10) / 10 - y,
             eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
         }
-      else if (interface_case == InterfaceCase::curved)
-        { // a rough non-template ellipse for the interface, because unlikely to be reused
+      else if (interface_case == InterfaceCase::single_powder_particle)
+        {
           if constexpr (dim == 2)
             {
-              const auto x = p[0];
+              // say we inherit from a straight interface case
               const auto y = p[1];
-              return (
-                (std::pow(x / interface_case_info[0], 2.) +
-                   std::pow((y - x_max / 3 * ((this->get_time() < 10.5) ? this->get_time() : 10)) /
-                              interface_case_info[1],
-                            2.) <
-                 1) ?
-                  0.0 :
-                  1.0);
-            }
-          else if constexpr (dim == 3)
-            {
-              const auto x = p[0];
-              const auto y = p[1];
-              const auto z = p[2];
-              return (std::pow(x / interface_case_info[0], 2.) +
-                        std::pow(y / interface_case_info[1], 2.) +
-                        std::pow(z / interface_case_info[2], 2.) <
-                      1) ?
-                       1.0 :
-                       0.0;
-            }
-          else
-            {
-              AssertThrow(false, ExcImpossibleInDim(dim));
-            }
 
+              double straight_value = UtilityFunctions::CharacteristicFunctions::heaviside(
+                level - y,
+                eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
 
-          AssertThrow(false, ExcNotImplemented());
+              // now add a power_particle with gradient:
+              const Functions::SignedDistance::Sphere<dim> distance_sphere(
+                Point<dim>(0, interface_case_info[0]), interface_case_info[1]);
+              double power_particle_value =
+                UtilityFunctions::CharacteristicFunctions::heaviside(-distance_sphere.value(p),
+                                                                     eps);
+              return std::max(straight_value, power_particle_value);
+            }
         }
-      else if (interface_case == InterfaceCase::particles)
-        { // TBD: particles
+      else if (interface_case == InterfaceCase::powderbed)
+        {
           AssertThrow(false, ExcNotImplemented());
+          return 0.0;
         }
       else
         {
           AssertThrow(false, ExcNotImplemented());
+          return 0.0;
         }
+      return 0.0;
     }
 
   private:
-    const double  eps   = 0.1;
-    const double  level = 0.0;
-    InterfaceCase interface_case;
-    Point<dim>    interface_case_info;
+    const double  eps                 = 0.1;
+    const double  level               = 0.0;
+    InterfaceCase interface_case      = InterfaceCase::straight;
+    Point<dim>    interface_case_info = Point<dim>();
   };
 
 
@@ -147,24 +137,20 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     {
       prm.enter_subsection("simulation specific parameters");
       {
-        prm.add_parameter("ellipse-a",
-                          ellipse_a,
-                          "1st semi-axis of the ellipsoid (curved) heaviside");
-        prm.add_parameter("ellipse-b",
-                          ellipse_b,
-                          "2nd semi-axis of the ellipsoid (curved) heaviside");
-        prm.add_parameter("ellipse-c",
-                          ellipse_c,
-                          "3rd semi-axis of the ellipsoid (curved) heaviside");
         prm.add_parameter("source center", center_in, "location of the heat source center");
         prm.add_parameter("source radius", radius_in, "heat source radius");
         prm.add_parameter("interface case",
                           interface_case,
                           "kind of interface for this simulation");
-
         prm.add_parameter("power",
                           power_in,
                           "Sets the intensity scale of the laser source. Is a scalar value");
+        prm.add_parameter("power_particle radius",
+                          powder_particle_radius,
+                          "hanging power_particle radius");
+        prm.add_parameter("powder particle offset",
+                          powder_particle_offset,
+                          "hanging power_particle offset from [dim-1] = 0 plane");
       }
       prm.leave_subsection();
     }
@@ -236,26 +222,32 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     {
       // pass simulation-specific parameters to the simulation class.
       // Done after json parsing, is relevant for heaviside
-      if (interface_case == InterfaceCase::curved)
+      if (interface_case == InterfaceCase::single_powder_particle)
         {
-          (dim == 2) ? interface_case_info_in = Point<dim>(ellipse_a, ellipse_b) :
-                       interface_case_info_in = Point<dim>(ellipse_a, ellipse_b, ellipse_c);
+          // TBD
+          interface_case_info_in = Point<dim>(powder_particle_offset, powder_particle_radius);
         }
+
+      // determine the interface epsilon parameter from minimum mesh size
+      double       thickness_scale_factor = 2.5;
+      const double epsilon_cell           = GridTools::minimal_cell_diameter(*this->triangulation) /
+                                  std::sqrt(dim) * thickness_scale_factor;
 
       // attach the heaviside function field
       this->attach_source_field(std::make_shared<LevelSetHeaviside<dim>>(interface_case,
-                                                                         interface_case_info_in),
+                                                                         interface_case_info_in,
+                                                                         epsilon_cell),
                                 "heaviside");
+      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(), "intensity");
     }
 
   private:
     InterfaceCase interface_case = InterfaceCase::straight;
     Point<dim>    interface_case_info_in;
-    double        ellipse_a;
-    double        ellipse_b;
-    double        ellipse_c;
     Point<dim>    center_in;
-    double        radius_in = x_max / 5.;
-    double        power_in  = 0.1;
+    double        radius_in              = x_max / 5.;
+    double        powder_particle_offset = x_max / 4.;
+    double        powder_particle_radius = x_max / 20.;
+    double        power_in               = 0.1;
   };
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

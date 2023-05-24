@@ -11,14 +11,12 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportOperator<dim, number>::RadiativeTransportOperator(
     const ScratchData<dim> &              scratch_data_in,
     const RadiativeTransportData<double> &rte_data_in,
-    VectorType &                          intensity_in,
     const VectorType &                    heaviside_in,
     const unsigned int                    rte_dof_idx_in,
     const unsigned int                    rte_quad_idx_in,
     const unsigned int                    hs_dof_idx_in)
     : scratch_data(scratch_data_in)
     , rte_data(rte_data_in)
-    , intensity(intensity_in)
     , heaviside(heaviside_in)
     , rte_dof_idx(rte_dof_idx_in)
     , rte_quad_idx(rte_quad_idx_in)
@@ -138,13 +136,6 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim, typename number>
   void
-  RadiativeTransportOperator<dim, number>::reinit()
-  {
-    return;
-  }
-
-  template <int dim, typename number>
-  void
   RadiativeTransportOperator<dim, number>::tangent_local_cell_operation(
     FECellIntegrator<dim, 1, number> &intensity_vals,
     FECellIntegrator<dim, 1, number> &heaviside_vals,
@@ -160,29 +151,51 @@ namespace MeltPoolDG::RadiativeTransport
       }
     for (unsigned int q_index = 0; q_index < intensity_vals.n_q_points; ++q_index)
       {
+        auto compute_mu = [&]() {
+          // 1. material constant mu
+          if (rte_data.absorptivity_type == AbsorptivityType::constant)
+            return (
+              rte_data.absorptivity_constant_data.absorptivity_gas +
+              (rte_data.absorptivity_constant_data.absorptivity_liquid -
+               rte_data.absorptivity_constant_data.absorptivity_gas) *
+                heaviside_vals.get_value(
+                  q_index)); // absorptivity information closes the heaviside function definition
+
+          // 2. gradient based mu:∇H * laser_dir *1./(1.- H + ϵ)
+          else if (rte_data.absorptivity_type == AbsorptivityType::gradient_based)
+            return (scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
+                    (1. - heaviside_vals.get_value(q_index) +
+                     rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant));
+
+          // 3. revised gradient based mu : max(0, ∇H * laser_dir *1./(1.- H + ϵ))
+          else if (rte_data.absorptivity_type == AbsorptivityType::revised_gradient_based)
+            return compare_and_apply_mask<SIMDComparison::less_than>(
+              scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
+                (1. - heaviside_vals.get_value(q_index) +
+                 rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant),
+              0.,
+              /*true*/ 0.,
+              /*false*/ scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
+                (1. - heaviside_vals.get_value(q_index) +
+                 rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant));
+          else
+            AssertThrow(false, ExcNotImplemented());
+          return scalar(0);
+        };
+
+
         const scalar I      = intensity_vals.get_value(q_index);
         const vector grad_I = intensity_vals.get_gradient(q_index);
-        // constant mu definition
-        //        const scalar mu_A =
-        //          rte_data.absorptivity_gas +
-        //          (rte_data.absorptivity_liquid - rte_data.absorptivity_gas) *
-        //            heaviside_vals.get_value(
-        //              q_index); // absorptivity information closes the heaviside function
-        //              definition
-        //        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) + mu_A * I,
-        //        q_index);
-        // TODO : invalidate this mu option after resolving convergence issue
+        scalar       mu_A   = compute_mu();
+        mu_A                = compare_and_apply_mask<SIMDComparison::less_than>(mu_A,
+                                                                 1e-6,
+                                                                 /*true*/ 1e-6,
+                                                                 /*false*/ mu_A);
 
-        // gradient based mu:∇H * laser_dir *1./(1.- H + ϵ)
-        intensity_vals.submit_value(
-          scalar_product(laser_direction, grad_I) +
-            scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
-              (1. - heaviside_vals.get_value(q_index) + rte_data.avoid_div_zero_constant) * I,
-          q_index);
+        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) + mu_A * I, q_index);
       }
     intensity_vals.integrate(EvaluationFlags::values);
   }
-
   template class RadiativeTransportOperator<1, double>;
   template class RadiativeTransportOperator<2, double>;
   template class RadiativeTransportOperator<3, double>;

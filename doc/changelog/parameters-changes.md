@@ -1,6 +1,47 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-08-03
+- Add some parameters related to usage of pseudo-time problem within radiative_transport. Add parameter to choose Absorption coefficient formulation.
+``` diff
+  {
+  "rte": {
++    "problem type": "plain|time_dependent_predictor|time_dependent_problem",
++    "absorptivity type": "constant|gradient_based|revised_gradient_based",
++    "absorptivity": {
++      "absorptivity gas": "",
++      "absorptivity liquid": "",
++      "avoid div zero constant" : ""
++    },
++    "pseudo time stepping": {
++      "diffusion term scaling": "",
++      "advection term scaling": "",
++      "time step size": "",
++      "pseudo time scaling": "",
++      "max n steps": "",
++      "rel tolerance": ""
++      "linear solver": {
++       },
++    },
+  }
+```
+- Add parameters for simulation: radiative_transport
+``` json
+{
+  "base": {
+    "problem name": "radiative_transport"
+    }
+  "problem specific": {
++    "interface case": "straight|single_powder_particle|powderbed",
++    "center in": "",
++    "radius in": "",
++    "power in": "",
++    "powder particle radius": "",
++    "offset": "",
+  }
+```
+
+
 ## 2023-07-05
 - Move some heat parameters to simulation/problem specific section
 ```diff

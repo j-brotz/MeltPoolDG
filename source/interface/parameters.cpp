@@ -1,3 +1,4 @@
+#include "meltpooldg/radiative_transport/radiative_transport_data.hpp"
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -128,6 +129,14 @@ namespace MeltPoolDG
       {
         laser.center.resize(base.dimension);
         std::fill(laser.center.begin(), laser.center.end(), 0);
+      }
+    /*
+     *  resize the laser direction according to the problem dimension
+     */
+    if (rte.laser_direction.size() == 0)
+      {
+        rte.laser_direction.resize(base.dimension);
+        std::fill(rte.laser_direction.begin(), rte.laser_direction.end(), 0);
       }
     /*
      *  recoil pressure: set default value of activation temperature equal to the boiling
@@ -702,36 +711,7 @@ namespace MeltPoolDG
     /*
      *   laser
      */
-    prm.enter_subsection("rte");
-    {
-      prm.add_parameter(
-        "verbosity level",
-        rte.verbosity_level,
-        "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
-        " base value is decisive.");
-      rte.linear_solver.add_parameters(prm);
-      // resize the laser direction according to the problem dimension
-      if (rte.laser_direction.size() == 0)
-        {
-          rte.laser_direction.resize(base.dimension);
-          std::fill(rte.laser_direction.begin(), rte.laser_direction.end(), 0);
-        }
-      prm.add_parameter(
-        "laser direction",
-        rte.laser_direction,
-        "Sets the laser source direction vector. Is a vector. Does not throw if direction vector provided does not match problem dimensions");
-      prm.add_parameter("absorptivity gas",
-                        rte.absorptivity_gas,
-                        "Sets the absorptivity of the gas");
-      prm.add_parameter("absorptivity liquid",
-                        rte.absorptivity_liquid,
-                        "Sets the absorptivity of the liquid");
-      prm.add_parameter(
-        "avoid div zero constant",
-        rte.avoid_div_zero_constant,
-        "Small number in gradient-based absorptivity definition to avoid divide-by-zero");
-    }
-    prm.leave_subsection();
+    rte.add_parameters(prm);
     /*
      * recoil pressure
      */

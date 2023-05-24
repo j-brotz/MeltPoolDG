@@ -8,6 +8,7 @@
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_data.hpp>
+#include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
@@ -354,22 +355,6 @@ namespace MeltPoolDG
     } analytical;
   };
 
-
-  template <typename number = double>
-  struct RadiativeTransportData
-  {
-    RadiativeTransportData()
-    {
-      linear_solver.solver_type         = LinearSolverType::GMRES;
-      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
-    }
-    LinearSolverData<number> linear_solver;
-    double                   absorptivity_gas    = 0.1;
-    double                   absorptivity_liquid = 0.9;
-    unsigned int             verbosity_level     = 0;
-    std::vector<double>      laser_direction;
-    double                   avoid_div_zero_constant = 1e-16;
-  };
 
   template <typename number = double>
   struct MeltPoolData

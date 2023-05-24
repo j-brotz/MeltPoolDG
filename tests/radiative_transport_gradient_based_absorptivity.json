@@ -3,41 +3,31 @@
     "problem name": "radiative_transport",
     "application name": "radiative_transport",
     "dimension": "2",
-    "global refinements": "7",
+    "global refinements": "5",
     "degree": "1",
     "do print parameters": "false",
-    "verbosity level": "3"
-  },
-  "profiling": {
-    "enable": "true"
+    "verbosity level": "0"
   },
   "time stepping": {
     "start time": "0.0",
-    "end time": "20.0",
+    "end time": "4.0",
     "time step size": "1.0"
   },
   "rte": {
-    "verbosity level": "3",
+    "verbosity level": "0",
     "laser direction": "0.0,-1.0",
-    "absorptivity gas": "0",
-    "absorptivity liquid": "10.0 ",
-    "avoid div zero constant": "1e-10",
-    "problem type": "time_dependent_predictor",
     "absorptivity type": "gradient_based",
-    "pseudo time stepping": {
-      "max n steps": 2,
-      "rel tolerance": 0.001
+    "absorptivity": {
+      "avoid div zero constant": "1e-2"
     },
     "linear solver": {
-      "monitor type": "reduced",
       "do matrix free": "true",
       "abs tolerance": "1e-16",
-      "max iterations": "10000",
-      "preconditioner type": "ILU"
+      "preconditioner type": "AMG"
     }
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "simulation specific parameters": {
     "power": "0.1"
