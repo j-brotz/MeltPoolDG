@@ -5,7 +5,6 @@
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 
-
 namespace MeltPoolDG::RadiativeTransport
 {
   template <int dim, typename number>
@@ -31,6 +30,9 @@ namespace MeltPoolDG::RadiativeTransport
       {
         laser_direction[i] = rte_data_in.laser_direction[i];
       }
+    AssertThrow(laser_direction.norm() > 1e-16,
+                ExcZero("laser direction has zero norm. Please check .json input parameter file"));
+    laser_direction /= laser_direction.norm(); // normalize
   }
 
   template <int dim, typename number>
@@ -169,12 +171,13 @@ namespace MeltPoolDG::RadiativeTransport
         //              definition
         //        intensity_vals.submit_value(scalar_product(laser_direction, grad_I) + mu_A * I,
         //        q_index);
+        // TODO : invalidate this mu option after resolving convergence issue
 
         // gradient based mu:∇H * laser_dir *1./(1.- H + ϵ)
         intensity_vals.submit_value(
           scalar_product(laser_direction, grad_I) +
             scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
-              (1. - heaviside_vals.get_value(q_index) + rte_data.mueps) * I,
+              (1. - heaviside_vals.get_value(q_index) + rte_data.avoid_div_zero_constant) * I,
           q_index);
       }
     intensity_vals.integrate(EvaluationFlags::values);

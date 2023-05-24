@@ -721,7 +721,7 @@ namespace MeltPoolDG
         "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
         " base value is decisive.");
       rte.linear_solver.add_parameters(prm);
-      /*resize the laser direction according to the problem dimension*/
+      // resize the laser direction according to the problem dimension
       if (rte.laser_direction.size() == 0)
         {
           rte.laser_direction.resize(base.dimension);
@@ -738,8 +738,8 @@ namespace MeltPoolDG
                         rte.absorptivity_liquid,
                         "Sets the absorptivity of the liquid");
       prm.add_parameter(
-        "mueps",
-        rte.mueps,
+        "avoid div zero constant",
+        rte.avoid_div_zero_constant,
         "Small number in gradient-based absorptivity definition to avoid divide-by-zero");
     }
     prm.leave_subsection();

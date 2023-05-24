@@ -370,7 +370,7 @@ namespace MeltPoolDG
     double                   absorptivity_liquid = 0.9;
     unsigned int             verbosity_level     = 0;
     std::vector<double>      laser_direction;
-    double                   mueps = 1e-16;
+    double                   avoid_div_zero_constant = 1e-16;
   };
 
   template <typename number = double>

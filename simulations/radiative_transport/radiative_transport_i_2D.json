@@ -21,7 +21,7 @@
     "laser direction": "0.0,-1.0",
     "absorptivity gas": "0",
     "absorptivity liquid": "10.0 ",
-    "mueps": "1e-16",
+    "avoid div zero constant": "1e-16",
     "linear solver": {
       "monitor type": "reduced",
       "do matrix free": "true",

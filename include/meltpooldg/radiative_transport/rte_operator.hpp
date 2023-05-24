@@ -20,18 +20,17 @@ namespace MeltPoolDG::RadiativeTransport
  *              µ_A (/) is the absorption opacity of the surface.
  *                  It is described as a heaviside function, whose scale and offset is given as input parameters
  *
- *  Cast into a weak formulation (Φ is the test function) :
+ *  The RTE cast into a weak formulation (Φ is the test function) reads as follows:
  *  ( Φ , ∇ · (s I)  ) + ( Φ ,  µ_A I ) = 0
  *                    Ω                Ω
- *  Because s  is taken to be constant, integration by parts is not necessary:
- *      ∇ · (s I) = s (∇ · I) + I (∇ · s) = s∇I = s*grad(I)
+ *  The divergence term is rearranged to
+ *      ∇ · (s I) = s (∇ · I) + I (∇ · s) = s · ∇I = s*grad(I)
  *  Hence:
- *     /                        \
- *  ∫ Φ|  ( s  ∇I )  +    µ_A*I |  = 0
- *     \                        /
- *                              Ω
- *
- *                                              */
+ *     /                             \
+ *     | Φ, ( s  ∇I   +     µ_A*I   )|  = 0
+ *     \                             /
+ *                                   Ω
+ */
 
 
   // clang-format on

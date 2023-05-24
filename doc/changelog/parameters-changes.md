@@ -10,7 +10,7 @@ All notable changes of the input parameters will be documented in this file.
     "laser direction": ",",
     "absorptivity gas": "",
     "absorptivity liquid": "",
-    "mueps": "",
+    "avoid div zero constant": "",
     "linear solver": {
     "monitor type": "",
     "do matrix free": "",
