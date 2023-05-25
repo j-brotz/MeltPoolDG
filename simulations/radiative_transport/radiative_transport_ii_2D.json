@@ -33,6 +33,9 @@
     "paraview do output": "true"
   },
   "simulation specific parameters": {
-    "power": "0.1"
+    "power": "0.1",
+    "interface case": "curved",
+    "ellipse-a": 3.0,
+    "ellipse-b": 1.75
   }
 }

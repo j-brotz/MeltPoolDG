@@ -366,7 +366,11 @@ namespace MeltPoolDG
       linear_solver.preconditioner_type = PreconditionerType::Diagonal;
     }
     LinearSolverData<number> linear_solver;
-    unsigned int             verbosity_level = 0;
+    double                   absorptivity_gas    = 0.1;
+    double                   absorptivity_liquid = 0.9;
+    unsigned int             verbosity_level     = 0;
+    std::vector<double>      laser_direction;
+    double                   avoid_div_zero_constant = 1e-16;
   };
 
   template <typename number = double>

@@ -33,24 +33,23 @@ namespace MeltPoolDG::RadiativeTransport
     const VectorType &heaviside;
 
     const unsigned int rte_dof_idx;
+    const unsigned int rte_hanging_nodes_dof_idx;
     const unsigned int rte_quad_idx;
     const unsigned int hs_dof_idx;
 
     VectorType intensity;
     VectorType rhs;
 
-    std::shared_ptr<RadiativeTransportOperator<dim>> rte_operator;
+    std::unique_ptr<OperatorBase<dim, double>> rte_operator;
 
   public:
     RadiativeTransportOperation(const ScratchData<dim> &              scratch_data_in,
                                 const RadiativeTransportData<double> &rte_data_in,
                                 const VectorType &                    heaviside_in,
                                 const unsigned int                    rte_dof_idx_in,
+                                const unsigned int                    rte_hanging_nodes_dof_idx_in,
                                 const unsigned int                    rte_quad_idx_in,
                                 const unsigned int                    hs_dof_idx_in);
-
-    void
-    set_initial_condition(const Function<dim> &initial_intensity);
 
     void
     reinit();

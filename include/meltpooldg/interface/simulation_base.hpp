@@ -7,6 +7,8 @@
 
 #include <deal.II/grid/grid_tools.h>
 // MeltPoolDG
+#include <deal.II/base/mpi.h>
+
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/interface/field_conditions.hpp>
@@ -18,8 +20,6 @@
 
 namespace MeltPoolDG
 {
-  using namespace dealii;
-
   template <int dim, int spacedim = dim>
   class SimulationBase
   {
@@ -116,7 +116,7 @@ namespace MeltPoolDG
       else
         AssertThrow(false, ExcMessage("Parameterhandler cannot handle current file ending"));
 
-      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
+      if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 &&
           this->parameters.base.do_print_parameters)
         {
           std::cout << "Simulation-specific paramters:" << std::endl;

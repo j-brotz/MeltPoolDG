@@ -6,10 +6,7 @@
     "global refinements": "5",
     "degree": "1",
     "do print parameters": "false",
-    "verbosity level": "3"
-  },
-  "profiling": {
-    "enable": "true"
+    "verbosity level": "0"
   },
   "time stepping": {
     "start time": "0.0",
@@ -17,20 +14,19 @@
     "time step size": "1.0"
   },
   "rte": {
-    "verbosity level": "3",
+    "verbosity level": "0",
     "laser direction": "0.0,-1.0",
     "absorptivity gas": "0",
     "absorptivity liquid": "10.0 ",
     "avoid div zero constant": "1e-16",
     "linear solver": {
-      "monitor type": "reduced",
       "do matrix free": "true",
       "abs tolerance": "1e-16",
       "preconditioner type": "AMG"
     }
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "simulation specific parameters": {
     "power": "0.1"
