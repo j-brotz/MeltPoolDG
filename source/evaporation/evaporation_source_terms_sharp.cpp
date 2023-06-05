@@ -233,7 +233,7 @@ namespace MeltPoolDG::Evaporation
 
             // integrate rhs term of the continuity equation
             buffer.resize(scratch_data.get_fe(pressure_dof_idx).n_dofs_per_cell());
-            rhs_continuity.integrate(buffer, EvaluationFlags::values);
+            rhs_continuity.test_and_sum(buffer, EvaluationFlags::values);
 
             // scatter
             local_dof_indices.resize(scratch_data.get_fe(pressure_dof_idx).n_dofs_per_cell());

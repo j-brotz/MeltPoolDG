@@ -1,3 +1,5 @@
+#include <deal.II/base/mpi.h>
+
 #include <deal.II/numerics/data_out.h>
 
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
@@ -429,7 +431,7 @@ namespace MeltPoolDG::Heat
           }
 
         // integrate laser heat source
-        heat_source_vals.integrate(buffer, EvaluationFlags::values);
+        heat_source_vals.test_and_sum(buffer, EvaluationFlags::values);
 
         scratch_data.get_constraint(temp_dof_idx)
           .distribute_local_to_global(buffer, local_dof_indices, heat_rhs);
