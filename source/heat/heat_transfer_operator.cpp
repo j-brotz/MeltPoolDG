@@ -810,8 +810,8 @@ namespace MeltPoolDG::Heat
                                                   JxW[q],
                                                 q); // *(-1) for the residual
                   }
-                temp_vals_surf.integrate(buffer,
-                                         EvaluationFlags::values); //
+                temp_vals_surf.test_and_sum(buffer,
+                                            EvaluationFlags::values); //
 
                 scratch_data.get_constraint(temp_dof_idx)
                   .distribute_local_to_global(buffer, local_dof_indices, evapor_heat_source);
