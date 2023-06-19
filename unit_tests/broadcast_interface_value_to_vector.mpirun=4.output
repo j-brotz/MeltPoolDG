@@ -9,14 +9,14 @@ norm of interface vals: 21232.504
  START TEST: n_iter=16 type closest_point_normal #comp 1 #refine 6
 --------------------------------------------------------
 max distance to analytical solution (relative): 0.015635164
-max distance to numerical distance solution (relative): 9.9948078e-11
+max distance to numerical distance solution (relative): 9.9948086e-11
 norm of interface vals: 21232.322
 --------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal #comp 2 #refine 6
 --------------------------------------------------------
 WARNING: The tolerance of 8912 points is not yet attained. Max distance value: 5.2369329e-10
 max distance to analytical solution (relative): 0.015635164
-max distance to numerical distance solution (relative): 1.7378428e-10
+max distance to numerical distance solution (relative): 1.7378426e-10
 norm of interface vals: 30027.037
 --------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal_collinear #comp 2 #refine 6
@@ -29,5 +29,5 @@ norm of interface vals: 30027.037
  START TEST: n_iter=1 type nearest_point #comp 2 #refine 6
 --------------------------------------------------------
 max distance to analytical solution (relative): 0.33349596
-max distance to numerical distance solution (relative): 1.047773e-14
-norm of interface vals: 30027.34
+max distance to numerical distance solution (relative): 5.0079953e-15
+norm of interface vals: 30027.557
