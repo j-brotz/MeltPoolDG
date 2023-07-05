@@ -18,6 +18,7 @@
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/radiative_transport/rte_operation.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::Heat
@@ -58,6 +59,8 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
     std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
 
+    std::shared_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
+
   public:
     HeatTransferProblem() = default;
 
@@ -77,6 +80,7 @@ namespace MeltPoolDG::Heat
       bool do_two_phase      = false;
       bool do_convection     = false;
       bool do_solidification = false;
+      bool do_rte            = false;
     } problem_specific_parameters;
     /*
      *  This function initials the relevant scratch data

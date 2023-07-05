@@ -99,7 +99,17 @@ namespace MeltPoolDG::Heat
                   }
               }
           }
-        // TODO add RTE heat source if given
+        // add RTE heat source if given
+        if (problem_specific_parameters.do_rte)
+          {
+            rte_operation->solve();
+
+            AssertThrow(false, ExcMessage("not implemented"))
+            // rte_operation->compute_heat_source(
+            //   heat_operation->get_user_rhs(),
+            //   *scratch_data,
+            //   temp_dof_idx);
+          }
 
         heat_operation->solve();
 
@@ -138,6 +148,9 @@ namespace MeltPoolDG::Heat
         "do solidification",
         problem_specific_parameters.do_solidification,
         "Set this parameter to true if you want to consider melting/solidification effects.");
+      prm.add_parameter("do rte",
+                        problem_specific_parameters.do_rte,
+                        "Set this parameter to true if you want to enable RTE.");
     }
     prm.leave_subsection();
   }
@@ -275,8 +288,22 @@ namespace MeltPoolDG::Heat
                         "heat source model in the laser section of the input parameters."));
       }
     /*
-     * RTE operation TODO
+     * RTE operation
      */
+    if (problem_specific_parameters.do_rte)
+      {
+        AssertThrow(problem_specific_parameters.do_two_phase,
+                    ExcMessage("RTE requires a Level Set interface."));
+
+        rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
+          *scratch_data,
+          base_in->parameters.rte,
+          level_set_as_heaviside,
+          temp_dof_idx,
+          temp_hanging_nodes_dof_idx,
+          temp_quad_idx,
+          level_set_dof_idx);
+      }
 
     /*
      *    initialize the heat operation class
@@ -412,6 +439,7 @@ namespace MeltPoolDG::Heat
      */
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       heat_operation->attach_output_vectors(data_out);
+      rte_operation->attach_output_vectors(data_out);
     };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
