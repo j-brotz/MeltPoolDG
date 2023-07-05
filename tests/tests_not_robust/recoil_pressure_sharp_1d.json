@@ -25,9 +25,7 @@
   "heat": {
     "heat nlsolve field correction tolerance": "1.e-9",
     "heat nlsolve max nonlinear iterations": "15",
-    "heat nlsolve residual tolerance": "1e0",
-    "heat solidification": "false",
-    "heat two phase": "true"
+    "heat nlsolve residual tolerance": "1e0"
   },
   "laser": {
     "laser gauss absorptivity gas": "1.0",

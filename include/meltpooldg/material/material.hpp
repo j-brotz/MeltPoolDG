@@ -425,6 +425,8 @@ namespace MeltPoolDG
     MaterialParameterValuesContainer solid;
 
     const MaterialTypes material_type;
+
+    const number inv_mushy_interval;
   };
 
 
@@ -482,6 +484,12 @@ namespace MeltPoolDG
     , liquid(data.second)
     , solid(data.solid)
     , material_type(material_type)
+    , inv_mushy_interval(material_type == MaterialTypes::liquid_solid ||
+                             material_type == MaterialTypes::gas_liquid_solid ||
+                             material_type ==
+                               MaterialTypes::gas_liquid_solid_consistent_with_evaporation ?
+                           1.0 / (data.liquidus_temperature - data.solidus_temperature) :
+                           0.0)
   {}
 
 

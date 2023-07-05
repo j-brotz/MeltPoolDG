@@ -1,6 +1,61 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-07-05
+- Move some heat parameters to simulation/problem specific section
+```diff
+{
+  "heat": {
+-    "heat velocity": "",
+-    "heat two phase": "",
+-    "heat solidification": ""
+  }
+```
+- problem: melt_pool
+```diff
+{
+  "base": {
+    "problem name": "melt_pool"
+    }
+  "problem specific": {
++    "do solidification": "true/false"
+  }
+```
+- problem: heat_transfer
+```diff
+{
+  "base": {
+    "problem name": "heat_transfer"
+    }
++  "problem specific": {
++    "do two phase": "true/false",
++    "do convection": "true/false",
++    "do solidification": "true/false"
++  }
+```
+- simulation: melt_front_propagation
+```diff
+{
+  "base": {
+    "application name": "melt_front_propagation"
+    }
++  "simulation specific parameters": {
++    "do two phase": "true/false"
++  }
+```
+- simulation: unidirectional_heat_transfer
+```diff
+{
+  "base": {
+    "application name": "unidirectional_heat_transfer"
+    }
+  "simulation specific": {
++    "do solidification": "true/false",
++    "do two phase": "true/false",
++    "velocity": ""
+  }
+```
+
 ## 2023-05-09
 - Add parameters for Radiative Transfer Equation
 ```json

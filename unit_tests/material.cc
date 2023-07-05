@@ -56,8 +56,6 @@ main()
     TwoPhaseFluidPropertiesTransitionType::smooth;
   material_data.solidus_temperature  = 0.0;
   material_data.liquidus_temperature = 100.0;
-  material_data.inv_mushy_interval =
-    1 / (material_data.liquidus_temperature - material_data.solidus_temperature);
 
   const auto update_all = MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
                           MaterialUpdateFlags::density | MaterialUpdateFlags::d_capacity_d_T |

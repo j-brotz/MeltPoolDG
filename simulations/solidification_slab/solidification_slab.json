@@ -15,12 +15,14 @@
     "verbosity level": "2"
   },
   "heat": {
-    "heat solidification": "true",
     "heat nlsolve residual tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "AMG"
     }
+  },
+  "problem specific": {
+    "do solidification": "true"
   },
   "material": {
     "material second capacity": "4226.0",
@@ -36,4 +38,4 @@
     "paraview do output": "true",
     "paraview filename": "solution_solidification_slab"
   }
-}
+},

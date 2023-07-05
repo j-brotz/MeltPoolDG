@@ -113,7 +113,6 @@
     }
   },
   "heat": {
-    "heat solidification": "true",
     "heat nlsolve residual tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-12",
@@ -128,7 +127,8 @@
   "problem specific": {
     "do melt pool": "true",
     "do recoil pressure": "true",
-    "do heat transfer": "true"
+    "do heat transfer": "true",
+    "do solidification": "true"
   },
   "advection diffusion": {
     "linear solver": {

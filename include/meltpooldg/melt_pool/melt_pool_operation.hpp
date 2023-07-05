@@ -10,6 +10,7 @@
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
@@ -30,8 +31,9 @@ namespace MeltPoolDG
        *  Parameters
        */
       const MeltPoolData<double> mp_data;
-      const MaterialData<double> material;
-      const bool                 do_mushy_zone;
+
+      // melting/solidification
+      Material<double> melting_solidification;
 
       std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
       std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
@@ -108,15 +110,15 @@ namespace MeltPoolDG
       const VectorType &
       get_liquid() const;
 
-      VectorizedArray<double>
-      compute_solid_fraction(const VectorizedArray<double> &current_temperature) const;
-
       /**
        * This function returns the solid fraction from a linear interpolation between the solidus
        * and liquidus temperatures, i.e. 0 (T>=T_liquidus) and 1 (T<=T_solidus).
        */
       double
-      compute_solid_fraction(const double temeprature) const;
+      compute_solid_fraction(const double temperature) const;
+
+      VectorizedArray<double>
+      compute_solid_fraction(const VectorizedArray<double> &temperature) const;
 
     private:
       void

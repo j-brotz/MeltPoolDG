@@ -99,9 +99,6 @@
     "avoid div zero constant": "1e-3",
     "formulation": "implicit_formulation"
   },
-  "heat": {
-    "heat solidification": "true"
-  },
   "simulation specific domain": {
     "domain x max": "0.000100",
     "domain x min": "-0.000100",
@@ -128,7 +125,8 @@
   "problem specific": {
     "do melt pool": "true",
     "do recoil pressure": "true",
-    "do heat transfer": "true"
+    "do heat transfer": "true",
+    "do solidification": "true"
   },
   "advection diffusion": {
     "linear solver": {

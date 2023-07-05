@@ -9,9 +9,6 @@
     "problem name": "melt_pool",
     "gravity": "0.0"
   },
-  "heat": {
-    "heat two phase": "true"
-  },
   "material": {
     "material first capacity": "1e-4",
     "material first conductivity": "2.4e-6",

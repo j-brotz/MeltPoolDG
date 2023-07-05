@@ -95,7 +95,8 @@ namespace MeltPoolDG::Heat
                           unsigned int                             vel_dof_idx_in = 0,
                           VectorType *                             velocity_in    = nullptr,
                           unsigned int                             ls_dof_idx_in  = 0,
-                          VectorType *level_set_as_heaviside_in                   = nullptr);
+                          VectorType *level_set_as_heaviside_in                   = nullptr,
+                          const bool  do_solidifiaction                           = false);
 
     void
     register_evaporative_mass_flux(VectorType *       evaporative_mass_flux_in,

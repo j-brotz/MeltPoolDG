@@ -155,11 +155,33 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   template <int dim>
   class SimulationUnidirectionalHeatTransfer : public SimulationBase<dim>
   {
+  private:
+    bool   do_solidification = false;
+    bool   do_two_phase      = false;
+    double velocity          = 0.0;
+
   public:
     SimulationUnidirectionalHeatTransfer(std::string    parameter_file,
                                          const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
     {}
+
+    void
+    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    {
+      prm.enter_subsection("simulation specific");
+      {
+        prm.add_parameter(
+          "do solidification",
+          do_solidification,
+          "Set this parameter to true for the case to consider melting/solidification effects.");
+        prm.add_parameter("do two phase",
+                          do_two_phase,
+                          "Set this parameter to true for the case to consider two phases.");
+        prm.add_parameter("velocity", velocity, "Velocity.");
+      }
+      prm.leave_subsection();
+    }
 
     void
     create_spatial_discretization() override
@@ -229,7 +251,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     void
     set_field_conditions() final
     {
-      if (this->parameters.heat.solidification)
+      if (do_solidification)
         this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(1960.0, 1980.0),
                                        "heat_transfer");
       else if (this->parameters.heat.emissivity > 0.0 ||
@@ -239,20 +261,18 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       else
         this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_transfer");
 
-      this->attach_velocity_field(std::make_shared<UnidirectionalVelocityField<dim>>(
-                                    this->parameters.heat.velocity),
+      this->attach_velocity_field(std::make_shared<UnidirectionalVelocityField<dim>>(velocity),
                                   "heat_transfer");
 
-      if (this->parameters.heat.two_phase)
+      if (do_two_phase)
         {
-          if (!this->parameters.heat.solidification)
+          if (!do_solidification)
             this->template attach_initial_condition(
-              std::make_shared<HorizontalLevelSetHeaviside<dim>>(), "prescribed_level_set");
+              std::make_shared<HorizontalLevelSetHeaviside<dim>>(), "prescribed_heaviside");
           else
             this->template attach_initial_condition(
-              std::make_shared<CovectedVerticalLevelSetHeaviside<dim>>(
-                this->parameters.heat.velocity),
-              "prescribed_level_set");
+              std::make_shared<CovectedVerticalLevelSetHeaviside<dim>>(velocity),
+              "prescribed_heaviside");
         }
     }
   };

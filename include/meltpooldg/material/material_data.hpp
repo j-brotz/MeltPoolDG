@@ -79,7 +79,6 @@ namespace MeltPoolDG
     number solidus_temperature        = 0.0;
     number liquidus_temperature       = 0.0;
     number melting_point              = 0.0;
-    number inv_mushy_interval         = 0.0;
     number boiling_temperature        = 0.0;
     number latent_heat_of_evaporation = 0.0;
     number molar_mass                 = 0.0;

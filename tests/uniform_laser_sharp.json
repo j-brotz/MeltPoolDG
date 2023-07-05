@@ -28,8 +28,6 @@
     "heat nlsolve field correction tolerance": "1e-06",
     "heat nlsolve max nonlinear iterations": "15",
     "heat nlsolve residual tolerance": "1e-2",
-    "heat solidification": "false",
-    "heat two phase": "true",
     "linear solver": {
       "rel tolerance": "0.0001",
       "abs tolerance": "1e-12",
@@ -63,6 +61,7 @@
     "do melt pool": "true",
     "do recoil pressure": "false",
     "do heat transfer": "true",
+    "do solidification": "false",
     "do advect level set": "false"
   },
   "Navier-Stokes": {

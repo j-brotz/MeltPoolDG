@@ -19,17 +19,20 @@
     "domain x max": "0.6e-3",
     "domain z min": "-0.2e-3",
     "domain z max": "0.2e-3",
-    "initial temperature": "1000.0"
+    "initial temperature": "1000.0",
+    "do two phase": "true"
   },
   "heat": {
-    "heat velocity": "-1",
-    "heat solidification": "true",
-    "heat two phase": "true",
     "heat nlsolve residual tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "ILU"
     }
+  },
+  "problem specific": {
+    "do two phase": "true",
+    "do convection": "false",
+    "do solidification": "true"
   },
   "laser": {
     "laser power": "10.",

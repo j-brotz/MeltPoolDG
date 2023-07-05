@@ -67,7 +67,17 @@ namespace MeltPoolDG::Heat
     std::string
     get_name() final;
 
+  protected:
+    void
+    add_parameters(dealii::ParameterHandler &) final;
+
   private:
+    struct
+    {
+      bool do_two_phase      = false;
+      bool do_convection     = false;
+      bool do_solidification = false;
+    } problem_specific_parameters;
     /*
      *  This function initials the relevant scratch data
      *  for the computation of the level set problem

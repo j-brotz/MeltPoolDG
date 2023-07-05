@@ -100,8 +100,6 @@
     "paraview directory": "solution_recoil_pressure"
   },
   "heat": {
-    "heat two phase": "true",
-    "heat solidification": "true",
     "heat nlsolve residual tolerance": "1.0",
     "heat nlsolve max nonlinear iterations": "20",
     "heat nlsolve field correction tolerance": "1e-12",
@@ -143,6 +141,7 @@
     "do evaporative heat flux": "true",
     "do melt pool": "true",
     "do heat transfer": "true",
+    "do solidification": "true",
     "do advect level set": "true"
   }
 }

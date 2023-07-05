@@ -57,9 +57,7 @@
   "heat": {
     "heat nlsolve field correction tolerance": "1e-6",
     "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve residual tolerance": "1e-5",
-    "heat solidification": "true",
-    "heat two phase": "true"
+    "heat nlsolve residual tolerance": "1e-5"
   },
   "laser": {
     "laser gauss laser beam radius": "70.e-6",
@@ -90,6 +88,7 @@
     "do evaporative heat flux": "false",
     "do evaporative velocity jump": "true",
     "do heat transfer": "true",
+    "do solidification": "true",
     "do melt pool": "true",
     "do recoil pressure": "true"
   },

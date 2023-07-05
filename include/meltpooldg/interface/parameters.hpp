@@ -306,9 +306,6 @@ namespace MeltPoolDG
     number                                      emissivity               = 0.0;
     number                                      convection_coefficient   = 0.0;
     number                                      temperature_infinity     = 0.0;
-    number                                      velocity                 = 0.0;
-    bool                                        two_phase                = false;
-    bool                                        solidification           = false;
     bool                                        enable_time_dependent_bc = false;
     NonlinearSolverData<number>                 nlsolve;
     LinearSolverData<number>                    linear_solver;

@@ -82,7 +82,8 @@ namespace MeltPoolDG::MeltPool
 
     struct
     {
-      bool do_heat_transfer = false;
+      bool do_heat_transfer  = false;
+      bool do_solidification = false;
       bool do_evaporative_heat_flux =
         false; //@todo: move to struct "phase change", rename do_evaporative_enthalpy_jump
       bool do_evaporative_velocity_jump  = false; //@todo: move to struct "phase change"

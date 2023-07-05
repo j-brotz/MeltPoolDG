@@ -745,6 +745,10 @@ namespace MeltPoolDG::MeltPool
         problem_specific_parameters.do_heat_transfer,
         "Set this parameter to true if you want to consider a coupling with heat transfer.");
       prm.add_parameter(
+        "do solidification",
+        problem_specific_parameters.do_solidification,
+        "Set this parameter to true if you want to consider melting/solidification effects.");
+      prm.add_parameter(
         "do evaporative heat flux",
         problem_specific_parameters.do_evaporative_heat_flux,
         "Set this parameter to true if you want to the evaporation-induced jump in the enthalpy of the heat equation.");
@@ -953,7 +957,7 @@ namespace MeltPoolDG::MeltPool
      */
     const auto material_type =
       determine_material_type(true,
-                              base_in->parameters.heat.solidification,
+                              problem_specific_parameters.do_solidification,
                               base_in->parameters.material.two_phase_properties_transition_type ==
                                 TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
 
@@ -1015,7 +1019,8 @@ namespace MeltPoolDG::MeltPool
         vel_dof_idx,
         &flow_operation->get_velocity(),
         ls_hanging_nodes_dof_idx,
-        &level_set_operation->get_level_set_as_heaviside());
+        &level_set_operation->get_level_set_as_heaviside(),
+        problem_specific_parameters.do_solidification);
 
     /*
      *    initialize the surface tension operation class
@@ -1196,7 +1201,7 @@ namespace MeltPoolDG::MeltPool
             temp_hanging_nodes_dof_idx);
       }
 
-    if (base_in->parameters.heat.solidification)
+    if (problem_specific_parameters.do_solidification)
       AssertThrow(
         melt_pool_operation,
         ExcMessage("If solidifcation is enabled the melt pool operation must be initialized! Check "
@@ -1463,7 +1468,7 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::update_phases(const VectorType &        ls_as_heaviside,
                                       const Parameters<double> &parameters) const
   {
-    if (heat_operation && parameters.heat.solidification)
+    if (heat_operation && problem_specific_parameters.do_solidification)
       heat_operation->get_temperature().update_ghost_values();
 
     double dummy;
@@ -1473,25 +1478,25 @@ namespace MeltPoolDG::MeltPool
 #if 0
     // compute the limit values of the material parameters
     const double max_density =
-      parameters.heat.solidification ?
+      problem_specific_parameters.do_solidification ?
         std::max({parameters.material.solid.density,
                   parameters.material.first.density,
                   parameters.material.second.density}) :
         std::max(parameters.material.first.density, parameters.material.second.density);
     const double min_density =
-      parameters.heat.solidification ?
+      problem_specific_parameters.do_solidification ?
         std::min({parameters.material.solid.density,
                   parameters.material.first.density,
                   parameters.material.second.density}) :
         std::min(parameters.material.first.density, parameters.material.second.density);
     const double max_viscosity =
-      parameters.heat.solidification ?
+      problem_specific_parameters.do_solidification ?
         std::max({parameters.material.solid.viscosity,
                   parameters.material.first.viscosity,
                   parameters.material.second.viscosity}) :
         std::max(parameters.material.first.viscosity, parameters.material.second.viscosity);
     const double min_viscosity =
-      parameters.heat.solidification ?
+      problem_specific_parameters.do_solidification ?
         std::min({parameters.material.solid.viscosity,
                   parameters.material.first.viscosity,
                   parameters.material.second.viscosity}) :
@@ -1506,7 +1511,7 @@ namespace MeltPoolDG::MeltPool
 
         std::unique_ptr<FECellIntegrator<dim, 1, double>> temp_values;
 
-        if (heat_operation && parameters.heat.solidification)
+        if (heat_operation && problem_specific_parameters.do_solidification)
           temp_values = std::make_unique<FECellIntegrator<dim, 1, double>>(
             matrix_free, temp_dof_idx, flow_operation->get_quad_idx_velocity());
 
@@ -1643,7 +1648,7 @@ namespace MeltPoolDG::MeltPool
           update_values);
 
         std::unique_ptr<FEValues<dim>> temp_values;
-        if (heat_operation && parameters.heat.solidification)
+        if (heat_operation && problem_specific_parameters.do_solidification)
           temp_values = std::make_unique<FEValues<dim>>(
             scratch_data->get_mapping(),
             scratch_data->get_fe(temp_dof_idx),
@@ -1709,7 +1714,7 @@ namespace MeltPoolDG::MeltPool
       }
 #endif
 
-    if (heat_operation && parameters.heat.solidification)
+    if (heat_operation && problem_specific_parameters.do_solidification)
       heat_operation->get_temperature().zero_out_ghost_values();
   }
 

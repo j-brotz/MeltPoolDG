@@ -32,22 +32,28 @@ namespace MeltPoolDG::Heat
 
         time_iterator->print_me(scratch_data->get_pcout());
 
-        if (const auto velocity_field_function =
-              base_in->get_velocity_field("heat_transfer", true /*is_optional*/))
-          compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
+        if (problem_specific_parameters.do_convection)
+          compute_field_vector(velocity,
+                               velocity_dof_idx,
+                               *base_in->get_velocity_field("heat_transfer",
+                                                            false /*is_optional*/));
 
-        if (base_in->parameters.heat.two_phase)
+        if (problem_specific_parameters.do_two_phase)
           compute_field_vector(level_set_as_heaviside,
                                level_set_dof_idx,
-                               *base_in->get_initial_condition("prescribed_level_set"));
+                               *base_in->get_initial_condition("prescribed_heaviside",
+                                                               false /*is_optional*/));
 
+        // heat source
+        // zero out
+        scratch_data->initialize_dof_vector(heat_operation->get_heat_source(), temp_dof_idx);
+        // add custom source field if given
         if (const auto source_field_function =
               base_in->get_source_field("heat_transfer", true /*is_optional*/))
           compute_field_vector(heat_operation->get_heat_source(),
                                temp_dof_idx,
                                *source_field_function);
-        // TODO: Atm the laser heat source will overwrite the heat source field function if both are
-        // given. Instead they should be added.
+        // add laser heat source if given
         if (laser_operation)
           {
             laser_operation->move_laser(dt);
@@ -60,7 +66,7 @@ namespace MeltPoolDG::Heat
                       temp_dof_idx,
                       laser_operation->get_laser_power(),
                       laser_operation->get_laser_position(),
-                      true /* zero_out */);
+                      false /* zero_out */);
                     break;
                   }
                   case LaserImpactType::interface: {
@@ -72,7 +78,7 @@ namespace MeltPoolDG::Heat
                       laser_operation->get_laser_position(),
                       heat_operation->get_level_set_as_heaviside(),
                       level_set_dof_idx,
-                      true /* zero_out */);
+                      false /* zero_out */);
                     break;
                   }
                   case LaserImpactType::interface_sharp: {
@@ -84,7 +90,7 @@ namespace MeltPoolDG::Heat
                       laser_operation->get_laser_position(),
                       heat_operation->get_level_set_as_heaviside(),
                       level_set_dof_idx,
-                      true /* zero_out */);
+                      false /* zero_out */);
                     break;
                   }
                   default: {
@@ -93,6 +99,8 @@ namespace MeltPoolDG::Heat
                   }
               }
           }
+        // TODO add RTE heat source if given
+
         heat_operation->solve();
 
         // ... and output the results to vtk files.
@@ -113,8 +121,35 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
+  HeatTransferProblem<dim>::add_parameters(dealii::ParameterHandler &prm)
+  {
+    prm.enter_subsection("problem specific");
+    {
+      prm.add_parameter("do two phase",
+                        problem_specific_parameters.do_two_phase,
+                        "Set this parameter to true if you want to consider two phases."
+                        "If true the field \"prescribed_heaviside\" is considered.");
+      prm.add_parameter(
+        "do convection",
+        problem_specific_parameters.do_convection,
+        "Set this parameter to true if you want to consider convective heat transfer."
+        "If true the velocity field in \"heat_transfer\" is considered.");
+      prm.add_parameter(
+        "do solidification",
+        problem_specific_parameters.do_solidification,
+        "Set this parameter to true if you want to consider melting/solidification effects.");
+    }
+    prm.leave_subsection();
+  }
+
+  template <int dim>
+  void
   HeatTransferProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
   {
+    /*
+     *  Add problem specific parameters defined within add_parameters()
+     */
+    this->add_problem_specific_parameters(base_in->parameter_file);
     /*
      *  setup DoFHandler
      */
@@ -169,13 +204,11 @@ namespace MeltPoolDG::Heat
     /*
      * initialize material
      */
-    // TODO: Introduce problem specific parameters
-    const bool do_two_phase      = base_in->parameters.heat.two_phase;
-    const bool do_solidification = base_in->parameters.heat.solidification;
-    const bool do_evaporation = base_in->parameters.material.two_phase_properties_transition_type ==
-                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation;
     const auto material_type =
-      determine_material_type(do_two_phase, do_solidification, do_evaporation);
+      determine_material_type(problem_specific_parameters.do_two_phase,
+                              problem_specific_parameters.do_solidification,
+                              base_in->parameters.material.two_phase_properties_transition_type ==
+                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
     material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
 
     /*
@@ -186,26 +219,28 @@ namespace MeltPoolDG::Heat
      *    set velocity field
      */
     VectorType *velocity_ptr = nullptr;
-    if (base_in->parameters.heat.velocity != 0.0)
+    if (problem_specific_parameters.do_convection)
       {
         compute_field_vector(velocity,
                              velocity_dof_idx,
-                             *base_in->get_velocity_field("heat_transfer"));
+                             *base_in->get_velocity_field("heat_transfer", false /*is_optional*/));
         velocity_ptr = &velocity;
       }
-
     /*
      *    set level-set as heaviside field
      */
     VectorType *level_set_as_heaviside_ptr = nullptr;
-    if (base_in->parameters.heat.two_phase)
+    if (problem_specific_parameters.do_two_phase)
       {
         compute_field_vector(level_set_as_heaviside,
                              level_set_dof_idx,
-                             *base_in->get_initial_condition("prescribed_level_set"));
+                             *base_in->get_initial_condition("prescribed_heaviside",
+                                                             false /*is_optional*/));
         level_set_as_heaviside_ptr = &level_set_as_heaviside;
       }
-
+    /*
+     * laser operation
+     */
     if (base_in->parameters.laser.power > 0.0)
       {
         /*
@@ -239,22 +274,27 @@ namespace MeltPoolDG::Heat
                         "No requested laser model found. Please speficy the "
                         "heat source model in the laser section of the input parameters."));
       }
+    /*
+     * RTE operation TODO
+     */
 
     /*
      *    initialize the heat operation class
      */
-    heat_operation = std::make_shared<HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
-                                                                  *scratch_data,
-                                                                  base_in->parameters.heat,
-                                                                  *material,
-                                                                  *time_iterator,
-                                                                  temp_dof_idx,
-                                                                  temp_hanging_nodes_dof_idx,
-                                                                  temp_quad_idx,
-                                                                  velocity_dof_idx,
-                                                                  velocity_ptr,
-                                                                  level_set_dof_idx,
-                                                                  level_set_as_heaviside_ptr);
+    heat_operation =
+      std::make_shared<HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
+                                                   *scratch_data,
+                                                   base_in->parameters.heat,
+                                                   *material,
+                                                   *time_iterator,
+                                                   temp_dof_idx,
+                                                   temp_hanging_nodes_dof_idx,
+                                                   temp_quad_idx,
+                                                   velocity_dof_idx,
+                                                   velocity_ptr,
+                                                   level_set_dof_idx,
+                                                   level_set_as_heaviside_ptr,
+                                                   problem_specific_parameters.do_solidification);
 
     heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
                                           base_in->parameters.time_stepping.start_time);
@@ -288,7 +328,8 @@ namespace MeltPoolDG::Heat
     /*
      *  output results of initialization
      */
-    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
+    if (base_in->parameters.paraview.do_initial_state)
+      output_results(0, base_in->parameters.time_stepping.start_time, base_in);
   }
 
   template <int dim>

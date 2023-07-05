@@ -19,8 +19,6 @@
     "initial temperature": "1000.0"
   },
   "heat": {
-    "heat solidification": "true",
-    "heat two phase": "true",
     "heat nlsolve residual tolerance": "1e-5",
     "linear solver": {
       "rel tolerance": "1e-12",
@@ -48,6 +46,7 @@
   },
   "problem specific": {
     "do heat transfer": "true",
+    "do solidification": "true",
     "do melt pool": "true"
   },
   "paraview": {

@@ -59,7 +59,6 @@
     "paraview do output": "false"
   },
   "heat": {
-    "heat two phase": "true",
     "heat nlsolve residual tolerance": "1e-6",
     "heat nlsolve field correction tolerance": "1e-7",
     "heat nlsolve max nonlinear iterations": "15",

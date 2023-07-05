@@ -28,7 +28,8 @@ namespace MeltPoolDG::Heat
     const unsigned int                              vel_dof_idx_in,
     const VectorType *                              velocity_in,
     const unsigned int                              ls_dof_idx_in,
-    const VectorType *                              level_set_as_heaviside_in)
+    const VectorType *                              level_set_as_heaviside_in,
+    const bool                                      do_solidifiaction_in)
     : scratch_data(scratch_data_in)
     , data(data_in)
     , material(material)
@@ -42,14 +43,13 @@ namespace MeltPoolDG::Heat
     , velocity(velocity_in)
     , ls_dof_idx(ls_dof_idx_in)
     , level_set_as_heaviside(level_set_as_heaviside_in)
+    , do_solidification(do_solidifiaction_in)
   {
-    AssertThrow(!level_set_as_heaviside || (velocity && level_set_as_heaviside),
-                ExcMessage("Two-phase flow must come with a velocity! Abort..."));
-
-    // TODO move these asserts to a more central place
+    // TODO move these asserts to a more central place -> to material perhaps?
     const auto &material_data = material.get_data();
+    // TODO move solidification bool to material?
     AssertThrow((material_data.first.conductivity > 0.0 && material_data.first.density > 0.0) ||
-                  data.solidification,
+                  do_solidification,
                 ExcMessage(
                   "The material's conductivity and density must be greater than zero! Abort..."));
     AssertThrow(
@@ -58,18 +58,17 @@ namespace MeltPoolDG::Heat
       ExcMessage(
         "The secondary material's conductivity and density must be greater than zero! Abort..."));
     AssertThrow(
-      !data.solidification ||
+      !do_solidification ||
         (material_data.solid.conductivity > 0.0 && material_data.solid.density > 0.0),
       ExcMessage(
         "In case of solidification the solid's conductivity and density must be greater than zero! Abort..."));
     AssertThrow(
-      !data.solidification ||
+      !do_solidification ||
         (material_data.second.conductivity > 0.0 && material_data.second.density > 0.0),
       ExcMessage(
         "In case of solidification the liquid's (material_data.second) conductivity and density must be greater than zero! Abort..."));
     AssertThrow(
-      !data.solidification ||
-        material_data.liquidus_temperature > material_data.solidus_temperature,
+      !do_solidification || material_data.liquidus_temperature > material_data.solidus_temperature,
       ExcMessage(
         "In case of solidification the liquidus temperature must be greater than the solidus temperature! Abort..."));
 
@@ -82,10 +81,9 @@ namespace MeltPoolDG::Heat
 
     if (data.interpolate_rho_times_cp != InterpolateMaterialParameterType::none)
       {
-        Assert(material_data.second.density == material_data.solid.density || !data.solidification,
+        Assert(material_data.second.density == material_data.solid.density || !do_solidification,
                ExcMessage("The density of melt and solid must match! Abort..."));
-        Assert(material_data.second.capacity == material_data.solid.capacity ||
-                 !data.solidification,
+        Assert(material_data.second.capacity == material_data.solid.capacity || !do_solidification,
                ExcMessage("The capacity of melt and solid must match! Abort..."));
 
         rho_cp_gas   = material_data.first.density * material_data.first.capacity;
@@ -94,7 +92,7 @@ namespace MeltPoolDG::Heat
     if (data.interpolate_k != InterpolateMaterialParameterType::none)
       {
         Assert(material_data.second.conductivity == material_data.solid.conductivity ||
-                 !data.solidification,
+                 !do_solidification,
                ExcMessage("The conductivity of melt and solid must match! Abort..."));
 
         conductivity_gas   = material_data.first.conductivity;
@@ -148,7 +146,7 @@ namespace MeltPoolDG::Heat
                       "For the phenomenological recoil pressure model, the reference temperature "
                       "for computing the specific enthalpy must be specified. Abort..."));
 
-        AssertThrow(!data.solidification ||
+        AssertThrow(!do_solidification ||
                       (material_data.solid.capacity == material_data.second.capacity),
                     ExcMessage("The equation for specific enthalpy for evaporative heat sink "
                                "assumes equality between the solid and liquid "
@@ -174,7 +172,7 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
+    if (do_solidification)
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
     if (evaporative_mass_flux)
       MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
@@ -189,7 +187,7 @@ namespace MeltPoolDG::Heat
       MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
     if (level_set_as_heaviside)
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
-    if (data.solidification)
+    if (do_solidification)
       MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
     if (evaporative_mass_flux)
       MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
@@ -1092,7 +1090,7 @@ namespace MeltPoolDG::Heat
               ls_vals.evaluate(EvaluationFlags::values);
           }
 
-        if (data.solidification)
+        if (do_solidification)
           {
             temp_old_vals.reinit(temp_vals.get_current_cell_index());
             temp_old_vals.read_dof_values_plain(temperature_old);
@@ -1126,7 +1124,7 @@ namespace MeltPoolDG::Heat
             // todo: add term containing ∇·u  in case of evaporation
           }
 
-        if (data.solidification)
+        if (do_solidification)
           {
             val += this->time_increment_inv * d_rho_cp_dT *
                    (temp_lin_vals.get_value(q_index) - temp_old_vals.get_value(q_index)) *
@@ -1135,7 +1133,7 @@ namespace MeltPoolDG::Heat
                         temp_vals.get_value(q_index);
           }
 
-        if (velocity && data.solidification)
+        if (velocity && do_solidification)
           {
             val += d_rho_cp_dT * temp_lin_vals.get_gradient(q_index) *
                    velocity_vals.get_value(q_index) * temp_vals.get_value(q_index);

@@ -84,7 +84,6 @@
     "evapor coefficient": "1."
   },
   "heat": {
-    "heat two phase": "true",
     "heat nlsolve residual tolerance": "1e-6",
     "heat nlsolve field correction tolerance": "1e-9",
     "linear solver": {

@@ -88,7 +88,6 @@
     "evapor do level set pressure gradient interpolation": "true"
   },
   "heat": {
-    "heat two phase": "true",
     "heat nlsolve residual tolerance": "1e-6",
     "heat nlsolve field correction tolerance": "1e-9",
     "linear solver": {
