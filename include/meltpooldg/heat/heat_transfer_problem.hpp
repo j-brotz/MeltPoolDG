@@ -81,7 +81,6 @@ namespace MeltPoolDG::Heat
     struct
     {
       bool do_solidification = false;
-      bool do_rte            = false;
     } problem_specific_parameters;
     /*
      *  This function initials the relevant scratch data

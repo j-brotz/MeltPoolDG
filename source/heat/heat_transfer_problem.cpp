@@ -96,7 +96,7 @@ namespace MeltPoolDG::Heat
               }
           }
         // add RTE heat source if given
-        if (problem_specific_parameters.do_rte)
+        if (rte_operation)
           {
             rte_operation->solve();
 
@@ -136,9 +136,6 @@ namespace MeltPoolDG::Heat
         "do solidification",
         problem_specific_parameters.do_solidification,
         "Set this parameter to true if you want to consider melting/solidification effects.");
-      prm.add_parameter("do rte",
-                        problem_specific_parameters.do_rte,
-                        "Set this parameter to true if you want to enable RTE.");
     }
     prm.leave_subsection();
   }
@@ -267,27 +264,27 @@ namespace MeltPoolDG::Heat
             laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceUniform<dim>>(
               base_in->parameters.laser.delta_approximation_phase_weighted);
           }
+        else if (base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+          {
+            /*
+             * RTE operation
+             */
+            AssertThrow(heaviside_field_function,
+                        ExcMessage("RTE requires a Level Set interface."));
+            rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
+              *scratch_data,
+              base_in->parameters.rte,
+              level_set_as_heaviside,
+              temp_dof_idx,
+              temp_hanging_nodes_dof_idx,
+              temp_quad_idx,
+              level_set_dof_idx);
+          }
         else
           AssertThrow(false,
                       ExcMessage(
                         "No requested laser model found. Please speficy the "
                         "heat source model in the laser section of the input parameters."));
-      }
-    /*
-     * RTE operation
-     */
-    if (problem_specific_parameters.do_rte)
-      {
-        AssertThrow(heaviside_field_function, ExcMessage("RTE requires a Level Set interface."));
-
-        rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
-          *scratch_data,
-          base_in->parameters.rte,
-          level_set_as_heaviside,
-          temp_dof_idx,
-          temp_hanging_nodes_dof_idx,
-          temp_quad_idx,
-          level_set_dof_idx);
       }
 
     /*

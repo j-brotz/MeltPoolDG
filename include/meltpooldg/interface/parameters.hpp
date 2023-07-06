@@ -39,7 +39,8 @@ namespace MeltPoolDG
     Gauss,           // Gauss heat source distribution, see MeltPoolDG::Heat::LaserHeatSourceGauss
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
     Analytical, // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
-    uniform     // uniform laser model, see MeltPoolDG::Heat::LaserHeatSourceUniform
+    uniform,    // uniform laser model, see MeltPoolDG::Heat::LaserHeatSourceUniform
+    RTE         // use radiative transport equation, see MeltPoolDG::RadiativeTransportOperation
   )
   BETTER_ENUM(
     LaserImpactType,
