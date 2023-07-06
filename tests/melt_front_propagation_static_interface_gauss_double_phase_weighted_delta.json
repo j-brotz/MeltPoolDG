@@ -30,8 +30,6 @@
     }
   },
   "problem specific": {
-    "do two phase": "true",
-    "do convection": "false",
     "do solidification": "true"
   },
   "laser": {

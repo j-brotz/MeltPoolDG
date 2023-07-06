@@ -32,17 +32,13 @@ namespace MeltPoolDG::Heat
 
         time_iterator->print_me(scratch_data->get_pcout());
 
-        if (problem_specific_parameters.do_convection)
-          compute_field_vector(velocity,
-                               velocity_dof_idx,
-                               *base_in->get_velocity_field("heat_transfer",
-                                                            false /*is_optional*/));
+        if (velocity_field_function)
+          compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
 
-        if (problem_specific_parameters.do_two_phase)
+        if (heaviside_field_function)
           compute_field_vector(level_set_as_heaviside,
                                level_set_dof_idx,
-                               *base_in->get_initial_condition("prescribed_heaviside",
-                                                               false /*is_optional*/));
+                               *heaviside_field_function);
 
         // heat source
         // zero out
@@ -135,15 +131,6 @@ namespace MeltPoolDG::Heat
   {
     prm.enter_subsection("problem specific");
     {
-      prm.add_parameter("do two phase",
-                        problem_specific_parameters.do_two_phase,
-                        "Set this parameter to true if you want to consider two phases."
-                        "If true the field \"prescribed_heaviside\" is considered.");
-      prm.add_parameter(
-        "do convection",
-        problem_specific_parameters.do_convection,
-        "Set this parameter to true if you want to consider convective heat transfer."
-        "If true the velocity field in \"heat_transfer\" is considered.");
       prm.add_parameter(
         "do solidification",
         problem_specific_parameters.do_solidification,
@@ -214,15 +201,6 @@ namespace MeltPoolDG::Heat
 
     setup_dof_system(base_in, false);
 
-    /*
-     * initialize material
-     */
-    const auto material_type =
-      determine_material_type(problem_specific_parameters.do_two_phase,
-                              problem_specific_parameters.do_solidification,
-                              base_in->parameters.material.two_phase_properties_transition_type ==
-                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
-    material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
 
     /*
      *  initialize the time stepping scheme
@@ -232,25 +210,32 @@ namespace MeltPoolDG::Heat
      *    set velocity field
      */
     VectorType *velocity_ptr = nullptr;
-    if (problem_specific_parameters.do_convection)
+    velocity_field_function  = base_in->get_velocity_field("heat_transfer", true /*is_optional*/);
+    if (velocity_field_function)
       {
-        compute_field_vector(velocity,
-                             velocity_dof_idx,
-                             *base_in->get_velocity_field("heat_transfer", false /*is_optional*/));
+        compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
         velocity_ptr = &velocity;
       }
     /*
      *    set level-set as heaviside field
      */
     VectorType *level_set_as_heaviside_ptr = nullptr;
-    if (problem_specific_parameters.do_two_phase)
+    heaviside_field_function =
+      base_in->get_initial_condition("prescribed_heaviside", true /*is_optional*/);
+    if (heaviside_field_function)
       {
-        compute_field_vector(level_set_as_heaviside,
-                             level_set_dof_idx,
-                             *base_in->get_initial_condition("prescribed_heaviside",
-                                                             false /*is_optional*/));
+        compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
         level_set_as_heaviside_ptr = &level_set_as_heaviside;
       }
+    /*
+     * initialize material
+     */
+    const auto material_type =
+      determine_material_type(heaviside_field_function != nullptr,
+                              problem_specific_parameters.do_solidification,
+                              base_in->parameters.material.two_phase_properties_transition_type ==
+                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
+    material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
     /*
      * laser operation
      */
@@ -292,8 +277,7 @@ namespace MeltPoolDG::Heat
      */
     if (problem_specific_parameters.do_rte)
       {
-        AssertThrow(problem_specific_parameters.do_two_phase,
-                    ExcMessage("RTE requires a Level Set interface."));
+        AssertThrow(heaviside_field_function, ExcMessage("RTE requires a Level Set interface."));
 
         rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
           *scratch_data,

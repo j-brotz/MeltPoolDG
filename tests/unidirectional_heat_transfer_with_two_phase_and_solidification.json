@@ -28,8 +28,6 @@
     "velocity": "0.0001"
   },
   "problem specific": {
-    "do two phase": "true",
-    "do convection": "true",
     "do solidification": "true"
   },
   "material": {

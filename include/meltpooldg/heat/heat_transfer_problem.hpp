@@ -56,6 +56,9 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<Material<double>>           material;
     std::shared_ptr<Postprocessor<dim>>         post_processor;
 
+    std::shared_ptr<Function<dim>> velocity_field_function;
+    std::shared_ptr<Function<dim>> heaviside_field_function;
+
     std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
     std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
 
@@ -77,8 +80,6 @@ namespace MeltPoolDG::Heat
   private:
     struct
     {
-      bool do_two_phase      = false;
-      bool do_convection     = false;
       bool do_solidification = false;
       bool do_rte            = false;
     } problem_specific_parameters;

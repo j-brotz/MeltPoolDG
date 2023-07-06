@@ -28,8 +28,6 @@ All notable changes of the input parameters will be documented in this file.
     "problem name": "heat_transfer"
     }
 +  "problem specific": {
-+    "do two phase": "true/false",
-+    "do convection": "true/false",
 +    "do solidification": "true/false"
 +  }
 ```
