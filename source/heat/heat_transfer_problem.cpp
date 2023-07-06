@@ -42,7 +42,7 @@ namespace MeltPoolDG::Heat
 
         // heat source
         // zero out
-        scratch_data->initialize_dof_vector(heat_operation->get_heat_source(), temp_dof_idx);
+        heat_operation->get_heat_source() = 0;
         // add custom source field if given
         if (const auto source_field_function =
               base_in->get_source_field("heat_transfer", true /*is_optional*/))
@@ -101,6 +101,7 @@ namespace MeltPoolDG::Heat
             rte_operation->solve();
 
             AssertThrow(false, ExcMessage("not implemented"))
+            // TODO
             // rte_operation->compute_heat_source(
             //   heat_operation->get_user_rhs(),
             //   *scratch_data,
@@ -339,8 +340,7 @@ namespace MeltPoolDG::Heat
     /*
      *  output results of initialization
      */
-    if (base_in->parameters.paraview.do_initial_state)
-      output_results(0, base_in->parameters.time_stepping.start_time, base_in);
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
   }
 
   template <int dim>

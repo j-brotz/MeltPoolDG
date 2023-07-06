@@ -905,9 +905,6 @@ namespace MeltPoolDG
                         paraview.write_time_step_size,
                         "Write paraview output every given time step. If this parameter is "
                         "set, the paraview write frequency is overwritten.");
-      prm.add_parameter("paraview do initial state",
-                        paraview.do_initial_state,
-                        "boolean for writing the initial state into the paraview output file");
       prm.add_parameter("paraview print boundary id",
                         paraview.print_boundary_id,
                         "boolean for printing a vtk-file with the boundary id");
