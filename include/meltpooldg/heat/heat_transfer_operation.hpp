@@ -64,11 +64,11 @@ namespace MeltPoolDG::Heat
 
     // optional flow velocity for internal convection
     const unsigned int vel_dof_idx;
-    VectorType *       velocity;
+    const VectorType * velocity;
 
     // optional level-set heaviside field for two phase flow
     const unsigned int ls_dof_idx;
-    VectorType *       level_set_as_heaviside;
+    const VectorType * level_set_as_heaviside;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
@@ -93,10 +93,10 @@ namespace MeltPoolDG::Heat
                           unsigned int                             temp_hanging_nodes_dof_idx_in,
                           unsigned int                             temp_quad_idx_in,
                           unsigned int                             vel_dof_idx_in = 0,
-                          VectorType *                             velocity_in    = nullptr,
+                          const VectorType *                       velocity_in    = nullptr,
                           unsigned int                             ls_dof_idx_in  = 0,
-                          VectorType *level_set_as_heaviside_in                   = nullptr,
-                          const bool  do_solidifiaction                           = false);
+                          const VectorType *level_set_as_heaviside_in             = nullptr,
+                          const bool        do_solidifiaction                     = false);
 
     void
     register_evaporative_mass_flux(VectorType *       evaporative_mass_flux_in,
