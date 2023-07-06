@@ -311,8 +311,8 @@ namespace MeltPoolDG::LevelSet::Tools
               -> std::tuple<std::vector<Point<dim>>, std::vector<Point<dim>>, std::vector<double>> {
               nm_non_matching_fe_values->reinit(cell);
 
-              const std_cxx17::optional<NonMatching::FEImmersedSurfaceValues<dim>>
-                &surface_fe_values = nm_non_matching_fe_values->get_surface_fe_values();
+              const std::optional<NonMatching::FEImmersedSurfaceValues<dim>> &surface_fe_values =
+                nm_non_matching_fe_values->get_surface_fe_values();
 
               if (surface_fe_values.has_value() == false)
                 return {};
