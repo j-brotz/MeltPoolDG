@@ -16,13 +16,19 @@
     "max n steps": "5"
   },
   "heat": {
-    "heat velocity": "0.005",
-    "heat solidification": "true",
     "heat nlsolve residual tolerance": "1e-7",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "ILU"
     }
+  },
+  "simulation specific": {
+    "do solidification": "true",
+    "do two phase": "false",
+    "velocity": "0.005"
+  },
+  "problem specific": {
+    "do solidification": "true"
   },
   "material": {
     "material second conductivity": "55.563",

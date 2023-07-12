@@ -18,11 +18,18 @@
     "heat emissivity": "0.98",
     "heat convection coefficient": "25",
     "heat temperature infinity": "300.0",
-    "heat velocity": "0.01",
     "heat nlsolve residual tolerance": "1e-6",
     "linear solver": {
       "rel tolerance": "1e-12"
     }
+  },
+  "simulation specific": {
+    "do solidification": "false",
+    "do two phase": "false",
+    "velocity": "0.01"
+  },
+  "problem specific": {
+    "do solidification": "false"
   },
   "material": {
     "material first conductivity": "55.563",

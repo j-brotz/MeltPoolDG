@@ -16,14 +16,19 @@
     "max n steps": "5"
   },
   "heat": {
-    "heat velocity": "0.0001",
-    "heat two phase": "true",
-    "heat solidification": "true",
     "heat nlsolve residual tolerance": "1e-7",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "ILU"
     }
+  },
+  "simulation specific": {
+    "do solidification": "true",
+    "do two phase": "true",
+    "velocity": "0.0001"
+  },
+  "problem specific": {
+    "do solidification": "true"
   },
   "material": {
     "material first capacity": "230",

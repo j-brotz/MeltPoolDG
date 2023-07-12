@@ -84,13 +84,14 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
   class SimulationMeltFrontPropagation : public SimulationBase<dim>
   {
   private:
-    double x_min = 0.0;
-    double x_max = 0.0;
-    double y_min = 0.0;
-    double y_max = 0.0;
-    double z_min = 0.0;
-    double z_max = 0.0;
-    double T_0   = 0.0;
+    double x_min        = 0.0;
+    double x_max        = 0.0;
+    double y_min        = 0.0;
+    double y_max        = 0.0;
+    double z_min        = 0.0;
+    double z_max        = 0.0;
+    double T_0          = 0.0;
+    bool   do_two_phase = false;
 
   public:
     SimulationMeltFrontPropagation(std::string parameter_file, const MPI_Comm mpi_communicator)
@@ -113,6 +114,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
             prm.add_parameter("domain y max", y_max, "maximum y coordinate of simulation domain");
           }
         prm.add_parameter("initial temperature", T_0);
+        prm.add_parameter("do two phase", do_two_phase);
       }
       prm.leave_subsection();
     }
@@ -158,8 +160,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<2>>(this->mpi_communicator);
 
-          if (this->parameters.base.problem_name == ProblemType::heat_transfer &&
-              !this->parameters.heat.two_phase)
+          if (this->parameters.base.problem_name == ProblemType::heat_transfer && !do_two_phase)
             {
               std::vector<unsigned> refinements(2, 1);
               refinements[0] = 3;
@@ -192,8 +193,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
           this->triangulation =
             std::make_shared<parallel::distributed::Triangulation<3>>(this->mpi_communicator);
 
-          if (this->parameters.base.problem_name == ProblemType::heat_transfer &&
-              !this->parameters.heat.two_phase)
+          if (this->parameters.base.problem_name == ProblemType::heat_transfer && !do_two_phase)
             {
               std::vector<unsigned int> refinements(3, 1);
               refinements[0] = 3;
@@ -311,15 +311,10 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     {
       this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_0),
                                      "heat_transfer");
-      if (this->parameters.base.problem_name == ProblemType::heat_transfer &&
-          this->parameters.heat.two_phase)
-        {
-          this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
-                                                                                         z_max / 5),
-                                         "prescribed_level_set");
-          this->attach_velocity_field(std::make_shared<Functions::ZeroFunction<dim>>(dim),
-                                      "heat_transfer");
-        }
+      if (this->parameters.base.problem_name == ProblemType::heat_transfer && do_two_phase)
+        this->attach_initial_condition(std::make_shared<InitialLevelSetHeaviside<dim>>(0.0,
+                                                                                       z_max / 5),
+                                       "prescribed_heaviside");
       if (this->parameters.base.problem_name == ProblemType::melt_pool)
         {
           const double eps =

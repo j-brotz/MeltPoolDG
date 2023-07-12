@@ -47,13 +47,11 @@
     "heat nlsolve field correction tolerance": "1e-6",
     "heat nlsolve max nonlinear iterations": "20",
     "heat nlsolve residual tolerance": "1e-1",
-    "heat solidification": "false",
     "enable time dependent bc": "true",
     "linear solver": {
       "preconditioner type": "DiagonalReduced",
       "rel tolerance": "1e-4"
-    },
-    "heat two phase": "true"
+    }
   },
   "material": {
     "material template": "Ti64"
@@ -71,7 +69,8 @@
     "do evaporative heat flux": "false",
     "do evaporative velocity jump": "false",
     "do melt pool": "false",
-    "do heat transfer": "true"
+    "do heat transfer": "true",
+    "do solidification": "false"
   },
   "simulation specific domain": {
     "domain x max": "400e-6",

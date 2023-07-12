@@ -10,8 +10,7 @@
     "gravity": "0.0"
   },
   "heat": {
-    "degree": "2",
-    "heat two phase": "true"
+    "degree": "2"
   },
   "material": {
     "material first capacity": "1e-4",

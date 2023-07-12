@@ -6,6 +6,7 @@
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/heat/laser_heat_source_uniform.hpp>
+#include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -26,8 +27,7 @@ namespace MeltPoolDG::MeltPool
                                             const double              start_time_in)
     : scratch_data(scratch_data_in)
     , mp_data(data_in.mp)
-    , material(data_in.material)
-    , do_mushy_zone(data_in.heat.solidification)
+    , melting_solidification(data_in.material, MaterialTypes::liquid_solid)
     , ls_dof_idx(ls_dof_idx_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_no_solid_dof_idx(reinit_no_solid_dof_idx_in)
@@ -499,11 +499,8 @@ namespace MeltPoolDG::MeltPool
   double
   MeltPoolOperation<dim>::compute_solid_fraction(const double T) const
   {
-    if (do_mushy_zone)
-      return UtilityFunctions::limit_to_bounds(
-        (material.liquidus_temperature - T) * material.inv_mushy_interval, 0.0, 1.0);
-    else
-      return T < material.melting_point ? 1.0 : 0.0;
+    return melting_solidification.compute_parameters(T, MaterialUpdateFlags::phase_fractions)
+      .solid_fraction;
   }
 
   template <int dim>

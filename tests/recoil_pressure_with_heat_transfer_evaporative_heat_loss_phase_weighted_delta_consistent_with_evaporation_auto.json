@@ -90,8 +90,6 @@
     "paraview do output": "false"
   },
   "heat": {
-    "heat two phase": "true",
-    "heat solidification": "true",
     "heat nlsolve residual tolerance": "1e-7",
     "heat nlsolve max nonlinear iterations": "20",
     "heat nlsolve field correction tolerance": "1e-5",
@@ -138,6 +136,7 @@
     "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true",
+    "do solidification": "true",
     "do evaporative velocity jump": "false"
   },
   "advection diffusion": {

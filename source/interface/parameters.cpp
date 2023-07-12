@@ -149,12 +149,6 @@ namespace MeltPoolDG
     if (heat.n_q_points_1d < 1)
       heat.n_q_points_1d = heat.degree + 1;
 
-    if (heat.solidification)
-      {
-        material.inv_mushy_interval =
-          1.0 / (material.liquidus_temperature -
-                 material.solidus_temperature); //@todo: move to new material class
-      }
     // sync verbosity level with base verbosity if not set
     if (heat.nlsolve.verbosity_level == -1)
       heat.nlsolve.verbosity_level = base.verbosity_level;
@@ -602,11 +596,6 @@ namespace MeltPoolDG
       // override default value
       heat.predictor.type = PredictorType::linear_extrapolation;
       heat.predictor.add_parameters(prm);
-      prm.add_parameter("heat velocity", heat.velocity, "Velocity.");
-      prm.add_parameter("heat two phase", heat.two_phase, "Set this parameter for two phase flow.");
-      prm.add_parameter("heat solidification",
-                        heat.solidification,
-                        "Set this parameter to true to consider solidification.");
       prm.add_parameter("enable time dependent bc",
                         heat.enable_time_dependent_bc,
                         "Set this parameter to true to enable time-dependent bc.");
@@ -916,9 +905,6 @@ namespace MeltPoolDG
                         paraview.write_time_step_size,
                         "Write paraview output every given time step. If this parameter is "
                         "set, the paraview write frequency is overwritten.");
-      prm.add_parameter("paraview do initial state",
-                        paraview.do_initial_state,
-                        "boolean for writing the initial state into the paraview output file");
       prm.add_parameter("paraview print boundary id",
                         paraview.print_boundary_id,
                         "boolean for printing a vtk-file with the boundary id");

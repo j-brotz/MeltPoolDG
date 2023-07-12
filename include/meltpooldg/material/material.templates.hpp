@@ -397,7 +397,7 @@ namespace MeltPoolDG
     if (temperature_dependent_solid_fraction == value_type(0.0) ||
         temperature_dependent_solid_fraction == value_type(1.0))
       return value_type(0.0);
-    return -1.0 * data.inv_mushy_interval *
+    return -1.0 * inv_mushy_interval *
            LevelSet::Tools::interpolate_cubic_derivative(temperature_dependent_solid_fraction,
                                                          liquid_value,
                                                          solid_value);
@@ -496,7 +496,7 @@ namespace MeltPoolDG
   {
     if (data.solidification_type == SolidLiquidPropertiesTransitionType::mushy_zone)
       return UtilityFunctions::limit_to_bounds(
-        (data.liquidus_temperature - temperature) * data.inv_mushy_interval, 0.0, 1.0);
+        (data.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
     else if (data.solidification_type == SolidLiquidPropertiesTransitionType::sharp)
       return temperature < data.melting_point ? 1.0 : 0.0;
     Assert(false, ExcNotImplemented());
@@ -512,7 +512,7 @@ namespace MeltPoolDG
   {
     if (data.solidification_type == SolidLiquidPropertiesTransitionType::mushy_zone)
       return UtilityFunctions::limit_to_bounds(
-        (data.liquidus_temperature - temperature) * data.inv_mushy_interval, 0.0, 1.0);
+        (data.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
     else if (data.solidification_type == SolidLiquidPropertiesTransitionType::sharp)
       return compare_and_apply_mask<SIMDComparison::less_than>(temperature,
                                                                data.melting_point,

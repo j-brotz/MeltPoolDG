@@ -97,7 +97,6 @@
     "evapor coefficient": "0.1"
   },
   "heat": {
-    "heat two phase": "true",
     "linear solver": {
       "rel tolerance": "1e-20",
       "preconditioner type": "AMG"

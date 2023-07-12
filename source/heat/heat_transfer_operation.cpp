@@ -19,9 +19,10 @@ namespace MeltPoolDG::Heat
     const unsigned int                       temp_hanging_nodes_dof_idx_in,
     const unsigned int                       temp_quad_idx_in,
     const unsigned int                       vel_dof_idx_in,
-    VectorType *                             velocity_in,
+    const VectorType *                       velocity_in,
     const unsigned int                       ls_dof_idx_in,
-    VectorType *                             level_set_as_heaviside_in)
+    const VectorType *                       level_set_as_heaviside_in,
+    const bool                               do_solidifiaction)
     : scratch_data(scratch_data_in)
     , bc_data(bc_data_in)
     , heat_data(heat_data_in)
@@ -50,7 +51,8 @@ namespace MeltPoolDG::Heat
                                                   vel_dof_idx,
                                                   velocity,
                                                   ls_dof_idx,
-                                                  level_set_as_heaviside);
+                                                  level_set_as_heaviside,
+                                                  do_solidifiaction);
 
 
     /*

@@ -147,6 +147,9 @@ namespace MeltPoolDG::Heat
     double       latent_heat_of_evaporation = 0;
     bool         do_phenomenological_recoil_pressure;
 
+    // optional: melting/solidification effects
+    const bool do_solidification;
+
     // interpolation of the level set space to the temperature space
     FullMatrix<double> ls_to_temp_grad_interpolation_matrix;
     bool               do_level_set_temperature_gradient_interpolation = false;
@@ -182,7 +185,8 @@ namespace MeltPoolDG::Heat
                          const unsigned int                              vel_dof_idx_in = 0,
                          const VectorType *                              velocity_in    = nullptr,
                          const unsigned int                              ls_dof_idx_in  = 0,
-                         const VectorType *level_set_as_heaviside_in                    = nullptr);
+                         const VectorType *level_set_as_heaviside_in                    = nullptr,
+                         const bool        do_solidifiaction_in                         = false);
 
     void
     register_evaporative_mass_flux(VectorType *       evaporative_mass_flux_in,

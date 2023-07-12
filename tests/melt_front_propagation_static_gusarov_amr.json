@@ -22,12 +22,14 @@
     "initial temperature": "1000.0"
   },
   "heat": {
-    "heat solidification": "true",
     "heat nlsolve residual tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "ILU"
     }
+  },
+  "problem specific": {
+    "do solidification": "true"
   },
   "laser": {
     "laser power": "30.",

@@ -10,7 +10,6 @@
     "gravity": "0.0"
   },
   "heat": {
-    "heat two phase": "true",
     "heat nlsolve residual tolerance": "1e-6",
     "linear solver": {
       "rel tolerance": "1e-12",

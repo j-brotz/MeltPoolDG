@@ -39,7 +39,8 @@ namespace MeltPoolDG
     Gauss,           // Gauss heat source distribution, see MeltPoolDG::Heat::LaserHeatSourceGauss
     Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
     Analytical, // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
-    uniform     // uniform laser model, see MeltPoolDG::Heat::LaserHeatSourceUniform
+    uniform,    // uniform laser model, see MeltPoolDG::Heat::LaserHeatSourceUniform
+    RTE         // use radiative transport equation, see MeltPoolDG::RadiativeTransportOperation
   )
   BETTER_ENUM(
     LaserImpactType,
@@ -306,9 +307,6 @@ namespace MeltPoolDG
     number                                      emissivity               = 0.0;
     number                                      convection_coefficient   = 0.0;
     number                                      temperature_infinity     = 0.0;
-    number                                      velocity                 = 0.0;
-    bool                                        two_phase                = false;
-    bool                                        solidification           = false;
     bool                                        enable_time_dependent_bc = false;
     NonlinearSolverData<number>                 nlsolve;
     LinearSolverData<number>                    linear_solver;
@@ -458,7 +456,6 @@ namespace MeltPoolDG
     std::string              directory                      = "./";
     int                      write_frequency                = 1;
     double                   write_time_step_size           = 0.0;
-    bool                     do_initial_state               = true;
     bool                     print_boundary_id              = false;
     bool                     output_subdomains              = false;
     int                      n_digits_timestep              = 4;
