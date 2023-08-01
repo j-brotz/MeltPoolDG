@@ -68,7 +68,6 @@
     "do advect level set": "false",
     "do evaporative heat flux": "false",
     "do evaporative velocity jump": "false",
-    "do melt pool": "false",
     "do heat transfer": "true",
     "do solidification": "false"
   },

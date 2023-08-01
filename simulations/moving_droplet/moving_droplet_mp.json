@@ -88,7 +88,6 @@
   },
   "problem specific": {
     "do evaporation": "false",
-    "do melt pool": "false",
     "do recoil pressure": "false",
     "do heat transfer": "false",
     "amr": {
@@ -97,7 +96,8 @@
       "do auto detect frequency": "true",
       "automatic grid refinement type": "fixed_fraction",
       "fraction of melting point refined in solid": "1.0"
-    }
+    },
+    "do solidification": "false"
   },
   "simulation specific": {
     "radius": "50e-6"

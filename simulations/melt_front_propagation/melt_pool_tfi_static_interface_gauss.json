@@ -116,7 +116,6 @@
     "paraview filename": "melt_pool_tfi_static_interface_gauss"
   },
   "problem specific": {
-    "do melt pool": "true",
     "do heat transfer": "true",
     "do solidification": "true"
   },

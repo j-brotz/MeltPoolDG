@@ -109,22 +109,13 @@ namespace MeltPoolDG
      */
     if (restart.load >= 0)
       amr.n_initial_refinement_cycles = 0;
-    /*
-     *  set the number of initial reinitialization steps equal to the number of reinit steps
-     *  if no value is provided
-     */
+
+    // set the number of initial reinitialization steps equal to the number of reinit steps
+    // if no value is provided
     if (ls.do_reinitialization && ls.n_initial_reinit_steps < 0.0)
       ls.n_initial_reinit_steps = reinit.max_n_steps;
-    /*
-     *  set the maximum temperature of the melt pool if not specified
-     */
-    if (laser.analytical.max_temperature < material.boiling_temperature)
-      laser.analytical.max_temperature =
-        material.boiling_temperature + 500; // TODO: move to simulation
 
-    /*
-     *  set the laser center if it is not specified
-     */
+    // set the laser center if it is not specified
     if (laser.center.size() == 0)
       {
         laser.center.resize(base.dimension);
@@ -138,10 +129,8 @@ namespace MeltPoolDG
         rte.laser_direction.resize(base.dimension);
         std::fill(rte.laser_direction.begin(), rte.laser_direction.end(), 0);
       }
-    /*
-     *  recoil pressure: set default value of activation temperature equal to the boiling
-     * temperature
-     */
+    // recoil pressure: set default value of activation temperature equal to the boiling
+    // temperature
     if (dealii::numbers::is_invalid(recoil.activation_temperature))
       recoil.activation_temperature = material.boiling_temperature;
 
@@ -625,91 +614,9 @@ namespace MeltPoolDG
     /*
      *   laser
      */
-    prm.enter_subsection("laser");
-    {
-      prm.add_parameter("laser power", laser.power, "Intensity of the laser");
-      prm.add_parameter("laser power over time",
-                        laser.power_over_time,
-                        "Temporal distribution of the laser power",
-                        Patterns::Selection("constant|ramp"));
-      prm.add_parameter("laser power start time",
-                        laser.power_start_time,
-                        "In case of time-dependent laser power: activation time of laser.");
-      prm.add_parameter("laser power end time",
-                        laser.power_end_time,
-                        "In case of time-dependent laser power: end time of laser.");
-      prm.add_parameter("laser center",
-                        laser.center,
-                        "Center coordinates of the laser beam on the interface melt/gas.");
-      prm.add_parameter("laser scan speed", laser.scan_speed, "Scan speed of the laser.");
-      prm.add_parameter(
-        "laser do move",
-        laser.do_move,
-        "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.");
-      prm.add_parameter(
-        "laser impact type",
-        laser.impact_type,
-        "Laser impact model. "
-        "volumetric: volumetric heat source; "
-        "interface: surface heat source at the two-phase interface modelled as a "
-        "continuum surface force within the interface region; "
-        "interface sharp: impact of surface heat source at the two-phase interface modelled as a "
-        "a sharp surface force (evaluation of a surface integral);");
-      laser.delta_approximation_phase_weighted.add_parameters(prm);
-      prm.add_parameter("laser heat source model",
-                        laser.heat_source_model,
-                        "Laser heat source model.");
-      /*
-       *   Gusarov
-       */
-      prm.add_parameter("laser gusarov laser beam radius",
-                        laser.gusarov.laser_beam_radius,
-                        "Laser beam radius.");
-      prm.add_parameter("laser gusarov reflectivity",
-                        laser.gusarov.reflectivity,
-                        "Reflectivity of the material.");
-      prm.add_parameter("laser gusarov extinction coefficient",
-                        laser.gusarov.extinction_coefficient,
-                        "Extinction coefficient in [1/m].");
-      prm.add_parameter("laser gusarov layer thickness",
-                        laser.gusarov.layer_thickness,
-                        "Layer thickness");
-      /*
-       *   Gauss
-       */
-      prm.add_parameter("laser gauss laser beam radius",
-                        laser.gauss.laser_beam_radius,
-                        "Laser beam radius.");
-      prm.add_parameter("laser gauss absorptivity gas",
-                        laser.gauss.absorptivity_gas,
-                        "Laser energy absorptivity of the gaseous part of the domain.");
-      prm.add_parameter("laser gauss absorptivity liquid",
-                        laser.gauss.absorptivity_liquid,
-                        "Laser energy absorptivity of the liquid part of the domain.");
-      /*
-       *   Analytical temperature field
-       */
-      prm.add_parameter("laser analytical absorptivity liquid",
-                        laser.analytical.absorptivity_liquid,
-                        "Absorptivity of the liquid part of domain");
-      prm.add_parameter("laser analytical absorptivity gas",
-                        laser.analytical.absorptivity_gas,
-                        "Absorptivity of the gaseous part of domain");
-      prm.add_parameter("laser analytical ambient temperature",
-                        laser.analytical.ambient_temperature,
-                        "Ambient temperature in the inert gas.");
-      prm.add_parameter(
-        "laser analytical max temperature",
-        laser.analytical.max_temperature,
-        "Maximum temperature arising in the melt pool. If this temperature is lower than the boiling"
-        " temperature, this value is corrected to correspond to the boiling temperature + 500 K.");
-      prm.add_parameter("laser analytical temperature x to y ratio",
-                        laser.analytical.temperature_x_to_y_ratio,
-                        "This factor scales the analytical temperature field to be anisotropic.");
-    }
-    prm.leave_subsection();
+    laser.add_parameters(prm);
     /*
-     *   laser
+     *   radiative transfer equaton (RTE)
      */
     rte.add_parameters(prm);
     /*
@@ -736,13 +643,6 @@ namespace MeltPoolDG
         "set to zero if \"mp set velocity to zero in solid\" or \"mp set level set to zero in solid\" "
         "are enabled.",
         Patterns::Double(0.0, 1.0));
-      prm.add_parameter("mp liquid melt pool radius",
-                        mp.liquid.melt_pool_radius,
-                        "Set the radius of the liquid parts of the melt pool ellipse "
-                        " or the width of the parabola");
-      prm.add_parameter("mp liquid melt pool depth",
-                        mp.liquid.melt_pool_depth,
-                        "Set the depth of the liquid parts of the melt pool ellipse");
     }
     prm.leave_subsection();
     /*

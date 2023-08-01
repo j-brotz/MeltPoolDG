@@ -142,7 +142,6 @@
   },
   "problem specific": {
     "do evaporative heat flux": "true",
-    "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true",
     "do solidification": "true",

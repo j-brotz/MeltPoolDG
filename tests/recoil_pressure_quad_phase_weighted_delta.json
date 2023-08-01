@@ -121,10 +121,10 @@
   },
   "problem specific": {
     "do evaporative heat flux": "false",
-    "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true",
-    "do evaporative velocity jump": "false"
+    "do evaporative velocity jump": "false",
+    "do solidification": "false"
   },
   "advection diffusion": {
     "linear solver": {

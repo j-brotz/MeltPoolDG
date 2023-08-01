@@ -22,7 +22,7 @@ namespace MeltPoolDG::Heat
     const VectorType *                       velocity_in,
     const unsigned int                       ls_dof_idx_in,
     const VectorType *                       level_set_as_heaviside_in,
-    const bool                               do_solidifiaction)
+    const bool                               do_solidification)
     : scratch_data(scratch_data_in)
     , bc_data(bc_data_in)
     , heat_data(heat_data_in)
@@ -52,7 +52,7 @@ namespace MeltPoolDG::Heat
                                                   velocity,
                                                   ls_dof_idx,
                                                   level_set_as_heaviside,
-                                                  do_solidifiaction);
+                                                  do_solidification);
 
 
     /*

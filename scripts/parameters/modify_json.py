@@ -29,7 +29,7 @@ new_parameter_names = [
 ]
 delete_parameter_names = [
     # ... add parameter names to be deleted
-    ["problem specific", "do convection"],
+    ["problem specific", "do melt pool"],
 ]
 
 new_categories = [

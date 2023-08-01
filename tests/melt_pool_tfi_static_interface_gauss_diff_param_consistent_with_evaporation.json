@@ -116,7 +116,6 @@
     "paraview do output": "false"
   },
   "problem specific": {
-    "do melt pool": "true",
     "do heat transfer": "true",
     "do solidification": "true"
   },

@@ -159,12 +159,8 @@ namespace MeltPoolDG::Evaporation
     void
     update_ghost_values() final
     {
-      vector_is_ghosted = normal_vector.has_ghost_elements() || heaviside.has_ghost_elements();
-      if (!vector_is_ghosted)
-        {
-          normal_vector.update_ghost_values();
-          heaviside.update_ghost_values();
-        }
+      normal_vector.update_ghost_values();
+      heaviside.update_ghost_values();
     }
 
     /**
@@ -173,12 +169,8 @@ namespace MeltPoolDG::Evaporation
     void
     zero_out_ghost_values() final
     {
-      // only zero out ghost values if the vector was not ghosted in the beginning
-      if (!vector_is_ghosted)
-        {
-          normal_vector.zero_out_ghost_values();
-          heaviside.zero_out_ghost_values();
-        }
+      normal_vector.zero_out_ghost_values();
+      heaviside.zero_out_ghost_values();
     }
 
   private:
@@ -193,7 +185,6 @@ namespace MeltPoolDG::Evaporation
     const unsigned int                 velocity_quad_idx;
     FECellIntegrator<dim, dim, number> normal_vals;
     FECellIntegrator<dim, 1, number>   ls_vals;
-    bool                               vector_is_ghosted;
 
     // temporary quadrature point values
     Tensor<2, dim, VectorizedArray<number>> grad_u;

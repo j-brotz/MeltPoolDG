@@ -4,27 +4,24 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim>
-  LaserAnalyticalTemperatureField<dim>::LaserAnalyticalTemperatureField(
-    const ScratchData<dim> &                 scratch_data,
-    const LaserData<double>::AnalyticalData &data_in,
-    const MaterialData<double> &             material_in,
-    const double                             scan_speed_in,
-    const unsigned int                       temp_dof_idx)
-    : scratch_data(scratch_data)
-    , laser_data(data_in)
-    , material(material_in)
-    , scan_speed(scan_speed_in)
-    , temp_dof_idx(temp_dof_idx)
-  {}
-
-  template <int dim>
   void
   LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
-    const VectorType &level_set_as_heaviside,
-    VectorType &      temperature,
-    const double &    laser_power,
-    const Point<dim> &laser_position) const
+    const ScratchData<dim> &                 scratch_data,
+    const MaterialData<double> &             material,
+    const LaserData<double>::AnalyticalData &laser_data,
+    const double                             scan_speed,
+    const double                             laser_power,
+    const Point<dim> &                       laser_position,
+    VectorType &                             temperature,
+    const VectorType &                       level_set_as_heaviside,
+    const unsigned int                       temp_dof_idx)
   {
+    /*
+     *  set the maximum temperature of the melt pool if not specified
+     */
+    double max_temperature = laser_data.max_temperature;
+    if (laser_data.max_temperature < material.boiling_temperature)
+      max_temperature = material.boiling_temperature + 500;
     level_set_as_heaviside.update_ghost_values();
     scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
 
@@ -42,11 +39,17 @@ namespace MeltPoolDG::Heat
         {
           cell->get_dof_indices(local_dof_indices);
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            temperature[local_dof_indices[i]] =
-              local_compute_temperature_field(support_points[local_dof_indices[i]],
-                                              level_set_as_heaviside[local_dof_indices[i]],
-                                              laser_power,
-                                              laser_position);
+            {
+              const double T =
+                local_compute_temperature_field(material,
+                                                laser_data,
+                                                support_points[local_dof_indices[i]],
+                                                level_set_as_heaviside[local_dof_indices[i]],
+                                                scan_speed,
+                                                laser_power,
+                                                laser_position);
+              temperature[local_dof_indices[i]] = (T > max_temperature) ? max_temperature : T;
+            }
         }
 
     temperature.compress(VectorOperation::insert);
@@ -57,10 +60,13 @@ namespace MeltPoolDG::Heat
   template <int dim>
   double
   LaserAnalyticalTemperatureField<dim>::local_compute_temperature_field(
-    const Point<dim> &point,
-    const double      heaviside,
-    const double      laser_power,
-    const Point<dim> &laser_position) const
+    const MaterialData<double> &             material,
+    const LaserData<double>::AnalyticalData &laser_data,
+    const Point<dim> &                       point,
+    const double                             heaviside,
+    const double                             scan_speed,
+    const double                             laser_power,
+    const Point<dim> &                       laser_position)
   {
     const double P  = laser_power;
     const double v  = scan_speed;
@@ -107,7 +113,7 @@ namespace MeltPoolDG::Heat
                  std::exp(-v * R / (2. * thermal_diffusivity)) +
                T0;
 
-    return (T > laser_data.max_temperature) ? laser_data.max_temperature : T;
+    return T;
   }
 
   template class LaserAnalyticalTemperatureField<1>;

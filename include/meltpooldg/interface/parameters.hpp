@@ -3,6 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
@@ -33,26 +34,6 @@ namespace MeltPoolDG
               radiative_transport,
               none)
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
-  BETTER_ENUM(
-    LaserHeatSourceModel,
-    char,
-    not_initialized, // must be specified by user
-    Gauss,           // Gauss heat source distribution, see MeltPoolDG::Heat::LaserHeatSourceGauss
-    Gusarov,         // Gusarov laser model, see MeltPoolDG::Heat::LaserHeatSourceGusarov
-    Analytical, // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
-    uniform,    // uniform laser model, see MeltPoolDG::Heat::LaserHeatSourceUniform
-    RTE         // use radiative transport equation, see MeltPoolDG::RadiativeTransportOperation
-  )
-  BETTER_ENUM(
-    LaserImpactType,
-    char,
-    // volumetric heat source
-    volumetric,
-    // interfacial heat source; use continuum surface force modeling within the interface region
-    interface,
-    // interfacial heat source; evaluate integral as surface integral over the sharp interface
-    interface_sharp)
-
 
   // evaporation specific @todo: move to own file evaporation_data.hpp
   BETTER_ENUM(
@@ -318,44 +299,6 @@ namespace MeltPoolDG
     PredictorData<number>            predictor;
   };
 
-
-  template <typename number = double>
-  struct LaserData
-  {
-    number              power            = 0.0;
-    std::string         power_over_time  = "constant";
-    number              power_start_time = 0.0;
-    number              power_end_time   = 1.e12;
-    std::vector<double> center; // default value will be set after parameters are read
-    bool                do_move     = false;
-    number              scan_speed  = 0.0;
-    LaserImpactType     impact_type = LaserImpactType::volumetric;
-    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
-    LaserHeatSourceModel heat_source_model = LaserHeatSourceModel::not_initialized;
-    struct GaussData
-    {
-      number laser_beam_radius   = 0.0;
-      number absorptivity_liquid = 0.0;
-      number absorptivity_gas    = 0.0;
-    } gauss;
-    struct GusarovData
-    {
-      number laser_beam_radius      = 0.0; // R
-      number reflectivity           = 0.0; // rho
-      number extinction_coefficient = 0.0; // beta
-      number layer_thickness        = 0.0; // L
-    } gusarov;
-    struct AnalyticalData
-    {
-      number temperature_x_to_y_ratio = 1.0;
-      number absorptivity_liquid      = 0.0;
-      number absorptivity_gas         = 0.0;
-      number max_temperature          = 0.0;
-      number ambient_temperature      = 0.0;
-    } analytical;
-  };
-
-
   template <typename number = double>
   struct MeltPoolData
   {
@@ -365,12 +308,6 @@ namespace MeltPoolDG
       bool   do_not_reinitialize        = false;
       number solid_fraction_lower_limit = 1.0;
     } solid;
-
-    struct Liquid
-    {
-      number melt_pool_radius = 0.0;
-      number melt_pool_depth  = 0.0;
-    } liquid;
   };
 
   template <typename number = double>

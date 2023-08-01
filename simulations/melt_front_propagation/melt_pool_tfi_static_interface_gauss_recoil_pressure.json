@@ -125,7 +125,6 @@
     "paraview filename": "melt_pool_tfi_static_interface_gauss_recoil_pressure"
   },
   "problem specific": {
-    "do melt pool": "true",
     "do recoil pressure": "true",
     "do heat transfer": "true",
     "do solidification": "true"

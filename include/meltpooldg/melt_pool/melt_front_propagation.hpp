@@ -6,9 +6,6 @@
 #pragma once
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/heat/laser.hpp>
-#include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
-#include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
@@ -21,7 +18,7 @@ namespace MeltPoolDG
     using namespace dealii;
 
     template <int dim>
-    class MeltPoolOperation
+    class MeltFrontPropagation
     {
     private:
       using VectorType = LinearAlgebra::distributed::Vector<double>;
@@ -34,11 +31,6 @@ namespace MeltPoolDG
 
       // melting/solidification
       Material<double> melting_solidification;
-
-      std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
-      std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
-      std::shared_ptr<Heat::LaserAnalyticalTemperatureField<dim>>
-        laser_analytical_temperature_field;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds
@@ -50,7 +42,7 @@ namespace MeltPoolDG
       const unsigned int flow_vel_dof_idx;
       const unsigned int flow_vel_no_solid_dof_idx;
       const unsigned int temp_hanging_nodes_dof_idx;
-      VectorType *       temperature;
+      const VectorType & temperature;
 
       /*
        * DoF vectors
@@ -59,29 +51,18 @@ namespace MeltPoolDG
       VectorType liquid;
 
     public:
-      MeltPoolOperation(const ScratchData<dim> &  scratch_data_in,
-                        const Parameters<double> &data_in,
-                        const unsigned int        ls_dof_idx_in,
-                        VectorType *              temperature,
-                        const unsigned int        reinit_dof_idx_in,
-                        const unsigned int        reinit_no_solid_dof_idx_in,
-                        const unsigned int        flow_vel_dof_idx_in,
-                        const unsigned int        flow_vel_no_solid_dof_idx_in,
-                        const unsigned int        temp_dof_idx_in,
-                        const unsigned int        temp_hanging_nodes_dof_idx_in,
-                        const double              start_time_in);
+      MeltFrontPropagation(const ScratchData<dim> &  scratch_data_in,
+                           const Parameters<double> &data_in,
+                           const unsigned int        ls_dof_idx_in,
+                           const VectorType &        temperature,
+                           const unsigned int        reinit_dof_idx_in,
+                           const unsigned int        reinit_no_solid_dof_idx_in,
+                           const unsigned int        flow_vel_dof_idx_in,
+                           const unsigned int        flow_vel_no_solid_dof_idx_in,
+                           const unsigned int        temp_hanging_nodes_dof_idx_in);
 
       void
       set_initial_condition(const VectorType &level_set_as_heaviside, VectorType &level_set);
-
-      void
-      compute_heat_source(VectorType &           heat_source,
-                          VectorType &           user_rhs,
-                          const VectorType &     level_set_as_heaviside,
-                          const BlockVectorType &normal_vector,
-                          const unsigned int     normal_dof_idx,
-                          const double &         dt,
-                          const bool             zero_out = true);
 
       void
       compute_melt_front_propagation(const VectorType &level_set_as_heaviside);
