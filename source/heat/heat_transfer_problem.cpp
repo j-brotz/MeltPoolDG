@@ -420,7 +420,21 @@ namespace MeltPoolDG::Heat
      */
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       heat_operation->attach_output_vectors(data_out);
-      rte_operation->attach_output_vectors(data_out);
+
+      /**
+       *  prescribed velocity
+       */
+      if (velocity_field_function)
+        data_out.add_data_vector(dof_handler_velocity, velocity, "velocity");
+      /**
+       *  prescribed heaviside
+       */
+      if (heaviside_field_function)
+        data_out.add_data_vector(dof_handler_level_set, level_set_as_heaviside, "heaviside");
+
+
+      if (rte_operation)
+        rte_operation->attach_output_vectors(data_out);
     };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
@@ -471,7 +485,14 @@ namespace MeltPoolDG::Heat
       heat_operation->attach_vectors(vectors);
     };
 
-    const auto post = [&]() { heat_operation->distribute_constraints(); };
+    const auto post = [&]() {
+      heat_operation->distribute_constraints();
+
+      if (velocity_field_function)
+        compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
+      if (heaviside_field_function)
+        compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
+    };
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in, true); };
 
