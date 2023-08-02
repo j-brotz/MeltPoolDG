@@ -1,6 +1,6 @@
 {
   "base": {
-    "application name": "slotted_disc",
+    "application name": "zalesak_disk",
     "problem name": "level_set",
     "dimension": "2",
     "global refinements": "8",
@@ -19,25 +19,13 @@
     "reinit constant epsilon": "-1",
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "reinit scale factor epsilon": "2"
   },
   "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "false"
-    }
+    "normal vec damping scale factor": "0.5"
   },
   "paraview": {
-    "paraview filename": "output/slotted_disc/solution_reinitialization",
-    "paraview do output": "true",
-    "paraview print exactsolution": "true"
-  },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "false"
-    }
+    "paraview directory": "output",
+    "paraview do output": "true"
   }
 }

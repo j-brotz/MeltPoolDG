@@ -1,0 +1,29 @@
+{
+  "base": {
+    "application name": "zalesak_disk",
+    "problem name": "level_set",
+    "dimension": "2",
+    "global refinements": "5",
+    "do print parameters": "false",
+    "degree": "1"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "end time": "0.03",
+    "time step size": "0.01"
+  },
+  "levelset": {
+    "ls do reinitialization": "true",
+    "ls time integration scheme": "crank_nicolson"
+  },
+  "reinitialization": {
+    "reinit max n steps": "2",
+    "reinit scale factor epsilon": "1"
+  },
+  "normal vector": {
+    "normal vec damping scale factor": "2"
+  },
+  "paraview": {
+    "paraview do output": "false"
+  }
+}
