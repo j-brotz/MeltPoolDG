@@ -51,24 +51,4 @@ namespace MeltPoolDG::Journal
                        const unsigned int             precision   = 6,
                        const std::string &            norm_suffix = "L2",
                        const unsigned int             extra_size  = 0);
-
-  template <int dim>
-  void
-  print_mesh_information(const ScratchData<dim> &scratch_data,
-                         const unsigned int      verbosity_level = 1)
-  {
-    print_decoration_line(scratch_data.get_pcout(verbosity_level));
-    print_line(scratch_data.get_pcout(verbosity_level), "Mesh data:", "ScratchData");
-    print_line(scratch_data.get_pcout(verbosity_level),
-               "  * total number of cells: " +
-                 std::to_string(scratch_data.get_triangulation().n_global_active_cells()),
-               "ScratchData");
-    print_line(scratch_data.get_pcout(verbosity_level),
-               "  * minimum cell size: " + std::to_string(scratch_data.get_min_cell_size()),
-               "ScratchData");
-    print_line(scratch_data.get_pcout(verbosity_level),
-               "  * maximum cell size: " + std::to_string(scratch_data.get_max_cell_size()),
-               "ScratchData");
-    print_decoration_line(scratch_data.get_pcout(verbosity_level));
-  }
 } // namespace MeltPoolDG::Journal
