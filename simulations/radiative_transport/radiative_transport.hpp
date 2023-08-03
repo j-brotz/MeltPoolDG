@@ -174,8 +174,8 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     {
       if constexpr (dim == 1)
         {
-          AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
-          this->triangulation = std::make_shared<Triangulation<dim>>();
+          this->triangulation =
+            std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
           // create mesh
           const Point<1> left(x_min);
           const Point<1> right(x_max);
