@@ -26,19 +26,20 @@ All notable changes of the input parameters will be documented in this file.
   }
 ```
 - Add parameters for simulation: radiative_transport
-``` json
+``` diff
 {
   "base": {
     "problem name": "radiative_transport"
-    }
+    },
   "problem specific": {
 +    "interface case": "straight|single_powder_particle|powderbed",
 +    "center in": "",
 +    "radius in": "",
 +    "power in": "",
 +    "powder particle radius": "",
-+    "offset": "",
++    "offset": ""
   }
+}
 ```
 
 
