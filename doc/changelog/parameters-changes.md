@@ -29,9 +29,10 @@ All notable changes of the input parameters will be documented in this file.
 ``` diff
 {
   "base": {
+    "application name": "radiative_transport",
     "problem name": "radiative_transport"
     },
-  "problem specific": {
+  "simulation specific parameters": {
 +    "interface case": "straight|single_powder_particle|powderbed",
 +    "center in": "",
 +    "radius in": "",
