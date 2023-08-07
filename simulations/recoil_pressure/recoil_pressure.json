@@ -37,9 +37,11 @@
     "laser scan speed": "0.003",
     "laser heat source model": "Analytical",
     "laser do move": "false",
-    "laser analytical ambient temperature": "300.",
-    "laser analytical absorptivity liquid": "0.5",
-    "laser analytical absorptivity gas": "0"
+    "analytical": {
+      "absorptivity liquid": "0.5",
+      "absorptivity gas": "0",
+      "ambient temperature": "300."
+    }
   },
   "simulation specific domain": {
     "domain x min": "-0.0002",
@@ -105,8 +107,8 @@
     }
   },
   "problem specific": {
-    "do melt pool": "true",
-    "do heat transfer": "true"
+    "do heat transfer": "true",
+    "do solidification": "true"
   },
   "advection diffusion": {
     "linear solver": {

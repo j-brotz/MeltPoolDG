@@ -29,7 +29,7 @@ namespace MeltPoolDG::Heat
     const VectorType *                              velocity_in,
     const unsigned int                              ls_dof_idx_in,
     const VectorType *                              level_set_as_heaviside_in,
-    const bool                                      do_solidifiaction_in)
+    const bool                                      do_solidification_in)
     : scratch_data(scratch_data_in)
     , data(data_in)
     , material(material)
@@ -43,7 +43,7 @@ namespace MeltPoolDG::Heat
     , velocity(velocity_in)
     , ls_dof_idx(ls_dof_idx_in)
     , level_set_as_heaviside(level_set_as_heaviside_in)
-    , do_solidification(do_solidifiaction_in)
+    , do_solidification(do_solidification_in)
   {
     // TODO move these asserts to a more central place -> to material perhaps?
     const auto &material_data = material.get_data();

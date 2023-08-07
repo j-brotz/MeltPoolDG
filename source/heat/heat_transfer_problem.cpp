@@ -53,47 +53,12 @@ namespace MeltPoolDG::Heat
         if (laser_operation)
           {
             laser_operation->move_laser(dt);
-            switch (laser_operation->get_laser_impact_type())
-              {
-                  case LaserImpactType::volumetric: {
-                    laser_heat_source_operation->compute_volumetric_heat_source(
-                      heat_operation->get_heat_source(),
-                      *scratch_data,
-                      temp_dof_idx,
-                      laser_operation->get_laser_power(),
-                      laser_operation->get_laser_position(),
-                      false /* zero_out */);
-                    break;
-                  }
-                  case LaserImpactType::interface: {
-                    laser_heat_source_operation->compute_interfacial_heat_source(
-                      heat_operation->get_heat_source(),
-                      *scratch_data,
-                      temp_dof_idx,
-                      laser_operation->get_laser_power(),
-                      laser_operation->get_laser_position(),
-                      heat_operation->get_level_set_as_heaviside(),
-                      level_set_dof_idx,
-                      false /* zero_out */);
-                    break;
-                  }
-                  case LaserImpactType::interface_sharp: {
-                    laser_heat_source_operation->compute_interfacial_heat_source_sharp(
-                      heat_operation->get_user_rhs(),
-                      *scratch_data,
-                      temp_dof_idx,
-                      laser_operation->get_laser_power(),
-                      laser_operation->get_laser_position(),
-                      heat_operation->get_level_set_as_heaviside(),
-                      level_set_dof_idx,
-                      false /* zero_out */);
-                    break;
-                  }
-                  default: {
-                    AssertThrow(false, ExcMessage("Unknown laser impact type! Abort..."));
-                    break;
-                  }
-              }
+            laser_operation->compute_heat_source(heat_operation->get_heat_source(),
+                                                 heat_operation->get_user_rhs(),
+                                                 level_set_as_heaviside,
+                                                 level_set_dof_idx,
+                                                 temp_hanging_nodes_dof_idx,
+                                                 false /* zero_out */);
           }
         // add RTE heat source if given
         if (rte_operation)
@@ -245,7 +210,7 @@ namespace MeltPoolDG::Heat
         laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data,
                                                                       base_in->parameters.laser,
                                                                       base_in->parameters.material);
-        laser_operation->set_initial_condition(base_in->parameters.time_stepping.start_time);
+        laser_operation->reset(base_in->parameters.time_stepping.start_time);
 
         if (base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Gusarov)
           {

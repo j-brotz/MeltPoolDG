@@ -55,11 +55,13 @@
   "laser": {
     "laser power": "75.",
     "laser heat source model": "Analytical",
-    "laser analytical temperature x to y ratio": "3.",
-    "laser analytical ambient temperature": "500.",
-    "laser analytical max temperature": "3500.",
-    "laser analytical absorptivity gas": "0",
-    "laser analytical absorptivity liquid": "0.5"
+    "analytical": {
+      "absorptivity liquid": "0.5",
+      "absorptivity gas": "0",
+      "ambient temperature": "500.",
+      "max temperature": "3500.",
+      "temperature x to y ratio": "3."
+    }
   },
   "simulation specific domain": {
     "domain x min": "-0.0001",
@@ -79,11 +81,11 @@
     "reinit scale factor epsilon": "2"
   },
   "problem specific": {
-    "do melt pool": "false",
     "do recoil pressure": "false",
     "do heat transfer": "false",
     "do advect level set": "false",
-    "do evaporation": "false"
+    "do evaporation": "false",
+    "do solidification": "false"
   },
   "advection diffusion": {
     "linear solver": {

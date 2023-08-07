@@ -58,10 +58,10 @@
     "do evaporative heat flux": "false",
     "do evaporative mass flux": "false",
     "do evaporation": "false",
-    "do melt pool": "true",
     "do recoil pressure": "false",
     "do heat transfer": "true",
-    "do advect level set": "false"
+    "do advect level set": "false",
+    "do solidification": "true"
   },
   "Navier-Stokes": {
     "adaflo": {

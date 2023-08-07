@@ -51,6 +51,7 @@
     "reference temperature": "1700"
   },
   "material": {
+    "material template": "stainless_steel",
     "material first capacity": "0",
     "material first conductivity": "10",
     "material first density": "74.30",
@@ -78,10 +79,13 @@
     "laser power over time": "constant",
     "laser power start time": "-1.e-4",
     "laser heat source model": "Analytical",
-    "laser analytical absorptivity gas": "0",
-    "laser analytical absorptivity liquid": "0.5",
-    "laser analytical ambient temperature": "500.",
-    "laser analytical temperature x to y ratio": "3."
+    "analytical": {
+      "absorptivity liquid": "0.5",
+      "absorptivity gas": "0",
+      "max temperature": "3500.",
+      "ambient temperature": "500.",
+      "temperature x to y ratio": "3."
+    }
   },
   "melt pool": {
     "mp do not reinitialize in solid": "true",
@@ -111,9 +115,9 @@
     }
   },
   "problem specific": {
-    "do melt pool": "true",
     "do recoil pressure": "true",
-    "do heat transfer": "true"
+    "do heat transfer": "true",
+    "do solidification": "true"
   },
   "advection diffusion": {
     "linear solver": {

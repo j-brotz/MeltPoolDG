@@ -6,6 +6,7 @@
 
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
+#include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/material/material.hpp>
@@ -363,16 +364,33 @@ namespace MeltPoolDG::MeltPool
                 ScopedName         sc("heat");
                 TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
-                if (melt_pool_operation)
-                  melt_pool_operation->compute_heat_source(
-                    heat_operation->get_heat_source(),
-                    heat_operation->get_user_rhs(),
-                    level_set_operation->get_level_set_as_heaviside(),
-                    level_set_operation->get_normal_vector(),
-                    normal_dof_idx,
-                    dt,
-                    true /* zero_out */);
+                if (laser_operation)
+                  {
+                    laser_operation->move_laser(dt);
 
+                    if (base_in->parameters.laser.heat_source_model ==
+                        LaserHeatSourceModel::Analytical)
+                      Heat::LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
+                        *scratch_data,
+                        base_in->parameters.material,
+                        base_in->parameters.laser.analytical,
+                        base_in->parameters.laser.scan_speed,
+                        laser_operation->get_laser_power(),
+                        laser_operation->get_laser_position(),
+                        heat_operation->get_temperature(),
+                        level_set_operation->get_level_set_as_heaviside(),
+                        temp_dof_idx);
+                    else
+                      laser_operation->compute_heat_source(
+                        heat_operation->get_heat_source(),
+                        heat_operation->get_user_rhs(),
+                        level_set_operation->get_level_set_as_heaviside(),
+                        ls_dof_idx,
+                        temp_hanging_nodes_dof_idx,
+                        true /* zero_out */,
+                        &level_set_operation->get_normal_vector(),
+                        normal_dof_idx);
+                  }
                 TableHandler iter_table;
                 VectorType   iter_res;
 
@@ -430,13 +448,14 @@ namespace MeltPoolDG::MeltPool
                     //    * the evaporative mass flux is given as a constant
                     //    (temperature-independent) value
                     //    * the temperature field is prescribed analytically
-                    if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
-                        (evaporation_operation && !(base_in->parameters.evapor.evaporation_model ==
-                                                    EvaporationModelType::constant)) ||
-                        (melt_pool_operation && !(base_in->parameters.laser.heat_source_model ==
-                                                  LaserHeatSourceModel::Analytical)))
+                    if (heat_operation)
                       {
-                        heat_operation->solve(false);
+                        if (!((evaporation_operation &&
+                               (base_in->parameters.evapor.evaporation_model ==
+                                EvaporationModelType::constant)) ||
+                              base_in->parameters.laser.heat_source_model ==
+                                LaserHeatSourceModel::Analytical))
+                          heat_operation->solve(false);
                       }
 
                     if (do_heat_iteration)
@@ -463,11 +482,11 @@ namespace MeltPoolDG::MeltPool
 
 
 
-                if (melt_pool_operation)
+                if (melt_front_propagation)
                   {
                     ScopedName         sc("melt_front_propagation");
                     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-                    melt_pool_operation->compute_melt_front_propagation(
+                    melt_front_propagation->compute_melt_front_propagation(
                       level_set_operation->get_level_set_as_heaviside());
 
                     if (base_in->parameters.mp.solid.set_velocity_to_zero ||
@@ -772,10 +791,6 @@ namespace MeltPoolDG::MeltPool
         "If 'do evaporative velocity jump' is set to true, this pressure jump will be added to the "
         "one resulting from the discontinuous normal velocity field.");
       prm.add_parameter(
-        "do melt pool",
-        problem_specific_parameters.do_melt_pool,
-        "Set this parameter to true if you want to consider a melt pool simulation including solid/liquid/gaseous phases.");
-      prm.add_parameter(
         "do advect level set",
         problem_specific_parameters.do_advect_level_set,
         "Set this parameter to true if you want to advect the level set with the fluid velocity.");
@@ -867,9 +882,10 @@ namespace MeltPoolDG::MeltPool
                            ">>> latent heat of evaporation <<< "
                            "must be larger than zero."));
 
-    if (problem_specific_parameters.do_melt_pool && !problem_specific_parameters.do_heat_transfer)
+    if (problem_specific_parameters.do_solidification &&
+        !problem_specific_parameters.do_heat_transfer)
       AssertThrow(false,
-                  ExcMessage("In case of do melt pool both flag >>> do melt pool <<< "
+                  ExcMessage("In case of solidification flag >>> do solidification <<< "
                              "and >>> do heat transfer <<< have to be set to true."));
 
     AssertThrow(problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid <= 1 &&
@@ -1176,26 +1192,24 @@ namespace MeltPoolDG::MeltPool
     /*
      *    initialize the melt pool operation class
      */
-    if (problem_specific_parameters.do_melt_pool)
+    if (problem_specific_parameters.do_solidification)
       {
-        melt_pool_operation = std::make_shared<MeltPool::MeltPoolOperation<dim>>(
+        melt_front_propagation = std::make_shared<MeltPool::MeltFrontPropagation<dim>>(
           *scratch_data,
           base_in->parameters,
           ls_hanging_nodes_dof_idx,
-          &heat_operation->get_temperature(),
+          heat_operation->get_temperature(),
           reinit_dof_idx,
           reinit_no_solid_dof_idx,
           flow_operation->get_dof_handler_idx_velocity(),
           flow_vel_no_solid_dof_idx,
-          temp_dof_idx,
-          temp_hanging_nodes_dof_idx,
-          base_in->parameters.time_stepping.start_time);
+          temp_hanging_nodes_dof_idx);
         /*
          * Register solid fraction in surface tension
          */
         if (base_in->parameters.surface_tension.zero_surface_tension_in_solid)
           surface_tension_operation->register_solid_fraction(temp_hanging_nodes_dof_idx,
-                                                             &melt_pool_operation->get_solid());
+                                                             &melt_front_propagation->get_solid());
         /*
          *    initialize the darcy damping operation class
          */
@@ -1208,11 +1222,21 @@ namespace MeltPoolDG::MeltPool
             temp_hanging_nodes_dof_idx);
       }
 
+    // setup laser
+    if (base_in->parameters.laser.power > 0)
+      {
+        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data,
+                                                                      base_in->parameters.laser,
+                                                                      base_in->parameters.material);
+        laser_operation->reset(base_in->parameters.time_stepping.start_time);
+      }
+
+
     if (problem_specific_parameters.do_solidification)
       AssertThrow(
-        melt_pool_operation,
+        melt_front_propagation,
         ExcMessage("If solidifcation is enabled the melt pool operation must be initialized! Check "
-                   "if the parameter >>>do melt pool<<< is set to true. Abort..."));
+                   "if the parameter >>>do soldification<<< is set to true. Abort..."));
 
     /*
      *  set initial conditions of all operations
@@ -1252,8 +1276,8 @@ namespace MeltPoolDG::MeltPool
 
           if (heat_operation)
             str << " T.size " << heat_operation->get_temperature().size();
-          if (melt_pool_operation)
-            str << " solid.size " << melt_pool_operation->get_solid().size();
+          if (melt_front_propagation)
+            str << " solid.size " << melt_front_propagation->get_solid().size();
 
           Journal::print_line(scratch_data->get_pcout(), str.str(), "melt_pool_problem");
           refine_mesh(base_in);
@@ -1300,25 +1324,34 @@ namespace MeltPoolDG::MeltPool
         false,
         ExcMessage("For the level set operation either a function for the initial level set or the "
                    "signed distance field must be provided. Abort ..."));
-    /*
-     *  set initial conditions of the temperature field
-     *
-     *  @todo: improve cases where it must not be specified
-     */
-    if ((heat_operation && !evaporation_operation && !melt_pool_operation) ||
-        (evaporation_operation &&
-         !(base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)) ||
-        (melt_pool_operation &&
-         !(base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)))
-      heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
-                                            base_in->parameters.time_stepping.start_time);
-
+    // set initial conditions of the temperature field
+    if (heat_operation)
+      {
+        if (laser_operation &&
+            base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)
+          Heat::LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
+            *scratch_data,
+            base_in->parameters.material,
+            base_in->parameters.laser.analytical,
+            base_in->parameters.laser.scan_speed,
+            laser_operation->get_laser_power(),
+            laser_operation->get_laser_position(),
+            heat_operation->get_temperature(),
+            level_set_operation->get_level_set_as_heaviside(),
+            temp_dof_idx);
+        else if
+          // constant evaporative mass flux --> no need to set initial condition
+          (!(evaporation_operation &&
+             base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant))
+          heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
+                                                base_in->parameters.time_stepping.start_time);
+      }
     /*
      * set initial condition of the melt pool class
      */
-    if (melt_pool_operation)
+    if (melt_front_propagation)
       {
-        melt_pool_operation->set_initial_condition(
+        melt_front_propagation->set_initial_condition(
           level_set_operation->get_level_set_as_heaviside(), level_set_operation->get_level_set());
         if (base_in->parameters.mp.solid.set_velocity_to_zero ||
             base_in->parameters.mp.solid.do_not_reinitialize)
@@ -1443,8 +1476,8 @@ namespace MeltPoolDG::MeltPool
 
         if (evaporation_operation)
           evaporation_operation->reinit();
-        if (melt_pool_operation)
-          melt_pool_operation->reinit();
+        if (melt_front_propagation)
+          melt_front_propagation->reinit();
         if (heat_operation)
           heat_operation->reinit();
       }
@@ -1574,7 +1607,7 @@ namespace MeltPoolDG::MeltPool
                 if (temp_values)
                   {
                     const auto solid_fraction =
-                      melt_pool_operation->compute_solid_fraction(temp_values->get_value(q));
+                      melt_front_propagation->compute_solid_fraction(temp_values->get_value(q));
 
                     rho_l = LevelSet::Tools::interpolate_cubic(solid_fraction,
                                                                material.second.density,
@@ -1649,7 +1682,7 @@ namespace MeltPoolDG::MeltPool
       dummy,
       ls_as_heaviside);
 
-    if (evaporation_operation || melt_pool_operation)
+    if (evaporation_operation || melt_front_propagation)
       {
         std::ostringstream str;
         str << " total mass = " << std::setprecision(11)
@@ -1713,7 +1746,7 @@ namespace MeltPoolDG::MeltPool
 
                     for (unsigned int i = 0; i < rho_ls.size(); ++i)
                       rho_ls[i] = LevelSet::Tools::interpolate_cubic(
-                        melt_pool_operation->compute_solid_fraction(temp[i]),
+                        melt_front_propagation->compute_solid_fraction(temp[i]),
                         parameters.material.second.density,
                         parameters.material.solid.density);
                   }
@@ -1788,8 +1821,8 @@ namespace MeltPoolDG::MeltPool
 
       flow_operation->attach_output_vectors(data_out);
 
-      if (melt_pool_operation)
-        melt_pool_operation->attach_output_vectors(data_out);
+      if (melt_front_propagation)
+        melt_front_propagation->attach_output_vectors(data_out);
 
       if (evaporation_operation)
         evaporation_operation->attach_output_vectors(data_out);
@@ -2003,13 +2036,13 @@ namespace MeltPoolDG::MeltPool
               estimated_error_per_cell);
 
             // 3) optional: incorporate interface to solid in error estimator
-            if (problem_specific_parameters.do_melt_pool)
+            if (problem_specific_parameters.do_solidification)
               {
                 // 3a) copy the solution
                 locally_relevant_solution.reinit(
                   scratch_data->get_partitioner(temp_hanging_nodes_dof_idx));
                 locally_relevant_solution.copy_locally_owned_data_from(
-                  melt_pool_operation->get_solid());
+                  melt_front_propagation->get_solid());
                 scratch_data->get_constraint(temp_hanging_nodes_dof_idx)
                   .distribute(locally_relevant_solution);
                 locally_relevant_solution.update_ghost_values();
@@ -2153,10 +2186,10 @@ namespace MeltPoolDG::MeltPool
           }
       }
 
-    if (melt_pool_operation)
+    if (melt_front_propagation)
       {
-        melt_pool_operation->get_liquid().update_ghost_values();
-        melt_pool_operation->get_solid().update_ghost_values();
+        melt_front_propagation->get_liquid().update_ghost_values();
+        melt_front_propagation->get_solid().update_ghost_values();
         heat_operation->get_temperature().update_ghost_values();
         Vector<double> liq_vals(scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
         Vector<double> solid_vals(
@@ -2170,8 +2203,8 @@ namespace MeltPoolDG::MeltPool
             if (cell->is_locally_owned() == false)
               continue;
 
-            cell->get_dof_values(melt_pool_operation->get_liquid(), liq_vals);
-            cell->get_dof_values(melt_pool_operation->get_solid(), solid_vals);
+            cell->get_dof_values(melt_front_propagation->get_liquid(), liq_vals);
+            cell->get_dof_values(melt_front_propagation->get_solid(), solid_vals);
             cell->get_dof_values(heat_operation->get_temperature(), temp_vals);
 
             for (unsigned int i = 0; i < liq_vals.size(); ++i)
@@ -2195,8 +2228,8 @@ namespace MeltPoolDG::MeltPool
                   break;
                 }
           }
-        melt_pool_operation->get_liquid().zero_out_ghost_values();
-        melt_pool_operation->get_solid().zero_out_ghost_values();
+        melt_front_propagation->get_liquid().zero_out_ghost_values();
+        melt_front_propagation->get_solid().zero_out_ghost_values();
         heat_operation->get_temperature().zero_out_ghost_values();
       }
 
@@ -2248,9 +2281,9 @@ namespace MeltPoolDG::MeltPool
                         flow_operation->attach_vectors_p(vectors);
                       });
 
-    if (melt_pool_operation)
+    if (melt_front_propagation)
       data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
-        melt_pool_operation->attach_vectors(vectors); // temperature + solid + liquid
+        melt_front_propagation->attach_vectors(vectors); // temperature + solid + liquid
       });
 
     if (evaporation_operation)
@@ -2288,8 +2321,8 @@ namespace MeltPoolDG::MeltPool
     /**
      * melt pool
      */
-    if (melt_pool_operation)
-      melt_pool_operation->distribute_constraints();
+    if (melt_front_propagation)
+      melt_front_propagation->distribute_constraints();
     /**
      * evaporation
      */

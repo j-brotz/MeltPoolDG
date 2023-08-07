@@ -552,5 +552,21 @@ namespace MeltPoolDG
       //
       interpolated_values.evaluate(EvaluationFlags::gradients);
     }
+
+    template <int dim, typename ForwardIterator>
+    Point<dim>
+    to_point(const ForwardIterator begin, const ForwardIterator end)
+    {
+      (void)end;
+      AssertIndexRange(dim, std::distance(begin, end) + 1);
+
+      Point<dim> point;
+
+      auto it = begin;
+      for (int i = 0; i < dim; ++i)
+        point[i] = *it++;
+
+      return point;
+    }
   } // namespace UtilityFunctions
 } // namespace MeltPoolDG

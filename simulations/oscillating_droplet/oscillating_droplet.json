@@ -108,8 +108,8 @@
     "paraview write frequency": "2"
   },
   "problem specific": {
-    "do melt pool": "false",
     "do recoil pressure": "false",
-    "do heat transfer": "false"
+    "do heat transfer": "false",
+    "do solidification": "false"
   }
 }

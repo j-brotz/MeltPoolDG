@@ -59,9 +59,6 @@
     "domain z max": "0.2e-3",
     "initial temperature": "1000.0"
   },
-  "melt pool": {
-    "mp set velocity to zero in solid": "false"
-  },
   "material": {
     "material first capacity": "0",
     "material first conductivity": "10",
@@ -109,7 +106,6 @@
     "paraview do output": "false"
   },
   "problem specific": {
-    "do melt pool": "true",
     "do heat transfer": "true",
     "do solidification": "false"
   },

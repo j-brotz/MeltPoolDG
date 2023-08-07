@@ -48,8 +48,7 @@
   },
   "problem specific": {
     "do heat transfer": "true",
-    "do solidification": "true",
-    "do melt pool": "true"
+    "do solidification": "true"
   },
   "paraview": {
     "paraview do output": "false"

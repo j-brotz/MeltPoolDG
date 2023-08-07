@@ -1,5 +1,3 @@
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
 |  total mass = 0.00028599933333                                                 melt_pool_problem |
 | Surface mesh generated, 16 cut cells found.                                            level set |
 +--------------------------------------------------------------------------------------------------+
@@ -9,8 +7,6 @@
 +--------------------------------------------------------------------------------------------------+
 +--------------------------------------------------------------------------------------------------+
 | Surface mesh generated, 16 cut cells found.                                            level set |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.10819e+00                newton_raphson_solver |
 |  total mass = 0.00028599933333                                                 melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -21,8 +17,6 @@
 | || advected field ||L2 = 3.1776822700e-04                                    advection_diffusion |
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | Surface mesh generated, 16 cut cells found.                                            level set |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.10802e+00                newton_raphson_solver |
 |  total mass = 0.00028599933333                                                 melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |

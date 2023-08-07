@@ -30,11 +30,12 @@
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
+#include <meltpooldg/heat/laser.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/material/material.hpp>
-#include <meltpooldg/melt_pool/melt_pool_operation.hpp>
+#include <meltpooldg/melt_pool/melt_front_propagation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
@@ -88,7 +89,6 @@ namespace MeltPoolDG::MeltPool
         false; //@todo: move to struct "phase change", rename do_evaporative_enthalpy_jump
       bool do_evaporative_velocity_jump  = false; //@todo: move to struct "phase change"
       bool do_recoil_pressure            = false; //@todo: move to struct "phase change", rename
-      bool do_melt_pool                  = false;
       bool do_advect_level_set           = true;
       bool do_extrapolate_coupling_terms = false;
 
@@ -226,7 +226,8 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Material<double>>                       material;
     std::shared_ptr<Flow::FlowBase<dim>>                    flow_operation;
     std::shared_ptr<LevelSet::LevelSetOperation<dim>>       level_set_operation;
-    std::shared_ptr<MeltPool::MeltPoolOperation<dim>>       melt_pool_operation;
+    std::shared_ptr<Heat::LaserOperation<dim>>              laser_operation;
+    std::shared_ptr<MeltPool::MeltFrontPropagation<dim>>    melt_front_propagation;
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation = nullptr;
     std::shared_ptr<
       MeltPoolDG::Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>

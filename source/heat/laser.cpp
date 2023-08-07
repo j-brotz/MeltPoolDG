@@ -1,28 +1,12 @@
 #include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/heat/laser_heat_source_gauss.hpp>
+#include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
+#include <meltpooldg/heat/laser_heat_source_uniform.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Heat
 {
-  namespace
-  {
-    template <int dim, typename ForwardIterator>
-    Point<dim>
-    to_point(const ForwardIterator begin, const ForwardIterator end)
-    {
-      (void)end;
-      AssertIndexRange(dim, std::distance(begin, end) + 1);
-
-      Point<dim> point;
-
-      auto it = begin;
-      for (int i = 0; i < dim; ++i)
-        point[i] = *it++;
-
-      return point;
-    }
-  } // namespace
-
   template <int dim>
   LaserOperation<dim>::LaserOperation(const ScratchData<dim> &    scratch_data_in,
                                       const LaserData<double> &   laser_data_in,
@@ -30,21 +14,42 @@ namespace MeltPoolDG::Heat
     : scratch_data(scratch_data_in)
     , laser_data(laser_data_in)
     , material(material_data_in)
-    , laser_position(to_point<dim>(laser_data.center.begin(), laser_data.center.end()))
-  {}
+    , laser_position(
+        UtilityFunctions::to_point<dim>(laser_data.center.begin(), laser_data.center.end()))
+  {
+    /*
+     * Factory for the laser heat source model
+     */
+    if (laser_data.heat_source_model == LaserHeatSourceModel::Gusarov)
+      {
+        laser_heat_source_operation =
+          std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(laser_data.gusarov);
+      }
+    else if (laser_data.heat_source_model == LaserHeatSourceModel::Gauss)
+      {
+        laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
+          laser_data.gauss,
+          material.two_phase_properties_transition_type,
+          laser_data.delta_approximation_phase_weighted);
+      }
+    else if (laser_data.heat_source_model == LaserHeatSourceModel::uniform)
+      {
+        laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceUniform<dim>>(
+          laser_data.delta_approximation_phase_weighted);
+      }
+    else
+      AssertThrow(laser_data.heat_source_model == LaserHeatSourceModel::Analytical,
+                  ExcMessage("No requested laser model found. Please specify the "
+                             "heat source model in the laser section of the input parameters."))
+  }
 
   template <int dim>
   void
-  LaserOperation<dim>::set_initial_condition(const double start_time)
+  LaserOperation<dim>::reset(const double start_time)
   {
     current_time = start_time;
     compute_laser_intensity();
-    std::ostringstream str;
-    str << "current laser position: " << laser_position;
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
-    str.str("");
-    str << "current laser intensity: " << laser_intensity;
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
+    print();
   }
 
   template <int dim>
@@ -59,24 +64,19 @@ namespace MeltPoolDG::Heat
     // 2) update intensity of the laser
     compute_laser_intensity();
 
-    std::ostringstream str;
-    str << "current laser position: " << laser_position;
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
-    str.str("");
-    str << "current laser intensity: " << laser_intensity;
-    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
+    print();
   }
 
   template <int dim>
-  Point<dim>
-  LaserOperation<dim>::get_laser_position()
+  const Point<dim> &
+  LaserOperation<dim>::get_laser_position() const
   {
     return laser_position;
   }
 
   template <int dim>
   double
-  LaserOperation<dim>::get_laser_power()
+  LaserOperation<dim>::get_laser_power() const
   {
     return laser_intensity * laser_data.power;
   }
@@ -109,11 +109,82 @@ namespace MeltPoolDG::Heat
       AssertThrow(false, ExcNotImplemented());
   }
 
+  /* TODO: add function parameters*/
+  template <int dim>
+  void
+  LaserOperation<dim>::compute_heat_source(VectorType &           heat_source,
+                                           VectorType &           heat_user_rhs,
+                                           const VectorType &     level_set_as_heaviside,
+                                           const unsigned int     ls_dof_idx,
+                                           const unsigned int     temp_hanging_nodes_dof_idx,
+                                           const bool             zero_out,
+                                           const BlockVectorType *normal_vector,
+                                           const unsigned int     normal_dof_idx) const
+  {
+    switch (get_laser_impact_type())
+      {
+          case LaserImpactType::volumetric: {
+            laser_heat_source_operation->compute_volumetric_heat_source(heat_source,
+                                                                        scratch_data,
+                                                                        temp_hanging_nodes_dof_idx,
+                                                                        get_laser_power(),
+                                                                        get_laser_position(),
+                                                                        zero_out);
+            break;
+          }
+          case LaserImpactType::interface: {
+            laser_heat_source_operation->compute_interfacial_heat_source(heat_source,
+                                                                         scratch_data,
+                                                                         temp_hanging_nodes_dof_idx,
+                                                                         get_laser_power(),
+                                                                         get_laser_position(),
+                                                                         level_set_as_heaviside,
+                                                                         ls_dof_idx,
+                                                                         zero_out,
+                                                                         normal_vector,
+                                                                         normal_dof_idx);
+            break;
+          }
+          case LaserImpactType::interface_sharp: {
+            laser_heat_source_operation->compute_interfacial_heat_source_sharp(
+              heat_user_rhs,
+              scratch_data,
+              temp_hanging_nodes_dof_idx,
+              get_laser_power(),
+              get_laser_position(),
+              level_set_as_heaviside,
+              ls_dof_idx,
+              zero_out,
+              normal_vector,
+              normal_dof_idx);
+            break;
+          }
+          default: {
+            AssertThrow(false, ExcMessage("Laser impact type not implemented here! Abort..."));
+            break;
+          }
+      }
+  }
+
+
+
   template <int dim>
   LaserImpactType
   LaserOperation<dim>::get_laser_impact_type() const
   {
     return laser_data.impact_type;
+  }
+
+  template <int dim>
+  void
+  LaserOperation<dim>::print() const
+  {
+    std::ostringstream str;
+    str << "current laser position: " << laser_position;
+    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
+    str.str("");
+    str << "current laser intensity: " << laser_intensity;
+    Journal::print_line(scratch_data.get_pcout(), str.str(), "laser");
   }
 
   template class LaserOperation<1>;

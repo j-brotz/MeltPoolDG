@@ -1,11 +1,8 @@
-#include <meltpooldg/melt_pool/melt_pool_operation.hpp>
+#include <meltpooldg/melt_pool/melt_front_propagation.hpp>
 //
 
 #include <deal.II/dofs/dof_tools.h>
 
-#include <meltpooldg/heat/laser_heat_source_gauss.hpp>
-#include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
-#include <meltpooldg/heat/laser_heat_source_uniform.hpp>
 #include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
@@ -14,17 +11,15 @@
 namespace MeltPoolDG::MeltPool
 {
   template <int dim>
-  MeltPoolOperation<dim>::MeltPoolOperation(const ScratchData<dim> &  scratch_data_in,
-                                            const Parameters<double> &data_in,
-                                            const unsigned int        ls_dof_idx_in,
-                                            VectorType *              temperature,
-                                            const unsigned int        reinit_dof_idx_in,
-                                            const unsigned int        reinit_no_solid_dof_idx_in,
-                                            const unsigned int        flow_vel_dof_idx_in,
-                                            const unsigned int        flow_vel_no_solid_dof_idx_in,
-                                            const unsigned int        temp_dof_idx_in,
-                                            const unsigned int        temp_hanging_nodes_dof_idx_in,
-                                            const double              start_time_in)
+  MeltFrontPropagation<dim>::MeltFrontPropagation(const ScratchData<dim> &  scratch_data_in,
+                                                  const Parameters<double> &data_in,
+                                                  const unsigned int        ls_dof_idx_in,
+                                                  const VectorType &        temperature,
+                                                  const unsigned int        reinit_dof_idx_in,
+                                                  const unsigned int reinit_no_solid_dof_idx_in,
+                                                  const unsigned int flow_vel_dof_idx_in,
+                                                  const unsigned int flow_vel_no_solid_dof_idx_in,
+                                                  const unsigned int temp_hanging_nodes_dof_idx_in)
     : scratch_data(scratch_data_in)
     , mp_data(data_in.mp)
     , melting_solidification(data_in.material, MaterialTypes::liquid_solid)
@@ -37,69 +32,17 @@ namespace MeltPoolDG::MeltPool
     , temperature(temperature)
   {
     /*
-     *  initialize the laser operation class
-     */
-    laser_operation =
-      std::make_shared<Heat::LaserOperation<dim>>(scratch_data, data_in.laser, data_in.material);
-    /*
-     *  Initialize the laser operation
-     */
-    laser_operation->set_initial_condition(start_time_in);
-    /*
      * initialize the dof_vectors
      */
     scratch_data.initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
-
-    /*
-     * Choose the laser heat source model
-     */
-    if (data_in.laser.heat_source_model == LaserHeatSourceModel::Gusarov)
-      {
-        laser_heat_source_operation =
-          std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(data_in.laser.gusarov);
-      }
-    else if (data_in.laser.heat_source_model == LaserHeatSourceModel::Gauss)
-      {
-        laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
-          data_in.laser.gauss,
-          data_in.material.two_phase_properties_transition_type,
-          data_in.laser.delta_approximation_phase_weighted);
-      }
-    else if (data_in.laser.heat_source_model == LaserHeatSourceModel::uniform)
-      {
-        laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceUniform<dim>>(
-          data_in.laser.delta_approximation_phase_weighted);
-      }
-    else if (data_in.laser.heat_source_model == LaserHeatSourceModel::Analytical)
-      {
-        laser_analytical_temperature_field =
-          std::make_shared<Heat::LaserAnalyticalTemperatureField<dim>>(scratch_data_in,
-                                                                       data_in.laser.analytical,
-                                                                       data_in.material,
-                                                                       data_in.laser.scan_speed,
-                                                                       temp_dof_idx_in);
-      }
-    else
-      AssertThrow(false,
-                  ExcMessage("No requested laser model found. Please specify the "
-                             "heat source model in the laser section of the input parameters."))
   }
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::set_initial_condition(const VectorType &level_set_as_heaviside,
-                                                VectorType &      level_set)
+  MeltFrontPropagation<dim>::set_initial_condition(const VectorType &level_set_as_heaviside,
+                                                   VectorType &      level_set)
   {
-    /*
-     *  Compute analytical temperature field
-     */
-    if (laser_analytical_temperature_field)
-      laser_analytical_temperature_field->compute_temperature_field(
-        level_set_as_heaviside,
-        *temperature,
-        laser_operation->get_laser_power(),
-        laser_operation->get_laser_position());
     /*
      *  Compute the initial solid and liquid phases
      */
@@ -116,99 +59,25 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::compute_heat_source(VectorType &           heat_source,
-                                              VectorType &           user_rhs,
-                                              const VectorType &     level_set_as_heaviside,
-                                              const BlockVectorType &normal_vector,
-                                              const unsigned int     normal_dof_idx,
-                                              const double &         dt,
-                                              const bool             zero_out)
+  MeltFrontPropagation<dim>::compute_melt_front_propagation(
+    const VectorType &level_set_as_heaviside)
   {
-    // 0) move laser
-    laser_operation->move_laser(dt);
+    // 1) update phases
+    compute_solid_and_liquid_phases(level_set_as_heaviside);
 
-    // 1) compute heat source or define analytical temperature field
-    if (laser_analytical_temperature_field)
-      {
-        laser_analytical_temperature_field->compute_temperature_field(
-          level_set_as_heaviside,
-          *temperature,
-          laser_operation->get_laser_power(),
-          laser_operation->get_laser_position());
-      }
-    else
-      {
-        switch (laser_operation->get_laser_impact_type())
-          {
-              case LaserImpactType::volumetric: {
-                laser_heat_source_operation->compute_volumetric_heat_source(
-                  heat_source,
-                  scratch_data,
-                  temp_hanging_nodes_dof_idx,
-                  laser_operation->get_laser_power(),
-                  laser_operation->get_laser_position(),
-                  zero_out);
-                break;
-              }
-              case LaserImpactType::interface: {
-                laser_heat_source_operation->compute_interfacial_heat_source(
-                  heat_source,
-                  scratch_data,
-                  temp_hanging_nodes_dof_idx,
-                  laser_operation->get_laser_power(),
-                  laser_operation->get_laser_position(),
-                  level_set_as_heaviside,
-                  ls_dof_idx,
-                  zero_out,
-                  &normal_vector,
-                  normal_dof_idx);
-                break;
-              }
-              case LaserImpactType::interface_sharp: {
-                laser_heat_source_operation->compute_interfacial_heat_source_sharp(
-                  user_rhs,
-                  scratch_data,
-                  temp_hanging_nodes_dof_idx,
-                  laser_operation->get_laser_power(),
-                  laser_operation->get_laser_position(),
-                  level_set_as_heaviside,
-                  ls_dof_idx,
-                  zero_out,
-                  &normal_vector,
-                  normal_dof_idx);
-                break;
-              }
-              default: {
-                AssertThrow(false, ExcMessage("Laser impact type not implemented here! Abort..."));
-                break;
-              }
-          }
-      }
+
+    // 2) update the constraints such that the solid domain is spatially fixed
+    make_constraints_in_spatially_fixed_solid_domain();
+    /*
+     * distribute the constraints for the level set in the solid region
+     */
+    //@todo:
+    // scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
   }
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::compute_melt_front_propagation(const VectorType &level_set_as_heaviside)
-  {
-    if (!laser_analytical_temperature_field)
-      {
-        // 1) update phases
-        compute_solid_and_liquid_phases(level_set_as_heaviside);
-
-
-        // 2) update the constraints such that the solid domain is spatially fixed
-        make_constraints_in_spatially_fixed_solid_domain();
-        /*
-         * distribute the constraints for the level set in the solid region
-         */
-        //@todo:
-        // scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
-      }
-  }
-
-  template <int dim>
-  void
-  MeltPoolOperation<dim>::reinit()
+  MeltFrontPropagation<dim>::reinit()
   {
     scratch_data.initialize_dof_vector(solid, temp_hanging_nodes_dof_idx);
     scratch_data.initialize_dof_vector(liquid, temp_hanging_nodes_dof_idx);
@@ -216,7 +85,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::attach_vectors(
+  MeltFrontPropagation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
     // TODO: remove -- not needed
@@ -226,7 +95,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  MeltFrontPropagation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
     /**
      *  solid
@@ -244,7 +113,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::distribute_constraints()
+  MeltFrontPropagation<dim>::distribute_constraints()
   {
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
@@ -252,21 +121,21 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   const VectorType &
-  MeltPoolOperation<dim>::get_solid() const
+  MeltFrontPropagation<dim>::get_solid() const
   {
     return solid;
   }
 
   template <int dim>
   const VectorType &
-  MeltPoolOperation<dim>::get_liquid() const
+  MeltFrontPropagation<dim>::get_liquid() const
   {
     return liquid;
   }
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::make_constraints_in_spatially_fixed_solid_domain()
+  MeltFrontPropagation<dim>::make_constraints_in_spatially_fixed_solid_domain()
   {
     /*
      *  Do not reinitialize the level set field in the solid domain
@@ -299,10 +168,11 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::compute_solid_and_liquid_phases(const VectorType &level_set_as_heaviside)
+  MeltFrontPropagation<dim>::compute_solid_and_liquid_phases(
+    const VectorType &level_set_as_heaviside)
   {
     level_set_as_heaviside.update_ghost_values();
-    temperature->update_ghost_values();
+    temperature.update_ghost_values();
 
     std::vector<types::global_dof_index> local_dof_indices(
       scratch_data.get_n_dofs_per_cell(temp_hanging_nodes_dof_idx));
@@ -336,11 +206,11 @@ namespace MeltPoolDG::MeltPool
             for (const auto q : ls_heaviside_eval.quadrature_point_indices())
               {
                 solid[local_dof_indices[q]] =
-                  compute_solid_fraction((*temperature)[local_dof_indices[q]]) *
+                  compute_solid_fraction((temperature)[local_dof_indices[q]]) *
                   ls_heaviside_at_q[q];
 
                 liquid[local_dof_indices[q]] =
-                  (1. - compute_solid_fraction((*temperature)[local_dof_indices[q]])) *
+                  (1. - compute_solid_fraction((temperature)[local_dof_indices[q]])) *
                   ls_heaviside_at_q[q];
               }
           }
@@ -353,13 +223,13 @@ namespace MeltPoolDG::MeltPool
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
 
-    temperature->zero_out_ghost_values();
+    temperature.zero_out_ghost_values();
     level_set_as_heaviside.zero_out_ghost_values();
   }
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::set_flow_field_in_solid_regions_to_zero(
+  MeltFrontPropagation<dim>::set_flow_field_in_solid_regions_to_zero(
     const DoFHandler<dim> &          flow_dof_handler,
     const AffineConstraints<double> &flow_constraints_no_solid,
     AffineConstraints<double> &      flow_constraints)
@@ -427,7 +297,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolOperation<dim>::ignore_reinitialization_in_solid_regions(
+  MeltFrontPropagation<dim>::ignore_reinitialization_in_solid_regions(
     const DoFHandler<dim> &          level_set_dof_handler,
     const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
     AffineConstraints<double> &      reinit_dirichlet_constraints)
@@ -497,7 +367,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   double
-  MeltPoolOperation<dim>::compute_solid_fraction(const double T) const
+  MeltFrontPropagation<dim>::compute_solid_fraction(const double T) const
   {
     return melting_solidification.compute_parameters(T, MaterialUpdateFlags::phase_fractions)
       .solid_fraction;
@@ -505,7 +375,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   VectorizedArray<double>
-  MeltPoolOperation<dim>::compute_solid_fraction(
+  MeltFrontPropagation<dim>::compute_solid_fraction(
     const VectorizedArray<double> &current_temperature) const
   {
     VectorizedArray<double> result;
@@ -514,7 +384,7 @@ namespace MeltPoolDG::MeltPool
     return result;
   }
 
-  template class MeltPoolOperation<1>;
-  template class MeltPoolOperation<2>;
-  template class MeltPoolOperation<3>;
+  template class MeltFrontPropagation<1>;
+  template class MeltFrontPropagation<2>;
+  template class MeltFrontPropagation<3>;
 } // namespace MeltPoolDG::MeltPool

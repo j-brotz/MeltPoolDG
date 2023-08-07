@@ -40,8 +40,38 @@ All notable changes of the input parameters will be documented in this file.
 +    "offset": ""
   }
 }
-```
 
+## 2023-08-01
+- Remove unused parameters, resolve redundant parameter do melt pool and 
+restructure analytical laser section
+```diff
+{
+  "base": {
+    "problem name": "melt_pool"
+    },
+  "problem specific": {
+-    "do melt pool": ""
+  },
+  "melt pool": {
+     "mp liquid melt pool radius",
+     "mp liquid melt pool depth",
+  },
+  "laser": {
+-    "laser analytical max temperature": "3500.",
+-    "laser analytical absorptivity gas": "0",
+-    "laser analytical absorptivity liquid": "0.5",
+-    "laser analytical ambient temperature": "500.",
+-    "laser analytical temperature x to y ratio": "3."
++    "analytical": {
++      "absorptivity liquid": "0.5",
++      "absorptivity gas": "0",
++      "ambient temperature": "500.",
++      "max temperature": "3500.",
++      "temperature x to y ratio": "3."
+    }
+  }
+}
+```
 
 ## 2023-07-05
 - Move some heat parameters to simulation/problem specific section
@@ -62,6 +92,7 @@ All notable changes of the input parameters will be documented in this file.
   "problem specific": {
 +    "do solidification": "true/false"
   }
+}
 ```
 - problem: heat_transfer
 ```diff

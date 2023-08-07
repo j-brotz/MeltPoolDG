@@ -89,7 +89,6 @@
     "do evaporative velocity jump": "true",
     "do heat transfer": "true",
     "do solidification": "true",
-    "do melt pool": "true",
     "do recoil pressure": "true"
   },
   "recoil pressure": {
