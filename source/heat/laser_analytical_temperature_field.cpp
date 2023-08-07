@@ -19,9 +19,6 @@ namespace MeltPoolDG::Heat
     /*
      *  set the maximum temperature of the melt pool if not specified
      */
-    double max_temperature = laser_data.max_temperature;
-    if (laser_data.max_temperature < material.boiling_temperature)
-      max_temperature = material.boiling_temperature + 500;
     level_set_as_heaviside.update_ghost_values();
     scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
 
@@ -48,7 +45,8 @@ namespace MeltPoolDG::Heat
                                                 scan_speed,
                                                 laser_power,
                                                 laser_position);
-              temperature[local_dof_indices[i]] = (T > max_temperature) ? max_temperature : T;
+              temperature[local_dof_indices[i]] =
+                (T > laser_data.max_temperature) ? laser_data.max_temperature : T;
             }
         }
 

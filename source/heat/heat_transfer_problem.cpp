@@ -58,7 +58,7 @@ namespace MeltPoolDG::Heat
                                                  level_set_as_heaviside,
                                                  level_set_dof_idx,
                                                  temp_hanging_nodes_dof_idx,
-                                                 true /* zero_out */);
+                                                 false /* zero_out */);
           }
         // add RTE heat source if given
         if (rte_operation)

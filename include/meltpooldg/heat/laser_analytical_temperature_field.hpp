@@ -33,9 +33,9 @@ namespace MeltPoolDG::Heat
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
     /**
-     * The temperature function below is derived from the publication on
+     * The temperature function below is derived from the publication
      * "Heat Source Modeling in Selective Laser Melting" by E. Mirkoohi, D. E. Seivers,
-     *  H. Garmestani and S. Y. Liang
+     *  H. Garmestani and S. Y. Liang.
      */
     static double
     local_compute_temperature_field(const MaterialData<double> &             material,

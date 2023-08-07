@@ -60,6 +60,7 @@ namespace MeltPoolDG
       number max_temperature          = 0.0;
       number ambient_temperature      = 0.0;
     } analytical;
+
     void
     add_parameters(ParameterHandler &prm)
     {

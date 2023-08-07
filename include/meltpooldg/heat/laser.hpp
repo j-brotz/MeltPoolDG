@@ -47,14 +47,15 @@ namespace MeltPoolDG::Heat
                    const MaterialData<double> &material_data_in);
 
     /**
-     * Compute either the @p heat_source vector or @p heat_user_rhs, which is
-     * the weak form of the heat_source, both with the DoFHandler layout provided
+     * Compute either the @p heat_source vector (for LaserImpactType::interface and
+     * LaserImpactType::volumetric) or @p heat_user_rhs (for LaserImpactType::interface_sharp),
+     * which is the weak form of the heat_source, both with the DoF layout provided
      * by @p temp_hanging_nodes_dof_idx. The input parameter comprise the
      * level set indicator, @p level_set_as_heaviside and the corresponding
      * index of the DoFHandler @p ls_dof_idx.
      *
      * The optional parameter @p zero_out specifies whether to clear out the to be filled
-     * vector @p heat_user_rhs or @p heat_source. Optionally, a normal vector field cannot
+     * vector @p heat_source or @p heat_user_rhs. Optionally, a normal vector field can
      * be provided by @p normal_vector and @p normal_dof_idx. Alternatively,
      * the unit normal to the surface will be computed by the gradient of
      * @p level_set_as_heaviside.

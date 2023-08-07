@@ -83,6 +83,7 @@
       "absorptivity liquid": "0.5",
       "absorptivity gas": "0",
       "ambient temperature": "500.",
+      "max temperature": "3500.",
       "temperature x to y ratio": "3."
     }
   },

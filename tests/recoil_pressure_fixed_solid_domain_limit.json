@@ -80,6 +80,7 @@
     "laser power start time": "-1.e-4",
     "laser heat source model": "Analytical",
     "analytical": {
+      "max temperature": "3500.",
       "absorptivity liquid": "0.5",
       "absorptivity gas": "0",
       "ambient temperature": "500.",
