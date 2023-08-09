@@ -96,8 +96,6 @@ namespace MeltPoolDG::RadiativeTransport
       },
       this->dof_idx,
       rte_quad_idx);
-
-    system_matrix.compress(VectorOperation::add);
   }
 
   template <int dim, typename number>

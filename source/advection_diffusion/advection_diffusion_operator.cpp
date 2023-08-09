@@ -297,8 +297,6 @@ namespace MeltPoolDG::AdvectionDiffusion
       },
       this->dof_idx,
       advec_diff_quad_idx);
-
-    system_matrix.compress(VectorOperation::add);
   }
 
   template <int dim, typename number>

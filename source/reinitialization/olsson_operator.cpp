@@ -231,8 +231,6 @@ namespace MeltPoolDG::Reinitialization
       },
       this->dof_idx,
       reinit_quad_idx);
-
-    system_matrix.compress(VectorOperation::add);
   }
 
   template <int dim, typename number>

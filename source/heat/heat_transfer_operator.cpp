@@ -383,8 +383,6 @@ namespace MeltPoolDG::Heat
       },
       temp_dof_idx,
       temp_quad_idx);
-
-    system_matrix.compress(VectorOperation::add);
   }
 
   template <int dim, typename number>
