@@ -88,6 +88,8 @@ file(GLOB_RECURSE sources "${CMAKE_SOURCE_DIR}/source/**/*.cpp" "${CMAKE_SOURCE_
 
 add_library(${libName} ${sources})
 
+TARGET_COMPILE_DEFINITIONS(${libName} PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
 deal_ii_setup_target(${libName})
 
 

@@ -14,6 +14,7 @@
 #include "melt_front_propagation/melt_front_propagation.hpp"
 #include "moving_droplet/moving_droplet.hpp"
 #include "oscillating_droplet/oscillating_droplet.hpp"
+#include "powder_bed/powder_bed.hpp"
 #include "radiative_transport/radiative_transport.hpp"
 #include "recoil_pressure/recoil_pressure.hpp"
 #include "reinit_circle/reinit_circle.hpp"
@@ -125,6 +126,9 @@ namespace MeltPoolDG::Simulation
     else if (simulation_name == "radiative_transport")
       return std::make_shared<RadiativeTransport::RadiativeTransportSimulation<dim>>(
         parameter_file, mpi_communicator);
+    else if (simulation_name == "powder_bed")
+      return std::make_shared<PowderBed::SimulationPowderBed<dim>>(parameter_file,
+                                                                   mpi_communicator);
 
     /* add your simulation here*/
     else

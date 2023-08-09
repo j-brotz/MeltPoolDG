@@ -1,0 +1,51 @@
+{
+  "base": {
+    "application name": "powder_bed",
+    "degree": "1",
+    "dimension": "2",
+    "do print parameters": "false",
+    "global refinements": "5",
+    "problem name": "heat_transfer",
+    "verbosity level": "0"
+  },
+  "time stepping": {
+    "max n steps": "1",
+    "time step size": "1e-6"
+  },
+  "heat": {
+    "interpolate rho times cp": "smooth"
+  },
+  "laser": {
+    "laser center": "0.0,0.0",
+    "laser gauss absorptivity gas": "0.5",
+    "laser gauss absorptivity liquid": "0.5",
+    "laser gauss laser beam radius": "70e-6",
+    "laser heat source model": "Gauss",
+    "laser impact type": "interface",
+    "laser power": "100"
+  },
+  "material": {
+    "material template": "Ti64",
+    "material two phase properties transition type": "smooth",
+    "material first density": "4.087"
+  },
+  "reinitialization": {
+    "reinit scale factor epsilon": "1.5"
+  },
+  "simulation specific parameters": {
+    "domain x min": "-100e-6",
+    "domain x max": "100e-6",
+    "domain y min": "-50e-6",
+    "domain y max": "100e-6",
+    "cell repetitions": "4,3",
+    "initial temperature": "500.0",
+    "powder bed": {
+      "particle list file": "simulations/powder_bed/particles_in_domain.csv",
+      "substrate level": "0.0",
+      "slice location": "50e-6"
+    }
+  },
+  "paraview": {
+    "paraview do output": "false"
+  }
+}
