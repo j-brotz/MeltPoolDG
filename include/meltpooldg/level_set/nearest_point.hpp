@@ -82,10 +82,15 @@ namespace MeltPoolDG::LevelSet::Tools
     void
     reinit(const DoFHandler<dim> &dof_handler_req)
     {
-      ScopedName                          sc2("nearest_point::reinit");
       std::unique_ptr<TimerOutput::Scope> timer_scope;
       if (timer_output)
-        timer_scope = std::make_unique<TimerOutput::Scope>(timer_output.value(), sc2);
+        timer_scope = std::make_unique<TimerOutput::Scope>(timer_output.value(),
+                                                           ScopedName("nearest_point::reinit"));
+
+      std::unique_ptr<TimerOutput::Scope> timer_scope_local;
+      if (timer_output)
+        timer_scope_local = std::make_unique<TimerOutput::Scope>(
+          timer_output.value(), ScopedName("nearest_point::reinit::collect_support_points"));
 
       is_reinit_called = true;
       // calculate point cloud corresponding to nodes of the requested DoFHandler
@@ -154,6 +159,14 @@ namespace MeltPoolDG::LevelSet::Tools
       // set initial guess for closest point projection
       projected_points_at_interface = stencil;
 
+      if (timer_scope_local)
+        timer_scope_local->stop();
+
+      if (timer_output)
+        timer_scope_local =
+          std::make_unique<TimerOutput::Scope>(timer_output.value(),
+                                               ScopedName("nearest_point::reinit::search"));
+
       if (additional_data.type == NearestPointType::nearest_point)
         {
           local_compute_nearest_point();
@@ -178,11 +191,19 @@ namespace MeltPoolDG::LevelSet::Tools
 
       AssertThrow(dof_indices.size() == projected_points_at_interface.size(),
                   ExcMessage("The size of vectors does not match."));
+      if (timer_scope_local)
+        timer_scope_local->stop();
 
+      if (timer_output)
+        timer_scope_local =
+          std::make_unique<TimerOutput::Scope>(timer_output.value(),
+                                               ScopedName("nearest_point::reinit::rpe"));
       // TODO: where to update remote points (?)
       remote_point_evaluation.reinit(projected_points_at_interface,
                                      dof_handler_ls.get_triangulation(),
                                      mapping);
+      if (timer_scope_local)
+        timer_scope_local->stop();
     }
 
     /**
@@ -232,10 +253,11 @@ namespace MeltPoolDG::LevelSet::Tools
       const bool                                 zero_out  = false,
       const std::function<double(const double)> &operation = {}) const
     {
-      ScopedName                          sc("nearest_point::fill_dof_vector");
       std::unique_ptr<TimerOutput::Scope> timer_scope;
       if (timer_output)
-        timer_scope = std::make_unique<TimerOutput::Scope>(timer_output.value(), sc);
+        timer_scope =
+          std::make_unique<TimerOutput::Scope>(timer_output.value(),
+                                               ScopedName("nearest_point::fill_dof_vector"));
 
       AssertThrow(n_components == dof_handler_req.get_fe().n_components(),
                   ExcMessage("There is a mismatch in the number of components "
@@ -474,6 +496,11 @@ namespace MeltPoolDG::LevelSet::Tools
     void
     local_compute_nearest_point()
     {
+      std::unique_ptr<TimerOutput::Scope> timer_scope;
+      if (timer_output)
+        timer_scope =
+          std::make_unique<TimerOutput::Scope>(timer_output.value(),
+                                               ScopedName("nearest_point::reinit::local::mca"));
       // create a point cloud of the surface
       GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(mapping,
                                                            dof_handler_ls.get_fe(), // todo
@@ -492,6 +519,14 @@ namespace MeltPoolDG::LevelSet::Tools
         for (unsigned int j = 0; j < surface_points_global[i].size(); ++j)
           surface_points.emplace_back(surface_points_global[i][j]);
 
+      if (timer_scope)
+        timer_scope->stop();
+
+      if (timer_output)
+        timer_scope =
+          std::make_unique<TimerOutput::Scope>(timer_output.value(),
+                                               ScopedName("nearest_point::reinit::local::search"));
+
       const auto used_vertices_rtree = pack_rtree(surface_points);
 
       if (!used_vertices_rtree.empty())
@@ -509,6 +544,8 @@ namespace MeltPoolDG::LevelSet::Tools
               projected_points_at_interface[i] = closest_vertex_in_domain[0];
             }
         }
+      if (timer_scope)
+        timer_scope->stop();
     }
 
     const Mapping<dim> &            mapping;

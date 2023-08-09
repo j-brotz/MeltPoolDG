@@ -244,7 +244,8 @@ namespace MeltPoolDG::MeltPool
                                       level_set_operation->get_distance_to_level_set(),
                                       level_set_operation->get_normal_vector(),
                                       scratch_data->get_remote_point_evaluation(vel_dof_idx),
-                                      nearest_point_data);
+                                      nearest_point_data,
+                                      scratch_data->get_timer());
 
                                     nearest_point.reinit(
                                       scratch_data->get_dof_handler(vel_dof_idx));
@@ -299,7 +300,8 @@ namespace MeltPoolDG::MeltPool
                               level_set_operation->get_distance_to_level_set(),
                               level_set_operation->get_normal_vector(),
                               scratch_data->get_remote_point_evaluation(vel_dof_idx),
-                              nearest_point_data);
+                              nearest_point_data,
+                              scratch_data->get_timer());
 
                             nearest_point.reinit(scratch_data->get_dof_handler(vel_dof_idx));
 
