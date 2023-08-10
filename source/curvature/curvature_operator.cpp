@@ -285,8 +285,6 @@ namespace MeltPoolDG::Curvature
       curv_dof_idx,
       curv_quad_idx);
 
-    system_matrix.compress(VectorOperation::add);
-
     if (solution_level_set)
       solution_level_set->zero_out_ghost_values();
   }
