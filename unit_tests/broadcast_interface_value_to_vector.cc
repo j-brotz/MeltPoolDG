@@ -224,7 +224,8 @@ run_test(const NearestPointType type = NearestPointType::closest_point_normal)
                                          solution_distance,
                                          solution_normal,
                                          remote_point_evaluation,
-                                         nearest_point_data);
+                                         nearest_point_data,
+                                         2 /*verbosity_level*/);
 
   cpp.reinit(dof_handler_temp);
 
@@ -370,6 +371,7 @@ main(int argc, char *argv[])
   run_test<2, 6, 5>();
   run_test<2, 6, 5>(NearestPointType::closest_point_normal_collinear);
   run_test<2, 6, 1>(NearestPointType::nearest_point);
+  run_test<2, 6, 5>(NearestPointType::closest_point_normal_collinear_coquerelle);
 
   return 0;
 }

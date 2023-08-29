@@ -50,6 +50,7 @@ namespace MeltPoolDG::Evaporation
         normal_vector,
         scratch_data.get_remote_point_evaluation(evapor_mass_flux_dof_idx),
         nearest_point_data,
+        0 /*verbosity_level*/,
         scratch_data.get_timer());
 
     nearest_point_search->reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));

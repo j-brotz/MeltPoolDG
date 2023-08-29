@@ -245,6 +245,7 @@ namespace MeltPoolDG::MeltPool
                                       level_set_operation->get_normal_vector(),
                                       scratch_data->get_remote_point_evaluation(vel_dof_idx),
                                       nearest_point_data,
+                                      base_in->parameters.base.verbosity_level,
                                       scratch_data->get_timer());
 
                                     nearest_point.reinit(
@@ -301,6 +302,7 @@ namespace MeltPoolDG::MeltPool
                               level_set_operation->get_normal_vector(),
                               scratch_data->get_remote_point_evaluation(vel_dof_idx),
                               nearest_point_data,
+                              base_in->parameters.base.verbosity_level,
                               scratch_data->get_timer());
 
                             nearest_point.reinit(scratch_data->get_dof_handler(vel_dof_idx));

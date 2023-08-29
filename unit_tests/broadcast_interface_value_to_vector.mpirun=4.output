@@ -1,27 +1,72 @@
 --------------------------------------------------------
  START TEST: n_iter=1 type closest_point_normal #comp 1 #refine 6
 --------------------------------------------------------
+|      j=0 (normal) 14412 -> 14396 (✗)                                               nearest_point |
 WARNING: The tolerance of 14396 points is not yet attained. Max distance value: 0.1244986
+| total number of RPE points: 14412                                                  nearest_point |
 max distance to analytical solution (relative): 0.016963
 max distance to numerical distance solution (relative): 0.0077833435
 norm of interface vals: 21232.504
 --------------------------------------------------------
  START TEST: n_iter=16 type closest_point_normal #comp 1 #refine 6
 --------------------------------------------------------
+|      j=0 (normal) 14412 -> 14396 (✗)                                               nearest_point |
+|      j=1 (normal) 14396 -> 14044 (✗)                                               nearest_point |
+|      j=2 (normal) 14044 -> 14044 (✗)                                               nearest_point |
+|      j=3 (normal) 14044 -> 13732 (✗)                                               nearest_point |
+|      j=4 (normal) 13732 -> 8912 (✗)                                                nearest_point |
+|      j=5 (normal) 8912 -> 912 (✗)                                                  nearest_point |
+|      j=6 (normal) 912 -> 0 (✗)                                                     nearest_point |
+| total number of RPE points: 80452                                                  nearest_point |
 max distance to analytical solution (relative): 0.015635164
-max distance to numerical distance solution (relative): 9.9948086e-11
+max distance to numerical distance solution (relative): 9.994808e-11
 norm of interface vals: 21232.322
 --------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal #comp 2 #refine 6
 --------------------------------------------------------
+|      j=0 (normal) 14412 -> 14396 (✗)                                               nearest_point |
+|      j=1 (normal) 14396 -> 14044 (✗)                                               nearest_point |
+|      j=2 (normal) 14044 -> 14044 (✗)                                               nearest_point |
+|      j=3 (normal) 14044 -> 13732 (✗)                                               nearest_point |
+|      j=4 (normal) 13732 -> 8912 (✗)                                                nearest_point |
 WARNING: The tolerance of 8912 points is not yet attained. Max distance value: 5.2369329e-10
+| total number of RPE points: 70628                                                  nearest_point |
 max distance to analytical solution (relative): 0.015635164
-max distance to numerical distance solution (relative): 1.7378426e-10
+max distance to numerical distance solution (relative): 1.737843e-10
 norm of interface vals: 30027.037
 --------------------------------------------------------
  START TEST: n_iter=5 type closest_point_normal_collinear #comp 2 #refine 6
 --------------------------------------------------------
-WARNING: The tolerance of the tangential correction of 1124 points is not yet attained. Max tangential distance value: 1.4994429e-05 max tolerance: 1.5625e-12
+|  k=0 -> 14412                                                                      nearest_point |
+|    j=0 14412 -> 14396 (n ✗) 0 (n ✓ | t ✗) 16 (n ✓ | t ✓)                           nearest_point |
+|    j=1 14396 -> 14044 (n ✗) 0 (n ✓ | t ✗) 352 (n ✓ | t ✓)                          nearest_point |
+|    j=2 14044 -> 14044 (n ✗) 0 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
+|    j=3 14044 -> 13732 (n ✗) 312 (n ✓ | t ✗) 0 (n ✓ | t ✓)                          nearest_point |
+|    j=4 13732 -> 8912 (n ✗) 5128 (n ✓ | t ✗) 4 (n ✓ | t ✓)                          nearest_point |
+|  k=1 -> 14044                                                                      nearest_point |
+|    j=0 14044 -> 6016 (n ✗) 7784 (n ✓ | t ✗) 244 (n ✓ | t ✓)                        nearest_point |
+|    j=1 6016 -> 4200 (n ✗) 9584 (n ✓ | t ✗) 16 (n ✓ | t ✓)                          nearest_point |
+|    j=2 4200 -> 488 (n ✗) 13296 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
+|    j=3 488 -> 0 (n ✗) 13784 (n ✓ | t ✗) 0 (n ✓ | t ✓)                              nearest_point |
+|  k=2 -> 13784                                                                      nearest_point |
+|    j=0 13784 -> 13664 (n ✗) 8 (n ✓ | t ✗) 112 (n ✓ | t ✓)                          nearest_point |
+|    j=1 13664 -> 11880 (n ✗) 1792 (n ✓ | t ✗) 0 (n ✓ | t ✓)                         nearest_point |
+|    j=2 11880 -> 6240 (n ✗) 7432 (n ✓ | t ✗) 0 (n ✓ | t ✓)                          nearest_point |
+|    j=3 6240 -> 144 (n ✗) 13528 (n ✓ | t ✗) 0 (n ✓ | t ✓)                           nearest_point |
+|    j=4 144 -> 0 (n ✗) 13672 (n ✓ | t ✗) 0 (n ✓ | t ✓)                              nearest_point |
+|  k=3 -> 13672                                                                      nearest_point |
+|    j=0 13672 -> 13384 (n ✗) 144 (n ✓ | t ✗) 144 (n ✓ | t ✓)                        nearest_point |
+|    j=1 13384 -> 10208 (n ✗) 3320 (n ✓ | t ✗) 0 (n ✓ | t ✓)                         nearest_point |
+|    j=2 10208 -> 3936 (n ✗) 9592 (n ✓ | t ✗) 0 (n ✓ | t ✓)                          nearest_point |
+|    j=3 3936 -> 16 (n ✗) 13512 (n ✓ | t ✗) 0 (n ✓ | t ✓)                            nearest_point |
+|    j=4 16 -> 0 (n ✗) 13528 (n ✓ | t ✗) 0 (n ✓ | t ✓)                               nearest_point |
+|  k=4 -> 13528                                                                      nearest_point |
+|    j=0 13528 -> 12632 (n ✗) 400 (n ✓ | t ✗) 496 (n ✓ | t ✓)                        nearest_point |
+|    j=1 12632 -> 8528 (n ✗) 4504 (n ✓ | t ✗) 0 (n ✓ | t ✓)                          nearest_point |
+|    j=2 8528 -> 2248 (n ✗) 10784 (n ✓ | t ✗) 0 (n ✓ | t ✓)                          nearest_point |
+|    j=3 2248 -> 0 (n ✗) 13032 (n ✓ | t ✗) 0 (n ✓ | t ✓)                             nearest_point |
+WARNING: The tolerance of the tangential correction of 13032 points is not yet attained. Max tangential distance value: 1.4994429e-05 max tolerance: 1.5625e-12
+| total number of RPE points: 219240                                                 nearest_point |
 max distance to analytical solution (relative): 0.0078111056
 max distance to numerical distance solution (relative): 1.2139665e-05
 norm of interface vals: 30027.037
@@ -29,5 +74,46 @@ norm of interface vals: 30027.037
  START TEST: n_iter=1 type nearest_point #comp 2 #refine 6
 --------------------------------------------------------
 max distance to analytical solution (relative): 0.33349596
-max distance to numerical distance solution (relative): 5.0079953e-15
+max distance to numerical distance solution (relative): 4.9816097e-15
 norm of interface vals: 30027.557
+--------------------------------------------------------
+ START TEST: n_iter=5 type closest_point_normal_collinear_coquerelle #comp 2 #refine 6
+--------------------------------------------------------
+|      j=0 (normal) 14412 -> 14396 (✗)                                               nearest_point |
+|      j=1 (normal) 14396 -> 14044 (✗)                                               nearest_point |
+|      j=2 (normal) 14044 -> 14044 (✗)                                               nearest_point |
+|      j=3 (normal) 14044 -> 13732 (✗)                                               nearest_point |
+|      j=4 (normal) 13732 -> 8912 (✗)                                                nearest_point |
+WARNING: The tolerance of 8912 points is not yet attained. Max distance value: 5.2369329e-10
+|  i=0 (tangent) 14412 ->                                                            nearest_point |
+|      j=0 (normal) 14412 -> 13800 (✗)                                               nearest_point |
+|      j=1 (normal) 13800 -> 12784 (✗)                                               nearest_point |
+|      j=2 (normal) 12784 -> 6560 (✗)                                                nearest_point |
+|      j=3 (normal) 6560 -> 144 (✗)                                                  nearest_point |
+|      j=4 (normal) 144 -> 0 (✗)                                                     nearest_point |
+|  i=1 (tangent) 13824 ->                                                            nearest_point |
+|      j=0 (normal) 13824 -> 13600 (✗)                                               nearest_point |
+|      j=1 (normal) 13600 -> 11288 (✗)                                               nearest_point |
+|      j=2 (normal) 11288 -> 4048 (✗)                                                nearest_point |
+|      j=3 (normal) 4048 -> 16 (✗)                                                   nearest_point |
+|      j=4 (normal) 16 -> 0 (✗)                                                      nearest_point |
+|  i=2 (tangent) 13784 ->                                                            nearest_point |
+|      j=0 (normal) 13784 -> 13040 (✗)                                               nearest_point |
+|      j=1 (normal) 13040 -> 9208 (✗)                                                nearest_point |
+|      j=2 (normal) 9208 -> 2272 (✗)                                                 nearest_point |
+|      j=3 (normal) 2272 -> 0 (✗)                                                    nearest_point |
+|  i=3 (tangent) 13640 ->                                                            nearest_point |
+|      j=0 (normal) 13640 -> 12160 (✗)                                               nearest_point |
+|      j=1 (normal) 12160 -> 7440 (✗)                                                nearest_point |
+|      j=2 (normal) 7440 -> 880 (✗)                                                  nearest_point |
+|      j=3 (normal) 880 -> 0 (✗)                                                     nearest_point |
+|  i=4 (tangent) 13296 ->                                                            nearest_point |
+|      j=0 (normal) 13296 -> 10984 (✗)                                               nearest_point |
+|      j=1 (normal) 10984 -> 5624 (✗)                                                nearest_point |
+|      j=2 (normal) 5624 -> 488 (✗)                                                  nearest_point |
+|      j=3 (normal) 488 -> 0 (✗)                                                     nearest_point |
+WARNING: The tolerance of the tangential correction of 12632 points is not yet attained. Max tangential distance value: 0.00012244934 max tolerance: 1.5625e-12
+| total number of RPE points: 332876                                                 nearest_point |
+max distance to analytical solution (relative): 0.0078111076
+max distance to numerical distance solution (relative): 9.8832563e-11
+norm of interface vals: 30027.037

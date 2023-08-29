@@ -1,6 +1,19 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-08-30
+- Add alternative type for closest point projection with collinearity
+```diff
+{
+  "levelset": {
++    "nearest point":
+    {
++       "type": "closest_point_normal_collinear_coquerelle",
+    }
+  }
+}
+```
+
 ## 2023-08-03
 - Add some parameters related to usage of pseudo-time problem within radiative_transport. Add parameter to choose Absorption coefficient formulation.
 ``` diff
