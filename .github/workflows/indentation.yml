@@ -15,7 +15,7 @@ jobs:
         source: '.'
         exclude: ''
         extensions: 'hpp,cpp'
-        clangFormatVersion: 11
+        clangFormatVersion: 16
         inplace: true
     - name: code-formatting
       run: |
