@@ -37,18 +37,18 @@ namespace MeltPoolDG
       using VectorizedArrayType = VectorizedArray<number>;
       using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
 
-      NormalVectorOperator(const ScratchData<dim> &        scratch_data_in,
+      NormalVectorOperator(const ScratchData<dim>         &scratch_data_in,
                            const NormalVectorData<double> &normal_vector_data_in,
                            const unsigned int              normal_dof_idx_in,
                            const unsigned int              normal_quad_idx_in,
                            const unsigned int              ls_dof_idx_in,
                            const bool                      do_narrow_band        = false,
-                           const VectorType *              solution_level_set_in = nullptr);
+                           const VectorType               *solution_level_set_in = nullptr);
 
       void
       assemble_matrixbased(const VectorType &level_set_in,
                            SparseMatrixType &matrix,
-                           BlockVectorType & rhs) const final;
+                           BlockVectorType  &rhs) const final;
 
       /*
        *  matrix-free utility
@@ -68,8 +68,8 @@ namespace MeltPoolDG
       compute_inverse_diagonal_from_matrixfree(BlockVectorType &diagonal) const final;
 
       static void
-      get_unit_normals_at_quadrature(const FEValues<dim> &        fe_values,
-                                     const BlockVectorType &      normal_vector_field_in,
+      get_unit_normals_at_quadrature(const FEValues<dim>         &fe_values,
+                                     const BlockVectorType       &normal_vector_field_in,
                                      std::vector<Tensor<1, dim>> &unit_normal_at_quadrature,
                                      const double                 zero = 1e-16);
 
@@ -84,7 +84,7 @@ namespace MeltPoolDG
       reinit() final;
 
     private:
-      const ScratchData<dim> &        scratch_data;
+      const ScratchData<dim>         &scratch_data;
       const NormalVectorData<double> &normal_vector_data;
 
       const unsigned int normal_dof_idx;

@@ -58,9 +58,9 @@ namespace MeltPoolDG::RadiativeTransport
     Tensor<1, dim, number> laser_direction;
 
   public:
-    RadiativeTransportOperator(const ScratchData<dim> &              scratch_data_in,
+    RadiativeTransportOperator(const ScratchData<dim>               &scratch_data_in,
                                const RadiativeTransportData<double> &rte_data,
-                               const VectorType &                    heaviside_in,
+                               const VectorType                     &heaviside_in,
                                const unsigned int                    rte_dof_idx_in,
                                const unsigned int                    rte_quad_idx_in,
                                const unsigned int                    hs_dof_idx_in);

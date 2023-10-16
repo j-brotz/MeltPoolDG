@@ -14,7 +14,7 @@ namespace dealii
   template <typename Number, std::size_t N>
   dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>>
   operator+=(const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec,
-             const dealii::VectorizedArray<Number, N> &                      scalar)
+             const dealii::VectorizedArray<Number, N>                       &scalar)
   {
     auto temp = vec;
     temp[0] += scalar;
@@ -24,7 +24,7 @@ namespace dealii
 
   template <typename Number, std::size_t N>
   dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>>
-  operator+=(const dealii::VectorizedArray<Number, N> &                      scalar,
+  operator+=(const dealii::VectorizedArray<Number, N>                       &scalar,
              const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec)
   {
     auto temp = vec;
@@ -36,7 +36,7 @@ namespace dealii
   template <typename Number, std::size_t N>
   dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>>
   operator-=(const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec,
-             const dealii::VectorizedArray<Number, N> &                      scalar)
+             const dealii::VectorizedArray<Number, N>                       &scalar)
   {
     auto temp = vec;
     temp[0] -= scalar;
@@ -46,7 +46,7 @@ namespace dealii
 
   template <typename Number, std::size_t N>
   dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>>
-  operator-=(const dealii::VectorizedArray<Number, N> &                      scalar,
+  operator-=(const dealii::VectorizedArray<Number, N>                       &scalar,
              const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec)
   {
     auto temp = -vec;
@@ -57,7 +57,7 @@ namespace dealii
 
   template <typename Number, std::size_t N>
   dealii::VectorizedArray<Number, N>
-  scalar_product(const dealii::VectorizedArray<Number, N> &                      scalar,
+  scalar_product(const dealii::VectorizedArray<Number, N>                       &scalar,
                  const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec)
   {
     return vec[0] * scalar;
@@ -66,7 +66,7 @@ namespace dealii
   template <typename Number, std::size_t N>
   dealii::VectorizedArray<Number, N>
   scalar_product(const dealii::Tensor<1, 1, dealii::VectorizedArray<Number, N>> &vec,
-                 const dealii::VectorizedArray<Number, N> &                      scalar)
+                 const dealii::VectorizedArray<Number, N>                       &scalar)
   {
     return vec[0] * scalar;
   }
@@ -132,9 +132,9 @@ namespace MeltPoolDG
     void
     convert_block_vector_to_fe_system_vector(
       const LinearAlgebra::distributed::BlockVector<Number> &in,
-      const DoFHandler<dim, spacedim> &                      dof_handler,
-      LinearAlgebra::distributed::Vector<Number> &           out,
-      const DoFHandler<dim, spacedim> &                      dof_handler_fe_system)
+      const DoFHandler<dim, spacedim>                       &dof_handler,
+      LinearAlgebra::distributed::Vector<Number>            &out,
+      const DoFHandler<dim, spacedim>                       &dof_handler_fe_system)
     {
       in.update_ghost_values();
 
@@ -231,7 +231,7 @@ namespace MeltPoolDG
 
     template <int dim, typename number = double>
     Tensor<1, dim, VectorizedArray<number>>
-    evaluate_function_at_vectorized_points(const Function<dim> &                      func,
+    evaluate_function_at_vectorized_points(const Function<dim>                       &func,
                                            const Point<dim, VectorizedArray<double>> &points)
     {
       AssertThrow(func.n_components == dim, ExcNotImplemented());
@@ -253,11 +253,11 @@ namespace MeltPoolDG
 
     template <int dim, typename VectorType>
     double
-    compute_L2_norm(const VectorType &        solution,
+    compute_L2_norm(const VectorType         &solution,
                     const Triangulation<dim> &triangulation,
-                    const Mapping<dim> &      mapping,
-                    const DoFHandler<dim> &   dof_handler,
-                    const Quadrature<dim> &   quadrature)
+                    const Mapping<dim>       &mapping,
+                    const DoFHandler<dim>    &dof_handler,
+                    const Quadrature<dim>    &quadrature)
     {
       const bool is_ghosted = solution.has_ghost_elements();
 
@@ -285,7 +285,7 @@ namespace MeltPoolDG
 
     template <int dim, typename VectorType>
     double
-    compute_L2_norm(const VectorType &      solution,
+    compute_L2_norm(const VectorType       &solution,
                     const ScratchData<dim> &scratch_data,
                     const unsigned int      dof_idx,
                     const unsigned int      quad_idx)
@@ -299,12 +299,12 @@ namespace MeltPoolDG
 
     template <int n_components, int dim, typename VectorType>
     void
-    project_vector(const Mapping<dim> &                                      mapping,
-                   const DoFHandler<dim> &                                   dof,
+    project_vector(const Mapping<dim>                                       &mapping,
+                   const DoFHandler<dim>                                    &dof,
                    const AffineConstraints<typename VectorType::value_type> &constraints,
-                   const Quadrature<dim> &                                   quadrature,
-                   const VectorType &                                        vec_in,
-                   VectorType &                                              vec_out)
+                   const Quadrature<dim>                                    &quadrature,
+                   const VectorType                                         &vec_in,
+                   VectorType                                               &vec_out)
     {
       using Number = typename VectorType::value_type;
 
@@ -337,11 +337,11 @@ namespace MeltPoolDG
     template <int dim, int n_components, typename T, typename VectorType>
     void
     fill_dof_vector_from_cell_operation(
-      VectorType &                                            vec,
+      VectorType                                             &vec,
       const MatrixFree<dim, double, VectorizedArray<double>> &matrix_free,
       unsigned int                                            dof_idx,
       unsigned int                                            quad_idx,
-      const T &                                               cell_operation)
+      const T                                                &cell_operation)
     {
       FECellIntegrator<dim, n_components, double> fe_eval(matrix_free, dof_idx, quad_idx);
 

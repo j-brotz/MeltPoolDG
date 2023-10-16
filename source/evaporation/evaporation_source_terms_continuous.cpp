@@ -20,11 +20,11 @@ namespace MeltPoolDG::Evaporation
    */
   template <int dim>
   EvaporationSourceTermsContinuous<dim>::EvaporationSourceTermsContinuous(
-    const ScratchData<dim> &                     scratch_data,
-    const EvaporationData<double> &              evapor_data,
-    const VectorType &                           level_set_as_heaviside,
-    const BlockVectorType &                      normal_vector,
-    const VectorType &                           evaporative_mass_flux,
+    const ScratchData<dim>                      &scratch_data,
+    const EvaporationData<double>               &evapor_data,
+    const VectorType                            &level_set_as_heaviside,
+    const BlockVectorType                       &normal_vector,
+    const VectorType                            &evaporative_mass_flux,
     const unsigned int                           ls_hanging_nodes_dof_idx,
     const unsigned int                           ls_quad_idx,
     const unsigned int                           normal_dof_idx,
@@ -53,9 +53,9 @@ namespace MeltPoolDG::Evaporation
   template <int dim>
   void
   EvaporationSourceTermsContinuous<dim>::compute_level_set_source_term(
-    VectorType &       level_set_source_term,
+    VectorType        &level_set_source_term,
     const unsigned int ls_dof_idx,
-    const VectorType & level_set,
+    const VectorType  &level_set,
     const unsigned int pressure_dof_idx)
   {
     if (evapor_data.do_level_set_pressure_gradient_interpolation &&
@@ -71,7 +71,7 @@ namespace MeltPoolDG::Evaporation
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
-          auto &      level_set_source_term,
+          auto       &level_set_source_term,
           const auto &level_set_as_heaviside,
           auto        macro_cells) {
         FECellIntegrator<dim, 1, double> ls(matrix_free, ls_dof_idx, ls_quad_idx);
@@ -257,7 +257,7 @@ namespace MeltPoolDG::Evaporation
   template <int dim>
   void
   EvaporationSourceTermsContinuous<dim>::compute_mass_balance_source_term(
-    VectorType &       mass_balance_source_term,
+    VectorType        &mass_balance_source_term,
     const unsigned int pressure_dof_idx,
     const unsigned int pressure_quad_idx,
     bool               zero_out)
@@ -276,7 +276,7 @@ namespace MeltPoolDG::Evaporation
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
-          auto &      mass_balance_source_term,
+          auto       &mass_balance_source_term,
           const auto &level_set_as_heaviside,
           auto        macro_cells) {
         FECellIntegrator<dim, 1, double> heaviside(matrix_free,

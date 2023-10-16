@@ -16,13 +16,13 @@ namespace MeltPoolDG
   public:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    GenericDataOut(const Mapping<dim> &           mapping,
+    GenericDataOut(const Mapping<dim>            &mapping,
                    const double                   current_time,
                    const std::vector<std::string> req_var = {"all"});
 
     void
-    add_data_vector(const DoFHandler<dim> &         dof_handler,
-                    const VectorType &              data,
+    add_data_vector(const DoFHandler<dim>          &dof_handler,
+                    const VectorType               &data,
                     const std::vector<std::string> &names,
                     const std::vector<DataComponentInterpretation::DataComponentInterpretation>
                       &data_component_interpretation =
@@ -30,8 +30,8 @@ namespace MeltPoolDG
 
     void
     add_data_vector(const DoFHandler<dim> &dof_handler,
-                    const VectorType &     data,
-                    const std::string &    name);
+                    const VectorType      &data,
+                    const std::string     &name);
 
     std::vector<std::tuple<const DoFHandler<dim> *,
                            const VectorType *,
@@ -59,7 +59,7 @@ namespace MeltPoolDG
 
   private:
     std::map<std::string, unsigned int> entry_id;
-    const Mapping<dim> &                mapping;
+    const Mapping<dim>                 &mapping;
     double                              current_time;
     const std::vector<std::string>      req_vars;
     mutable std::map<std::string, bool> req_vars_info;

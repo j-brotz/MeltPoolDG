@@ -15,8 +15,8 @@ namespace MeltPoolDG::Journal
 
   void
   print_line(const ConditionalOStream &pcout,
-             const std::string &       text           = "",
-             const std::string &       operation_name = "",
+             const std::string        &text           = "",
+             const std::string        &operation_name = "",
              const unsigned int        extra_size     = 0);
   inline void
   print_end(const ConditionalOStream &pcout)
@@ -37,18 +37,18 @@ namespace MeltPoolDG::Journal
   void
   print_formatted_norm(const ConditionalOStream &pcout,
                        const double              norm_value,
-                       const std::string &       norm_id,
-                       const std::string &       operation_name,
+                       const std::string        &norm_id,
+                       const std::string        &operation_name,
                        const unsigned int        precision   = 6,
-                       const std::string &       norm_suffix = "L2",
+                       const std::string        &norm_suffix = "L2",
                        const unsigned int        extra_size  = 0);
 
   void
-  print_formatted_norm(const ConditionalOStream &     pcout,
+  print_formatted_norm(const ConditionalOStream      &pcout,
                        const std::function<double()> &compute_norm,
-                       const std::string &            norm_id,
-                       const std::string &            operation_name,
+                       const std::string             &norm_id,
+                       const std::string             &operation_name,
                        const unsigned int             precision   = 6,
-                       const std::string &            norm_suffix = "L2",
+                       const std::string             &norm_suffix = "L2",
                        const unsigned int             extra_size  = 0);
 } // namespace MeltPoolDG::Journal

@@ -25,7 +25,7 @@ namespace MeltPoolDG::Evaporation
 
   public:
     virtual void
-    compute_evaporative_mass_flux(VectorType &      evaporative_mass_flux,
+    compute_evaporative_mass_flux(VectorType       &evaporative_mass_flux,
                                   const VectorType &temperature) const = 0;
   };
 } // namespace MeltPoolDG::Evaporation

@@ -74,7 +74,7 @@ namespace MeltPoolDG
   template <typename number>
   template <typename value_type>
   inline MaterialParameterValues<value_type>
-  Material<number>::compute_parameters(const value_type &                              v,
+  Material<number>::compute_parameters(const value_type                               &v,
                                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
     Assert(
@@ -111,8 +111,8 @@ namespace MeltPoolDG
   template <typename value_type, int dim>
   inline MaterialParameterValues<value_type>
   Material<number>::compute_parameters(
-    const FECellIntegrator<dim, 1, number> &        level_set_heaviside_val,
-    const FECellIntegrator<dim, 1, number> &        temperature_val,
+    const FECellIntegrator<dim, 1, number>         &level_set_heaviside_val,
+    const FECellIntegrator<dim, 1, number>         &temperature_val,
     const MaterialUpdateFlags::MaterialUpdateFlags &flags,
     const unsigned int                              q_index) const
   {
@@ -146,8 +146,8 @@ namespace MeltPoolDG
   template <typename value_type>
   inline MaterialParameterValues<value_type>
   Material<number>::compute_parameters_internal(
-    const value_type &                              v1,
-    const value_type &                              v2,
+    const value_type                               &v1,
+    const value_type                               &v2,
     const MaterialUpdateFlags::MaterialUpdateFlags &flags) const
   {
     MaterialParameterValues<value_type> t;

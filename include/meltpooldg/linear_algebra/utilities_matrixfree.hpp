@@ -33,9 +33,9 @@ namespace MeltPoolDG::Utilities::MatrixFree
             typename SrcRhsVectorType = VectorType>
   inline void
   create_rhs_and_apply_dirichlet_matrixfree(OperatorBase<dim, number> &operator_base,
-                                            DoFVectorType &            rhs,
-                                            const SrcRhsVectorType &   src,
-                                            const ScratchData<dim> &   scratch_data,
+                                            DoFVectorType             &rhs,
+                                            const SrcRhsVectorType    &src,
+                                            const ScratchData<dim>    &scratch_data,
                                             const unsigned int         dof_idx,
                                             const unsigned int         dof_no_bc_idx,
                                             const bool                 zero_out)

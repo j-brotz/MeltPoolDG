@@ -29,9 +29,9 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim>
   RadiativeTransportOperation<dim>::RadiativeTransportOperation(
-    const ScratchData<dim> &              scratch_data_in,
+    const ScratchData<dim>               &scratch_data_in,
     const RadiativeTransportData<double> &rte_data_in,
-    const VectorType &                    heaviside_in,
+    const VectorType                     &heaviside_in,
     const unsigned int                    rte_dof_idx_in,
     const unsigned int                    rte_hanging_nodes_dof_idx_in,
     const unsigned int                    rte_quad_idx_in,

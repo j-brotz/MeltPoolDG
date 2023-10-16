@@ -34,7 +34,7 @@ namespace MeltPoolDG::Heat
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const ScratchData<dim> &                 scratch_data;
+    const ScratchData<dim>                  &scratch_data;
     std::shared_ptr<BoundaryConditions<dim>> bc_data;
     /**
      * parameters
@@ -64,11 +64,11 @@ namespace MeltPoolDG::Heat
 
     // optional flow velocity for internal convection
     const unsigned int vel_dof_idx;
-    const VectorType * velocity;
+    const VectorType  *velocity;
 
     // optional level-set heaviside field for two phase flow
     const unsigned int ls_dof_idx;
-    const VectorType * level_set_as_heaviside;
+    const VectorType  *level_set_as_heaviside;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
@@ -85,21 +85,21 @@ namespace MeltPoolDG::Heat
 
   public:
     HeatTransferOperation(std::shared_ptr<BoundaryConditions<dim>> bc_data,
-                          const ScratchData<dim> &                 scratch_data_in,
-                          const HeatData<double> &                 heat_data_in,
-                          const Material<double> &                 material,
-                          const TimeIterator<double> &             time_iterator,
+                          const ScratchData<dim>                  &scratch_data_in,
+                          const HeatData<double>                  &heat_data_in,
+                          const Material<double>                  &material,
+                          const TimeIterator<double>              &time_iterator,
                           unsigned int                             temp_dof_idx_in,
                           unsigned int                             temp_hanging_nodes_dof_idx_in,
                           unsigned int                             temp_quad_idx_in,
                           unsigned int                             vel_dof_idx_in = 0,
-                          const VectorType *                       velocity_in    = nullptr,
+                          const VectorType                        *velocity_in    = nullptr,
                           unsigned int                             ls_dof_idx_in  = 0,
                           const VectorType *level_set_as_heaviside_in             = nullptr,
                           const bool        do_solidifiaction                     = false);
 
     void
-    register_evaporative_mass_flux(VectorType *       evaporative_mass_flux_in,
+    register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
                                    const unsigned int evapor_mass_flux_dof_idx_in,
                                    const double       latent_heat_of_evaporation,
                                    const bool         do_phenomenological_recoil_pressure);
@@ -127,8 +127,8 @@ namespace MeltPoolDG::Heat
     finish_time_advance();
 
     void
-    compute_interface_temperature(const VectorType &              distance,
-                                  const BlockVectorType &         normal_vector,
+    compute_interface_temperature(const VectorType               &distance,
+                                  const BlockVectorType          &normal_vector,
                                   const NearestPointData<double> &nearest_point_data);
 
     void

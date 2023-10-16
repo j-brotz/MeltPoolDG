@@ -12,11 +12,11 @@ namespace MeltPoolDG::Evaporation
 {
   template <int dim>
   EvaporationSourceTermsSharp<dim>::EvaporationSourceTermsSharp(
-    const ScratchData<dim> &       scratch_data,
+    const ScratchData<dim>        &scratch_data,
     const EvaporationData<double> &evapor_data,
-    const VectorType &             level_set_as_heaviside,
-    const BlockVectorType &        normal_vector,
-    const VectorType &             evaporative_mass_flux,
+    const VectorType              &level_set_as_heaviside,
+    const BlockVectorType         &normal_vector,
+    const VectorType              &evaporative_mass_flux,
     const unsigned int             ls_hanging_nodes_dof_idx,
     const unsigned int             ls_quad_idx,
     const unsigned int             normal_dof_idx,
@@ -164,7 +164,7 @@ namespace MeltPoolDG::Evaporation
   template <int dim>
   void
   EvaporationSourceTermsSharp<dim>::compute_mass_balance_source_term(
-    VectorType &                        mass_balance_source_term,
+    VectorType                         &mass_balance_source_term,
     const unsigned int                  pressure_dof_idx,
     [[maybe_unused]] const unsigned int pressure_quad_idx,
     [[maybe_unused]] bool               zero_out)

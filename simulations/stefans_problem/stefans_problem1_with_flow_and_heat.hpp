@@ -334,9 +334,9 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                 generic_data_out.get_dof_handler("level_set"),
                 generic_data_out.get_mapping(),
                 generic_data_out.get_vector("level_set"),
-                [&](const auto &                 cell,
-                    const auto &                 points_real,
-                    const auto &                 points,
+                [&](const auto                  &cell,
+                    const auto                  &points_real,
+                    const auto                  &points,
                     [[maybe_unused]] const auto &weights) {
                   local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
                   buffer.resize(cell->get_fe().n_dofs_per_cell());

@@ -184,12 +184,11 @@ main(int argc, char *argv[])
   MatrixFree<dim, double, VectorizedArray<double>> matrix_free;
   matrix_free.reinit(mapping, dof_handler, constraints, q_gauss, additional_data);
 
-  const auto run_test = [&](const auto & level_set_1,
-                            const auto & level_set_2,
+  const auto run_test = [&](const auto  &level_set_1,
+                            const auto  &level_set_2,
                             const double level_set_interior_value = 1.0,
                             const double level_set_exterior_value = -1.0,
-                            std::string  pv_name                  = "test") -> auto
-  {
+                            std::string  pv_name                  = "test") -> auto {
     level_set_1.update_ghost_values();
     level_set_2.update_ghost_values();
 

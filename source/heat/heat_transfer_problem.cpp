@@ -307,9 +307,9 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::compute_field_vector(VectorType &       vector,
+  HeatTransferProblem<dim>::compute_field_vector(VectorType        &vector,
                                                  const unsigned int dof_idx,
-                                                 Function<dim> &    field_function)
+                                                 Function<dim>     &field_function)
   {
     scratch_data->initialize_dof_vector(vector, dof_idx);
     /*

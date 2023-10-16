@@ -37,8 +37,8 @@ namespace MeltPoolDG::Heat
      * interfacial heat source
      */
     double
-    local_compute_interfacial_heat_source(const Point<dim> &            position,
-                                          const Point<dim> &            laser_position,
+    local_compute_interfacial_heat_source(const Point<dim>             &position,
+                                          const Point<dim>             &laser_position,
                                           const double                  power,
                                           const Tensor<1, dim, double> &normal_vector,
                                           const double                  delta_value,

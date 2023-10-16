@@ -34,10 +34,10 @@ namespace MeltPoolDG::AdvectionDiffusion
      *  All the necessary parameters are stored in this struct.
      */
 
-    AdvectionDiffusionOperation(const ScratchData<dim> &              scratch_data_in,
+    AdvectionDiffusionOperation(const ScratchData<dim>               &scratch_data_in,
                                 const AdvectionDiffusionData<double> &advec_diff_data_in,
-                                const TimeIterator<double> &          time_iterator,
-                                const VectorType &                    advection_velocity,
+                                const TimeIterator<double>           &time_iterator,
+                                const VectorType                     &advection_velocity,
                                 const unsigned int                    advec_diff_dof_idx_in,
                                 const unsigned int advec_diff_hanging_nodes_dof_idx_in,
                                 const unsigned int advec_diff_quad_idx_in,
@@ -92,7 +92,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     std::unique_ptr<OperatorBase<dim, double>> advec_diff_operator;
 
-    const TimeIterator<double> &                      time_iterator;
+    const TimeIterator<double>                       &time_iterator;
     const LinearAlgebra::distributed::Vector<double> &advection_velocity;
     /*
      *  Based on the following indices the correct DoFHandler or quadrature rule from

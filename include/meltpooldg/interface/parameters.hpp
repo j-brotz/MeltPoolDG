@@ -408,7 +408,7 @@ namespace MeltPoolDG
    */
   inline void
   print_parameters_external(const ParameterHandler &prm,
-                            std::ostream &          pcout,
+                            std::ostream           &pcout,
                             const bool              print_details)
   {
     prm.print_parameters(pcout,

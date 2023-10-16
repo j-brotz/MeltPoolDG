@@ -55,10 +55,10 @@ namespace MeltPoolDG::Heat
     TrilinosWrappers::SparseMatrix preconditioner_system_matrix;
 
   public:
-    HeatTransferPreconditionerMatrixFree(const ScratchData<dim> &  scratch_data_in,
+    HeatTransferPreconditionerMatrixFree(const ScratchData<dim>   &scratch_data_in,
                                          unsigned int              temp_dof_idx_in,
                                          const PreconditionerType &preconditioner_type_in,
-                                         const OperatorType &      operator_base_in);
+                                         const OperatorType       &operator_base_in);
 
     void
     reinit() override;

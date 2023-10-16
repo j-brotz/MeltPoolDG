@@ -185,7 +185,7 @@ namespace MeltPoolDG::MeltPool
 
     bool
     mark_cells_for_refinement(std::shared_ptr<SimulationBase<dim>> base_in,
-                              Triangulation<dim> &                 tria);
+                              Triangulation<dim>                  &tria);
 
     std::shared_ptr<TimeIterator<double>> time_iterator;
 

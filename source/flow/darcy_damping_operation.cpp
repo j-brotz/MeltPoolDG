@@ -6,7 +6,7 @@ namespace MeltPoolDG::Flow
   template <int dim>
   DarcyDampingOperation<dim>::DarcyDampingOperation(
     const DarcyDampingData<double> &data_in,
-    const ScratchData<dim> &        scratch_data,
+    const ScratchData<dim>         &scratch_data,
     const unsigned int              flow_vel_hanging_nodes_dof_idx,
     const unsigned int              flow_quad_idx,
     const unsigned int              solid_dof_idx)
@@ -25,7 +25,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  DarcyDampingOperation<dim>::compute_darcy_damping(VectorType &      force_rhs,
+  DarcyDampingOperation<dim>::compute_darcy_damping(VectorType       &force_rhs,
                                                     const VectorType &velocity_vec,
                                                     const VectorType &solid_fraction_vec,
                                                     const bool        zero_out)
@@ -34,7 +34,7 @@ namespace MeltPoolDG::Flow
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
-          auto &      force_rhs,
+          auto       &force_rhs,
           const auto &solid_fraction_vec,
           auto        macro_cells) {
         FECellIntegrator<dim, 1, double> solid(matrix_free, solid_dof_idx, flow_quad_idx);
@@ -84,7 +84,7 @@ namespace MeltPoolDG::Flow
 
   template <int dim>
   void
-  DarcyDampingOperation<dim>::compute_darcy_damping(VectorType &      force_rhs,
+  DarcyDampingOperation<dim>::compute_darcy_damping(VectorType       &force_rhs,
                                                     const VectorType &velocity_vec,
                                                     const bool        zero_out)
   {

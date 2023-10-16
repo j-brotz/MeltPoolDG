@@ -24,10 +24,10 @@ namespace MeltPoolDG::LevelSet
   using namespace AdvectionDiffusion;
 
   template <int dim>
-  LevelSetOperation<dim>::LevelSetOperation(const ScratchData<dim> &             scratch_data_in,
-                                            const TimeIterator<double> &         time_stepping,
+  LevelSetOperation<dim>::LevelSetOperation(const ScratchData<dim>              &scratch_data_in,
+                                            const TimeIterator<double>          &time_stepping,
                                             std::shared_ptr<SimulationBase<dim>> base_in,
-                                            const VectorType &                   advection_velocity,
+                                            const VectorType                    &advection_velocity,
                                             const unsigned int                   ls_dof_idx_in,
                                             const unsigned int ls_hanging_nodes_dof_idx_in,
                                             const unsigned int ls_quad_idx_in,
@@ -492,8 +492,8 @@ namespace MeltPoolDG::LevelSet
                                                        // ... compute min(epsilon, dt)
                                                        //
                                                        std::min(reinit_data.constant_epsilon > 0 ?
-                                                                  reinit_data.constant_epsilon :
-                                                                  scratch_data.get_min_cell_size() * reinit_data.scale_factor_epsilon /
+                       reinit_data.constant_epsilon :
+                       scratch_data.get_min_cell_size() * reinit_data.scale_factor_epsilon /
                          scratch_data.get_degree(ls_dof_idx),
                      time_stepping.get_current_time_increment()));
 

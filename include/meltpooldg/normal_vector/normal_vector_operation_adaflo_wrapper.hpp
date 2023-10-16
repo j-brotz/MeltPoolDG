@@ -45,7 +45,7 @@ namespace MeltPoolDG
                                   const int               advec_diff_dof_idx,
                                   const int               normal_vec_dof_idx,
                                   const int               normal_vec_quad_idx,
-                                  const VectorType &      advected_field, //@todo: make const
+                                  const VectorType       &advected_field, //@todo: make const
                                   const NormalVectorData<double> &data_in,
                                   const double                    reinit_scale_factor_epsilon);
 

@@ -39,12 +39,12 @@ namespace MeltPoolDG
       /**
        * Constructor.
        */
-      ReinitializationOperationAdaflo(const ScratchData<dim> &    scratch_data,
+      ReinitializationOperationAdaflo(const ScratchData<dim>     &scratch_data,
                                       const TimeIterator<double> &time_iterator,
                                       const int                   reinit_dof_idx,
                                       const int                   reinit_quad_idx,
                                       const int                   normal_dof_idx,
-                                      const Parameters<double> &  parameters);
+                                      const Parameters<double>   &parameters);
 
       void
       update_dof_idx(const unsigned int &reinit_dof_idx) override;

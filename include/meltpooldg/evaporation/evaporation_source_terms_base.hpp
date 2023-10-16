@@ -27,13 +27,13 @@ namespace MeltPoolDG::Evaporation
     compute_evaporation_velocity(VectorType &evaporation_velocity) = 0;
 
     virtual void
-    compute_level_set_source_term(VectorType &       level_set_source_term,
+    compute_level_set_source_term(VectorType        &level_set_source_term,
                                   const unsigned int ls_dof_idx,
-                                  const VectorType & level_set,
+                                  const VectorType  &level_set,
                                   const unsigned int pressure_dof_idx) = 0;
 
     virtual void
-    compute_mass_balance_source_term(VectorType &       mass_balance_source_term,
+    compute_mass_balance_source_term(VectorType        &mass_balance_source_term,
                                      const unsigned int pressure_dof_idx,
                                      const unsigned int pressure_quad_idx,
                                      bool               zero_out) = 0;

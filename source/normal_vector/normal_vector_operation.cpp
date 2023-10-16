@@ -10,9 +10,9 @@ namespace MeltPoolDG::NormalVector
 {
   template <int dim>
   NormalVectorOperation<dim>::NormalVectorOperation(
-    const ScratchData<dim> &        scratch_data_in,
+    const ScratchData<dim>         &scratch_data_in,
     const NormalVectorData<double> &normal_vector_data,
-    const VectorType &              solution_level_set,
+    const VectorType               &solution_level_set,
     const unsigned int              normal_dof_idx_in,
     const unsigned int              normal_quad_idx_in,
     const unsigned int              ls_dof_idx_in)
@@ -76,7 +76,7 @@ namespace MeltPoolDG::NormalVector
 
     template <typename Number>
     void
-    vmult(LinearAlgebra::distributed::BlockVector<Number> &      dst,
+    vmult(LinearAlgebra::distributed::BlockVector<Number>       &dst,
           const LinearAlgebra::distributed::BlockVector<Number> &src) const
     {
       for (unsigned int b = 0; b < dst.n_blocks(); ++b)

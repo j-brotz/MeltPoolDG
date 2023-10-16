@@ -27,11 +27,11 @@ namespace MeltPoolDG
               const std::function<void(
                 std::vector<std::pair<const DoFHandler<dim> *,
                                       std::function<void(std::vector<VectorType *> &)>>> &data)>
-                &                          attach_vectors,
+                                          &attach_vectors,
               const std::function<void()> &post,
               const std::function<void()> &setup_dof_system,
-              const AdaptiveMeshingData &  amr,
-              Triangulation<dim> &         tria,
+              const AdaptiveMeshingData   &amr,
+              Triangulation<dim>          &tria,
               const int                    n_time_step)
   {
     if (!now(amr, n_time_step))
@@ -210,12 +210,12 @@ namespace MeltPoolDG
 
   template <int dim, typename VectorType>
   void
-  refine_grid(const std::function<bool(Triangulation<dim> &)> &       mark_cells_for_refinement,
+  refine_grid(const std::function<bool(Triangulation<dim> &)>        &mark_cells_for_refinement,
               const std::function<void(std::vector<VectorType *> &)> &attach_vectors,
-              const std::function<void()> &                           post,
-              const std::function<void()> &                           setup_dof_system,
-              const AdaptiveMeshingData &                             amr,
-              DoFHandler<dim> &                                       dof_handler,
+              const std::function<void()>                            &post,
+              const std::function<void()>                            &setup_dof_system,
+              const AdaptiveMeshingData                              &amr,
+              DoFHandler<dim>                                        &dof_handler,
               const int                                               n_time_step)
   {
     refine_grid<dim, VectorType>(

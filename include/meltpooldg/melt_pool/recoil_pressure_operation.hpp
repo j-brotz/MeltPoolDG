@@ -107,14 +107,14 @@ namespace MeltPoolDG::MeltPool
     using RecoilPressureModelBase<number>::compute_recoil_pressure_coefficient;
 
   private:
-    const RecoilPressureData<number> &                recoil_data;
+    const RecoilPressureData<number>                 &recoil_data;
     const number                                      boiling_temperature;
     const number                                      density_coeff;
     const RecoilPressurePhenomenologicalModel<number> recoil_phenomenological;
 
   public:
     RecoilPressureHybridModel(const RecoilPressureData<number> &recoil_data,
-                              const MaterialData<number> &      material_data);
+                              const MaterialData<number>       &material_data);
 
     /**
      * Compute the recoil pressure p_v(T) in terms of the temperature @p T
@@ -178,7 +178,7 @@ namespace MeltPoolDG::MeltPool
     std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
 
   public:
-    RecoilPressureOperation(const ScratchData<dim> &  scratch_data_in,
+    RecoilPressureOperation(const ScratchData<dim>   &scratch_data_in,
                             const Parameters<double> &data_in,
                             const unsigned int        flow_vel_dof_idx_in,
                             const unsigned int        flow_vel_quad_idx_in,
@@ -192,10 +192,10 @@ namespace MeltPoolDG::MeltPool
      * function computed from the level set.
      */
     void
-    compute_recoil_pressure_force(VectorType &       force_rhs,
-                                  const VectorType & level_set_as_heaviside,
-                                  const VectorType & temperature,
-                                  const VectorType & evaporative_mass_flux,
+    compute_recoil_pressure_force(VectorType        &force_rhs,
+                                  const VectorType  &level_set_as_heaviside,
+                                  const VectorType  &temperature,
+                                  const VectorType  &evaporative_mass_flux,
                                   const unsigned int evapor_dof_idx,
                                   bool               zero_out = true) const;
   };

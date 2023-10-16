@@ -25,18 +25,18 @@ namespace MeltPoolDG::Evaporation
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    const ScratchData<dim> &    scratch_data;
+    const ScratchData<dim>     &scratch_data;
     const EvaporationModelBase &evaporation_model;
 
   public:
-    EvaporationMassFluxOperatorContinuous(const ScratchData<dim> &    scratch_data,
+    EvaporationMassFluxOperatorContinuous(const ScratchData<dim>     &scratch_data,
                                           const EvaporationModelBase &evaporation_model);
 
     /**
      * DOCU: TODO
      */
     void
-    compute_evaporative_mass_flux(VectorType &      evaporative_mass_flux,
+    compute_evaporative_mass_flux(VectorType       &evaporative_mass_flux,
                                   const VectorType &temperature) const final;
   };
 } // namespace MeltPoolDG::Evaporation

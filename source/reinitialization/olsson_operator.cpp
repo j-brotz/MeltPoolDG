@@ -5,9 +5,9 @@
 namespace MeltPoolDG::Reinitialization
 {
   template <int dim, typename number>
-  OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim> &            scratch_data_in,
+  OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim>             &scratch_data_in,
                                               const ReinitializationData<number> &reinit_data_in,
-                                              const BlockVectorType &             n_in,
+                                              const BlockVectorType              &n_in,
                                               const unsigned int                  reinit_dof_idx_in,
                                               const unsigned int reinit_quad_idx_in,
                                               const unsigned int ls_dof_idx_in,
@@ -31,7 +31,7 @@ namespace MeltPoolDG::Reinitialization
   void
   OlssonOperator<dim, number>::assemble_matrixbased(const VectorType &levelset_old,
                                                     SparseMatrixType &matrix,
-                                                    VectorType &      rhs) const
+                                                    VectorType       &rhs) const
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
 

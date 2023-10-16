@@ -35,7 +35,7 @@ namespace MeltPoolDG::Flow
      */
     AdafloWrapper(ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data,
                   std::shared_ptr<SimulationBase<dim>>                    base_in,
-                  const TimeIterator<double> &                            time_iterator,
+                  const TimeIterator<double>                             &time_iterator,
                   const bool                                              do_evaporative_mass_flux);
 
     void
