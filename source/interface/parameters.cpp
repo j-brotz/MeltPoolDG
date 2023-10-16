@@ -8,7 +8,7 @@ namespace MeltPoolDG
 {
   template <typename number>
   void
-  Parameters<number>::process_parameters_file(ParameterHandler & prm,
+  Parameters<number>::process_parameters_file(ParameterHandler  &prm,
                                               const std::string &parameter_filename)
   {
     AssertThrow(!parameters_read, ExcMessage("The parameters are already read once."));
@@ -442,6 +442,9 @@ namespace MeltPoolDG
         prm.add_parameter("type",
                           ls.nearest_point.type,
                           "Choose the type for calculating the nearest point to the interface.");
+        prm.add_parameter("verbosity level",
+                          ls.nearest_point.verbosity_level,
+                          "Set the verbosity level.");
       }
       prm.leave_subsection();
     }
@@ -885,7 +888,7 @@ namespace MeltPoolDG
   template <typename number>
   void
   Parameters<number>::print_parameters(ParameterHandler &prm,
-                                       std::ostream &    pcout,
+                                       std::ostream     &pcout,
                                        const bool        print_details)
   {
     // Set the written variable values to the ParameterHandler.

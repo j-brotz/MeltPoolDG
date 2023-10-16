@@ -50,14 +50,13 @@ namespace MeltPoolDG::LevelSet::Tools
      * @param remote_point_evaluation Cache for MPI::RemotePointEvaluation.
      * @param additional_data Parameters for calculating nearest point.
      */
-    NearestPoint(const Mapping<dim> &                               mapping,
-                 const DoFHandler<dim> &                            dof_handler_signed_distance,
-                 const VectorType &                                 signed_distance,
-                 const BlockVectorType &                            normal_vector,
-                 Utilities::MPI::RemotePointEvaluation<dim, dim> &  remote_point_evaluation,
-                 const NearestPointData<double> &                   additional_data,
-                 const unsigned int                                 verbosity_level = 0,
-                 std::optional<std::reference_wrapper<TimerOutput>> timer_output    = {})
+    NearestPoint(const Mapping<dim>                                &mapping,
+                 const DoFHandler<dim>                             &dof_handler_signed_distance,
+                 const VectorType                                  &signed_distance,
+                 const BlockVectorType                             &normal_vector,
+                 Utilities::MPI::RemotePointEvaluation<dim, dim>   &remote_point_evaluation,
+                 const NearestPointData<double>                    &additional_data,
+                 std::optional<std::reference_wrapper<TimerOutput>> timer_output = {})
       : mapping(mapping)
       , dof_handler_ls(dof_handler_signed_distance)
       , signed_distance(signed_distance)
@@ -76,7 +75,6 @@ namespace MeltPoolDG::LevelSet::Tools
       , mpi_comm(dof_handler_ls.get_communicator())
       , pcout(std::cout,
               Utilities::MPI::this_mpi_process(dof_handler_signed_distance.get_communicator()) == 0)
-      , verbosity_level(verbosity_level)
       , timer_output(timer_output)
     {
       AssertThrow(dim <= 2 ||
@@ -196,7 +194,8 @@ namespace MeltPoolDG::LevelSet::Tools
       else
         AssertThrow(false, ExcNotImplemented());
 
-      if (verbosity_level > 0 && additional_data.type != NearestPointType::nearest_point)
+      if (additional_data.verbosity_level > 0 &&
+          additional_data.type != NearestPointType::nearest_point)
         Journal::print_line(pcout,
                             "total number of RPE points: " +
                               std::to_string(Utilities::MPI::sum(total_points_rpe, mpi_comm)),
@@ -263,9 +262,9 @@ namespace MeltPoolDG::LevelSet::Tools
     template <int n_components = 1>
     void
     fill_dof_vector_with_point_values(
-      VectorType &                               solution_out,
-      const DoFHandler<dim> &                    dof_handler_req, // TODO: remove
-      const VectorType &                         solution_in,
+      VectorType                                &solution_out,
+      const DoFHandler<dim>                     &dof_handler_req, // TODO: remove
+      const VectorType                          &solution_in,
       const bool                                 zero_out  = false,
       const std::function<double(const double)> &operation = {}) const
     {
@@ -444,7 +443,7 @@ namespace MeltPoolDG::LevelSet::Tools
           n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
 
           str << " -> " << n_unmatched_points << " (✗)";
-          if (verbosity_level > 1)
+          if (additional_data.verbosity_level > 1)
             Journal::print_line(pcout, str.str(), "nearest_point", 2);
 
           if (n_unmatched_points == 0)
@@ -516,16 +515,16 @@ namespace MeltPoolDG::LevelSet::Tools
       double max_tangential_distance = 0.0;
 
       // 1) Perform correction in tangential direction
-      for (int i = 0; i < additional_data.max_iter; ++i)
+      for (int it = 0; it < additional_data.max_iter && n_unmatched_points > 0; ++it)
         {
           std::vector<Point<dim>> unmatched_points(unmatched_points_idx.size());
           for (unsigned int i = 0; i < unmatched_points_idx.size(); ++i)
             unmatched_points[i] = y[unmatched_points_idx[i]];
 
           std::ostringstream str;
-          str << " i=" << i << " (tangent) ";
+          str << " i=" << it << " (tangent) ";
           str << n_unmatched_points << " -> ";
-          if (verbosity_level > 1)
+          if (additional_data.verbosity_level > 1)
             Journal::print_line(pcout, str.str(), "nearest_point");
 
           // update remote point evaluation for unmatched points
@@ -704,7 +703,7 @@ namespace MeltPoolDG::LevelSet::Tools
           {
             std::ostringstream str;
             str << " k=" << k << " -> " << n_unmatched_points;
-            if (verbosity_level > 1)
+            if (additional_data.verbosity_level > 1)
               Journal::print_line(pcout, str.str(), "nearest_point");
           }
 
@@ -824,7 +823,6 @@ namespace MeltPoolDG::LevelSet::Tools
                           // correct point by tangential offset
                           for (unsigned int d = 0; d < dim - 1; ++d)
                             y[unmatched_points_idx[counter]] -=
-                              // unmatched_points[counter] -=
                               omega[d] * evaluation_values_unit_tangent[counter][d];
                         }
                       else
@@ -854,7 +852,7 @@ namespace MeltPoolDG::LevelSet::Tools
                   << Utilities::MPI::sum(unmatched_points_normal_and_tangential_idx_next.size(),
                                          mpi_comm)
                   << " (n ✓ | t ✗) " << n_complete << " (n ✓ | t ✓) ";
-              if (verbosity_level > 1)
+              if (additional_data.verbosity_level > 1)
                 Journal::print_line(pcout, str.str(), "nearest_point", 10 /*special characters*/);
 
               if (n_unmatched_points == 0)
@@ -963,10 +961,10 @@ namespace MeltPoolDG::LevelSet::Tools
         timer_scope->stop();
     }
 
-    const Mapping<dim> &            mapping;
-    const DoFHandler<dim> &         dof_handler_ls;
-    const VectorType &              signed_distance;
-    const BlockVectorType &         normal_vector;
+    const Mapping<dim>             &mapping;
+    const DoFHandler<dim>          &dof_handler_ls;
+    const VectorType               &signed_distance;
+    const BlockVectorType          &normal_vector;
     const NearestPointData<double> &additional_data;
 
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation;
@@ -984,7 +982,6 @@ namespace MeltPoolDG::LevelSet::Tools
     const MPI_Comm mpi_comm;
 
     ConditionalOStream pcout;
-    const unsigned int verbosity_level = 0;
 
     std::optional<std::reference_wrapper<TimerOutput>> timer_output;
 

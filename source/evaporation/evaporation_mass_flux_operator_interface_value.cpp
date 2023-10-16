@@ -12,12 +12,12 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   EvaporationMassFluxOperatorInterfaceValue<dim>::EvaporationMassFluxOperatorInterfaceValue(
-    const ScratchData<dim> &        scratch_data,
+    const ScratchData<dim>         &scratch_data,
     const NearestPointData<double> &data,
-    const EvaporationModelBase &    evaporation_model,
-    const VectorType &              level_set_as_heaviside,
-    const VectorType &              distance,
-    const BlockVectorType &         normal_vector,
+    const EvaporationModelBase     &evaporation_model,
+    const VectorType               &level_set_as_heaviside,
+    const VectorType               &distance,
+    const BlockVectorType          &normal_vector,
     const unsigned int              ls_dof_idx_in,
     const unsigned int              temp_hanging_nodes_dof_idx_in,
     const unsigned int              evapor_mass_flux_dof_idx_in)
@@ -39,7 +39,7 @@ namespace MeltPoolDG::Evaporation
   template <int dim>
   void
   EvaporationMassFluxOperatorInterfaceValue<dim>::compute_evaporative_mass_flux(
-    VectorType &      evaporative_mass_flux,
+    VectorType       &evaporative_mass_flux,
     const VectorType &temperature) const
   {
     if (!nearest_point_search)
@@ -50,7 +50,6 @@ namespace MeltPoolDG::Evaporation
         normal_vector,
         scratch_data.get_remote_point_evaluation(evapor_mass_flux_dof_idx),
         nearest_point_data,
-        0 /*verbosity_level*/,
         scratch_data.get_timer());
 
     nearest_point_search->reinit(scratch_data.get_dof_handler(temp_hanging_nodes_dof_idx));

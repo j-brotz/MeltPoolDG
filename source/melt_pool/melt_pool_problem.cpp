@@ -245,7 +245,6 @@ namespace MeltPoolDG::MeltPool
                                       level_set_operation->get_normal_vector(),
                                       scratch_data->get_remote_point_evaluation(vel_dof_idx),
                                       nearest_point_data,
-                                      base_in->parameters.base.verbosity_level,
                                       scratch_data->get_timer());
 
                                     nearest_point.reinit(
@@ -302,7 +301,6 @@ namespace MeltPoolDG::MeltPool
                               level_set_operation->get_normal_vector(),
                               scratch_data->get_remote_point_evaluation(vel_dof_idx),
                               nearest_point_data,
-                              base_in->parameters.base.verbosity_level,
                               scratch_data->get_timer());
 
                             nearest_point.reinit(scratch_data->get_dof_handler(vel_dof_idx));
@@ -1523,7 +1521,7 @@ namespace MeltPoolDG::MeltPool
   // todo: clean-up
   template <int dim>
   void
-  MeltPoolProblem<dim>::update_phases(const VectorType &        ls_as_heaviside,
+  MeltPoolProblem<dim>::update_phases(const VectorType         &ls_as_heaviside,
                                       const Parameters<double> &parameters) const
   {
     if (heat_operation && problem_specific_parameters.do_solidification)
@@ -1778,7 +1776,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::compute_gravity_force(VectorType & vec,
+  MeltPoolProblem<dim>::compute_gravity_force(VectorType  &vec,
                                               const double gravity,
                                               const bool   zero_out) const
   {
@@ -1878,7 +1876,7 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   bool
   MeltPoolProblem<dim>::mark_cells_for_refinement(std::shared_ptr<SimulationBase<dim>> base_in,
-                                                  Triangulation<dim> &                 tria)
+                                                  Triangulation<dim>                  &tria)
   {
     const auto &amr_data = base_in->parameters.amr;
 
