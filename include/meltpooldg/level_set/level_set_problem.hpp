@@ -17,6 +17,8 @@ namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
+  BETTER_ENUM(AMRStrategy, char, generic, refine_all_interface_cells)
+
   template <int dim>
   class LevelSetProblem : public ProblemBase<dim>
   {
@@ -55,6 +57,13 @@ namespace MeltPoolDG::LevelSet
     VectorType initial_solution;
 
     std::shared_ptr<Postprocessor<dim>> post_processor;
+    struct
+    {
+      struct
+      {
+        AMRStrategy strategy = AMRStrategy::generic;
+      } amr;
+    } problem_specific_parameters;
     /*
      *  This function initials the relevant scratch data
      *  for the computation of the level set problem
@@ -80,6 +89,9 @@ namespace MeltPoolDG::LevelSet
     void
     refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
 
+  protected:
+    void
+    add_parameters(dealii::ParameterHandler &) final;
 
   public:
     LevelSetProblem() = default;

@@ -17,6 +17,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -31,47 +32,6 @@
  * and represents the film boiling example.
  */
 
-namespace dealii::GridGenerator
-{
-  template <int dim, typename VectorType>
-  void
-  create_triangulation_with_marching_cube_algorithm(Triangulation<dim - 1, dim> &tria,
-                                                    const Mapping<dim> &         mapping,
-                                                    const DoFHandler<dim> &background_dof_handler,
-                                                    const VectorType &     ls_vector,
-                                                    const double           iso_level,
-                                                    const unsigned int     n_subdivisions = 1,
-                                                    const double           tolerance      = 1e-10)
-  {
-    std::vector<Point<dim>>        vertices;
-    std::vector<CellData<dim - 1>> cells;
-    SubCellData                    subcelldata;
-
-    const GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(mapping,
-                                                               background_dof_handler.get_fe(),
-                                                               n_subdivisions,
-                                                               tolerance);
-
-    const bool vector_is_ghosted = ls_vector.has_ghost_elements();
-
-    if (vector_is_ghosted == false)
-      ls_vector.update_ghost_values();
-
-    mc.process(background_dof_handler, ls_vector, iso_level, vertices, cells);
-
-    if (vector_is_ghosted == false)
-      ls_vector.zero_out_ghost_values();
-
-    std::vector<unsigned int> considered_vertices;
-
-    // note: the following operation does not work for simplex meshes yet
-    // GridTools::delete_duplicated_vertices (vertices, cells, subcelldata,
-    // considered_vertices);
-
-    if (vertices.size() > 0)
-      tria.create_triangulation(vertices, cells, subcelldata);
-  }
-} // namespace dealii::GridGenerator
 
 namespace MeltPoolDG::Simulation::FilmBoiling
 {

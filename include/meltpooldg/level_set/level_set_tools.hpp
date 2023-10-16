@@ -13,6 +13,47 @@
 
 #include <meltpooldg/utilities/utility_functions.hpp>
 
+namespace dealii::GridGenerator
+{
+  template <int dim, typename VectorType>
+  void
+  create_triangulation_with_marching_cube_algorithm(Triangulation<dim - 1, dim> &tria,
+                                                    const Mapping<dim>          &mapping,
+                                                    const DoFHandler<dim> &background_dof_handler,
+                                                    const VectorType      &ls_vector,
+                                                    const double           iso_level,
+                                                    const unsigned int     n_subdivisions = 1,
+                                                    const double           tolerance      = 1e-10)
+  {
+    std::vector<Point<dim>>        vertices;
+    std::vector<CellData<dim - 1>> cells;
+    SubCellData                    subcelldata;
+
+    const GridTools::MarchingCubeAlgorithm<dim, VectorType> mc(mapping,
+                                                               background_dof_handler.get_fe(),
+                                                               n_subdivisions,
+                                                               tolerance);
+
+    const bool vector_is_ghosted = ls_vector.has_ghost_elements();
+
+    if (vector_is_ghosted == false)
+      ls_vector.update_ghost_values();
+
+    mc.process(background_dof_handler, ls_vector, iso_level, vertices, cells);
+
+    if (vector_is_ghosted == false)
+      ls_vector.zero_out_ghost_values();
+
+    std::vector<unsigned int> considered_vertices;
+
+    // note: the following operation does not work for simplex meshes yet
+    // GridTools::delete_duplicated_vertices (vertices, cells, subcelldata,
+    // considered_vertices);
+
+    if (vertices.size() > 0)
+      tria.create_triangulation(vertices, cells, subcelldata);
+  }
+} // namespace dealii::GridGenerator
 namespace MeltPoolDG::LevelSet::Tools
 {
   using namespace dealii;
@@ -149,9 +190,9 @@ namespace MeltPoolDG::LevelSet::Tools
   template <int dim>
   void
   evaluate_at_interface(
-    const DoFHandler<dim> &                                         dof_handler,
-    const Mapping<dim> &                                            mapping,
-    const VectorType &                                              level_set_vector,
+    const DoFHandler<dim>                                          &dof_handler,
+    const Mapping<dim>                                             &mapping,
+    const VectorType                                               &level_set_vector,
     const std::function<void(const typename DoFHandler<dim>::active_cell_iterator & /*cell*/,
                              const std::vector<Point<dim>> & /*points_real*/,
                              const std::vector<Point<dim>> & /*points_reference*/,
@@ -354,8 +395,8 @@ namespace MeltPoolDG::LevelSet::Tools
                          std::vector<double> /*weights*/
                          >>
   generate_surface_mesh_info(const DoFHandler<dim> &dof_handler,
-                             const Mapping<dim> &   mapping,
-                             const VectorType &     level_set_as_heaviside,
+                             const Mapping<dim>    &mapping,
+                             const VectorType      &level_set_as_heaviside,
                              const double           contour_value  = 0.0,
                              const unsigned int     n_subdivisions = 1,
                              const bool             use_mca        = true)
@@ -394,13 +435,13 @@ namespace MeltPoolDG::LevelSet::Tools
    */
   template <int dim>
   void
-  generate_points_along_normal(std::vector<Point<dim>> &  global_points_normal_to_interface,
+  generate_points_along_normal(std::vector<Point<dim>>   &global_points_normal_to_interface,
                                std::vector<unsigned int> &global_points_normal_to_interface_pointer,
-                               const DoFHandler<dim> &    dof_handler_ls,
-                               const FESystem<dim> &      fe_normal,
-                               const Mapping<dim> &       mapping,
-                               const VectorType &         level_set_vector,
-                               const BlockVectorType &    normal_vector,
+                               const DoFHandler<dim>     &dof_handler_ls,
+                               const FESystem<dim>       &fe_normal,
+                               const Mapping<dim>        &mapping,
+                               const VectorType          &level_set_vector,
+                               const BlockVectorType     &normal_vector,
                                const double               max_distance_per_side,
                                const unsigned int         n_inc_per_side,
                                const bool                 bidirectional      = true,
@@ -425,9 +466,9 @@ namespace MeltPoolDG::LevelSet::Tools
     const auto boundary_points = bounding_box.get_boundary_points();
 
 
-    const auto collect_points_along_normal = [&](const auto &                 cell,
-                                                 const auto &                 real_points,
-                                                 const auto &                 unit_points,
+    const auto collect_points_along_normal = [&](const auto                  &cell,
+                                                 const auto                  &real_points,
+                                                 const auto                  &unit_points,
                                                  [[maybe_unused]] const auto &weights) {
       local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
       buffer.resize(cell->get_fe().n_dofs_per_cell());
