@@ -7,6 +7,7 @@
 #include <deal.II/numerics/rtree.h>
 
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -25,13 +26,16 @@ namespace MeltPoolDG::LevelSet::Tools
    * Based on a level set function and a cloud of points in the domain (stencil), compute
    * the corresponding nearest points to a discrete representation of the interface (isocontour).
    * The stencil is computed considering nodal points of a DoFHandler lying within a narrow band.
-   * We support three types of algorithms (@p NearestPointType):
+   * We support four types of algorithms (@p NearestPointType):
    *    - nearest_point: discretize the surface via the marching cube algorithm and take the closest
    *      point to the surface (cheap!)
    *    - closest_point_normal: iteratively correct the nearest point following the normal direction
    *      of the point.
    *    - closest_point_normal_collinear: extension of closest_point_normal to also ensure that the
-   *      closest point is collinear to the interface.
+   *      closest point is collinear to the interface (standard algorithm)
+   *    - closest_point_normal_collinear_coquerelle: extension of closest_point_normal to also
+   *      ensure that the closest point is collinear to the interface (algorithm proposed by
+   *      Coquerelle and Glockner (2014))
    */
   template <int dim>
   class NearestPoint
@@ -46,12 +50,12 @@ namespace MeltPoolDG::LevelSet::Tools
      * @param remote_point_evaluation Cache for MPI::RemotePointEvaluation.
      * @param additional_data Parameters for calculating nearest point.
      */
-    NearestPoint(const Mapping<dim> &                               mapping,
-                 const DoFHandler<dim> &                            dof_handler_signed_distance,
-                 const VectorType &                                 signed_distance,
-                 const BlockVectorType &                            normal_vector,
-                 Utilities::MPI::RemotePointEvaluation<dim, dim> &  remote_point_evaluation,
-                 const NearestPointData<double> &                   additional_data,
+    NearestPoint(const Mapping<dim>                                &mapping,
+                 const DoFHandler<dim>                             &dof_handler_signed_distance,
+                 const VectorType                                  &signed_distance,
+                 const BlockVectorType                             &normal_vector,
+                 Utilities::MPI::RemotePointEvaluation<dim, dim>   &remote_point_evaluation,
+                 const NearestPointData<double>                    &additional_data,
                  std::optional<std::reference_wrapper<TimerOutput>> timer_output = {})
       : mapping(mapping)
       , dof_handler_ls(dof_handler_signed_distance)
@@ -69,6 +73,8 @@ namespace MeltPoolDG::LevelSet::Tools
           UtilityFunctions::compute_numerical_zero_of_norm<dim>(dof_handler_ls.get_triangulation(),
                                                                 mapping))
       , mpi_comm(dof_handler_ls.get_communicator())
+      , pcout(std::cout,
+              Utilities::MPI::this_mpi_process(dof_handler_signed_distance.get_communicator()) == 0)
       , timer_output(timer_output)
     {
       AssertThrow(dim <= 2 ||
@@ -167,24 +173,33 @@ namespace MeltPoolDG::LevelSet::Tools
           std::make_unique<TimerOutput::Scope>(timer_output.value(),
                                                ScopedName("nearest_point::reinit::search"));
 
+      total_points_rpe = 0;
+
       if (additional_data.type == NearestPointType::nearest_point)
         {
           local_compute_nearest_point();
         }
-      else
+      else if (additional_data.type == NearestPointType::closest_point_normal)
         {
-          // compute_closest points
-          for (int j = 0; j < additional_data.max_iter; ++j)
-            {
-              if (local_compute_normal_correction(
-                    projected_points_at_interface,
-                    /* print warning */
-                    j == additional_data.max_iter - 1 ||
-                      additional_data.type != NearestPointType::closest_point_normal_collinear) ||
-                  additional_data.type == NearestPointType::closest_point_normal)
-                break;
-            }
+          local_compute_normal_correction(projected_points_at_interface);
         }
+      else if (additional_data.type == NearestPointType::closest_point_normal_collinear)
+        {
+          local_compute_normal_and_tangential_correction(projected_points_at_interface);
+        }
+      else if (additional_data.type == NearestPointType::closest_point_normal_collinear_coquerelle)
+        {
+          local_compute_normal_and_tangential_correction_coquerelle(projected_points_at_interface);
+        }
+      else
+        AssertThrow(false, ExcNotImplemented());
+
+      if (additional_data.verbosity_level > 0 &&
+          additional_data.type != NearestPointType::nearest_point)
+        Journal::print_line(pcout,
+                            "total number of RPE points: " +
+                              std::to_string(Utilities::MPI::sum(total_points_rpe, mpi_comm)),
+                            "nearest_point");
 
       signed_distance.zero_out_ghost_values();
       normal_vector.zero_out_ghost_values();
@@ -247,9 +262,9 @@ namespace MeltPoolDG::LevelSet::Tools
     template <int n_components = 1>
     void
     fill_dof_vector_with_point_values(
-      VectorType &                               solution_out,
-      const DoFHandler<dim> &                    dof_handler_req, // TODO: remove
-      const VectorType &                         solution_in,
+      VectorType                                &solution_out,
+      const DoFHandler<dim>                     &dof_handler_req, // TODO: remove
+      const VectorType                          &solution_in,
       const bool                                 zero_out  = false,
       const std::function<double(const double)> &operation = {}) const
     {
@@ -299,7 +314,7 @@ namespace MeltPoolDG::LevelSet::Tools
      * Write the nearest points, calculated via reinit(), to a table file @p filename.
      */
     void
-    write_to_file(const std::string filename = "closest_points") const
+    write_to_file(const std::string filename = "unmatched_points") const
     {
       const auto global_points_normal_to_interface_all =
         Utilities::MPI::reduce<std::vector<Point<dim>>>(
@@ -324,47 +339,62 @@ namespace MeltPoolDG::LevelSet::Tools
 
   private:
     /**
-     * Perform a closest point projection to the surface.
+     * Perform a closest point projection to the surface by an iterative correction procedure
+     * in the normal direction according to:
+     *
+     *   (k+1)   (k)     /  (k) \    /  (k) \
+     * y      = y    - d | y    | nΓ | y    |    for k=0...max_iter
+     *                   \      /    \      /
+     *
+     * with y being the closest point of a support point, d the signed distance function and
+     * nΓ the interface normal vector. The iteration is skipped once the required tolerance for
+     * d is achieved for all points within the input/output list of points @p y.
      */
     bool
-    local_compute_normal_correction(std::vector<Point<dim>> &y, const bool print_warning)
+    local_compute_normal_correction(std::vector<Point<dim>> &y)
     {
       // points that are not (yet) at the interface and still needs to be processed
-      std::vector<Point<dim>>   closest_points = y;
-      std::vector<unsigned int> closest_points_idx(closest_points.size());
-
-      std::iota(closest_points_idx.begin(), closest_points_idx.end(), 0);
+      std::vector<unsigned int> unmatched_points_idx(y.size());
+      std::iota(unmatched_points_idx.begin(), unmatched_points_idx.end(), 0);
+      int n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
 
       // temporary variable for signed distance
       std::vector<double> evaluation_values_distance;
 
-      double max_tangential_distance = 0;
-      int    n_closest_points        = Utilities::MPI::sum(closest_points.size(), mpi_comm);
-      int    n_omega                 = 0;
-
       for (int j = 0; j < additional_data.max_iter; ++j)
         {
-          remote_point_evaluation.reinit(closest_points,
+          std::vector<Point<dim>> unmatched_points(unmatched_points_idx.size());
+
+          for (unsigned int counter = 0; counter < unmatched_points_idx.size(); ++counter)
+            unmatched_points[counter] = y[unmatched_points_idx[counter]];
+
+          std::ostringstream str;
+          str << "     j=" << j << " (normal) "
+              << Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
+
+          total_points_rpe += unmatched_points.size();
+
+          remote_point_evaluation.reinit(unmatched_points,
                                          dof_handler_ls.get_triangulation(),
                                          mapping);
 
           AssertThrow(remote_point_evaluation.all_points_found(),
                       ExcMessage("Processed point is outside domain."));
 
-          // compute signed distance at closest_points
+          // compute signed distance at unmatched_points
           evaluation_values_distance = dealii::VectorTools::point_values<1>(remote_point_evaluation,
                                                                             dof_handler_ls,
                                                                             signed_distance);
 
+          // shift isocontour
           if (std::abs(additional_data.isocontour >= 0))
             {
               for (auto &e : evaluation_values_distance)
                 e -= additional_data.isocontour;
             }
 
-          // compute unit normal and tangent
+          // compute unit normal
           std::vector<Point<dim>> evaluation_values_unit_normal;
-          std::vector<Point<dim>> evaluation_values_unit_tangent;
 
           std::array<std::vector<double>, dim> evaluation_values_normal;
 
@@ -376,7 +406,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                                      normal_vector.block(comp));
             }
 
-          for (unsigned int counter = 0; counter < closest_points.size(); ++counter)
+          for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
             {
               Point<dim> unit_normal;
               for (unsigned int comp = 0; comp < dim; ++comp)
@@ -387,70 +417,36 @@ namespace MeltPoolDG::LevelSet::Tools
                 (n_norm > tolerance_normal_vector) ? unit_normal / n_norm : Point<dim>();
 
               evaluation_values_unit_normal.emplace_back(unit_normal);
-
-              if (dim > 1 &&
-                  additional_data.type == NearestPointType::closest_point_normal_collinear)
-                {
-                  Point<dim> tangent;
-                  // TODO: add 3D tangent
-                  if constexpr (dim == 2)
-                    {
-                      tangent[0] = unit_normal[1];
-                      tangent[1] = -unit_normal[0];
-                      evaluation_values_unit_tangent.emplace_back(tangent);
-                    }
-                }
             }
 
-          std::vector<Point<dim>>   closest_points_new;
-          std::vector<unsigned int> closest_points_idx_new;
+          std::vector<unsigned int> unmatched_points_idx_next;
 
-          // counter for points that need to be corrected tangentially
-          n_omega = 0;
-
-          for (unsigned int counter = 0; counter < closest_points.size(); ++counter)
+          for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
             {
               // skip point where the distance to the interface is already close enough
               if (std::abs(evaluation_values_distance[counter]) <= tol_distance)
-                {
-                  if (additional_data.type == NearestPointType::closest_point_normal_collinear)
-                    {
-                      // correct point by tangential offset
-                      const auto distance_vec =
-                        closest_points[counter] - stencil[closest_points_idx[counter]];
-
-                      const double omega = distance_vec * evaluation_values_unit_tangent[counter];
-
-                      if (omega > tol_distance)
-                        n_omega++;
-
-                      max_tangential_distance = std::max(std::abs(omega), max_tangential_distance);
-
-                      if constexpr (dim == 2)
-                        y[closest_points_idx[counter]] -=
-                          omega * evaluation_values_unit_tangent[counter];
-                    }
-                  continue;
-                }
+                continue;
 
               // compute closest point and update value in global vector
-              closest_points[counter] -=
+              unmatched_points[counter] -=
                 evaluation_values_distance[counter] * evaluation_values_unit_normal[counter];
 
-              y[closest_points_idx[counter]] = closest_points[counter];
+              y[unmatched_points_idx[counter]] = unmatched_points[counter];
 
-              closest_points_new.emplace_back(closest_points[counter]);
-              closest_points_idx_new.emplace_back(closest_points_idx[counter]);
+              unmatched_points_idx_next.emplace_back(unmatched_points_idx[counter]);
             }
 
           // remove points from processing that are already at the interface
-          closest_points.swap(closest_points_new);
-          closest_points_idx.swap(closest_points_idx_new);
+          unmatched_points_idx.swap(unmatched_points_idx_next);
 
           // if every point is close enough to the interface, we are finished
-          n_closest_points = Utilities::MPI::sum(closest_points.size(), mpi_comm);
+          n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
 
-          if (n_closest_points == 0)
+          str << " -> " << n_unmatched_points << " (✗)";
+          if (additional_data.verbosity_level > 1)
+            Journal::print_line(pcout, str.str(), "nearest_point", 2);
+
+          if (n_unmatched_points == 0)
             break;
         }
 
@@ -462,25 +458,441 @@ namespace MeltPoolDG::LevelSet::Tools
 
       max_distance = Utilities::MPI::max(max_distance, mpi_comm);
 
-      dealii::ConditionalOStream pcout(std::cout,
-                                       Utilities::MPI::this_mpi_process(mpi_comm) == 0 &&
-                                         print_warning);
-
-      if (n_closest_points > 0 && max_distance > tol_distance)
+      if (n_unmatched_points > 0)
         {
-          pcout << "WARNING: The tolerance of " << n_closest_points
+          pcout << "WARNING: The tolerance of " << n_unmatched_points
                 << " points is not yet attained. Max distance value: " << max_distance << std::endl;
           return false;
         }
+      return true;
+    }
 
-      if (additional_data.type == NearestPointType::closest_point_normal_collinear)
+    /**
+     * Perform a closest point projection of a point x to the surface by an iterative correction
+     * procedure in the normal direction and the tangential direction according to
+     *
+     * M. Coquerelle, S. Glockner (2014). A fourth-order accurate curvature computation in a
+     * level set framework for two-phase flows subjected to surface tension forces. First,
+     * the point is corrected in tangential direction via
+     *
+     *  (0)    (0)     /  (0) \       /  (0) \
+     * y    = y    - ω | y    |  tΓ   | y    |
+     *                i\      /    i  \      /
+     *
+     * with the tangential vector to the interface tΓ and the tangential distance ω
+     *
+     *      /  (0)    \                            2D: {0}
+     * ω  = | y   - x | · tΓ             for i in
+     *  i   \         /     i                      3D: {0,1}
+     *
+     * and subsequently is iteratively corrected in normal direction
+     *
+     *   (k+1)   (k)         /  (k) \
+     * y      = y    - d  nΓ | y    |    for k=0...max_iter
+     *                       \      /
+     *
+     * with y being the closest point of a support point, d the signed distance function and
+     * nΓ the interface normal vector. The iteration is finished once the required tolerance for
+     * d is achieved for all points within the input/output list of points @p y.
+     */
+    bool
+    local_compute_normal_and_tangential_correction_coquerelle(std::vector<Point<dim>> &y)
+    {
+      AssertThrow(dim == 2 || dim == 3,
+                  ExcMessage("Use local_compute_normal_correction for dim==1."));
+
+      total_points_rpe = 0;
+
+      // 0) Perform correction in normal direction
+      local_compute_normal_correction(y);
+
+      // points that are not (yet) at the interface and still need to be processed
+      std::vector<unsigned int> unmatched_points_idx(y.size());
+      std::iota(unmatched_points_idx.begin(), unmatched_points_idx.end(), 0);
+
+      int n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), MPI_COMM_WORLD);
+
+      double max_tangential_distance = 0.0;
+
+      // 1) Perform correction in tangential direction
+      for (int it = 0; it < additional_data.max_iter && n_unmatched_points > 0; ++it)
         {
-          max_tangential_distance = Utilities::MPI::max(max_tangential_distance, mpi_comm);
-          n_omega                 = Utilities::MPI::sum(n_omega, mpi_comm);
+          std::vector<Point<dim>> unmatched_points(unmatched_points_idx.size());
+          for (unsigned int i = 0; i < unmatched_points_idx.size(); ++i)
+            unmatched_points[i] = y[unmatched_points_idx[i]];
 
-          if (max_tangential_distance > tol_distance)
+          std::ostringstream str;
+          str << " i=" << it << " (tangent) ";
+          str << n_unmatched_points << " -> ";
+          if (additional_data.verbosity_level > 1)
+            Journal::print_line(pcout, str.str(), "nearest_point");
+
+          // update remote point evaluation for unmatched points
+          total_points_rpe += unmatched_points.size();
+          remote_point_evaluation.reinit(unmatched_points,
+                                         dof_handler_ls.get_triangulation(),
+                                         mapping);
+
+          // compute unit normal for each unmatched point
+          std::vector<Point<dim>>              evaluation_values_unit_normal;
+          std::vector<std::vector<Point<dim>>> evaluation_values_unit_tangent;
+
+          std::array<std::vector<double>, dim> evaluation_values_normal;
+
+          for (int comp = 0; comp < dim; ++comp)
             {
-              pcout << "WARNING: The tolerance of the tangential correction of " << n_omega
+              evaluation_values_normal[comp] =
+                dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                                     dof_handler_ls,
+                                                     normal_vector.block(comp));
+            }
+
+          for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
+            {
+              Point<dim> unit_normal;
+              for (unsigned int comp = 0; comp < dim; ++comp)
+                unit_normal[comp] = evaluation_values_normal[comp][counter];
+
+              const auto n_norm = unit_normal.norm();
+              unit_normal =
+                (n_norm > tolerance_normal_vector) ? unit_normal / n_norm : Point<dim>();
+
+              evaluation_values_unit_normal.emplace_back(unit_normal);
+
+              // compute the tangent(s) for each point
+              std::vector<Point<dim>> tangent;
+              tangent.resize(dim - 1);
+
+              if (n_norm > tolerance_normal_vector)
+                {
+                  if constexpr (dim == 2)
+                    {
+                      tangent[0][0] = unit_normal[1];
+                      tangent[0][1] = -unit_normal[0];
+                    }
+                  else if constexpr (dim == 3)
+                    {
+                      Point<dim> temp_vec = Point<dim>::unit_vector(0);
+
+                      // if normal vector is identical with unit vector
+                      // choose different unit vector to compute the
+                      // tangent
+                      if ((temp_vec - unit_normal).norm() < 1e-10)
+                        temp_vec = Point<dim>::unit_vector(1);
+
+                      tangent[0] = temp_vec - (temp_vec * unit_normal) * unit_normal;
+                      tangent[1] = cross_product_3d(unit_normal, tangent[0]);
+                    }
+                }
+              else
+                {
+                  for (unsigned int d = 0; d < dim - 1; ++d)
+                    tangent[d] = Point<dim>();
+                }
+
+              evaluation_values_unit_tangent.emplace_back(tangent);
+            }
+
+          // compute the tangential correction for each point
+          std::vector<unsigned int> unmatched_points_idx_next;
+
+          for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
+            {
+              // check if point needs to be corrected
+              const auto distance_vec =
+                unmatched_points[counter] - stencil[unmatched_points_idx[counter]];
+
+              // determine tangential offset for each direction
+              std::vector<double> omega(dim - 1);
+              for (unsigned int d = 0; d < dim - 1; ++d)
+                omega[d] = distance_vec * evaluation_values_unit_tangent[counter][d];
+
+              // determine maximum tangential offset
+              double max_omega = 0;
+              for (unsigned int d = 0; d < dim - 1; ++d)
+                max_omega = std::max(max_omega, std::abs(omega[d]));
+
+              if (max_omega <= tol_distance)
+                continue; // no need to perform a tangential corection
+
+              max_tangential_distance = std::max(max_omega, max_tangential_distance);
+
+              // correct point by tangential offset
+              for (unsigned int d = 0; d < dim - 1; ++d)
+                unmatched_points[counter] -= omega[d] * evaluation_values_unit_tangent[counter][d];
+
+              unmatched_points_idx_next.emplace_back(unmatched_points_idx[counter]);
+            }
+          // 2) Proceed with the correction in normal direction
+          local_compute_normal_correction(unmatched_points);
+
+          // update points in global vector
+          for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
+            y[unmatched_points_idx[counter]] = unmatched_points[counter];
+
+          // remove points from processing that are already at the interface
+          unmatched_points_idx.swap(unmatched_points_idx_next);
+
+          // if every point is close enough to the interface, we are finished
+          n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
+
+          if (n_unmatched_points == 0)
+            break;
+        }
+
+      max_tangential_distance = Utilities::MPI::max(max_tangential_distance, mpi_comm);
+
+      if (n_unmatched_points > 0)
+        {
+          pcout << "WARNING: The tolerance of the tangential correction of " << n_unmatched_points
+                << " points is not yet attained. Max tangential distance value: "
+                << max_tangential_distance << " max tolerance: " << tol_distance << std::endl;
+          return false;
+        }
+      return true;
+    }
+
+    /**
+     * Perform a closest point projection of a point x to the surface by an iterative correction
+     * procedure in the normal direction and the tangential direction. First, we iteratively correct
+     * in normal direction
+     *
+     *   (k+1)   (k)         /  (k) \
+     * y      = y    - d  nΓ | y    |    for k=0...max_iter
+     *                       \      /
+     *
+     * with y being the closest point of a support point, d the signed distance function and
+     * nΓ the interface normal vector. The iteration is finished once the required tolerance for
+     * d is achieved. Then, the algorithm continues with the tangential correction step
+     *
+     *  (k+1)    (k+1)  /  (k+1) \       /  (k+1) \
+     * y     = y    - ω | y      |  tΓ   | y      |
+     *                 i\        /    i  \        /
+     *
+     * with the tangential vector to the interface tΓ and the tangential distance ω
+     *
+     *      /  (k)    \                            2D: {0}
+     * ω  = | y   - x | · tΓ             for i in
+     *  i   \         /     i                      3D: {0,1}
+     *
+     */
+    bool
+    local_compute_normal_and_tangential_correction(std::vector<Point<dim>> &y)
+    {
+      AssertThrow(dim == 2 || dim == 3,
+                  ExcMessage("Use local_compute_normal_correction for dim==1."));
+
+      total_points_rpe = 0;
+
+      // points that are not (yet) at the interface and still needs to be processed
+      std::vector<unsigned int> unmatched_points_idx(y.size());
+      std::iota(unmatched_points_idx.begin(), unmatched_points_idx.end(), 0);
+
+      // temporary variable for signed distance
+      std::vector<double>       evaluation_values_distance;
+      std::vector<unsigned int> unmatched_points_normal_idx_next;
+
+      for (int k = 0; k < additional_data.max_iter; ++k)
+        {
+          // correct entire points
+          double max_tangential_distance = 0;
+          int    n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
+
+          std::vector<unsigned int> unmatched_points_normal_and_tangential_idx_next;
+
+          {
+            std::ostringstream str;
+            str << " k=" << k << " -> " << n_unmatched_points;
+            if (additional_data.verbosity_level > 1)
+              Journal::print_line(pcout, str.str(), "nearest_point");
+          }
+
+          // correct only unmatched points
+          for (int j = 0; j < additional_data.max_iter; ++j)
+            {
+              std::vector<Point<dim>> unmatched_points(unmatched_points_idx.size());
+              for (unsigned int i = 0; i < unmatched_points_idx.size(); ++i)
+                unmatched_points[i] = y[unmatched_points_idx[i]];
+
+              // just for output purposes
+              std::ostringstream str;
+              str << "   j=" << j << " "
+                  << Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm) << " -> ";
+              total_points_rpe += unmatched_points.size();
+
+              remote_point_evaluation.reinit(unmatched_points,
+                                             dof_handler_ls.get_triangulation(),
+                                             mapping);
+
+              AssertThrow(remote_point_evaluation.all_points_found(),
+                          ExcMessage("Processed point is outside domain."));
+
+              // compute signed distance at unmatched_points
+              evaluation_values_distance =
+                dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                                     dof_handler_ls,
+                                                     signed_distance);
+
+              if (std::abs(additional_data.isocontour >= 0))
+                {
+                  for (auto &e : evaluation_values_distance)
+                    e -= additional_data.isocontour;
+                }
+
+              // compute unit normal and tangent
+              std::vector<Point<dim>>              evaluation_values_unit_normal;
+              std::vector<std::vector<Point<dim>>> evaluation_values_unit_tangent;
+
+              std::array<std::vector<double>, dim> evaluation_values_normal;
+
+              for (int comp = 0; comp < dim; ++comp)
+                {
+                  evaluation_values_normal[comp] =
+                    dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                                         dof_handler_ls,
+                                                         normal_vector.block(comp));
+                }
+
+              for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
+                {
+                  Point<dim> unit_normal;
+                  for (unsigned int comp = 0; comp < dim; ++comp)
+                    unit_normal[comp] = evaluation_values_normal[comp][counter];
+
+                  const auto n_norm = unit_normal.norm();
+                  unit_normal =
+                    (n_norm > tolerance_normal_vector) ? unit_normal / n_norm : Point<dim>();
+
+                  evaluation_values_unit_normal.emplace_back(unit_normal);
+                  // compute the tangent(s) for each point
+                  std::vector<Point<dim>> tangent;
+                  tangent.resize(dim - 1);
+
+                  if constexpr (dim == 2)
+                    {
+                      tangent[0][0] = unit_normal[1];
+                      tangent[0][1] = -unit_normal[0];
+                    }
+                  else if constexpr (dim == 3)
+                    {
+                      Point<dim> temp_vec = Point<dim>::unit_vector(0);
+
+                      // if normal vector is identical with unit vector
+                      // choose different unit vector to compute the
+                      // tangent
+                      if ((temp_vec - unit_normal).norm() < 1e-10)
+                        temp_vec = Point<dim>::unit_vector(1);
+
+                      tangent[0] = temp_vec - (temp_vec * unit_normal) * unit_normal;
+                      tangent[1] = cross_product_3d(unit_normal, tangent[0]);
+                    }
+
+                  evaluation_values_unit_tangent.emplace_back(tangent);
+                }
+
+              unmatched_points_normal_idx_next.clear();
+
+              unsigned int n_complete = 0;
+
+              for (unsigned int counter = 0; counter < unmatched_points.size(); ++counter)
+                {
+                  // perform tangential correction where normal correction was successful
+                  if (std::abs(evaluation_values_distance[counter]) <= tol_distance)
+                    {
+                      // correct point by tangential offset
+                      const auto distance_vec =
+                        unmatched_points[counter] - stencil[unmatched_points_idx[counter]];
+
+                      // determine tangential offset for each direction
+                      std::vector<double> omega(dim - 1);
+                      for (unsigned int d = 0; d < dim - 1; ++d)
+                        omega[d] = distance_vec * evaluation_values_unit_tangent[counter][d];
+
+                      // determine maximum tangential offset
+                      double max_omega = std::numeric_limits<double>::lowest();
+                      for (unsigned int d = 0; d < dim - 1; ++d)
+                        max_omega = std::max(max_omega, std::abs(omega[d]));
+
+                      max_tangential_distance = std::max(max_omega, max_tangential_distance);
+
+                      if (max_omega > tol_distance)
+                        {
+                          unmatched_points_normal_and_tangential_idx_next.emplace_back(
+                            unmatched_points_idx[counter]);
+
+                          // correct point by tangential offset
+                          for (unsigned int d = 0; d < dim - 1; ++d)
+                            y[unmatched_points_idx[counter]] -=
+                              omega[d] * evaluation_values_unit_tangent[counter][d];
+                        }
+                      else
+                        n_complete += 1;
+                    }
+                  else
+                    {
+                      unmatched_points[counter] -= evaluation_values_distance[counter] *
+                                                   evaluation_values_unit_normal[counter];
+
+                      y[unmatched_points_idx[counter]] = unmatched_points[counter];
+
+                      unmatched_points_normal_idx_next.emplace_back(unmatched_points_idx[counter]);
+                    }
+                }
+
+              n_complete = Utilities::MPI::sum(n_complete, mpi_comm);
+
+
+              // remove points from processing that are already at the interface
+              unmatched_points_idx.swap(unmatched_points_normal_idx_next);
+
+              // if every point is close enough to the interface, we are finished
+              n_unmatched_points = Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm);
+
+              str << n_unmatched_points << " (n ✗) "
+                  << Utilities::MPI::sum(unmatched_points_normal_and_tangential_idx_next.size(),
+                                         mpi_comm)
+                  << " (n ✓ | t ✗) " << n_complete << " (n ✓ | t ✓) ";
+              if (additional_data.verbosity_level > 1)
+                Journal::print_line(pcout, str.str(), "nearest_point", 10 /*special characters*/);
+
+              if (n_unmatched_points == 0)
+                break;
+            }
+
+          std::copy(unmatched_points_normal_idx_next.begin(),
+                    unmatched_points_normal_idx_next.end(),
+                    std::back_inserter(unmatched_points_normal_and_tangential_idx_next));
+          std::sort(unmatched_points_normal_and_tangential_idx_next.begin(),
+                    unmatched_points_normal_and_tangential_idx_next.end());
+          unmatched_points_normal_and_tangential_idx_next.erase(
+            std::unique(unmatched_points_normal_and_tangential_idx_next.begin(),
+                        unmatched_points_normal_and_tangential_idx_next.end()),
+            unmatched_points_normal_and_tangential_idx_next.end());
+
+          unmatched_points_idx.swap(unmatched_points_normal_and_tangential_idx_next);
+
+          // compute maximum distance of projected points to the level set 0 isosurface
+          double max_distance = (evaluation_values_distance.size() == 0) ?
+                                  0.0 :
+                                  *std::max_element(evaluation_values_distance.begin(),
+                                                    evaluation_values_distance.end());
+
+          max_distance = Utilities::MPI::max(max_distance, mpi_comm);
+
+          if (n_unmatched_points > 0 && k == additional_data.max_iter - 1)
+            {
+              pcout << "WARNING: The tolerance of " << n_unmatched_points
+                    << " points is not yet attained. Max distance value: " << max_distance
+                    << std::endl;
+              return false;
+            }
+
+          max_tangential_distance = Utilities::MPI::max(max_tangential_distance, mpi_comm);
+
+          if (max_tangential_distance > tol_distance && k == additional_data.max_iter - 1)
+            {
+              pcout << "WARNING: The tolerance of the tangential correction of "
+                    << Utilities::MPI::sum(unmatched_points_idx.size(), mpi_comm)
                     << " points is not yet attained. Max tangential distance value: "
                     << max_tangential_distance << " max tolerance: " << tol_distance << std::endl;
               return false;
@@ -491,7 +903,8 @@ namespace MeltPoolDG::LevelSet::Tools
     }
 
     /**
-     * Create a surface mesh and find the nearest vertices to the surface mesh.
+     * Create a surface mesh and identify the closest point as the nearest vertex of the surface
+     * mesh.
      */
     void
     local_compute_nearest_point()
@@ -548,10 +961,10 @@ namespace MeltPoolDG::LevelSet::Tools
         timer_scope->stop();
     }
 
-    const Mapping<dim> &            mapping;
-    const DoFHandler<dim> &         dof_handler_ls;
-    const VectorType &              signed_distance;
-    const BlockVectorType &         normal_vector;
+    const Mapping<dim>             &mapping;
+    const DoFHandler<dim>          &dof_handler_ls;
+    const VectorType               &signed_distance;
+    const BlockVectorType          &normal_vector;
     const NearestPointData<double> &additional_data;
 
     Utilities::MPI::RemotePointEvaluation<dim, dim> &remote_point_evaluation;
@@ -568,7 +981,10 @@ namespace MeltPoolDG::LevelSet::Tools
 
     const MPI_Comm mpi_comm;
 
+    ConditionalOStream pcout;
+
     std::optional<std::reference_wrapper<TimerOutput>> timer_output;
+
 
     // vectors to be filled: projected points to the interface corresponding to DoF indices
     std::vector<Point<dim>>                           projected_points_at_interface;
@@ -576,5 +992,8 @@ namespace MeltPoolDG::LevelSet::Tools
     std::vector<Point<dim>>                           stencil;
 
     bool is_reinit_called = false;
+
+    // this is just a temporary variable to be called within the projection operators
+    int total_points_rpe = 0;
   };
 } // namespace MeltPoolDG::LevelSet::Tools
