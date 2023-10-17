@@ -218,14 +218,14 @@ run_test(const NearestPointType type = NearestPointType::closest_point_normal)
   nearest_point_data.narrow_band_threshold = 0.125;
   nearest_point_data.max_iter              = n_iter;
   nearest_point_data.type                  = type;
+  nearest_point_data.verbosity_level       = 2;
 
   LevelSet::Tools::NearestPoint<dim> cpp(mapping,
                                          dof_handler,
                                          solution_distance,
                                          solution_normal,
                                          remote_point_evaluation,
-                                         nearest_point_data,
-                                         2 /*verbosity_level*/);
+                                         nearest_point_data);
 
   cpp.reinit(dof_handler_temp);
 
