@@ -24,8 +24,10 @@
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -38,11 +40,25 @@ namespace MeltPoolDG::LevelSet
   LevelSetProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     initialize(base_in);
+    ScopedName         sc("run");
+    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
     while (!time_iterator->is_finished())
       {
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout());
+        const int n = time_iterator->get_current_time_step_number();
+
+        //@todo: adapt in case of adaptive time stepping
+        if ((n % base_in->parameters.profiling.write_frequency == 0) &&
+            base_in->parameters.profiling.enable)
+          {
+            scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+            scratch_data->get_pcout() << std::endl;
+            DoFMonitor::print(scratch_data->get_pcout());
+            scratch_data->get_pcout() << std::endl;
+            CellMonitor::print(scratch_data->get_pcout());
+          }
         compute_advection_velocity(*base_in->get_advection_field("level_set"));
 
         if (evaporation_operation)
@@ -78,6 +94,15 @@ namespace MeltPoolDG::LevelSet
       }
 
     Journal::print_end(scratch_data->get_pcout());
+    //... always print timing statistics
+    if (base_in->parameters.profiling.enable)
+      {
+        scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
+        scratch_data->get_pcout() << std::endl;
+        DoFMonitor::print(scratch_data->get_pcout());
+        scratch_data->get_pcout() << std::endl;
+        CellMonitor::print(scratch_data->get_pcout());
+      }
   }
 
   template <int dim>
@@ -101,6 +126,8 @@ namespace MeltPoolDG::LevelSet
     scratch_data = std::make_shared<ScratchData<dim>>(base_in->mpi_communicator,
                                                       base_in->parameters.base.verbosity_level,
                                                       /* do_matrix_free */ true);
+    ScopedName         sc("initialize");
+    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
     /*
      *  setup mapping
      */
@@ -214,8 +241,6 @@ namespace MeltPoolDG::LevelSet
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(ls_dof_idx),
                                            scratch_data->get_pcout(1));
-
-    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
     /*
      *    Do initial refinement steps if requested
      */
@@ -249,6 +274,8 @@ namespace MeltPoolDG::LevelSet
                 "For the level set operation either a function for the initial level set or the "
                 "signed distance field must be provided. Abort ..."));
         }
+
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
   }
 
   template <int dim>
@@ -334,6 +361,8 @@ namespace MeltPoolDG::LevelSet
                                        const double                         time,
                                        std::shared_ptr<SimulationBase<dim>> base_in)
   {
+    ScopedName         sc("output_results");
+    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
     if (!post_processor->now(time_step, time))
       return;
 
@@ -375,34 +404,92 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetProblem<dim>::refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
-      Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
+    ScopedName         sc("AMR");
+    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+    const auto         mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
+      if (problem_specific_parameters.amr.strategy == AMRStrategy::generic)
+        {
+          Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
 
-      VectorType locally_relevant_solution;
-      locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
-      locally_relevant_solution.copy_locally_owned_data_from(level_set_operation->get_level_set());
-      constraints_dirichlet.distribute(locally_relevant_solution);
-      locally_relevant_solution.update_ghost_values();
+          VectorType locally_relevant_solution;
+          locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
+          locally_relevant_solution.copy_locally_owned_data_from(
+            level_set_operation->get_level_set());
+          constraints_dirichlet.distribute(locally_relevant_solution);
+          locally_relevant_solution.update_ghost_values();
 
-      for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
-        locally_relevant_solution.local_element(i) =
-          (1.0 -
-           locally_relevant_solution.local_element(i) * locally_relevant_solution.local_element(i));
+          for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
+            locally_relevant_solution.local_element(i) =
+              (1.0 - locally_relevant_solution.local_element(i) *
+                       locally_relevant_solution.local_element(i));
 
-      locally_relevant_solution.update_ghost_values();
+          locally_relevant_solution.update_ghost_values();
 
-      dealii::VectorTools::integrate_difference(scratch_data->get_dof_handler(ls_dof_idx),
-                                                locally_relevant_solution,
-                                                Functions::ZeroFunction<dim>(),
-                                                estimated_error_per_cell,
-                                                scratch_data->get_quadrature(ls_quad_idx),
-                                                dealii::VectorTools::L2_norm);
+          dealii::VectorTools::integrate_difference(scratch_data->get_dof_handler(ls_dof_idx),
+                                                    locally_relevant_solution,
+                                                    Functions::ZeroFunction<dim>(),
+                                                    estimated_error_per_cell,
+                                                    scratch_data->get_quadrature(ls_quad_idx),
+                                                    dealii::VectorTools::L2_norm);
 
-      parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
-        tria,
-        estimated_error_per_cell,
-        base_in->parameters.amr.upper_perc_to_refine,
-        base_in->parameters.amr.lower_perc_to_coarsen);
+          parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+            tria,
+            estimated_error_per_cell,
+            base_in->parameters.amr.upper_perc_to_refine,
+            base_in->parameters.amr.lower_perc_to_coarsen);
+        }
+      else if (problem_specific_parameters.amr.strategy == AMRStrategy::refine_all_interface_cells)
+        {
+          level_set_operation->get_level_set().update_ghost_values();
+          level_set_operation->get_level_set_as_heaviside().update_ghost_values();
+          FEValues<dim>       ls_values(scratch_data->get_fe(ls_dof_idx),
+                                  Quadrature<dim>(
+                                    scratch_data->get_fe(ls_dof_idx).get_unit_support_points()),
+                                  update_values);
+          std::vector<double> ls_vals(scratch_data->get_n_dofs_per_cell(ls_dof_idx));
+          std::vector<double> hs_vals(scratch_data->get_n_dofs_per_cell(ls_dof_idx));
+
+          const double phi_threshold = std::tanh(2.0);
+
+          for (auto &cell : tria.active_cell_iterators())
+            {
+              if (cell->is_locally_owned())
+                {
+                  TriaIterator<DoFCellAccessor<dim, dim, false>> ls_dof_cell(
+                    &tria,
+                    cell->level(),
+                    cell->index(),
+                    &scratch_data->get_dof_handler(ls_dof_idx));
+                  ls_values.reinit(ls_dof_cell);
+
+                  ls_values.get_function_values(level_set_operation->get_level_set(), ls_vals);
+                  ls_values.get_function_values(level_set_operation->get_level_set_as_heaviside(),
+                                                hs_vals);
+
+                  double max_ls = 0;
+                  for (const auto &ls : ls_vals)
+                    max_ls = std::max(std::abs(ls), max_ls);
+
+                  bool refine_cell =
+                    (cell->level() <
+                       static_cast<int>(base_in->parameters.amr.max_grid_refinement_level) &&
+                     (max_ls < phi_threshold));
+
+                  if (refine_cell == true)
+                    cell->set_refine_flag();
+                  else if ((cell->level() >= base_in->parameters.amr.min_grid_refinement_level) &&
+                           (max_ls >= phi_threshold))
+                    cell->set_coarsen_flag();
+                }
+            }
+
+          level_set_operation->get_level_set().zero_out_ghost_values();
+          level_set_operation->get_level_set_as_heaviside().zero_out_ghost_values();
+        }
+      else
+        {
+          AssertThrow(false, ExcNotImplemented());
+        }
 
       return true;
     };
@@ -428,6 +515,24 @@ namespace MeltPoolDG::LevelSet
                                  dof_handler,
                                  time_iterator->get_current_time_step_number());
   }
+
+  template <int dim>
+  void
+  LevelSetProblem<dim>::add_parameters(dealii::ParameterHandler &prm)
+  {
+    prm.enter_subsection("problem specific");
+    {
+      prm.enter_subsection("amr");
+      {
+        prm.add_parameter("strategy",
+                          problem_specific_parameters.amr.strategy,
+                          "Select the AMR strategy.");
+      }
+      prm.leave_subsection();
+    }
+    prm.leave_subsection();
+  }
+
 
   template class LevelSetProblem<1>;
   template class LevelSetProblem<2>;

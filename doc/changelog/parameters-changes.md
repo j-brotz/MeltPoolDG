@@ -1,6 +1,22 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-10-16
+- Add problem specific parameter to level set problem
+``` diff
+{
+  "base": {
+    "problem name": "level_set"
+    }, 
++  "problem specific": {
++   "amr":
++     {
++         "strategy": "generic|refine_all_interface_cells"
++     }
++  }
+}
+```
+
 ## 2023-08-30
 - Add alternative type for closest point projection with collinearity
 ```diff
