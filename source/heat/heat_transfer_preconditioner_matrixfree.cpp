@@ -5,10 +5,10 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   HeatTransferPreconditionerMatrixFree<dim>::HeatTransferPreconditionerMatrixFree(
-    const ScratchData<dim> &  scratch_data_in,
+    const ScratchData<dim>   &scratch_data_in,
     const unsigned int        temp_dof_idx_in,
     const PreconditionerType &preconditioner_type_in,
-    const OperatorType &      heat_operator_in)
+    const OperatorType       &heat_operator_in)
     : scratch_data(scratch_data_in)
     , temp_dof_idx(temp_dof_idx_in)
     , preconditioner_type(preconditioner_type_in)

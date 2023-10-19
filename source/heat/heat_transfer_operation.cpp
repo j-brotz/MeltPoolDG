@@ -11,17 +11,17 @@ namespace MeltPoolDG::Heat
   template <int dim>
   HeatTransferOperation<dim>::HeatTransferOperation(
     std::shared_ptr<BoundaryConditions<dim>> bc_data_in,
-    const ScratchData<dim> &                 scratch_data_in,
-    const HeatData<double> &                 heat_data_in,
-    const Material<double> &                 material,
-    const TimeIterator<double> &             time_iterator,
+    const ScratchData<dim>                  &scratch_data_in,
+    const HeatData<double>                  &heat_data_in,
+    const Material<double>                  &material,
+    const TimeIterator<double>              &time_iterator,
     const unsigned int                       temp_dof_idx_in,
     const unsigned int                       temp_hanging_nodes_dof_idx_in,
     const unsigned int                       temp_quad_idx_in,
     const unsigned int                       vel_dof_idx_in,
-    const VectorType *                       velocity_in,
+    const VectorType                        *velocity_in,
     const unsigned int                       ls_dof_idx_in,
-    const VectorType *                       level_set_as_heaviside_in,
+    const VectorType                        *level_set_as_heaviside_in,
     const bool                               do_solidification)
     : scratch_data(scratch_data_in)
     , bc_data(bc_data_in)
@@ -69,7 +69,7 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   HeatTransferOperation<dim>::register_evaporative_mass_flux(
-    VectorType *       evaporative_mass_flux_in,
+    VectorType        *evaporative_mass_flux_in,
     const unsigned int evapor_mass_flux_dof_idx_in,
     const double       latent_heat_of_evaporation,
     const bool         do_phenomenological_recoil_pressure)
@@ -295,8 +295,8 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   HeatTransferOperation<dim>::compute_interface_temperature(
-    const VectorType &              distance,
-    const BlockVectorType &         normal_vector,
+    const VectorType               &distance,
+    const BlockVectorType          &normal_vector,
     const NearestPointData<double> &nearest_point_data)
   {
     if (!nearest_point_search)

@@ -41,8 +41,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     using scalar              = VectorizedArray<number>;
 
   public:
-    AdvectionDiffusionOperator(const ScratchData<dim> &              scratch_data_in,
-                               const VectorType &                    advection_velocity_in,
+    AdvectionDiffusionOperator(const ScratchData<dim>               &scratch_data_in,
+                               const VectorType                     &advection_velocity_in,
                                const AdvectionDiffusionData<number> &data_in,
                                unsigned int                          dof_idx_in,
                                unsigned int                          quad_idx_in,
@@ -56,7 +56,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     void
     assemble_matrixbased(const VectorType &advected_field_old,
                          SparseMatrixType &matrix,
-                         VectorType &      rhs) const final;
+                         VectorType       &rhs) const final;
 
     /*
      *    matrix-free implementation
@@ -82,16 +82,16 @@ namespace MeltPoolDG::AdvectionDiffusion
 
   private:
     void
-    tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &  advected_field,
+    tangent_local_cell_operation(FECellIntegrator<dim, 1, number>   &advected_field,
                                  FECellIntegrator<dim, dim, number> &velocity_vals,
                                  const bool                          do_reinit_cells) const;
 
     void
     compute_stabilization_parameter(const FECellIntegrator<dim, dim, number> &velocity_vals) const;
 
-    const ScratchData<dim> &                       scratch_data;
-    const VectorType &                             advection_velocity;
-    const AdvectionDiffusionData<number> &         data;
+    const ScratchData<dim>                        &scratch_data;
+    const VectorType                              &advection_velocity;
+    const AdvectionDiffusionData<number>          &data;
     const unsigned int                             velocity_dof_idx;
     const unsigned int                             advec_diff_quad_idx;
     double                                         theta;

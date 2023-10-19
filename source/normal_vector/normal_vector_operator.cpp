@@ -8,13 +8,13 @@ namespace MeltPoolDG::NormalVector
 {
   template <int dim, typename number>
   NormalVectorOperator<dim, number>::NormalVectorOperator(
-    const ScratchData<dim> &        scratch_data_in,
+    const ScratchData<dim>         &scratch_data_in,
     const NormalVectorData<double> &normal_vector_data_in,
     const unsigned int              normal_dof_idx_in,
     const unsigned int              normal_quad_idx_in,
     const unsigned int              ls_dof_idx_in,
     const bool                      do_narrow_band_in,
-    const VectorType *              solution_level_set_in)
+    const VectorType               *solution_level_set_in)
     : scratch_data(scratch_data_in)
     , normal_vector_data(normal_vector_data_in)
     , normal_dof_idx(normal_dof_idx_in)
@@ -33,7 +33,7 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperator<dim, number>::assemble_matrixbased(const VectorType &level_set_in,
                                                           SparseMatrixType &matrix,
-                                                          BlockVectorType & rhs) const
+                                                          BlockVectorType  &rhs) const
   {
     FEValues<dim> normal_values(scratch_data.get_mapping(),
                                 scratch_data.get_dof_handler(normal_dof_idx).get_fe(),
@@ -206,7 +206,7 @@ namespace MeltPoolDG::NormalVector
       solution_level_set->update_ghost_values();
 
     // note: not thread safe!!!
-    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, normal_quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
@@ -245,7 +245,7 @@ namespace MeltPoolDG::NormalVector
       solution_level_set->update_ghost_values();
 
     // note: not thread safe!!!
-    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(scratch_data.get_matrix_free(),
                                                     ls_dof_idx,
                                                     normal_quad_idx);
@@ -320,8 +320,8 @@ namespace MeltPoolDG::NormalVector
   template <int dim, typename number>
   void
   NormalVectorOperator<dim, number>::get_unit_normals_at_quadrature(
-    const FEValues<dim> &        fe_values,
-    const BlockVectorType &      normal_vector_field_in,
+    const FEValues<dim>         &fe_values,
+    const BlockVectorType       &normal_vector_field_in,
     std::vector<Tensor<1, dim>> &unit_normal_at_quadrature,
     const double                 zero)
   {

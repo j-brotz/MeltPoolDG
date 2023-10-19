@@ -12,8 +12,8 @@ namespace MeltPoolDG::AdvectionDiffusion
 {
   template <int dim, typename number>
   AdvectionDiffusionOperator<dim, number>::AdvectionDiffusionOperator(
-    const ScratchData<dim> &              scratch_data_in,
-    const VectorType &                    advection_velocity_in,
+    const ScratchData<dim>               &scratch_data_in,
+    const VectorType                     &advection_velocity_in,
     const AdvectionDiffusionData<number> &data_in,
     const unsigned int                    dof_idx_in,
     const unsigned int                    quad_idx_in,
@@ -40,9 +40,9 @@ namespace MeltPoolDG::AdvectionDiffusion
   template <int dim, typename number>
   void
   AdvectionDiffusionOperator<dim, number>::assemble_matrixbased(
-    const VectorType &                            advected_field_old,
+    const VectorType                             &advected_field_old,
     AdvectionDiffusionOperator::SparseMatrixType &matrix,
-    VectorType &                                  rhs) const
+    VectorType                                   &rhs) const
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
 
@@ -197,7 +197,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   template <int dim, typename number>
   void
   AdvectionDiffusionOperator<dim, number>::create_rhs(
-    VectorType &      dst,
+    VectorType       &dst,
     const VectorType &src /* old advected field*/) const
   {
     /*
@@ -274,7 +274,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     system_matrix = 0.0;
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    const auto                        &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
                                                      velocity_dof_idx,
                                                      advec_diff_quad_idx);
@@ -307,7 +307,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     scratch_data.initialize_dof_vector(diagonal, this->dof_idx);
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    const auto                        &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free,
                                                      velocity_dof_idx,
                                                      advec_diff_quad_idx);
@@ -339,7 +339,7 @@ namespace MeltPoolDG::AdvectionDiffusion
   template <int dim, typename number>
   void
   AdvectionDiffusionOperator<dim, number>::tangent_local_cell_operation(
-    FECellIntegrator<dim, 1, number> &  advected_field_vals,
+    FECellIntegrator<dim, 1, number>   &advected_field_vals,
     FECellIntegrator<dim, dim, number> &velocity_vals,
     const bool                          do_reinit_cells) const
   {

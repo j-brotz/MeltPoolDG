@@ -100,16 +100,16 @@ namespace MeltPoolDG::Restart
     }
 
   private:
-    const RestartData<number> &                        data;
+    const RestartData<number>                         &data;
     fs::path                                           dir;
     fs::path                                           prefix;
-    const TimeIterator<number> &                       time;
+    const TimeIterator<number>                        &time;
     mutable number                                     last_written_time = 0.0;
     std::chrono::time_point<std::chrono::system_clock> real_time_start;
     std::vector<std::string>                           suffices = {"_tria",
-                                         "_tria.info",
-                                         "_tria_fixed.data",
-                                         "_problem.restart"};
+                                                                   "_tria.info",
+                                                                   "_tria_fixed.data",
+                                                                   "_problem.restart"};
 
     number
     compute_current_time() const
@@ -134,7 +134,7 @@ namespace MeltPoolDG::Restart
     const std::function<
       void(std::vector<std::pair<const DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &data)>
-      &                attach_vectors,
+                      &attach_vectors,
     const std::string &prefix)
   {
     std::vector<
@@ -189,10 +189,10 @@ namespace MeltPoolDG::Restart
     const std::function<
       void(std::vector<std::pair<const DoFHandler<dim> *,
                                  std::function<void(std::vector<VectorType *> &)>>> &data)>
-      &                          attach_vectors,
+                                &attach_vectors,
     const std::function<void()> &post,
     const std::function<void()> &setup_dof_system,
-    const std::string &          prefix)
+    const std::string           &prefix)
   {
     std::vector<
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>>

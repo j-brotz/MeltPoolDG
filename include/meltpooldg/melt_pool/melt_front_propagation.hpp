@@ -42,7 +42,7 @@ namespace MeltPoolDG
       const unsigned int flow_vel_dof_idx;
       const unsigned int flow_vel_no_solid_dof_idx;
       const unsigned int temp_hanging_nodes_dof_idx;
-      const VectorType & temperature;
+      const VectorType  &temperature;
 
       /*
        * DoF vectors
@@ -51,10 +51,10 @@ namespace MeltPoolDG
       VectorType liquid;
 
     public:
-      MeltFrontPropagation(const ScratchData<dim> &  scratch_data_in,
+      MeltFrontPropagation(const ScratchData<dim>   &scratch_data_in,
                            const Parameters<double> &data_in,
                            const unsigned int        ls_dof_idx_in,
-                           const VectorType &        temperature,
+                           const VectorType         &temperature,
                            const unsigned int        reinit_dof_idx_in,
                            const unsigned int        reinit_no_solid_dof_idx_in,
                            const unsigned int        flow_vel_dof_idx_in,
@@ -139,9 +139,9 @@ namespace MeltPoolDG
        */
       void
       set_flow_field_in_solid_regions_to_zero(
-        const DoFHandler<dim> &          flow_dof_handler,
+        const DoFHandler<dim>           &flow_dof_handler,
         const AffineConstraints<double> &flow_constraints_no_solid,
-        AffineConstraints<double> &      flow_constraints);
+        AffineConstraints<double>       &flow_constraints);
 
       /**
        *  The reinitialization constraints are modified such that they are zero in solid
@@ -150,9 +150,9 @@ namespace MeltPoolDG
        */
       void
       ignore_reinitialization_in_solid_regions(
-        const DoFHandler<dim> &          level_set_dof_handler,
+        const DoFHandler<dim>           &level_set_dof_handler,
         const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
-        AffineConstraints<double> &      reinit_dirichlet_constraints);
+        AffineConstraints<double>       &reinit_dirichlet_constraints);
     };
   } // namespace MeltPool
 } // namespace MeltPoolDG

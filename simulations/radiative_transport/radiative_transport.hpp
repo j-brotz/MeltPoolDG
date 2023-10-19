@@ -62,7 +62,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   {
   public:
     LevelSetHeaviside(const InterfaceCase interface_case_in,
-                      const Point<dim> &  interface_case_info_in,
+                      const Point<dim>   &interface_case_info_in,
                       const double        epsilon_cell_in)
       : Function<dim>(1)
       , eps(epsilon_cell_in)

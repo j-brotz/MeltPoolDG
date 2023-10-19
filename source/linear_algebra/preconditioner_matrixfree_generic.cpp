@@ -7,10 +7,10 @@ namespace MeltPoolDG::Preconditioner
 {
   template <int dim, typename OperatorType>
   PreconditionerMatrixFreeGeneric<dim, OperatorType>::PreconditionerMatrixFreeGeneric(
-    const ScratchData<dim> &  scratch_data_in,
+    const ScratchData<dim>   &scratch_data_in,
     const unsigned int        dof_idx,
     const PreconditionerType &preconditioner_type_in,
-    const OperatorType &      operator_base_in)
+    const OperatorType       &operator_base_in)
     : scratch_data(scratch_data_in)
     , dof_idx(dof_idx)
     , preconditioner_type(preconditioner_type_in)

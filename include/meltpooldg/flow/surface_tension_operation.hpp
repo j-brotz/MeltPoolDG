@@ -61,9 +61,9 @@ namespace MeltPoolDG::Flow
     const unsigned int flow_pressure_hanging_nodes_dof_idx;
     const unsigned int flow_vel_quad_idx;
 
-    const VectorType *     temperature            = nullptr;
+    const VectorType      *temperature            = nullptr;
     const BlockVectorType *solution_normal_vector = nullptr;
-    const VectorType *     solid                  = nullptr;
+    const VectorType      *solid                  = nullptr;
     unsigned int           temp_dof_idx;
     unsigned int           normal_dof_idx;
     unsigned int           solid_dof_idx;
@@ -77,9 +77,9 @@ namespace MeltPoolDG::Flow
 
   public:
     SurfaceTensionOperation(const SurfaceTensionData<double> &data_in,
-                            const ScratchData<dim> &          scratch_data,
-                            const VectorType &                level_set_as_heaviside,
-                            const VectorType &                solution_curvature,
+                            const ScratchData<dim>           &scratch_data,
+                            const VectorType                 &level_set_as_heaviside,
+                            const VectorType                 &solution_curvature,
                             const unsigned int                ls_dof_idx,
                             const unsigned int                curv_dof_idx,
                             const unsigned int                flow_vel_hanging_nodes_dof_idx,
@@ -94,7 +94,7 @@ namespace MeltPoolDG::Flow
     void
     register_temperature_and_normal_vector(const unsigned int     temp_dof_idx,
                                            const unsigned int     normal_dof_idx,
-                                           const VectorType *     temperature,
+                                           const VectorType      *temperature,
                                            const BlockVectorType *solution_normal_vector);
     /**
      * Registers the solid fraction, given by a DoF vector @p solid and a DoF index @p solid_dof_idx,

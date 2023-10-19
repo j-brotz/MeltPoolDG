@@ -55,24 +55,24 @@ namespace MeltPoolDG::Curvature
     // optional parameters for narrow band
     const bool         do_narrow_band;
     const unsigned int ls_dof_idx;
-    const VectorType * solution_level_set;
+    const VectorType  *solution_level_set;
 
     AlignedVector<VectorizedArray<double>> damping;
 
   public:
-    CurvatureOperator(const ScratchData<dim> &     scratch_data_in,
+    CurvatureOperator(const ScratchData<dim>      &scratch_data_in,
                       const CurvatureData<double> &curvature_data,
                       const unsigned int           curv_dof_idx_in,
                       const unsigned int           curv_quad_idx_in,
                       const unsigned int           normal_dof_idx_in,
                       const unsigned int           ls_dof_idx_in,
                       const bool                   do_narrow_band        = false,
-                      const VectorType *           solution_level_set_in = nullptr);
+                      const VectorType            *solution_level_set_in = nullptr);
 
     void
     assemble_matrixbased(const BlockVectorType &solution_normal_vector_in,
-                         SparseMatrixType &     matrix,
-                         VectorType &           rhs) const final;
+                         SparseMatrixType      &matrix,
+                         VectorType            &rhs) const final;
 
     /*
      *  matrix-free utility

@@ -127,11 +127,11 @@ namespace MeltPoolDG::Heat
 
     // optional: flow velocity for internal convection
     const unsigned int vel_dof_idx;
-    const VectorType * velocity;
+    const VectorType  *velocity;
 
     // optional: level set heaviside field for two phase flow
     const unsigned int ls_dof_idx;
-    const VectorType * level_set_as_heaviside;
+    const VectorType  *level_set_as_heaviside;
 
     // optional: rho times cp
     double rho_cp_gas   = -1;
@@ -142,7 +142,7 @@ namespace MeltPoolDG::Heat
     double conductivity_heavy = -1;
 
     // optional: two phase flow with evaporation
-    VectorType * evaporative_mass_flux      = nullptr;
+    VectorType  *evaporative_mass_flux      = nullptr;
     unsigned int evapor_mass_flux_dof_idx   = 0;
     double       latent_heat_of_evaporation = 0;
     bool         do_phenomenological_recoil_pressure;
@@ -173,23 +173,23 @@ namespace MeltPoolDG::Heat
 
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
-                         const ScratchData<dim> &                        scratch_data_in,
-                         const HeatData<number> &                        data_in,
-                         const Material<number> &                        material,
+                         const ScratchData<dim>                         &scratch_data_in,
+                         const HeatData<number>                         &data_in,
+                         const Material<number>                         &material,
                          const unsigned int                              temp_dof_idx_in,
                          const unsigned int                              temp_quad_idx_in,
                          const unsigned int                              temp_hanging_nodes_dof_idx,
-                         const VectorType &                              temperature_in,
-                         const VectorType &                              temperature_old_in,
-                         const VectorType &                              heat_source_in,
+                         const VectorType                               &temperature_in,
+                         const VectorType                               &temperature_old_in,
+                         const VectorType                               &heat_source_in,
                          const unsigned int                              vel_dof_idx_in = 0,
-                         const VectorType *                              velocity_in    = nullptr,
+                         const VectorType                               *velocity_in    = nullptr,
                          const unsigned int                              ls_dof_idx_in  = 0,
                          const VectorType *level_set_as_heaviside_in                    = nullptr,
                          const bool        do_solidifiaction_in                         = false);
 
     void
-    register_evaporative_mass_flux(VectorType *       evaporative_mass_flux_in,
+    register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
                                    const unsigned int evapor_mass_flux_dof_idx_in,
                                    const double       latent_heat_of_evaporation,
                                    const bool         do_phenomenological_recoil_pressure);
@@ -204,7 +204,7 @@ namespace MeltPoolDG::Heat
     void
     assemble_matrixbased(const VectorType &advected_field_old,
                          SparseMatrixType &matrix,
-                         VectorType &      rhs) const final;
+                         VectorType       &rhs) const final;
 
     void
     update_ghost_values() const;
@@ -218,18 +218,18 @@ namespace MeltPoolDG::Heat
     vmult(VectorType &dst, const VectorType &src /*solution_update*/) const final;
 
     void
-    tangent_cell_loop(const MatrixFree<dim, number> &       matrix_free,
-                      VectorType &                          dst,
-                      const VectorType &                    src,
+    tangent_cell_loop(const MatrixFree<dim, number>        &matrix_free,
+                      VectorType                           &dst,
+                      const VectorType                     &src,
                       std::pair<unsigned int, unsigned int> cell_range) const;
 
     /*
      * compute the tangent of Robin-type boundary conditions for convection and radiation
      */
     void
-    tangent_boundary_loop(const MatrixFree<dim, number> &       matrix_free,
-                          VectorType &                          dst,
-                          const VectorType &                    src,
+    tangent_boundary_loop(const MatrixFree<dim, number>        &matrix_free,
+                          VectorType                           &dst,
+                          const VectorType                     &src,
                           std::pair<unsigned int, unsigned int> face_range) const;
 
     void
@@ -244,9 +244,9 @@ namespace MeltPoolDG::Heat
       TrilinosWrappers::SparseMatrix &system_matrix) const final;
 
     void
-    rhs_cell_loop(const MatrixFree<dim, number> &       matrix_free,
-                  VectorType &                          dst,
-                  const VectorType &                    src, /* temperature_old*/
+    rhs_cell_loop(const MatrixFree<dim, number>        &matrix_free,
+                  VectorType                           &dst,
+                  const VectorType                     &src, /* temperature_old*/
                   std::pair<unsigned int, unsigned int> cell_range) const;
 
     /*
@@ -256,9 +256,9 @@ namespace MeltPoolDG::Heat
      * @todo: add equations
      */
     void
-    rhs_boundary_loop(const MatrixFree<dim, number> &       matrix_free,
-                      VectorType &                          dst,
-                      [[maybe_unused]] const VectorType &   src,
+    rhs_boundary_loop(const MatrixFree<dim, number>        &matrix_free,
+                      VectorType                           &dst,
+                      [[maybe_unused]] const VectorType    &src,
                       std::pair<unsigned int, unsigned int> face_range) const;
 
     void
@@ -296,12 +296,12 @@ namespace MeltPoolDG::Heat
      */
     void
     tangent_local_cell_operation(
-      FECellIntegrator<dim, 1, number> &                       temp_vals,
-      FECellIntegrator<dim, 1, number> &                       temp_lin_vals,
-      FECellIntegrator<dim, 1, number> &                       temp_old_vals,
-      FECellIntegrator<dim, dim, number> &                     velocity_vals,
-      FECellIntegrator<dim, 1, number> &                       ls_vals,
-      FECellIntegrator<dim, 1, number> &                       ls_interpolated_vals,
+      FECellIntegrator<dim, 1, number>                        &temp_vals,
+      FECellIntegrator<dim, 1, number>                        &temp_lin_vals,
+      FECellIntegrator<dim, 1, number>                        &temp_old_vals,
+      FECellIntegrator<dim, dim, number>                      &velocity_vals,
+      FECellIntegrator<dim, 1, number>                        &ls_vals,
+      FECellIntegrator<dim, 1, number>                        &ls_interpolated_vals,
       const std::unique_ptr<FECellIntegrator<dim, 1, number>> &evapor_vals,
       bool                                                     do_reinit_cells) const;
 

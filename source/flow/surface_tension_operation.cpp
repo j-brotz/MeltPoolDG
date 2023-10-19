@@ -6,9 +6,9 @@ namespace MeltPoolDG::Flow
   template <int dim>
   SurfaceTensionOperation<dim>::SurfaceTensionOperation(
     const SurfaceTensionData<double> &data_in,
-    const ScratchData<dim> &          scratch_data,
-    const VectorType &                level_set_as_heaviside,
-    const VectorType &                solution_curvature,
+    const ScratchData<dim>           &scratch_data,
+    const VectorType                 &level_set_as_heaviside,
+    const VectorType                 &solution_curvature,
     const unsigned int                ls_dof_idx,
     const unsigned int                curv_dof_idx,
     const unsigned int                flow_vel_dof_idx,
@@ -52,7 +52,7 @@ namespace MeltPoolDG::Flow
   SurfaceTensionOperation<dim>::register_temperature_and_normal_vector(
     const unsigned int     temp_dof_idx_in,
     const unsigned int     normal_dof_idx_in,
-    const VectorType *     temperature_in,
+    const VectorType      *temperature_in,
     const BlockVectorType *solution_normal_vector_in)
   {
     temp_dof_idx           = temp_dof_idx_in;
@@ -70,7 +70,7 @@ namespace MeltPoolDG::Flow
   template <int dim>
   void
   SurfaceTensionOperation<dim>::register_solid_fraction(const unsigned int solid_dof_idx_in,
-                                                        const VectorType * solid_in)
+                                                        const VectorType  *solid_in)
   {
     solid_dof_idx = solid_dof_idx_in;
     solid         = solid_in;
@@ -98,7 +98,7 @@ namespace MeltPoolDG::Flow
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
-          auto &      force_rhs,
+          auto       &force_rhs,
           const auto &level_set_as_heaviside,
           auto        macro_cells) {
         FECellIntegrator<dim, 1, double> level_set(matrix_free, ls_dof_idx, flow_vel_quad_idx);

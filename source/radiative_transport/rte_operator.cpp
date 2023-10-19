@@ -9,9 +9,9 @@ namespace MeltPoolDG::RadiativeTransport
 {
   template <int dim, typename number>
   RadiativeTransportOperator<dim, number>::RadiativeTransportOperator(
-    const ScratchData<dim> &              scratch_data_in,
+    const ScratchData<dim>               &scratch_data_in,
     const RadiativeTransportData<double> &rte_data_in,
-    const VectorType &                    heaviside_in,
+    const VectorType                     &heaviside_in,
     const unsigned int                    rte_dof_idx_in,
     const unsigned int                    rte_quad_idx_in,
     const unsigned int                    hs_dof_idx_in)
@@ -75,7 +75,7 @@ namespace MeltPoolDG::RadiativeTransport
     system_matrix = 0.0;
 
     // note: not thread safe!!!
-    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> heaviside_vals(matrix_free, hs_dof_idx, rte_quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
@@ -105,7 +105,7 @@ namespace MeltPoolDG::RadiativeTransport
   {
     scratch_data.initialize_dof_vector(diagonal, rte_dof_idx);
     // note: not thread safe!!!
-    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> heaviside_vals(matrix_free, hs_dof_idx, rte_quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;

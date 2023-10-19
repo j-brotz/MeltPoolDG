@@ -6,12 +6,12 @@ namespace MeltPoolDG::Reinitialization
 {
   template <int dim>
   ReinitializationOperationAdaflo<dim>::ReinitializationOperationAdaflo(
-    const ScratchData<dim> &    scratch_data,
+    const ScratchData<dim>     &scratch_data,
     const TimeIterator<double> &time_iterator,
     const int                   reinit_dof_idx,
     const int                   reinit_quad_idx,
     const int                   normal_dof_idx,
-    const Parameters<double> &  parameters)
+    const Parameters<double>   &parameters)
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , pcout(scratch_data.get_pcout(1))

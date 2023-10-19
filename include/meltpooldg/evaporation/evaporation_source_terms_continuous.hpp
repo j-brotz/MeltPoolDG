@@ -23,14 +23,14 @@ namespace MeltPoolDG::Evaporation
   private:
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
-    const ScratchData<dim> &       scratch_data;
+    const ScratchData<dim>        &scratch_data;
     const EvaporationData<double> &evapor_data;
     /**
      * references to solutions needed for the computation
      */
-    const VectorType &     level_set_as_heaviside;
+    const VectorType      &level_set_as_heaviside;
     const BlockVectorType &normal_vector;
-    const VectorType &     evaporative_mass_flux;
+    const VectorType      &evaporative_mass_flux;
     /**
      * select the relevant DoFHandlers and quadrature rules
      */
@@ -59,11 +59,11 @@ namespace MeltPoolDG::Evaporation
 
   public:
     EvaporationSourceTermsContinuous(
-      const ScratchData<dim> &                     scratch_data,
-      const EvaporationData<double> &              evapor_data,
-      const VectorType &                           level_set_as_heaviside,
-      const BlockVectorType &                      normal_vector,
-      const VectorType &                           evaporative_mass_flux,
+      const ScratchData<dim>                      &scratch_data,
+      const EvaporationData<double>               &evapor_data,
+      const VectorType                            &level_set_as_heaviside,
+      const BlockVectorType                       &normal_vector,
+      const VectorType                            &evaporative_mass_flux,
       const unsigned int                           ls_hanging_nodes_dof_idx,
       const unsigned int                           ls_quad_idx,
       const unsigned int                           normal_dof_idx,
@@ -78,13 +78,13 @@ namespace MeltPoolDG::Evaporation
     compute_evaporation_velocity(VectorType &evaporation_velocity) final;
 
     void
-    compute_level_set_source_term(VectorType &       level_set_source_term,
+    compute_level_set_source_term(VectorType        &level_set_source_term,
                                   const unsigned int ls_dof_idx,
-                                  const VectorType & level_set,
+                                  const VectorType  &level_set,
                                   const unsigned int pressure_dof_idx) final;
 
     void
-    compute_mass_balance_source_term(VectorType &       mass_balance_source_term,
+    compute_mass_balance_source_term(VectorType        &mass_balance_source_term,
                                      const unsigned int pressure_dof_idx,
                                      const unsigned int pressure_quad_idx,
                                      bool               zero_out) final;

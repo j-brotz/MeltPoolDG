@@ -8,10 +8,10 @@ namespace MeltPoolDG::Reinitialization
 {
   template <int dim>
   ReinitializationOperation<dim>::ReinitializationOperation(
-    const ScratchData<dim> &            scratch_data_in,
+    const ScratchData<dim>             &scratch_data_in,
     const ReinitializationData<double> &reinit_data,
-    const NormalVectorData<double> &    normal_vec_data,
-    const TimeIterator<double> &        time_iterator,
+    const NormalVectorData<double>     &normal_vec_data,
+    const TimeIterator<double>         &time_iterator,
     const unsigned int                  reinit_dof_idx_in,
     const unsigned int                  reinit_quad_idx_in,
     const unsigned int                  ls_dof_idx_in,

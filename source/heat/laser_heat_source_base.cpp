@@ -28,7 +28,7 @@ namespace MeltPoolDG::Heat
                                                            const ScratchData<dim> &scratch_data,
                                                            const unsigned int heat_source_dof_idx,
                                                            const double       laser_power,
-                                                           const Point<dim> & laser_position,
+                                                           const Point<dim>  &laser_position,
                                                            const bool         zero_out) const
   {
     if (zero_out)
@@ -71,8 +71,8 @@ namespace MeltPoolDG::Heat
                                                             const ScratchData<dim> &scratch_data,
                                                             const unsigned int      temp_dof_idx,
                                                             const double            laser_power,
-                                                            const Point<dim> &      laser_position,
-                                                            const VectorType & level_set_heaviside,
+                                                            const Point<dim>       &laser_position,
+                                                            const VectorType  &level_set_heaviside,
                                                             const unsigned int ls_dof_idx,
                                                             const bool         zero_out,
                                                             const BlockVectorType *normal_vector,
@@ -96,7 +96,7 @@ namespace MeltPoolDG::Heat
         scratch_data.get_dof_handler(temp_dof_idx).get_fe().get_unit_support_points()),
       update_quadrature_points);
 
-    const VectorType *             used_level_set  = &level_set_heaviside;
+    const VectorType              *used_level_set  = &level_set_heaviside;
     unsigned int                   used_ls_dof_idx = ls_dof_idx;
     std::unique_ptr<FEValues<dim>> ls_heaviside_eval;
 
@@ -304,15 +304,15 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   LaserHeatSourceBase<dim>::compute_interfacial_heat_source_sharp(
-    VectorType &            heat_rhs,
+    VectorType             &heat_rhs,
     const ScratchData<dim> &scratch_data,
     const unsigned int      temp_dof_idx,
     const double            laser_power,
-    const Point<dim> &      laser_position,
-    const VectorType &      level_set_heaviside,
+    const Point<dim>       &laser_position,
+    const VectorType       &level_set_heaviside,
     const unsigned int      ls_dof_idx,
     const bool              zero_out,
-    const BlockVectorType * normal_vector,
+    const BlockVectorType  *normal_vector,
     const unsigned int      normal_dof_idx) const
   {
     if (zero_out)

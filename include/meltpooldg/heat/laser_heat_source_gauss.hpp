@@ -38,8 +38,8 @@ namespace MeltPoolDG::Heat
   {
   public:
     LaserHeatSourceGauss(
-      const LaserData<double>::GaussData &               data_in,
-      const TwoPhaseFluidPropertiesTransitionType &      variable_properties_over_interface,
+      const LaserData<double>::GaussData                &data_in,
+      const TwoPhaseFluidPropertiesTransitionType       &variable_properties_over_interface,
       const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
 
     /**
@@ -86,8 +86,8 @@ namespace MeltPoolDG::Heat
      * interface heat source
      */
     double
-    local_compute_interfacial_heat_source(const Point<dim> &            position,
-                                          const Point<dim> &            laser_position,
+    local_compute_interfacial_heat_source(const Point<dim>             &position,
+                                          const Point<dim>             &laser_position,
                                           const double                  power,
                                           const Tensor<1, dim, double> &normal_vector,
                                           const double                  delta_value,

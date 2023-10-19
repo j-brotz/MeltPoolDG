@@ -39,9 +39,9 @@ namespace MeltPoolDG
       using scalar              = VectorizedArray<number>;
 
     public:
-      OlssonOperator(const ScratchData<dim> &            scratch_data_in,
+      OlssonOperator(const ScratchData<dim>             &scratch_data_in,
                      const ReinitializationData<number> &reinit_data_in,
-                     const BlockVectorType &             n_in,
+                     const BlockVectorType              &n_in,
                      const unsigned int                  reinit_dof_idx_in,
                      const unsigned int                  reinit_quad_idx_in,
                      const unsigned int                  ls_dof_idx_in,
@@ -55,7 +55,7 @@ namespace MeltPoolDG
       void
       assemble_matrixbased(const VectorType &levelset_old,
                            SparseMatrixType &matrix,
-                           VectorType &      rhs) const final;
+                           VectorType       &rhs) const final;
 
       /*
        *    matrix-free implementation
@@ -83,9 +83,9 @@ namespace MeltPoolDG
       tangent_local_cell_operation(FECellIntegrator<dim, 1, number> &delta_psi) const;
 
     private:
-      const ScratchData<dim> &            scratch_data;
+      const ScratchData<dim>             &scratch_data;
       const ReinitializationData<number> &reinit_data;
-      const BlockVectorType &             normal_vec;
+      const BlockVectorType              &normal_vec;
       const unsigned int                  reinit_quad_idx;
       const unsigned int                  normal_dof_idx;
       const unsigned int                  ls_dof_idx;

@@ -32,7 +32,6 @@
  * and represents the film boiling example.
  */
 
-
 namespace MeltPoolDG::Simulation::FilmBoiling
 {
   using namespace dealii;

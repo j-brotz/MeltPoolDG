@@ -42,8 +42,8 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<LaserHeatSourceBase<dim>> laser_heat_source_operation;
 
   public:
-    LaserOperation(const ScratchData<dim> &    scratch_data_in,
-                   const LaserData<double> &   laser_data_in,
+    LaserOperation(const ScratchData<dim>     &scratch_data_in,
+                   const LaserData<double>    &laser_data_in,
                    const MaterialData<double> &material_data_in);
 
     /**
@@ -61,9 +61,9 @@ namespace MeltPoolDG::Heat
      * @p level_set_as_heaviside.
      */
     void
-    compute_heat_source(VectorType &           heat_source,
-                        VectorType &           heat_user_rhs,
-                        const VectorType &     level_set_as_heaviside,
+    compute_heat_source(VectorType            &heat_source,
+                        VectorType            &heat_user_rhs,
+                        const VectorType      &level_set_as_heaviside,
                         const unsigned int     ls_dof_idx,
                         const unsigned int     temp_hanging_nodes_dof_idx,
                         const bool             zero_out       = false,

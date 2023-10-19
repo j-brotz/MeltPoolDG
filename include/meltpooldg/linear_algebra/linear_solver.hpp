@@ -27,11 +27,11 @@ namespace MeltPoolDG
               typename OperatorType       = TrilinosWrappers::SparseMatrix,
               typename PreconditionerType = PreconditionIdentity>
     static int
-    solve(const OperatorType &            system_matrix,
-          VectorType &                    solution,
-          const VectorType &              rhs,
+    solve(const OperatorType             &system_matrix,
+          VectorType                     &solution,
+          const VectorType               &rhs,
           const LinearSolverData<double> &data,
-          const PreconditionerType &      preconditioner = PreconditionIdentity())
+          const PreconditionerType       &preconditioner = PreconditionIdentity())
     {
       const bool monitor_history = data.monitor_type != LinearSolverMonitorType::none;
 

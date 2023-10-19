@@ -11,10 +11,10 @@
 namespace MeltPoolDG::MeltPool
 {
   template <int dim>
-  MeltFrontPropagation<dim>::MeltFrontPropagation(const ScratchData<dim> &  scratch_data_in,
+  MeltFrontPropagation<dim>::MeltFrontPropagation(const ScratchData<dim>   &scratch_data_in,
                                                   const Parameters<double> &data_in,
                                                   const unsigned int        ls_dof_idx_in,
-                                                  const VectorType &        temperature,
+                                                  const VectorType         &temperature,
                                                   const unsigned int        reinit_dof_idx_in,
                                                   const unsigned int reinit_no_solid_dof_idx_in,
                                                   const unsigned int flow_vel_dof_idx_in,
@@ -41,7 +41,7 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   MeltFrontPropagation<dim>::set_initial_condition(const VectorType &level_set_as_heaviside,
-                                                   VectorType &      level_set)
+                                                   VectorType       &level_set)
   {
     /*
      *  Compute the initial solid and liquid phases
@@ -230,9 +230,9 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   MeltFrontPropagation<dim>::set_flow_field_in_solid_regions_to_zero(
-    const DoFHandler<dim> &          flow_dof_handler,
+    const DoFHandler<dim>           &flow_dof_handler,
     const AffineConstraints<double> &flow_constraints_no_solid,
-    AffineConstraints<double> &      flow_constraints)
+    AffineConstraints<double>       &flow_constraints)
   {
     solid.update_ghost_values();
 
@@ -298,9 +298,9 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   MeltFrontPropagation<dim>::ignore_reinitialization_in_solid_regions(
-    const DoFHandler<dim> &          level_set_dof_handler,
+    const DoFHandler<dim>           &level_set_dof_handler,
     const AffineConstraints<double> &reinit_dirichlet_constraints_no_solid,
-    AffineConstraints<double> &      reinit_dirichlet_constraints)
+    AffineConstraints<double>       &reinit_dirichlet_constraints)
   {
     reinit_dirichlet_constraints.copy_from(reinit_dirichlet_constraints_no_solid);
 

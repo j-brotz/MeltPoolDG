@@ -50,9 +50,9 @@ namespace MeltPoolDG
       using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
     public:
-      NormalVectorOperation(const ScratchData<dim> &        scratch_data_in,
+      NormalVectorOperation(const ScratchData<dim>         &scratch_data_in,
                             const NormalVectorData<double> &normal_vector_data,
-                            const VectorType &              solution_level_set,
+                            const VectorType               &solution_level_set,
                             const unsigned int              normal_dof_idx_in,
                             const unsigned int              normal_quad_idx_in,
                             const unsigned int              ls_dof_idx_in);
@@ -81,9 +81,9 @@ namespace MeltPoolDG
       create_operator();
 
     private:
-      const ScratchData<dim> &       scratch_data;
+      const ScratchData<dim>        &scratch_data;
       const NormalVectorData<double> normal_vector_data;
-      const VectorType &             solution_level_set;
+      const VectorType              &solution_level_set;
       /*
        *  Based on the following indices the correct DoFHandler or quadrature rule from
        *  ScratchData<dim> object is selected. This is important when ScratchData<dim> holds

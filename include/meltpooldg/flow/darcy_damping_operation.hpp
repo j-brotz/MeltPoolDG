@@ -42,7 +42,7 @@ namespace MeltPoolDG::Flow
 
     const double                                   mushy_zone_morphology;
     const double                                   avoid_div_zero_constant;
-    const ScratchData<dim> &                       scratch_data;
+    const ScratchData<dim>                        &scratch_data;
     const unsigned int                             flow_vel_hanging_nodes_dof_idx;
     const unsigned int                             flow_quad_idx;
     const unsigned int                             solid_dof_idx;
@@ -51,7 +51,7 @@ namespace MeltPoolDG::Flow
 
   public:
     DarcyDampingOperation(const DarcyDampingData<double> &data_in,
-                          const ScratchData<dim> &        scratch_data,
+                          const ScratchData<dim>         &scratch_data,
                           const unsigned int              flow_vel_hanging_nodes_dof_idx,
                           const unsigned int              flow_quad_idx,
                           const unsigned int              solid_dof_idx);
@@ -62,7 +62,7 @@ namespace MeltPoolDG::Flow
      * @note The Darcy damping coefficient is computed based on the @param solid_fraction_vec.
      */
     void
-    compute_darcy_damping(VectorType &      force_rhs,
+    compute_darcy_damping(VectorType       &force_rhs,
                           const VectorType &velocity_vec,
                           const VectorType &solid_fraction_vec,
                           const bool        zero_out = true);
@@ -75,7 +75,7 @@ namespace MeltPoolDG::Flow
      * by get_damping(cell, q) or as a global vector by get_damping_at_q().
      */
     void
-    compute_darcy_damping(VectorType &      force_rhs,
+    compute_darcy_damping(VectorType       &force_rhs,
                           const VectorType &velocity_vec,
                           const bool        zero_out = true);
 

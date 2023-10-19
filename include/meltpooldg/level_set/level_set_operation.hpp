@@ -84,10 +84,10 @@ namespace MeltPoolDG::LevelSet
     std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
 
   public:
-    LevelSetOperation(const ScratchData<dim> &             scratch_data_in,
-                      const TimeIterator<double> &         time_stepping,
+    LevelSetOperation(const ScratchData<dim>              &scratch_data_in,
+                      const TimeIterator<double>          &time_stepping,
                       std::shared_ptr<SimulationBase<dim>> base_in,
-                      const VectorType &                   advection_velocity,
+                      const VectorType                    &advection_velocity,
                       const unsigned int                   ls_dof_idx_in,
                       const unsigned int                   ls_hanging_nodes_dof_idx_in,
                       const unsigned int                   ls_quad_idx_in,

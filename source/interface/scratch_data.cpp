@@ -40,10 +40,10 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   void
   ScratchData<dim, spacedim, number, VectorizedArrayType>::reinit(
-    const Mapping<dim, spacedim> &                        mapping,
+    const Mapping<dim, spacedim>                         &mapping,
     const std::vector<const DoFHandler<dim, spacedim> *> &dof_handler,
     const std::vector<const AffineConstraints<number> *> &constraint,
-    const std::vector<Quadrature<dim>> &                  quad)
+    const std::vector<Quadrature<dim>>                   &quad)
   {
     this->clear();
 
@@ -219,7 +219,7 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   void
   ScratchData<dim, spacedim, number, VectorizedArrayType>::initialize_dof_vector(
-    VectorType &       vec,
+    VectorType        &vec,
     const unsigned int dof_idx) const
   {
     if (do_matrix_free)
@@ -233,7 +233,7 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   void
   ScratchData<dim, spacedim, number, VectorizedArrayType>::initialize_dof_vector(
-    BlockVectorType &  vec,
+    BlockVectorType   &vec,
     const unsigned int dof_idx) const
   {
     vec.reinit(dim);
@@ -244,7 +244,7 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   void
   ScratchData<dim, spacedim, number, VectorizedArrayType>::initialize_bc_vector(
-    VectorType &       vec,
+    VectorType        &vec,
     const unsigned int dof_idx) const
   {
     this->initialize_dof_vector(vec, dof_idx);
@@ -254,7 +254,7 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   void
   ScratchData<dim, spacedim, number, VectorizedArrayType>::initialize_bc_vector(
-    BlockVectorType &  vec,
+    BlockVectorType   &vec,
     const unsigned int dof_idx) const
   {
     vec.reinit(dim);

@@ -18,10 +18,10 @@ namespace MeltPoolDG::PostProcessingTools
   class SliceCreator : public PostProcessorBase<dim>
   {
   private:
-    const GenericDataOut<dim> *        generic_data_out = nullptr;
+    const GenericDataOut<dim>         *generic_data_out = nullptr;
     const Triangulation<dim - 1, dim> &tria_slice;
     const std::vector<std::string>     request_variables;
-    const ParaviewData<double> &       pv_data;
+    const ParaviewData<double>        &pv_data;
 
     // Collect file name and corresponding time step for the pvd-file
     std::vector<std::pair<double, std::string>> times_and_names;
@@ -31,10 +31,10 @@ namespace MeltPoolDG::PostProcessingTools
     /**
      * Constructor.
      */
-    SliceCreator(const GenericDataOut<dim> &        generic_data_out,
+    SliceCreator(const GenericDataOut<dim>         &generic_data_out,
                  const Triangulation<dim - 1, dim> &tria_slice,
                  const std::vector<std::string>     request_variables,
-                 const ParaviewData<double> &       pv_data)
+                 const ParaviewData<double>        &pv_data)
       : generic_data_out(&generic_data_out)
       , tria_slice(tria_slice)
       , request_variables(request_variables)

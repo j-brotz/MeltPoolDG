@@ -95,7 +95,7 @@ namespace MeltPoolDG::MeltPool
   template <typename number>
   RecoilPressureHybridModel<number>::RecoilPressureHybridModel(
     const RecoilPressureData<number> &recoil_data,
-    const MaterialData<number> &      material)
+    const MaterialData<number>       &material)
     : recoil_data(recoil_data)
     , boiling_temperature(material.boiling_temperature)
     , density_coeff(1. / material.first.density - 1. / material.second.density)
@@ -126,7 +126,7 @@ namespace MeltPoolDG::MeltPool
 
 
   template <int dim>
-  RecoilPressureOperation<dim>::RecoilPressureOperation(const ScratchData<dim> &  scratch_data_in,
+  RecoilPressureOperation<dim>::RecoilPressureOperation(const ScratchData<dim>   &scratch_data_in,
                                                         const Parameters<double> &data_in,
                                                         const unsigned int flow_vel_dof_idx_in,
                                                         const unsigned int flow_vel_quad_idx_in,
@@ -172,10 +172,10 @@ namespace MeltPoolDG::MeltPool
   template <int dim>
   void
   RecoilPressureOperation<dim>::compute_recoil_pressure_force(
-    VectorType &       force_rhs,
-    const VectorType & level_set_as_heaviside,
-    const VectorType & temperature,
-    const VectorType & evaporative_mass_flux,
+    VectorType        &force_rhs,
+    const VectorType  &level_set_as_heaviside,
+    const VectorType  &temperature,
+    const VectorType  &evaporative_mass_flux,
     const unsigned int evapor_dof_idx,
     bool               zero_out) const
   {
@@ -185,7 +185,7 @@ namespace MeltPoolDG::MeltPool
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
-          auto &      force_rhs,
+          auto       &force_rhs,
           const auto &level_set_as_heaviside,
           auto        macro_cells) {
         FECellIntegrator<dim, 1, double> level_set(matrix_free, ls_dof_idx, flow_vel_quad_idx);

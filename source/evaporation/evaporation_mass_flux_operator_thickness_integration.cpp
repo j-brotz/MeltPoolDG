@@ -19,9 +19,9 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   EvaporationMassFluxOperatorThicknessIntegration<dim>::
-    EvaporationMassFluxOperatorThicknessIntegration(const ScratchData<dim> &    scratch_data,
+    EvaporationMassFluxOperatorThicknessIntegration(const ScratchData<dim>     &scratch_data,
                                                     const EvaporationModelBase &evaporation_model,
-                                                    const VectorType &     level_set_as_heaviside,
+                                                    const VectorType      &level_set_as_heaviside,
                                                     const BlockVectorType &normal_vector,
                                                     const double           constant_epsilon,
                                                     const double           eps_scale_factor,
@@ -49,7 +49,7 @@ namespace MeltPoolDG::Evaporation
   template <int dim>
   void
   EvaporationMassFluxOperatorThicknessIntegration<dim>::compute_evaporative_mass_flux(
-    VectorType &      evaporative_mass_flux,
+    VectorType       &evaporative_mass_flux,
     const VectorType &temperature) const
   {
     Assert(dim > 1, ExcMessage("The requested operation can only be performed for dim>1."));

@@ -40,11 +40,11 @@ namespace MeltPoolDG::Evaporation
 
   public:
     IncompressibleNewtonianFluidEvaporationMaterial(
-      const ScratchData<dim> &                                                   scratch_data,
+      const ScratchData<dim>                                                    &scratch_data,
       const std::function<const VectorizedArray<number> &(const unsigned int cell,
                                                           const unsigned int q)> get_viscosity,
-      const BlockVectorType &                                                    normal_vector,
-      const VectorType &                                                         heaviside,
+      const BlockVectorType                                                     &normal_vector,
+      const VectorType                                                          &heaviside,
       const unsigned int                                                         normal_dof_idx,
       const unsigned int ls_hanging_nodes_dof_idx,
       const unsigned int velocity_quad_idx)
@@ -178,8 +178,8 @@ namespace MeltPoolDG::Evaporation
     const std::function<const VectorizedArray<number> &(const unsigned int cell,
                                                         const unsigned int q)>
                                        get_viscosity;
-    const BlockVectorType &            normal_vector;
-    const VectorType &                 heaviside;
+    const BlockVectorType             &normal_vector;
+    const VectorType                  &heaviside;
     const unsigned int                 normal_dof_idx;
     const unsigned int                 ls_hanging_nodes_dof_idx;
     const unsigned int                 velocity_quad_idx;

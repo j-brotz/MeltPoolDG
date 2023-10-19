@@ -9,8 +9,8 @@ namespace MeltPoolDG::Journal
 
   void
   print_line(const ConditionalOStream &pcout,
-             const std::string &       text,
-             const std::string &       operation_name,
+             const std::string        &text,
+             const std::string        &operation_name,
              const unsigned int        extra_size)
   {
     std::ostringstream str;
@@ -23,10 +23,10 @@ namespace MeltPoolDG::Journal
   void
   print_formatted_norm(const ConditionalOStream &pcout,
                        const double              norm_value,
-                       const std::string &       norm_id,
-                       const std::string &       operation_name,
+                       const std::string        &norm_id,
+                       const std::string        &operation_name,
                        const unsigned int        precision,
-                       const std::string &       norm_suffix,
+                       const std::string        &norm_suffix,
                        const unsigned int        extra_size)
   {
     std::ostringstream str;
@@ -37,12 +37,12 @@ namespace MeltPoolDG::Journal
   }
 
   void
-  print_formatted_norm(const ConditionalOStream &     pcout,
+  print_formatted_norm(const ConditionalOStream      &pcout,
                        const std::function<double()> &compute_norm,
-                       const std::string &            norm_id,
-                       const std::string &            operation_name,
+                       const std::string             &norm_id,
+                       const std::string             &operation_name,
                        const unsigned int             precision,
-                       const std::string &            norm_suffix,
+                       const std::string             &norm_suffix,
                        const unsigned int             extra_size)
   {
     if (pcout.now() == false)

@@ -32,9 +32,9 @@ namespace MeltPoolDG::AdvectionDiffusion
     /**
      * Constructor.
      */
-    AdvectionDiffusionOperationAdaflo(const ScratchData<dim> &    scratch_data,
+    AdvectionDiffusionOperationAdaflo(const ScratchData<dim>     &scratch_data,
                                       const TimeIterator<double> &time_iterator,
-                                      const VectorType &          advection_velocity,
+                                      const VectorType           &advection_velocity,
                                       const int                   advec_diff_zero_dirichlet_dof_idx,
                                       const int                   advec_diff_dirichlet_dof_idx,
                                       const int                   advec_diff_quad_idx,
@@ -100,8 +100,8 @@ namespace MeltPoolDG::AdvectionDiffusion
     void
     initialize_vectors();
 
-    const ScratchData<dim> &                          scratch_data;
-    const TimeIterator<double> &                      time_iterator;
+    const ScratchData<dim>                           &scratch_data;
+    const TimeIterator<double>                       &time_iterator;
     const LinearAlgebra::distributed::Vector<double> &advection_velocity;
     /**
      *  advected field

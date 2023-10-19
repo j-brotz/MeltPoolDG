@@ -10,12 +10,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: DoozyX/clang-format-lint-action@v0.16
+    - uses: DoozyX/clang-format-lint-action@v0.16.2
       with:
         source: '.'
         exclude: ''
-        extensions: 'hpp,cpp'
-        clangFormatVersion: 11
+        extensions: 'hpp,cpp,cc'
+        clangFormatVersion: 16
         inplace: true
     - name: code-formatting
       run: |

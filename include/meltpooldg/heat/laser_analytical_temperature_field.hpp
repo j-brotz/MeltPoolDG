@@ -20,14 +20,14 @@ namespace MeltPoolDG::Heat
   {
   public:
     static void
-    compute_temperature_field(const ScratchData<dim> &                 scratch_data,
-                              const MaterialData<double> &             material,
+    compute_temperature_field(const ScratchData<dim>                  &scratch_data,
+                              const MaterialData<double>              &material,
                               const LaserData<double>::AnalyticalData &laser_data,
                               const double                             scan_speed,
                               const double                             laser_power,
-                              const Point<dim> &                       laser_position,
-                              VectorType &                             temperature,
-                              const VectorType &                       level_set_as_heaviside,
+                              const Point<dim>                        &laser_position,
+                              VectorType                              &temperature,
+                              const VectorType                        &level_set_as_heaviside,
                               const unsigned int                       temp_dof_idx);
 
   private:
@@ -38,12 +38,12 @@ namespace MeltPoolDG::Heat
      *  H. Garmestani and S. Y. Liang.
      */
     static double
-    local_compute_temperature_field(const MaterialData<double> &             material,
+    local_compute_temperature_field(const MaterialData<double>              &material,
                                     const LaserData<double>::AnalyticalData &laser_data,
-                                    const Point<dim> &                       point,
+                                    const Point<dim>                        &point,
                                     const double                             heaviside,
                                     const double                             scan_speed,
                                     const double                             laser_power,
-                                    const Point<dim> &                       laser_position);
+                                    const Point<dim>                        &laser_position);
   };
 } // namespace MeltPoolDG::Heat

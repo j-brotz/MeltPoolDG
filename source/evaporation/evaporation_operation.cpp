@@ -22,10 +22,10 @@ namespace MeltPoolDG::Evaporation
 {
   template <int dim>
   EvaporationOperation<dim>::EvaporationOperation(const ScratchData<dim> &scratch_data_in,
-                                                  const VectorType &      level_set_as_heaviside_in,
-                                                  const BlockVectorType & normal_vector_in,
+                                                  const VectorType       &level_set_as_heaviside_in,
+                                                  const BlockVectorType  &normal_vector_in,
                                                   const EvaporationData<double> &evapor_data,
-                                                  const MaterialData<double> &   material_data,
+                                                  const MaterialData<double>    &material_data,
                                                   const unsigned int             normal_dof_idx_in,
                                                   const unsigned int evapor_vel_dof_idx_in,
                                                   const unsigned int evapor_mass_flux_dof_idx_in,
@@ -109,10 +109,10 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationOperation<dim>::reinit(const VectorType *                temperature_in,
-                                    const VectorType &                distance,
+  EvaporationOperation<dim>::reinit(const VectorType                 *temperature_in,
+                                    const VectorType                 &distance,
                                     const RecoilPressureData<double> &recoil_data,
-                                    const NearestPointData<double> &  nearest_point_data,
+                                    const NearestPointData<double>   &nearest_point_data,
                                     const double                      constant_epsilon,
                                     const double                      scale_factor_epsilon,
                                     const unsigned int                temp_dof_idx_in)
@@ -219,9 +219,9 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationOperation<dim>::compute_level_set_source_term(VectorType &       ls_rhs,
+  EvaporationOperation<dim>::compute_level_set_source_term(VectorType        &ls_rhs,
                                                            const unsigned int ls_dof_idx,
-                                                           const VectorType & level_set,
+                                                           const VectorType  &level_set,
                                                            const unsigned int pressure_dof_idx)
   {
     evapor_source_terms_operator->compute_level_set_source_term(ls_rhs,
@@ -232,7 +232,7 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationOperation<dim>::compute_mass_balance_source_term(VectorType &       mass_balance_rhs,
+  EvaporationOperation<dim>::compute_mass_balance_source_term(VectorType        &mass_balance_rhs,
                                                               const unsigned int pressure_dof_idx,
                                                               const unsigned int pressure_quad_idx,
                                                               bool               zero_out)

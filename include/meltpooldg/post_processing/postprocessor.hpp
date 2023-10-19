@@ -34,8 +34,8 @@ namespace MeltPoolDG
 
     const MPI_Comm              mpi_communicator;
     const ParaviewData<double> &pv_data;
-    const Mapping<dim> &        mapping;
-    const Triangulation<dim> &  triangulation;
+    const Mapping<dim>         &mapping;
+    const Triangulation<dim>   &triangulation;
     const ConditionalOStream    pcout;
     const bool                  do_simplex;
     const double                end_time;
@@ -49,18 +49,18 @@ namespace MeltPoolDG
 
   public:
     Postprocessor(const MPI_Comm                  mpi_communicator_in,
-                  const ParaviewData<double> &    pv_data_in,
+                  const ParaviewData<double>     &pv_data_in,
                   const TimeSteppingData<double> &time_data,
-                  const Mapping<dim> &            mapping_in,
-                  const Triangulation<dim> &      triangulation_in,
-                  const ConditionalOStream &      pcout_in);
+                  const Mapping<dim>             &mapping_in,
+                  const Triangulation<dim>       &triangulation_in,
+                  const ConditionalOStream       &pcout_in);
 
     /**
      *  This function collects and performs all relevant postprocessing steps.
      */
     void
     process(const int                    n_time_step,
-            const GenericDataOut<dim> &  generic_data_out,
+            const GenericDataOut<dim>   &generic_data_out,
             const double                 time           = -1.0,
             const bool                   force_output   = false,
             const std::function<void()> &post_operation = {});
@@ -72,7 +72,7 @@ namespace MeltPoolDG
     process(const int                                         n_time_step,
             const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
             const double                                      time           = -1.0,
-            const std::function<void()> &                     post_operation = {});
+            const std::function<void()>                      &post_operation = {});
 
     /**
      * Determines whether postprocessing should be performed now.
@@ -113,19 +113,19 @@ namespace MeltPoolDG
      */
     void
     compute_error(const int              n_q_points,
-                  const VectorType &     approximate_solution,
-                  const Function<dim> &  ExactSolution,
+                  const VectorType      &approximate_solution,
+                  const Function<dim>   &ExactSolution,
                   const DoFHandler<dim> &dof_handler,
-                  const Mapping<dim> &   mapping);
+                  const Mapping<dim>    &mapping);
 
     std::vector<double>
     compute_volume_of_phases(const int              degree,
                              const int              n_q_points,
                              const DoFHandler<dim> &dof_handler,
-                             const VectorType &     solution_levelset,
+                             const VectorType      &solution_levelset,
                              const double           time,
-                             const MPI_Comm &       mpi_communicator,
-                             TableHandler &         volume_table,
+                             const MPI_Comm        &mpi_communicator,
+                             TableHandler          &volume_table,
                              const double           max_value = 1,
                              const double           min_value = -1.0);
   };

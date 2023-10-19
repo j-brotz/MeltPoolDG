@@ -50,7 +50,7 @@ namespace MeltPoolDG::Evaporation
     /**
      * references to solutions needed for the computation
      */
-    const VectorType &     level_set_as_heaviside;
+    const VectorType      &level_set_as_heaviside;
     const BlockVectorType &normal_vector;
     /**
      * select the relevant DoFHandlers and quadrature rules
@@ -90,11 +90,11 @@ namespace MeltPoolDG::Evaporation
     std::shared_ptr<EvaporationSourceTermsBase<dim>>      evapor_source_terms_operator;
 
   public:
-    EvaporationOperation(const ScratchData<dim> &       scratch_data_in,
-                         const VectorType &             level_set_as_heaviside_in,
-                         const BlockVectorType &        normal_vector_in,
+    EvaporationOperation(const ScratchData<dim>        &scratch_data_in,
+                         const VectorType              &level_set_as_heaviside_in,
+                         const BlockVectorType         &normal_vector_in,
                          const EvaporationData<double> &evapor_data,
-                         const MaterialData<double> &   material_data,
+                         const MaterialData<double>    &material_data,
                          const unsigned int             normal_dof_idx_in,
                          const unsigned int             evapor_vel_dof_idx_in,
                          const unsigned int             evapor_mass_flux_dof_idx_in,
@@ -106,10 +106,10 @@ namespace MeltPoolDG::Evaporation
      * Configure the evaporation operation with temperature dependence.
      */
     void
-    reinit(const VectorType *                temperature_in,
-           const VectorType &                distance,
+    reinit(const VectorType                 *temperature_in,
+           const VectorType                 &distance,
            const RecoilPressureData<double> &recoil_data,
-           const NearestPointData<double> &  nearest_point_data,
+           const NearestPointData<double>   &nearest_point_data,
            const double                      constant_epsilon,
            const double                      scale_factor_epsilon,
            const unsigned int                temp_dof_idx_in);
@@ -125,13 +125,13 @@ namespace MeltPoolDG::Evaporation
     compute_evaporation_velocity();
 
     void
-    compute_level_set_source_term(VectorType &       rhs,
+    compute_level_set_source_term(VectorType        &rhs,
                                   const unsigned int ls_dof_idx,
-                                  const VectorType & level_set,
+                                  const VectorType  &level_set,
                                   const unsigned int pressure_dof_idx);
 
     void
-    compute_mass_balance_source_term(VectorType &       mass_balance_rhs,
+    compute_mass_balance_source_term(VectorType        &mass_balance_rhs,
                                      const unsigned int pressure_dof_idx,
                                      const unsigned int pressure_quad_idx,
                                      bool               zero_out);

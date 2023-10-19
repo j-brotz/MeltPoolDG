@@ -120,7 +120,7 @@ namespace MeltPoolDG
      */
     template <typename value_type>
     inline MaterialParameterValues<value_type>
-    compute_parameters(const value_type &                              v,
+    compute_parameters(const value_type                               &v,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const;
 
     /**
@@ -129,8 +129,8 @@ namespace MeltPoolDG
      */
     template <typename value_type>
     inline MaterialParameterValues<value_type>
-    compute_parameters(const value_type &                              level_set_heaviside,
-                       const value_type &                              temperature,
+    compute_parameters(const value_type                               &level_set_heaviside,
+                       const value_type                               &temperature,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags) const;
 
     /**
@@ -156,8 +156,8 @@ namespace MeltPoolDG
      */
     template <typename value_type, int dim>
     inline MaterialParameterValues<value_type>
-    compute_parameters(const FECellIntegrator<dim, 1, number> &        level_set_heaviside_val,
-                       const FECellIntegrator<dim, 1, number> &        temperature_val,
+    compute_parameters(const FECellIntegrator<dim, 1, number>         &level_set_heaviside_val,
+                       const FECellIntegrator<dim, 1, number>         &temperature_val,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags,
                        const unsigned int                              q_index) const;
 
@@ -167,8 +167,8 @@ namespace MeltPoolDG
      */
     template <typename value_type>
     inline MaterialParameterValues<value_type>
-    compute_parameters_internal(const value_type &                              v1,
-                                const value_type &                              v2,
+    compute_parameters_internal(const value_type                               &v1,
+                                const value_type                               &v2,
                                 const MaterialUpdateFlags::MaterialUpdateFlags &flags) const;
 
     /**

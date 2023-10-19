@@ -16,10 +16,10 @@ namespace MeltPoolDG::AdvectionDiffusion
 {
   template <int dim>
   AdvectionDiffusionOperation<dim>::AdvectionDiffusionOperation(
-    const ScratchData<dim> &              scratch_data_in,
+    const ScratchData<dim>               &scratch_data_in,
     const AdvectionDiffusionData<double> &advec_diff_data_in,
-    const TimeIterator<double> &          time_iterator,
-    const VectorType &                    advection_velocity,
+    const TimeIterator<double>           &time_iterator,
+    const VectorType                     &advection_velocity,
     const unsigned int                    advec_diff_dof_idx_in,
     const unsigned int                    advec_diff_hanging_nodes_dof_idx_in,
     const unsigned int                    advec_diff_quad_idx_in,

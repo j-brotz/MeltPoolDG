@@ -30,10 +30,10 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const ScratchData<dim> &    scratch_data;
+    const ScratchData<dim>     &scratch_data;
     const EvaporationModelBase &evaporation_model;
 
-    const VectorType &     level_set_as_heaviside;
+    const VectorType      &level_set_as_heaviside;
     const BlockVectorType &normal_vector;
 
     const double constant_epsilon;
@@ -50,9 +50,9 @@ namespace MeltPoolDG::Evaporation
     const unsigned int n_subdivisions_MCA;
 
   public:
-    EvaporationMassFluxOperatorThicknessIntegration(const ScratchData<dim> &    scratch_data,
+    EvaporationMassFluxOperatorThicknessIntegration(const ScratchData<dim>     &scratch_data,
                                                     const EvaporationModelBase &evaporation_model,
-                                                    const VectorType &     level_set_as_heaviside,
+                                                    const VectorType      &level_set_as_heaviside,
                                                     const BlockVectorType &normal_vector,
                                                     const double           constant_epsilon,
                                                     const double           eps_scale_factor,
@@ -76,7 +76,7 @@ namespace MeltPoolDG::Evaporation
      *                          Г
      */
     void
-    compute_evaporative_mass_flux(VectorType &      evaporative_mass_flux,
+    compute_evaporative_mass_flux(VectorType       &evaporative_mass_flux,
                                   const VectorType &temperature) const final;
   };
 } // namespace MeltPoolDG::Evaporation

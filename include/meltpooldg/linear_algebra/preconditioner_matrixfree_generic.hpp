@@ -48,10 +48,10 @@ namespace MeltPoolDG::Preconditioner
     TrilinosWrappers::SparseMatrix preconditioner_system_matrix;
 
   public:
-    PreconditionerMatrixFreeGeneric(const ScratchData<dim> &  scratch_data_in,
+    PreconditionerMatrixFreeGeneric(const ScratchData<dim>   &scratch_data_in,
                                     const unsigned int        curv_dof_idx_in,
                                     const PreconditionerType &preconditioner_type_in,
-                                    const OperatorType &      operator_base_in);
+                                    const OperatorType       &operator_base_in);
 
     /*
      * setup sparsity pattern of the preconditioner_system_matrix if needed

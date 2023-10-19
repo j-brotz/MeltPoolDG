@@ -126,7 +126,7 @@ namespace MeltPoolDG
     distribute_dofs(const bool         do_simplex,
                     const unsigned int degree,
                     const unsigned int n_subdivisions,
-                    DoFHandler<dim> &  dof_handler)
+                    DoFHandler<dim>   &dof_handler)
     {
       if (do_simplex)
         {
@@ -337,8 +337,8 @@ namespace MeltPoolDG
     template <int dim, typename vector>
     void
     generate_points_along_vector(std::vector<Point<dim>> &points_normal_to_interface,
-                                 const Point<dim> &       starting_point,
-                                 const vector &           unit_vec,
+                                 const Point<dim>        &starting_point,
+                                 const vector            &unit_vec,
                                  const double             max_distance_per_side,
                                  const unsigned int       n_inc_per_side,
                                  const bool               bidirectional = true)
@@ -371,7 +371,7 @@ namespace MeltPoolDG
     template <int dim>
     double
     compute_numerical_zero_of_norm(const Triangulation<dim> &triangulation,
-                                   const Mapping<dim> &      mapping)
+                                   const Mapping<dim>       &mapping)
     {
       return std::min(1e-2,
                       std::max(std::pow(10,
@@ -401,7 +401,7 @@ namespace MeltPoolDG
     void
     compute_linear_predictor(const VectorType &old_vec,
                              const VectorType &old_old_vec,
-                             VectorType &      predictor,
+                             VectorType       &predictor,
                              const double      current_time_increment,
                              const double      old_time_increment)
     {
@@ -523,7 +523,7 @@ namespace MeltPoolDG
     compute_gradient_at_interpolated_dof_values(
       FECellIntegrator<dim, 1, double> &values,
       FECellIntegrator<dim, 1, double> &interpolated_values,
-      const FullMatrix<double> &        interpolation_matrix)
+      const FullMatrix<double>         &interpolation_matrix)
     {
       // Evaluate the field Φ at the support points of its space j
       values.evaluate(EvaluationFlags::values);

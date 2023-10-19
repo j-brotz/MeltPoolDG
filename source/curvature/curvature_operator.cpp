@@ -6,7 +6,7 @@
 namespace MeltPoolDG::Curvature
 {
   template <int dim, typename number>
-  CurvatureOperator<dim, number>::CurvatureOperator(const ScratchData<dim> &     scratch_data_in,
+  CurvatureOperator<dim, number>::CurvatureOperator(const ScratchData<dim>      &scratch_data_in,
                                                     const CurvatureData<double> &curvature_data_in,
                                                     const unsigned int           curv_dof_idx_in,
                                                     const unsigned int           curv_quad_idx_in,
@@ -41,8 +41,8 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperator<dim, number>::assemble_matrixbased(
     const CurvatureOperator::BlockVectorType &solution_normal_vector_in,
-    CurvatureOperator::SparseMatrixType &     matrix,
-    VectorType &                              rhs) const
+    CurvatureOperator::SparseMatrixType      &matrix,
+    VectorType                               &rhs) const
   {
     BlockVectorType unit_normal(solution_normal_vector_in);
 
@@ -182,7 +182,7 @@ namespace MeltPoolDG::Curvature
 
   template <int dim, typename number>
   void
-  CurvatureOperator<dim, number>::create_rhs(VectorType &                              dst,
+  CurvatureOperator<dim, number>::create_rhs(VectorType                               &dst,
                                              const CurvatureOperator::BlockVectorType &src) const
   {
     scratch_data.get_matrix_free().template cell_loop<VectorType, BlockVectorType>(
@@ -263,7 +263,7 @@ namespace MeltPoolDG::Curvature
       solution_level_set->update_ghost_values();
 
     // note: not thread safe!!!
-    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
@@ -296,7 +296,7 @@ namespace MeltPoolDG::Curvature
   {
     scratch_data.initialize_dof_vector(diagonal, curv_dof_idx);
     // note: not thread safe!!!
-    const auto &                     matrix_free = scratch_data.get_matrix_free();
+    const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, curv_quad_idx);
 
     unsigned int old_cell_index = numbers::invalid_unsigned_int;

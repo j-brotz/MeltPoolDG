@@ -7,11 +7,11 @@ namespace MeltPoolDG
 {
   template <int dim>
   Postprocessor<dim>::Postprocessor(const MPI_Comm                  mpi_communicator_in,
-                                    const ParaviewData<double> &    pv_data_in,
+                                    const ParaviewData<double>     &pv_data_in,
                                     const TimeSteppingData<double> &time_data,
-                                    const Mapping<dim> &            mapping_in,
-                                    const Triangulation<dim> &      triangulation_in,
-                                    const ConditionalOStream &      pcout_in)
+                                    const Mapping<dim>             &mapping_in,
+                                    const Triangulation<dim>       &triangulation_in,
+                                    const ConditionalOStream       &pcout_in)
     : mpi_communicator(mpi_communicator_in)
     , pv_data(pv_data_in)
     , mapping(mapping_in)
@@ -36,7 +36,7 @@ namespace MeltPoolDG
   template <int dim>
   void
   Postprocessor<dim>::process(const int                    n_time_step,
-                              const GenericDataOut<dim> &  data_out,
+                              const GenericDataOut<dim>   &data_out,
                               const double                 time,
                               const bool                   force_output,
                               const std::function<void()> &post_operation)
@@ -67,7 +67,7 @@ namespace MeltPoolDG
     const int                                         n_time_step,
     const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
     const double                                      time,
-    const std::function<void()> &                     post_operation)
+    const std::function<void()>                      &post_operation)
   {
     if (now(n_time_step, time))
       {
@@ -115,7 +115,7 @@ namespace MeltPoolDG
 
     if (pv_data.output_subdomains)
       {
-        const auto &   tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
+        const auto    &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
         Vector<double> subdomains(tria.n_active_cells());
         subdomains = Utilities::MPI::this_mpi_process(mpi_communicator);
 
@@ -208,10 +208,10 @@ namespace MeltPoolDG
   template <int dim>
   void
   Postprocessor<dim>::compute_error(const int              n_q_points,
-                                    const VectorType &     approximate_solution,
-                                    const Function<dim> &  ExactSolution,
+                                    const VectorType      &approximate_solution,
+                                    const Function<dim>   &ExactSolution,
                                     const DoFHandler<dim> &dof_handler,
-                                    const Mapping<dim> &   mapping)
+                                    const Mapping<dim>    &mapping)
   {
     const auto &triangulation = dof_handler.get_triangulation();
 
@@ -251,10 +251,10 @@ namespace MeltPoolDG
   Postprocessor<dim>::compute_volume_of_phases(const int              degree,
                                                const int              n_q_points,
                                                const DoFHandler<dim> &dof_handler,
-                                               const VectorType &     solution_levelset,
+                                               const VectorType      &solution_levelset,
                                                const double           time,
-                                               const MPI_Comm &       mpi_communicator,
-                                               TableHandler &         volume_table,
+                                               const MPI_Comm        &mpi_communicator,
+                                               TableHandler          &volume_table,
                                                const double           max_value,
                                                const double           min_value)
   {

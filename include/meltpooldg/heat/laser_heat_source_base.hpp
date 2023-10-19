@@ -26,26 +26,26 @@ namespace MeltPoolDG::Heat
      * Compute a DoF vector of the volumetric heat source.
      */
     void
-    compute_volumetric_heat_source(VectorType &            heat_source_vector,
+    compute_volumetric_heat_source(VectorType             &heat_source_vector,
                                    const ScratchData<dim> &scratch_data,
                                    const unsigned int      temp_dof_idx,
                                    const double            laser_power,
-                                   const Point<dim> &      laser_position,
+                                   const Point<dim>       &laser_position,
                                    const bool              zero_out = true) const;
 
     /**
      * Compute a DoF vector of the interfacial heat source.
      */
     void
-    compute_interfacial_heat_source(VectorType &            heat_source_vector,
+    compute_interfacial_heat_source(VectorType             &heat_source_vector,
                                     const ScratchData<dim> &scratch_data,
                                     const unsigned int      temp_dof_idx,
                                     const double            laser_power,
-                                    const Point<dim> &      laser_position,
-                                    const VectorType &      level_set_heaviside,
+                                    const Point<dim>       &laser_position,
+                                    const VectorType       &level_set_heaviside,
                                     const unsigned int      ls_dof_idx,
                                     const bool              zero_out       = true,
-                                    const BlockVectorType * normal_vector  = nullptr,
+                                    const BlockVectorType  *normal_vector  = nullptr,
                                     const unsigned int      normal_dof_idx = 0) const;
 
     /**
@@ -53,15 +53,15 @@ namespace MeltPoolDG::Heat
      * integral.
      */
     void
-    compute_interfacial_heat_source_sharp(VectorType &            heat_rhs,
+    compute_interfacial_heat_source_sharp(VectorType             &heat_rhs,
                                           const ScratchData<dim> &scratch_data,
                                           const unsigned int      temp_dof_idx,
                                           const double            laser_power,
-                                          const Point<dim> &      laser_position,
-                                          const VectorType &      level_set_heaviside,
+                                          const Point<dim>       &laser_position,
+                                          const VectorType       &level_set_heaviside,
                                           const unsigned int      ls_dof_idx,
                                           const bool              zero_out       = true,
-                                          const BlockVectorType * normal_vector  = nullptr,
+                                          const BlockVectorType  *normal_vector  = nullptr,
                                           const unsigned int      normal_dof_idx = 0) const;
 
   private:
@@ -78,8 +78,8 @@ namespace MeltPoolDG::Heat
      * For the sharp interfacial heat source, set @p delta_value to 1.
      */
     virtual double
-    local_compute_interfacial_heat_source(const Point<dim> &            position,
-                                          const Point<dim> &            laser_position,
+    local_compute_interfacial_heat_source(const Point<dim>             &position,
+                                          const Point<dim>             &laser_position,
                                           const double                  power,
                                           const Tensor<1, dim, double> &normal_vector,
                                           const double                  delta_value,

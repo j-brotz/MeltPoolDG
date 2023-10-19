@@ -3,7 +3,7 @@
 namespace MeltPoolDG
 {
   template <int dim>
-  GenericDataOut<dim>::GenericDataOut(const Mapping<dim> &           mapping,
+  GenericDataOut<dim>::GenericDataOut(const Mapping<dim>            &mapping,
                                       const double                   current_time,
                                       const std::vector<std::string> req_vars)
     : mapping(mapping)
@@ -15,8 +15,8 @@ namespace MeltPoolDG
   template <int dim>
   void
   GenericDataOut<dim>::add_data_vector(
-    const DoFHandler<dim> &         dof_handler,
-    const VectorType &              data,
+    const DoFHandler<dim>          &dof_handler,
+    const VectorType               &data,
     const std::vector<std::string> &names,
     const std::vector<DataComponentInterpretation::DataComponentInterpretation>
       &data_component_interpretation)
@@ -31,8 +31,8 @@ namespace MeltPoolDG
   template <int dim>
   void
   GenericDataOut<dim>::add_data_vector(const DoFHandler<dim> &dof_handler,
-                                       const VectorType &     data,
-                                       const std::string &    name)
+                                       const VectorType      &data,
+                                       const std::string     &name)
   {
     if (!is_requested(name))
       return;

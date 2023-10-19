@@ -16,19 +16,19 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   HeatTransferOperator<dim, number>::HeatTransferOperator(
     const std::shared_ptr<BoundaryConditions<dim>> &bc,
-    const ScratchData<dim> &                        scratch_data_in,
-    const HeatData<number> &                        data_in,
-    const Material<number> &                        material,
+    const ScratchData<dim>                         &scratch_data_in,
+    const HeatData<number>                         &data_in,
+    const Material<number>                         &material,
     const unsigned int                              temp_dof_idx_in,
     const unsigned int                              temp_quad_idx_in,
     const unsigned int                              temp_hanging_nodes_dof_idx_in,
-    const VectorType &                              temperature_in,
-    const VectorType &                              temperature_old_in,
-    const VectorType &                              heat_source_in,
+    const VectorType                               &temperature_in,
+    const VectorType                               &temperature_old_in,
+    const VectorType                               &heat_source_in,
     const unsigned int                              vel_dof_idx_in,
-    const VectorType *                              velocity_in,
+    const VectorType                               *velocity_in,
     const unsigned int                              ls_dof_idx_in,
-    const VectorType *                              level_set_as_heaviside_in,
+    const VectorType                               *level_set_as_heaviside_in,
     const bool                                      do_solidification_in)
     : scratch_data(scratch_data_in)
     , data(data_in)
@@ -117,7 +117,7 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::register_evaporative_mass_flux(
-    VectorType *       evaporative_mass_flux_in,
+    VectorType        *evaporative_mass_flux_in,
     const unsigned int evapor_mass_flux_dof_idx_in,
     const double       latent_heat_of_evaporation_in,
     const bool         do_phenomenological_recoil_pressure_in)
@@ -157,9 +157,9 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::assemble_matrixbased(
-    [[maybe_unused]] const VectorType &                      advected_field_old,
+    [[maybe_unused]] const VectorType                       &advected_field_old,
     [[maybe_unused]] HeatTransferOperator::SparseMatrixType &matrix,
-    [[maybe_unused]] VectorType &                            rhs) const
+    [[maybe_unused]] VectorType                             &rhs) const
   {
     AssertThrow(false, ExcNotImplemented());
   }
@@ -202,7 +202,7 @@ namespace MeltPoolDG::Heat
         tangent_cell_loop(matrix_free, dst, src, cell_range);
       }, // cell loop
       [&]([[maybe_unused]] const auto &matrix_free,
-          [[maybe_unused]] auto &      dst,
+          [[maybe_unused]] auto       &dst,
           [[maybe_unused]] const auto &src,
           [[maybe_unused]] auto        face_range) { /*do nothing*/ }, // internal face loop
       [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
@@ -216,9 +216,9 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::tangent_cell_loop(
-    const MatrixFree<dim, number> &       matrix_free,
-    VectorType &                          dst,
-    const VectorType &                    src,
+    const MatrixFree<dim, number>        &matrix_free,
+    VectorType                           &dst,
+    const VectorType                     &src,
     std::pair<unsigned int, unsigned int> cell_range) const
   {
     FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, temp_quad_idx);
@@ -259,9 +259,9 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::tangent_boundary_loop(
-    const MatrixFree<dim, number> &       matrix_free,
-    VectorType &                          dst,
-    const VectorType &                    src,
+    const MatrixFree<dim, number>        &matrix_free,
+    VectorType                           &dst,
+    const VectorType                     &src,
     std::pair<unsigned int, unsigned int> face_range) const
   {
     FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
@@ -292,7 +292,7 @@ namespace MeltPoolDG::Heat
     scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    const auto                        &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
@@ -344,7 +344,7 @@ namespace MeltPoolDG::Heat
     system_matrix = 0.0;
 
     // note: not thread safe!!!
-    const auto &                       matrix_free = scratch_data.get_matrix_free();
+    const auto                        &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
@@ -393,7 +393,7 @@ namespace MeltPoolDG::Heat
     system_matrix = 0.0;
 
     {
-      const auto &                          matrix_free = scratch_data.get_matrix_free();
+      const auto                           &matrix_free = scratch_data.get_matrix_free();
       std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
 
       FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, temp_quad_idx);
@@ -465,10 +465,10 @@ namespace MeltPoolDG::Heat
     }
     // boundary_integral
     {
-      const auto &                          matrix_free = scratch_data.get_matrix_free();
+      const auto                           &matrix_free = scratch_data.get_matrix_free();
       std::pair<unsigned int, unsigned int> face_range  = {matrix_free.n_inner_face_batches(),
-                                                          matrix_free.n_inner_face_batches() +
-                                                            matrix_free.n_boundary_face_batches()};
+                                                           matrix_free.n_inner_face_batches() +
+                                                             matrix_free.n_boundary_face_batches()};
 
       FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
                                              true /*is_interior_face*/,
@@ -532,9 +532,9 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::rhs_cell_loop(
-    const MatrixFree<dim, number> &       matrix_free,
-    VectorType &                          dst,
-    const VectorType &                    src,
+    const MatrixFree<dim, number>        &matrix_free,
+    VectorType                           &dst,
+    const VectorType                     &src,
     std::pair<unsigned int, unsigned int> cell_range) const
   {
     FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, temp_quad_idx);
@@ -824,9 +824,9 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::rhs_boundary_loop(
-    const MatrixFree<dim, number> &       matrix_free,
-    VectorType &                          dst,
-    [[maybe_unused]] const VectorType &   src,
+    const MatrixFree<dim, number>        &matrix_free,
+    VectorType                           &dst,
+    [[maybe_unused]] const VectorType    &src,
     std::pair<unsigned int, unsigned int> face_range) const
   {
     FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
@@ -894,7 +894,7 @@ namespace MeltPoolDG::Heat
         rhs_cell_loop(matrix_free, dst, src, cell_range);
       },
       [&]([[maybe_unused]] const auto &matrix_free,
-          [[maybe_unused]] auto &      dst,
+          [[maybe_unused]] auto       &dst,
           [[maybe_unused]] const auto &src,
           [[maybe_unused]] auto        face_range) { /*do nothing*/ }, // face loop
       [&](const auto &matrix_free, auto &dst, const auto &src, auto face_range) {
@@ -1041,12 +1041,12 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::tangent_local_cell_operation(
-    FECellIntegrator<dim, 1, number> &                       temp_vals,
-    FECellIntegrator<dim, 1, number> &                       temp_lin_vals,
-    FECellIntegrator<dim, 1, number> &                       temp_old_vals,
-    FECellIntegrator<dim, dim, number> &                     velocity_vals,
-    FECellIntegrator<dim, 1, number> &                       ls_vals,
-    FECellIntegrator<dim, 1, number> &                       ls_interpolated_vals,
+    FECellIntegrator<dim, 1, number>                        &temp_vals,
+    FECellIntegrator<dim, 1, number>                        &temp_lin_vals,
+    FECellIntegrator<dim, 1, number>                        &temp_old_vals,
+    FECellIntegrator<dim, dim, number>                      &velocity_vals,
+    FECellIntegrator<dim, 1, number>                        &ls_vals,
+    FECellIntegrator<dim, 1, number>                        &ls_interpolated_vals,
     const std::unique_ptr<FECellIntegrator<dim, 1, number>> &evapor_vals,
     const bool                                               do_reinit_cells) const
   {

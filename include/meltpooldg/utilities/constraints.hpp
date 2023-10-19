@@ -44,7 +44,7 @@ namespace MeltPoolDG::UtilityFunctions
    */
   template <int dim>
   void
-  setup_constraints(ScratchData<dim> &                      scratch_data,
+  setup_constraints(ScratchData<dim>                       &scratch_data,
                     const DirichletBoundaryConditions<dim> &bc_data,
                     const unsigned int                      dof_idx,
                     const bool                              set_inhomogeneities = true)
@@ -85,7 +85,7 @@ namespace MeltPoolDG::UtilityFunctions
    */
   template <int dim>
   void
-  setup_and_merge_constraints(ScratchData<dim> &                      scratch_data,
+  setup_and_merge_constraints(ScratchData<dim>                       &scratch_data,
                               const DirichletBoundaryConditions<dim> &bc_data,
                               const unsigned int                      dof_idx,
                               const unsigned int                      dof_hanging_nodes_idx,
@@ -128,7 +128,7 @@ namespace MeltPoolDG::UtilityFunctions
    */
   template <int dim>
   void
-  setup_constraints(ScratchData<dim> &                     scratch_data,
+  setup_constraints(ScratchData<dim>                      &scratch_data,
                     const PeriodicBoundaryConditions<dim> &pbc,
                     const unsigned int                     dof_hanging_nodes_idx)
   {
@@ -164,9 +164,9 @@ namespace MeltPoolDG::UtilityFunctions
    */
   template <int dim>
   void
-  setup_constraints(ScratchData<dim> &                      scratch_data,
+  setup_constraints(ScratchData<dim>                       &scratch_data,
                     const DirichletBoundaryConditions<dim> &bc_data,
-                    const PeriodicBoundaryConditions<dim> & pbc,
+                    const PeriodicBoundaryConditions<dim>  &pbc,
                     const unsigned int                      dof_idx,
                     const unsigned int                      dof_hanging_nodes_idx,
                     const bool                              set_inhomogeneities = true)
