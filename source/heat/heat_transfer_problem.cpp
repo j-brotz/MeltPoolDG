@@ -65,7 +65,7 @@ namespace MeltPoolDG::Heat
           {
             rte_operation->solve();
 
-            AssertThrow(false, ExcMessage("not implemented"))
+            AssertThrow(false, ExcMessage("not implemented"));
             // TODO
             // rte_operation->compute_heat_source(
             //   heat_operation->get_user_rhs(),
