@@ -43,7 +43,7 @@ namespace MeltPoolDG::MeltPool
   {
     AssertThrow(!particles.empty(),
                 ExcMessage("The powder bed contains no powder particles! "
-                           "Please check input files."))
+                           "Please check input files."));
   }
 
   template <int dim>

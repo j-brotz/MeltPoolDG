@@ -40,7 +40,7 @@ namespace MeltPoolDG::Heat
     else
       AssertThrow(laser_data.heat_source_model == LaserHeatSourceModel::Analytical,
                   ExcMessage("No requested laser model found. Please specify the "
-                             "heat source model in the laser section of the input parameters."))
+                             "heat source model in the laser section of the input parameters."));
   }
 
   template <int dim>
