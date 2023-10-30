@@ -1,3 +1,4 @@
+#include "meltpooldg/heat/laser_data.hpp"
 #ifndef MELT_POOL_DG_DIM
 #  define MELT_POOL_DG_DIM 1
 #endif
@@ -389,6 +390,7 @@ namespace MeltPoolDG::MeltPool
                         level_set_operation->get_level_set_as_heaviside(),
                         ls_dof_idx,
                         temp_hanging_nodes_dof_idx,
+                        temp_quad_idx,
                         true /* zero_out */,
                         &level_set_operation->get_normal_vector(),
                         normal_dof_idx);
@@ -1462,7 +1464,10 @@ namespace MeltPoolDG::MeltPool
                                                            temp_dof_idx,
                                                            temp_hanging_nodes_dof_idx);
 
-    scratch_data->build();
+    // TODO: add function to each operation to check the requirements on ScratchData
+    scratch_data->build(problem_specific_parameters.do_heat_transfer,
+                        base_in->parameters.laser.impact_type ==
+                          LaserImpactType::interface_sharp_conforming /*enable_inner_face_loops*/);
 
     if (do_reinit)
       {

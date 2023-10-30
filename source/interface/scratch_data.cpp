@@ -166,7 +166,9 @@ namespace MeltPoolDG
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   void
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::build()
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::build(
+    const bool enable_boundary_face_loops,
+    const bool enable_inner_face_loops)
   {
     AssertThrow(this->constraint.size() == this->dof_handler.size(),
                 ExcMessage(
@@ -181,11 +183,17 @@ namespace MeltPoolDG
 
         additional_data.overlap_communication_computation = false;
 
+        // TODO: make problem-dependent
         additional_data.mapping_update_flags =
           update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
 
-        additional_data.mapping_update_flags_boundary_faces =
-          update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
+        if (enable_boundary_face_loops)
+          additional_data.mapping_update_flags_boundary_faces =
+            update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
+
+        if (enable_inner_face_loops)
+          additional_data.mapping_update_flags_inner_faces =
+            update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
 
         this->matrix_free.reinit(
           *this->mapping, this->dof_handler, this->constraint, this->quad, additional_data);

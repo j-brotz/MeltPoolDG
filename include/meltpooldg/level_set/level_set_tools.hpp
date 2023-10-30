@@ -11,6 +11,7 @@
 
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
+#include "meltpooldg/interface/scratch_data.hpp"
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace dealii::GridGenerator
@@ -570,4 +571,60 @@ namespace MeltPoolDG::LevelSet::Tools
     normal_vector.zero_out_ghost_values();
   }
 
+  /**
+   * Set the material ID of cells depending on their level-set values, given by
+   * @p level_set_heaviside and the corresponding DoFHandler index @p ls_dof_idx.
+   * The index of the quadrature rule within ScratchData is set by @p quad_idx.
+   * Cells with level-set values larger than or equal to the threshold value
+   * (@p lower_threshold) are indicated by a material_id of 1, others by
+   * a material_id of 0.
+   *
+   * @note This function should only be used, if the isosurface is aligned with
+   * the cell faces, because we do not treat real cut-cells special.
+   */
+  template <int dim>
+  void
+  set_material_id_from_level_set(const ScratchData<dim> &scratch_data,
+                                 const unsigned int      ls_dof_idx,
+                                 const unsigned int      quad_idx,
+                                 const VectorType       &level_set_heaviside,
+                                 const double            lower_threshold = 0.5)
+  {
+    FECellIntegrator<dim, 1, double> sd(scratch_data.get_matrix_free(), ls_dof_idx, quad_idx);
+    for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
+      {
+        sd.reinit(cell);
+        sd.read_dof_values(level_set_heaviside);
+        sd.evaluate(EvaluationFlags::values);
+
+        // compute cell-wise maximum value of the level-set function
+        VectorizedArray<double> min_ls = std::numeric_limits<double>::max();
+        for (unsigned int j = 0; j < sd.dofs_per_cell; ++j)
+          {
+            min_ls = std::min(min_ls, sd.get_dof_value(j));
+          }
+
+        // set material ID
+        for (unsigned int v = 0;
+             v < scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);
+             ++v)
+          {
+            auto tria_cell = scratch_data.get_matrix_free().get_cell_iterator(cell, v);
+            tria_cell->set_material_id(min_ls[v] >= lower_threshold ? 1 : 0);
+          }
+      }
+
+    // communicate local data to ghost cells
+    using active_cell_iterator = typename Triangulation<dim>::active_cell_iterator;
+    auto pack                  = [](const active_cell_iterator &cell) -> unsigned int {
+      return cell->material_id();
+    };
+
+    auto unpack = [](const active_cell_iterator &cell, const unsigned int material_id) -> void {
+      cell->set_material_id(material_id);
+    };
+
+    GridTools::exchange_cell_data_to_ghosts<unsigned int, Triangulation<dim>>(
+      scratch_data.get_triangulation(), pack, unpack);
+  }
 } // namespace MeltPoolDG::LevelSet::Tools

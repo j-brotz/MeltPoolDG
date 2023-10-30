@@ -79,7 +79,8 @@ namespace MeltPoolDG
     create_partitioning();
 
     void
-    build();
+    build(const bool enable_boundary_face_loops = false,
+          const bool enable_inner_face_loops    = false);
 
     /**
      * initialize vectors

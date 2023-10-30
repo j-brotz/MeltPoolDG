@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
 
 #include <meltpooldg/interface/scratch_data.hpp>
@@ -63,6 +64,38 @@ namespace MeltPoolDG::Heat
                                           const bool              zero_out       = true,
                                           const BlockVectorType  *normal_vector  = nullptr,
                                           const unsigned int      normal_dof_idx = 0) const;
+
+    /**
+     * For a given finite element discretization, hidden within @p scratch_data,
+     * compute a right-hand-side contribution for heat-transfer and store it
+     * into the DoF-vector @p heat_rhs (with the corresponding index @p temp_dof_idx).
+     * Based on the level-set indicator function (@p level_set_heaviside and
+     * corresponding DoFHandler index @p ls_dof_idx), cells
+     * will be categorized into the different phases. We loop over all element
+     * faces that are along the phase boundary and perform a surface integral
+     * based on the quadrature rule, given by the index @p temp_quad_idx,
+     * to compute the laser impact. The laser parameters are @p laser_power and
+     * @p laser_position. Set @p zero_out to true to zero out the right-hand-side
+     * vector @p heat_rhs in advance. The optional arguments
+     * @p normal_vector and @p normal_dof_idx, can be used to compute the unit
+     * normal at the surface.
+     *
+     * @note This function should only be used, if the level-set isosurface
+     * is aligned with element faces and does not cross the cells.
+     *
+     */
+    void
+    compute_interfacial_heat_source_sharp_conforming(VectorType             &heat_rhs,
+                                                     const ScratchData<dim> &scratch_data,
+                                                     const unsigned int      temp_dof_idx,
+                                                     const unsigned int      temp_quad_idx,
+                                                     const double            laser_power,
+                                                     const Point<dim>       &laser_position,
+                                                     const VectorType       &level_set_heaviside,
+                                                     const unsigned int      ls_dof_idx,
+                                                     const bool              zero_out,
+                                                     const BlockVectorType  *normal_vector,
+                                                     const unsigned int      normal_dof_idx) const;
 
   private:
     /**
