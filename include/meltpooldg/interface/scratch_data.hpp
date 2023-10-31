@@ -51,7 +51,6 @@ namespace MeltPoolDG
                 const unsigned int max_verbosity_level,
                 const bool         do_matrix_free);
 
-    ScratchData(const ScratchData &scratch_data);
     /**
      * Setup everything in one go.
      */
