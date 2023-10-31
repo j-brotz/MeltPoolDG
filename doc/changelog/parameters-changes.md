@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-10-30
+- Add new option `interface_sharp_conforming` for Gaussian laser heat source
+```json
+{
+  "laser": {
+    "laser impact type": "interface_sharp_conforming"
+  }
+}
+```
+
 ## 2023-10-16
 - Add problem specific parameter to level set problem
 ``` diff

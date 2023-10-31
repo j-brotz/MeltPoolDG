@@ -1,10 +1,16 @@
 #include <deal.II/base/mpi.h>
 
+#include <deal.II/grid/grid_tools.h>
+
 #include <deal.II/numerics/data_out.h>
 
+#include "meltpooldg/level_set/level_set_tools.hpp"
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <algorithm>
+#include <memory>
 
 namespace MeltPoolDG::Heat
 {
@@ -82,6 +88,7 @@ namespace MeltPoolDG::Heat
       heat_source_vector = 0.0;
 
     level_set_heaviside.update_ghost_values();
+
     if (normal_vector)
       normal_vector->update_ghost_values();
 
@@ -296,6 +303,125 @@ namespace MeltPoolDG::Heat
     scratch_data.get_constraint(temp_dof_idx).distribute(heat_source_vector);
 
     heat_source_vector.zero_out_ghost_values();
+    level_set_heaviside.zero_out_ghost_values();
+    if (normal_vector)
+      normal_vector->zero_out_ghost_values();
+  }
+
+  template <int dim>
+  void
+  LaserHeatSourceBase<dim>::compute_interfacial_heat_source_sharp_conforming(
+    VectorType             &heat_rhs,
+    const ScratchData<dim> &scratch_data,
+    const unsigned int      temp_dof_idx,
+    const unsigned int      temp_quad_idx,
+    const double            laser_power,
+    const Point<dim>       &laser_position,
+    const VectorType       &level_set_heaviside,
+    const unsigned int      ls_dof_idx,
+    const bool              zero_out,
+    const BlockVectorType  *normal_vector,
+    const unsigned int      normal_dof_idx) const
+  {
+    if (zero_out)
+      scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);
+
+    level_set_heaviside.update_ghost_values();
+
+    if (normal_vector)
+      normal_vector->update_ghost_values();
+
+    // step 1: set material ID of cells
+    LevelSet::Tools::set_material_id_from_level_set(scratch_data, ls_dof_idx, level_set_heaviside);
+
+    // step 2: evaluate and fill rhs
+    FEFaceIntegrator<dim, 1, double> ls_eval(scratch_data.get_matrix_free(),
+                                             true /*is_interior_face*/,
+                                             ls_dof_idx,
+                                             temp_quad_idx);
+
+    FEFaceIntegrator<dim, 1, double> rhs_eval(scratch_data.get_matrix_free(),
+                                              true /*is_interior_face*/,
+                                              temp_dof_idx,
+                                              temp_quad_idx);
+
+    std::unique_ptr<FEFaceIntegrator<dim, dim, double>> normal_eval;
+
+    VectorizedArray<double> local_result_face = 0.0;
+    Point<dim>              position_v;
+    Point<dim>              normal_v;
+
+    if (normal_vector)
+      normal_eval = std::make_unique<FEFaceIntegrator<dim, dim, double>>(
+        scratch_data.get_matrix_free(), true, normal_dof_idx, temp_quad_idx);
+
+    std::pair<unsigned int, unsigned int> face_range = {
+      0, scratch_data.get_matrix_free().n_inner_face_batches()};
+
+    for (unsigned int face = face_range.first; face < face_range.second; ++face)
+      {
+        ls_eval.reinit(face);
+        ls_eval.read_dof_values(level_set_heaviside);
+        ls_eval.evaluate(normal_vector ? EvaluationFlags::values :
+                                         EvaluationFlags::values | EvaluationFlags::gradients);
+
+        if (normal_vector)
+          {
+            normal_eval->reinit(face);
+            normal_eval->read_dof_values(*normal_vector);
+            normal_eval->evaluate(EvaluationFlags::values);
+          }
+
+        rhs_eval.reinit(face);
+
+        // collect lanes that need to be processed
+        std::vector<unsigned int> process_lanes;
+        for (unsigned int v = 0;
+             v < scratch_data.get_matrix_free().n_active_entries_per_face_batch(face);
+             ++v)
+          {
+            const auto face_iter_inner =
+              scratch_data.get_matrix_free().get_face_iterator(face, v, true);
+            const auto face_iter_outer =
+              scratch_data.get_matrix_free().get_face_iterator(face, v, false);
+
+            // check if surrounding cells have different materials
+            if (face_iter_inner.first->material_id() != face_iter_outer.first->material_id())
+              process_lanes.emplace_back(v);
+          }
+
+        // loop over quadrature points
+        for (unsigned int q = 0; q < ls_eval.n_q_points; ++q)
+          {
+            auto unit_normal =
+              normal_vector ? MeltPoolDG::VectorTools::to_vector<dim>(normal_eval->get_value(q)) :
+                              ls_eval.get_gradient(q);
+            unit_normal = unit_normal / std::max(unit_normal.norm(), VectorizedArray<double>(1e-6));
+
+            // loop over relavant lanes
+            local_result_face = 0.0;
+            for (const auto &v : process_lanes)
+              {
+                for (unsigned int d = 0; d < dim; ++d)
+                  position_v[d] = ls_eval.quadrature_point(q)[d][v];
+                for (unsigned int d = 0; d < dim; ++d)
+                  normal_v[d] = unit_normal[d][v];
+
+                local_result_face[v] =
+                  local_compute_interfacial_heat_source(position_v,
+                                                        laser_position,
+                                                        laser_power,
+                                                        normal_v,
+                                                        1.0 /*delta value*/,
+                                                        ls_eval.get_value(q)[v]);
+              }
+            rhs_eval.submit_value(local_result_face, q);
+          }
+        rhs_eval.integrate_scatter(EvaluationFlags::values, heat_rhs);
+      }
+
+    heat_rhs.compress(VectorOperation::add);
+
     level_set_heaviside.zero_out_ghost_values();
     if (normal_vector)
       normal_vector->zero_out_ghost_values();

@@ -794,6 +794,9 @@ namespace MeltPoolDG
       prm.add_parameter("paraview output subdomains",
                         paraview.output_subdomains,
                         "boolean for outputting the subdomain ranks");
+      prm.add_parameter("output material id",
+                        paraview.output_material_id,
+                        "Set to true to output the material id.");
       prm.add_parameter("paraview n digits timestep",
                         paraview.n_digits_timestep,
                         "number of digits for the frame number of the vtk-file.");

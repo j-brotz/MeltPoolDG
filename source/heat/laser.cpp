@@ -117,6 +117,7 @@ namespace MeltPoolDG::Heat
                                            const VectorType      &level_set_as_heaviside,
                                            const unsigned int     ls_dof_idx,
                                            const unsigned int     temp_hanging_nodes_dof_idx,
+                                           const unsigned int     temp_quad_idx,
                                            const bool             zero_out,
                                            const BlockVectorType *normal_vector,
                                            const unsigned int     normal_dof_idx) const
@@ -150,6 +151,21 @@ namespace MeltPoolDG::Heat
               heat_user_rhs,
               scratch_data,
               temp_hanging_nodes_dof_idx,
+              get_laser_power(),
+              get_laser_position(),
+              level_set_as_heaviside,
+              ls_dof_idx,
+              zero_out,
+              normal_vector,
+              normal_dof_idx);
+            break;
+          }
+          case LaserImpactType::interface_sharp_conforming: {
+            laser_heat_source_operation->compute_interfacial_heat_source_sharp_conforming(
+              heat_user_rhs,
+              scratch_data,
+              temp_hanging_nodes_dof_idx,
+              temp_quad_idx,
               get_laser_power(),
               get_laser_position(),
               level_set_as_heaviside,

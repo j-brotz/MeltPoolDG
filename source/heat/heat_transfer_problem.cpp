@@ -58,6 +58,7 @@ namespace MeltPoolDG::Heat
                                                  level_set_as_heaviside,
                                                  level_set_dof_idx,
                                                  temp_hanging_nodes_dof_idx,
+                                                 temp_quad_idx,
                                                  false /* zero_out */);
           }
         // add RTE heat source if given
@@ -365,7 +366,9 @@ namespace MeltPoolDG::Heat
                                                          temp_dof_idx,
                                                          temp_hanging_nodes_dof_idx);
 
-    scratch_data->build();
+    scratch_data->build(true /*enable_boundary_faces*/,
+                        base_in->parameters.laser.impact_type ==
+                          LaserImpactType::interface_sharp_conforming /*enable_inner_face_loops*/);
 
     if (do_reinit && heat_operation)
       heat_operation->reinit();

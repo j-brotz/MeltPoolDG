@@ -121,6 +121,17 @@ namespace MeltPoolDG
 
         data_out.add_data_vector(subdomains, "subdomains");
       }
+    if (pv_data.output_material_id)
+      {
+        const auto    &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
+        Vector<double> material_id(tria.n_active_cells());
+
+        for (const auto &cell : tria.active_cell_iterators())
+          if (cell->is_locally_owned())
+            material_id[cell->index()] = cell->material_id();
+
+        data_out.add_data_vector(material_id, "material_id");
+      }
 
     DataOutBase::VtkFlags flags;
     if ((do_simplex == false) && (dim > 1))

@@ -66,6 +66,7 @@ namespace MeltPoolDG::Heat
                         const VectorType      &level_set_as_heaviside,
                         const unsigned int     ls_dof_idx,
                         const unsigned int     temp_hanging_nodes_dof_idx,
+                        const unsigned int     temp_quad_idx,
                         const bool             zero_out       = false,
                         const BlockVectorType *normal_vector  = nullptr,
                         const unsigned int     normal_dof_idx = 0) const;

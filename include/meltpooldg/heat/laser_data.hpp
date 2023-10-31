@@ -23,8 +23,12 @@ namespace MeltPoolDG
     volumetric,
     // interfacial heat source; use continuum surface force modeling within the interface region
     interface,
-    // interfacial heat source; evaluate integral as surface integral over the sharp interface
-    interface_sharp)
+    // interfacial heat source; evaluate integral as surface integral over the sharp interface,
+    // determined by the margin cube algorithm
+    interface_sharp,
+    // ONLY FOR MESH CONFORMING INTERFACES: evaluate integral as surface integral over the element
+    // faces that represent the interface
+    interface_sharp_conforming)
 
   template <typename number = double>
   struct LaserData
