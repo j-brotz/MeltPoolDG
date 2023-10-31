@@ -1,3 +1,5 @@
+#include <deal.II/numerics/data_out_dof_data.h>
+
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -126,11 +128,12 @@ namespace MeltPoolDG
         const auto    &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
         Vector<double> material_id(tria.n_active_cells());
 
-        for (const auto &cell : tria.active_cell_iterators())
-          if (cell->is_locally_owned())
-            material_id[cell->index()] = cell->material_id();
+        unsigned int i = 0;
 
-        data_out.add_data_vector(material_id, "material_id");
+        for (const auto &cell : tria.active_cell_iterators())
+          material_id[i++] = cell->material_id();
+
+        data_out.add_data_vector(material_id, "material_id", DataOut<dim>::type_cell_data);
       }
 
     DataOutBase::VtkFlags flags;

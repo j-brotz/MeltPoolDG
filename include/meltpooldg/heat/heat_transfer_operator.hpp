@@ -192,7 +192,8 @@ namespace MeltPoolDG::Heat
     register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
                                    const unsigned int evapor_mass_flux_dof_idx_in,
                                    const double       latent_heat_of_evaporation,
-                                   const bool         do_phenomenological_recoil_pressure);
+                                   const bool         do_phenomenological_recoil_pressure,
+                                   const EvaporCoolingInterfaceFluxType type);
 
     void
     register_surface_mesh(
@@ -356,5 +357,7 @@ namespace MeltPoolDG::Heat
                                  std::vector<Point<dim>> /*quad_points*/,
                                  std::vector<double> /*weights*/
                                  >> *surface_mesh_info = nullptr;
+
+    EvaporCoolingInterfaceFluxType evapor_flux_type = EvaporCoolingInterfaceFluxType::none;
   };
 } // namespace MeltPoolDG::Heat

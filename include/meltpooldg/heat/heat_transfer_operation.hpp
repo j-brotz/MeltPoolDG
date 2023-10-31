@@ -10,6 +10,7 @@
 
 #include <deal.II/numerics/data_out.h>
 
+#include "meltpooldg/interface/parameters.hpp"
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
@@ -102,7 +103,8 @@ namespace MeltPoolDG::Heat
     register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
                                    const unsigned int evapor_mass_flux_dof_idx_in,
                                    const double       latent_heat_of_evaporation,
-                                   const bool         do_phenomenological_recoil_pressure);
+                                   const bool         do_phenomenological_recoil_pressure,
+                                   const EvaporCoolingInterfaceFluxType flux_type);
     void
     register_surface_mesh(
       const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,

@@ -590,6 +590,9 @@ namespace MeltPoolDG::LevelSet::Tools
   {
     const bool has_ghost_elements = level_set_heaviside.has_ghost_elements();
 
+    const bool distributed_mesh = (dynamic_cast<parallel::distributed::Triangulation<dim> *>(
+      const_cast<Triangulation<dim> *>(&scratch_data.get_triangulation())));
+
     if (!has_ghost_elements)
       level_set_heaviside.update_ghost_values();
 
@@ -603,20 +606,24 @@ namespace MeltPoolDG::LevelSet::Tools
             cell->set_material_id(min_ls >= lower_threshold ? 1 : 0);
           }
       }
+
     if (!has_ghost_elements)
       level_set_heaviside.zero_out_ghost_values();
 
     // communicate local data to ghost cells
-    using active_cell_iterator = typename Triangulation<dim>::active_cell_iterator;
-    auto pack                  = [](const active_cell_iterator &cell) -> unsigned int {
-      return cell->material_id();
-    };
+    if (distributed_mesh)
+      {
+        using active_cell_iterator = typename Triangulation<dim>::active_cell_iterator;
+        auto pack                  = [](const active_cell_iterator &cell) -> unsigned int {
+          return cell->material_id();
+        };
 
-    auto unpack = [](const active_cell_iterator &cell, const unsigned int material_id) -> void {
-      cell->set_material_id(material_id);
-    };
+        auto unpack = [](const active_cell_iterator &cell, const unsigned int material_id) -> void {
+          cell->set_material_id(material_id);
+        };
 
-    GridTools::exchange_cell_data_to_ghosts<unsigned int, Triangulation<dim>>(
-      scratch_data.get_triangulation(), pack, unpack);
+        GridTools::exchange_cell_data_to_ghosts<unsigned int, Triangulation<dim>>(
+          scratch_data.get_triangulation(), pack, unpack);
+      }
   }
 } // namespace MeltPoolDG::LevelSet::Tools

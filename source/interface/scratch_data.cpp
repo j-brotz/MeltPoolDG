@@ -3,6 +3,7 @@
 #include <deal.II/matrix_free/util.h>
 
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG
 {
@@ -30,8 +31,13 @@ namespace MeltPoolDG
     const Mapping<dim, spacedim>                         &mapping,
     const std::vector<const DoFHandler<dim, spacedim> *> &dof_handler,
     const std::vector<const AffineConstraints<number> *> &constraint,
-    const std::vector<Quadrature<dim>>                   &quad)
+    const std::vector<Quadrature<dim>>                   &quad,
+    const bool                                            enable_boundary_face_loops,
+    const bool                                            enable_inner_face_loops)
   {
+    enable_inner_faces    = enable_inner_face_loops;
+    enable_boundary_faces = enable_boundary_face_loops;
+
     this->clear();
 
     set_mapping(mapping);
@@ -47,7 +53,7 @@ namespace MeltPoolDG
 
     this->create_partitioning();
 
-    this->build();
+    this->build(enable_boundary_face_loops, enable_inner_face_loops);
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
@@ -157,6 +163,9 @@ namespace MeltPoolDG
     const bool enable_boundary_face_loops,
     const bool enable_inner_face_loops)
   {
+    enable_inner_faces    = enable_inner_face_loops;
+    enable_boundary_faces = enable_boundary_face_loops;
+
     AssertThrow(this->constraint.size() == this->dof_handler.size(),
                 ExcMessage(
                   "The number of DoFHandlers and AffineConstraints attached to ScratchData<dim>"
@@ -171,15 +180,30 @@ namespace MeltPoolDG
         additional_data.overlap_communication_computation = false;
 
         additional_data.mapping_update_flags =
-          update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
+          (update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points);
 
-        if (enable_boundary_face_loops)
-          additional_data.mapping_update_flags_boundary_faces =
-            update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
 
         if (enable_inner_face_loops)
-          additional_data.mapping_update_flags_inner_faces =
-            update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
+          {
+            Journal::print_line(get_pcout(2),
+                                "Matrix-free: set update flags for inner face loops",
+                                "ScratchData",
+                                0);
+            additional_data.mapping_update_flags_inner_faces =
+              (update_values | update_gradients | update_JxW_values |
+               dealii::update_quadrature_points);
+          }
+
+        if (enable_boundary_face_loops)
+          {
+            Journal::print_line(get_pcout(2),
+                                "Matrix-free: set update flags for boundary face loops",
+                                "ScratchData",
+                                0);
+            additional_data.mapping_update_flags_boundary_faces =
+              (update_values | update_gradients | update_JxW_values |
+               dealii::update_quadrature_points);
+          }
 
         this->matrix_free.reinit(
           *this->mapping, this->dof_handler, this->constraint, this->quad, additional_data);

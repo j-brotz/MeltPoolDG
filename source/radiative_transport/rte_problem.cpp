@@ -194,7 +194,7 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  create the matrix-free object
      */
-    scratch_data->build();
+    scratch_data->build(false, false);
 
     if (do_reinit)
       rte_operation->reinit();
