@@ -574,7 +574,6 @@ namespace MeltPoolDG::LevelSet::Tools
   /**
    * Set the material ID of cells depending on their level-set values, given by
    * @p level_set_heaviside and the corresponding DoFHandler index @p ls_dof_idx.
-   * The index of the quadrature rule within ScratchData is set by @p quad_idx.
    * Cells with level-set values larger than or equal to the threshold value
    * (@p lower_threshold) are indicated by a material_id of 1, others by
    * a material_id of 0.
