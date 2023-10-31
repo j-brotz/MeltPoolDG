@@ -25,19 +25,6 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
-  ScratchData<dim, spacedim, number, VectorizedArrayType>::ScratchData(
-    const ScratchData &scratch_data)
-  {
-    do_matrix_free = scratch_data.do_matrix_free;
-
-    //@todo: check if mapping is deleted
-    this->reinit(scratch_data.get_mapping(),
-                 scratch_data.get_dof_handlers(),
-                 scratch_data.get_constraints(),
-                 scratch_data.get_quadratures());
-  }
-
-  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   void
   ScratchData<dim, spacedim, number, VectorizedArrayType>::reinit(
     const Mapping<dim, spacedim>                         &mapping,
