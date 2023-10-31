@@ -183,7 +183,6 @@ namespace MeltPoolDG
 
         additional_data.overlap_communication_computation = false;
 
-        // TODO: make problem-dependent
         additional_data.mapping_update_flags =
           update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points;
 

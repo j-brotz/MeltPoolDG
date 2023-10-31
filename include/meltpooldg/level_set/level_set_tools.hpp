@@ -586,33 +586,26 @@ namespace MeltPoolDG::LevelSet::Tools
   void
   set_material_id_from_level_set(const ScratchData<dim> &scratch_data,
                                  const unsigned int      ls_dof_idx,
-                                 const unsigned int      quad_idx,
                                  const VectorType       &level_set_heaviside,
                                  const double            lower_threshold = 0.5)
   {
-    FECellIntegrator<dim, 1, double> sd(scratch_data.get_matrix_free(), ls_dof_idx, quad_idx);
-    for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
+    const bool has_ghost_elements = level_set_heaviside.has_ghost_elements();
+
+    if (!has_ghost_elements)
+      level_set_heaviside.update_ghost_values();
+
+    Vector<double> hs_local(scratch_data.get_n_dofs_per_cell(ls_dof_idx));
+    for (const auto &cell : scratch_data.get_dof_handler(ls_dof_idx).active_cell_iterators())
       {
-        sd.reinit(cell);
-        sd.read_dof_values(level_set_heaviside);
-        sd.evaluate(EvaluationFlags::values);
-
-        // compute cell-wise maximum value of the level-set function
-        VectorizedArray<double> min_ls = std::numeric_limits<double>::max();
-        for (unsigned int j = 0; j < sd.dofs_per_cell; ++j)
+        if (cell->is_locally_owned())
           {
-            min_ls = std::min(min_ls, sd.get_dof_value(j));
-          }
-
-        // set material ID
-        for (unsigned int v = 0;
-             v < scratch_data.get_matrix_free().n_active_entries_per_cell_batch(cell);
-             ++v)
-          {
-            auto tria_cell = scratch_data.get_matrix_free().get_cell_iterator(cell, v);
-            tria_cell->set_material_id(min_ls[v] >= lower_threshold ? 1 : 0);
+            cell->get_dof_values(level_set_heaviside, hs_local);
+            const double min_ls = *std::min_element(hs_local.begin(), hs_local.end());
+            cell->set_material_id(min_ls >= lower_threshold ? 1 : 0);
           }
       }
+    if (!has_ghost_elements)
+      level_set_heaviside.zero_out_ghost_values();
 
     // communicate local data to ghost cells
     using active_cell_iterator = typename Triangulation<dim>::active_cell_iterator;

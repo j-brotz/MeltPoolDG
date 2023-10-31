@@ -332,10 +332,7 @@ namespace MeltPoolDG::Heat
       normal_vector->update_ghost_values();
 
     // step 1: set material ID of cells
-    LevelSet::Tools::set_material_id_from_level_set(scratch_data,
-                                                    ls_dof_idx,
-                                                    temp_quad_idx,
-                                                    level_set_heaviside);
+    LevelSet::Tools::set_material_id_from_level_set(scratch_data, ls_dof_idx, level_set_heaviside);
 
     // step 2: evaluate and fill rhs
     FEFaceIntegrator<dim, 1, double> ls_eval(scratch_data.get_matrix_free(),
