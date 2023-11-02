@@ -253,11 +253,12 @@ namespace MeltPoolDG
 
     template <int dim, typename VectorType>
     double
-    compute_L2_norm(const VectorType         &solution,
-                    const Triangulation<dim> &triangulation,
-                    const Mapping<dim>       &mapping,
-                    const DoFHandler<dim>    &dof_handler,
-                    const Quadrature<dim>    &quadrature)
+    compute_norm(const VectorType                   &solution,
+                 const Triangulation<dim>           &triangulation,
+                 const Mapping<dim>                 &mapping,
+                 const DoFHandler<dim>              &dof_handler,
+                 const Quadrature<dim>              &quadrature,
+                 const dealii::VectorTools::NormType norm_type)
     {
       const bool is_ghosted = solution.has_ghost_elements();
 
@@ -273,28 +274,30 @@ namespace MeltPoolDG
                                                   dof_handler.get_fe().n_components()),
                                                 difference_per_cell,
                                                 quadrature,
-                                                dealii::VectorTools::L2_norm);
+                                                norm_type);
 
       if (!is_ghosted)
         solution.zero_out_ghost_values();
 
       return dealii::VectorTools::compute_global_error(triangulation,
                                                        difference_per_cell,
-                                                       dealii::VectorTools::L2_norm);
+                                                       norm_type);
     }
 
     template <int dim, typename VectorType>
     double
-    compute_L2_norm(const VectorType       &solution,
-                    const ScratchData<dim> &scratch_data,
-                    const unsigned int      dof_idx,
-                    const unsigned int      quad_idx)
+    compute_norm(const VectorType                   &solution,
+                 const ScratchData<dim>             &scratch_data,
+                 const unsigned int                  dof_idx,
+                 const unsigned int                  quad_idx,
+                 const dealii::VectorTools::NormType norm_type = dealii::VectorTools::L2_norm)
     {
-      return compute_L2_norm<dim, VectorType>(solution,
-                                              scratch_data.get_triangulation(dof_idx),
-                                              scratch_data.get_mapping(),
-                                              scratch_data.get_dof_handler(dof_idx),
-                                              scratch_data.get_quadrature(quad_idx));
+      return compute_norm<dim, VectorType>(solution,
+                                           scratch_data.get_triangulation(dof_idx),
+                                           scratch_data.get_mapping(),
+                                           scratch_data.get_dof_handler(dof_idx),
+                                           scratch_data.get_quadrature(quad_idx),
+                                           norm_type);
     }
 
     template <int n_components, int dim, typename VectorType>

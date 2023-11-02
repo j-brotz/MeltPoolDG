@@ -127,20 +127,20 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     std::ostringstream str;
     str << "|phi| = " << std::setw(11) << std::setprecision(10) << std::left
-        << VectorTools::compute_L2_norm<dim>(get_advected_field(),
-                                             scratch_data,
-                                             adaflo_params.dof_index_ls,
-                                             adaflo_params.quad_index)
+        << VectorTools::compute_norm<dim>(get_advected_field(),
+                                          scratch_data,
+                                          adaflo_params.dof_index_ls,
+                                          adaflo_params.quad_index)
         << " |phi_n-1| = " << std::setw(11) << std::setprecision(10) << std::left
-        << VectorTools::compute_L2_norm<dim>(get_advected_field_old(),
-                                             scratch_data,
-                                             adaflo_params.dof_index_ls,
-                                             adaflo_params.quad_index)
+        << VectorTools::compute_norm<dim>(get_advected_field_old(),
+                                          scratch_data,
+                                          adaflo_params.dof_index_ls,
+                                          adaflo_params.quad_index)
         << " |phi_n-2| = " << std::setw(11) << std::setprecision(10) << std::left
-        << VectorTools::compute_L2_norm<dim>(get_advected_field_old_old(),
-                                             scratch_data,
-                                             adaflo_params.dof_index_ls,
-                                             adaflo_params.quad_index);
+        << VectorTools::compute_norm<dim>(get_advected_field_old_old(),
+                                          scratch_data,
+                                          adaflo_params.dof_index_ls,
+                                          adaflo_params.quad_index);
     Journal::print_line(scratch_data.get_pcout(), str.str(), "advection_diffusion_adaflo");
 
     if (do_finish_time_step)

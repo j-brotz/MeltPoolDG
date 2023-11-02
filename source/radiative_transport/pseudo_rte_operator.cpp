@@ -1,6 +1,7 @@
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
+#include <meltpooldg/radiative_transport/rte_operator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -21,6 +22,8 @@ namespace MeltPoolDG::RadiativeTransport
     , rte_dof_idx(rte_dof_idx_in)
     , rte_quad_idx(rte_quad_idx_in)
     , hs_dof_idx(hs_dof_idx_in)
+    , pure_gas_level_set(rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant)
+    , pure_liquid_level_set(1. - rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant)
   {
     this->reset_dof_index(rte_dof_idx_in);
 
@@ -81,43 +84,21 @@ namespace MeltPoolDG::RadiativeTransport
 
             for (unsigned int q_index = 0; q_index < last_intensity_vals.n_q_points; ++q_index)
               {
-                auto compute_mu = [&]() {
-                  // 1. material constant mu
-                  if (rte_data.absorptivity_type == AbsorptivityType::constant)
-                    return (
-                      rte_data.absorptivity_constant_data.absorptivity_gas +
-                      (rte_data.absorptivity_constant_data.absorptivity_liquid -
-                       rte_data.absorptivity_constant_data.absorptivity_gas) *
-                        heaviside_vals.get_value(q_index)); // absorptivity information closes the
-                                                            // heaviside function definition
-
-                  // 2. gradient based mu:∇H * laser_dir *1./(1.- H + ϵ)
-                  else if (rte_data.absorptivity_type == AbsorptivityType::gradient_based)
-                    return (scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) *
-                            1. /
-                            (1. - heaviside_vals.get_value(q_index) +
-                             rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant));
-
-                  // 3. revised gradient based mu : max(0, ∇H * laser_dir *1./(1.- H + ϵ))
-                  else if (rte_data.absorptivity_type == AbsorptivityType::revised_gradient_based)
-                    return compare_and_apply_mask<SIMDComparison::less_than>(
-                      scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
-                        (1. - heaviside_vals.get_value(q_index) +
-                         rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant),
-                      0.,
-                      /*true*/ 0.,
-                      /*false*/
-                      scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
-                        (1. - heaviside_vals.get_value(q_index) +
-                         rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant));
-                  else
-                    AssertThrow(false, ExcNotImplemented());
-                  return scalar(0);
-                };
-
                 const scalar last_I      = last_intensity_vals.get_value(q_index);
                 const vector last_grad_I = last_intensity_vals.get_gradient(q_index);
-                const scalar mu_A        = compute_mu();
+                const scalar H           = heaviside_vals.get_value(q_index);
+                const vector grad_H      = heaviside_vals.get_gradient(q_index);
+
+                const scalar mu_A = compare_and_apply_mask<SIMDComparison::greater_than>(
+                  compute_invalid_mask(last_I, last_grad_I, H, pure_liquid_level_set),
+                  VectorizedArray<double>(1e-16),
+                  /*true*/ VectorizedArray<double>(rte_data.avoid_singular_matrix_absorptivity),
+                  /*false*/
+                  compute_mu(rte_data,
+                             H,
+                             grad_H,
+                             laser_direction,
+                             rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant));
 
                 scalar advec_term = -rte_data.pseudo_time_stepping.advection_term_scaling *
                                     scalar_product(laser_direction, last_grad_I);

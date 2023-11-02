@@ -1,0 +1,44 @@
+{
+  "base": {
+    "application name": "radiative_transport",
+    "problem name": "heat_transfer",
+    "degree": "1",
+    "dimension": "2",
+    "do print parameters": "false",
+    "global refinements": "6",
+    "verbosity level": "0"
+  },
+  "heat": {},
+  "laser": {
+    "laser heat source model": "RTE",
+    "laser impact type": "interface",
+    "laser power": "99."
+  },
+  "rte": {
+    "verbosity level": "0",
+    "laser direction": "0.0,-1.0",
+    "linear solver": {
+      "solver type": "GMRES",
+      "preconditioner type": "ILU"
+    }
+  },
+  "simulation specific parameters": {
+    "power": "0.1",
+    "source radius": "0.5",
+    "interface case": "straight"
+  },
+  "material": {
+    "material first conductivity": "1.0",
+    "material first capacity": "1.0",
+    "material first density": "1.0",
+    "material second capacity": "1.0",
+    "material second conductivity": "1.0",
+    "material second density": "1.0"
+  },
+  "paraview": {
+    "paraview do output": "false"
+  },
+  "time stepping": {
+    "max n steps": "4"
+  }
+}

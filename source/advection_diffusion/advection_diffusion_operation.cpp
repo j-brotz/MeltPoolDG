@@ -174,10 +174,10 @@ namespace MeltPoolDG::AdvectionDiffusion
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
       [&]() -> double {
-        return VectorTools::compute_L2_norm<dim>(advection_velocity,
-                                                 scratch_data,
-                                                 velocity_dof_idx,
-                                                 advec_diff_quad_idx);
+        return VectorTools::compute_norm<dim>(advection_velocity,
+                                              scratch_data,
+                                              velocity_dof_idx,
+                                              advec_diff_quad_idx);
       },
       "velocity",
       "advection_diffusion");
@@ -274,11 +274,10 @@ namespace MeltPoolDG::AdvectionDiffusion
     Journal::print_formatted_norm(
       scratch_data.get_pcout(0),
       [&]() -> double {
-        return MeltPoolDG::VectorTools::compute_L2_norm<dim>(
-          solution_history.get_current_solution(),
-          scratch_data,
-          advec_diff_dof_idx,
-          advec_diff_quad_idx);
+        return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                                          scratch_data,
+                                                          advec_diff_dof_idx,
+                                                          advec_diff_quad_idx);
       },
       "advected field",
       "advection_diffusion",

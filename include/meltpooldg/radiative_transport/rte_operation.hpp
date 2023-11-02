@@ -13,6 +13,7 @@
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
 #include <meltpooldg/radiative_transport/rte_operator.hpp>
+#include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 #include <meltpooldg/utilities/time_stepping_data.hpp>
@@ -53,6 +54,8 @@ namespace MeltPoolDG::RadiativeTransport
     TimeSteppingData<double> pseudo_time_stepping;
     TimeIterator<double>     pseudo_time_iterator;
 
+    Tensor<1, dim, double> laser_direction;
+
   public:
     RadiativeTransportOperation(const ScratchData<dim>               &scratch_data_in,
                                 const RadiativeTransportData<double> &rte_data_in,
@@ -67,6 +70,14 @@ namespace MeltPoolDG::RadiativeTransport
 
     void
     distribute_constraints();
+
+    void
+    setup_constraints(ScratchData<dim>                       &scratch_data,
+                      const DirichletBoundaryConditions<dim> &bc_data,
+                      const PeriodicBoundaryConditions<dim>  &pbc,
+                      const unsigned int                      rte_dof_idx_in,
+                      const unsigned int                      rte_dof_hanging_nodes_dof_idx_in,
+                      const bool                              set_inhomogeneities);
 
     void
     solve();
@@ -88,6 +99,11 @@ namespace MeltPoolDG::RadiativeTransport
      */
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const;
+
+    void
+    compute_heat_source(VectorType        &heat_source,
+                        const unsigned int heat_source_dof_idx,
+                        const bool         zero_out = true) const;
 
   private:
     void

@@ -38,7 +38,8 @@ namespace MeltPoolDG::Heat
           laser_data.delta_approximation_phase_weighted);
       }
     else
-      AssertThrow(laser_data.heat_source_model == LaserHeatSourceModel::Analytical,
+      AssertThrow(laser_data.heat_source_model == LaserHeatSourceModel::Analytical ||
+                    laser_data.heat_source_model == LaserHeatSourceModel::RTE,
                   ExcMessage("No requested laser model found. Please specify the "
                              "heat source model in the laser section of the input parameters."));
   }

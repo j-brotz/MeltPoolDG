@@ -249,10 +249,10 @@ namespace MeltPoolDG::Reinitialization
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
       [&]() -> double {
-        return MeltPoolDG::VectorTools::compute_L2_norm<dim>(rhs,
-                                                             scratch_data,
-                                                             reinit_dof_idx,
-                                                             reinit_quad_idx);
+        return MeltPoolDG::VectorTools::compute_norm<dim>(rhs,
+                                                          scratch_data,
+                                                          reinit_dof_idx,
+                                                          reinit_quad_idx);
       },
       "RHS",
       "reinitialization",
@@ -261,10 +261,10 @@ namespace MeltPoolDG::Reinitialization
     Journal::print_formatted_norm(
       scratch_data.get_pcout(0),
       [&]() -> double {
-        return VectorTools::compute_L2_norm<dim>(solution_history.get_current_solution(),
-                                                 scratch_data,
-                                                 reinit_dof_idx,
-                                                 reinit_quad_idx);
+        return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                              scratch_data,
+                                              reinit_dof_idx,
+                                              reinit_quad_idx);
       },
       "delta phi",
       "reinitialization",
@@ -281,10 +281,10 @@ namespace MeltPoolDG::Reinitialization
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
       [&]() -> double {
-        return VectorTools::compute_L2_norm<dim>(solution_level_set,
-                                                 scratch_data,
-                                                 reinit_dof_idx,
-                                                 reinit_quad_idx);
+        return VectorTools::compute_norm<dim>(solution_level_set,
+                                              scratch_data,
+                                              reinit_dof_idx,
+                                              reinit_quad_idx);
       },
       "phi",
       "reinitialization",

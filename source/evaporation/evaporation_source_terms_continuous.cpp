@@ -242,10 +242,10 @@ namespace MeltPoolDG::Evaporation
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
       [&]() -> double {
-        return VectorTools::compute_L2_norm<dim>(evaporation_velocity,
-                                                 scratch_data,
-                                                 evapor_vel_dof_idx,
-                                                 ls_quad_idx);
+        return VectorTools::compute_norm<dim>(evaporation_velocity,
+                                              scratch_data,
+                                              evapor_vel_dof_idx,
+                                              ls_quad_idx);
       },
       "evaporative_velocity",
       "evaporation_operation",

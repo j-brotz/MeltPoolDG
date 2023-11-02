@@ -26,18 +26,16 @@ namespace MeltPoolDG
               char,
               // absorptivity coefficient as material constants
               constant,
-              // absorptivity coefficient as a function of heaviside gradient
-              gradient_based,
-              // TBD absorptivity coefficient as a function of the heaviside gradient,
-              // and applying a MacAulay bracket. Fails when run in parallel.
-              revised_gradient_based)
+              // absorptivity coefficient as a function of the heaviside gradient, and applying a
+              // MacAulay bracket
+              gradient_based)
 
   template <typename number = double>
   struct RadiativeTransportData
   {
     RadiativeTransportData()
     {
-      linear_solver.solver_type         = LinearSolverType::CG;
+      linear_solver.solver_type         = LinearSolverType::GMRES;
       linear_solver.preconditioner_type = PreconditionerType::ILU;
     }
     struct PseudoTimeSteppingData
@@ -122,8 +120,9 @@ namespace MeltPoolDG
 
     unsigned int        verbosity_level   = 0;
     RTEProblemType      problem_type      = RTEProblemType::time_dependent_predictor;
-    AbsorptivityType    absorptivity_type = AbsorptivityType::revised_gradient_based;
+    AbsorptivityType    absorptivity_type = AbsorptivityType::gradient_based;
     std::vector<double> laser_direction;
+    double              avoid_singular_matrix_absorptivity = 1e-16;
     void
     add_parameters(dealii::ParameterHandler &prm)
     {
@@ -144,6 +143,10 @@ namespace MeltPoolDG
         prm.add_parameter("laser direction",
                           laser_direction,
                           "Sets the laser source direction vector.");
+        prm.add_parameter(
+          "avoid singular matrix absorptivity",
+          avoid_singular_matrix_absorptivity,
+          "Minimum value for absorptivity to ensure a non-singular matrix for RTE.");
         linear_solver.add_parameters(prm);
         pseudo_time_stepping.add_parameters(prm);
         absorptivity_constant_data.add_parameters(prm);

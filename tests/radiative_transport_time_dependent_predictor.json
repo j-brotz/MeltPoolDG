@@ -16,7 +16,7 @@
   "rte": {
     "verbosity level": "0",
     "laser direction": "0.0,-1.0",
-    "absorptivity type": "revised_gradient_based",
+    "absorptivity type": "gradient_based",
     "linear solver": {
       "do matrix free": "true",
       "abs tolerance": "1e-16",
