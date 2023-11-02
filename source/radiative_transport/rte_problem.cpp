@@ -31,11 +31,11 @@ namespace MeltPoolDG::RadiativeTransport
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout());
 
-        compute_heaviside(*base_in->get_source_field("heaviside"));
+        compute_heaviside(*base_in->get_initial_condition("prescribed_heaviside"));
 
         rte_operation->solve();
 
-        // ... and output the results to vtk files.
+        // calculate the source field and output the results to vtk files.
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time(),
                        base_in);
@@ -116,7 +116,7 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  set initial conditions of the heaviside field
      */
-    compute_heaviside(*base_in->get_source_field("heaviside"));
+    compute_heaviside(*base_in->get_initial_condition("prescribed_heaviside"));
 
     /*
      * initialize the RTE operation
@@ -226,8 +226,11 @@ namespace MeltPoolDG::RadiativeTransport
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
+      scratch_data->initialize_dof_vector(heat_source, rte_dof_idx);
+      rte_operation->compute_heat_source(heat_source, rte_dof_idx, true);
       rte_operation->attach_output_vectors(data_out);
-      data_out.add_data_vector(dof_handler_heaviside, heaviside, "heaviside");
+      data_out.add_data_vector(dof_handler_heaviside, heaviside, "prescribed_heaviside");
+      data_out.add_data_vector(dof_handler, heat_source, "heat_source");
     };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),

@@ -251,10 +251,10 @@ namespace MeltPoolDG::Heat
     };
 
     newton.norm_of_solution_vector = [this]() -> double {
-      return MeltPoolDG::VectorTools::compute_L2_norm<dim>(solution_history.get_current_solution(),
-                                                           scratch_data,
-                                                           temp_dof_idx,
-                                                           temp_quad_idx);
+      return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                                        scratch_data,
+                                                        temp_dof_idx,
+                                                        temp_quad_idx);
     };
 
     try

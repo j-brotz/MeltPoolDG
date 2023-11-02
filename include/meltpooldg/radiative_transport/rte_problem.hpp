@@ -22,6 +22,7 @@ namespace MeltPoolDG::RadiativeTransport
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
     VectorType heaviside;
+    VectorType heat_source;
 
     DoFHandler<dim> dof_handler;
     DoFHandler<dim> dof_handler_heaviside;

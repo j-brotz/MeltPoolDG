@@ -200,10 +200,10 @@ namespace MeltPoolDG::Evaporation
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
       [&]() -> double {
-        return MeltPoolDG::VectorTools::compute_L2_norm(evaporative_mass_flux,
-                                                        scratch_data,
-                                                        evapor_mass_flux_dof_idx,
-                                                        ls_quad_idx);
+        return MeltPoolDG::VectorTools::compute_norm(evaporative_mass_flux,
+                                                     scratch_data,
+                                                     evapor_mass_flux_dof_idx,
+                                                     ls_quad_idx);
       },
       "evaporative_mass_flux",
       "evaporation_operation",

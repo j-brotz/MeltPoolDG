@@ -30,8 +30,8 @@ namespace MeltPoolDG::UtilityFunctions
     DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
 
     AssertThrow(constraints.is_consistent_in_parallel(
-                  Utilities::MPI::all_gather(dof_handler.get_communicator(),
-                                             dof_handler.locally_owned_dofs()),
+                  dealii::Utilities::MPI::all_gather(dof_handler.get_communicator(),
+                                                     dof_handler.locally_owned_dofs()),
                   locally_active_dofs,
                   dof_handler.get_communicator()),
                 ExcInternalError());

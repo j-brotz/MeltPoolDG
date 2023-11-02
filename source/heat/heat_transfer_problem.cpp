@@ -50,7 +50,8 @@ namespace MeltPoolDG::Heat
                                temp_dof_idx,
                                *source_field_function);
         // add laser heat source if given
-        if (laser_operation)
+        if (laser_operation &&
+            base_in->parameters.laser.heat_source_model != LaserHeatSourceModel::RTE)
           {
             laser_operation->move_laser(dt);
             laser_operation->compute_heat_source(heat_operation->get_heat_source(),
@@ -65,15 +66,25 @@ namespace MeltPoolDG::Heat
         if (rte_operation)
           {
             rte_operation->solve();
-
-            AssertThrow(false, ExcMessage("not implemented"));
-            // TODO
-            // rte_operation->compute_heat_source(
-            //   heat_operation->get_user_rhs(),
-            //   *scratch_data,
-            //   temp_dof_idx);
+            rte_operation->compute_heat_source(heat_operation->get_heat_source(),
+                                               temp_dof_idx,
+                                               false);
           }
 
+
+        Journal::print_formatted_norm(
+          scratch_data->get_pcout(2),
+          [&]() -> double {
+            return VectorTools::compute_norm(heat_operation->get_heat_source(),
+                                             *scratch_data,
+                                             temp_dof_idx,
+                                             temp_quad_idx,
+                                             dealii::VectorTools::NormType::L1_norm);
+          },
+          "heat-source",
+          "laser",
+          11 /*precision*/,
+          "L1");
         heat_operation->solve();
 
         // ... and output the results to vtk files.
@@ -139,6 +150,11 @@ namespace MeltPoolDG::Heat
     scratch_data->attach_dof_handler(dof_handler);
     scratch_data->attach_dof_handler(dof_handler_velocity);
     scratch_data->attach_dof_handler(dof_handler_level_set);
+    if (base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        scratch_data->attach_dof_handler(dof_handler);
+        scratch_data->attach_dof_handler(dof_handler);
+      }
 
     /*
      * attach constraints
@@ -148,6 +164,12 @@ namespace MeltPoolDG::Heat
       scratch_data->attach_constraint_matrix(temp_hanging_nodes_constraints);
     velocity_dof_idx  = scratch_data->attach_constraint_matrix(velocity_hanging_nodes_constraints);
     level_set_dof_idx = scratch_data->attach_constraint_matrix(level_set_hanging_nodes_constraints);
+    if (base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        rte_dof_idx = scratch_data->attach_constraint_matrix(rte_constraints);
+        rte_hanging_nodes_dof_idx =
+          scratch_data->attach_constraint_matrix(rte_hanging_nodes_constraints);
+      }
 
     /*
      *  create quadrature rule
@@ -184,8 +206,10 @@ namespace MeltPoolDG::Heat
      *    set level-set as heaviside field
      */
     VectorType *level_set_as_heaviside_ptr = nullptr;
-    heaviside_field_function =
-      base_in->get_initial_condition("prescribed_heaviside", true /*is_optional*/);
+    heaviside_field_function               = base_in->get_initial_condition(
+      "prescribed_heaviside",
+      (base_in->parameters.laser.heat_source_model !=
+       LaserHeatSourceModel::RTE) /*is_optional if laser is not RTE*/);
     if (heaviside_field_function)
       {
         compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
@@ -241,8 +265,8 @@ namespace MeltPoolDG::Heat
               *scratch_data,
               base_in->parameters.rte,
               level_set_as_heaviside,
-              temp_dof_idx,
-              temp_hanging_nodes_dof_idx,
+              rte_dof_idx,
+              rte_hanging_nodes_dof_idx,
               temp_quad_idx,
               level_set_dof_idx);
           }
@@ -365,6 +389,18 @@ namespace MeltPoolDG::Heat
                                                          base_in->get_periodic_bc(),
                                                          temp_dof_idx,
                                                          temp_hanging_nodes_dof_idx);
+
+    // TODO: Move to LaserRTE
+    if (base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        base_in->attach_boundary_condition("intensity");
+        rte_operation->setup_constraints(*scratch_data,
+                                         base_in->get_dirichlet_bc("intensity"),
+                                         base_in->get_periodic_bc(),
+                                         rte_dof_idx,
+                                         rte_hanging_nodes_dof_idx,
+                                         true /*set_inhomogeneities*/);
+      }
 
     scratch_data->build(true /*enable_boundary_faces*/,
                         base_in->parameters.laser.impact_type ==

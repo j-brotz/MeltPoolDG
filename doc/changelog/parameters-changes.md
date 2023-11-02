@@ -40,6 +40,26 @@ All notable changes of the input parameters will be documented in this file.
 }
 ```
 
+## 2023-08-31
+- Removed revised_gradient_based absorption model
+``` diff
+  {
+  "rte": {
+-    "absorptivity type": "constant|gradient_based|revised_gradient_based",
++    "absorptivity type": "constant|gradient_based",
+  }
+```
+
+## 2023-08-17
+- Add a parameter Radiative Transfer Equation that prevent a singular matrix when run in parallel
+``` diff
+  {
+  "rte": {
++    "avoid singular matrix absorptivity": "",
+    },
+  }
+```
+
 ## 2023-08-03
 - Add some parameters related to usage of pseudo-time problem within radiative_transport. Add parameter to choose Absorption coefficient formulation.
 ``` diff
@@ -80,6 +100,7 @@ All notable changes of the input parameters will be documented in this file.
 +    "offset": ""
   }
 }
+```
 
 ## 2023-08-01
 - Remove unused parameters, resolve redundant parameter do melt pool and 

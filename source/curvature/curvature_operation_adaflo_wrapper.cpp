@@ -125,10 +125,10 @@ namespace MeltPoolDG::Curvature
     Journal::print_formatted_norm(
       scratch_data.get_pcout(verbosity_l2_norm),
       [&]() -> double {
-        return VectorTools::compute_L2_norm<dim>(get_curvature(),
-                                                 scratch_data,
-                                                 curv_adaflo_params.dof_index_curvature,
-                                                 curv_adaflo_params.quad_index);
+        return VectorTools::compute_norm<dim>(get_curvature(),
+                                              scratch_data,
+                                              curv_adaflo_params.dof_index_curvature,
+                                              curv_adaflo_params.quad_index);
       },
       "curvature",
       "curvature_adaflo",

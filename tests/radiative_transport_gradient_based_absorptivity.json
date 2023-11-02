@@ -18,6 +18,8 @@
     "laser direction": "0.0,-1.0",
     "absorptivity type": "gradient_based",
     "absorptivity": {
+      "absorptivity gas": "-10.",
+      "absorptivity liquid": "3.0 ",
       "avoid div zero constant": "1e-2"
     },
     "linear solver": {
@@ -30,6 +32,10 @@
     "paraview do output": "false"
   },
   "simulation specific parameters": {
-    "power": "0.1"
+    "power": "0.1",
+    "source radius": "0.2",
+    "interface case": "single_powder_particle",
+    "offset": "0.35",
+    "droplet radius": "0.06"
   }
 }

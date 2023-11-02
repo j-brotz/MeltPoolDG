@@ -21,6 +21,8 @@ namespace MeltPoolDG::RadiativeTransport
     , rte_dof_idx(rte_dof_idx_in)
     , rte_quad_idx(rte_quad_idx_in)
     , hs_dof_idx(hs_dof_idx_in)
+    , pure_gas_level_set(rte_data.avoid_singular_matrix_absorptivity)
+    , pure_liquid_level_set(1. - rte_data.avoid_singular_matrix_absorptivity)
   {
     this->reset_dof_index(rte_dof_idx_in);
 
@@ -149,46 +151,23 @@ namespace MeltPoolDG::RadiativeTransport
       }
     for (unsigned int q_index = 0; q_index < intensity_vals.n_q_points; ++q_index)
       {
-        auto compute_mu = [&]() {
-          // 1. material constant mu
-          if (rte_data.absorptivity_type == AbsorptivityType::constant)
-            return (
-              rte_data.absorptivity_constant_data.absorptivity_gas +
-              (rte_data.absorptivity_constant_data.absorptivity_liquid -
-               rte_data.absorptivity_constant_data.absorptivity_gas) *
-                heaviside_vals.get_value(
-                  q_index)); // absorptivity information closes the heaviside function definition
-
-          // 2. gradient based mu:∇H * laser_dir *1./(1.- H + ϵ)
-          else if (rte_data.absorptivity_type == AbsorptivityType::gradient_based)
-            return (scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
-                    (1. - heaviside_vals.get_value(q_index) +
-                     rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant));
-
-          // 3. revised gradient based mu : max(0, ∇H * laser_dir *1./(1.- H + ϵ))
-          else if (rte_data.absorptivity_type == AbsorptivityType::revised_gradient_based)
-            return compare_and_apply_mask<SIMDComparison::less_than>(
-              scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
-                (1. - heaviside_vals.get_value(q_index) +
-                 rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant),
-              0.,
-              /*true*/ 0.,
-              /*false*/ scalar_product(heaviside_vals.get_gradient(q_index), laser_direction) * 1. /
-                (1. - heaviside_vals.get_value(q_index) +
-                 rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant));
-          else
-            AssertThrow(false, ExcNotImplemented());
-          return scalar(0);
-        };
-
-
         const scalar I      = intensity_vals.get_value(q_index);
         const vector grad_I = intensity_vals.get_gradient(q_index);
-        scalar       mu_A   = compute_mu();
-        mu_A                = compare_and_apply_mask<SIMDComparison::less_than>(mu_A,
-                                                                 1e-6,
-                                                                 /*true*/ 1e-6,
-                                                                 /*false*/ mu_A);
+        const scalar H      = heaviside_vals.get_value(q_index);
+        const vector grad_H = heaviside_vals.get_gradient(q_index);
+
+        // 0 and 1 exact heaviside gives no grad
+        // -> mu needs to be set to near-zero value to avoid singular matrix in parallel
+        const scalar mu_A = compare_and_apply_mask<SIMDComparison::greater_than>(
+          compute_invalid_mask(I, grad_I, H, pure_liquid_level_set),
+          VectorizedArray<double>(1e-16),
+          /*true: fallback value for near-zero absorptivity*/ VectorizedArray<double>(1e-6),
+          /*false*/
+          compute_mu(rte_data,
+                     H,
+                     grad_H,
+                     laser_direction,
+                     rte_data.absorptivity_gradient_based_data.avoid_div_zero_constant));
 
         intensity_vals.submit_value(scalar_product(laser_direction, grad_I) + mu_A * I, q_index);
       }

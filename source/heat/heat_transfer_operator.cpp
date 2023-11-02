@@ -1018,10 +1018,10 @@ namespace MeltPoolDG::Heat
             Journal::print_formatted_norm(
               scratch_data.get_pcout(2),
               [&]() -> double {
-                return VectorTools::compute_L2_norm<dim>(evapor_heat_source_projected,
-                                                         scratch_data,
-                                                         temp_hanging_nodes_dof_idx,
-                                                         temp_quad_idx);
+                return VectorTools::compute_norm<dim>(evapor_heat_source_projected,
+                                                      scratch_data,
+                                                      temp_hanging_nodes_dof_idx,
+                                                      temp_quad_idx);
               },
               "int(mDot*hV)",
               "heat_transfer_operator",

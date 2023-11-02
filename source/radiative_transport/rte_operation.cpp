@@ -48,6 +48,15 @@ namespace MeltPoolDG::RadiativeTransport
                                                                                            3)
     , pseudo_time_iterator(pseudo_time_stepping)
   {
+    // TODO: get from `LaserBase`
+    for (unsigned int i = 0; i < dim; i++)
+      {
+        laser_direction[i] = rte_data.laser_direction[i];
+      }
+    AssertThrow(laser_direction.norm() > 1e-16,
+                ExcZero("laser direction has zero norm. Please check .json input parameter file"));
+    laser_direction /= laser_direction.norm(); // normalize
+
     // matrix-based simulation is not supported
     AssertThrow(rte_data.linear_solver.do_matrix_free &&
                   rte_data.pseudo_time_stepping.linear_solver.do_matrix_free,
@@ -116,6 +125,76 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim>
   void
+  RadiativeTransportOperation<dim>::setup_constraints(
+    ScratchData<dim>                       &scratch_data_in,
+    const DirichletBoundaryConditions<dim> &bc_data,
+    const PeriodicBoundaryConditions<dim>  &pbc,
+    const unsigned int                      rte_dof_idx_in,
+    const unsigned int                      rte_hanging_nodes_idx,
+    const bool                              set_inhomogeneities)
+
+  {
+    // setup hanging constraints
+    scratch_data_in.get_constraint(rte_hanging_nodes_idx).clear();
+    scratch_data_in.get_constraint(rte_hanging_nodes_idx)
+      .reinit(scratch_data_in.get_locally_relevant_dofs(rte_hanging_nodes_idx));
+    DoFTools::make_hanging_node_constraints(scratch_data_in.get_dof_handler(rte_hanging_nodes_idx),
+                                            scratch_data_in.get_constraint(rte_hanging_nodes_idx));
+
+    for (const auto &bc : pbc.get_data())
+      {
+        const auto [id_in, id_out, direction] = bc;
+        DoFTools::make_periodicity_constraints(
+          scratch_data_in.get_dof_handler(rte_hanging_nodes_idx),
+          id_in,
+          id_out,
+          direction,
+          scratch_data_in.get_constraint(rte_hanging_nodes_idx));
+      }
+
+    scratch_data_in.get_constraint(rte_hanging_nodes_idx).close();
+
+    UtilityFunctions::check_constraints(scratch_data_in.get_dof_handler(rte_hanging_nodes_idx),
+                                        scratch_data_in.get_constraint(rte_hanging_nodes_idx));
+
+    // setup Dirichlet constraints and merge
+    scratch_data_in.get_constraint(rte_dof_idx_in).clear();
+    scratch_data_in.get_constraint(rte_dof_idx_in)
+      .reinit(scratch_data_in.get_locally_relevant_dofs(rte_dof_idx_in));
+
+    if (!bc_data.get_data().empty())
+      {
+        for (const auto &bc : bc_data.get_data())
+          {
+            if (set_inhomogeneities)
+              dealii::VectorTools::interpolate_boundary_values(
+                scratch_data_in.get_mapping(),
+                scratch_data_in.get_dof_handler(rte_dof_idx_in),
+                bc.first,
+                *bc.second,
+                scratch_data_in.get_constraint(rte_dof_idx_in));
+            else
+              dealii::DoFTools::make_zero_boundary_constraints(
+                scratch_data_in.get_dof_handler(rte_dof_idx_in),
+                bc.first,
+                scratch_data_in.get_constraint(rte_dof_idx_in));
+          }
+      }
+
+    scratch_data_in.get_constraint(rte_dof_idx_in).close();
+    UtilityFunctions::check_constraints(scratch_data_in.get_dof_handler(rte_dof_idx_in),
+                                        scratch_data_in.get_constraint(rte_dof_idx_in));
+
+    scratch_data_in.get_constraint(rte_dof_idx_in)
+      .merge(scratch_data_in.get_constraint(rte_hanging_nodes_idx),
+             AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
+    scratch_data_in.get_constraint(rte_dof_idx_in).close();
+    UtilityFunctions::check_constraints(scratch_data_in.get_dof_handler(rte_dof_idx_in),
+                                        scratch_data_in.get_constraint(rte_dof_idx_in));
+  }
+
+  template <int dim>
+  void
   RadiativeTransportOperation<dim>::solve()
   {
     ScopedName         sc("rte::solve");
@@ -169,11 +248,15 @@ namespace MeltPoolDG::RadiativeTransport
                 // print final pseudo-time stepping solution
                 Journal::print_formatted_norm(
                   scratch_data.get_pcout(0),
-                  [&]() -> double { return solution_history.get_current_solution().l2_norm(); },
+                  [&]() -> double {
+                    return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                                          scratch_data,
+                                                          rte_dof_idx,
+                                                          rte_quad_idx);
+                  },
                   "pseudo-time-solution",
                   "RTE::pseudo-time-stepping",
-                  6 /*precision*/,
-                  "l2");
+                  6 /*precision*/);
               }
 
             solution_history.commit_old_solutions();
@@ -191,11 +274,15 @@ namespace MeltPoolDG::RadiativeTransport
               "pseudo-time steps");
             Journal::print_formatted_norm(
               scratch_data.get_pcout(0),
-              [&]() -> double { return solution_history.get_current_solution().l2_norm(); },
+              [&]() -> double {
+                return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                                      scratch_data,
+                                                      rte_dof_idx,
+                                                      rte_quad_idx);
+              },
               "intensity",
               "RTE::pseudo-predictor",
-              6 /*precision*/,
-              "l2");
+              6 /*precision*/);
           }
       }
     // 2) Solve the actual radiative transfer equation
@@ -238,20 +325,22 @@ namespace MeltPoolDG::RadiativeTransport
 
         solution_history.commit_old_solutions();
 
-        const ConditionalOStream &pcout = scratch_data.get_pcout(rte_data.verbosity_level);
         Journal::print_formatted_norm(
-          pcout,
+          scratch_data.get_pcout(0),
           [&]() -> double {
-            return VectorTools::compute_L2_norm<dim>(solution_history.get_current_solution(),
-                                                     scratch_data,
-                                                     rte_dof_idx,
-                                                     rte_quad_idx);
+            return VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
+                                                  scratch_data,
+                                                  rte_dof_idx,
+                                                  rte_quad_idx);
           },
           "intensity",
           "RTE",
           11 /*precision*/
         );
       }
+
+    solution_history.get_current_solution().update_ghost_values();
+
     IterationMonitor::add_linear_iterations(sc, iter);
   }
   template <int dim>
@@ -305,6 +394,100 @@ namespace MeltPoolDG::RadiativeTransport
     solution_history.get_current_solution().update_ghost_values();
 
     scratch_data.get_constraint(rte_dof_idx).distribute(solution_history.get_current_solution());
+  }
+
+  template <int dim>
+  void
+  RadiativeTransportOperation<dim>::compute_heat_source(VectorType        &heat_source,
+                                                        const unsigned int heat_source_dof_idx,
+                                                        const bool         zero_out) const
+  {
+    if (zero_out)
+      heat_source = 0.0;
+
+    if (!solution_history.get_current_solution().has_ghost_elements())
+      solution_history.get_current_solution().update_ghost_values();
+
+    // declarations
+    FEValues<dim> heat_source_eval(
+      scratch_data.get_mapping(),
+      scratch_data.get_fe(heat_source_dof_idx),
+      Quadrature<dim>(scratch_data.get_fe(heat_source_dof_idx).get_unit_support_points()),
+      update_quadrature_points); // dst
+    FEValues<dim> intensity_grad_eval(
+      scratch_data.get_mapping(),
+      scratch_data.get_fe(rte_dof_idx),
+      Quadrature<dim>(scratch_data.get_fe(heat_source_dof_idx).get_unit_support_points()),
+      update_gradients); // src
+    const unsigned int dofs_per_cell = scratch_data.get_fe(heat_source_dof_idx).n_dofs_per_cell();
+    std::vector<types::global_dof_index>        local_dof_indices(dofs_per_cell);
+    std::vector<dealii::Tensor<1, dim, double>> intensity_grad_at_q(
+      intensity_grad_eval.n_quadrature_points);
+    VectorType heat_source_multiplicity;
+    heat_source_multiplicity.reinit(heat_source);
+
+    for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
+      {
+        if (cell->is_locally_owned())
+          {
+            // make iterators
+            TriaIterator<DoFCellAccessor<dim, dim, false>> intensity_grad_dof_cell(
+              &scratch_data.get_triangulation(),
+              cell->level(),
+              cell->index(),
+              &scratch_data.get_dof_handler(rte_dof_idx));
+
+            TriaIterator<DoFCellAccessor<dim, dim, false>> heat_source_dof_cell(
+              &scratch_data.get_triangulation(),
+              cell->level(),
+              cell->index(),
+              &scratch_data.get_dof_handler(heat_source_dof_idx));
+
+            heat_source_dof_cell->get_dof_indices(local_dof_indices);
+
+            // record multiplicity entry
+            Vector<double> heat_source_multiplicity_local(dofs_per_cell);
+            for (auto &val : heat_source_multiplicity_local)
+              val = 1.0;
+            scratch_data.get_constraint(heat_source_dof_idx)
+              .distribute_local_to_global(heat_source_multiplicity_local,
+                                          local_dof_indices,
+                                          heat_source_multiplicity);
+
+            // reinit and eval
+            heat_source_eval.reinit(heat_source_dof_cell);
+            intensity_grad_eval.reinit(intensity_grad_dof_cell);
+            intensity_grad_eval.get_function_gradients(solution_history.get_current_solution(),
+                                                       intensity_grad_at_q);
+
+            Vector<double> heat_source_vector_local(dofs_per_cell);
+
+            // get local evaluation
+            for (const auto q : heat_source_eval.quadrature_point_indices())
+              {
+                heat_source_vector_local[q] =
+                  std::abs(scalar_product(intensity_grad_at_q[q], laser_direction));
+              }
+            scratch_data.get_constraint(heat_source_dof_idx)
+              .distribute_local_to_global(heat_source_vector_local, local_dof_indices, heat_source);
+          }
+      }
+    heat_source.compress(VectorOperation::add);
+    heat_source_multiplicity.compress(VectorOperation::add);
+
+    /*
+     * average the heat source added, because an entry is written to multiple times
+     */
+    for (unsigned int source_mult_local_index = 0;
+         source_mult_local_index < heat_source_multiplicity.locally_owned_size();
+         ++source_mult_local_index)
+      if (heat_source_multiplicity.local_element(source_mult_local_index) > 1.0)
+        heat_source.local_element(source_mult_local_index) /=
+          heat_source_multiplicity.local_element(source_mult_local_index);
+    heat_source.zero_out_ghost_values();
+
+    if (!solution_history.get_current_solution().has_ghost_elements())
+      solution_history.get_current_solution().update_ghost_values();
   }
 
   template <int dim>

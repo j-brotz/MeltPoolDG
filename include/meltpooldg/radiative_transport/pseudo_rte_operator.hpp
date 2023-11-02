@@ -25,8 +25,14 @@ namespace MeltPoolDG::RadiativeTransport
    *              I (W/m^2) is the intensity of the laser. Is a field quantity.
    *              D (/) is the diffusion term scaling, or intensity diffusivity coefficient.
    *                It is optional, not physical and is only to create numerical diffusion.
-   *              µ_A (/) is the absorption opacity of the surface.
-   *              
+   *              µ_A (/) is the absorption opacity of the surface. It can be based on material constants or heaviside gradients.
+   *                In the (default) gradient-based absorption opacity,
+   *                it is defined as a function of the heaviside function gradient and the laser direction:
+   *                                      1                 /               1            \
+   *                µ_A = < ∇H   s   ------------ >   = max | ∇H   s   ------------  , 0 |
+   *                                  (1.- H + ϵ)           \          (1.- H + ϵ)       /
+   *                      where ϵ is a small scalar constant to avoid a division by zero (avoid_div_zero_constant)
+   *                      and <*> represent MacAulay brackets.
    *  The pseudo-RTE cast into a weak formulation (Φ is the test function) reads as follows:
    *  ( Φ , I^(n+1)  )    = ( Φ ,  I^(n) + dt * [ - ∇ · (s I^(n)) - µ_A · I^(n) + D · ΔI^(n) ]   )
    *                  Ω                                                                          Ω
@@ -37,6 +43,11 @@ namespace MeltPoolDG::RadiativeTransport
    *  | Φ, I^(n+1)| = | Φ, I^(n) + dt * (-s · ∇I^(n) -             µ_A             ·  I^(n) + D · ΔI^(n) )|
    *  \           /   \                                                                                   /
    *              Ω                                                                                       Ω
+   *  or with the full (default) gradient-based  absorption opacity definition:
+   *  /           \   /                                                1                                  \
+   *  | Φ, I^(n+1)| = | Φ, I^(n) + dt * (-s · ∇I^(n) - < ∇H · s · ------------ >    · I^(n) + D · ΔI^(n) )|
+   *  \           /   \                                           (1.- H + ϵ)                             /
+   *              Ω
    */
   // clang-format on
 
@@ -65,6 +76,9 @@ namespace MeltPoolDG::RadiativeTransport
     const unsigned int hs_dof_idx;
 
     Tensor<1, dim, number> laser_direction;
+
+    const double pure_gas_level_set;
+    const double pure_liquid_level_set;
 
   public:
     PseudoRTEOperator(const ScratchData<dim>               &scratch_data_in,

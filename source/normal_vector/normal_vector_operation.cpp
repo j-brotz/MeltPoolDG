@@ -169,7 +169,7 @@ namespace MeltPoolDG::NormalVector
       Journal::print_formatted_norm(
         pcout,
         [&]() -> double {
-          return MeltPoolDG::VectorTools::compute_L2_norm<dim>(
+          return MeltPoolDG::VectorTools::compute_norm<dim>(
             solution_history.get_current_solution().block(d),
             scratch_data,
             normal_dof_idx,
