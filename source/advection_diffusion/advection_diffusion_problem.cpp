@@ -106,7 +106,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     /*
      *  create the matrix-free object
      */
-    scratch_data->build();
+    scratch_data->build(false, false);
 
     if (advec_diff_operation) // TODO: better place
       advec_diff_operation->reinit();

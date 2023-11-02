@@ -163,7 +163,8 @@ namespace MeltPoolDG::MeltPool
     // constrained indices in matrix-free have to be updated
     // which is done in the following by rebuilding matrix-free.
     if (mp_data.solid.set_velocity_to_zero || mp_data.solid.do_not_reinitialize)
-      const_cast<ScratchData<dim> &>(scratch_data).build();
+      const_cast<ScratchData<dim> &>(scratch_data)
+        .build(scratch_data.enable_boundary_faces, scratch_data.enable_inner_faces);
   }
 
   template <int dim>

@@ -1,4 +1,5 @@
 #include "meltpooldg/heat/laser_data.hpp"
+#include "meltpooldg/interface/parameters.hpp"
 #ifndef MELT_POOL_DG_DIM
 #  define MELT_POOL_DG_DIM 1
 #endif
@@ -353,7 +354,7 @@ namespace MeltPoolDG::MeltPool
 
                 if (evaporation_operation &&
                     (base_in->parameters.evapor.formulation_source_term_heat ==
-                       InterfaceForceType::sharp ||
+                       EvaporCoolingInterfaceFluxType::sharp ||
                      base_in->parameters.evapor.formulation_source_term_continuity ==
                        InterfaceForceType::sharp))
                   level_set_operation->update_surface_mesh();
@@ -1180,7 +1181,7 @@ namespace MeltPoolDG::MeltPool
         if (problem_specific_parameters.do_evaporative_heat_flux)
           {
             if (base_in->parameters.evapor.formulation_source_term_heat ==
-                InterfaceForceType::sharp)
+                EvaporCoolingInterfaceFluxType::sharp)
               heat_operation->register_surface_mesh(level_set_operation->get_surface_mesh_info());
 
             heat_operation->register_evaporative_mass_flux(
@@ -1189,8 +1190,9 @@ namespace MeltPoolDG::MeltPool
               base_in->parameters.material.latent_heat_of_evaporation,
               problem_specific_parameters.do_recoil_pressure &&
                 !problem_specific_parameters
-                   .do_evaporative_velocity_jump /*do phenomenological recoil pressure model*/); // @todo:
-                                                                                                 // clean-up
+                   .do_evaporative_velocity_jump /*do phenomenological recoil pressure model*/,
+              base_in->parameters.evapor.formulation_source_term_heat); // @todo:
+                                                                        // clean-up
           }
       }
     /*
@@ -1380,10 +1382,10 @@ namespace MeltPoolDG::MeltPool
         evaporation_operation->compute_evaporative_mass_flux();
       }
 
-    if (evaporation_operation &&
-        (base_in->parameters.evapor.formulation_source_term_heat == InterfaceForceType::sharp ||
-         base_in->parameters.evapor.formulation_source_term_continuity ==
-           InterfaceForceType::sharp))
+    if (evaporation_operation && (base_in->parameters.evapor.formulation_source_term_heat ==
+                                    EvaporCoolingInterfaceFluxType::sharp ||
+                                  base_in->parameters.evapor.formulation_source_term_continuity ==
+                                    InterfaceForceType::sharp))
       level_set_operation->update_surface_mesh();
   }
 
@@ -1466,8 +1468,11 @@ namespace MeltPoolDG::MeltPool
 
     // TODO: add function to each operation to check the requirements on ScratchData
     scratch_data->build(problem_specific_parameters.do_heat_transfer,
-                        base_in->parameters.laser.impact_type ==
-                          LaserImpactType::interface_sharp_conforming /*enable_inner_face_loops*/);
+                        (base_in->parameters.laser.impact_type ==
+                           LaserImpactType::interface_sharp_conforming ||
+                         base_in->parameters.evapor.formulation_source_term_heat ==
+                           EvaporCoolingInterfaceFluxType::sharp_conforming)
+                        /*enable_inner_face_loops*/);
 
     if (do_reinit)
       {
@@ -1529,6 +1534,11 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::update_phases(const VectorType         &ls_as_heaviside,
                                       const Parameters<double> &parameters) const
   {
+    const bool ls_has_ghost_values = ls_as_heaviside.has_ghost_elements();
+
+    if (!ls_has_ghost_values)
+      ls_as_heaviside.update_ghost_values();
+
     if (heat_operation && problem_specific_parameters.do_solidification)
       heat_operation->get_temperature().update_ghost_values();
 
@@ -1579,7 +1589,6 @@ namespace MeltPoolDG::MeltPool
         if (darcy_operation)
           darcy_operation->get_damping_at_q().resize_fast(matrix_free.n_cell_batches() *
                                                           ls_values.n_q_points);
-
         const auto &material    = parameters.material;
         const auto  rho_g       = VectorizedArray<double>(material.first.density);
         const auto  viscosity_g = VectorizedArray<double>(material.first.viscosity);
@@ -1777,6 +1786,9 @@ namespace MeltPoolDG::MeltPool
 
     if (heat_operation && problem_specific_parameters.do_solidification)
       heat_operation->get_temperature().zero_out_ghost_values();
+
+    if (!ls_has_ghost_values)
+      ls_as_heaviside.zero_out_ghost_values();
   }
 
   template <int dim>

@@ -1,3 +1,4 @@
+#include "meltpooldg/interface/parameters.hpp"
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
@@ -69,15 +70,17 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   HeatTransferOperation<dim>::register_evaporative_mass_flux(
-    VectorType        *evaporative_mass_flux_in,
-    const unsigned int evapor_mass_flux_dof_idx_in,
-    const double       latent_heat_of_evaporation,
-    const bool         do_phenomenological_recoil_pressure)
+    VectorType                          *evaporative_mass_flux_in,
+    const unsigned int                   evapor_mass_flux_dof_idx_in,
+    const double                         latent_heat_of_evaporation,
+    const bool                           do_phenomenological_recoil_pressure,
+    const EvaporCoolingInterfaceFluxType type)
   {
     heat_operator->register_evaporative_mass_flux(evaporative_mass_flux_in,
                                                   evapor_mass_flux_dof_idx_in,
                                                   latent_heat_of_evaporation,
-                                                  do_phenomenological_recoil_pressure);
+                                                  do_phenomenological_recoil_pressure,
+                                                  type);
   }
 
 

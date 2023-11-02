@@ -12,7 +12,7 @@
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
 #include "meltpooldg/interface/scratch_data.hpp"
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include "meltpooldg/utilities/utility_functions.hpp"
 
 namespace dealii::GridGenerator
 {
@@ -603,20 +603,34 @@ namespace MeltPoolDG::LevelSet::Tools
             cell->set_material_id(min_ls >= lower_threshold ? 1 : 0);
           }
       }
+
     if (!has_ghost_elements)
       level_set_heaviside.zero_out_ghost_values();
 
     // communicate local data to ghost cells
-    using active_cell_iterator = typename Triangulation<dim>::active_cell_iterator;
-    auto pack                  = [](const active_cell_iterator &cell) -> unsigned int {
-      return cell->material_id();
-    };
+    if (get_triangulation_type(scratch_data.get_triangulation()) !=
+        dealii::TriangulationType::serial)
+      {
+        using active_cell_iterator = typename Triangulation<dim>::active_cell_iterator;
+        auto pack                  = [](const active_cell_iterator &cell) -> unsigned int {
+          return cell->material_id();
+        };
 
-    auto unpack = [](const active_cell_iterator &cell, const unsigned int material_id) -> void {
-      cell->set_material_id(material_id);
-    };
+        auto unpack = [](const active_cell_iterator &cell, const unsigned int material_id) -> void {
+          cell->set_material_id(material_id);
+        };
+        if (const auto tria_shared = (dynamic_cast<parallel::shared::Triangulation<dim> *>(
+              const_cast<Triangulation<dim> *>(&scratch_data.get_triangulation()))))
+          {
+            AssertThrow(
+              tria_shared->with_artificial_cells(),
+              ExcMessage(
+                "For a shared triangulation, make sure that you allow to create artificial cells."
+                "Otherwise every cell is a ghost cell, which prohibits the use of this functionality."));
+          }
 
-    GridTools::exchange_cell_data_to_ghosts<unsigned int, Triangulation<dim>>(
-      scratch_data.get_triangulation(), pack, unpack);
+        GridTools::exchange_cell_data_to_ghosts<unsigned int, Triangulation<dim>>(
+          scratch_data.get_triangulation(), pack, unpack);
+      }
   }
 } // namespace MeltPoolDG::LevelSet::Tools

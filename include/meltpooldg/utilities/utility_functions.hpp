@@ -7,6 +7,8 @@
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/vectorization.h>
 
+#include <deal.II/distributed/fully_distributed_tria.h>
+
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe_dgq.h>
@@ -18,6 +20,7 @@
 #include <deal.II/fe/fe_tools.h>
 
 #include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
@@ -39,6 +42,31 @@
 
 namespace dealii
 {
+  enum TriangulationType
+  {
+    shared,
+    parallel_distributed,
+    parallel_fullydistributed,
+    serial
+  };
+
+  template <int dim, int spacedim = dim>
+  TriangulationType
+  get_triangulation_type(const Triangulation<dim, spacedim> &tria)
+  {
+    if (dynamic_cast<parallel::shared::Triangulation<dim, spacedim> *>(
+          const_cast<Triangulation<dim, spacedim> *>(&tria)))
+      return TriangulationType::shared;
+    else if (dynamic_cast<parallel::distributed::Triangulation<dim, spacedim> *>(
+               const_cast<Triangulation<dim, spacedim> *>(&tria)))
+      return TriangulationType::parallel_distributed;
+    else if (dynamic_cast<parallel::fullydistributed::Triangulation<dim, spacedim> *>(
+               const_cast<Triangulation<dim, spacedim> *>(&tria)))
+      return TriangulationType::parallel_fullydistributed;
+    else
+      return TriangulationType::serial;
+  }
+
   // note: the content of this namespace will be part of deal.II
   namespace internal
   {

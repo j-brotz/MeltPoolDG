@@ -58,7 +58,9 @@ namespace MeltPoolDG
     reinit(const Mapping<dim, spacedim>                         &mapping,
            const std::vector<const DoFHandler<dim, spacedim> *> &dof_handler,
            const std::vector<const AffineConstraints<number> *> &constraint,
-           const std::vector<Quadrature<dim>>                   &quad);
+           const std::vector<Quadrature<dim>>                   &quad,
+           const bool                                            enable_boundary_face_loops,
+           const bool                                            enable_inner_face_loops);
     /**
      * Fill internal data structures step-by-step.
      */
@@ -78,8 +80,7 @@ namespace MeltPoolDG
     create_partitioning();
 
     void
-    build(const bool enable_boundary_face_loops = false,
-          const bool enable_inner_face_loops    = false);
+    build(const bool enable_boundary_face_loops, const bool enable_inner_face_loops);
 
     /**
      * initialize vectors
@@ -203,6 +204,9 @@ namespace MeltPoolDG
 
     Utilities::MPI::RemotePointEvaluation<dim, dim> &
     get_remote_point_evaluation(const unsigned int dof_idx) const;
+
+    bool enable_boundary_faces;
+    bool enable_inner_faces;
 
   private:
     bool                                           do_matrix_free;

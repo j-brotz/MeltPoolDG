@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-10-31
+- Add new option `sharp_conforming` for evaporative cooling
+```json
+{
+  "evaporation": {
+~    "evapor formulation source term heat": "sharp_conforming"
+  },
+}
+```
+
 ## 2023-10-30
 - Add new option `interface_sharp_conforming` for Gaussian laser heat source
 ```json

@@ -159,7 +159,7 @@ namespace MeltPoolDG::Reinitialization
     /*
      *  create the matrix-free object
      */
-    scratch_data->build();
+    scratch_data->build(false, false);
 
     if (reinit_operation)
       reinit_operation->reinit();

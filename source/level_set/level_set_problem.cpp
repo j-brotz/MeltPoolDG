@@ -326,7 +326,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  create the matrix-free object
      */
-    scratch_data->build();
+    scratch_data->build(false, false);
 
     if (do_reinit)
       {
