@@ -21,11 +21,11 @@ import collections.abc
 
 old_parameter_names = [
     # ... add old parameter names
-    #["old", "my age"],
+    # ["old", "my age"],
 ]
 new_parameter_names = [
     # ... add new parameter names
-    #["new", "new", "my new age"],
+    # ["new", "new", "my new age"],
 ]
 delete_parameter_names = [
     # ... add parameter names to be deleted
@@ -33,7 +33,7 @@ delete_parameter_names = [
 ]
 
 new_categories = [
-    #{'new': {'new': {'new': {}}}},
+    # {'new': {'new': {'new': {}}}},
 ]  # optional: add entirely new parameter categories
 
 root_dir = "."
@@ -92,7 +92,7 @@ def remove_empty_items(d):
 def remove_empty_nested_items(d):
     for i in range(10):  # max 10 nested parameters
         d = remove_empty_items(d)
-    return(d)
+    return (d)
 
 
 def modify_json(json_f, appendix=""):

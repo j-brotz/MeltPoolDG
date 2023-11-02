@@ -128,10 +128,8 @@ namespace MeltPoolDG
         const auto    &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
         Vector<double> material_id(tria.n_active_cells());
 
-        unsigned int i = 0;
-
         for (const auto &cell : tria.active_cell_iterators())
-          material_id[i++] = cell->material_id();
+          material_id[cell->active_cell_index()] = cell->material_id();
 
         data_out.add_data_vector(material_id, "material_id", DataOut<dim>::type_cell_data);
       }

@@ -12,7 +12,7 @@
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
 #include "meltpooldg/interface/scratch_data.hpp"
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include "meltpooldg/utilities/utility_functions.hpp"
 
 namespace dealii::GridGenerator
 {
@@ -590,9 +590,6 @@ namespace MeltPoolDG::LevelSet::Tools
   {
     const bool has_ghost_elements = level_set_heaviside.has_ghost_elements();
 
-    const bool distributed_mesh = (dynamic_cast<parallel::distributed::Triangulation<dim> *>(
-      const_cast<Triangulation<dim> *>(&scratch_data.get_triangulation())));
-
     if (!has_ghost_elements)
       level_set_heaviside.update_ghost_values();
 
@@ -611,7 +608,8 @@ namespace MeltPoolDG::LevelSet::Tools
       level_set_heaviside.zero_out_ghost_values();
 
     // communicate local data to ghost cells
-    if (distributed_mesh)
+    if (get_triangulation_type(scratch_data.get_triangulation()) !=
+        dealii::TriangulationType::serial)
       {
         using active_cell_iterator = typename Triangulation<dim>::active_cell_iterator;
         auto pack                  = [](const active_cell_iterator &cell) -> unsigned int {
@@ -621,6 +619,15 @@ namespace MeltPoolDG::LevelSet::Tools
         auto unpack = [](const active_cell_iterator &cell, const unsigned int material_id) -> void {
           cell->set_material_id(material_id);
         };
+        if (const auto tria_shared = (dynamic_cast<parallel::shared::Triangulation<dim> *>(
+              const_cast<Triangulation<dim> *>(&scratch_data.get_triangulation()))))
+          {
+            AssertThrow(
+              tria_shared->with_artificial_cells(),
+              ExcMessage(
+                "For a shared triangulation, make sure that you allow to create artificial cells."
+                "Otherwise every cell is a ghost cell, which prohibits the use of this functionality."));
+          }
 
         GridTools::exchange_cell_data_to_ghosts<unsigned int, Triangulation<dim>>(
           scratch_data.get_triangulation(), pack, unpack);
