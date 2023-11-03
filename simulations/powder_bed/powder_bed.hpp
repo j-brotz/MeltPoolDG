@@ -22,6 +22,37 @@
 namespace MeltPoolDG::Simulation::PowderBed
 {
   template <int dim>
+  class IntensityBoundary : public Function<dim>
+  {
+  public:
+    IntensityBoundary(const double             power_in,
+                      const double             radius_in,
+                      const Point<dim, double> center_in)
+      : Function<dim>(1)
+      , power(power_in)
+      , radius(radius_in)
+      , center(center_in)
+    {}
+    double
+    value(const Point<dim> &p, const unsigned int) const override
+    {
+      const double peak_factor = 1. / (radius * radius * numbers::PI * 0.5);
+
+      const double r = center.distance(p);
+
+      const double s          = r / radius;
+      const double peak_power = power * peak_factor;
+      return peak_power * std::exp(-2. * s * s);
+    }
+
+  private:
+    const double             power;
+    const double             radius;
+    const Point<dim, double> center;
+  };
+
+
+  template <int dim>
   class SimulationPowderBed : public SimulationBase<dim>
   {
   private:
@@ -164,11 +195,30 @@ namespace MeltPoolDG::Simulation::PowderBed
 
       if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
+      /*
+       * BC for RTE
+       */
+      if (this->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+        {
+          Point<dim> laser_center;
+          for (int i = 0; i < dim; i++)
+            laser_center[i] = this->parameters.laser.center[i];
+          laser_center[dim - 1] = domain_z_max;
+          this->attach_dirichlet_boundary_condition(
+            upper_bc,
+            std::make_shared<IntensityBoundary<dim>>(this->parameters.laser.power,
+                                                     this->parameters.laser.rte.laser_beam_radius,
+                                                     laser_center),
+            "intensity");
+        }
     }
 
     void
     set_field_conditions() override
     {
+      if (this->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+        this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
+                                       "intensity");
       if (this->parameters.base.problem_name == ProblemType::heat_transfer)
         {
           // attach initial temperature

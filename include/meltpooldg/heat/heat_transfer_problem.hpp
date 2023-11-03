@@ -25,6 +25,8 @@ namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
+  BETTER_ENUM(AMRStrategy, char, KellyErrorEstimator, generic)
+
   template <int dim>
   class HeatTransferProblem : public ProblemBase<dim>
   {
@@ -87,7 +89,8 @@ namespace MeltPoolDG::Heat
   private:
     struct
     {
-      bool do_solidification = false;
+      bool        do_solidification = false;
+      AMRStrategy amr_strategy      = AMRStrategy::KellyErrorEstimator;
     } problem_specific_parameters;
     /*
      *  This function initials the relevant scratch data
