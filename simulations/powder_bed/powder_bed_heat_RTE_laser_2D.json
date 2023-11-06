@@ -47,6 +47,7 @@
     "domain x max": "100e-6",
     "domain y min": "-50e-6",
     "domain y max": "100e-6",
+    "RTE laser beam radius": "70e-6",
     "cell repetitions": "4,3",
     "initial temperature": "500.0",
     "powder bed": {

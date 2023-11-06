@@ -43,10 +43,6 @@ namespace MeltPoolDG
     LaserImpactType     impact_type = LaserImpactType::volumetric;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     LaserHeatSourceModel heat_source_model = LaserHeatSourceModel::not_initialized;
-    struct RTEData
-    {
-      number laser_beam_radius = 0.0;
-    } rte;
     struct GaussData
     {
       number laser_beam_radius   = 0.0;
@@ -131,12 +127,6 @@ namespace MeltPoolDG
         prm.add_parameter("laser gauss absorptivity liquid",
                           gauss.absorptivity_liquid,
                           "Laser energy absorptivity of the liquid part of the domain.");
-        /*
-         *   RTE
-         */
-        prm.add_parameter("laser RTE laser beam radius",
-                          rte.laser_beam_radius,
-                          "Laser beam radius.");
         prm.enter_subsection("analytical");
         {
           /*

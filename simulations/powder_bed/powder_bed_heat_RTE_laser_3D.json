@@ -17,7 +17,6 @@
   },
   "laser": {
     "laser center": "0.0,0.0,0.0",
-    "laser RTE laser beam radius": "70e-6",
     "laser heat source model": "RTE",
     "laser impact type": "interface",
     "laser power": "100"
@@ -49,6 +48,7 @@
     "domain z min": "-50e-6",
     "domain z max": "100e-6",
     "cell repetitions": "4,4,3",
+    "RTE laser beam radius": "70e-6",
     "initial temperature": "500.0",
     "powder bed": {
       "particle list file": "particles_in_domain.csv",
@@ -59,7 +59,7 @@
     "amr strategy": "generic"
   },
   "adaptive meshing": {
-    "do amr": "true",
+    "do amr": "false",
     "lower perc to coarsen": "0.3",
     "max grid refinement level": "2",
     "n initial refinement cycles": "2",

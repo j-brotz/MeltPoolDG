@@ -56,12 +56,13 @@ namespace MeltPoolDG::Simulation::PowderBed
   class SimulationPowderBed : public SimulationBase<dim>
   {
   private:
-    double                    domain_x_min = 0;
-    double                    domain_x_max = 0;
-    double                    domain_y_min = 0;
-    double                    domain_y_max = 0;
-    double                    domain_z_min = 0;
-    double                    domain_z_max = 0;
+    double                    domain_x_min          = 0;
+    double                    domain_x_max          = 0;
+    double                    domain_y_min          = 0;
+    double                    domain_y_max          = 0;
+    double                    domain_z_min          = 0;
+    double                    domain_z_max          = 0;
+    double                    rte_laser_beam_radius = 0;
     std::vector<unsigned int> cell_repetitions;
     double                    T_initial = 500;
     MeltPool::PowderBedData   powder_bed_data;
@@ -99,6 +100,9 @@ namespace MeltPoolDG::Simulation::PowderBed
                           cell_repetitions,
                           "cell repetitions per dim applied before global refinement or amr");
         prm.add_parameter("initial temperature", T_initial, "Set the initial temperature.");
+        prm.add_parameter("RTE laser beam radius",
+                          rte_laser_beam_radius,
+                          "Laser beam radius in case of an RTE heat source is used.");
         powder_bed_data.add_parameters(prm);
       }
       prm.leave_subsection();
@@ -207,7 +211,7 @@ namespace MeltPoolDG::Simulation::PowderBed
           this->attach_dirichlet_boundary_condition(
             upper_bc,
             std::make_shared<IntensityBoundary<dim>>(this->parameters.laser.power,
-                                                     this->parameters.laser.rte.laser_beam_radius,
+                                                     rte_laser_beam_radius,
                                                      laser_center),
             "intensity");
         }
