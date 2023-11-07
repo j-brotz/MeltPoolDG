@@ -1,6 +1,18 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-11-06
+- Add new option `amr strategy` for heat
+``` diff
+{
+  "heat": {
+   "problem specific": {
++     "amr strategy": "generic|KellyErrorEstimator"
+    }
+  }
+}
+```
+
 ## 2023-10-31
 - Add new option `sharp_conforming` for evaporative cooling
 ```json

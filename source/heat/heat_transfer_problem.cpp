@@ -113,6 +113,9 @@ namespace MeltPoolDG::Heat
         "do solidification",
         problem_specific_parameters.do_solidification,
         "Set this parameter to true if you want to consider melting/solidification effects.");
+      prm.add_parameter("amr strategy",
+                        problem_specific_parameters.amr_strategy,
+                        "Select the AMR strategy.");
     }
     prm.leave_subsection();
   }
@@ -406,8 +409,12 @@ namespace MeltPoolDG::Heat
                         base_in->parameters.laser.impact_type ==
                           LaserImpactType::interface_sharp_conforming /*enable_inner_face_loops*/);
 
-    if (do_reinit && heat_operation)
-      heat_operation->reinit();
+    if (do_reinit)
+      {
+        heat_operation->reinit();
+        if (rte_operation)
+          rte_operation->reinit();
+      }
   }
 
   template <int dim>
@@ -461,20 +468,47 @@ namespace MeltPoolDG::Heat
     const auto mark_cells_for_refinement = [&](Triangulation<dim> &tria) -> bool {
       Vector<float> estimated_error_per_cell(base_in->triangulation->n_active_cells());
 
-      VectorType locally_relevant_solution;
-      locally_relevant_solution.reinit(scratch_data->get_partitioner(temp_dof_idx));
-      locally_relevant_solution.copy_locally_owned_data_from(heat_operation->get_temperature());
-      scratch_data->get_constraint(temp_dof_idx).distribute(locally_relevant_solution);
-      locally_relevant_solution.update_ghost_values();
+      switch (problem_specific_parameters.amr_strategy)
+        {
+            case AMRStrategy::KellyErrorEstimator: {
+              VectorType locally_relevant_solution;
+              locally_relevant_solution.reinit(scratch_data->get_partitioner(temp_dof_idx));
+              locally_relevant_solution.copy_locally_owned_data_from(
+                heat_operation->get_temperature());
+              scratch_data->get_constraint(temp_dof_idx).distribute(locally_relevant_solution);
+              locally_relevant_solution.update_ghost_values();
 
-      KellyErrorEstimator<dim>::estimate(scratch_data->get_mapping(),
-                                         scratch_data->get_dof_handler(temp_dof_idx),
-                                         scratch_data->get_face_quadrature(temp_quad_idx),
-                                         {}, // neumann bc
-                                         locally_relevant_solution,
-                                         estimated_error_per_cell);
-      auto vec =
-        Utilities::MPI::gather(scratch_data->get_mpi_comm(), estimated_error_per_cell.l2_norm());
+              KellyErrorEstimator<dim>::estimate(scratch_data->get_mapping(),
+                                                 scratch_data->get_dof_handler(temp_dof_idx),
+                                                 scratch_data->get_face_quadrature(temp_quad_idx),
+                                                 {}, // neumann bc
+                                                 locally_relevant_solution,
+                                                 estimated_error_per_cell);
+              break;
+            }
+            case AMRStrategy::generic: {
+              VectorType locally_relevant_solution;
+              locally_relevant_solution.reinit(scratch_data->get_partitioner(level_set_dof_idx));
+
+              locally_relevant_solution.copy_locally_owned_data_from(level_set_as_heaviside);
+
+              for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
+                locally_relevant_solution.local_element(i) =
+                  (1.0 - std::pow(2.0 * locally_relevant_solution.local_element(i) - 1.0, 2));
+
+              locally_relevant_solution.update_ghost_values();
+
+              dealii::VectorTools::integrate_difference(dof_handler_level_set,
+                                                        locally_relevant_solution,
+                                                        Functions::ZeroFunction<dim>(),
+                                                        estimated_error_per_cell,
+                                                        scratch_data->get_quadrature(temp_dof_idx),
+                                                        dealii::VectorTools::L2_norm);
+              break;
+            }
+          default:
+            AssertThrow(false, ExcNotImplemented());
+        }
 
       parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
         tria,
@@ -485,9 +519,18 @@ namespace MeltPoolDG::Heat
       return true;
     };
 
-    const auto attach_vectors = [&](std::vector<VectorType *> &vectors) {
-      heat_operation->attach_vectors(vectors);
-    };
+    const auto attach_vectors =
+      [&](std::vector<std::pair<const DoFHandler<dim> *,
+                                std::function<void(std::vector<VectorType *> &)>>> &data) {
+        data.emplace_back(&dof_handler, [&](std::vector<VectorType *> &vectors) {
+          heat_operation->attach_vectors(vectors);
+        });
+        if (rte_operation)
+          data.emplace_back(&scratch_data->get_dof_handler(rte_dof_idx),
+                            [&](std::vector<VectorType *> &vectors) {
+                              rte_operation->attach_vectors(vectors);
+                            });
+      };
 
     const auto post = [&]() {
       heat_operation->distribute_constraints();
@@ -496,6 +539,8 @@ namespace MeltPoolDG::Heat
         compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
       if (heaviside_field_function)
         compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
+      if (rte_operation)
+        rte_operation->distribute_constraints();
     };
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in, true); };
@@ -505,7 +550,7 @@ namespace MeltPoolDG::Heat
                                  post,
                                  setup_dof_system,
                                  base_in->parameters.amr,
-                                 dof_handler,
+                                 *base_in->triangulation,
                                  time_iterator->get_current_time_step_number());
   }
 
