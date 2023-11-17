@@ -71,7 +71,7 @@ namespace MeltPoolDG
               // least squares projection (WIP)
               least_squares_projection)
 
-  BETTER_ENUM(RestartTimeType, char, real, simulation)
+  BETTER_ENUM(TimeType, char, real, simulation)
 
   BETTER_ENUM(ConvectionStabilizationType,
               char,
@@ -362,20 +362,20 @@ namespace MeltPoolDG
   template <typename number = double>
   struct ProfilingData
   {
-    bool   enable               = false;
-    int    write_frequency      = 1;
-    double write_time_step_size = 0.0;
+    bool     enable               = false;
+    double   write_time_step_size = 10.0;
+    TimeType time_type            = TimeType::real;
   };
 
   template <typename number = double>
   struct RestartData
   {
-    int             load                 = -1;
-    int             save                 = -1;
-    std::string     directory            = "";
-    std::string     prefix               = "restart";
-    double          write_time_step_size = 0.0;
-    RestartTimeType time_type            = RestartTimeType::real;
+    int         load                 = -1;
+    int         save                 = -1;
+    std::string directory            = "";
+    std::string prefix               = "restart";
+    double      write_time_step_size = 0.0;
+    TimeType    time_type            = TimeType::real;
   };
 
   template <typename number = double>

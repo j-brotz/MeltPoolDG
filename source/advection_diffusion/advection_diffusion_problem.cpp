@@ -9,7 +9,6 @@
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
-#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
@@ -43,21 +42,19 @@ namespace MeltPoolDG::AdvectionDiffusion
             refine_mesh(base_in);
           }
 
-        const int n = time_iterator->get_current_time_step_number();
-        if ((n % base_in->parameters.profiling.write_frequency == 0) &&
-            base_in->parameters.profiling.enable)
+        if (profiling_monitor && profiling_monitor->now())
           {
-            scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-            scratch_data->get_pcout() << std::endl;
-            CellMonitor::print(scratch_data->get_pcout());
+            profiling_monitor->print(scratch_data->get_pcout(),
+                                     scratch_data->get_timer(),
+                                     scratch_data->get_mpi_comm());
           }
       }
     //... always print timing statistics
-    if (base_in->parameters.profiling.enable)
+    if (profiling_monitor)
       {
-        scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-        scratch_data->get_pcout() << std::endl;
-        CellMonitor::print(scratch_data->get_pcout());
+        profiling_monitor->print(scratch_data->get_pcout(),
+                                 scratch_data->get_timer(),
+                                 scratch_data->get_mpi_comm());
       }
     Journal::print_end(scratch_data->get_pcout());
   }
@@ -237,6 +234,13 @@ namespace MeltPoolDG::AdvectionDiffusion
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(advec_diff_dof_idx),
                                            scratch_data->get_pcout(1));
+    /*
+     *  initialize profiling
+     */
+    if (base_in->parameters.profiling.enable)
+      profiling_monitor =
+        std::make_unique<Profiling::ProfilingMonitor<double>>(base_in->parameters.profiling,
+                                                              *time_iterator);
   }
 
   template <int dim>

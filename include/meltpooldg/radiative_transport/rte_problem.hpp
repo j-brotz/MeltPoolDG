@@ -7,6 +7,7 @@
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/radiative_transport/rte_operation.hpp>
+#include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>
@@ -41,7 +42,8 @@ namespace MeltPoolDG::RadiativeTransport
 
     std::shared_ptr<RadiativeTransportOperation<dim>> rte_operation;
 
-    std::shared_ptr<Postprocessor<dim>> post_processor;
+    std::shared_ptr<Postprocessor<dim>>                  post_processor;
+    std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;
 
   public:
     RadiativeTransportProblem() = default;

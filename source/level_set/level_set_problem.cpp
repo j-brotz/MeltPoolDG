@@ -24,10 +24,8 @@
 #include <meltpooldg/level_set/level_set_problem.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>
-#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -47,17 +45,13 @@ namespace MeltPoolDG::LevelSet
       {
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout());
-        const int n = time_iterator->get_current_time_step_number();
 
         //@todo: adapt in case of adaptive time stepping
-        if ((n % base_in->parameters.profiling.write_frequency == 0) &&
-            base_in->parameters.profiling.enable)
+        if (profiling_monitor && profiling_monitor->now())
           {
-            scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-            scratch_data->get_pcout() << std::endl;
-            DoFMonitor::print(scratch_data->get_pcout());
-            scratch_data->get_pcout() << std::endl;
-            CellMonitor::print(scratch_data->get_pcout());
+            profiling_monitor->print(scratch_data->get_pcout(),
+                                     scratch_data->get_timer(),
+                                     scratch_data->get_mpi_comm());
           }
         compute_advection_velocity(*base_in->get_advection_field("level_set"));
 
@@ -95,13 +89,11 @@ namespace MeltPoolDG::LevelSet
 
     Journal::print_end(scratch_data->get_pcout());
     //... always print timing statistics
-    if (base_in->parameters.profiling.enable)
+    if (profiling_monitor)
       {
-        scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-        scratch_data->get_pcout() << std::endl;
-        DoFMonitor::print(scratch_data->get_pcout());
-        scratch_data->get_pcout() << std::endl;
-        CellMonitor::print(scratch_data->get_pcout());
+        profiling_monitor->print(scratch_data->get_pcout(),
+                                 scratch_data->get_timer(),
+                                 scratch_data->get_mpi_comm());
       }
   }
 
@@ -241,6 +233,13 @@ namespace MeltPoolDG::LevelSet
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(ls_dof_idx),
                                            scratch_data->get_pcout(1));
+    /*
+     *  initialize profiling
+     */
+    if (base_in->parameters.profiling.enable)
+      profiling_monitor =
+        std::make_unique<Profiling::ProfilingMonitor<double>>(base_in->parameters.profiling,
+                                                              *time_iterator);
     /*
      *    Do initial refinement steps if requested
      */

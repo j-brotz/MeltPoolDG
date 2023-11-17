@@ -18,6 +18,7 @@
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::AdvectionDiffusion
@@ -81,6 +82,7 @@ namespace MeltPoolDG::AdvectionDiffusion
     VectorType                            advection_velocity;
     std::shared_ptr<TimeIterator<double>> time_iterator;
     std::shared_ptr<AdvectionDiffusionOperationBase<dim>> advec_diff_operation;
+    std::unique_ptr<Profiling::ProfilingMonitor<double>>  profiling_monitor;
 
     unsigned int advec_diff_dof_idx;
     unsigned int advec_diff_hanging_nodes_dof_idx;

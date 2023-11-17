@@ -11,6 +11,7 @@
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
+#include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 namespace MeltPoolDG::LevelSet
@@ -57,6 +58,9 @@ namespace MeltPoolDG::LevelSet
     VectorType initial_solution;
 
     std::shared_ptr<Postprocessor<dim>> post_processor;
+
+    std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;
+
     struct
     {
       struct
