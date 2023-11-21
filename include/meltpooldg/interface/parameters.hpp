@@ -397,15 +397,6 @@ namespace MeltPoolDG
     std::vector<std::string> output_variables               = {"all"};
   };
 
-  template <typename number = double>
-  struct OutputData
-  {
-    bool        do_walltime              = 0;
-    bool        do_compute_error         = 0;
-    bool        do_compute_volume_output = 0;
-    std::string filename_volume_output   = "my_volumes.txt";
-  };
-
   /**
    * Utility function to print parameters from a given ParameterHandler object.
    */
@@ -470,7 +461,6 @@ namespace MeltPoolDG
     ParaviewData<number>           paraview;
     ProfilingData<number>          profiling;
     RestartData<number>            restart;
-    OutputData<number>             output;
     Flow::AdafloWrapperParameters  adaflo_params;
   };
 } // namespace MeltPoolDG

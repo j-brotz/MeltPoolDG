@@ -1919,8 +1919,14 @@ namespace MeltPoolDG::MeltPool
         Quadrature<1>   quadrature_1d(point);
         Quadrature<dim> quadrature(quadrature_1d);
 
-        FEValues<dim> ls_values(scratch_data->get_fe(ls_dof_idx), quadrature, update_values);
-        FEValues<dim> vel_values(scratch_data->get_fe(vel_dof_idx), quadrature, update_values);
+        FEValues<dim> ls_values(scratch_data->get_mapping(),
+                                scratch_data->get_fe(ls_dof_idx),
+                                quadrature,
+                                update_values);
+        FEValues<dim> vel_values(scratch_data->get_mapping(),
+                                 scratch_data->get_fe(vel_dof_idx),
+                                 quadrature,
+                                 update_values);
 
         // solution variables
         std::vector<std::vector<double>> ls_gradients(dim, std::vector<double>(quadrature.size()));
@@ -2129,8 +2135,14 @@ namespace MeltPoolDG::MeltPool
             Quadrature<1>   quadrature_1d(point);
             Quadrature<dim> quadrature(quadrature_1d);
 
-            FEValues<dim> ls_values(scratch_data->get_fe(ls_dof_idx), quadrature, update_values);
-            FEValues<dim> vel_values(scratch_data->get_fe(vel_dof_idx), quadrature, update_values);
+            FEValues<dim>               ls_values(scratch_data->get_mapping(),
+                                    scratch_data->get_fe(ls_dof_idx),
+                                    quadrature,
+                                    update_values);
+            FEValues<dim>               vel_values(scratch_data->get_mapping(),
+                                     scratch_data->get_fe(vel_dof_idx),
+                                     quadrature,
+                                     update_values);
             std::vector<Tensor<1, dim>> vel_vals(quadrature.size());
 
             // solution variables
