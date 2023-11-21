@@ -107,26 +107,5 @@ namespace MeltPoolDG
 
     void
     print_boundary_ids();
-
-    /*
-     * @todo
-     */
-    void
-    compute_error(const int              n_q_points,
-                  const VectorType      &approximate_solution,
-                  const Function<dim>   &ExactSolution,
-                  const DoFHandler<dim> &dof_handler,
-                  const Mapping<dim>    &mapping);
-
-    std::vector<double>
-    compute_volume_of_phases(const int              degree,
-                             const int              n_q_points,
-                             const DoFHandler<dim> &dof_handler,
-                             const VectorType      &solution_levelset,
-                             const double           time,
-                             const MPI_Comm        &mpi_communicator,
-                             TableHandler          &volume_table,
-                             const double           max_value = 1,
-                             const double           min_value = -1.0);
   };
 } // namespace MeltPoolDG

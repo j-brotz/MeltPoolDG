@@ -863,27 +863,6 @@ namespace MeltPoolDG
       prm.add_parameter("prefix", restart.prefix, "Write restart prefix");
     }
     prm.leave_subsection();
-    /*
-     *   output
-     */
-    prm.enter_subsection("output");
-    {
-      prm.add_parameter(
-        "do walltime",
-        output.do_walltime,
-        "this flag enables the output of wall times (should be disabled if a test file is prepared)");
-      prm.add_parameter(
-        "do compute error",
-        output.do_compute_error,
-        "this flag enables the computation of the error compared to a given analytical solution.");
-      prm.add_parameter("do compute volume output",
-                        output.do_compute_volume_output,
-                        "boolean for computing the phase volumes");
-      prm.add_parameter("filename volume output",
-                        output.filename_volume_output,
-                        "Sets the base name for the volume fraction file output.");
-    }
-    prm.leave_subsection();
   }
 
   template <typename number>

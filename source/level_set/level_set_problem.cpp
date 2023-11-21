@@ -441,7 +441,8 @@ namespace MeltPoolDG::LevelSet
         {
           level_set_operation->get_level_set().update_ghost_values();
           level_set_operation->get_level_set_as_heaviside().update_ghost_values();
-          FEValues<dim>       ls_values(scratch_data->get_fe(ls_dof_idx),
+          FEValues<dim>       ls_values(scratch_data->get_mapping(),
+                                  scratch_data->get_fe(ls_dof_idx),
                                   Quadrature<dim>(
                                     scratch_data->get_fe(ls_dof_idx).get_unit_support_points()),
                                   update_values);
