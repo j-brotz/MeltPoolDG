@@ -10,8 +10,6 @@
 #include <meltpooldg/radiative_transport/rte_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/dof_monitor.hpp>
-#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <memory>
@@ -42,13 +40,11 @@ namespace MeltPoolDG::RadiativeTransport
       }
 
     //... print timing statistics
-    if (base_in->parameters.profiling.enable)
+    if (profiling_monitor)
       {
-        scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-        scratch_data->get_pcout() << std::endl;
-        IterationMonitor::print(scratch_data->get_pcout());
-        scratch_data->get_pcout() << std::endl;
-        DoFMonitor::print(scratch_data->get_pcout());
+        profiling_monitor->print(scratch_data->get_pcout(),
+                                 scratch_data->get_timer(),
+                                 scratch_data->get_mpi_comm());
       }
     Journal::print_end(scratch_data->get_pcout());
   }
@@ -140,6 +136,13 @@ namespace MeltPoolDG::RadiativeTransport
                                            scratch_data->get_triangulation(rte_dof_idx),
                                            scratch_data->get_pcout(1));
 
+    /*
+     *  initialize profiling
+     */
+    if (base_in->parameters.profiling.enable)
+      profiling_monitor =
+        std::make_unique<Profiling::ProfilingMonitor<double>>(base_in->parameters.profiling,
+                                                              *time_iterator);
     /*
      *    Do initial refinement steps if requested
      */

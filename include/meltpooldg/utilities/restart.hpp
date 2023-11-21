@@ -115,7 +115,7 @@ namespace MeltPoolDG::Restart
     compute_current_time() const
     {
       // note: we use nanoseconds to increase the precision of the real time in seconds
-      return (data.time_type == RestartTimeType::real ?
+      return (data.time_type == TimeType::real ?
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                   std::chrono::system_clock::now() - real_time_start)
                     .count() /

@@ -1,6 +1,18 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2023-11-20
+- Revise parameters of profiling output
+```diff
+{
+  "profiling": {
+-   "write frequency": "",
+    "write time step size": "",
++   "time type": "real|simulation"
+}
+```
+
+
 ## 2023-11-06
 - Add new option `amr strategy` for heat
 ``` diff

@@ -13,10 +13,7 @@
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
-#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/dof_monitor.hpp>
-#include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
@@ -39,16 +36,10 @@ namespace MeltPoolDG::MeltPool
                      force_output);
 
       //... always print timing statistics
-      if (base_in->parameters.profiling.enable)
-        {
-          scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-          scratch_data->get_pcout() << std::endl;
-          IterationMonitor::print(scratch_data->get_pcout());
-          scratch_data->get_pcout() << std::endl;
-          DoFMonitor::print(scratch_data->get_pcout());
-          scratch_data->get_pcout() << std::endl;
-          CellMonitor::print(scratch_data->get_pcout());
-        }
+      if (profiling_monitor)
+        profiling_monitor->print(scratch_data->get_pcout(),
+                                 scratch_data->get_timer(),
+                                 scratch_data->get_mpi_comm());
     };
 
     try
@@ -640,17 +631,11 @@ namespace MeltPoolDG::MeltPool
                 refine_mesh(base_in);
               }
 
-            //@todo: adapt in case of adaptive time stepping
-            if ((n % base_in->parameters.profiling.write_frequency == 0) &&
-                base_in->parameters.profiling.enable)
+            if (profiling_monitor && profiling_monitor->now())
               {
-                scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-                scratch_data->get_pcout() << std::endl;
-                IterationMonitor::print(scratch_data->get_pcout());
-                scratch_data->get_pcout() << std::endl;
-                DoFMonitor::print(scratch_data->get_pcout());
-                scratch_data->get_pcout() << std::endl;
-                CellMonitor::print(scratch_data->get_pcout());
+                profiling_monitor->print(scratch_data->get_pcout(),
+                                         scratch_data->get_timer(),
+                                         scratch_data->get_mpi_comm());
               }
 
             if (restart_monitor && restart_monitor->do_save())
@@ -667,15 +652,11 @@ namespace MeltPoolDG::MeltPool
         sc.reset();
 
         //... always print timing statistics
-        if (base_in->parameters.profiling.enable)
+        if (profiling_monitor)
           {
-            scratch_data->get_timer().print_wall_time_statistics(scratch_data->get_mpi_comm());
-            scratch_data->get_pcout() << std::endl;
-            IterationMonitor::print(scratch_data->get_pcout());
-            scratch_data->get_pcout() << std::endl;
-            DoFMonitor::print(scratch_data->get_pcout());
-            scratch_data->get_pcout() << std::endl;
-            CellMonitor::print(scratch_data->get_pcout());
+            profiling_monitor->print(scratch_data->get_pcout(),
+                                     scratch_data->get_timer(),
+                                     scratch_data->get_mpi_comm());
           }
       }
     catch (const ExcNewtonDidNotConverge &e)
@@ -1259,6 +1240,13 @@ namespace MeltPoolDG::MeltPool
                                            scratch_data->get_triangulation(vel_dof_idx),
                                            scratch_data->get_pcout(1));
     /*
+     *  initialize profiling
+     */
+    if (base_in->parameters.profiling.enable)
+      profiling_monitor =
+        std::make_unique<Profiling::ProfilingMonitor<double>>(base_in->parameters.profiling,
+                                                              *time_iterator);
+    /*
      *  initialize restart
      */
     if (base_in->parameters.restart.load >= 0 || base_in->parameters.restart.save >= 0)
@@ -1267,7 +1255,6 @@ namespace MeltPoolDG::MeltPool
           std::make_shared<Restart::RestartMonitor<double>>(base_in->parameters.restart,
                                                             *time_iterator);
       }
-
     /*
      *    Do initial refinement steps if requested
      */

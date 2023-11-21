@@ -68,12 +68,10 @@ namespace MeltPoolDG
     if (profiling.write_time_step_size > 0.0)
       {
         AssertThrow(
-          profiling.write_time_step_size >= time_stepping.time_step_size,
+          profiling.time_type == TimeType::real ||
+            profiling.write_time_step_size >= time_stepping.time_step_size,
           ExcMessage("The time step size for profiling must be equal or larger than the simulation "
                      "time step size."));
-        profiling.write_frequency =
-          profiling.write_time_step_size /
-          time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
       }
 
     // enable profiling for verbosity level higher than 1
@@ -84,15 +82,15 @@ namespace MeltPoolDG
      */
     if (restart.write_time_step_size > 0.0)
       {
-        AssertThrow(restart.time_type == RestartTimeType::real ||
+        AssertThrow(restart.time_type == TimeType::real ||
                       restart.write_time_step_size >= time_stepping.time_step_size,
                     ExcMessage(
-                      "The time step size for restartmust be equal or larger than the simulation "
+                      "The time step size for restart must be equal or larger than the simulation "
                       "time step size."));
       }
     else
       {
-        restart.time_type            = RestartTimeType::real;
+        restart.time_type            = TimeType::real;
         restart.write_time_step_size = 3600; // 1 hour
       }
     /*
@@ -830,13 +828,13 @@ namespace MeltPoolDG
         profiling.enable,
         "Set this parameter to true if profiling should be enabled. It will be automatically"
         "enabled for verbosity level >=1.");
-      prm.add_parameter("write frequency",
-                        profiling.write_frequency,
-                        "Every n timestep that should be written");
       prm.add_parameter("write time step size",
                         profiling.write_time_step_size,
                         "Write profiling output every given time step size. If this parameter is "
                         "set, the specified parameter for write frequency is overwritten.");
+      prm.add_parameter("time type",
+                        restart.time_type,
+                        "Choose the type of time measure to write profiling information.");
     }
     prm.leave_subsection();
     /*
