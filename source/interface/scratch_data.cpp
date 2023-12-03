@@ -300,12 +300,13 @@ namespace MeltPoolDG
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   void
   ScratchData<dim, spacedim, number, VectorizedArrayType>::create_remote_point_evaluation(
-    const unsigned int dof_idx)
+    const unsigned int                        dof_idx,
+    const std::function<std::vector<bool>()> &marked_vertices)
   {
     if (!rpe.contains(dof_idx))
       rpe.insert({dof_idx,
                   std::make_shared<Utilities::MPI::RemotePointEvaluation<dim, dim>>(
-                    1e-6 /*tolerance*/, true /*unique mapping*/)});
+                    1e-6 /*tolerance*/, true /*unique mapping*/, 0, marked_vertices)});
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>

@@ -179,6 +179,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                                ScopedName("nearest_point::reinit::search"));
 
       total_points_rpe = 0;
+      points_not_found.clear();
 
       if (additional_data.type == NearestPointType::nearest_point)
         {
@@ -329,18 +330,46 @@ namespace MeltPoolDG::LevelSet::Tools
             return result;
           });
 
-      std::ofstream myfile;
-      myfile.open(filename + ".dat");
-
-      for (const auto &p : global_points_normal_to_interface_all)
+      if (Utilities::MPI::this_mpi_process(mpi_comm) == 0)
         {
-          for (unsigned int d = 0; d < dim; ++d)
-            myfile << p[d] << " ";
-          myfile << std::endl;
-        }
+          std::ofstream myfile;
+          myfile.open(filename + ".dat");
 
-      myfile.close();
+          for (const auto &p : global_points_normal_to_interface_all)
+            {
+              for (unsigned int d = 0; d < dim; ++d)
+                myfile << p[d] << " ";
+              myfile << std::endl;
+            }
+
+          myfile.close();
+        }
+      {
+        const auto all_points_not_found = Utilities::MPI::reduce<std::vector<Point<dim>>>(
+          points_not_found, mpi_comm, [](const auto &a, const auto &b) {
+            auto result = a;
+            result.insert(result.end(), b.begin(), b.end());
+            return result;
+          });
+
+        if (Utilities::MPI::this_mpi_process(mpi_comm) == 0 && all_points_not_found.size() > 0)
+          {
+            std::ofstream myfile;
+            myfile.open(filename + "_not_found.dat");
+
+            for (const auto &p : all_points_not_found)
+              {
+                for (unsigned int d = 0; d < dim; ++d)
+                  myfile << p[d] << " ";
+
+                myfile << std::endl;
+              }
+
+            myfile.close();
+          }
+      }
     }
+    mutable std::vector<Point<dim>> points_not_found;
 
   private:
     /**
@@ -383,8 +412,16 @@ namespace MeltPoolDG::LevelSet::Tools
                                          dof_handler_ls.get_triangulation(),
                                          mapping);
 
-          AssertThrow(remote_point_evaluation.all_points_found(),
-                      ExcMessage("Processed point is outside domain."));
+          if (!remote_point_evaluation.all_points_found())
+            {
+              for (unsigned int i = 0; i < unmatched_points.size(); ++i)
+                if (!remote_point_evaluation.point_found(i))
+                  points_not_found.emplace_back(unmatched_points[i]);
+
+              write_to_file();
+
+              AssertThrow(false, ExcMessage("Processed point is outside domain."));
+            }
 
           // compute signed distance at unmatched_points
           evaluation_values_distance = dealii::VectorTools::point_values<1>(remote_point_evaluation,
@@ -869,6 +906,7 @@ namespace MeltPoolDG::LevelSet::Tools
                     std::back_inserter(unmatched_points_normal_and_tangential_idx_next));
           std::sort(unmatched_points_normal_and_tangential_idx_next.begin(),
                     unmatched_points_normal_and_tangential_idx_next.end());
+
           unmatched_points_normal_and_tangential_idx_next.erase(
             std::unique(unmatched_points_normal_and_tangential_idx_next.begin(),
                         unmatched_points_normal_and_tangential_idx_next.end()),

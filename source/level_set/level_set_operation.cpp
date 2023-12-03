@@ -1,4 +1,6 @@
 // for parallelization
+#include <deal.II/base/mpi.h>
+
 #include <deal.II/lac/generic_linear_algebra.h>
 // DoFTools
 #include <deal.II/dofs/dof_tools.h>
@@ -673,21 +675,77 @@ namespace MeltPoolDG::LevelSet
     ScopedName         sc("curvature_correction");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
+    // TODO: make part of NearestPoint
     if (!nearest_point_search)
-      nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim>>(
-        scratch_data.get_mapping(),
-        scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
-        distance_to_level_set,
-        get_normal_vector(),
-        scratch_data.get_remote_point_evaluation(curv_dof_idx),
-        level_set_data.nearest_point);
+      {
+        const_cast<ScratchData<dim> &>(scratch_data)
+          .create_remote_point_evaluation(curv_dof_idx, [&]() -> std::vector<bool> {
+            all_marked_vertices.clear();
+            const double narrow_band_threshold =
+              level_set_data.nearest_point.narrow_band_threshold > 0 ?
+                level_set_data.nearest_point.narrow_band_threshold :
+                distance_to_level_set.linfty_norm() * 0.9999;
+
+            LinearAlgebra::distributed::Vector<double> mark_cells;
+            mark_cells.reinit(
+              scratch_data.get_triangulation().global_active_cell_index_partitioner().lock());
+            mark_cells = 0.0;
+
+            Vector<double> local_signed_distance;
+            local_signed_distance.reinit(
+              scratch_data.get_n_dofs_per_cell(ls_hanging_nodes_dof_idx));
+
+            const bool update_ghosts = !distance_to_level_set.has_ghost_elements();
+            if (update_ghosts)
+              distance_to_level_set.update_ghost_values();
+
+            for (const auto &cell :
+                 scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
+              {
+                if (cell->is_locally_owned() == false)
+                  continue;
+
+                cell->get_dof_values(distance_to_level_set, local_signed_distance);
+
+                std::sort(local_signed_distance.begin(), local_signed_distance.end());
+
+                // check if level-set values are below narrow_band_threshold
+                if ((std::abs(local_signed_distance[local_signed_distance.size() - 1]) <=
+                     narrow_band_threshold) &&
+                    (std::abs(local_signed_distance[0]) <= narrow_band_threshold))
+                  mark_cells[cell->global_active_cell_index()] = 1;
+              }
+
+            if (update_ghosts)
+              distance_to_level_set.zero_out_ghost_values();
+
+            mark_cells.update_ghost_values();
+
+            std::vector<bool> marked_vertices(scratch_data.get_triangulation().n_vertices(), false);
+            for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
+              if (!cell->is_artificial() && mark_cells[cell->global_active_cell_index()] > 0)
+                for (const auto v : cell->vertex_indices())
+                  marked_vertices[cell->vertex_index(v)] = true;
+
+            return marked_vertices;
+          });
+
+        nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim>>(
+          scratch_data.get_mapping(),
+          scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
+          distance_to_level_set,
+          get_normal_vector(),
+          scratch_data.get_remote_point_evaluation(curv_dof_idx),
+          level_set_data.nearest_point);
+      }
 
     nearest_point_search->reinit(scratch_data.get_dof_handler(curv_dof_idx));
 
     nearest_point_search->template fill_dof_vector_with_point_values(
       curvature_operation->get_curvature(),
       scratch_data.get_dof_handler(curv_dof_idx),
-      curvature_operation->get_curvature());
+      curvature_operation->get_curvature(),
+      true);
 
     /*
      * old approach --> only kept as back-up [MS]

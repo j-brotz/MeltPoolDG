@@ -1009,8 +1009,6 @@ namespace MeltPoolDG::MeltPool
                                                          normal_dof_idx,
                                                          vel_dof_idx,
                                                          ls_dof_idx /* todo: ls_zero_bc_idx*/);
-    if (base_in->parameters.ls.do_curvature_correction)
-      scratch_data->create_remote_point_evaluation(curv_dof_idx);
 
     /*
      *    initialize the heat operation class

@@ -204,14 +204,6 @@ run_test(const NearestPointType type = NearestPointType::closest_point_normal)
    * ------------------------------------------------------------------------------------
    * ------------------------------------------------------------------------------------
    */
-  Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(1e-6 /*tolerance*/,
-                                                                          true /*unique mapping*/);
-
-  const double min_cell_size = GridTools::minimal_cell_diameter(triangulation) / std::sqrt(dim);
-
-  timer_total.start();
-
-  // 1) compute accuracy of projected points
   NearestPointData<double> nearest_point_data;
 
   nearest_point_data.rel_tol               = 1e-10;
@@ -219,6 +211,80 @@ run_test(const NearestPointType type = NearestPointType::closest_point_normal)
   nearest_point_data.max_iter              = n_iter;
   nearest_point_data.type                  = type;
   nearest_point_data.verbosity_level       = 2;
+
+  std::vector<Point<dim>> all_marked_vertices;
+
+  // restrict RemotePointEvaluation to cells which are adjacent to the marked
+  // vertices
+  const auto marked_vertices = [&]() -> std::vector<bool> {
+    all_marked_vertices.clear();
+    std::vector<bool> marked_vertices(triangulation.n_vertices(), false);
+
+    Vector<double> local_signed_distance;
+    local_signed_distance.reinit(dof_handler.get_fe().n_dofs_per_cell());
+
+    LinearAlgebra::distributed::Vector<double> mark_cells;
+    mark_cells.reinit(triangulation.global_active_cell_index_partitioner().lock());
+    mark_cells = 0.0;
+
+    const bool update_ghosts = !solution_distance.has_ghost_elements();
+
+    if (update_ghosts)
+      solution_distance.update_ghost_values();
+
+    for (const auto &cell : dof_handler.active_cell_iterators())
+      {
+        if (cell->is_locally_owned() == false)
+          continue;
+
+        cell->get_dof_values(solution_distance, local_signed_distance);
+
+        std::sort(local_signed_distance.begin(), local_signed_distance.end());
+
+        // check if level-set values are below narrow_band_threshold
+        if ((std::abs(local_signed_distance[local_signed_distance.size() - 1]) <=
+             nearest_point_data.narrow_band_threshold) &&
+            (std::abs(local_signed_distance[0]) <= nearest_point_data.narrow_band_threshold))
+          mark_cells[cell->global_active_cell_index()] = 1;
+      }
+
+    if (update_ghosts)
+      solution_distance.zero_out_ghost_values();
+
+    mark_cells.update_ghost_values();
+
+    for (const auto &cell : triangulation.active_cell_iterators())
+      if (!cell->is_artificial())
+        {
+          if (mark_cells[cell->global_active_cell_index()] > 0)
+            for (const auto v : cell->vertex_indices())
+              {
+                marked_vertices[cell->vertex_index(v)] = true;
+                all_marked_vertices.emplace_back(cell->vertex(v));
+              }
+        }
+
+    all_marked_vertices = Utilities::MPI::reduce<std::vector<Point<dim>>>(
+      all_marked_vertices, mpi_comm, [](const auto &a, const auto &b) {
+        auto result = a;
+        result.insert(result.end(), b.begin(), b.end());
+        return result;
+      });
+
+    return marked_vertices;
+  };
+
+  Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation(
+    1e-6 /*tolerance*/,
+    true /*unique mapping*/,
+    0 /*rtree_level=*/,
+    marked_vertices /*marked vertices*/);
+
+  const double min_cell_size = GridTools::minimal_cell_diameter(triangulation) / std::sqrt(dim);
+
+  timer_total.start();
+
+  // 1) compute accuracy of projected points
 
   LevelSet::Tools::NearestPoint<dim> cpp(mapping,
                                          dof_handler,
@@ -228,6 +294,8 @@ run_test(const NearestPointType type = NearestPointType::closest_point_normal)
                                          nearest_point_data);
 
   cpp.reinit(dof_handler_temp);
+
+  cpp.write_to_file("interface_points");
 
   const auto evaluation_points = cpp.get_points();
   const auto dof_indices       = cpp.get_dof_indices();
@@ -296,6 +364,18 @@ run_test(const NearestPointType type = NearestPointType::closest_point_normal)
   cpp.fill_dof_vector_with_point_values<n_components>(solution_temp_interface,
                                                       dof_handler_temp,
                                                       solution_temp);
+
+  std::ofstream myfile;
+  myfile.open("marked_vertices.dat");
+
+  for (const auto &p : all_marked_vertices)
+    {
+      for (unsigned int d = 0; d < dim; ++d)
+        myfile << p[d] << " ";
+      myfile << std::endl;
+    }
+
+  myfile.close();
 
   timer_total.stop();
   /*

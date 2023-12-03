@@ -107,7 +107,8 @@ namespace MeltPoolDG
      * @p dof_idx
      */
     void
-    create_remote_point_evaluation(const unsigned int dof_idx);
+    create_remote_point_evaluation(const unsigned int                        dof_idx,
+                                   const std::function<std::vector<bool>()> &marked_vertices = {});
 
     /**
      * Getter functions.
