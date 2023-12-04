@@ -142,6 +142,11 @@ namespace MeltPoolDG::LevelSet::Tools
 
               for (const auto q : req_values.quadrature_point_indices())
                 {
+                  // early return if point was already collect in stencil
+                  if (std::find(stencil.begin(), stencil.end(), req_values.quadrature_point(q)) !=
+                      stencil.end())
+                    continue;
+
                   std::vector<types::global_dof_index> dofs_at_q;
 
                   // collect points of narrow band
@@ -149,7 +154,7 @@ namespace MeltPoolDG::LevelSet::Tools
                     {
                       stencil.emplace_back(req_values.quadrature_point(q));
 
-                      // collect dof indices
+                      // create a list of component-wise dof indices
                       for (unsigned int c = 0; c < n_components; ++c)
                         dofs_at_q.emplace_back(
                           temp_local_dof_indices[dof_handler_req.get_fe().component_to_system_index(
