@@ -142,6 +142,30 @@ namespace MeltPoolDG::LevelSet::Tools
 
               for (const auto q : req_values.quadrature_point_indices())
                 {
+                  // copied from dealii::GridTools and modified
+                  //
+                  // check if the rank of this process is the lowest of all cells
+                  // if not, the other process will handle this cell and we don't
+                  // have to do here anything in the case of unique mapping
+                  unsigned int lowest_rank = numbers::invalid_unsigned_int;
+
+                  const auto active_cells_around_point =
+                    GridTools::find_all_active_cells_around_point<dim>(
+                      mapping,
+                      dof_handler_ls.get_triangulation(),
+                      req_values.quadrature_point(q),
+                      1e-6 /*tolerance*/,
+                      {cell,
+                       mapping.transform_real_to_unit_cell(cell, req_values.quadrature_point(q))});
+
+                  for (const auto &cell : active_cells_around_point)
+                    lowest_rank = std::min(lowest_rank, cell.first->subdomain_id());
+
+                  if (lowest_rank != Utilities::MPI::this_mpi_process(mpi_comm))
+                    continue;
+                  // end of copy
+
+
                   // early return if point was already collected in stencil
                   if (std::find(stencil.begin(), stencil.end(), req_values.quadrature_point(q)) !=
                       stencil.end())
