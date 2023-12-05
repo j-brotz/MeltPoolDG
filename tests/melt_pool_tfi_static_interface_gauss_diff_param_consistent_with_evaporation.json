@@ -12,7 +12,7 @@
     "start time": "0.0",
     "time step size": "1e-5",
     "end time": "0.015",
-    "max n steps": "10"
+    "max n steps": "5"
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -100,16 +100,13 @@
     }
   },
   "curvature": {
-    "curv damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "enable": "false"
   },
   "heat": {
     "heat nlsolve residual tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-12",
-      "preconditioner type": "ILU"
+      "preconditioner type": "AMG"
     }
   },
   "paraview": {
