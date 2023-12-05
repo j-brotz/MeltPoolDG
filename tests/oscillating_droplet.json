@@ -4,9 +4,8 @@
     "problem name": "melt_pool",
     "degree": "1",
     "dimension": "2",
-    "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "7",
+    "global refinements": "6",
     "gravity": "0.0"
   },
   "simulation specific parameters": {
@@ -32,47 +31,18 @@
   },
   "levelset": {
     "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls implementation": "meltpooldg"
-  },
-  "advection diffusion": {
-    "advec diff implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "ls time integration scheme": "crank_nicolson"
   },
   "reinitialization": {
     "reinit max n steps": "2",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.5",
-    "reinit implementation": "meltpooldg",
-    "linear solver": {
-      "preconditioner type": "AMG",
-      "do matrix free": "true"
-    }
+    "reinit scale factor epsilon": "1.5"
   },
   "normal vector": {
-    "normal vec damping scale factor": "1",
-    "normal vec implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "normal vec damping scale factor": "1"
   },
   "curvature": {
     "curv damping scale factor": "3.2",
-    "curv implementation": "meltpooldg",
-    "curv verbosity level": "1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "adaptive meshing": {
-    "do amr": "false",
-    "do not modify boundary cells": "false",
-    "upper perc to refine": "0.20",
-    "lower perc to coarsen": "0.20",
-    "max grid refinement level": "8",
-    "n initial refinement cycles": "5"
+    "curv verbosity level": "1"
   },
   "Navier-Stokes": {
     "adaflo": {
