@@ -142,7 +142,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
               for (const auto q : req_values.quadrature_point_indices())
                 {
-                  // early return if point was already collect in stencil
+                  // early return if point was already collected in stencil
                   if (std::find(stencil.begin(), stencil.end(), req_values.quadrature_point(q)) !=
                       stencil.end())
                     continue;
