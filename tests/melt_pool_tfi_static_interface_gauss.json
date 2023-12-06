@@ -87,30 +87,20 @@
   "reinitialization": {
     "reinit max n steps": "5",
     "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.0",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "reinit scale factor epsilon": "1.0"
   },
   "normal vector": {
     "normal vec damping scale factor": "0.5",
-    "normal vec verbosity level": "1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "normal vec verbosity level": "1"
   },
   "curvature": {
-    "curv damping scale factor": "0.5",
-    "curv verbosity level": "1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "enable": "false"
   },
   "heat": {
     "heat nlsolve residual tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-12",
-      "preconditioner type": "ILU"
+      "preconditioner type": "AMG"
     }
   },
   "paraview": {
@@ -119,10 +109,5 @@
   "problem specific": {
     "do heat transfer": "true",
     "do solidification": "true"
-  },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
   }
 }

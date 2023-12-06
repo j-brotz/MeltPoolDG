@@ -14,7 +14,6 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
 | || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
 |  total mass = 0.00013606268914                                                 melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
@@ -23,7 +22,6 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
 | || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 3.79019e-02                newton_raphson_solver |
@@ -37,7 +35,6 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
 | || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 4.88749e-02                newton_raphson_solver |
@@ -51,7 +48,6 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
 | || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.62799e-02                newton_raphson_solver |
@@ -65,7 +61,6 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
 | || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 6.22207e-02                newton_raphson_solver |
@@ -79,81 +74,10 @@
 |  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
 | || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 6.73004e-02                newton_raphson_solver |
 |  total mass = 0.00013549215662                                                 melt_pool_problem |
-| || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 6      t = 5.0000e-05 to 6.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.6618982967e-04                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
-| || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 7.17950e-02                newton_raphson_solver |
-|  total mass = 0.00013536957353                                                 melt_pool_problem |
-| || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 7      t = 6.0000e-05 to 7.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.6618982967e-04                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
-| || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 7.58588e-02                newton_raphson_solver |
-|  total mass = 0.00013524696547                                                 melt_pool_problem |
-| || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 8      t = 7.0000e-05 to 8.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.6618982967e-04                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
-| || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 7.95883e-02                newton_raphson_solver |
-|  total mass = 0.00013512432259                                                 melt_pool_problem |
-| || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 9      t = 8.0000e-05 to 9.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.6618982967e-04                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
-| || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 8.30481e-02                newton_raphson_solver |
-|  total mass = 0.00013500175059                                                 melt_pool_problem |
-| || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-| || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
-+--------------------------------------------------------------------------------------------------+
-|  Time increment # 10     t = 9.0000e-05 to 1.0000e-04 ( dt = 1.0000e-05 )          time_iterator |
-+--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 4.6618982967e-04                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 0.00000e+00 < level_set_data.reinit_tol       reinitialization |
-| || normal_0 ||L2 = 6.45437366537e-15                                               normal_vector |
-| || normal_1 ||L2 = 6.24946445398e+00                                               normal_vector |
-| || curvature ||L2 = 8.31286245736e-14                                                  curvature |
-| current laser position: 0 0                                                                laser |
-| current laser intensity: 0                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 5.44300e-02                newton_raphson_solver |
-|  total mass = 0.00013494595233                                                 melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
