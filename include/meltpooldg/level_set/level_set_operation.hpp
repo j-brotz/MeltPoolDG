@@ -243,5 +243,7 @@ namespace MeltPoolDG::LevelSet
 
     void
     set_level_set_parameters();
+
+    std::vector<Point<dim>> all_marked_vertices;
   };
 } // namespace MeltPoolDG::LevelSet
