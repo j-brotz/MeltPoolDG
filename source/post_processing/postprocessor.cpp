@@ -199,9 +199,11 @@ namespace MeltPoolDG
 
     const unsigned int n_digits = static_cast<int>(std::ceil(std::log10(std::fabs(n_ranks))));
 
-    std::string filename =
-      pv_data.filename + "_boundary_ids" + Utilities::int_to_string(rank, n_digits) + ".vtk";
-    std::ofstream output(filename.c_str());
+    namespace fs = std::filesystem;
+
+    std::ofstream output(fs::path(pv_data.directory) /
+                         fs::path(pv_data.filename + "_boundary_ids" +
+                                  Utilities::int_to_string(rank, n_digits) + ".vtk"));
 
     GridOut           grid_out;
     GridOutFlags::Vtk flags;
