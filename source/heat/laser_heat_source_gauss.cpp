@@ -39,15 +39,16 @@ namespace MeltPoolDG::Heat
     const double                  delta_value,
     const double                  heaviside) const
   {
-    Point<dim> projected_position(position);
+    double distance_normal_to_laser_axis = 0;
 
     if (dim > 1)
       {
         // Calculate the projected distance in x (2D) or x and y (3D) direction.
         // To this end, we calculate a projected point lying in the laser plane.
-        projected_position[dim - 1] = laser_position[dim - 1];
+        Point<dim> projected_position(position);
+        projected_position[dim - 1]   = laser_position[dim - 1];
+        distance_normal_to_laser_axis = laser_position.distance(projected_position);
       }
-    const double distance = laser_position.distance(projected_position);
 
     // assume laser direction coincides with the negative dim-1 direction
     double projection_factor = normal_vector * -Point<dim>::unit_vector(dim - 1);
@@ -63,7 +64,7 @@ namespace MeltPoolDG::Heat
       LevelSet::Tools::interpolate(weight, data.absorptivity_gas, data.absorptivity_liquid);
 
     return absorptivity * projection_factor * delta_value *
-           power_density_interfacial(distance, power);
+           power_density_interfacial(distance_normal_to_laser_axis, power);
   }
 
   template <int dim>
