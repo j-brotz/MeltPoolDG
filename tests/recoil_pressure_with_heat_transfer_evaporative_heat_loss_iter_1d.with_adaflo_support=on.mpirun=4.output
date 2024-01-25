@@ -13,12 +13,12 @@
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.03496e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.03496e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.03496e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.03564e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.03564e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.03564e+01                newton_raphson_solver |
 |  total mass = 0.75785285119                                                    melt_pool_problem |
-| || velocity ||L2 = 5.096288675353114e-11                                    navier_stokes_adaflo |
-| || pressure ||L2 = 3.875663979815127e-03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 5.213934853086506e-11                                    navier_stokes_adaflo |
+| || pressure ||L2 = 3.934257104916398e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-06 to 2.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -31,156 +31,156 @@
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.15693e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.15693e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.15693e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.15809e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.15809e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.15809e+01                newton_raphson_solver |
 |  total mass = 0.75785299738                                                    melt_pool_problem |
-| || velocity ||L2 = 6.295636789702614e-10                                    navier_stokes_adaflo |
-| || pressure ||L2 = 5.682287720946446e-02                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.432951393835173e-10                                    navier_stokes_adaflo |
+| || pressure ||L2 = 5.785187567201464e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-06 to 3.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6905774385e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.065566009747400e-07                                       reinitialization |
+| || delta phi ||L2 = 9.065566577495746e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
 | || delta phi ||L2 = 8.546250635309404e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.25630e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.25630e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.25630e+01                newton_raphson_solver |
-|  total mass = 0.75785002745                                                    melt_pool_problem |
-| || velocity ||L2 = 2.515857744356278e-09                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.669550211275486e-01                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 1.25791e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.25790e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.25790e+01                newton_raphson_solver |
+|  total mass = 0.75784974353                                                    melt_pool_problem |
+| || velocity ||L2 = 2.571409085661532e-09                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.722188950059462e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-06 to 4.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6906315077e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.143471595959212e-07                                       reinitialization |
+| || delta phi ||L2 = 8.143471028144389e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
 | || delta phi ||L2 = 7.765203184358110e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.34164e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.34163e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.34163e+01                newton_raphson_solver |
-|  total mass = 0.757799638                                                      melt_pool_problem |
-| || velocity ||L2 = 6.779968586556999e-09                                    navier_stokes_adaflo |
-| || pressure ||L2 = 7.599285701442314e-01                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 1.34368e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.34367e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.34367e+01                newton_raphson_solver |
+|  total mass = 0.75779768415                                                    melt_pool_problem |
+| || velocity ||L2 = 6.944788299989854e-09                                    navier_stokes_adaflo |
+| || pressure ||L2 = 7.757630479828109e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-06 to 5.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6906796797e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 7.381683548455229e-07                                       reinitialization |
+| || delta phi ||L2 = 7.381682412666293e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 6.988193792344415e-07                                       reinitialization |
+| || delta phi ||L2 = 6.988193224417987e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.41731e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.41730e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.41730e+01                newton_raphson_solver |
-|  total mass = 0.75768251536                                                    melt_pool_problem |
-| || velocity ||L2 = 1.514530012514115e-08                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.646963483581084e+00                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 1.41977e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.41975e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.41975e+01                newton_raphson_solver |
+|  total mass = 0.75767793976                                                    melt_pool_problem |
+| || velocity ||L2 = 1.555632778149629e-08                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.682622379644418e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 5.0000e-06 to 6.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6907218956e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 6.588403583234471e-07                                       reinitialization |
+| || delta phi ||L2 = 6.588399039609164e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 6.188829292809374e-07                                       reinitialization |
+| || delta phi ||L2 = 6.188826452931911e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.48586e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.48584e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.48584e+01                newton_raphson_solver |
-|  total mass = 0.75751242314                                                    melt_pool_problem |
-| || velocity ||L2 = 3.043368934640976e-08                                    navier_stokes_adaflo |
-| || pressure ||L2 = 3.016794052865256e+00                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 1.48871e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.48869e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.48869e+01                newton_raphson_solver |
+|  total mass = 0.75750473688                                                    melt_pool_problem |
+| || velocity ||L2 = 3.136351978128005e-08                                    navier_stokes_adaflo |
+| || pressure ||L2 = 3.083922443229176e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 6.0000e-06 to 7.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6907584216e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 5.794545232262431e-07                                       reinitialization |
+| || delta phi ||L2 = 5.794532168398870e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 5.411308651482503e-07                                       reinitialization |
+| || delta phi ||L2 = 5.411300699346597e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.54892e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.54889e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.54889e+01                newton_raphson_solver |
-|  total mass = 0.75730624019                                                    melt_pool_problem |
-| || velocity ||L2 = 5.751259735120585e-08                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.936963522454492e+00                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 1.55214e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.55211e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.55211e+01                newton_raphson_solver |
+|  total mass = 0.75729533622                                                    melt_pool_problem |
+| || velocity ||L2 = 5.950024117851174e-08                                    navier_stokes_adaflo |
+| || pressure ||L2 = 5.049005764314683e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 7.0000e-06 to 8.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6907898588e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 5.040989631719484e-07                                       reinitialization |
+| || delta phi ||L2 = 5.040957822448671e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 4.688222074404084e-07                                       reinitialization |
+| || delta phi ||L2 = 4.688204181338604e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.60757e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.60753e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.60753e+01                newton_raphson_solver |
-|  total mass = 0.75707868203                                                    melt_pool_problem |
-| || velocity ||L2 = 1.048279472115610e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 7.457182529613857e+00                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 1.61116e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.61112e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.61112e+01                newton_raphson_solver |
+|  total mass = 0.75706480263                                                    melt_pool_problem |
+| || velocity ||L2 = 1.089108891960677e-07                                    navier_stokes_adaflo |
+| || pressure ||L2 = 7.628833509065169e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 8.0000e-06 to 9.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6908167692e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 4.351309882094541e-07                                       reinitialization |
+| || delta phi ||L2 = 4.351241432925393e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 4.035339874640712e-07                                       reinitialization |
+| || delta phi ||L2 = 4.035301247175290e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.66261e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.66257e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.66257e+01                newton_raphson_solver |
-|  total mass = 0.7568425651                                                     melt_pool_problem |
-| || velocity ||L2 = 1.860328922020926e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.061266189609324e+01                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 1.66655e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.66650e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.66650e+01                newton_raphson_solver |
+|  total mass = 0.75682610321                                                    melt_pool_problem |
+| || velocity ||L2 = 1.939808385031938e-07                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.085939477600083e+01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 9.0000e-06 to 1.0000e-05 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6908397755e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 3.734782057497431e-07                                       reinitialization |
+| || delta phi ||L2 = 3.734655096728125e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 3.457009616810273e-07                                       reinitialization |
+| || delta phi ||L2 = 3.456932076196778e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.71462e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.71456e+01                newton_raphson_solver |
-| Newton Raphson solver converged: ||solution|| = 1.71456e+01                newton_raphson_solver |
-|  total mass = 0.75660849281                                                    melt_pool_problem |
-| || velocity ||L2 = 3.166252895425714e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.442873403334564e+01                                    navier_stokes_adaflo |
+| Newton Raphson solver converged: ||solution|| = 1.71888e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.71882e+01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.71882e+01                newton_raphson_solver |
+|  total mass = 0.75659015606                                                    melt_pool_problem |
+| || velocity ||L2 = 3.301818765066855e-07                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.476649328837034e+01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
