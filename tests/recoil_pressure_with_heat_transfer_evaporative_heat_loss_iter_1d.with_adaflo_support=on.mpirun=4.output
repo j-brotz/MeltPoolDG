@@ -17,8 +17,8 @@
 | Newton Raphson solver converged: ||solution|| = 1.03564e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 1.03564e+01                newton_raphson_solver |
 |  total mass = 0.75785285119                                                    melt_pool_problem |
-| || velocity ||L2 = 5.213934853086506e-11                                    navier_stokes_adaflo |
-| || pressure ||L2 = 3.934257104916398e-03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 5.213930329385218e-11                                    navier_stokes_adaflo |
+| || pressure ||L2 = 3.934257047507002e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-06 to 2.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -35,7 +35,7 @@
 | Newton Raphson solver converged: ||solution|| = 1.15809e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 1.15809e+01                newton_raphson_solver |
 |  total mass = 0.75785299738                                                    melt_pool_problem |
-| || velocity ||L2 = 6.432951393835173e-10                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.432951393797768e-10                                    navier_stokes_adaflo |
 | || pressure ||L2 = 5.785187567201464e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-06 to 3.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
@@ -53,8 +53,8 @@
 | Newton Raphson solver converged: ||solution|| = 1.25790e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 1.25790e+01                newton_raphson_solver |
 |  total mass = 0.75784974353                                                    melt_pool_problem |
-| || velocity ||L2 = 2.571409085661532e-09                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.722188950059462e-01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 2.571409085661003e-09                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.722188820079398e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-06 to 4.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -71,7 +71,7 @@
 | Newton Raphson solver converged: ||solution|| = 1.34367e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 1.34367e+01                newton_raphson_solver |
 |  total mass = 0.75779768415                                                    melt_pool_problem |
-| || velocity ||L2 = 6.944788299989854e-09                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.944788299989568e-09                                    navier_stokes_adaflo |
 | || pressure ||L2 = 7.757630479828109e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-06 to 5.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
@@ -125,7 +125,7 @@
 | Newton Raphson solver converged: ||solution|| = 1.55211e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 1.55211e+01                newton_raphson_solver |
 |  total mass = 0.75729533622                                                    melt_pool_problem |
-| || velocity ||L2 = 5.950024117851174e-08                                    navier_stokes_adaflo |
+| || velocity ||L2 = 5.950024117851171e-08                                    navier_stokes_adaflo |
 | || pressure ||L2 = 5.049005764314683e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 7.0000e-06 to 8.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
@@ -162,7 +162,7 @@
 | Newton Raphson solver converged: ||solution|| = 1.66650e+01                newton_raphson_solver |
 |  total mass = 0.75682610321                                                    melt_pool_problem |
 | || velocity ||L2 = 1.939808385031938e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.085939477600083e+01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.086081331443438e+01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 9.0000e-06 to 1.0000e-05 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -180,7 +180,7 @@
 | Newton Raphson solver converged: ||solution|| = 1.71882e+01                newton_raphson_solver |
 |  total mass = 0.75659015606                                                    melt_pool_problem |
 | || velocity ||L2 = 3.301818765066855e-07                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.476649328837034e+01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.476883804666270e+01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
