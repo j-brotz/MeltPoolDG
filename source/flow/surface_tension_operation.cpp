@@ -1,5 +1,6 @@
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Flow
 {
@@ -183,9 +184,8 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q_index = 0; q_index < surface_tension.n_q_points; ++q_index)
               {
-                const auto mask = solid ? compare_and_apply_mask<SIMDComparison::equal>(
-                                            solid_val->get_value(q_index), 0.0, 1.0, 0.0) :
-                                          VectorizedArray<double>(1.0);
+                const auto mask =
+                  solid ? 1. - solid_val->get_value(q_index) : VectorizedArray<double>(1.0);
 
                 VectorizedArray<double> weight(1.0);
                 if (delta_phase_weighted)
@@ -193,33 +193,30 @@ namespace MeltPoolDG::Flow
 
                 if (temperature)
                   {
-                    const auto delta = used_level_set.get_gradient(q_index).norm() * weight;
-
                     const auto n =
                       MeltPoolDG::VectorTools::normalize<dim>(normal_vec->get_value(q_index),
                                                               tolerance_normal_vector);
                     const auto T      = temperature_val->get_value(q_index);
                     const auto grad_T = temperature_val->get_gradient(q_index);
 
-                    Tensor<1, dim, VectorizedArray<double>> temp_surf_ten;
-
-                    for (unsigned int i = 0; i < dim; ++i)
-                      for (unsigned int j = 0; j < dim; ++j)
-                        temp_surf_ten[i] = (i == j) ?
-                                             (make_vectorized_array<double>(1.) - n[i] * n[j]) *
-                                               (-d_alpha0) * grad_T[j] :
-                                             -(n[i] * n[j]) * (-d_alpha0) * grad_T[j];
-
+                    // compute constant surface tension
                     alpha = local_compute_temperature_dependent_surface_tension_coefficient(T);
+                    const auto constant_surface_tension = alpha * curvature.get_value(q_index) *
+                                                          weight *
+                                                          used_level_set.get_gradient(q_index);
 
-                    surface_tension.submit_value(mask * alpha * n * curvature.get_value(q_index) *
-                                                     delta +
-                                                   temp_surf_ten * delta,
+
+                    // compute Marangoni convection
+                    const auto delta = used_level_set.get_gradient(q_index).norm() * weight;
+                    const Tensor<1, dim, VectorizedArray<double>> temp_surf_ten =
+                      -d_alpha0 * (grad_T - n * scalar_product(n, grad_T)) * delta;
+
+                    surface_tension.submit_value(mask * (constant_surface_tension + temp_surf_ten),
                                                  q_index);
                   }
                 else
-                  surface_tension.submit_value(mask * alpha * used_level_set.get_gradient(q_index) *
-                                                 weight * curvature.get_value(q_index),
+                  surface_tension.submit_value(mask * alpha * curvature.get_value(q_index) *
+                                                 used_level_set.get_gradient(q_index) * weight,
                                                q_index);
               }
             surface_tension.integrate_scatter(EvaluationFlags::values, force_rhs);
