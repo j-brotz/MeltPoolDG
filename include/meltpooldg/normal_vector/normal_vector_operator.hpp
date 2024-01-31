@@ -118,9 +118,9 @@ namespace MeltPoolDG
     {
       const double n_subdivisions =
         scratch_data.is_FE_Q_iso_Q_1(dof_idx) ? scratch_data.get_degree(dof_idx) : 1;
-      return std::pow(std::max(VectorizedArray<double>(scratch_data.get_min_cell_size()),
-                               scratch_data.get_cell_sizes()[cell_idx] / (double)n_subdivisions),
-                      2.) *
+      return Utilities::fixed_power<2>(
+               std::max(VectorizedArray<double>(scratch_data.get_min_cell_size()),
+                        scratch_data.get_cell_sizes()[cell_idx] / (double)n_subdivisions)) *
              scale_factor;
     }
 
@@ -143,9 +143,9 @@ namespace MeltPoolDG
       const double n_subdivisions =
         scratch_data.is_FE_Q_iso_Q_1(dof_idx) ? scratch_data.get_degree(dof_idx) : 1;
 
-      return std::pow(std::max(scratch_data.get_min_cell_size(),
-                               cell->diameter() / (std::sqrt(dim) * n_subdivisions)),
-                      2.) *
+      return Utilities::fixed_power<2>(
+               std::max(scratch_data.get_min_cell_size(),
+                        cell->diameter() / (std::sqrt(dim) * n_subdivisions))) *
              scale_factor;
     }
   } // namespace NormalVector

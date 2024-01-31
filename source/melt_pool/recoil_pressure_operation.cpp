@@ -110,7 +110,7 @@ namespace MeltPoolDG::MeltPool
     const number delta_coefficient) const
   {
     return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
-           std::pow(m_dot, 2.) * density_coeff * delta_coefficient;
+           Utilities::fixed_power<2>(m_dot) * density_coeff * delta_coefficient;
   }
 
   template <typename number>
@@ -121,7 +121,7 @@ namespace MeltPoolDG::MeltPool
     const VectorizedArray<number> &delta_coefficient) const
   {
     return recoil_phenomenological.compute_recoil_pressure_coefficient(T) -
-           std::pow(m_dot, 2.) * density_coeff * delta_coefficient;
+           Utilities::fixed_power<2>(m_dot) * density_coeff * delta_coefficient;
   }
 
 

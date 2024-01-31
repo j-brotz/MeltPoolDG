@@ -482,7 +482,7 @@ namespace MeltPoolDG
               / (w_1g - w_1h)
             +
               (w_2h - w_2g) * (1. / w_1g * (std::log(w_1h / w_1g) - 1.) + 1. / w_1h)
-              / std::pow(1. / w_1h - 1. / w_1g, 2)
+              / Utilities::fixed_power<2>(1. / w_1h - 1. / w_1g)
           )
           // clang-format on
         )

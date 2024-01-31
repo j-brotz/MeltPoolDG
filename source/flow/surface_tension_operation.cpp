@@ -269,7 +269,8 @@ namespace MeltPoolDG::Flow
       }
 
     return data.time_step_limit.scale_factor *
-           std::sqrt((density_1 + density_2) * std::pow(scratch_data.get_min_cell_size(), 3) /
+           std::sqrt((density_1 + density_2) *
+                     Utilities::fixed_power<3>(scratch_data.get_min_cell_size()) /
                      (2 * numbers::PI * alpha));
   }
 

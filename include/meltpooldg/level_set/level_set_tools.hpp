@@ -494,7 +494,8 @@ namespace MeltPoolDG::LevelSet::Tools
           {
             double norm = 0.0;
             for (int i = 0; i < dim; ++i)
-              norm += std::pow(buffer_dim[fe_normal.component_to_system_index(i, c)], 2);
+              norm += dealii::Utilities::fixed_power<2>(
+                buffer_dim[fe_normal.component_to_system_index(i, c)]);
 
             norm = std::sqrt(norm);
             for (int i = 0; i < dim; ++i)
