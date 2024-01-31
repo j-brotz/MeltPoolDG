@@ -56,12 +56,13 @@
     "laser heat source model": "Gauss",
     "laser impact type": "interface",
     "laser gauss laser beam radius": "70.e-6",
-    "laser gauss absorptivity gas": "0.0",
+    "laser gauss absorptivity gas": "0.5",
     "laser gauss absorptivity liquid": "0.5"
   },
-  "melt pool": {
-    "mp do not reinitialize in solid": "false",
-    "mp set velocity to zero in solid": "true"
+  "darcy damping": {
+    "avoid div zero constant": "1.",
+    "formulation": "implicit_formulation",
+    "mushy zone morphology": "1e11"
   },
   "simulation specific domain": {
     "domain x min": "-0.0002",
@@ -77,33 +78,21 @@
   "reinitialization": {
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "reinit scale factor epsilon": "1.5"
   },
   "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "normal vec damping scale factor": "0.5"
   },
   "curvature": {
-    "curv damping scale factor": "0.5",
-    "curv verbosity level": "1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
+    "enable": "false"
   },
   "paraview": {
-    "paraview do output": "false",
-    "paraview write frequency": "1",
-    "paraview filename": "solution_recoil_pressure"
+    "paraview do output": "true"
   },
   "heat": {
     "heat nlsolve residual tolerance": "1e-4",
     "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve field correction tolerance": "1e-9",
+    "heat nlsolve field correction tolerance": "1e-10",
     "linear solver": {
       "rel tolerance": "1e-4",
       "preconditioner type": "DiagonalReduced"
@@ -144,10 +133,5 @@
     "do heat transfer": "true",
     "do solidification": "true",
     "do evaporative velocity jump": "false"
-  },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
   }
 }
