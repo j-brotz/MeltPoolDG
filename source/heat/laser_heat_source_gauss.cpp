@@ -11,7 +11,7 @@ namespace MeltPoolDG::Heat
     , data(data_in)
     , variable_properties_over_interface(variable_properties_over_interface)
     , vol_peak_power_density_factor(
-        1. / std::pow(data.laser_beam_radius * std::sqrt(numbers::PI / 2), 3))
+        1. / Utilities::fixed_power<3>(data.laser_beam_radius * std::sqrt(numbers::PI / 2)))
     , surf_peak_power_density_factor(
         1. / (data.laser_beam_radius * data.laser_beam_radius * numbers::PI / 2))
   {

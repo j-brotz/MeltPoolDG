@@ -954,7 +954,8 @@ namespace MeltPoolDG::Heat
               }
             if (do_radiation)
               temp -= data.emissivity * PhysicalConstants::stefan_boltzmann_constant *
-                      (pow<double>(temp_vals, 4) - std::pow(data.temperature_infinity, 4));
+                      (Utilities::fixed_power<4>(temp_vals) -
+                       Utilities::fixed_power<4>(data.temperature_infinity));
             if (do_convection)
               temp -= data.convection_coefficient * (temp_vals - data.temperature_infinity);
 

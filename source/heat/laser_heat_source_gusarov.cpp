@@ -33,9 +33,10 @@ namespace MeltPoolDG::Heat
   LaserHeatSourceGusarov<dim>::power_density(const double radius, const double power) const
   {
     const double &R = gusarov_data.laser_beam_radius;
-    return radius <= R ? 3. * power / (numbers::PI * R * R) * std::pow(1. - radius / R, 2) *
-                           std::pow(1 + radius / R, 2) :
-                         0.0;
+    return radius <= R ?
+             3. * power / (numbers::PI * R * R) * Utilities::fixed_power<2>(1. - radius / R) *
+               Utilities::fixed_power<2>(1 + radius / R) :
+             0.0;
   }
 
   template <int dim>

@@ -494,7 +494,8 @@ namespace MeltPoolDG::Heat
 
               for (unsigned int i = 0; i < locally_relevant_solution.locally_owned_size(); ++i)
                 locally_relevant_solution.local_element(i) =
-                  (1.0 - std::pow(2.0 * locally_relevant_solution.local_element(i) - 1.0, 2));
+                  (1.0 - Utilities::fixed_power<2>(
+                           2.0 * locally_relevant_solution.local_element(i) - 1.0));
 
               locally_relevant_solution.update_ghost_values();
 

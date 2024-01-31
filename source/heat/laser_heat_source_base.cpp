@@ -517,7 +517,8 @@ namespace MeltPoolDG::Heat
               {
                 double norm = 0.0;
                 for (int d = 0; d < dim; ++d)
-                  norm += std::pow(buffer_dim[fe_normal->component_to_system_index(d, c)], 2);
+                  norm += Utilities::fixed_power<2>(
+                    buffer_dim[fe_normal->component_to_system_index(d, c)]);
 
                 norm = std::max(1e-6, std::sqrt(norm));
 
