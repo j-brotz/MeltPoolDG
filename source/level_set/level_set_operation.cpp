@@ -556,7 +556,10 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::transform_distance_to_level_set()
   {
-    distance_to_level_set.update_ghost_values();
+    const bool update_ghosts = !distance_to_level_set.has_ghost_elements();
+
+    if (update_ghosts)
+      distance_to_level_set.update_ghost_values();
     scratch_data.initialize_dof_vector(get_level_set(), ls_dof_idx);
 
     VectorType multiplicity;
@@ -618,7 +621,12 @@ namespace MeltPoolDG::LevelSet
         get_level_set().local_element(i) /= multiplicity.local_element(i);
 
     scratch_data.get_constraint(ls_dof_idx).distribute(get_level_set());
-    distance_to_level_set.zero_out_ghost_values();
+
+
+    get_level_set().update_ghost_values();
+
+    if (update_ghosts)
+      distance_to_level_set.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -666,6 +674,9 @@ namespace MeltPoolDG::LevelSet
         }
     scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
     scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
+
+    level_set_as_heaviside.update_ghost_values();
+    distance_to_level_set.update_ghost_values();
   }
 
   template <int dim>
@@ -741,11 +752,16 @@ namespace MeltPoolDG::LevelSet
 
     nearest_point_search->reinit(scratch_data.get_dof_handler(curv_dof_idx));
 
+    // zero out because it is overwritten
+    curvature_operation->get_curvature().zero_out_ghost_values();
+
     nearest_point_search->template fill_dof_vector_with_point_values(
       curvature_operation->get_curvature(),
       scratch_data.get_dof_handler(curv_dof_idx),
       curvature_operation->get_curvature(),
       true);
+
+    curvature_operation->get_curvature().update_ghost_values();
 
     /*
      * old approach --> only kept as back-up [MS]

@@ -60,8 +60,15 @@ namespace MeltPoolDG::Curvature
     if (!curvature_data.enable)
       return;
 
-    solution_levelset.update_ghost_values();
-    normal_vector_operation.get_solution_normal_vector().update_ghost_values();
+
+    const bool update_ghosts = !solution_levelset.has_ghost_elements();
+    if (update_ghosts)
+      solution_levelset.update_ghost_values();
+    const bool normal_update_ghosts =
+      !normal_vector_operation.get_solution_normal_vector().has_ghost_elements();
+
+    if (normal_update_ghosts)
+      normal_vector_operation.get_solution_normal_vector().update_ghost_values();
 
     // compute predictor
     if (!predictor)
@@ -122,10 +129,16 @@ namespace MeltPoolDG::Curvature
                                                curvature_data.linear_solver);
       }
 
-    solution_levelset.zero_out_ghost_values();
-    normal_vector_operation.get_solution_normal_vector().zero_out_ghost_values();
+    if (update_ghosts)
+      solution_levelset.zero_out_ghost_values();
+
+    if (normal_update_ghosts)
+      normal_vector_operation.get_solution_normal_vector().zero_out_ghost_values();
 
     scratch_data.get_constraint(curv_dof_idx).distribute(solution_history.get_current_solution());
+
+    // update ghost values of solution
+    solution_history.get_current_solution().update_ghost_values();
 
     const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
     const ConditionalOStream &pcout =

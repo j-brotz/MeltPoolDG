@@ -122,8 +122,14 @@ namespace MeltPoolDG::AdvectionDiffusion
     if (this->advec_diff_data.linear_solver.do_matrix_free &&
         this->advec_diff_data.predictor.type == PredictorType::least_squares_projection)
       {
-        solution_history.get_current_solution().update_ghost_values();
-        advection_velocity.update_ghost_values();
+        const bool velocity_update_ghosts = !advection_velocity.has_ghost_elements();
+        if (velocity_update_ghosts)
+          advection_velocity.update_ghost_values();
+
+        const bool solution_update_ghosts =
+          !solution_history.get_current_solution().has_ghost_elements();
+        if (solution_update_ghosts)
+          solution_history.get_current_solution().update_ghost_values();
 
         rhs = user_rhs;
 
@@ -137,8 +143,11 @@ namespace MeltPoolDG::AdvectionDiffusion
           advec_diff_hanging_nodes_dof_idx,
           false /*don't zero out rhs*/);
 
-        solution_history.get_current_solution().zero_out_ghost_values();
-        advection_velocity.zero_out_ghost_values();
+        if (solution_update_ghosts)
+          solution_history.get_current_solution().zero_out_ghost_values();
+
+        if (velocity_update_ghosts)
+          advection_velocity.zero_out_ghost_values();
       }
 
     if (!predictor)
@@ -165,11 +174,14 @@ namespace MeltPoolDG::AdvectionDiffusion
     if (!this->ready_for_time_advance)
       init_time_advance();
 
-    if (!solution_history.get_recent_old_solution().has_ghost_elements())
-      solution_history.get_recent_old_solution().update_ghost_values();
-
-    if (!advection_velocity.has_ghost_elements())
+    const bool velocity_update_ghosts = !advection_velocity.has_ghost_elements();
+    if (velocity_update_ghosts)
       advection_velocity.update_ghost_values();
+
+    const bool solution_update_ghosts =
+      !solution_history.get_recent_old_solution().has_ghost_elements();
+    if (solution_update_ghosts)
+      solution_history.get_recent_old_solution().update_ghost_values();
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
@@ -288,14 +300,17 @@ namespace MeltPoolDG::AdvectionDiffusion
                         "     * GMRES: i = " + std::to_string(iter),
                         "advection_diffusion");
 
-    if (!solution_history.get_recent_old_solution().has_ghost_elements())
+    if (solution_update_ghosts)
       solution_history.get_recent_old_solution().zero_out_ghost_values();
 
-    if (!advection_velocity.has_ghost_elements())
+    if (velocity_update_ghosts)
       advection_velocity.zero_out_ghost_values();
 
     if (do_finish_time_step)
-      this->finish_time_advance();
+      {
+        solution_history.update_ghost_values();
+        this->finish_time_advance();
+      }
 
     IterationMonitor::add_linear_iterations(sc, iter);
   }

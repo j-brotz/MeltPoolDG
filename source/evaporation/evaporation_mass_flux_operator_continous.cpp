@@ -22,13 +22,16 @@ namespace MeltPoolDG::Evaporation
     VectorType       &evaporative_mass_flux,
     const VectorType &temperature) const
   {
-    temperature.update_ghost_values();
+    const bool update_ghosts = !temperature.has_ghost_elements();
+    if (update_ghosts)
+      temperature.update_ghost_values();
 
     for (unsigned int i = 0; i < evaporative_mass_flux.locally_owned_size(); ++i)
       evaporative_mass_flux.local_element(i) =
         evaporation_model.local_compute_evaporative_mass_flux(temperature.local_element(i));
 
-    temperature.zero_out_ghost_values();
+    if (update_ghosts)
+      temperature.zero_out_ghost_values();
   }
 
   template class EvaporationMassFluxOperatorContinuous<1>;

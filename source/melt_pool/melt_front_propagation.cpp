@@ -172,8 +172,12 @@ namespace MeltPoolDG::MeltPool
   MeltFrontPropagation<dim>::compute_solid_and_liquid_phases(
     const VectorType &level_set_as_heaviside)
   {
-    level_set_as_heaviside.update_ghost_values();
-    temperature.update_ghost_values();
+    const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
+    if (update_ghosts)
+      level_set_as_heaviside.update_ghost_values();
+    const bool temp_update_ghosts = !temperature.has_ghost_elements();
+    if (temp_update_ghosts)
+      temperature.update_ghost_values();
 
     std::vector<types::global_dof_index> local_dof_indices(
       scratch_data.get_n_dofs_per_cell(temp_hanging_nodes_dof_idx));
@@ -224,8 +228,13 @@ namespace MeltPoolDG::MeltPool
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solid);
     scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(liquid);
 
-    temperature.zero_out_ghost_values();
-    level_set_as_heaviside.zero_out_ghost_values();
+    liquid.update_ghost_values();
+    solid.update_ghost_values();
+
+    if (temp_update_ghosts)
+      temperature.zero_out_ghost_values();
+    if (update_ghosts)
+      level_set_as_heaviside.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -235,7 +244,9 @@ namespace MeltPoolDG::MeltPool
     const AffineConstraints<double> &flow_constraints_no_solid,
     AffineConstraints<double>       &flow_constraints)
   {
-    solid.update_ghost_values();
+    const bool update_ghosts = !solid.has_ghost_elements();
+    if (update_ghosts)
+      solid.update_ghost_values();
 
     flow_constraints.copy_from(flow_constraints_no_solid);
 
@@ -293,7 +304,8 @@ namespace MeltPoolDG::MeltPool
 
     UtilityFunctions::check_constraints(flow_dof_handler, flow_constraints);
 
-    solid.zero_out_ghost_values();
+    if (update_ghosts)
+      solid.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -305,7 +317,9 @@ namespace MeltPoolDG::MeltPool
   {
     reinit_dirichlet_constraints.copy_from(reinit_dirichlet_constraints_no_solid);
 
-    solid.update_ghost_values();
+    const bool update_ghosts = !solid.has_ghost_elements();
+    if (update_ghosts)
+      solid.update_ghost_values();
 
     AffineConstraints<double> solid_constraints;
 
@@ -363,7 +377,8 @@ namespace MeltPoolDG::MeltPool
 
     UtilityFunctions::check_constraints(level_set_dof_handler, reinit_dirichlet_constraints);
 
-    solid.zero_out_ghost_values();
+    if (update_ghosts)
+      solid.zero_out_ghost_values();
   }
 
   template <int dim>

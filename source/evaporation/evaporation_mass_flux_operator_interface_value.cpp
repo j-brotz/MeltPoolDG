@@ -66,11 +66,6 @@ namespace MeltPoolDG::Evaporation
       [&](const double x) { return evaporation_model.local_compute_evaporative_mass_flux(x); });
 
     scratch_data.get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
-    evaporative_mass_flux.update_ghost_values(); //@todo: zero out ghost values
-
-    distance.zero_out_ghost_values();
-    normal_vector.zero_out_ghost_values();
-    level_set_as_heaviside.zero_out_ghost_values();
   }
 
   template class EvaporationMassFluxOperatorInterfaceValue<1>;

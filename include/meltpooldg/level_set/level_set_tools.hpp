@@ -449,8 +449,13 @@ namespace MeltPoolDG::LevelSet::Tools
                                const double               contour_value      = 0.0,
                                const unsigned int         n_subdivisions_MCA = 1)
   {
-    level_set_vector.update_ghost_values();
-    normal_vector.update_ghost_values();
+    const bool level_set_is_ghosted = level_set_vector.has_ghost_elements();
+    if (!level_set_is_ghosted)
+      level_set_vector.update_ghost_values();
+
+    const bool normal_vector_is_ghosted = normal_vector.has_ghost_elements();
+    if (!normal_vector_is_ghosted)
+      normal_vector.update_ghost_values();
 
     FEPointEvaluation<dim, dim> phi_normal(mapping, fe_normal, update_values);
 
@@ -568,8 +573,10 @@ namespace MeltPoolDG::LevelSet::Tools
                                contour_value, /*contour value*/
                                n_subdivisions_MCA /*n_subdivisions*/);
 
-    level_set_vector.zero_out_ghost_values();
-    normal_vector.zero_out_ghost_values();
+    if (!level_set_is_ghosted)
+      level_set_vector.zero_out_ghost_values();
+    if (!normal_vector_is_ghosted)
+      normal_vector.zero_out_ghost_values();
   }
 
   /**

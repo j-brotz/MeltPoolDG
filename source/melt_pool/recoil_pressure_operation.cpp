@@ -179,9 +179,17 @@ namespace MeltPoolDG::MeltPool
     const unsigned int evapor_dof_idx,
     bool               zero_out) const
   {
-    temperature.update_ghost_values();
+    const bool temp_update_ghosts = !temperature.has_ghost_elements();
+    if (temp_update_ghosts)
+      temperature.update_ghost_values();
+
+    bool evapor_update_ghosts = false;
     if (model_type == RecoilPressureModelType::hybrid)
-      evaporative_mass_flux.update_ghost_values();
+      {
+        evapor_update_ghosts = !evaporative_mass_flux.has_ghost_elements();
+        if (evapor_update_ghosts)
+          evaporative_mass_flux.update_ghost_values();
+      }
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
@@ -276,9 +284,14 @@ namespace MeltPoolDG::MeltPool
       force_rhs,
       level_set_as_heaviside,
       zero_out);
-    temperature.zero_out_ghost_values();
+
+    if (temp_update_ghosts)
+      temperature.zero_out_ghost_values();
     if (model_type == RecoilPressureModelType::hybrid)
-      evaporative_mass_flux.zero_out_ghost_values();
+      {
+        if (evapor_update_ghosts)
+          evaporative_mass_flux.zero_out_ghost_values();
+      }
   }
 
   template class RecoilPressureOperation<1>;

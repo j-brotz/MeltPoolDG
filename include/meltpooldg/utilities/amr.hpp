@@ -123,6 +123,8 @@ namespace MeltPoolDG
          */
         for (unsigned int j = 0; j < n; ++j)
           {
+            for (const auto &i : new_grid_solutions[j])
+              i->zero_out_ghost_values();
             solution_transfer[j]->interpolate(new_grid_solutions[j]);
           }
         post();

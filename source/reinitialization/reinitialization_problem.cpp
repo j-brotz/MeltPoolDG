@@ -92,9 +92,6 @@ namespace MeltPoolDG::Reinitialization
                                      *ic,
                                      solution_level_set);
     constraints.distribute(solution_level_set);
-
-    solution_level_set.update_ghost_values();
-
     /*
      *    initialize the reinitialization operation class
      */

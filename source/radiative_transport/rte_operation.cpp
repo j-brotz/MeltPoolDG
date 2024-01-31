@@ -199,8 +199,9 @@ namespace MeltPoolDG::RadiativeTransport
   {
     ScopedName         sc("rte::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
-
-    heaviside.update_ghost_values();
+    const bool         update_ghosts = !heaviside.has_ghost_elements();
+    if (update_ghosts)
+      heaviside.update_ghost_values();
 
     unsigned int iter = 0;
 
@@ -318,7 +319,8 @@ namespace MeltPoolDG::RadiativeTransport
                                                    *trilinos_preconditioner_matrixfree);
           }
 
-        heaviside.zero_out_ghost_values();
+        if (update_ghosts)
+          heaviside.zero_out_ghost_values();
 
         scratch_data.get_constraint(rte_dof_idx)
           .distribute(solution_history.get_current_solution());
@@ -347,9 +349,11 @@ namespace MeltPoolDG::RadiativeTransport
   void
   RadiativeTransportOperation<dim>::pseudo_solve()
   {
-    if (!solution_history.get_recent_old_solution().has_ghost_elements())
+    const bool sol_update_ghosts = !solution_history.get_recent_old_solution().has_ghost_elements();
+    if (sol_update_ghosts)
       solution_history.get_recent_old_solution().update_ghost_values();
-    if (!heaviside.has_ghost_elements())
+    const bool update_ghosts = !heaviside.has_ghost_elements();
+    if (update_ghosts)
       heaviside.update_ghost_values();
 
     // compute right-hand side of the pseudo-time dependent RTE problem modified by inhomogeneous
@@ -387,10 +391,12 @@ namespace MeltPoolDG::RadiativeTransport
                                         *trilinos_pseudo_preconditioner_matrixfree);
       }
 
-    if (!solution_history.get_recent_old_solution().has_ghost_elements())
+    if (sol_update_ghosts)
       solution_history.get_recent_old_solution().zero_out_ghost_values();
-    if (!heaviside.has_ghost_elements())
+    if (update_ghosts)
       heaviside.zero_out_ghost_values();
+
+    // update ghost values of relevant solution
     solution_history.get_current_solution().update_ghost_values();
 
     scratch_data.get_constraint(rte_dof_idx).distribute(solution_history.get_current_solution());
@@ -405,7 +411,8 @@ namespace MeltPoolDG::RadiativeTransport
     if (zero_out)
       heat_source = 0.0;
 
-    if (!solution_history.get_current_solution().has_ghost_elements())
+    const bool update_ghosts = !solution_history.get_current_solution().has_ghost_elements();
+    if (update_ghosts)
       solution_history.get_current_solution().update_ghost_values();
 
     // declarations
@@ -484,10 +491,9 @@ namespace MeltPoolDG::RadiativeTransport
       if (heat_source_multiplicity.local_element(source_mult_local_index) > 1.0)
         heat_source.local_element(source_mult_local_index) /=
           heat_source_multiplicity.local_element(source_mult_local_index);
-    heat_source.zero_out_ghost_values();
 
-    if (!solution_history.get_current_solution().has_ghost_elements())
-      solution_history.get_current_solution().update_ghost_values();
+    if (update_ghosts)
+      solution_history.get_current_solution().zero_out_ghost_values();
   }
 
   template <int dim>

@@ -82,15 +82,32 @@ namespace MeltPoolDG::Flow
   void
   SurfaceTensionOperation<dim>::compute_surface_tension(VectorType &force_rhs, const bool zero_out)
   {
-    solution_curvature.update_ghost_values();
+    const bool curv_update_ghosts = !solution_curvature.has_ghost_elements();
+
+    if (curv_update_ghosts)
+      solution_curvature.update_ghost_values();
+
+    bool normal_update_ghosts      = true;
+    bool temperature_update_ghosts = true;
+    bool solid_update_ghosts       = true;
 
     if (temperature)
       {
-        solution_normal_vector->update_ghost_values();
-        temperature->update_ghost_values();
+        normal_update_ghosts = !solution_normal_vector->has_ghost_elements();
+
+        if (normal_update_ghosts)
+          solution_normal_vector->update_ghost_values();
+
+        temperature_update_ghosts = !temperature->has_ghost_elements();
+        if (temperature_update_ghosts)
+          temperature->update_ghost_values();
       }
     if (solid)
-      solid->update_ghost_values();
+      {
+        solid_update_ghosts = !solid->has_ghost_elements();
+        if (solid_update_ghosts)
+          solid->update_ghost_values();
+      }
 
     const double tolerance_normal_vector =
       UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
@@ -229,15 +246,22 @@ namespace MeltPoolDG::Flow
       level_set_as_heaviside,
       zero_out);
 
-    solution_curvature.zero_out_ghost_values();
+    if (curv_update_ghosts)
+      solution_curvature.zero_out_ghost_values();
 
     if (temperature)
       {
-        temperature->zero_out_ghost_values();
-        solution_normal_vector->zero_out_ghost_values();
+        if (temperature_update_ghosts)
+          temperature->zero_out_ghost_values();
+
+        if (normal_update_ghosts)
+          solution_normal_vector->zero_out_ghost_values();
       }
     if (solid)
-      solid->zero_out_ghost_values();
+      {
+        if (solid_update_ghosts)
+          solid->zero_out_ghost_values();
+      }
   }
 
   template <int dim>

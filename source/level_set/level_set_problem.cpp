@@ -439,8 +439,14 @@ namespace MeltPoolDG::LevelSet
         }
       else if (problem_specific_parameters.amr.strategy == AMRStrategy::refine_all_interface_cells)
         {
-          level_set_operation->get_level_set().update_ghost_values();
-          level_set_operation->get_level_set_as_heaviside().update_ghost_values();
+          const bool solution_update_ghosts =
+            !level_set_operation->get_level_set().has_ghost_elements();
+          if (solution_update_ghosts)
+            level_set_operation->get_level_set().update_ghost_values();
+          const bool hs_update_ghosts =
+            !level_set_operation->get_level_set_as_heaviside().has_ghost_elements();
+          if (hs_update_ghosts)
+            level_set_operation->get_level_set_as_heaviside().update_ghost_values();
           FEValues<dim>       ls_values(scratch_data->get_mapping(),
                                   scratch_data->get_fe(ls_dof_idx),
                                   Quadrature<dim>(
@@ -483,8 +489,10 @@ namespace MeltPoolDG::LevelSet
                 }
             }
 
-          level_set_operation->get_level_set().zero_out_ghost_values();
-          level_set_operation->get_level_set_as_heaviside().zero_out_ghost_values();
+          if (solution_update_ghosts)
+            level_set_operation->get_level_set().zero_out_ghost_values();
+          if (hs_update_ghosts)
+            level_set_operation->get_level_set_as_heaviside().zero_out_ghost_values();
         }
       else
         {

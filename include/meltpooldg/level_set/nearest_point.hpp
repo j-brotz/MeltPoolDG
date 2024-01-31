@@ -103,8 +103,13 @@ namespace MeltPoolDG::LevelSet::Tools
       // located within the narrow band region
       const unsigned int n_components = dof_handler_req.get_fe().n_components();
 
-      signed_distance.update_ghost_values();
-      normal_vector.update_ghost_values();
+      const bool signed_distance_update_ghosts = !signed_distance.has_ghost_elements();
+
+      if (signed_distance_update_ghosts)
+        signed_distance.update_ghost_values();
+      const bool normal_vector_update_ghosts = !normal_vector.has_ghost_elements();
+      if (normal_vector_update_ghosts)
+        normal_vector.update_ghost_values();
 
       FEValues<dim> distance_values(
         mapping,
@@ -231,8 +236,10 @@ namespace MeltPoolDG::LevelSet::Tools
                               std::to_string(Utilities::MPI::sum(total_points_rpe, mpi_comm)),
                             "nearest_point");
 
-      signed_distance.zero_out_ghost_values();
-      normal_vector.zero_out_ghost_values();
+      if (signed_distance_update_ghosts)
+        signed_distance.zero_out_ghost_values();
+      if (normal_vector_update_ghosts)
+        normal_vector.zero_out_ghost_values();
 
       AssertThrow(dof_indices.size() == projected_points_at_interface.size(),
                   ExcMessage("The size of vectors does not match."));

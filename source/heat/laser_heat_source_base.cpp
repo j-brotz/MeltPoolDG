@@ -87,10 +87,18 @@ namespace MeltPoolDG::Heat
     if (zero_out)
       heat_source_vector = 0.0;
 
-    level_set_heaviside.update_ghost_values();
+    const bool update_ghosts = !level_set_heaviside.has_ghost_elements();
 
+    if (update_ghosts)
+      level_set_heaviside.update_ghost_values();
+
+    bool normal_update_ghosts = true;
     if (normal_vector)
-      normal_vector->update_ghost_values();
+      {
+        normal_update_ghosts = !normal_vector->has_ghost_elements();
+        if (normal_update_ghosts)
+          normal_vector->update_ghost_values();
+      }
 
     const double tolerance_normal_vector =
       UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
@@ -303,8 +311,10 @@ namespace MeltPoolDG::Heat
     scratch_data.get_constraint(temp_dof_idx).distribute(heat_source_vector);
 
     heat_source_vector.zero_out_ghost_values();
-    level_set_heaviside.zero_out_ghost_values();
-    if (normal_vector)
+
+    if (update_ghosts)
+      level_set_heaviside.zero_out_ghost_values();
+    if (normal_vector && normal_update_ghosts)
       normal_vector->zero_out_ghost_values();
   }
 
@@ -326,10 +336,18 @@ namespace MeltPoolDG::Heat
     if (zero_out)
       scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);
 
-    level_set_heaviside.update_ghost_values();
+    const bool update_ghosts = !level_set_heaviside.has_ghost_elements();
+    if (update_ghosts)
+      level_set_heaviside.update_ghost_values();
 
+    bool normal_update_ghosts = true;
     if (normal_vector)
-      normal_vector->update_ghost_values();
+      {
+        normal_update_ghosts = !normal_vector->has_ghost_elements();
+
+        if (normal_update_ghosts)
+          normal_vector->update_ghost_values();
+      }
 
     // step 1: set material ID of cells
     LevelSet::Tools::set_material_id_from_level_set(scratch_data, ls_dof_idx, level_set_heaviside);
@@ -422,8 +440,9 @@ namespace MeltPoolDG::Heat
 
     heat_rhs.compress(VectorOperation::add);
 
-    level_set_heaviside.zero_out_ghost_values();
-    if (normal_vector)
+    if (update_ghosts)
+      level_set_heaviside.zero_out_ghost_values();
+    if (normal_vector && normal_update_ghosts)
       normal_vector->zero_out_ghost_values();
   }
 
@@ -444,9 +463,17 @@ namespace MeltPoolDG::Heat
     if (zero_out)
       scratch_data.initialize_dof_vector(heat_rhs, temp_dof_idx);
 
-    level_set_heaviside.update_ghost_values();
+    const bool update_ghosts = !level_set_heaviside.has_ghost_elements();
+    if (update_ghosts)
+      level_set_heaviside.update_ghost_values();
+
+    bool normal_update_ghosts = true;
     if (normal_vector)
-      normal_vector->update_ghost_values();
+      {
+        normal_update_ghosts = !normal_vector->has_ghost_elements();
+        if (normal_update_ghosts)
+          normal_vector->update_ghost_values();
+      }
 
     FEPointEvaluation<1, dim> ls(scratch_data.get_mapping(),
                                  scratch_data.get_fe(ls_dof_idx),
@@ -569,8 +596,10 @@ namespace MeltPoolDG::Heat
     heat_rhs.compress(VectorOperation::add);
 
     heat_rhs.zero_out_ghost_values();
-    level_set_heaviside.zero_out_ghost_values();
-    if (normal_vector)
+
+    if (update_ghosts)
+      level_set_heaviside.zero_out_ghost_values();
+    if (normal_vector && normal_update_ghosts)
       normal_vector->zero_out_ghost_values();
 
     if (false)

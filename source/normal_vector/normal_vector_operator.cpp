@@ -202,9 +202,6 @@ namespace MeltPoolDG::NormalVector
   {
     system_matrix = 0.0;
 
-    if (solution_level_set)
-      solution_level_set->update_ghost_values();
-
     // note: not thread safe!!!
     const auto                      &matrix_free = scratch_data.get_matrix_free();
     FECellIntegrator<dim, 1, number> level_set_vals(matrix_free, ls_dof_idx, normal_quad_idx);
@@ -229,9 +226,6 @@ namespace MeltPoolDG::NormalVector
       normal_quad_idx);
 
     system_matrix.compress(VectorOperation::add);
-
-    if (solution_level_set)
-      solution_level_set->zero_out_ghost_values();
   }
 
   template <int dim, typename number>
@@ -241,8 +235,14 @@ namespace MeltPoolDG::NormalVector
   {
     scratch_data.initialize_dof_vector(diagonal, normal_dof_idx);
 
+    bool update_ghosts = true;
+
     if (solution_level_set)
-      solution_level_set->update_ghost_values();
+      {
+        update_ghosts = !solution_level_set->has_ghost_elements();
+        if (update_ghosts)
+          solution_level_set->update_ghost_values();
+      }
 
     // note: not thread safe!!!
     const auto                      &matrix_free = scratch_data.get_matrix_free();
@@ -269,10 +269,6 @@ namespace MeltPoolDG::NormalVector
           },
           normal_dof_idx,
           normal_quad_idx);
-
-
-    if (solution_level_set)
-      solution_level_set->zero_out_ghost_values();
 
     // ... and invert it
     const double linfty_norm = std::max(1.0, diagonal.linfty_norm());

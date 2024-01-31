@@ -48,6 +48,7 @@ namespace MeltPoolDG::Heat
     , ls_dof_idx(ls_dof_idx_in)
     , level_set_as_heaviside(level_set_as_heaviside_in)
     , do_solidification(do_solidification_in)
+    , do_update_ghosts(6)
   {
     // TODO move these asserts to a more central place -> to material perhaps?
     const auto &material_data = material.get_data();
@@ -174,14 +175,21 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperator<dim, number>::update_ghost_values() const
   {
-    MeltPoolDG::VectorTools::update_ghost_values(temperature, heat_source);
-    if (velocity)
+    unsigned int i = 0;
+
+    if (do_update_ghosts[i++] = !temperature.has_ghost_elements())
+      MeltPoolDG::VectorTools::update_ghost_values(temperature);
+    if (do_update_ghosts[i++] = !heat_source.has_ghost_elements())
+      MeltPoolDG::VectorTools::update_ghost_values(heat_source);
+    if (velocity && (do_update_ghosts[i++] = !velocity->has_ghost_elements()))
       MeltPoolDG::VectorTools::update_ghost_values(*velocity);
-    if (level_set_as_heaviside)
+    if (level_set_as_heaviside &&
+        (do_update_ghosts[i++] = !level_set_as_heaviside->has_ghost_elements()))
       MeltPoolDG::VectorTools::update_ghost_values(*level_set_as_heaviside);
-    if (do_solidification)
+    if (do_solidification && (do_update_ghosts[i++] = !temperature_old.has_ghost_elements()))
       MeltPoolDG::VectorTools::update_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
+    if (evaporative_mass_flux &&
+        (do_update_ghosts[i++] = !evaporative_mass_flux->has_ghost_elements()))
       MeltPoolDG::VectorTools::update_ghost_values(*evaporative_mass_flux);
   }
 
@@ -189,14 +197,19 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperator<dim, number>::zero_out_ghost_values() const
   {
-    MeltPoolDG::VectorTools::zero_out_ghost_values(temperature, heat_source);
-    if (velocity)
+    unsigned int i = 0;
+
+    if (do_update_ghosts[i++])
+      MeltPoolDG::VectorTools::zero_out_ghost_values(temperature);
+    if (do_update_ghosts[i++])
+      MeltPoolDG::VectorTools::zero_out_ghost_values(heat_source);
+    if (velocity && do_update_ghosts[i++])
       MeltPoolDG::VectorTools::zero_out_ghost_values(*velocity);
-    if (level_set_as_heaviside)
+    if (level_set_as_heaviside && do_update_ghosts[i++])
       MeltPoolDG::VectorTools::zero_out_ghost_values(*level_set_as_heaviside);
-    if (do_solidification)
+    if (do_solidification && do_update_ghosts[i++])
       MeltPoolDG::VectorTools::zero_out_ghost_values(temperature_old);
-    if (evaporative_mass_flux)
+    if (evaporative_mass_flux && do_update_ghosts[i++])
       MeltPoolDG::VectorTools::zero_out_ghost_values(*evaporative_mass_flux);
   }
 

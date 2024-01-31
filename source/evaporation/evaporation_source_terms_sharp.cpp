@@ -71,9 +71,16 @@ namespace MeltPoolDG::Evaporation
      */
     AlignedVector<Tensor<1, dim, VectorizedArray<double>>> evaporation_velocities;
 
-    level_set_as_heaviside.update_ghost_values();
-    normal_vector.update_ghost_values();
-    evaporative_mass_flux.update_ghost_values();
+    const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
+    if (update_ghosts)
+      level_set_as_heaviside.update_ghost_values();
+
+    const bool normal_update_ghosts = !normal_vector.has_ghost_elements();
+    if (normal_update_ghosts)
+      normal_vector.update_ghost_values();
+    const bool evapor_update_ghosts = !evaporative_mass_flux.has_ghost_elements();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.update_ghost_values();
 
     FECellIntegrator<dim, 1, double> ls(scratch_data.get_matrix_free(),
                                         ls_hanging_nodes_dof_idx,
@@ -121,9 +128,14 @@ namespace MeltPoolDG::Evaporation
             evapor_vel[q_index] = is_liquid * n_phi;
           }
       }
-    level_set_as_heaviside.zero_out_ghost_values();
-    normal_vector.zero_out_ghost_values();
-    evaporative_mass_flux.zero_out_ghost_values();
+    if (update_ghosts)
+      level_set_as_heaviside.zero_out_ghost_values();
+
+    if (normal_update_ghosts)
+      normal_vector.zero_out_ghost_values();
+
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.zero_out_ghost_values();
 
     scratch_data.initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
 
@@ -171,8 +183,12 @@ namespace MeltPoolDG::Evaporation
   {
     AssertThrow(surface_mesh_info, ExcNotImplemented());
 
-    evaporative_mass_flux.update_ghost_values();
-    level_set_as_heaviside.update_ghost_values();
+    const bool evapor_update_ghosts = !evaporative_mass_flux.has_ghost_elements();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.update_ghost_values();
+    const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
+    if (update_ghosts)
+      level_set_as_heaviside.update_ghost_values();
 
     FEPointEvaluation<1, dim> mass_flux(
       scratch_data.get_mapping(),
@@ -245,9 +261,10 @@ namespace MeltPoolDG::Evaporation
 
     mass_balance_source_term.compress(VectorOperation::add);
 
-    mass_balance_source_term.update_ghost_values();
-    evaporative_mass_flux.zero_out_ghost_values();
-    level_set_as_heaviside.zero_out_ghost_values();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.zero_out_ghost_values();
+    if (update_ghosts)
+      level_set_as_heaviside.zero_out_ghost_values();
   }
 
   template <int dim>

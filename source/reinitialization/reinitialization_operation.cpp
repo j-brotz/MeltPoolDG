@@ -137,13 +137,7 @@ namespace MeltPoolDG::Reinitialization
     if (reinit_data.linear_solver.do_matrix_free &&
         reinit_data.predictor.type == PredictorType::least_squares_projection)
       {
-        get_normal_vector().update_ghost_values();
-        solution_level_set.update_ghost_values();
-
         reinit_operator->create_rhs(rhs, solution_level_set);
-
-        get_normal_vector().zero_out_ghost_values();
-        solution_level_set.zero_out_ghost_values();
       }
 
     if (!predictor)
@@ -164,8 +158,14 @@ namespace MeltPoolDG::Reinitialization
     ScopedName         sc("reinitialization::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
-    get_normal_vector().update_ghost_values();
-    solution_level_set.update_ghost_values();
+
+    const bool normal_update_ghosts = !get_normal_vector().has_ghost_elements();
+    if (normal_update_ghosts)
+      get_normal_vector().update_ghost_values();
+
+    const bool ls_update_ghosts = !solution_level_set.has_ghost_elements();
+    if (ls_update_ghosts)
+      solution_level_set.update_ghost_values();
 
     init_time_advance();
 
@@ -233,9 +233,11 @@ namespace MeltPoolDG::Reinitialization
       }
     scratch_data.get_constraint(reinit_dof_idx).distribute(solution_history.get_current_solution());
 
-    solution_level_set.zero_out_ghost_values();
-    get_normal_vector().zero_out_ghost_values();
+    if (ls_update_ghosts)
+      solution_level_set.zero_out_ghost_values();
 
+    if (normal_update_ghosts)
+      get_normal_vector().zero_out_ghost_values();
 
     // copy the delta_psi to the DoFHandler of the level set
     VectorType delta_level_set;
@@ -244,6 +246,9 @@ namespace MeltPoolDG::Reinitialization
 
     solution_level_set += delta_level_set;
 
+    // update ghost values of solution
+    solution_level_set.update_ghost_values();
+    solution_history.update_ghost_values();
     max_change_level_set = solution_history.get_current_solution().linfty_norm();
 
     Journal::print_formatted_norm(
