@@ -87,7 +87,7 @@
     "enable": "false"
   },
   "paraview": {
-    "paraview do output": "true"
+    "paraview do output": "false"
   },
   "heat": {
     "heat nlsolve residual tolerance": "1e-4",
