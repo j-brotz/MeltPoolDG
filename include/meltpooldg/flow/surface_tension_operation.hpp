@@ -22,9 +22,13 @@ namespace MeltPoolDG::Flow
    *          /                \        /                         \
    *  f_st =  | N_a,  α κ n  δ |   +    | N_a,  (I - n ⊗ n ) ∇α δ |
    *          \            Γ   /        \             Γ   Γ       /
-   *                            Ω                                  Ω
+   *                           Ω                                  Ω
    *
-   *  with the temperature-dependent surface tension coefficient
+   *  with the curvature
+   *
+   *  κ = -( ∇ ∙ n )
+   *
+   *  the temperature-dependent surface tension coefficient
    *
    *  α = α_0 - α'_0 ( T - T    )
    *                        α_0
