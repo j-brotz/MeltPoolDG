@@ -60,13 +60,12 @@ namespace MeltPoolDG::Curvature
     if (!curvature_data.enable)
       return;
 
-
     const bool update_ghosts = !solution_levelset.has_ghost_elements();
     if (update_ghosts)
       solution_levelset.update_ghost_values();
+
     const bool normal_update_ghosts =
       !normal_vector_operation.get_solution_normal_vector().has_ghost_elements();
-
     if (normal_update_ghosts)
       normal_vector_operation.get_solution_normal_vector().update_ghost_values();
 

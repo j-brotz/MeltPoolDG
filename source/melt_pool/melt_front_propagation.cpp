@@ -54,7 +54,8 @@ namespace MeltPoolDG::MeltPool
     /*
      * distribute the constraints for the level set in the solid region
      */
-    scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
+    if (mp_data.solid.do_not_reinitialize)
+      scratch_data.get_constraint(ls_dof_idx).distribute(level_set);
   }
 
   template <int dim>

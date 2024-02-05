@@ -67,6 +67,9 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     // TODO: set to zero
     solution_history.set_recent_old_solution(solution_history.get_current_solution());
+
+    // update ghost values
+    solution_history.update_ghost_values();
   }
 
   template <int dim>
@@ -308,11 +311,13 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     if (do_finish_time_step)
       {
-        solution_history.update_ghost_values();
         this->finish_time_advance();
       }
 
     IterationMonitor::add_linear_iterations(sc, iter);
+
+    // update ghost values of solution
+    solution_history.get_current_solution().update_ghost_values();
   }
 
   template <int dim>

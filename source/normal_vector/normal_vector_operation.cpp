@@ -116,10 +116,6 @@ namespace MeltPoolDG::NormalVector
 
     unsigned int iter = 0;
 
-    const bool ls_update_ghosts = !solution_history.get_current_solution().has_ghost_elements();
-    if (ls_update_ghosts)
-      solution_history.get_current_solution().update_ghost_values();
-
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
         AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
