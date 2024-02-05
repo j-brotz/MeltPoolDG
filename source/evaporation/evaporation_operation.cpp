@@ -248,8 +248,6 @@ namespace MeltPoolDG::Evaporation
                                                                    pressure_dof_idx,
                                                                    pressure_quad_idx,
                                                                    zero_out);
-    // update ghost values of computed vector
-    mass_balance_rhs.update_ghost_values();
   }
 
   template <int dim>
