@@ -52,7 +52,7 @@
 | evaporation: jump in the velocity field = -0.000105544       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 5.1082348901e-05            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.809875097768341e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.247376532900703e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.247380761948822e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-10 to 4.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -70,7 +70,7 @@
 | evaporation: jump in the velocity field = -0.000105544       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 5.1082346764e-05            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.816214237914397e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.796204699933568e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.796205151521296e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-10 to 5.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -88,7 +88,7 @@
 | evaporation: jump in the velocity field = -0.000105544       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 5.1082344627e-05            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.810099778526755e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.944574007966728e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.944575312821290e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
