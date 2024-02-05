@@ -66,8 +66,13 @@ namespace MeltPoolDG::Evaporation
           scratch_data.get_dof_handler(ls_dof_idx),
           true /*do sort lexicographic (matrix-free)*/);
 
-    level_set.update_ghost_values();
-    evaporative_mass_flux.update_ghost_values();
+    const bool update_ghosts = !level_set.has_ghost_elements();
+    if (update_ghosts)
+      level_set.update_ghost_values();
+
+    const bool evapor_update_ghosts = !evaporative_mass_flux.has_ghost_elements();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.update_ghost_values();
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
@@ -138,8 +143,10 @@ namespace MeltPoolDG::Evaporation
       level_set_as_heaviside,
       true /*zero_out*/);
 
-    evaporative_mass_flux.zero_out_ghost_values();
-    level_set.zero_out_ghost_values();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.zero_out_ghost_values();
+    if (update_ghosts)
+      level_set.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -149,9 +156,17 @@ namespace MeltPoolDG::Evaporation
   {
     AssertThrow(!evapor_data.do_level_set_pressure_gradient_interpolation, ExcNotImplemented());
 
-    level_set_as_heaviside.update_ghost_values();
-    normal_vector.update_ghost_values();
-    evaporative_mass_flux.update_ghost_values();
+    const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
+    if (update_ghosts)
+      level_set_as_heaviside.update_ghost_values();
+
+    const bool normal_update_ghosts = !normal_vector.has_ghost_elements();
+    if (normal_update_ghosts)
+      normal_vector.update_ghost_values();
+
+    const bool evapor_update_ghosts = !evaporative_mass_flux.has_ghost_elements();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.update_ghost_values();
 
     FECellIntegrator<dim, 1, double> ls(scratch_data.get_matrix_free(),
                                         ls_hanging_nodes_dof_idx,
@@ -217,9 +232,12 @@ namespace MeltPoolDG::Evaporation
             AssertThrow(evapor_data.ls_value_gas == -1.0, ExcNotImplemented());
           }
       }
-    level_set_as_heaviside.zero_out_ghost_values();
-    normal_vector.zero_out_ghost_values();
-    evaporative_mass_flux.zero_out_ghost_values();
+    if (update_ghosts)
+      level_set_as_heaviside.zero_out_ghost_values();
+    if (normal_update_ghosts)
+      normal_vector.zero_out_ghost_values();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.zero_out_ghost_values();
 
     scratch_data.initialize_dof_vector(evaporation_velocity, evapor_vel_dof_idx);
 
@@ -250,7 +268,6 @@ namespace MeltPoolDG::Evaporation
       "evaporative_velocity",
       "evaporation_operation",
       10);
-
     evaporation_velocity.zero_out_ghost_values();
   }
 
@@ -270,7 +287,9 @@ namespace MeltPoolDG::Evaporation
           scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx),
           true /*do sort lexicographic (matrix-free)*/);
 
-    evaporative_mass_flux.update_ghost_values();
+    const bool evapor_update_ghosts = !evaporative_mass_flux.has_ghost_elements();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.update_ghost_values();
 
     double mass = 0.0;
 
@@ -344,7 +363,8 @@ namespace MeltPoolDG::Evaporation
       mass_balance_source_term,
       level_set_as_heaviside,
       zero_out);
-    evaporative_mass_flux.zero_out_ghost_values();
+    if (evapor_update_ghosts)
+      evaporative_mass_flux.zero_out_ghost_values();
 
     std::ostringstream str;
     str << "evaporation: jump in the velocity field = "

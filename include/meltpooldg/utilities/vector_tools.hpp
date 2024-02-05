@@ -98,7 +98,9 @@ namespace MeltPoolDG
                                              LinearAlgebra::distributed::BlockVector<Number> &out,
                                              const DoFHandler<dim, spacedim> &dof_handler)
     {
-      in.update_ghost_values();
+      const bool update_ghosts = !in.has_ghost_elements();
+      if (update_ghosts)
+        in.update_ghost_values();
 
       for (const auto &cell_fe_system : dof_handler_fe_system.active_cell_iterators())
         if (cell_fe_system->is_locally_owned())
@@ -125,7 +127,8 @@ namespace MeltPoolDG
               }
           }
 
-      in.zero_out_ghost_values();
+      if (update_ghosts)
+        in.zero_out_ghost_values();
     }
 
     template <int dim, int spacedim, typename Number>
@@ -136,7 +139,9 @@ namespace MeltPoolDG
       LinearAlgebra::distributed::Vector<Number>            &out,
       const DoFHandler<dim, spacedim>                       &dof_handler_fe_system)
     {
-      in.update_ghost_values();
+      const bool update_ghosts = !in.has_ghost_elements();
+      if (update_ghosts)
+        in.update_ghost_values();
 
       for (const auto &cell_fe_system : dof_handler_fe_system.active_cell_iterators())
         if (cell_fe_system->is_locally_owned())
@@ -162,7 +167,8 @@ namespace MeltPoolDG
             cell_fe_system->set_dof_values(local, out);
           }
 
-      in.zero_out_ghost_values();
+      if (update_ghosts)
+        in.zero_out_ghost_values();
     }
 
     template <typename... T>

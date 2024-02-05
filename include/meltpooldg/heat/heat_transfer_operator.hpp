@@ -171,6 +171,9 @@ namespace MeltPoolDG::Heat
     mutable AlignedVector<VectorizedArray<double>> rho_cp_at_q;
     mutable VectorType                             rho_cp_vec;
 
+    // for efficient ghost value update
+    mutable std::vector<bool> do_update_ghosts;
+
   public:
     HeatTransferOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
                          const ScratchData<dim>                         &scratch_data_in,

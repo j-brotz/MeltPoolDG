@@ -159,8 +159,13 @@ namespace MeltPoolDG::Evaporation
     void
     update_ghost_values() final
     {
-      normal_vector.update_ghost_values();
-      heaviside.update_ghost_values();
+      normal_update_ghosts = !normal_vector.has_ghost_elements();
+      if (normal_update_ghosts)
+        normal_vector.update_ghost_values();
+
+      ls_update_ghosts = !heaviside.has_ghost_elements();
+      if (ls_update_ghosts)
+        heaviside.update_ghost_values();
     }
 
     /**
@@ -169,8 +174,11 @@ namespace MeltPoolDG::Evaporation
     void
     zero_out_ghost_values() final
     {
-      normal_vector.zero_out_ghost_values();
-      heaviside.zero_out_ghost_values();
+      if (normal_update_ghosts)
+        normal_vector.zero_out_ghost_values();
+
+      if (ls_update_ghosts)
+        heaviside.zero_out_ghost_values();
     }
 
   private:
@@ -193,5 +201,8 @@ namespace MeltPoolDG::Evaporation
     Tensor<1, dim, VectorizedArray<number>> normal;
     VectorizedArray<number>                 hs;
     unsigned int                            cell;
+
+    mutable bool ls_update_ghosts     = true;
+    mutable bool normal_update_ghosts = true;
   };
 } // namespace MeltPoolDG::Evaporation

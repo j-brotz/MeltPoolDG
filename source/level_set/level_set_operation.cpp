@@ -140,29 +140,29 @@ namespace MeltPoolDG::LevelSet
     if ((base_in->parameters.curv.implementation ==
          "meltpooldg")) // @todo: add stronger criterion for ls implementation == meltpooldg
       {
-        curvature_operation = std::make_shared<Curvature::CurvatureOperation<dim>>(
-          scratch_data,
-          base_in->parameters.curv,
-          base_in->parameters.normal_vec,
-          advec_diff_operation->get_advected_field(),
-          curv_dof_idx_in,
-          ls_quad_idx_in,
-          normal_dof_idx_in,
-          ls_dof_idx);
+        curvature_operation =
+          std::make_shared<Curvature::CurvatureOperation<dim>>(scratch_data,
+                                                               base_in->parameters.curv,
+                                                               base_in->parameters.normal_vec,
+                                                               get_level_set(),
+                                                               curv_dof_idx_in,
+                                                               ls_quad_idx_in,
+                                                               normal_dof_idx_in,
+                                                               ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if ((base_in->parameters.curv.implementation == "adaflo") ||
              (base_in->parameters.ls.implementation == "adaflo"))
       {
         AssertThrow(base_in->parameters.curv.linear_solver.do_matrix_free, ExcNotImplemented());
-        curvature_operation = std::make_shared<Curvature::CurvatureOperationAdaflo<dim>>(
-          scratch_data_in,
-          ls_dof_idx_in,
-          normal_dof_idx_in,
-          curv_dof_idx_in,
-          ls_quad_idx,
-          advec_diff_operation->get_advected_field(),
-          base_in->parameters);
+        curvature_operation =
+          std::make_shared<Curvature::CurvatureOperationAdaflo<dim>>(scratch_data_in,
+                                                                     ls_dof_idx_in,
+                                                                     normal_dof_idx_in,
+                                                                     curv_dof_idx_in,
+                                                                     ls_quad_idx,
+                                                                     get_level_set(),
+                                                                     base_in->parameters);
       }
 #endif
     else
@@ -198,9 +198,6 @@ namespace MeltPoolDG::LevelSet
 
         // transform distance to level set function
         transform_distance_to_level_set();
-
-        // set the values in the advection operation
-        advec_diff_operation->get_advected_field() = get_level_set();
       }
     // do reinitialization of the initial field only if it is not a signed distance function
     else
@@ -212,6 +209,7 @@ namespace MeltPoolDG::LevelSet
             reinit_time_iterator.reset_max_n_time_steps(reinit_data.max_n_steps);
           }
       }
+
     /*
      *    compute the localized heaviside function
      */
@@ -254,7 +252,7 @@ namespace MeltPoolDG::LevelSet
     // reinit_operation->distribute_constraints();
     // curvature_operation->distribute_constraintst();
 
-    scratch_data.get_constraint(ls_dof_idx).distribute(advec_diff_operation->get_advected_field());
+    scratch_data.get_constraint(ls_dof_idx).distribute(get_level_set());
     scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
     scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
 
@@ -499,7 +497,7 @@ namespace MeltPoolDG::LevelSet
                          scratch_data.get_degree(ls_dof_idx),
                      time_stepping.get_current_time_increment()));
 
-        reinit_operation->set_initial_condition(advec_diff_operation->get_advected_field());
+        reinit_operation->set_initial_condition(get_level_set());
 
         Journal::print_decoration_line(scratch_data.get_pcout());
         while (!reinit_time_iterator.is_finished())
@@ -519,8 +517,7 @@ namespace MeltPoolDG::LevelSet
             /*
              *  reset the solution of the level set field to the reinitialized solution ...
              */
-            advec_diff_operation->get_advected_field().copy_locally_owned_data_from(
-              reinit_operation->get_level_set());
+            get_level_set().copy_locally_owned_data_from(reinit_operation->get_level_set());
             /*
              *  @todo
              *
@@ -538,6 +535,9 @@ namespace MeltPoolDG::LevelSet
             if (update_normal_vector_in_every_cycle)
               reinit_operation->set_initial_condition(get_level_set());
           }
+        // update ghost values of reinitialized solution
+        get_level_set().update_ghost_values();
+
         reinit_time_iterator.reset();
 
         Journal::print_decoration_line(scratch_data.get_pcout());
@@ -556,7 +556,10 @@ namespace MeltPoolDG::LevelSet
   void
   LevelSetOperation<dim>::transform_distance_to_level_set()
   {
-    distance_to_level_set.update_ghost_values();
+    const bool update_ghosts = !distance_to_level_set.has_ghost_elements();
+
+    if (update_ghosts)
+      distance_to_level_set.update_ghost_values();
     scratch_data.initialize_dof_vector(get_level_set(), ls_dof_idx);
 
     VectorType multiplicity;
@@ -618,7 +621,12 @@ namespace MeltPoolDG::LevelSet
         get_level_set().local_element(i) /= multiplicity.local_element(i);
 
     scratch_data.get_constraint(ls_dof_idx).distribute(get_level_set());
-    distance_to_level_set.zero_out_ghost_values();
+
+    // update ghost values of solution vector
+    get_level_set().update_ghost_values();
+
+    if (update_ghosts)
+      distance_to_level_set.zero_out_ghost_values();
   }
 
   template <int dim>
@@ -628,7 +636,6 @@ namespace MeltPoolDG::LevelSet
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(ls_dof_idx);
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
 
     for (const auto &cell :
          scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
@@ -644,17 +651,17 @@ namespace MeltPoolDG::LevelSet
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
-              distance_to_level_set(local_dof_indices[i]) = approximate_distance_from_level_set(
-                advec_diff_operation->get_advected_field()[local_dof_indices[i]],
-                epsilon_cell,
-                std::tanh(4) /*cut off value*/);
+              distance_to_level_set(local_dof_indices[i]) =
+                approximate_distance_from_level_set(get_level_set()[local_dof_indices[i]],
+                                                    epsilon_cell,
+                                                    std::tanh(4) /*cut off value*/);
 
               if (level_set_data.do_localized_heaviside)
                 {
-                  const double distance = approximate_distance_from_level_set(
-                    advec_diff_operation->get_advected_field()[local_dof_indices[i]],
-                    epsilon_cell,
-                    std::tanh(2) /*cut off value*/);
+                  const double distance =
+                    approximate_distance_from_level_set(get_level_set()[local_dof_indices[i]],
+                                                        epsilon_cell,
+                                                        std::tanh(2) /*cut off value*/);
 
                   level_set_as_heaviside(local_dof_indices[i]) =
                     smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
@@ -666,6 +673,9 @@ namespace MeltPoolDG::LevelSet
         }
     scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
     scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
+
+    level_set_as_heaviside.update_ghost_values();
+    distance_to_level_set.update_ghost_values();
   }
 
   template <int dim>
@@ -741,11 +751,16 @@ namespace MeltPoolDG::LevelSet
 
     nearest_point_search->reinit(scratch_data.get_dof_handler(curv_dof_idx));
 
+    // zero out because it is overwritten
+    curvature_operation->get_curvature().zero_out_ghost_values();
+
     nearest_point_search->template fill_dof_vector_with_point_values(
       curvature_operation->get_curvature(),
       scratch_data.get_dof_handler(curv_dof_idx),
       curvature_operation->get_curvature(),
       true);
+
+    curvature_operation->get_curvature().update_ghost_values();
 
     /*
      * old approach --> only kept as back-up [MS]

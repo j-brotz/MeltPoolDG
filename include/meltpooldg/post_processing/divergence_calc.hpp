@@ -50,7 +50,11 @@ namespace MeltPoolDG::PostProcessingTools
     void
     process(const unsigned int /*n_time_step*/) override
     {
-      generic_data_out->get_vector(request_variable).update_ghost_values();
+      const bool update_ghosts =
+        !generic_data_out->get_vector(request_variable).has_ghost_elements();
+
+      if (update_ghosts)
+        generic_data_out->get_vector(request_variable).update_ghost_values();
 
       QGauss<dim> quad(
         generic_data_out->get_dof_handler(request_variable).get_fe().tensor_degree() + 1);
@@ -82,7 +86,8 @@ namespace MeltPoolDG::PostProcessingTools
       diver =
         Utilities::MPI::sum(diver_local,
                             generic_data_out->get_vector(request_variable).get_mpi_communicator());
-      generic_data_out->get_vector(request_variable).zero_out_ghost_values();
+      if (update_ghosts)
+        generic_data_out->get_vector(request_variable).zero_out_ghost_values();
     }
 
     /**

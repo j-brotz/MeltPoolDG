@@ -611,6 +611,7 @@ namespace MeltPoolDG::MeltPool
 
                 // solver Navier-Stokes problem
                 flow_operation->solve();
+
                 if (evaporation_fluid_material)
                   evaporation_fluid_material->zero_out_ghost_values();
               }
@@ -1519,13 +1520,18 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::update_phases(const VectorType         &ls_as_heaviside,
                                       const Parameters<double> &parameters) const
   {
-    const bool ls_has_ghost_values = ls_as_heaviside.has_ghost_elements();
-
-    if (!ls_has_ghost_values)
+    const bool ls_update_ghosts = !ls_as_heaviside.has_ghost_elements();
+    if (ls_update_ghosts)
       ls_as_heaviside.update_ghost_values();
 
+    bool temp_update_ghosts = true;
     if (heat_operation && problem_specific_parameters.do_solidification)
-      heat_operation->get_temperature().update_ghost_values();
+      {
+        temp_update_ghosts = !heat_operation->get_temperature().has_ghost_elements();
+
+        if (temp_update_ghosts)
+          heat_operation->get_temperature().update_ghost_values();
+      }
 
     double dummy;
 
@@ -1694,8 +1700,6 @@ namespace MeltPoolDG::MeltPool
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     if (parameters.adaflo_params.params.augmented_taylor_hood == true)
       {
-        ls_as_heaviside.update_ghost_values();
-
         FEValues<dim> ls_values(
           scratch_data->get_mapping(),
           scratch_data->get_fe(ls_dof_idx),
@@ -1765,14 +1769,13 @@ namespace MeltPoolDG::MeltPool
                         LevelSet::Tools::interpolate(indicator[f], rho_g, rho_ls[f]));
               }
           }
-        ls_as_heaviside.zero_out_ghost_values();
       }
 #endif
 
-    if (heat_operation && problem_specific_parameters.do_solidification)
+    if (heat_operation && problem_specific_parameters.do_solidification && temp_update_ghosts)
       heat_operation->get_temperature().zero_out_ghost_values();
 
-    if (!ls_has_ghost_values)
+    if (ls_update_ghosts)
       ls_as_heaviside.zero_out_ghost_values();
   }
 
@@ -1882,8 +1885,14 @@ namespace MeltPoolDG::MeltPool
   {
     const auto &amr_data = base_in->parameters.amr;
 
-    level_set_operation->get_level_set().update_ghost_values();
-    level_set_operation->get_normal_vector().update_ghost_values();
+    const bool ls_update_ghosts = !level_set_operation->get_level_set().has_ghost_elements();
+    if (ls_update_ghosts)
+      level_set_operation->get_level_set().update_ghost_values();
+
+    const bool normal_update_ghosts =
+      !level_set_operation->get_normal_vector().has_ghost_elements();
+    if (normal_update_ghosts)
+      level_set_operation->get_normal_vector().update_ghost_values();
 
     if (problem_specific_parameters.amr.do_auto_detect_frequency)
       {
@@ -2146,7 +2155,9 @@ namespace MeltPoolDG::MeltPool
             typename DoFHandler<dim>::active_cell_iterator vel_cell =
               scratch_data->get_dof_handler(vel_dof_idx).begin_active();
 
-            flow_operation->get_velocity().update_ghost_values();
+            const bool vel_update_ghosts = !flow_operation->get_velocity().has_ghost_elements();
+            if (vel_update_ghosts)
+              flow_operation->get_velocity().update_ghost_values();
 
             for (auto &cell : scratch_data->get_dof_handler(ls_dof_idx).active_cell_iterators())
               {
@@ -2197,16 +2208,26 @@ namespace MeltPoolDG::MeltPool
                 vel_cell++;
               }
 
-            flow_operation->get_velocity().zero_out_ghost_values();
+            if (vel_update_ghosts)
+              flow_operation->get_velocity().zero_out_ghost_values();
             break;
           }
       }
 
     if (melt_front_propagation)
       {
-        melt_front_propagation->get_liquid().update_ghost_values();
-        melt_front_propagation->get_solid().update_ghost_values();
-        heat_operation->get_temperature().update_ghost_values();
+        const bool liq_update_ghosts = !melt_front_propagation->get_liquid().has_ghost_elements();
+        if (liq_update_ghosts)
+          melt_front_propagation->get_liquid().update_ghost_values();
+
+        const bool sol_update_ghosts = !melt_front_propagation->get_solid().has_ghost_elements();
+        if (sol_update_ghosts)
+          melt_front_propagation->get_solid().update_ghost_values();
+
+        const bool temp_update_ghosts = !heat_operation->get_temperature().has_ghost_elements();
+        if (temp_update_ghosts)
+          heat_operation->get_temperature().update_ghost_values();
+
         Vector<double> liq_vals(scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
         Vector<double> solid_vals(
           scratch_data->get_fe(temp_hanging_nodes_dof_idx).n_dofs_per_cell());
@@ -2244,9 +2265,12 @@ namespace MeltPoolDG::MeltPool
                   break;
                 }
           }
-        melt_front_propagation->get_liquid().zero_out_ghost_values();
-        melt_front_propagation->get_solid().zero_out_ghost_values();
-        heat_operation->get_temperature().zero_out_ghost_values();
+        if (liq_update_ghosts)
+          melt_front_propagation->get_liquid().zero_out_ghost_values();
+        if (sol_update_ghosts)
+          melt_front_propagation->get_solid().zero_out_ghost_values();
+        if (temp_update_ghosts)
+          heat_operation->get_temperature().zero_out_ghost_values();
       }
 
 
@@ -2274,8 +2298,10 @@ namespace MeltPoolDG::MeltPool
           }
       }
 
-    level_set_operation->get_level_set().zero_out_ghost_values();
-    level_set_operation->get_normal_vector().zero_out_ghost_values();
+    if (ls_update_ghosts)
+      level_set_operation->get_level_set().zero_out_ghost_values();
+    if (normal_update_ghosts)
+      level_set_operation->get_normal_vector().zero_out_ghost_values();
     return true;
   }
 

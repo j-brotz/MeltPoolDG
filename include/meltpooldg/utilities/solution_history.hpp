@@ -47,16 +47,16 @@ namespace TimeIntegration
     update_ghost_values(const bool check = false) const
     {
       for (unsigned int i = 0; i < solutions.size(); ++i)
-        if (!check || !solutions[i]->has_ghost_elements())
-          solutions[i]->update_ghost_values();
+        if (!check || !solutions[i].has_ghost_elements())
+          solutions[i].update_ghost_values();
     }
 
     void
     zero_out_ghost_values(const bool check = false) const
     {
       for (unsigned int i = 0; i < solutions.size(); ++i)
-        if (!check || solutions[i]->has_ghost_elements())
-          solutions[i]->zero_out_ghost_values();
+        if (!check || solutions[i].has_ghost_elements())
+          solutions[i].zero_out_ghost_values();
     }
 
     void

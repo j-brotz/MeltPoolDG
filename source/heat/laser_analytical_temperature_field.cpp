@@ -16,10 +16,13 @@ namespace MeltPoolDG::Heat
     const VectorType                        &level_set_as_heaviside,
     const unsigned int                       temp_dof_idx)
   {
-    /*
-     *  set the maximum temperature of the melt pool if not specified
-     */
-    level_set_as_heaviside.update_ghost_values();
+    // set the maximum temperature of the melt pool if not specified
+
+    const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
+
+    if (update_ghosts)
+      level_set_as_heaviside.update_ghost_values();
+
     scratch_data.initialize_dof_vector(temperature, temp_dof_idx);
 
     const unsigned int dofs_per_cell = scratch_data.get_n_dofs_per_cell(temp_dof_idx);
@@ -52,7 +55,12 @@ namespace MeltPoolDG::Heat
 
     temperature.compress(VectorOperation::insert);
     scratch_data.get_constraint(temp_dof_idx).distribute(temperature);
-    level_set_as_heaviside.zero_out_ghost_values();
+
+    // update ghost values of solution
+    temperature.update_ghost_values();
+
+    if (update_ghosts)
+      level_set_as_heaviside.zero_out_ghost_values();
   }
 
   template <int dim>

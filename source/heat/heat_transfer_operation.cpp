@@ -120,6 +120,7 @@ namespace MeltPoolDG::Heat
                                                                      temp_hanging_nodes_dof_idx);
 
     scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
+    solution_history.get_current_solution().update_ghost_values();
   }
 
   template <int dim>
@@ -292,6 +293,8 @@ namespace MeltPoolDG::Heat
   void
   HeatTransferOperation<dim>::finish_time_advance()
   {
+    heat_operator->zero_out_ghost_values();
+    solution_history.update_ghost_values();
     ready_for_time_advance = false;
   }
 

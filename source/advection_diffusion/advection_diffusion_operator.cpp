@@ -51,6 +51,14 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     const FEValuesExtractors::Vector velocities(0);
 
+    const bool vel_update_ghosts = !advection_velocity.has_ghost_elements();
+    if (vel_update_ghosts)
+      advection_velocity.update_ghost_values();
+
+    const bool update_ghosts = !advected_field_old.has_ghost_elements();
+    if (update_ghosts)
+      advected_field_old.update_ghost_values();
+
     FEValues<dim> advec_diff_values(scratch_data.get_mapping(),
                                     scratch_data.get_dof_handler(this->dof_idx).get_fe(),
                                     scratch_data.get_quadrature(advec_diff_quad_idx),
@@ -149,6 +157,12 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     matrix.compress(VectorOperation::add);
     rhs.compress(VectorOperation::add);
+
+    if (vel_update_ghosts)
+      advection_velocity.zero_out_ghost_values();
+
+    if (update_ghosts)
+      advected_field_old.zero_out_ghost_values();
   }
 
   template <int dim, typename number>

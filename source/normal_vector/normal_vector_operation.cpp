@@ -45,11 +45,10 @@ namespace MeltPoolDG::NormalVector
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
-        /*
-         * precompute preconditioner
-         */
-        solution_level_set.update_ghost_values();
-        solution_history.get_current_solution().update_ghost_values();
+        // precompute preconditioner
+        const bool update_ghosts = !solution_history.get_current_solution().has_ghost_elements();
+        if (update_ghosts)
+          solution_history.get_current_solution().update_ghost_values();
 
         preconditioner_matrixfree->reinit();
 
@@ -60,9 +59,8 @@ namespace MeltPoolDG::NormalVector
           trilinos_preconditioner_matrixfree =
             preconditioner_matrixfree->compute_trilinos_preconditioner();
 
-
-        solution_history.get_current_solution().zero_out_ghost_values();
-        solution_level_set.zero_out_ghost_values();
+        if (update_ghosts)
+          solution_history.get_current_solution().zero_out_ghost_values();
       }
   }
 
@@ -94,7 +92,9 @@ namespace MeltPoolDG::NormalVector
     ScopedName         sc("normal::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
-    solution_level_set.update_ghost_values();
+    const bool update_ghosts = !solution_level_set.has_ghost_elements();
+    if (update_ghosts)
+      solution_level_set.update_ghost_values();
 
     // compute predictor
     if (!predictor)
@@ -155,12 +155,14 @@ namespace MeltPoolDG::NormalVector
                                                  normal_vector_data.linear_solver);
       }
 
-    solution_level_set.zero_out_ghost_values();
+    if (update_ghosts)
+      solution_level_set.zero_out_ghost_values();
 
     for (unsigned int d = 0; d < dim; ++d)
-      scratch_data.get_constraint(normal_dof_idx)
-        .distribute(solution_history.get_current_solution().block(d));
-
+      {
+        scratch_data.get_constraint(normal_dof_idx)
+          .distribute(solution_history.get_current_solution().block(d));
+      }
     const unsigned int        verbosity_l2_norm = dim > 1 ? 0 : 1;
     const ConditionalOStream &pcout =
       scratch_data.get_pcout(std::max(normal_vector_data.verbosity_level, verbosity_l2_norm));
@@ -185,6 +187,9 @@ namespace MeltPoolDG::NormalVector
                         "normal_vector");
 
     IterationMonitor::add_linear_iterations(sc, iter);
+
+    // update ghost_values of solution
+    solution_history.get_current_solution().update_ghost_values();
   }
 
   template <int dim>

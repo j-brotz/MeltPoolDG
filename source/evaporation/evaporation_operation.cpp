@@ -197,6 +197,7 @@ namespace MeltPoolDG::Evaporation
         evapor_mass_flux_operator->compute_evaporative_mass_flux(evaporative_mass_flux,
                                                                  *temperature);
       }
+
     Journal::print_formatted_norm(
       scratch_data.get_pcout(1),
       [&]() -> double {
@@ -208,6 +209,9 @@ namespace MeltPoolDG::Evaporation
       "evaporative_mass_flux",
       "evaporation_operation",
       10);
+
+    // update ghost values of current solution
+    evaporative_mass_flux.update_ghost_values();
   }
 
   template <int dim>

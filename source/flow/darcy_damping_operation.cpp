@@ -30,7 +30,10 @@ namespace MeltPoolDG::Flow
                                                     const VectorType &solid_fraction_vec,
                                                     const bool        zero_out)
   {
-    velocity_vec.update_ghost_values();
+    const bool update_ghosts = !velocity_vec.has_ghost_elements();
+
+    if (update_ghosts)
+      velocity_vec.update_ghost_values();
 
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free,
@@ -79,7 +82,8 @@ namespace MeltPoolDG::Flow
       solid_fraction_vec,
       zero_out);
 
-    velocity_vec.zero_out_ghost_values();
+    if (update_ghosts)
+      velocity_vec.zero_out_ghost_values();
   }
 
   template <int dim>

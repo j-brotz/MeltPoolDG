@@ -720,7 +720,6 @@ namespace MeltPoolDG::Flow
             scratch_data.get_constraint(dof_index_parameters).distribute(density);
           }
 
-        density.update_ghost_values();
         data_out.add_data_vector(dof_handler_parameters, density, "density");
       }
 
@@ -742,7 +741,6 @@ namespace MeltPoolDG::Flow
             scratch_data.get_constraint(dof_index_parameters).distribute(viscosity);
           }
 
-        viscosity.update_ghost_values();
         data_out.add_data_vector(dof_handler_parameters, viscosity, "viscosity");
       }
   }

@@ -84,8 +84,12 @@ namespace MeltPoolDG::Evaporation
           /* contour_value */ 0.5,
           n_subdivisions_MCA);
 
-        temperature.update_ghost_values();
-        level_set_as_heaviside.update_ghost_values();
+        const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
+        if (update_ghosts)
+          level_set_as_heaviside.update_ghost_values();
+        const bool temp_update_ghosts = !temperature.has_ghost_elements();
+        if (temp_update_ghosts)
+          temperature.update_ghost_values();
 
 
         if (false)
@@ -249,10 +253,13 @@ namespace MeltPoolDG::Evaporation
           if (vector_multiplicity.local_element(i) > 1.0)
             evaporative_mass_flux.local_element(i) /= vector_multiplicity.local_element(i);
 
-        evaporative_mass_flux.update_ghost_values();
         scratch_data.get_constraint(evapor_mass_flux_dof_idx).distribute(evaporative_mass_flux);
-        temperature.zero_out_ghost_values();
-        level_set_as_heaviside.zero_out_ghost_values();
+
+        if (temp_update_ghosts)
+          temperature.zero_out_ghost_values();
+
+        if (update_ghosts)
+          level_set_as_heaviside.zero_out_ghost_values();
       }
   }
 
