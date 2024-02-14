@@ -27,6 +27,15 @@ All notable changes of the input parameters will be documented in this file.
   }
 }
 ```
+- rename RTE verbosity level
+```diff
+{
+  "rte": {
+-    "verbosity level": "",
++    "rte verbosity level": "",
+  }
+}
+```
 
 ## 2023-11-20
 - Revise parameters of profiling output

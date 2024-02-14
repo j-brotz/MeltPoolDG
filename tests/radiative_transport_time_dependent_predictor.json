@@ -14,7 +14,7 @@
     "time step size": "1.0"
   },
   "rte": {
-    "verbosity level": "1",
+    "rte verbosity level": "1",
     "laser direction": "0.0,-1.0",
     "absorptivity type": "gradient_based",
     "predictor type": "pseudo_time_stepping",

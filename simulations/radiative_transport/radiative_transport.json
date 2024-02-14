@@ -17,7 +17,7 @@
     "time step size": "1.0"
   },
   "rte": {
-    "verbosity level": "3",
+    "rte verbosity level": "3",
     "laser direction": "0.0,-1.0",
     "absorptivity gas": "0",
     "absorptivity liquid": "10.0 ",

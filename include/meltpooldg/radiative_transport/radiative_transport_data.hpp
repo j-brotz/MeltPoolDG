@@ -92,7 +92,7 @@ namespace MeltPoolDG
       prm.enter_subsection("rte");
       {
         prm.add_parameter(
-          "verbosity level",
+          "rte verbosity level",
           verbosity_level,
           "Sets the maximum verbosity level of the console output. The maximum level with respect to the "
           " base value is decisive.");
