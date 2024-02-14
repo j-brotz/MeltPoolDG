@@ -5,7 +5,7 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 #include <meltpooldg/evaporation/evaporation_model_base.hpp>
-#include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
+#include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -23,7 +23,7 @@ namespace MeltPoolDG::Evaporation
   class EvaporationModelRecoilPressure : public EvaporationModelBase
   {
   private:
-    const MeltPool::RecoilPressurePhenomenologicalModel<double> recoil_model;
+    const RecoilPressurePhenomenologicalModel<double> recoil_model;
 
     const double mass_flux_scale_factor;
 

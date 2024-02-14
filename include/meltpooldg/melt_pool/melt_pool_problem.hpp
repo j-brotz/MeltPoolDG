@@ -26,6 +26,7 @@
 // MeltPoolDG
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/evaporation/incompressible_newtonian_evaporation_material.hpp>
+#include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
@@ -232,13 +233,13 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation = nullptr;
     std::shared_ptr<
       MeltPoolDG::Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>
-                                                         evaporation_fluid_material;
-    std::shared_ptr<Heat::HeatTransferOperation<dim>>    heat_operation;
-    std::shared_ptr<Flow::DarcyDampingOperation<dim>>    darcy_operation;
-    std::shared_ptr<Flow::SurfaceTensionOperation<dim>>  surface_tension_operation;
-    std::shared_ptr<RecoilPressureOperation<dim>>        recoil_pressure_operation;
-    std::shared_ptr<Postprocessor<dim>>                  post_processor;
-    std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;
-    std::shared_ptr<Restart::RestartMonitor<double>>     restart_monitor;
+                                                               evaporation_fluid_material;
+    std::shared_ptr<Heat::HeatTransferOperation<dim>>          heat_operation;
+    std::shared_ptr<Flow::DarcyDampingOperation<dim>>          darcy_operation;
+    std::shared_ptr<Flow::SurfaceTensionOperation<dim>>        surface_tension_operation;
+    std::shared_ptr<Evaporation::RecoilPressureOperation<dim>> recoil_pressure_operation;
+    std::shared_ptr<Postprocessor<dim>>                        post_processor;
+    std::unique_ptr<Profiling::ProfilingMonitor<double>>       profiling_monitor;
+    std::shared_ptr<Restart::RestartMonitor<double>>           restart_monitor;
   };
 } // namespace MeltPoolDG::MeltPool

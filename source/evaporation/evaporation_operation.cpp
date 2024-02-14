@@ -11,7 +11,7 @@
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
-#include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
+#include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

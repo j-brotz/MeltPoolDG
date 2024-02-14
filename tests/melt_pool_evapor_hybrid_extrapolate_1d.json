@@ -92,7 +92,7 @@
     "do extrapolate coupling terms": "true"
   },
   "recoil pressure": {
-    "interface distributed flux type": "continuous",
+    "interface distributed flux type": "local_value",
     "recoil pressure constant": "1.0",
     "recoil temperature constant": "1.0",
     "activation temperature": "500",

@@ -559,7 +559,8 @@ namespace MeltPoolDG::MeltPool
                 if (recoil_pressure_operation)
                   {
                     if (base_in->parameters.recoil.interface_distributed_flux_type ==
-                        InterfaceDistributedFluxType::interface_value)
+                        Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::
+                          interface_value)
                       {
                         heat_operation->compute_interface_temperature(
                           level_set_operation->get_distance_to_level_set(),
@@ -859,7 +860,8 @@ namespace MeltPoolDG::MeltPool
   {
     AssertThrow(!problem_specific_parameters.do_recoil_pressure ||
                   (problem_specific_parameters.do_evaporative_velocity_jump ||
-                   parameters.recoil.model_type == RecoilPressureModelType::phenomenological),
+                   parameters.recoil.model_type ==
+                     Evaporation::RecoilPressureModelType::phenomenological),
                 ExcMessage("For the phenomenological recoil pressure model, no velocity jump "
                            "is allowed."));
 
@@ -1059,7 +1061,7 @@ namespace MeltPoolDG::MeltPool
     // create recoil pressure operation
     if (problem_specific_parameters.do_recoil_pressure)
       {
-        recoil_pressure_operation = std::make_shared<RecoilPressureOperation<dim>>(
+        recoil_pressure_operation = std::make_shared<Evaporation::RecoilPressureOperation<dim>>(
           *scratch_data,
           base_in->parameters,
           flow_operation->get_dof_handler_idx_velocity(),
@@ -1067,12 +1069,12 @@ namespace MeltPoolDG::MeltPool
           flow_operation->get_dof_handler_idx_pressure(),
           ls_hanging_nodes_dof_idx,
           (base_in->parameters.recoil.interface_distributed_flux_type ==
-           InterfaceDistributedFluxType::interface_value) ?
+           Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value) ?
             temp_hanging_nodes_dof_idx :
             temp_dof_idx);
 
         if (base_in->parameters.recoil.interface_distributed_flux_type ==
-            InterfaceDistributedFluxType::interface_value)
+            Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value)
           scratch_data->create_remote_point_evaluation(temp_hanging_nodes_dof_idx);
       }
     /*

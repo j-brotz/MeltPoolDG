@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-02-14
+- Adjust name of temperature evaluation method
+```json
+{
+  "recoil pressure" : {
+     "interface distributed flux type": "local_value|interface_value"
+  }
+}
+```
+
 ## 2024-02-13
 - RTE: make pseudo time stepping a predictor and remove time_dependent_problem
 ```diff
