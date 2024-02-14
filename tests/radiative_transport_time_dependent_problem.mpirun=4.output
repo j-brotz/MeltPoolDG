@@ -101,6 +101,9 @@
 | || pseudo-time-solution ||L2 = 1.354290e-01                            RTE::pseudo-time-stepping |
 | || pseudo-time-solution ||L2 = 1.361845e-01                            RTE::pseudo-time-stepping |
 | || pseudo-time-solution ||L2 = 1.369417e-01                            RTE::pseudo-time-stepping |
+| || n_steps ||pseudo-time steps = 1.0e+02                                   RTE::pseudo-predictor |
+| || intensity ||L2 = 1.369417e-01                                           RTE::pseudo-predictor |
+| || intensity ||L2 = 6.30830935240e-01                                                        RTE |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

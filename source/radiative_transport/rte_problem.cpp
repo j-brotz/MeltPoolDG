@@ -12,7 +12,9 @@
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
-#include <memory>
+#include <sstream>
+#include <vector>
+
 
 namespace MeltPoolDG::RadiativeTransport
 {

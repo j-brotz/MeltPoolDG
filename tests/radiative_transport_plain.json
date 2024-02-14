@@ -17,9 +17,8 @@
     "time step size": "1.0"
   },
   "rte": {
-    "verbosity level": "0",
+    "rte verbosity level": "0",
     "laser direction": "0.0,-1.0",
-    "problem type": "plain",
     "linear solver": {
       "do matrix free": "true",
       "abs tolerance": "1e-16",

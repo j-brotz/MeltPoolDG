@@ -3,22 +3,16 @@
 #include <deal.II/lac/diagonal_matrix.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <deal.II/matrix_free/operators.h>
-
-#include <meltpooldg/interface/operator_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/interface/boundary_conditions.hpp>
+#include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
+#include <meltpooldg/radiative_transport/pseudo_rte_operation.hpp>
 #include <meltpooldg/radiative_transport/rte_operator.hpp>
-#include <meltpooldg/utilities/constraints.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
-#include <meltpooldg/utilities/time_iterator.hpp>
-#include <meltpooldg/utilities/time_stepping_data.hpp>
 
 #include <memory>
+#include <vector>
 
 namespace MeltPoolDG::RadiativeTransport
 {
@@ -44,15 +38,12 @@ namespace MeltPoolDG::RadiativeTransport
     const unsigned int rte_quad_idx;
     const unsigned int hs_dof_idx;
 
+    VectorType intensity;
     VectorType rhs;
 
-    std::unique_ptr<OperatorBase<dim, double>> rte_operator;
-    std::unique_ptr<OperatorBase<dim, double>> pseudo_rte_operator;
+    std::unique_ptr<RadiativeTransportOperator<dim, double>> rte_operator;
 
-    TimeIntegration::SolutionHistory<VectorType> solution_history;
-
-    TimeSteppingData<double> pseudo_time_stepping;
-    TimeIterator<double>     pseudo_time_iterator;
+    std::unique_ptr<PseudoRTEOperation<dim>> pseudo_rte_operation;
 
     Tensor<1, dim, double> laser_direction;
 
@@ -106,25 +97,9 @@ namespace MeltPoolDG::RadiativeTransport
                         const bool         zero_out = true) const;
 
   private:
-    void
-    pseudo_solve();
-
-    /*
-     * Preconditioner for the matrix-free (pseudo-time dependent) RTE operator
-     */
     std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
-      preconditioner_matrixfree;
-    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
-      pseudo_preconditioner_matrixfree;
-    /*
-     * Cache for diagonal preconditioner matrix-free
-     */
-    std::shared_ptr<DiagonalMatrix<VectorType>> diag_preconditioner_matrixfree;
-    std::shared_ptr<DiagonalMatrix<VectorType>> diag_pseudo_preconditioner_matrixfree;
-    /*
-     * Cache for trilinos preconditioner matrix-free
-     */
+                                                        preconditioner_matrixfree;
+    std::shared_ptr<DiagonalMatrix<VectorType>>         diag_preconditioner_matrixfree;
     std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
-    std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_pseudo_preconditioner_matrixfree;
   };
 } // namespace MeltPoolDG::RadiativeTransport

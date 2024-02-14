@@ -4,8 +4,7 @@
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
 #include <meltpooldg/interface/operator_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
-#include <meltpooldg/utilities/solution_history.hpp>
+#include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 
 
 using namespace dealii;
@@ -82,7 +81,7 @@ namespace MeltPoolDG::RadiativeTransport
 
   public:
     PseudoRTEOperator(const ScratchData<dim>               &scratch_data_in,
-                      const RadiativeTransportData<double> &rte_data,
+                      const RadiativeTransportData<double> &rte_data_in,
                       const VectorType                     &heaviside_in,
                       const unsigned int                    rte_dof_idx_in,
                       const unsigned int                    rte_quad_idx_in,
