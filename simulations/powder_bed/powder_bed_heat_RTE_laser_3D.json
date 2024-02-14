@@ -22,7 +22,7 @@
     "laser power": "100"
   },
   "rte": {
-    "verbosity level": "5",
+    "rte verbosity level": "5",
     "laser direction": "0.0,0.0,-1.0",
     "absorptivity type": "gradient_based",
     "linear solver": {

@@ -14,9 +14,8 @@
     "time step size": "1.0"
   },
   "rte": {
-    "verbosity level": "0",
+    "rte verbosity level": "0",
     "laser direction": "0.0,-1.0",
-    "problem type": "plain",
     "absorptivity type": "constant",
     "absorptivity": {
       "absorptivity gas": "0.5",

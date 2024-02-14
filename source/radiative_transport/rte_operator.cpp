@@ -1,8 +1,12 @@
 #include <deal.II/base/exceptions.h>
 
+#include <deal.II/matrix_free/tools.h>
+
 #include <meltpooldg/radiative_transport/rte_operator.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/radiative_transport/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <algorithm>
 
 
 namespace MeltPoolDG::RadiativeTransport
@@ -21,7 +25,6 @@ namespace MeltPoolDG::RadiativeTransport
     , rte_dof_idx(rte_dof_idx_in)
     , rte_quad_idx(rte_quad_idx_in)
     , hs_dof_idx(hs_dof_idx_in)
-    , pure_gas_level_set(rte_data.avoid_singular_matrix_absorptivity)
     , pure_liquid_level_set(1. - rte_data.avoid_singular_matrix_absorptivity)
   {
     this->reset_dof_index(rte_dof_idx_in);

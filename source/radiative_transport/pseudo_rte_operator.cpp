@@ -1,9 +1,10 @@
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/radiative_transport/pseudo_rte_operator.hpp>
-#include <meltpooldg/radiative_transport/rte_operator.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/radiative_transport/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <algorithm>
 
 
 namespace MeltPoolDG::RadiativeTransport

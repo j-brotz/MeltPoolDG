@@ -1,5 +1,10 @@
 #pragma once
 
+#include <deal.II/base/function.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/interface/problem_base.hpp>
@@ -11,6 +16,7 @@
 #include <meltpooldg/utilities/time_iterator.hpp>
 
 #include <memory>
+#include <string>
 
 namespace MeltPoolDG::RadiativeTransport
 {
