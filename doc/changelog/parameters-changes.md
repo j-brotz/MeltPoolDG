@@ -1,6 +1,33 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-02-13
+- RTE: make pseudo time stepping a predictor and remove time_dependent_problem
+```diff
+{
+  "rte": {
+-    "problem type": "",
++    "predictor type": "none|pseudo_time_stepping"
+  }
+}
+```
+- RTE pseudo time stepping: use time_stepping_data
+```diff
+{
+  "rte": {
+    "predictor type": "pseudo_time_stepping",
+    "pseudo time stepping": {
+-      "max n steps": "",
+-      "time step size": "",
++      "time stepping": {
++        "max n steps": "",
++        "time step size": "",
++      }
+    }
+  }
+}
+```
+
 ## 2023-11-20
 - Revise parameters of profiling output
 ```diff

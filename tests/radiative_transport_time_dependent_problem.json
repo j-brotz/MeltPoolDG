@@ -17,12 +17,14 @@
     "time step size": "1.0"
   },
   "rte": {
-    "verbosity level": "0",
+    "verbosity level": "3",
     "laser direction": "0.0,-1.0",
-    "problem type": "time_dependent_problem",
+    "predictor type": "pseudo_time_stepping",
     "pseudo time stepping": {
-      "max n steps": "1",
-      "rel tolerance": "1e10"
+      "time stepping": {
+        "max n steps": "100"
+      },
+      "rel tolerance": "1e-16"
     },
     "linear solver": {
       "do matrix free": "true",

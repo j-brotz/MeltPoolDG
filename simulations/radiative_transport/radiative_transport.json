@@ -22,7 +22,7 @@
     "absorptivity gas": "0",
     "absorptivity liquid": "10.0 ",
     "avoid div zero constant": "1e-10",
-    "problem type": "time_dependent_predictor",
+    "predictor type": "pseudo_time_stepping",
     "absorptivity type": "gradient_based",
     "pseudo time stepping": {
       "max n steps": 2,
