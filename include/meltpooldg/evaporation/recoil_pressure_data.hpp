@@ -3,16 +3,16 @@
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::Evaporation
 {
   using namespace dealii;
 
   // @todo: move to own file
-  BETTER_ENUM(InterfaceDistributedFluxType,
+  BETTER_ENUM(RegularizedRecoilPressureTemperatureEvaluationType,
               char,
               // The flux distributed in the interfacial zone is computed based on local values
               // evaluated at the quadrature points.
-              continuous,
+              local_value,
               // The flux distributed in the interfacial zone is computed based on values evaluated
               // at the projected quadrature points to the level set = 0 isosurface.
               interface_value)
@@ -48,8 +48,8 @@ namespace MeltPoolDG
     // Choose how the recoil pressure flux across the interface should be computed:
     // * continuous: use the local temperature value
     // * interface_value: use the value at the interface (level set=0)
-    InterfaceDistributedFluxType interface_distributed_flux_type =
-      InterfaceDistributedFluxType::continuous;
+    RegularizedRecoilPressureTemperatureEvaluationType interface_distributed_flux_type =
+      RegularizedRecoilPressureTemperatureEvaluationType::local_value;
     // Choose the delta-function for computing the continuum interface force.
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     // Choose the model type to compute the recoil pressure:
@@ -88,4 +88,4 @@ namespace MeltPoolDG
       prm.leave_subsection();
     }
   };
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::Evaporation

@@ -91,7 +91,6 @@
     "do recoil pressure": "true"
   },
   "recoil pressure": {
-    "interface distributed flux type": "continuous",
     "recoil pressure constant": "1.0",
     "recoil temperature constant": "1.0",
     "activation temperature": "500",

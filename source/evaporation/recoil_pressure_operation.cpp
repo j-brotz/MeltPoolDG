@@ -1,6 +1,6 @@
-#include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
+#include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
 
-namespace MeltPoolDG::MeltPool
+namespace MeltPoolDG::Evaporation
 {
   namespace internal
   {
@@ -300,4 +300,4 @@ namespace MeltPoolDG::MeltPool
 
   template class RecoilPressurePhenomenologicalModel<double>;
   template class RecoilPressureHybridModel<double>;
-} // namespace MeltPoolDG::MeltPool
+} // namespace MeltPoolDG::Evaporation

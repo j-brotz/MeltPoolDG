@@ -4,12 +4,12 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
-#include <meltpooldg/melt_pool/recoil_pressure_data.hpp>
 
-namespace MeltPoolDG::MeltPool
+namespace MeltPoolDG::Evaporation
 {
   /**
    * Base class for the recoil pressure model
@@ -200,4 +200,4 @@ namespace MeltPoolDG::MeltPool
                                   bool               zero_out = true) const;
   };
 
-} // namespace MeltPoolDG::MeltPool
+} // namespace MeltPoolDG::Evaporation

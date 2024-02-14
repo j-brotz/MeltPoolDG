@@ -1,5 +1,4 @@
 #include <meltpooldg/evaporation/evaporation_model_recoil_pressure.hpp>
-#include <meltpooldg/melt_pool/recoil_pressure_operation.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
 
 namespace MeltPoolDG::Evaporation
