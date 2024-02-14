@@ -18,7 +18,7 @@
     "heat emissivity": "0.98",
     "heat convection coefficient": "25",
     "heat temperature infinity": "300.0",
-    "interpolate rho times cp": "smooth",
+    "use volume-specific thermal capacity for phase interpolation": "true",
     "heat nlsolve residual tolerance": "1e-6",
     "linear solver": {
       "rel tolerance": "1e-12"
@@ -38,7 +38,8 @@
     "material first density": "3925",
     "material second capacity": "460",
     "material second conductivity": "55.563",
-    "material second density": "7850"
+    "material second density": "7850",
+    "material two phase properties transition type": "smooth"
   },
   "paraview": {
     "paraview do output": "false"

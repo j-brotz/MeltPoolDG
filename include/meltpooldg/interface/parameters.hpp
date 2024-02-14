@@ -301,10 +301,8 @@ namespace MeltPoolDG
     NonlinearSolverData<number>                 nlsolve;
     LinearSolverData<number>                    linear_solver;
     DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
-    InterpolateMaterialParameterType            interpolate_rho_times_cp =
-      InterpolateMaterialParameterType::none;
-    InterpolateMaterialParameterType interpolate_k = InterpolateMaterialParameterType::none;
-    PredictorData<number>            predictor;
+    bool                  use_volume_specific_thermal_capacity_for_phase_interpolation = false;
+    PredictorData<number> predictor;
   };
 
   template <typename number = double>

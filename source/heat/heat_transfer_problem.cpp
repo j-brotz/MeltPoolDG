@@ -436,7 +436,16 @@ namespace MeltPoolDG::Heat
        *  prescribed velocity
        */
       if (velocity_field_function)
-        data_out.add_data_vector(dof_handler_velocity, velocity, "velocity");
+        {
+          std::vector<DataComponentInterpretation::DataComponentInterpretation>
+            vector_component_interpretation(
+              dim, DataComponentInterpretation::component_is_part_of_vector);
+
+          data_out.add_data_vector(dof_handler_velocity,
+                                   velocity,
+                                   std::vector<std::string>(dim, "velocity"),
+                                   vector_component_interpretation);
+        }
       /**
        *  prescribed heaviside
        */

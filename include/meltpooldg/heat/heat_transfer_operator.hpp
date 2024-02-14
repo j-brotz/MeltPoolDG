@@ -133,14 +133,6 @@ namespace MeltPoolDG::Heat
     const unsigned int ls_dof_idx;
     const VectorType  *level_set_as_heaviside;
 
-    // optional: rho times cp
-    double rho_cp_gas   = -1;
-    double rho_cp_heavy = -1;
-
-    // optional: conductivity
-    double conductivity_gas   = -1;
-    double conductivity_heavy = -1;
-
     // optional: two phase flow with evaporation
     VectorType  *evaporative_mass_flux      = nullptr;
     unsigned int evapor_mass_flux_dof_idx   = 0;
@@ -339,12 +331,12 @@ namespace MeltPoolDG::Heat
      * Determine the material parameters and their temperature derivatives. This function takes
      * two-phase flow and solidification effects into account.
      *
-     * The values of @p rho_cp, @p conductivity, @p d_rho_cp_dT and @p d_conductivity_dT must be set
+     * The values of @p rho_cp, @p conductivity, @p d_rho_cp_d_T and @p d_conductivity_dT must be set
      * to the material.first values initially (0 for the derivatives). This function only modifies
      * their values if necessary. I.e. in case of no two-phase flow and no solidification this
      * function does nothing.
      *
-     * @note The derivatives @p d_rho_cp_dT and @p d_conductivity_dT are only non-zero in the case of solidification
+     * @note The derivatives @p d_rho_cp_d_T and @p d_conductivity_dT are only non-zero in the case of solidification
      * and if the temperature is between the solidus- and liquidus temperature.
      */
     std::tuple<VectorizedArray<number>,
