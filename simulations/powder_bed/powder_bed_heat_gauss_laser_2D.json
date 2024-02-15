@@ -13,7 +13,7 @@
     "time step size": "1e-6"
   },
   "heat": {
-    "interpolate rho times cp": "smooth"
+    "use volume-specific thermal capacity for phase interpolation": "true"
   },
   "laser": {
     "laser center": "0.0,0.0",

@@ -599,15 +599,14 @@ namespace MeltPoolDG
                         heat.enable_time_dependent_bc,
                         "Set this parameter to true to enable time-dependent bc.");
       prm.add_parameter(
-        "interpolate rho times cp",
-        heat.interpolate_rho_times_cp,
-        "Specify the interpolation type of the product of density and capacity instead of default interpolating "
-        "both individually.");
-      prm.add_parameter(
-        "interpolate k",
-        heat.interpolate_k,
-        "Specify the interpolation type of the conductivity. The default value is the one specified "
-        "within the material section.");
+        "use volume-specific thermal capacity for phase interpolation",
+        heat.use_volume_specific_thermal_capacity_for_phase_interpolation,
+        "Perform phase interpolation via the volumetric thermal capacity (product of density "
+        " and capacity) instead of interpolating density and thermal capacity individually.");
+      // add deprecated status
+      prm.declare_alias("use volume-specific thermal capacity for phase interpolation",
+                        "interpolate rho times cp",
+                        true);
       heat.delta_approximation_phase_weighted.add_parameters(prm);
       heat.linear_solver.add_parameters(prm);
     }

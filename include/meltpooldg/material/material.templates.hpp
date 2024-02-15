@@ -186,6 +186,11 @@ namespace MeltPoolDG
               t.viscosity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
                                                                          g.viscosity,
                                                                          l.viscosity);
+            if (flags & MaterialUpdateFlags::volume_specific_capacity)
+              t.volume_specific_capacity =
+                compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                             g.volume_specific_capacity,
+                                                             l.volume_specific_capacity);
             // note: For the gas-liquid phase case, the derivatives with respect to temperature
             // are zero.
             if (flags & MaterialUpdateFlags::phase_fractions)
@@ -215,6 +220,11 @@ namespace MeltPoolDG
             if (flags & MaterialUpdateFlags::viscosity)
               t.viscosity = compute_solid_liquid_phases_property<value_type>(
                 temperature_dependent_solid_fraction, l.viscosity, s.viscosity);
+            if (flags & MaterialUpdateFlags::volume_specific_capacity)
+              t.volume_specific_capacity = compute_solid_liquid_phases_property<value_type>(
+                temperature_dependent_solid_fraction,
+                l.volume_specific_capacity,
+                s.volume_specific_capacity);
             if (flags & MaterialUpdateFlags::d_capacity_d_T)
               t.d_capacity_d_T =
                 compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
@@ -227,6 +237,12 @@ namespace MeltPoolDG
               t.d_density_d_T =
                 compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
                   temperature_dependent_solid_fraction, l.density, s.density);
+            if (flags & MaterialUpdateFlags::d_volume_specific_capacity_d_T)
+              t.d_volume_specific_capacity_d_T =
+                compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
+                  temperature_dependent_solid_fraction,
+                  l.volume_specific_capacity,
+                  s.volume_specific_capacity);
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
                 t.liquid_fraction = 1. - temperature_dependent_solid_fraction;
@@ -285,6 +301,13 @@ namespace MeltPoolDG
                 g.viscosity,
                 l.viscosity,
                 s.viscosity);
+            if (flags & MaterialUpdateFlags::volume_specific_capacity)
+              t.volume_specific_capacity = compute_solid_liquid_gas_phases_property<value_type>(
+                level_set_heaviside,
+                temperature_dependent_solid_fraction,
+                g.volume_specific_capacity,
+                l.volume_specific_capacity,
+                s.volume_specific_capacity);
             if (flags & MaterialUpdateFlags::d_capacity_d_T)
               t.d_capacity_d_T =
                 compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
@@ -317,6 +340,13 @@ namespace MeltPoolDG
                       l.density,
                       s.density);
               }
+            if (flags & MaterialUpdateFlags::d_volume_specific_capacity_d_T)
+              t.d_volume_specific_capacity_d_T =
+                compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
+                  level_set_heaviside,
+                  temperature_dependent_solid_fraction,
+                  l.volume_specific_capacity,
+                  s.volume_specific_capacity);
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
                 t.gas_fraction = 1. - level_set_heaviside;

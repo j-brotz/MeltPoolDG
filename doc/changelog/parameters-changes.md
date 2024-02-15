@@ -2,6 +2,17 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2024-02-14
+- Change parameter back to bool to choose to interpolate the volumetric thermal
+capacity and remove specific interpolation for thermal conductivity
+```diff
+{
+  "heat": {
+-    "interpolate rho times cp": "none|sharp|smooth|reciprocal",
++    "use volume-specific thermal capacity for phase interpolation": "false|true",
+-    "interpolate k": ""
+   }
+}
+```
 - Adjust name of temperature evaluation method
 ```json
 {

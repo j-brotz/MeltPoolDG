@@ -17,16 +17,18 @@ namespace MeltPoolDG
   template <typename value_type>
   struct MaterialParameterValues
   {
-    MaterialParameterValues(const double capacity           = 0.0,
-                            const double conductivity       = 0.0,
-                            const double density            = 0.0,
-                            const double viscosity          = 0.0,
-                            const double d_capacity_d_T     = 0.0,
-                            const double d_conductivity_d_T = 0.0,
-                            const double d_density_d_T      = 0.0,
-                            const double gas_fraction       = 0.0,
-                            const double liquid_fraction    = 0.0,
-                            const double solid_fraction     = 0.0);
+    MaterialParameterValues(const double capacity                       = 0.0,
+                            const double conductivity                   = 0.0,
+                            const double density                        = 0.0,
+                            const double viscosity                      = 0.0,
+                            const double volume_specific_capacity       = 0.0,
+                            const double d_capacity_d_T                 = 0.0,
+                            const double d_conductivity_d_T             = 0.0,
+                            const double d_density_d_T                  = 0.0,
+                            const double d_volume_specific_capacity_d_T = 0.0,
+                            const double gas_fraction                   = 0.0,
+                            const double liquid_fraction                = 0.0,
+                            const double solid_fraction                 = 0.0);
 
     template <typename material_phase_data_struct>
     MaterialParameterValues(const material_phase_data_struct &data);
@@ -35,9 +37,11 @@ namespace MeltPoolDG
     value_type conductivity;
     value_type density;
     value_type viscosity;
+    value_type volume_specific_capacity;
     value_type d_capacity_d_T;
     value_type d_conductivity_d_T;
     value_type d_density_d_T;
+    value_type d_volume_specific_capacity_d_T;
     value_type gas_fraction;
     value_type liquid_fraction;
     value_type solid_fraction;
@@ -62,15 +66,17 @@ namespace MeltPoolDG
   {
     enum MaterialUpdateFlags
     {
-      none               = 0,
-      capacity           = 1 << 0,
-      conductivity       = 1 << 1,
-      density            = 2 << 2,
-      viscosity          = 2 << 3,
-      d_capacity_d_T     = 2 << 4,
-      d_conductivity_d_T = 2 << 5,
-      d_density_d_T      = 2 << 6,
-      phase_fractions    = 2 << 7
+      none                           = 0,
+      capacity                       = 1 << 0,
+      conductivity                   = 1 << 1,
+      density                        = 1 << 2,
+      viscosity                      = 2 << 2,
+      d_capacity_d_T                 = 2 << 3,
+      d_conductivity_d_T             = 2 << 4,
+      d_density_d_T                  = 2 << 5,
+      phase_fractions                = 2 << 6,
+      volume_specific_capacity       = 2 << 7,
+      d_volume_specific_capacity_d_T = 2 << 8
     };
 
     inline MaterialUpdateFlags
@@ -434,23 +440,28 @@ namespace MeltPoolDG
 
 
   template <typename value_type>
-  MaterialParameterValues<value_type>::MaterialParameterValues(const double capacity,
-                                                               const double conductivity,
-                                                               const double density,
-                                                               const double viscosity,
-                                                               const double d_capacity_d_T,
-                                                               const double d_conductivity_d_T,
-                                                               const double d_density_d_T,
-                                                               const double gas_fraction,
-                                                               const double liquid_fraction,
-                                                               const double solid_fraction)
+  MaterialParameterValues<value_type>::MaterialParameterValues(
+    const double capacity,
+    const double conductivity,
+    const double density,
+    const double viscosity,
+    const double volume_specific_capacity,
+    const double d_capacity_d_T,
+    const double d_conductivity_d_T,
+    const double d_density_d_T,
+    const double d_volume_specific_capacity_d_T,
+    const double gas_fraction,
+    const double liquid_fraction,
+    const double solid_fraction)
     : capacity(capacity)
     , conductivity(conductivity)
     , density(density)
     , viscosity(viscosity)
+    , volume_specific_capacity(volume_specific_capacity)
     , d_capacity_d_T(d_capacity_d_T)
     , d_conductivity_d_T(d_conductivity_d_T)
     , d_density_d_T(d_density_d_T)
+    , d_volume_specific_capacity_d_T(d_volume_specific_capacity_d_T)
     , gas_fraction(gas_fraction)
     , liquid_fraction(liquid_fraction)
     , solid_fraction(solid_fraction)
@@ -466,9 +477,11 @@ namespace MeltPoolDG
     , conductivity(data.conductivity)
     , density(data.density)
     , viscosity(data.viscosity)
+    , volume_specific_capacity(data.density * data.capacity)
     , d_capacity_d_T(0.0)
     , d_conductivity_d_T(0.0)
     , d_density_d_T(0.0)
+    , d_volume_specific_capacity_d_T(0.0)
     , gas_fraction(1.0)
     , liquid_fraction(0.0)
     , solid_fraction(0.0)
