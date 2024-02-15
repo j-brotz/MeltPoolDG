@@ -1,3 +1,6 @@
+#include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_simplex_p.h>
+
 #include <meltpooldg/heat/laser.hpp>
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
@@ -8,12 +11,13 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim>
-  LaserOperation<dim>::LaserOperation(const ScratchData<dim>     &scratch_data_in,
-                                      const LaserData<double>    &laser_data_in,
-                                      const MaterialData<double> &material_data_in)
+  LaserOperation<dim>::LaserOperation(ScratchData<dim>         &scratch_data_in,
+                                      const Parameters<double> &data_in,
+                                      const VectorType         *heaviside_in,
+                                      const unsigned int        hs_dof_idx_in)
     : scratch_data(scratch_data_in)
-    , laser_data(laser_data_in)
-    , material(material_data_in)
+    , laser_data(data_in.laser)
+    , material(data_in.material)
     , laser_position(
         UtilityFunctions::to_point<dim>(laser_data.center.begin(), laser_data.center.end()))
   {
@@ -37,11 +41,110 @@ namespace MeltPoolDG::Heat
         laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceUniform<dim>>(
           laser_data.delta_approximation_phase_weighted);
       }
+    else if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        AssertThrow(heaviside_in, ExcMessage("The RTE laser model requires a heaviside!"));
+
+        rte_dof_handler.reinit(scratch_data.get_dof_handler(hs_dof_idx_in).get_triangulation());
+
+        scratch_data.attach_dof_handler(rte_dof_handler);
+        scratch_data.attach_dof_handler(rte_dof_handler);
+
+        rte_dof_idx = scratch_data.attach_constraint_matrix(rte_constraints_dirichlet);
+        rte_hanging_nodes_dof_idx =
+          scratch_data.attach_constraint_matrix(rte_hanging_node_constraints);
+
+        if (data_in.base.do_simplex)
+          rte_quad_idx =
+            scratch_data.attach_quadrature(QGaussSimplex<dim>(data_in.base.n_q_points_1d));
+        else
+          rte_quad_idx = scratch_data.attach_quadrature(QGauss<dim>(data_in.base.n_q_points_1d));
+
+        rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
+          scratch_data,
+          data_in.rte,
+          *heaviside_in,
+          rte_dof_idx,
+          rte_hanging_nodes_dof_idx,
+          rte_quad_idx,
+          hs_dof_idx_in);
+      }
     else
-      AssertThrow(laser_data.heat_source_model == LaserHeatSourceModel::Analytical ||
-                    laser_data.heat_source_model == LaserHeatSourceModel::RTE,
+      AssertThrow(laser_data.heat_source_model == LaserHeatSourceModel::Analytical,
                   ExcMessage("No requested laser model found. Please specify the "
                              "heat source model in the laser section of the input parameters."));
+  }
+
+  template <int dim>
+  void
+  LaserOperation<dim>::distribute_dofs(const BaseData<double> &base_data)
+  {
+    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        if (base_data.do_simplex)
+          rte_dof_handler.distribute_dofs(FE_SimplexP<dim>(base_data.degree));
+        else
+          rte_dof_handler.distribute_dofs(FE_Q<dim>(base_data.degree));
+      }
+  }
+
+  template <int dim>
+  void
+  LaserOperation<dim>::setup_constraints(SimulationBase<dim> &sim_base)
+  {
+    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        rte_operation->setup_constraints(scratch_data,
+                                         sim_base.get_dirichlet_bc("intensity"),
+                                         sim_base.get_periodic_bc(),
+                                         rte_dof_idx,
+                                         rte_hanging_nodes_dof_idx,
+                                         true /*set_inhomogeneities*/);
+      }
+  }
+
+  template <int dim>
+  void
+  LaserOperation<dim>::distribute_constraints()
+  {
+    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        rte_operation->distribute_constraints();
+      }
+  }
+
+  template <int dim>
+  void
+  LaserOperation<dim>::reinit()
+  {
+    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        rte_operation->reinit();
+      }
+  }
+
+  template <int dim>
+  void
+  LaserOperation<dim>::attach_vectors(
+    std::vector<
+      std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &data)
+  {
+    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        data.emplace_back(&rte_dof_handler, [&](std::vector<VectorType *> &vectors) {
+          rte_operation->attach_vectors(vectors);
+        });
+      }
+  }
+
+  template <int dim>
+  void
+  LaserOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  {
+    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        rte_operation->attach_output_vectors(data_out);
+      }
   }
 
   template <int dim>
@@ -123,7 +226,14 @@ namespace MeltPoolDG::Heat
                                            const BlockVectorType *normal_vector,
                                            const unsigned int     normal_dof_idx) const
   {
-    switch (get_laser_impact_type())
+    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+      {
+        rte_operation->solve();
+        rte_operation->compute_heat_source(heat_source, temp_hanging_nodes_dof_idx, false);
+        return;
+      }
+
+    switch (laser_data.impact_type)
       {
           case LaserImpactType::volumetric: {
             laser_heat_source_operation->compute_volumetric_heat_source(heat_source,
@@ -181,15 +291,6 @@ namespace MeltPoolDG::Heat
             break;
           }
       }
-  }
-
-
-
-  template <int dim>
-  LaserImpactType
-  LaserOperation<dim>::get_laser_impact_type() const
-  {
-    return laser_data.impact_type;
   }
 
   template <int dim>

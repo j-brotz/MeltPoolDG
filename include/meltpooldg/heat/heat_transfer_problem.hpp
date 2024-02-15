@@ -9,17 +9,21 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
+#include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/heat/laser.hpp>
-#include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
-#include <meltpooldg/radiative_transport/rte_operation.hpp>
+#include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
+
+#include <memory>
+#include <string>
+
 
 namespace MeltPoolDG::Heat
 {
@@ -46,19 +50,12 @@ namespace MeltPoolDG::Heat
     AffineConstraints<double> temp_hanging_nodes_constraints;
     AffineConstraints<double> velocity_hanging_nodes_constraints;
     AffineConstraints<double> level_set_hanging_nodes_constraints;
-    // TODO: move to RTEOperation
-    AffineConstraints<double> rte_constraints;
-    AffineConstraints<double> rte_hanging_nodes_constraints;
 
     unsigned int temp_dof_idx;
     unsigned int temp_hanging_nodes_dof_idx;
     unsigned int temp_quad_idx;
     unsigned int velocity_dof_idx;
     unsigned int level_set_dof_idx;
-
-    // TODO: move to RTEOperation
-    unsigned int rte_dof_idx               = numbers::invalid_unsigned_int;
-    unsigned int rte_hanging_nodes_dof_idx = numbers::invalid_unsigned_int;
 
     std::shared_ptr<ScratchData<dim>>           scratch_data;
     std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
@@ -68,10 +65,7 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<Function<dim>> velocity_field_function;
     std::shared_ptr<Function<dim>> heaviside_field_function;
 
-    std::shared_ptr<Heat::LaserOperation<dim>>      laser_operation;
-    std::shared_ptr<Heat::LaserHeatSourceBase<dim>> laser_heat_source_operation;
-
-    std::shared_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
+    std::shared_ptr<Heat::LaserOperation<dim>> laser_operation;
 
   public:
     HeatTransferProblem() = default;

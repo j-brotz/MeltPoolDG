@@ -5,11 +5,26 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
+#include <deal.II/base/point.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/radiative_transport/rte_operation.hpp>
+
+#include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace MeltPoolDG::Heat
 {
@@ -19,9 +34,10 @@ namespace MeltPoolDG::Heat
   class LaserOperation
   {
   private:
-    using VectorType = LinearAlgebra::distributed::Vector<double>;
+    using VectorType      = LinearAlgebra::distributed::Vector<double>;
+    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const ScratchData<dim> &scratch_data;
+    ScratchData<dim> &scratch_data;
 
     // Laser parameters
     const LaserData<double> laser_data;
@@ -41,10 +57,39 @@ namespace MeltPoolDG::Heat
     // Requested laser model
     std::shared_ptr<LaserHeatSourceBase<dim>> laser_heat_source_operation;
 
+    // RTE
+    std::shared_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
+    DoFHandler<dim>                                                       rte_dof_handler;
+    AffineConstraints<double>                                             rte_constraints_dirichlet;
+    AffineConstraints<double> rte_hanging_node_constraints;
+    unsigned int              rte_dof_idx;
+    unsigned int              rte_hanging_nodes_dof_idx;
+    unsigned int              rte_quad_idx;
+
   public:
-    LaserOperation(const ScratchData<dim>     &scratch_data_in,
-                   const LaserData<double>    &laser_data_in,
-                   const MaterialData<double> &material_data_in);
+    LaserOperation(ScratchData<dim>         &scratch_data_in,
+                   const Parameters<double> &data_in,
+                   const VectorType         *heaviside_in  = nullptr,
+                   const unsigned int        hs_dof_idx_in = 0);
+
+    void
+    distribute_dofs(const BaseData<double> &base_data);
+
+    void
+    setup_constraints(SimulationBase<dim> &sim_base);
+
+    void
+    distribute_constraints();
+
+    void
+    reinit();
+
+    void
+    attach_vectors(std::vector<std::pair<const DoFHandler<dim> *,
+                                         std::function<void(std::vector<VectorType *> &)>>> &data);
+
+    void
+    attach_output_vectors(GenericDataOut<dim> &data_out) const;
 
     /**
      * Compute either the @p heat_source vector (for LaserImpactType::interface and
@@ -95,13 +140,6 @@ namespace MeltPoolDG::Heat
      */
     double
     get_laser_power() const;
-
-    /**
-     * Getter function for the current laser impact type (volumetric, diffuse interface, sharp
-     * interface).
-     */
-    LaserImpactType
-    get_laser_impact_type() const;
 
   private:
     /**
