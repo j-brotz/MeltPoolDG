@@ -1,25 +1,69 @@
-#include "meltpooldg/heat/laser_data.hpp"
-#include "meltpooldg/interface/parameters.hpp"
 #ifndef MELT_POOL_DG_DIM
 #  define MELT_POOL_DG_DIM 1
 #endif
 
-#include <deal.II/fe/fe_q_iso_q1.h>
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/geometry_info.h>
+#include <deal.II/base/mpi.templates.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/quadrature.h>
+#include <deal.II/base/table_handler.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/timer.h>
+#include <deal.II/base/vectorization.h>
 
+#include <deal.II/distributed/grid_refinement.h>
+
+#include <deal.II/dofs/dof_accessor.h>
+
+#include <deal.II/fe/fe_simplex_p.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/fe_values_extractors.h>
+#include <deal.II/fe/mapping_fe.h>
+#include <deal.II/fe/mapping_q.h>
+
+#include <deal.II/grid/tria_iterator.h>
+
+#include <deal.II/lac/vector.h>
+
+#include <deal.II/numerics/data_component_interpretation.h>
+#include <deal.II/numerics/error_estimator.h>
+#include <deal.II/numerics/vector_tools_boundary.h>
+#include <deal.II/numerics/vector_tools_common.h>
+#include <deal.II/numerics/vector_tools_integrate_difference.h>
+
+#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
-#include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
+#include <meltpooldg/heat/laser_data.hpp>
+#include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
-#include <meltpooldg/material/material.hpp>
+#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <ios>
+#include <iostream>
+#include <map>
+#include <sstream>
 
 namespace MeltPoolDG::MeltPool
 {

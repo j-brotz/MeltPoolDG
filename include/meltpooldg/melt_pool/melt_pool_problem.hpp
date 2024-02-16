@@ -4,26 +4,15 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <deal.II/base/data_out_base.h>
-#include <deal.II/base/index_set.h>
-
-#include <deal.II/distributed/grid_refinement.h>
-#include <deal.II/distributed/tria_base.h>
+#include <deal.II/base/parameter_handler.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/mapping.h>
-#include <deal.II/fe/mapping_fe.h>
+#include <deal.II/grid/tria.h>
 
-#include <deal.II/grid/grid_out.h>
-
+#include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <deal.II/numerics/error_estimator.h>
-// MeltPoolDG
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/evaporation/incompressible_newtonian_evaporation_material.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
@@ -32,18 +21,24 @@
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
+#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/melt_pool/melt_front_propagation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
-#include <meltpooldg/utilities/amr.hpp>
-#include <meltpooldg/utilities/conditional_ostream.hpp>
+#include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace MeltPoolDG::MeltPool
 {
