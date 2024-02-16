@@ -1213,9 +1213,8 @@ namespace MeltPoolDG::MeltPool
     // setup laser
     if (base_in->parameters.laser.power > 0)
       {
-        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(*scratch_data,
-                                                                      base_in->parameters.laser,
-                                                                      base_in->parameters.material);
+        laser_operation =
+          std::make_shared<Heat::LaserOperation<dim>>(*scratch_data, base_in->parameters);
         laser_operation->reset(base_in->parameters.time_stepping.start_time);
       }
 

@@ -37,8 +37,6 @@ namespace MeltPoolDG::RadiativeTransport
       rte_dof_idx,
       rte_data.pseudo_time_stepping.linear_solver.preconditioner_type,
       *pseudo_rte_operator);
-
-    reinit();
   }
 
   template <int dim>

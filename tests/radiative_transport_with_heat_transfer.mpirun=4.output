@@ -3,24 +3,32 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
 | || intensity ||L2 = 1.608959e-02                                           RTE::pseudo-predictor |
 | || intensity ||L2 = 1.67858984999e-01                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 2.43525e-03                newton_raphson_solver |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-02 to 2.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
 | || intensity ||L2 = 1.678585e-01                                           RTE::pseudo-predictor |
 | || intensity ||L2 = 1.67816217907e-01                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 4.27415e-03                newton_raphson_solver |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-02 to 3.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
 | || intensity ||L2 = 1.678157e-01                                           RTE::pseudo-predictor |
 | || intensity ||L2 = 1.67773416466e-01                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 5.81912e-03                newton_raphson_solver |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-02 to 4.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
+| current laser position: 0 0                                                                laser |
+| current laser intensity: 1                                                                 laser |
 | || intensity ||L2 = 1.677729e-01                                           RTE::pseudo-predictor |
 | || intensity ||L2 = 1.67730582918e-01                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 7.17920e-03                newton_raphson_solver |

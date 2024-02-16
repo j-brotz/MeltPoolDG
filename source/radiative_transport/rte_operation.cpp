@@ -67,8 +67,6 @@ namespace MeltPoolDG::RadiativeTransport
                                                                        rte_hanging_nodes_dof_idx,
                                                                        rte_quad_idx,
                                                                        hs_dof_idx);
-
-    reinit();
   }
 
   template <int dim>

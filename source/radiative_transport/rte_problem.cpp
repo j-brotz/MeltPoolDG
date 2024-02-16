@@ -126,6 +126,7 @@ namespace MeltPoolDG::RadiativeTransport
                                                                        rte_hanging_nodes_dof_idx,
                                                                        rte_quad_idx,
                                                                        hs_dof_idx);
+    rte_operation->reinit();
 
     /*
      *  initialize postprocessor
@@ -189,13 +190,12 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  create AffineConstraints
      */
-    base_in->attach_boundary_condition("intensity");
-    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
-                                                         base_in->get_dirichlet_bc("intensity"),
-                                                         base_in->get_periodic_bc(),
-                                                         rte_dof_idx,
-                                                         rte_hanging_nodes_dof_idx);
-
+    rte_operation->setup_constraints(*scratch_data,
+                                     base_in->get_dirichlet_bc("intensity"),
+                                     base_in->get_periodic_bc(),
+                                     rte_dof_idx,
+                                     rte_hanging_nodes_dof_idx,
+                                     true /*set_inhomogeneities*/);
     /*
      *  create the matrix-free object
      */
