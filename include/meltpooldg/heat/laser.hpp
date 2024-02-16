@@ -14,15 +14,16 @@
 
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
+#include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/radiative_transport/rte_operation.hpp>
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -37,7 +38,7 @@ namespace MeltPoolDG::Heat
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    ScratchData<dim> &scratch_data;
+    const ScratchData<dim> &scratch_data;
 
     // Laser parameters
     const LaserData<double> laser_data;
@@ -76,7 +77,11 @@ namespace MeltPoolDG::Heat
     distribute_dofs(const BaseData<double> &base_data);
 
     void
-    setup_constraints(SimulationBase<dim> &sim_base);
+    setup_constraints(
+      ScratchData<dim> &mutable_scratch_data,
+      const std::function<const DirichletBoundaryConditions<dim> &(const std::string &)>
+                                            &dirichlet_bc,
+      const PeriodicBoundaryConditions<dim> &periodic_bc);
 
     void
     distribute_constraints();

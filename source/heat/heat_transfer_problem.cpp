@@ -337,8 +337,14 @@ namespace MeltPoolDG::Heat
                                                          base_in->get_periodic_bc(),
                                                          temp_dof_idx,
                                                          temp_hanging_nodes_dof_idx);
+
     if (laser_operation)
-      laser_operation->setup_constraints(*base_in);
+      laser_operation->setup_constraints(
+        *scratch_data,
+        [&](const std::string &operation_name) -> const DirichletBoundaryConditions<dim> & {
+          return base_in->get_dirichlet_bc(operation_name);
+        },
+        base_in->get_periodic_bc());
 
     scratch_data->build(true /*enable_boundary_faces*/,
                         base_in->parameters.laser.impact_type ==

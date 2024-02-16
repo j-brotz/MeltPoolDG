@@ -47,18 +47,18 @@ namespace MeltPoolDG::Heat
 
         rte_dof_handler.reinit(scratch_data.get_dof_handler(hs_dof_idx_in).get_triangulation());
 
-        scratch_data.attach_dof_handler(rte_dof_handler);
-        scratch_data.attach_dof_handler(rte_dof_handler);
+        scratch_data_in.attach_dof_handler(rte_dof_handler);
+        scratch_data_in.attach_dof_handler(rte_dof_handler);
 
-        rte_dof_idx = scratch_data.attach_constraint_matrix(rte_constraints_dirichlet);
+        rte_dof_idx = scratch_data_in.attach_constraint_matrix(rte_constraints_dirichlet);
         rte_hanging_nodes_dof_idx =
-          scratch_data.attach_constraint_matrix(rte_hanging_node_constraints);
+          scratch_data_in.attach_constraint_matrix(rte_hanging_node_constraints);
 
         if (data_in.base.do_simplex)
           rte_quad_idx =
-            scratch_data.attach_quadrature(QGaussSimplex<dim>(data_in.base.n_q_points_1d));
+            scratch_data_in.attach_quadrature(QGaussSimplex<dim>(data_in.base.n_q_points_1d));
         else
-          rte_quad_idx = scratch_data.attach_quadrature(QGauss<dim>(data_in.base.n_q_points_1d));
+          rte_quad_idx = scratch_data_in.attach_quadrature(QGauss<dim>(data_in.base.n_q_points_1d));
 
         rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
           scratch_data,
@@ -90,13 +90,17 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  LaserOperation<dim>::setup_constraints(SimulationBase<dim> &sim_base)
+  LaserOperation<dim>::setup_constraints(
+    ScratchData<dim> &mutable_scratch_data,
+    const std::function<const DirichletBoundaryConditions<dim> &(const std::string &)>
+                                          &dirichlet_bc,
+    const PeriodicBoundaryConditions<dim> &periodic_bc)
   {
     if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
       {
-        rte_operation->setup_constraints(scratch_data,
-                                         sim_base.get_dirichlet_bc("intensity"),
-                                         sim_base.get_periodic_bc(),
+        rte_operation->setup_constraints(mutable_scratch_data,
+                                         dirichlet_bc("intensity"),
+                                         periodic_bc,
                                          rte_dof_idx,
                                          rte_hanging_nodes_dof_idx,
                                          true /*set_inhomogeneities*/);
