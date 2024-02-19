@@ -41,6 +41,7 @@ namespace MeltPoolDG
     public:
       OlssonOperator(const ScratchData<dim>             &scratch_data_in,
                      const ReinitializationData<number> &reinit_data_in,
+                     const int                           ls_n_subdivisions,
                      const BlockVectorType              &n_in,
                      const unsigned int                  reinit_dof_idx_in,
                      const unsigned int                  reinit_quad_idx_in,

@@ -7,6 +7,7 @@ namespace MeltPoolDG::Reinitialization
   template <int dim, typename number>
   OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim>             &scratch_data_in,
                                               const ReinitializationData<number> &reinit_data_in,
+                                              const int                           ls_n_subdivisions,
                                               const BlockVectorType              &n_in,
                                               const unsigned int                  reinit_dof_idx_in,
                                               const unsigned int reinit_quad_idx_in,
@@ -18,8 +19,7 @@ namespace MeltPoolDG::Reinitialization
     , reinit_quad_idx(reinit_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , thickness_scale_factor(reinit_data_in.scale_factor_epsilon /
-                             scratch_data.get_degree(ls_dof_idx_in))
+    , thickness_scale_factor(reinit_data_in.scale_factor_epsilon / ls_n_subdivisions)
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))

@@ -93,6 +93,12 @@ namespace MeltPoolDG
       initialize_vectors();
 
     private:
+      void
+      create_operator();
+
+      void
+      create_normal_vector_operator();
+
       const ScratchData<dim> &scratch_data;
 
       const TimeIterator<double> &time_iterator;
@@ -132,6 +138,9 @@ namespace MeltPoolDG
       bool                                   force_compute_normal = true;
       std::function<void(bool)>              compute_normal;
       const ConditionalOStream               pcout;
+
+      const NormalVectorData<double> &normal_vector_data;
+      const double                    eps_cell_factor;
 
       // maximum change of the level set due to the current reinitialization step
       double max_change_level_set = std::numeric_limits<double>::max();

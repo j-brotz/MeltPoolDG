@@ -230,14 +230,6 @@ namespace MeltPoolDG::NormalVector
                                                   normal_vector_data.do_narrow_band,
                                                   &solution_level_set);
     /*
-     *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
-     *  apply it to the system matrix. This functionality is part of the OperatorBase class.
-     */
-    if (!normal_vector_data.linear_solver.do_matrix_free)
-      normal_vector_operator->initialize_matrix_based(scratch_data);
-
-    normal_vector_operator->reinit();
-    /*
      * initialize preconditioner matrix-free
      */
     if (normal_vector_data.linear_solver.do_matrix_free)

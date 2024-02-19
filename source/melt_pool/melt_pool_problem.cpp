@@ -1037,8 +1037,6 @@ namespace MeltPoolDG::MeltPool
     vel_dof_idx = flow_operation->get_dof_handler_idx_velocity();
 
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
-
-    setup_dof_system(base_in, false);
     /*
      *    initialize the levelset operation class
      *    and setup initial conditions
@@ -1056,6 +1054,25 @@ namespace MeltPoolDG::MeltPool
                                                          normal_dof_idx,
                                                          vel_dof_idx,
                                                          ls_dof_idx /* todo: ls_zero_bc_idx*/);
+    /*
+     * laser operation
+     */
+    if (base_in->parameters.laser.power > 0.0)
+      {
+        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(
+          *scratch_data,
+          base_in->parameters,
+          &level_set_operation->get_level_set_as_heaviside(),
+          ls_dof_idx);
+        laser_operation->reset(base_in->parameters.time_stepping.start_time);
+      }
+
+    setup_dof_system(base_in, false);
+
+    level_set_operation->reinit();
+
+    if (laser_operation)
+      laser_operation->reinit();
 
     /*
      *    initialize the heat operation class
@@ -1254,15 +1271,6 @@ namespace MeltPoolDG::MeltPool
             temp_hanging_nodes_dof_idx);
       }
 
-    // setup laser
-    if (base_in->parameters.laser.power > 0)
-      {
-        laser_operation =
-          std::make_shared<Heat::LaserOperation<dim>>(*scratch_data, base_in->parameters);
-        laser_operation->reset(base_in->parameters.time_stepping.start_time);
-      }
-
-
     if (problem_specific_parameters.do_solidification)
       AssertThrow(
         melt_front_propagation,
@@ -1438,6 +1446,9 @@ namespace MeltPoolDG::MeltPool
                                                dof_handler_heat);
       }
 
+    if (laser_operation)
+      laser_operation->distribute_dofs(base_in->parameters.base);
+
       /*
        *    initialize the flow operation class
        */
@@ -1497,6 +1508,14 @@ namespace MeltPoolDG::MeltPool
                                                            temp_dof_idx,
                                                            temp_hanging_nodes_dof_idx);
 
+    if (laser_operation)
+      laser_operation->setup_constraints(
+        *scratch_data,
+        [&](const std::string &operation_name) -> const DirichletBoundaryConditions<dim> & {
+          return base_in->get_dirichlet_bc(operation_name);
+        },
+        base_in->get_periodic_bc());
+
     // TODO: add function to each operation to check the requirements on ScratchData
     scratch_data->build(problem_specific_parameters.do_heat_transfer,
                         (base_in->parameters.laser.impact_type ==
@@ -1523,6 +1542,8 @@ namespace MeltPoolDG::MeltPool
           melt_front_propagation->reinit();
         if (heat_operation)
           heat_operation->reinit();
+        if (laser_operation)
+          laser_operation->reinit();
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -1880,6 +1901,8 @@ namespace MeltPoolDG::MeltPool
         evaporation_operation->attach_output_vectors(data_out);
       if (heat_operation)
         heat_operation->attach_output_vectors(data_out);
+      if (laser_operation)
+        laser_operation->attach_output_vectors(data_out);
       if (darcy_operation)
         darcy_operation->attach_output_vectors(data_out);
 
@@ -2388,6 +2411,9 @@ namespace MeltPoolDG::MeltPool
       data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
         heat_operation->attach_vectors(vectors);
       });
+
+    if (laser_operation)
+      laser_operation->attach_vectors(data);
   }
 
   template <int dim>
@@ -2420,6 +2446,9 @@ namespace MeltPoolDG::MeltPool
      */
     if (heat_operation)
       heat_operation->distribute_constraints();
+
+    if (laser_operation)
+      laser_operation->distribute_constraints();
   }
 
   template <int dim>

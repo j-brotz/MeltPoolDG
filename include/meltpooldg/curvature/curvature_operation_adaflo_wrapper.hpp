@@ -71,6 +71,12 @@ namespace MeltPoolDG::Curvature
 
   private:
     void
+    create_operator();
+
+    void
+    create_normal_vector_operator();
+
+    void
     set_adaflo_parameters(const Parameters<double> &parameters,
                           int                       advec_diff_dof_idx,
                           int                       curv_dof_idx,
@@ -114,6 +120,8 @@ namespace MeltPoolDG::Curvature
     double                                 cell_diameter_max;
     double                                 epsilon_used;
     unsigned int                           verbosity_level;
+
+    const NormalVectorData<double> &normal_vector_data;
   };
 } // namespace MeltPoolDG::Curvature
 

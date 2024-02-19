@@ -46,8 +46,6 @@ namespace MeltPoolDG::AdvectionDiffusion
           this->advec_diff_data.linear_solver.preconditioner_type,
           *advec_diff_operator);
       }
-
-    reinit();
   }
 
   template <int dim>

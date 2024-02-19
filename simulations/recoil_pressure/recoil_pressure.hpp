@@ -13,6 +13,7 @@
 #include <deal.II/grid/manifold_lib.h>
 
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <iostream>
 
@@ -57,6 +58,46 @@ namespace MeltPoolDG
         const double T_initial_top;
         const double y_min;
         const double grad_T;
+      };
+
+      // boundary condition for RTE
+      template <int dim>
+      class IntensityBoundary : public Function<dim>
+      {
+      public:
+        IntensityBoundary(const double             power_in,
+                          const double             radius_in,
+                          const Point<dim, double> center_in)
+          : Function<dim>(1)
+          , power(power_in)
+          , radius(radius_in)
+          , center(center_in)
+          , surf_peak_power_density_factor(1. / (radius_in * radius_in * numbers::PI / 2))
+        {}
+
+        double
+        value(const Point<dim> &p, const unsigned int) const override
+        {
+          double r = 0;
+          if (dim > 1)
+            {
+              // Calculate the projected distance in x (2D) or x and y (3D) direction.
+              // To this end, we calculate a projected point lying in the laser plane.
+              Point<dim> projected_position(p);
+              projected_position[dim - 1] = center[dim - 1];
+              r                           = center.distance(projected_position);
+            }
+
+          const double s          = r / radius;
+          const double peak_power = surf_peak_power_density_factor * power;
+          return peak_power * std::exp(-2. * s * s);
+        }
+
+      private:
+        const double             power;
+        const double             radius;
+        const Point<dim, double> center;
+        const double             surf_peak_power_density_factor;
       };
 
       template <int dim>
@@ -559,6 +600,19 @@ namespace MeltPoolDG
                 }
             }
 
+          /*
+           * BC for RTE
+           */
+          if (this->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+            this->attach_dirichlet_boundary_condition(
+              upper_bc,
+              std::make_shared<IntensityBoundary<dim>>(
+                this->parameters.laser.power,
+                this->parameters.laser.gauss.laser_beam_radius,
+                UtilityFunctions::to_point<dim>(this->parameters.laser.center.begin(),
+                                                this->parameters.laser.center.end())),
+              "intensity");
+
           if (!this->parameters.base.do_simplex)
             this->triangulation->refine_global(this->parameters.base.global_refinements);
 
@@ -636,6 +690,10 @@ namespace MeltPoolDG
               std::make_shared<InitialConditionTemperature<dim>>(
                 T_initial_bottom, T_initial_top, domain_y_min, domain_y_max),
               "heat_transfer");
+
+          if (this->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+            this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
+                                           "intensity");
         }
 
         void

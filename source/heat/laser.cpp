@@ -233,7 +233,7 @@ namespace MeltPoolDG::Heat
     if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
       {
         rte_operation->solve();
-        rte_operation->compute_heat_source(heat_source, temp_hanging_nodes_dof_idx, false);
+        rte_operation->compute_heat_source(heat_source, temp_hanging_nodes_dof_idx, zero_out);
         return;
       }
 

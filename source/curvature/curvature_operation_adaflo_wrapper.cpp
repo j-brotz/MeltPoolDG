@@ -14,6 +14,7 @@ namespace MeltPoolDG::Curvature
                                                           const Parameters<double> &data_in)
     : scratch_data(scratch_data)
     , advected_field(advected_field)
+    , normal_vector_data(data_in.normal_vec)
   {
     (void)normal_vec_dof_idx;
 
@@ -27,30 +28,19 @@ namespace MeltPoolDG::Curvature
      */
     projection_matrix     = std::make_shared<BlockMatrixExtension>();
     ilu_projection_matrix = std::make_shared<BlockILUExtension>();
+  }
 
-    /*
-     * initialize normal_vector_operation from adaflo
-     */
-    normal_vector_operation_adaflo =
-      std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-        scratch_data,
-        advec_diff_dof_idx,
-        curv_dof_idx,
-        curv_quad_idx,
-        advected_field,
-        data_in.normal_vec,
-        data_in.reinit.scale_factor_epsilon);
-
-    this->reinit();
-    /*
-     * initialize adaflo operation for computing curvature
-     */
+  template <int dim>
+  void
+  CurvatureOperationAdaflo<dim>::create_operator()
+  {
     curvature_operation = std::make_shared<LevelSetOKZSolverComputeCurvature<dim>>(
       scratch_data.get_cell_sizes(),
       normal_vector_operation_adaflo->get_solution_normal_vector(),
-      scratch_data.get_constraint(curv_dof_idx),
+      scratch_data.get_constraint(curv_adaflo_params.dof_index_curvature),
       scratch_data.get_constraint(
-        curv_dof_idx), // @todo -- check adaflo --> hanging node constraints??
+        curv_adaflo_params
+          .dof_index_curvature), // @todo -- check adaflo --> hanging node constraints??
       epsilon_used,
       rhs,
       curv_adaflo_params,
@@ -60,6 +50,21 @@ namespace MeltPoolDG::Curvature
       preconditioner,
       projection_matrix,
       ilu_projection_matrix);
+  }
+
+  template <int dim>
+  void
+  CurvatureOperationAdaflo<dim>::create_normal_vector_operator()
+  {
+    normal_vector_operation_adaflo =
+      std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
+        scratch_data,
+        curv_adaflo_params.dof_index_ls,
+        curv_adaflo_params.dof_index_normal,
+        curv_adaflo_params.quad_index,
+        advected_field,
+        normal_vector_data,
+        curv_adaflo_params.epsilon);
   }
 
   template <int dim>
@@ -78,6 +83,11 @@ namespace MeltPoolDG::Curvature
                                 cell_diameter_max);
 
     epsilon_used = cell_diameter_max * curv_adaflo_params.epsilon;
+
+    if (!normal_vector_operation_adaflo)
+      create_normal_vector_operator();
+    if (!curvature_operation)
+      create_operator();
 
     /**
      * initialize the preconditioner -->  @todo: currently not used in adaflo

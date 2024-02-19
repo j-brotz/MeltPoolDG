@@ -179,6 +179,7 @@ namespace MeltPoolDG::LevelSet
                                                                    normal_dof_idx,
                                                                    vel_dof_idx,
                                                                    ls_zero_bc_idx);
+    level_set_operation->reinit();
 
     /*
      * set initial conditions

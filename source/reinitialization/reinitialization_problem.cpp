@@ -102,11 +102,13 @@ namespace MeltPoolDG::Reinitialization
           std::make_shared<ReinitializationOperation<dim>>(*scratch_data,
                                                            base_in->parameters.reinit,
                                                            base_in->parameters.normal_vec,
+                                                           base_in->parameters.ls.n_subdivisions,
                                                            *time_iterator,
                                                            reinit_dof_idx,
                                                            reinit_quad_idx,
                                                            reinit_dof_idx,
                                                            normal_dof_idx);
+        reinit_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.reinit.implementation == "adaflo")
@@ -120,6 +122,7 @@ namespace MeltPoolDG::Reinitialization
                                                                  reinit_quad_idx,
                                                                  normal_dof_idx, // normal vec @todo
                                                                  base_in->parameters);
+        reinit_operation->reinit();
       }
 #endif
     else

@@ -198,6 +198,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                              advec_diff_hanging_nodes_dof_idx,
                                                              advec_diff_quad_idx,
                                                              velocity_dof_idx);
+        advec_diff_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.advec_diff.implementation == "adaflo")
