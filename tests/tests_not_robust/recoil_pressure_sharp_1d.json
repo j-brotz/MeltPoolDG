@@ -61,7 +61,7 @@
     "evapor formulation source term heat": "sharp"
   },
   "recoil pressure": {
-    "interface distributed flux type": "continuous",
+    "interface distributed flux type": "local_value",
     "recoil pressure constant": "2e3",
     "recoil temperature constant": "2e3",
     "activation temperature": "0"
