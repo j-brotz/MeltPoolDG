@@ -41,11 +41,11 @@ namespace MeltPoolDG
       /**
        * Constructor.
        */
-      NormalVectorOperationAdaflo(const ScratchData<dim> &scratch_data,
-                                  const int               advec_diff_dof_idx,
-                                  const int               normal_vec_dof_idx,
-                                  const int               normal_vec_quad_idx,
-                                  const VectorType       &advected_field, //@todo: make const
+      NormalVectorOperationAdaflo(const ScratchData<dim>         &scratch_data,
+                                  const int                       advec_diff_dof_idx,
+                                  const int                       normal_vec_dof_idx,
+                                  const int                       normal_vec_quad_idx,
+                                  const VectorType               &advected_field_in,
                                   const NormalVectorData<double> &data_in,
                                   const double                    reinit_scale_factor_epsilon);
 
@@ -76,7 +76,7 @@ namespace MeltPoolDG
     private:
       void
       set_adaflo_parameters(const NormalVectorData<double> &normal_vec_data,
-                            const double                    reinit_scale_factor_epsilon,
+                            const double                    epsilon,
                             const int                       advec_diff_dof_idx,
                             const int                       normal_vec_dof_idx,
                             const int                       normal_vec_quad_idx);
@@ -85,7 +85,13 @@ namespace MeltPoolDG
       initialize_vectors();
 
     private:
+      void
+      create_operator();
+
       const ScratchData<dim> &scratch_data;
+
+      const VectorType &advected_field;
+
       /**
        *  Vectors for computing the normals
        */

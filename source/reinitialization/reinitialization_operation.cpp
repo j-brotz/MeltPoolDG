@@ -11,6 +11,7 @@ namespace MeltPoolDG::Reinitialization
     const ScratchData<dim>             &scratch_data_in,
     const ReinitializationData<double> &reinit_data,
     const NormalVectorData<double>     &normal_vec_data,
+    const int                           ls_n_subdivisions_in,
     const TimeIterator<double>         &time_iterator,
     const unsigned int                  reinit_dof_idx_in,
     const unsigned int                  reinit_quad_idx_in,
@@ -18,6 +19,7 @@ namespace MeltPoolDG::Reinitialization
     const unsigned int                  normal_dof_idx_in)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
+    , ls_n_subdivisions(ls_n_subdivisions_in)
     , time_iterator(time_iterator)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_quad_idx(reinit_quad_idx_in)
@@ -56,7 +58,7 @@ namespace MeltPoolDG::Reinitialization
           reinit_quad_idx,
           solution_level_set,
           normal_vec_data,
-          reinit_data.scale_factor_epsilon);
+          reinit_data.scale_factor_epsilon / ls_n_subdivisions);
       }
 #endif
     else
@@ -67,8 +69,6 @@ namespace MeltPoolDG::Reinitialization
      *   and matrix-free computation.
      */
     create_operator();
-
-    reinit();
   }
 
   template <int dim>
@@ -369,6 +369,7 @@ namespace MeltPoolDG::Reinitialization
         reinit_operator = std::make_unique<OlssonOperator<dim, double>>(
           scratch_data,
           reinit_data,
+          ls_n_subdivisions,
           normal_vector_operation->get_solution_normal_vector(),
           reinit_dof_idx,
           reinit_quad_idx,
@@ -384,28 +385,13 @@ namespace MeltPoolDG::Reinitialization
     else
       AssertThrow(false, ExcMessage("Requested reinitialization model not implemented."));
 
-    /*
-     *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
-     *  apply it to the system matrix. This functionality is part of the OperatorBase class.
-     */
-
-    if (!reinit_data.linear_solver.do_matrix_free)
-      reinit_operator->initialize_matrix_based(scratch_data);
-
     if (reinit_data.linear_solver.do_matrix_free)
-      {
-        preconditioner_matrixfree = std::make_shared<
-          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
-          scratch_data,
-          reinit_dof_idx,
-          reinit_data.linear_solver.preconditioner_type,
-          *reinit_operator);
-        /*
-         * setup sparsity pattern of system matrix only if the latter is
-         * needed for computing the preconditioner
-         */
-        preconditioner_matrixfree->reinit();
-      }
+      preconditioner_matrixfree = std::make_shared<
+        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+        scratch_data,
+        reinit_dof_idx,
+        reinit_data.linear_solver.preconditioner_type,
+        *reinit_operator);
   }
 
   template <int dim>

@@ -10,10 +10,11 @@ namespace MeltPoolDG::NormalVector
     const int                       advec_diff_dof_idx,
     const int                       normal_vec_dof_idx,
     const int                       normal_vec_quad_idx,
-    const VectorType               &advected_field, //@todo: make const
+    const VectorType               &advected_field_in,
     const NormalVectorData<double> &data_in,
     const double                    reinit_scale_factor_epsilon)
     : scratch_data(scratch_data)
+    , advected_field(advected_field_in)
     , normal_vector_field(dim)
     , rhs(dim)
   {
@@ -31,26 +32,25 @@ namespace MeltPoolDG::NormalVector
      */
     projection_matrix     = std::make_shared<BlockMatrixExtension>();
     ilu_projection_matrix = std::make_shared<BlockILUExtension>();
+  }
 
-    reinit();
-
-    /*
-     * initialize adaflo operation
-     */
-    normal_vec_operation =
-      std::make_shared<LevelSetOKZSolverComputeNormal<dim>>(normal_vector_field,
-                                                            rhs,
-                                                            advected_field,
-                                                            scratch_data.get_cell_sizes(),
-                                                            epsilon_used,
-                                                            cell_diameter_min,
-                                                            scratch_data.get_constraint(
-                                                              normal_vec_dof_idx),
-                                                            normal_vec_adaflo_params,
-                                                            scratch_data.get_matrix_free(),
-                                                            preconditioner,
-                                                            projection_matrix,
-                                                            ilu_projection_matrix);
+  template <int dim>
+  void
+  NormalVectorOperationAdaflo<dim>::create_operator()
+  {
+    normal_vec_operation = std::make_shared<LevelSetOKZSolverComputeNormal<dim>>(
+      normal_vector_field,
+      rhs,
+      advected_field,
+      scratch_data.get_cell_sizes(),
+      epsilon_used,
+      cell_diameter_min,
+      scratch_data.get_constraint(normal_vec_adaflo_params.dof_index_normal),
+      normal_vec_adaflo_params,
+      scratch_data.get_matrix_free(),
+      preconditioner,
+      projection_matrix,
+      ilu_projection_matrix);
   }
 
   template <int dim>
@@ -69,6 +69,9 @@ namespace MeltPoolDG::NormalVector
                                 cell_diameter_max);
 
     epsilon_used = cell_diameter_max * normal_vec_adaflo_params.epsilon;
+
+    if (!normal_vec_operation)
+      create_operator();
 
     /**
      * initialize the preconditioner -->  @todo: currently not used in adaflo
@@ -152,19 +155,16 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperationAdaflo<dim>::set_adaflo_parameters(
     const NormalVectorData<double> &normal_vec_data,
-    const double                    reinit_scale_factor_epsilon,
+    const double                    epsilon,
     const int                       advec_diff_dof_idx,
     const int                       normal_vec_dof_idx,
     const int                       normal_vec_quad_idx)
   {
-    normal_vec_adaflo_params.dof_index_ls         = advec_diff_dof_idx;
-    normal_vec_adaflo_params.dof_index_normal     = normal_vec_dof_idx;
-    normal_vec_adaflo_params.quad_index           = normal_vec_quad_idx;
-    normal_vec_adaflo_params.damping_scale_factor = normal_vec_data.damping_scale_factor;
-    normal_vec_adaflo_params.epsilon =
-      reinit_scale_factor_epsilon / (scratch_data.is_FE_Q_iso_Q_1(advec_diff_dof_idx) ?
-                                       scratch_data.get_degree(advec_diff_dof_idx) :
-                                       1.);
+    normal_vec_adaflo_params.dof_index_ls            = advec_diff_dof_idx;
+    normal_vec_adaflo_params.dof_index_normal        = normal_vec_dof_idx;
+    normal_vec_adaflo_params.quad_index              = normal_vec_quad_idx;
+    normal_vec_adaflo_params.damping_scale_factor    = normal_vec_data.damping_scale_factor;
+    normal_vec_adaflo_params.epsilon                 = epsilon;
     normal_vec_adaflo_params.approximate_projections = false; // not used in adaflo
   }
 

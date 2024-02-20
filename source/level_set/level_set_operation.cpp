@@ -109,6 +109,7 @@ namespace MeltPoolDG::LevelSet
               scratch_data,
               base_in->parameters.reinit,
               base_in->parameters.normal_vec,
+              base_in->parameters.ls.n_subdivisions,
               reinit_time_iterator,
               reinit_dof_idx_in,
               ls_quad_idx_in,
@@ -167,8 +168,6 @@ namespace MeltPoolDG::LevelSet
 #endif
     else
       AssertThrow(false, ExcNotImplemented());
-
-    reinit();
   }
 
   /**

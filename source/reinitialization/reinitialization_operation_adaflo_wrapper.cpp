@@ -2,6 +2,8 @@
 #  include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 
+#  include <adaflo/util.h>
+
 namespace MeltPoolDG::Reinitialization
 {
   template <int dim>
@@ -15,23 +17,13 @@ namespace MeltPoolDG::Reinitialization
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , pcout(scratch_data.get_pcout(1))
+    , normal_vector_data(parameters.normal_vec)
+    , eps_cell_factor(parameters.reinit.scale_factor_epsilon / parameters.ls.n_subdivisions)
   {
     /**
      * set parameters of adaflo
      */
     set_adaflo_parameters(parameters, reinit_dof_idx, reinit_quad_idx, normal_dof_idx);
-    /*
-     * initialize normal_vector_operation from adaflo
-     */
-    normal_vector_operation_adaflo =
-      std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-        scratch_data,
-        reinit_dof_idx,
-        normal_dof_idx,
-        reinit_quad_idx,
-        level_set,
-        parameters.normal_vec,
-        parameters.reinit.scale_factor_epsilon);
 
     /*
      * setup lambda function to compute the normal vector
@@ -40,23 +32,19 @@ namespace MeltPoolDG::Reinitialization
       if (do_compute_normal && force_compute_normal)
         normal_vector_operation_adaflo->solve();
     };
+  }
 
-    /**
-     *  initialize the dof vectors and compute the preconditioner
-     */
-    reinit();
-
-    epsilon_used =
-      cell_diameter_max * parameters.reinit.scale_factor_epsilon / parameters.ls.n_subdivisions;
-    /*
-     * initialize reinitialization operation from adaflo
-     */
+  template <int dim>
+  void
+  ReinitializationOperationAdaflo<dim>::create_operator()
+  {
+    // std::cout <<
     reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
       normal_vector_operation_adaflo->get_solution_normal_vector(),
       scratch_data.get_cell_sizes(),
       epsilon_used,
       cell_diameter_min,
-      scratch_data.get_constraint(reinit_dof_idx),
+      scratch_data.get_constraint(reinit_params_adaflo.dof_index_ls),
       increment,
       level_set,
       rhs,
@@ -70,25 +58,26 @@ namespace MeltPoolDG::Reinitialization
 
   template <int dim>
   void
+  ReinitializationOperationAdaflo<dim>::create_normal_vector_operator()
+  {
+    normal_vector_operation_adaflo =
+      std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
+        scratch_data,
+        reinit_params_adaflo.dof_index_ls,
+        reinit_params_adaflo.dof_index_normal,
+        reinit_params_adaflo.quad_index,
+        level_set,
+        normal_vector_data,
+        eps_cell_factor);
+  }
+
+  template <int dim>
+  void
   ReinitializationOperationAdaflo<dim>::update_dof_idx(const unsigned int &reinit_dof_idx)
   {
     reinit_params_adaflo.dof_index_ls = reinit_dof_idx;
 
-    reinit_operation_adaflo = std::make_shared<LevelSetOKZSolverReinitialization<dim>>(
-      normal_vector_operation_adaflo->get_solution_normal_vector(),
-      scratch_data.get_cell_sizes(),
-      epsilon_used,
-      cell_diameter_min,
-      scratch_data.get_constraint(reinit_dof_idx),
-      increment,
-      level_set,
-      rhs,
-      pcout,
-      preconditioner,
-      last_concentration_range, // @todo
-      reinit_params_adaflo,
-      first_reinit_step,
-      scratch_data.get_matrix_free());
+    create_operator();
   }
 
   template <int dim>
@@ -102,6 +91,15 @@ namespace MeltPoolDG::Reinitialization
                                 cell_diameters,
                                 cell_diameter_min,
                                 cell_diameter_max);
+
+    if (!normal_vector_operation_adaflo)
+      create_normal_vector_operator();
+    if (!reinit_operation_adaflo)
+      {
+        epsilon_used = cell_diameter_max * eps_cell_factor;
+        create_operator();
+      }
+
     /**
      * initialize the preconditioner
      */

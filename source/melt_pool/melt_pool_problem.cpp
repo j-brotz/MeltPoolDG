@@ -1,25 +1,69 @@
-#include "meltpooldg/heat/laser_data.hpp"
-#include "meltpooldg/interface/parameters.hpp"
 #ifndef MELT_POOL_DG_DIM
 #  define MELT_POOL_DG_DIM 1
 #endif
 
-#include <deal.II/fe/fe_q_iso_q1.h>
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/geometry_info.h>
+#include <deal.II/base/mpi.templates.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/quadrature.h>
+#include <deal.II/base/table_handler.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/timer.h>
+#include <deal.II/base/vectorization.h>
 
+#include <deal.II/distributed/grid_refinement.h>
+
+#include <deal.II/dofs/dof_accessor.h>
+
+#include <deal.II/fe/fe_simplex_p.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/fe_values_extractors.h>
+#include <deal.II/fe/mapping_fe.h>
+#include <deal.II/fe/mapping_q.h>
+
+#include <deal.II/grid/tria_iterator.h>
+
+#include <deal.II/lac/vector.h>
+
+#include <deal.II/numerics/data_component_interpretation.h>
+#include <deal.II/numerics/error_estimator.h>
+#include <deal.II/numerics/vector_tools_boundary.h>
+#include <deal.II/numerics/vector_tools_common.h>
+#include <deal.II/numerics/vector_tools_integrate_difference.h>
+
+#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
-#include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
+#include <meltpooldg/heat/laser_data.hpp>
+#include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
-#include <meltpooldg/material/material.hpp>
+#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/amr.hpp>
+#include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/restart.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <ios>
+#include <iostream>
+#include <map>
+#include <sstream>
 
 namespace MeltPoolDG::MeltPool
 {
@@ -993,8 +1037,6 @@ namespace MeltPoolDG::MeltPool
     vel_dof_idx = flow_operation->get_dof_handler_idx_velocity();
 
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
-
-    setup_dof_system(base_in, false);
     /*
      *    initialize the levelset operation class
      *    and setup initial conditions
@@ -1012,6 +1054,25 @@ namespace MeltPoolDG::MeltPool
                                                          normal_dof_idx,
                                                          vel_dof_idx,
                                                          ls_dof_idx /* todo: ls_zero_bc_idx*/);
+    /*
+     * laser operation
+     */
+    if (base_in->parameters.laser.power > 0.0)
+      {
+        laser_operation = std::make_shared<Heat::LaserOperation<dim>>(
+          *scratch_data,
+          base_in->parameters,
+          &level_set_operation->get_level_set_as_heaviside(),
+          ls_dof_idx);
+        laser_operation->reset(base_in->parameters.time_stepping.start_time);
+      }
+
+    setup_dof_system(base_in, false);
+
+    level_set_operation->reinit();
+
+    if (laser_operation)
+      laser_operation->reinit();
 
     /*
      *    initialize the heat operation class
@@ -1210,15 +1271,6 @@ namespace MeltPoolDG::MeltPool
             temp_hanging_nodes_dof_idx);
       }
 
-    // setup laser
-    if (base_in->parameters.laser.power > 0)
-      {
-        laser_operation =
-          std::make_shared<Heat::LaserOperation<dim>>(*scratch_data, base_in->parameters);
-        laser_operation->reset(base_in->parameters.time_stepping.start_time);
-      }
-
-
     if (problem_specific_parameters.do_solidification)
       AssertThrow(
         melt_front_propagation,
@@ -1394,6 +1446,9 @@ namespace MeltPoolDG::MeltPool
                                                dof_handler_heat);
       }
 
+    if (laser_operation)
+      laser_operation->distribute_dofs(base_in->parameters.base);
+
       /*
        *    initialize the flow operation class
        */
@@ -1453,6 +1508,14 @@ namespace MeltPoolDG::MeltPool
                                                            temp_dof_idx,
                                                            temp_hanging_nodes_dof_idx);
 
+    if (laser_operation)
+      laser_operation->setup_constraints(
+        *scratch_data,
+        [&](const std::string &operation_name) -> const DirichletBoundaryConditions<dim> & {
+          return base_in->get_dirichlet_bc(operation_name);
+        },
+        base_in->get_periodic_bc());
+
     // TODO: add function to each operation to check the requirements on ScratchData
     scratch_data->build(problem_specific_parameters.do_heat_transfer,
                         (base_in->parameters.laser.impact_type ==
@@ -1479,6 +1542,8 @@ namespace MeltPoolDG::MeltPool
           melt_front_propagation->reinit();
         if (heat_operation)
           heat_operation->reinit();
+        if (laser_operation)
+          laser_operation->reinit();
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -1836,6 +1901,8 @@ namespace MeltPoolDG::MeltPool
         evaporation_operation->attach_output_vectors(data_out);
       if (heat_operation)
         heat_operation->attach_output_vectors(data_out);
+      if (laser_operation)
+        laser_operation->attach_output_vectors(data_out);
       if (darcy_operation)
         darcy_operation->attach_output_vectors(data_out);
 
@@ -2344,6 +2411,9 @@ namespace MeltPoolDG::MeltPool
       data.emplace_back(&dof_handler_heat, [&](std::vector<VectorType *> &vectors) {
         heat_operation->attach_vectors(vectors);
       });
+
+    if (laser_operation)
+      laser_operation->attach_vectors(data);
   }
 
   template <int dim>
@@ -2376,6 +2446,9 @@ namespace MeltPoolDG::MeltPool
      */
     if (heat_operation)
       heat_operation->distribute_constraints();
+
+    if (laser_operation)
+      laser_operation->distribute_constraints();
   }
 
   template <int dim>

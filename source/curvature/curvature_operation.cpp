@@ -31,8 +31,6 @@ namespace MeltPoolDG::Curvature
   {
     if (!curvature_operator)
       create_operator(solution_levelset);
-
-    reinit();
   }
 
   template <int dim>
@@ -252,41 +250,15 @@ namespace MeltPoolDG::Curvature
                                                                   curvature_data.do_narrow_band,
                                                                   &solution_levelset);
     /*
-     *  In case of a matrix-based simulation, setup the distributed sparsity pattern and
-     *  apply it to the system matrix. This functionality is part of the OperatorBase class.
-     */
-    if (!curvature_data.linear_solver.do_matrix_free)
-      {
-        curvature_operator->initialize_matrix_based(scratch_data);
-      }
-
-    curvature_operator->reinit();
-    /*
      * initialize preconditioner matrix-free
      */
     if (curvature_data.linear_solver.do_matrix_free)
-      {
-        preconditioner_matrixfree = std::make_shared<
-          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
-          scratch_data,
-          curv_dof_idx,
-          curvature_data.linear_solver.preconditioner_type,
-          *curvature_operator);
-        /*
-         * setup sparsity pattern of system matrix only if the latter is
-         * needed for computing the preconditioner
-         */
-        preconditioner_matrixfree->reinit();
-        /*
-         * precompute system matrix
-         */
-        if (curvature_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
-          diag_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_diagonal_preconditioner();
-        else
-          trilinos_preconditioner_matrixfree =
-            preconditioner_matrixfree->compute_trilinos_preconditioner();
-      }
+      preconditioner_matrixfree = std::make_shared<
+        Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+        scratch_data,
+        curv_dof_idx,
+        curvature_data.linear_solver.preconditioner_type,
+        *curvature_operator);
   }
 
   template class CurvatureOperation<1>;
