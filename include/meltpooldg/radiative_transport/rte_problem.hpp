@@ -1,12 +1,15 @@
 #pragma once
 
 #include <deal.II/base/function.h>
+#include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/tensor.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
@@ -17,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace MeltPoolDG::RadiativeTransport
 {
@@ -51,6 +55,9 @@ namespace MeltPoolDG::RadiativeTransport
     std::shared_ptr<Postprocessor<dim>>                  post_processor;
     std::unique_ptr<Profiling::ProfilingMonitor<double>> profiling_monitor;
 
+    Tensor<1, dim, double> laser_direction;
+    std::vector<double>    laser_direction_input_prm;
+
   public:
     RadiativeTransportProblem() = default;
 
@@ -59,6 +66,13 @@ namespace MeltPoolDG::RadiativeTransport
 
     std::string
     get_name() final;
+
+  protected:
+    void
+    add_parameters(dealii::ParameterHandler &) final;
+
+    void
+    check_input_parameters(Parameters<double> &) final;
 
   private:
     /*

@@ -18,12 +18,14 @@
   },
   "rte": {
     "rte verbosity level": "0",
-    "laser direction": "0.0,-1.0",
     "linear solver": {
       "do matrix free": "true",
       "abs tolerance": "1e-16",
       "preconditioner type": "AMG"
     }
+  },
+  "problem specific": {
+    "direction": "0.0,-1.0"
   },
   "paraview": {
     "paraview do output": "false"

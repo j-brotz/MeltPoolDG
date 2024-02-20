@@ -113,14 +113,7 @@ namespace MeltPoolDG
       ls.n_initial_reinit_steps = reinit.max_n_steps;
 
     laser.post(base.dimension, material);
-    /*
-     *  resize the laser direction according to the problem dimension TODO use laser.direction
-     */
-    if (rte.laser_direction.size() == 0)
-      {
-        rte.laser_direction.resize(base.dimension);
-        std::fill(rte.laser_direction.begin(), rte.laser_direction.end(), 0);
-      }
+
     // recoil pressure: set default value of activation temperature equal to the boiling
     // temperature
     if (dealii::numbers::is_invalid(recoil.activation_temperature))

@@ -63,6 +63,7 @@ namespace MeltPoolDG::Heat
         rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
           scratch_data,
           data_in.rte,
+          laser_direction,
           *heaviside_in,
           rte_dof_idx,
           rte_hanging_nodes_dof_idx,

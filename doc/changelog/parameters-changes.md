@@ -8,7 +8,21 @@ All notable changes of the input parameters will be documented in this file.
   "laser": {
 -    "laser center": ""
 +    "starting position": ""
-#    "direction": "0,0,-1"
++    "direction": "0,0,-1"
+  }
+}
+```
+- Make RTE direction a problem specific parameter
+```diff
+{
+  "rte": {
+-    "laser direction": ""
+  },
+  "base": {
+    "problem name": "radiative_transport"
+  },
+  "problem specific": {
++    "direction": "0,0,-1"
   }
 }
 ```

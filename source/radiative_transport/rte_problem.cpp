@@ -1,3 +1,5 @@
+#include <deal.II/base/point.h>
+
 #include <deal.II/distributed/grid_refinement.h>
 
 #include <deal.II/fe/fe_simplex_p.h>
@@ -11,9 +13,9 @@
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <sstream>
-#include <vector>
 
 
 namespace MeltPoolDG::RadiativeTransport
@@ -60,8 +62,44 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim>
   void
+  RadiativeTransportProblem<dim>::add_parameters(dealii::ParameterHandler &prm)
+  {
+    prm.enter_subsection("problem specific");
+    {
+      prm.add_parameter("direction", laser_direction_input_prm, "RTE direction.");
+    }
+    prm.leave_subsection();
+  }
+
+  template <int dim>
+  void
+  RadiativeTransportProblem<dim>::check_input_parameters(
+    Parameters<double> &parameters /*todo: could be made const*/)
+  {
+    (void)parameters;
+
+    // if the laser direction is not specified, set it to the negative dim-1 direction
+    if (laser_direction_input_prm.size() == 0)
+      laser_direction = -Point<dim>::unit_vector(dim - 1);
+    else
+      {
+        AssertThrow(laser_direction_input_prm.size() == dim,
+                    ExcMessage("There must be dim coordinates of the laser direction given."));
+
+        laser_direction = UtilityFunctions::to_point<dim>(laser_direction_input_prm.begin(),
+                                                          laser_direction_input_prm.end());
+
+        Assert(std::abs(laser_direction.norm() - 1.0) < 1e-8,
+               ExcMessage("The laser direction must be a unit vector"));
+      }
+  }
+
+  template <int dim>
+  void
   RadiativeTransportProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
   {
+    check_input_parameters(base_in->parameters);
+
     /*
      *  setup scratch data
      */
@@ -103,7 +141,6 @@ namespace MeltPoolDG::RadiativeTransport
     else
       rte_quad_idx =
         scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
-
     setup_dof_system(base_in, false);
 
     /*
@@ -121,6 +158,7 @@ namespace MeltPoolDG::RadiativeTransport
      */
     rte_operation = std::make_shared<RadiativeTransportOperation<dim>>(*scratch_data,
                                                                        base_in->parameters.rte,
+                                                                       laser_direction,
                                                                        heaviside,
                                                                        rte_dof_idx,
                                                                        rte_hanging_nodes_dof_idx,

@@ -23,6 +23,7 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportOperation<dim>::RadiativeTransportOperation(
     const ScratchData<dim>               &scratch_data_in,
     const RadiativeTransportData<double> &rte_data_in,
+    const Tensor<1, dim, double>         &laser_direction_in,
     const VectorType                     &heaviside_in,
     const unsigned int                    rte_dof_idx_in,
     const unsigned int                    rte_hanging_nodes_dof_idx_in,
@@ -30,21 +31,13 @@ namespace MeltPoolDG::RadiativeTransport
     const unsigned int                    hs_dof_idx_in)
     : scratch_data(scratch_data_in)
     , rte_data(rte_data_in)
+    , laser_direction(laser_direction_in)
     , heaviside(heaviside_in)
     , rte_dof_idx(rte_dof_idx_in)
     , rte_hanging_nodes_dof_idx(rte_hanging_nodes_dof_idx_in)
     , rte_quad_idx(rte_quad_idx_in)
     , hs_dof_idx(hs_dof_idx_in)
   {
-    // TODO: get from `LaserBase`
-    for (unsigned int i = 0; i < dim; i++)
-      {
-        laser_direction[i] = rte_data.laser_direction[i];
-      }
-    AssertThrow(laser_direction.norm() > 1e-16,
-                ExcZero("laser direction has zero norm. Please check .json input parameter file"));
-    laser_direction /= laser_direction.norm(); // normalize
-
     // matrix-based simulation is not supported
     AssertThrow(rte_data.linear_solver.do_matrix_free &&
                   rte_data.pseudo_time_stepping.linear_solver.do_matrix_free,
@@ -54,7 +47,7 @@ namespace MeltPoolDG::RadiativeTransport
      * operator init and setup preconditioner for matrix-free computation
      */
     rte_operator = std::make_unique<RadiativeTransportOperator<dim, double>>(
-      scratch_data, rte_data, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
+      scratch_data, rte_data, laser_direction, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
     preconditioner_matrixfree = std::make_shared<
       Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
       scratch_data, rte_dof_idx, rte_data.linear_solver.preconditioner_type, *rte_operator);
@@ -62,6 +55,7 @@ namespace MeltPoolDG::RadiativeTransport
     if (rte_data.predictor_type == RTEPredictorType::pseudo_time_stepping)
       pseudo_rte_operation = std::make_unique<PseudoRTEOperation<dim>>(scratch_data,
                                                                        rte_data,
+                                                                       laser_direction,
                                                                        heaviside,
                                                                        rte_dof_idx,
                                                                        rte_hanging_nodes_dof_idx,

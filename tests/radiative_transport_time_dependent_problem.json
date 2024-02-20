@@ -18,7 +18,6 @@
   },
   "rte": {
     "rte verbosity level": "3",
-    "laser direction": "0.0,-1.0",
     "predictor type": "pseudo_time_stepping",
     "pseudo time stepping": {
       "time stepping": {
@@ -34,6 +33,9 @@
   },
   "paraview": {
     "paraview do output": "false"
+  },
+  "problem specific": {
+    "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {
     "power": "0.1"

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/tensor.h>
+
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/interface/scratch_data.hpp>
@@ -51,6 +53,7 @@ namespace MeltPoolDG::RadiativeTransport
   public:
     PseudoRTEOperation(const ScratchData<dim>               &scratch_data_in,
                        const RadiativeTransportData<double> &rte_data_in,
+                       const Tensor<1, dim, double>         &laser_direction_in,
                        const VectorType                     &heaviside_in,
                        const unsigned int                    rte_dof_idx_in,
                        const unsigned int                    rte_hanging_nodes_dof_idx_in,
