@@ -33,7 +33,7 @@
   },
   "laser": {
     "laser power": "10.",
-    "laser center": "3e-4",
+    "starting position": "3e-4",
     "laser heat source model": "Gauss",
     "laser impact type": "interface_sharp",
     "laser gauss laser beam radius": "0.06e-3",

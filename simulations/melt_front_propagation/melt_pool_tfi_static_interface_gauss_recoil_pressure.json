@@ -48,7 +48,7 @@
   },
   "laser": {
     "laser power": "15.",
-    "laser center": "0.3e-3,0.0",
+    "starting position": "0.3e-3,0.0",
     "laser do move": "false",
     "laser heat source model": "Gauss",
     "laser impact type": "interface",

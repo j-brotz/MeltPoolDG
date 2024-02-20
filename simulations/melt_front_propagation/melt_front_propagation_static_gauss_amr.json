@@ -33,7 +33,7 @@
   },
   "laser": {
     "laser power": "30.",
-    "laser center": "0.0,0.0",
+    "starting position": "0.0,0.0",
     "laser do move": "false",
     "laser heat source model": "Gauss",
     "laser gauss laser beam radius": "0.06e-3",
