@@ -1,11 +1,17 @@
+#include <deal.II/base/exceptions.h>
+
 #include <meltpooldg/heat/laser_heat_source_uniform.hpp>
+
+#include <meltpooldg/heat/laser_utilities.h>
 
 namespace MeltPoolDG::Heat
 {
   template <int dim>
   LaserHeatSourceUniform<dim>::LaserHeatSourceUniform(
+    const Tensor<1, dim, double>                      &laser_direction_in,
     const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data)
     : LaserHeatSourceBase<dim>(delta_approximation_phase_weighted_data)
+    , laser_direction(laser_direction_in)
   {}
 
   template <int dim>
@@ -29,15 +35,7 @@ namespace MeltPoolDG::Heat
     const double                  delta_value,
     const double /*heaviside*/) const
   {
-    // assume laser direction coincides with the negative dim-1 direction
-    const double projection_factor = std::invoke([&]() {
-      const double fac = normal_vector * -Point<dim>::unit_vector(dim - 1);
-      if (fac < 0.0)
-        return 0.0;
-      return fac;
-    });
-
-    return projection_factor * delta_value * power_density;
+    return compute_projection_factor(laser_direction, normal_vector) * delta_value * power_density;
   }
 
   template class LaserHeatSourceUniform<1>;

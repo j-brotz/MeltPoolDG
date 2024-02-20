@@ -6,6 +6,7 @@
 #pragma once
 
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
@@ -41,18 +42,18 @@ namespace MeltPoolDG::Heat
     const ScratchData<dim> &scratch_data;
 
     // Laser parameters
-    const LaserData<double> laser_data;
+    const LaserData<double> &laser_data;
 
     // Material parameters
-    const MaterialData<double> material;
+    const MaterialData<double> &material;
 
-    // Laser position defined as spot center of the laser beam
+    // current laser position defined as spot center of the laser beam
     Point<dim> laser_position;
-
-    // Current time
+    // current unit laser direction vector
+    Tensor<1, dim> laser_direction;
+    // current time
     double current_time;
-
-    // Current intensity of the laser (between 0 and 1)
+    // current intensity of the laser (between 0 and 1)
     double laser_intensity;
 
     // Requested laser model

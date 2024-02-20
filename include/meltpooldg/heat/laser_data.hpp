@@ -1,6 +1,7 @@
 #pragma once
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
 
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
 #include <meltpooldg/material/material_data.hpp>
@@ -48,9 +49,15 @@ namespace MeltPoolDG
 
     bool   do_move    = false;
     number scan_speed = 0.0;
+
     template <int dim>
-    Point<dim>
+    Point<dim, number>
     get_starting_position() const;
+
+    // return unit direction vector
+    template <int dim>
+    Tensor<1, dim, number>
+    get_direction() const;
 
     LaserImpactType impact_type = LaserImpactType::volumetric;
 
@@ -88,5 +95,6 @@ namespace MeltPoolDG
 
   private:
     std::vector<number> starting_position; // default value will be set in post()
+    std::vector<number> direction;
   };
 } // namespace MeltPoolDG

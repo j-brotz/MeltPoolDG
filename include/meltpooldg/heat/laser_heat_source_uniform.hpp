@@ -1,7 +1,12 @@
 #pragma once
 
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+
+#include <memory>
 
 namespace MeltPoolDG::Heat
 {
@@ -22,6 +27,7 @@ namespace MeltPoolDG::Heat
   {
   public:
     LaserHeatSourceUniform(
+      const Tensor<1, dim, double>                      &laser_direction_in,
       const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
 
   private:
@@ -43,6 +49,8 @@ namespace MeltPoolDG::Heat
                                           const Tensor<1, dim, double> &normal_vector,
                                           const double                  delta_value,
                                           const double                  heaviside) const final;
+
+    const Tensor<1, dim, double> &laser_direction;
 
     std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
   };

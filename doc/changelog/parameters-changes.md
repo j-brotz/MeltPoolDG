@@ -8,6 +8,7 @@ All notable changes of the input parameters will be documented in this file.
   "laser": {
 -    "laser center": ""
 +    "starting position": ""
+#    "direction": "0,0,-1"
   }
 }
 ```

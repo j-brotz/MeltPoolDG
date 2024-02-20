@@ -18,6 +18,7 @@ namespace MeltPoolDG::Heat
     , laser_data(data_in.laser)
     , material(data_in.material)
     , laser_position(laser_data.get_starting_position<dim>())
+    , laser_direction(laser_data.get_direction<dim>())
   {
     /*
      * Factory for the laser heat source model
@@ -31,13 +32,14 @@ namespace MeltPoolDG::Heat
       {
         laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
           laser_data.gauss,
+          laser_direction,
           material.two_phase_properties_transition_type,
           laser_data.delta_approximation_phase_weighted);
       }
     else if (laser_data.heat_source_model == LaserHeatSourceModel::uniform)
       {
         laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceUniform<dim>>(
-          laser_data.delta_approximation_phase_weighted);
+          laser_direction, laser_data.delta_approximation_phase_weighted);
       }
     else if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
       {

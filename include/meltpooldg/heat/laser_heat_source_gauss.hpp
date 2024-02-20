@@ -1,7 +1,12 @@
 #pragma once
 
+#include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+
+#include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
 #include <meltpooldg/material/material_data.hpp>
 
 namespace MeltPoolDG::Heat
@@ -39,6 +44,7 @@ namespace MeltPoolDG::Heat
   public:
     LaserHeatSourceGauss(
       const LaserData<double>::GaussData                &data_in,
+      const Tensor<1, dim, double>                      &laser_direction_in,
       const TwoPhaseFluidPropertiesTransitionType       &variable_properties_over_interface,
       const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
 
@@ -106,7 +112,9 @@ namespace MeltPoolDG::Heat
     double
     power_density_interfacial(const double radius, const double power) const;
 
-    const LaserData<double>::GaussData data;
+    const LaserData<double>::GaussData &data;
+
+    const Tensor<1, dim, double> &laser_direction;
 
     const TwoPhaseFluidPropertiesTransitionType variable_properties_over_interface;
 
