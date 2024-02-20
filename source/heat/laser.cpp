@@ -6,7 +6,6 @@
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/heat/laser_heat_source_uniform.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -18,8 +17,7 @@ namespace MeltPoolDG::Heat
     : scratch_data(scratch_data_in)
     , laser_data(data_in.laser)
     , material(data_in.material)
-    , laser_position(
-        UtilityFunctions::to_point<dim>(laser_data.center.begin(), laser_data.center.end()))
+    , laser_position(laser_data.get_starting_position<dim>())
   {
     /*
      * Factory for the laser heat source model

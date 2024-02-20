@@ -673,15 +673,12 @@ namespace MeltPoolDG
         void
         set_field_conditions() override
         {
-          AssertThrow(this->parameters.laser.center.size() == dim,
-                      ExcMessage("There must be dim coordinates "
-                                 "of the laser center given."));
-
-          this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
-                                           Point<dim>::unit_vector(dim - 1) *
-                                             this->parameters.laser.center[dim - 1],
-                                           -Point<dim>::unit_vector(dim - 1)),
-                                         "signed_distance");
+          this->attach_initial_condition(
+            std::make_shared<Functions::SignedDistance::Plane<dim>>(
+              Point<dim>::unit_vector(dim - 1) *
+                this->parameters.laser.template get_starting_position<dim>()[dim - 1],
+              -Point<dim>::unit_vector(dim - 1)),
+            "signed_distance");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(
                                            new Functions::ZeroFunction<dim>(dim)),
                                          "navier_stokes_u");

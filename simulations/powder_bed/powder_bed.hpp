@@ -206,7 +206,7 @@ namespace MeltPoolDG::Simulation::PowderBed
         {
           Point<dim> laser_center;
           for (int i = 0; i < dim; i++)
-            laser_center[i] = this->parameters.laser.center[i];
+            laser_center[i] = this->parameters.laser.template get_starting_position<dim>()[i];
           laser_center[dim - 1] = domain_z_max;
           this->attach_dirichlet_boundary_condition(
             upper_bc,
