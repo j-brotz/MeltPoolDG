@@ -3,7 +3,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 
-#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
@@ -61,7 +61,7 @@ namespace MeltPoolDG
 
     LaserImpactType impact_type = LaserImpactType::volumetric;
 
-    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+    LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
 
     struct GaussData
     {
@@ -91,7 +91,9 @@ namespace MeltPoolDG
     add_parameters(ParameterHandler &prm);
 
     void
-    post(const unsigned int dim, const MaterialData<number> &material);
+    post(const unsigned int dim,
+         const bool         heat_use_volume_specific_thermal_capacity_for_phase_interpolation,
+         const MaterialData<number> &material);
 
   private:
     std::vector<number> starting_position; // default value will be set in post()

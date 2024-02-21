@@ -107,7 +107,10 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  LaserData<number>::post(const unsigned int dim, const MaterialData<number> &material)
+  LaserData<number>::post(
+    const unsigned int          dim,
+    const bool                  heat_use_volume_specific_thermal_capacity_for_phase_interpolation,
+    const MaterialData<number> &material)
   {
     // if the laser starting position is not specified, set it to the origin
     if (starting_position.size() == 0)
@@ -138,7 +141,12 @@ namespace MeltPoolDG
       }
 
     // set automatic weights of asymmetric delta functions, if requested
-    delta_approximation_phase_weighted.set_parameters(material);
+    if (heat_use_volume_specific_thermal_capacity_for_phase_interpolation)
+      delta_approximation_phase_weighted.set_parameters(
+        material, LevelSet::ParameterScaledInterpolationType::volume_specific_heat_capacity);
+    else
+      delta_approximation_phase_weighted.set_parameters(
+        material, LevelSet::ParameterScaledInterpolationType::specific_heat_capacity_times_density);
   }
 
   template <typename number>

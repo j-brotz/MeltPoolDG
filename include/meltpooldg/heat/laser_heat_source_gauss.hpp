@@ -5,7 +5,7 @@
 
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
-#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 
 namespace MeltPoolDG::Heat
@@ -42,10 +42,11 @@ namespace MeltPoolDG::Heat
   {
   public:
     LaserHeatSourceGauss(
-      const LaserData<double>::GaussData                &data_in,
-      const Tensor<1, dim, double>                      &laser_direction_in,
-      const TwoPhaseFluidPropertiesTransitionType       &variable_properties_over_interface,
-      const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
+      const LaserData<double>::GaussData          &data_in,
+      const Tensor<1, dim, double>                &laser_direction_in,
+      const TwoPhaseFluidPropertiesTransitionType &variable_properties_over_interface,
+      const LevelSet::DeltaApproximationPhaseWeightedData<double>
+        &delta_approximation_phase_weighted_data);
 
     /**
      * Compute a DoF vector and assemble it into @p heat_rhs, considering a Gaussian laser heat

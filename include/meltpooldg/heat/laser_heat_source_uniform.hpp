@@ -4,7 +4,7 @@
 #include <deal.II/base/tensor.h>
 
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
-#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 
 #include <memory>
 
@@ -26,9 +26,9 @@ namespace MeltPoolDG::Heat
   class LaserHeatSourceUniform : public LaserHeatSourceBase<dim>
   {
   public:
-    LaserHeatSourceUniform(
-      const Tensor<1, dim, double>                      &laser_direction_in,
-      const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
+    LaserHeatSourceUniform(const Tensor<1, dim, double> &laser_direction_in,
+                           const LevelSet::DeltaApproximationPhaseWeightedData<double>
+                             &delta_approximation_phase_weighted_data);
 
   private:
     /**
@@ -52,6 +52,6 @@ namespace MeltPoolDG::Heat
 
     const Tensor<1, dim, double> &laser_direction;
 
-    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
   };
 } // namespace MeltPoolDG::Heat

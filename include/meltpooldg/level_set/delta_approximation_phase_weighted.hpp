@@ -1,10 +1,10 @@
 #pragma once
 #include <deal.II/base/vectorization.h>
 
-#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
@@ -138,7 +138,7 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      return LevelSet::Tools::interpolate(level_set_heaviside, w_g, w_h) * correction_factor;
+      return Tools::interpolate(level_set_heaviside, w_g, w_h) * correction_factor;
     }
 
     const number w_g;
@@ -220,7 +220,7 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      const auto temp = LevelSet::Tools::interpolate(level_set_heaviside, w_g, w_h);
+      const auto temp = Tools::interpolate(level_set_heaviside, w_g, w_h);
       return temp * temp * correction_factor;
     }
 
@@ -306,8 +306,8 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      const auto w_1 = LevelSet::Tools::interpolate(level_set_heaviside, w_1g, w_1h);
-      const auto w_2 = LevelSet::Tools::interpolate(level_set_heaviside, w_2g, w_2h);
+      const auto w_1 = Tools::interpolate(level_set_heaviside, w_1g, w_1h);
+      const auto w_2 = Tools::interpolate(level_set_heaviside, w_2g, w_2h);
       return w_1 * w_2 * correction_factor;
     }
 
@@ -402,8 +402,7 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      return LevelSet::Tools::interpolate_reciprocal(level_set_heaviside, w_g, w_h) *
-             correction_factor;
+      return Tools::interpolate_reciprocal(level_set_heaviside, w_g, w_h) * correction_factor;
     }
 
     const number w_g;
@@ -534,8 +533,8 @@ namespace MeltPoolDG
     inline value_type
     compute_weight_internal(const value_type &level_set_heaviside) const
     {
-      const auto w_1 = LevelSet::Tools::interpolate_reciprocal(level_set_heaviside, w_1g, w_1h);
-      const auto w_2 = LevelSet::Tools::interpolate(level_set_heaviside, w_2g, w_2h);
+      const auto w_1 = Tools::interpolate_reciprocal(level_set_heaviside, w_1g, w_1h);
+      const auto w_2 = Tools::interpolate(level_set_heaviside, w_2g, w_2h);
       return w_1 * w_2 * correction_factor;
     }
 
@@ -586,4 +585,4 @@ namespace MeltPoolDG
       }
     return nullptr;
   }
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::LevelSet

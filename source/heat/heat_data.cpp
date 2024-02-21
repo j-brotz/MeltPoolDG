@@ -85,10 +85,13 @@ namespace MeltPoolDG::Heat
                          const unsigned int          base_verbosity_level,
                          const MaterialData<number> &material)
   {
-    // TODO check in interpolate rho times cp
-
     // set automatic weights of asymmetric delta functions, if requested
-    delta_approximation_phase_weighted.set_parameters(material);
+    if (use_volume_specific_thermal_capacity_for_phase_interpolation)
+      delta_approximation_phase_weighted.set_parameters(
+        material, LevelSet::ParameterScaledInterpolationType::volume_specific_heat_capacity);
+    else
+      delta_approximation_phase_weighted.set_parameters(
+        material, LevelSet::ParameterScaledInterpolationType::specific_heat_capacity_times_density);
 
     // set heat degree equal to base degree if it is not set
     if (degree < 1)

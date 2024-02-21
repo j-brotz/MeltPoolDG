@@ -8,7 +8,7 @@
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/interface/base_data.hpp>
-#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
@@ -141,9 +141,9 @@ namespace MeltPoolDG
     number temperature_dependent_surface_tension_coefficient = 0.0;
     number reference_temperature                             = numbers::invalid_double;
     number coefficient_residual_fraction                     = 0.0;
-    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
-    bool                                        zero_surface_tension_in_solid = false;
-    TimeStepLimitData<number>                   time_step_limit;
+    LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+    bool                                                  zero_surface_tension_in_solid = false;
+    TimeStepLimitData<number>                             time_step_limit;
   };
 
   template <typename number = double>

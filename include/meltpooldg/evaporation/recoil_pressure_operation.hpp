@@ -176,7 +176,7 @@ namespace MeltPoolDG::Evaporation
 
     std::unique_ptr<const RecoilPressureModelBase<double>> recoil_pressure_model;
 
-    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
 
   public:
     RecoilPressureOperation(const ScratchData<dim>   &scratch_data_in,

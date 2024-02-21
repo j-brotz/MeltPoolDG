@@ -1,5 +1,5 @@
 #pragma once
-#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
 
@@ -51,7 +51,7 @@ namespace MeltPoolDG::Evaporation
     RegularizedRecoilPressureTemperatureEvaluationType interface_distributed_flux_type =
       RegularizedRecoilPressureTemperatureEvaluationType::local_value;
     // Choose the delta-function for computing the continuum interface force.
-    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+    LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     // Choose the model type to compute the recoil pressure:
     //   * phenomenological (default)
     //   * consistent

@@ -111,11 +111,15 @@ namespace MeltPoolDG
       recoil.activation_temperature = material.boiling_temperature;
 
     // set automatic weights of asymmetric delta functions, if requested
-    surface_tension.delta_approximation_phase_weighted.set_parameters(material);
-    recoil.delta_approximation_phase_weighted.set_parameters(material);
+    surface_tension.delta_approximation_phase_weighted.set_parameters(
+      material, LevelSet::ParameterScaledInterpolationType::density);
+    recoil.delta_approximation_phase_weighted.set_parameters(
+      material, LevelSet::ParameterScaledInterpolationType::density);
 
     heat.post(base.degree, base.verbosity_level, material);
-    laser.post(base.dimension, material);
+    laser.post(base.dimension,
+               heat.use_volume_specific_thermal_capacity_for_phase_interpolation,
+               material);
     ls.post(reinit.max_n_steps);
 
     // set default values dependent on predictor type
