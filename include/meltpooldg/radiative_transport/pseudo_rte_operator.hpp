@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/tensor.h>
+
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
@@ -68,13 +70,13 @@ namespace MeltPoolDG::RadiativeTransport
 
     const RadiativeTransportData<double> &rte_data;
 
+    const Tensor<1, dim, number> &laser_direction;
+
     const VectorType &heaviside;
 
     const unsigned int rte_dof_idx;
     const unsigned int rte_quad_idx;
     const unsigned int hs_dof_idx;
-
-    Tensor<1, dim, number> laser_direction;
 
     const double pure_gas_level_set;
     const double pure_liquid_level_set;
@@ -82,6 +84,7 @@ namespace MeltPoolDG::RadiativeTransport
   public:
     PseudoRTEOperator(const ScratchData<dim>               &scratch_data_in,
                       const RadiativeTransportData<double> &rte_data_in,
+                      const Tensor<1, dim, number>         &laser_direction_in,
                       const VectorType                     &heaviside_in,
                       const unsigned int                    rte_dof_idx_in,
                       const unsigned int                    rte_quad_idx_in,

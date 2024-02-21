@@ -1,6 +1,32 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-02-20
+- Refactor laser data
+```diff
+{
+  "laser": {
+-    "laser center": ""
++    "starting position": ""
++    "direction": "0,0,-1"
+  }
+}
+```
+- Make RTE direction a problem specific parameter
+```diff
+{
+  "rte": {
+-    "laser direction": ""
+  },
+  "base": {
+    "problem name": "radiative_transport"
+  },
+  "problem specific": {
++    "direction": "0,0,-1"
+  }
+}
+```
+
 ## 2024-02-14
 - Change parameter back to bool to choose to interpolate the volumetric thermal
 capacity and remove specific interpolation for thermal conductivity

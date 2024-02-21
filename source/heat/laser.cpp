@@ -6,7 +6,6 @@
 #include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/heat/laser_heat_source_uniform.hpp>
 #include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -18,8 +17,8 @@ namespace MeltPoolDG::Heat
     : scratch_data(scratch_data_in)
     , laser_data(data_in.laser)
     , material(data_in.material)
-    , laser_position(
-        UtilityFunctions::to_point<dim>(laser_data.center.begin(), laser_data.center.end()))
+    , laser_position(laser_data.get_starting_position<dim>())
+    , laser_direction(laser_data.get_direction<dim>())
   {
     /*
      * Factory for the laser heat source model
@@ -33,13 +32,14 @@ namespace MeltPoolDG::Heat
       {
         laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
           laser_data.gauss,
+          laser_direction,
           material.two_phase_properties_transition_type,
           laser_data.delta_approximation_phase_weighted);
       }
     else if (laser_data.heat_source_model == LaserHeatSourceModel::uniform)
       {
         laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceUniform<dim>>(
-          laser_data.delta_approximation_phase_weighted);
+          laser_direction, laser_data.delta_approximation_phase_weighted);
       }
     else if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
       {
@@ -63,6 +63,7 @@ namespace MeltPoolDG::Heat
         rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
           scratch_data,
           data_in.rte,
+          laser_direction,
           *heaviside_in,
           rte_dof_idx,
           rte_hanging_nodes_dof_idx,

@@ -14,8 +14,9 @@ namespace MeltPoolDG::RadiativeTransport
   template <int dim>
   PseudoRTEOperation<dim>::PseudoRTEOperation(const ScratchData<dim>               &scratch_data_in,
                                               const RadiativeTransportData<double> &rte_data_in,
-                                              const VectorType                     &heaviside_in,
-                                              const unsigned int                    rte_dof_idx_in,
+                                              const Tensor<1, dim, double> &laser_direction_in,
+                                              const VectorType             &heaviside_in,
+                                              const unsigned int            rte_dof_idx_in,
                                               const unsigned int rte_hanging_nodes_dof_idx_in,
                                               const unsigned int rte_quad_idx_in,
                                               const unsigned int hs_dof_idx_in)
@@ -29,8 +30,13 @@ namespace MeltPoolDG::RadiativeTransport
     , solution_history(2)
     , pseudo_time_iterator(rte_data.pseudo_time_stepping.time_stepping_data)
   {
-    pseudo_rte_operator = std::make_unique<PseudoRTEOperator<dim, double>>(
-      scratch_data, rte_data_in, heaviside, rte_dof_idx, rte_quad_idx, hs_dof_idx);
+    pseudo_rte_operator       = std::make_unique<PseudoRTEOperator<dim, double>>(scratch_data,
+                                                                           rte_data_in,
+                                                                           laser_direction_in,
+                                                                           heaviside,
+                                                                           rte_dof_idx,
+                                                                           rte_quad_idx,
+                                                                           hs_dof_idx);
     preconditioner_matrixfree = std::make_shared<
       Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
       scratch_data,

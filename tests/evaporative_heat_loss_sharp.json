@@ -50,7 +50,7 @@
   },
   "laser": {
     "laser power": "0",
-    "laser center": "0.0,0.00000",
+    "starting position": "0.0,0.00000",
     "laser scan speed": "0.003",
     "laser do move": "false",
     "laser heat source model": "Gauss",

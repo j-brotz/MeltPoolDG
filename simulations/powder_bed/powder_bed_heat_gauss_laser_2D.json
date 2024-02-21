@@ -16,7 +16,7 @@
     "use volume-specific thermal capacity for phase interpolation": "true"
   },
   "laser": {
-    "laser center": "0.0,0.0",
+    "starting position": "0.0,0.0",
     "laser gauss absorptivity gas": "0.5",
     "laser gauss absorptivity liquid": "0.5",
     "laser gauss laser beam radius": "70e-6",

@@ -16,15 +16,14 @@
     "use volume-specific thermal capacity for phase interpolation": "true"
   },
   "laser": {
-    "laser center": "0.0,0.0",
-    "laser RTE laser beam radius": "70e-6",
+    "starting position": "0.0,0.0",
     "laser heat source model": "RTE",
+    "laser gauss laser beam radius": "70e-6",
     "laser impact type": "interface",
     "laser power": "100"
   },
   "rte": {
     "rte verbosity level": "5",
-    "laser direction": "0.0,-1.0",
     "absorptivity type": "gradient_based",
     "linear solver": {
       "monitor type": "all",

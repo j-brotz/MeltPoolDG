@@ -15,7 +15,6 @@
   },
   "rte": {
     "rte verbosity level": "0",
-    "laser direction": "-1.0",
     "avoid div zero constant": "1e-16",
     "linear solver": {
       "solver type": "GMRES",

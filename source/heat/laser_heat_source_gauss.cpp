@@ -1,14 +1,25 @@
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/utilities.h>
+
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
+#include <meltpooldg/heat/laser_utilities.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
+
+#include <cmath>
 
 namespace MeltPoolDG::Heat
 {
+  using namespace dealii;
+
   template <int dim>
   LaserHeatSourceGauss<dim>::LaserHeatSourceGauss(
     const LaserData<double>::GaussData                &data_in,
+    const Tensor<1, dim, double>                      &laser_direction_in,
     const TwoPhaseFluidPropertiesTransitionType       &variable_properties_over_interface,
     const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data)
     : LaserHeatSourceBase<dim>(delta_approximation_phase_weighted_data)
     , data(data_in)
+    , laser_direction(laser_direction_in)
     , variable_properties_over_interface(variable_properties_over_interface)
     , vol_peak_power_density_factor(
         1. / Utilities::fixed_power<3>(data.laser_beam_radius * std::sqrt(numbers::PI / 2)))
@@ -39,21 +50,12 @@ namespace MeltPoolDG::Heat
     const double                  delta_value,
     const double                  heaviside) const
   {
-    double distance_normal_to_laser_axis = 0;
+    // compute the projected distance from the laser center line, defined by the laser_position and
+    // the laser_direction.
+    const auto distance_normal_to_laser_axis =
+      compute_distance_to_line(position, laser_position, laser_direction);
 
-    if (dim > 1)
-      {
-        // Calculate the projected distance in x (2D) or x and y (3D) direction.
-        // To this end, we calculate a projected point lying in the laser plane.
-        Point<dim> projected_position(position);
-        projected_position[dim - 1]   = laser_position[dim - 1];
-        distance_normal_to_laser_axis = laser_position.distance(projected_position);
-      }
-
-    // assume laser direction coincides with the negative dim-1 direction
-    double projection_factor = normal_vector * -Point<dim>::unit_vector(dim - 1);
-    if (projection_factor < 0.0)
-      projection_factor = 0.0;
+    const auto projection_factor = compute_projection_factor(laser_direction, normal_vector);
 
     const double weight =
       (variable_properties_over_interface != TwoPhaseFluidPropertiesTransitionType::sharp) ?

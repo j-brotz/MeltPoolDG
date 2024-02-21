@@ -15,12 +15,14 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportOperator<dim, number>::RadiativeTransportOperator(
     const ScratchData<dim>               &scratch_data_in,
     const RadiativeTransportData<double> &rte_data_in,
+    const Tensor<1, dim, number>         &laser_direction_in,
     const VectorType                     &heaviside_in,
     const unsigned int                    rte_dof_idx_in,
     const unsigned int                    rte_quad_idx_in,
     const unsigned int                    hs_dof_idx_in)
     : scratch_data(scratch_data_in)
     , rte_data(rte_data_in)
+    , laser_direction(laser_direction_in)
     , heaviside(heaviside_in)
     , rte_dof_idx(rte_dof_idx_in)
     , rte_quad_idx(rte_quad_idx_in)
@@ -28,14 +30,6 @@ namespace MeltPoolDG::RadiativeTransport
     , pure_liquid_level_set(1. - rte_data.avoid_singular_matrix_absorptivity)
   {
     this->reset_dof_index(rte_dof_idx_in);
-
-    for (unsigned int i = 0; i < dim; i++)
-      {
-        laser_direction[i] = rte_data_in.laser_direction[i];
-      }
-    AssertThrow(laser_direction.norm() > 1e-16,
-                ExcZero("laser direction has zero norm. Please check .json input parameter file"));
-    laser_direction /= laser_direction.norm(); // normalize
   }
 
   template <int dim, typename number>

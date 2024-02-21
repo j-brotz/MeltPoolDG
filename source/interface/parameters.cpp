@@ -1,4 +1,3 @@
-#include "meltpooldg/radiative_transport/radiative_transport_data.hpp"
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -113,20 +112,8 @@ namespace MeltPoolDG
     if (ls.do_reinitialization && ls.n_initial_reinit_steps < 0.0)
       ls.n_initial_reinit_steps = reinit.max_n_steps;
 
-    // set the laser center if it is not specified
-    if (laser.center.size() == 0)
-      {
-        laser.center.resize(base.dimension);
-        std::fill(laser.center.begin(), laser.center.end(), 0);
-      }
-    /*
-     *  resize the laser direction according to the problem dimension
-     */
-    if (rte.laser_direction.size() == 0)
-      {
-        rte.laser_direction.resize(base.dimension);
-        std::fill(rte.laser_direction.begin(), rte.laser_direction.end(), 0);
-      }
+    laser.post(base.dimension, material);
+
     // recoil pressure: set default value of activation temperature equal to the boiling
     // temperature
     if (dealii::numbers::is_invalid(recoil.activation_temperature))
@@ -134,7 +121,6 @@ namespace MeltPoolDG
 
     // set automatic weights of asymmetric delta functions, if requested
     heat.delta_approximation_phase_weighted.set_parameters(material);
-    laser.delta_approximation_phase_weighted.set_parameters(material);
     surface_tension.delta_approximation_phase_weighted.set_parameters(material);
     recoil.delta_approximation_phase_weighted.set_parameters(material);
 

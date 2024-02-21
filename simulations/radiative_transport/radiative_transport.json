@@ -18,7 +18,6 @@
   },
   "rte": {
     "rte verbosity level": "3",
-    "laser direction": "0.0,-1.0",
     "absorptivity gas": "0",
     "absorptivity liquid": "10.0 ",
     "avoid div zero constant": "1e-10",
@@ -35,6 +34,9 @@
       "max iterations": "10000",
       "preconditioner type": "ILU"
     }
+  },
+  "problem specific": {
+    "direction": "0.0,-1.0"
   },
   "paraview": {
     "paraview do output": "true"

@@ -439,26 +439,26 @@ namespace MeltPoolDG
     bool parameters_read = false;
 
   public:
-    BaseData<number>                        base;
-    TimeSteppingData<number>                time_stepping;
-    AdaptiveMeshingData                     amr;
-    LevelSetData<number>                    ls;
-    ReinitializationData<number>            reinit;
-    AdvectionDiffusionData<number>          advec_diff;
-    NormalVectorData<number>                normal_vec;
-    CurvatureData<number>                   curv;
-    HeatData<number>                        heat;
-    LaserData<number>                       laser;
-    RadiativeTransportData<number>          rte;
-    MeltPoolData<number>                    mp;
-    SurfaceTensionData<number>              surface_tension;
-    DarcyDampingData<number>                darcy;
-    Evaporation::RecoilPressureData<number> recoil;
-    EvaporationData<number>                 evapor;
-    MaterialData<number>                    material;
-    ParaviewData<number>                    paraview;
-    ProfilingData<number>                   profiling;
-    RestartData<number>                     restart;
-    Flow::AdafloWrapperParameters           adaflo_params;
+    BaseData<number>                                   base;
+    TimeSteppingData<number>                           time_stepping;
+    AdaptiveMeshingData                                amr;
+    LevelSetData<number>                               ls;
+    ReinitializationData<number>                       reinit;
+    AdvectionDiffusionData<number>                     advec_diff;
+    NormalVectorData<number>                           normal_vec;
+    CurvatureData<number>                              curv;
+    HeatData<number>                                   heat;
+    LaserData<number>                                  laser;
+    RadiativeTransport::RadiativeTransportData<number> rte;
+    MeltPoolData<number>                               mp;
+    SurfaceTensionData<number>                         surface_tension;
+    DarcyDampingData<number>                           darcy;
+    Evaporation::RecoilPressureData<number>            recoil;
+    EvaporationData<number>                            evapor;
+    MaterialData<number>                               material;
+    ParaviewData<number>                               paraview;
+    ProfilingData<number>                              profiling;
+    RestartData<number>                                restart;
+    Flow::AdafloWrapperParameters                      adaflo_params;
   };
 } // namespace MeltPoolDG

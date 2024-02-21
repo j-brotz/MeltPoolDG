@@ -2,7 +2,8 @@
 #  define MELT_POOL_DG_DIM 1
 #endif
 
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <deal.II/base/exceptions.h>
+
 // simulations
 #include "advection_diffusion/advection_diffusion.hpp"
 #include "advection_diffusion/advection_diffusion_user_output.hpp"
