@@ -33,7 +33,7 @@ namespace MeltPoolDG
         starting_position,
         "Center coordinates of the laser beam starting position on the interface melt/gas.");
       prm.declare_alias("starting position", "laser center", true);
-      prm.add_parameter("laser scan speed", scan_speed, "Scan speed of the ");
+      prm.add_parameter("laser scan speed", scan_speed, "Scan speed of the laser");
       prm.add_parameter(
         "laser do move",
         do_move,
