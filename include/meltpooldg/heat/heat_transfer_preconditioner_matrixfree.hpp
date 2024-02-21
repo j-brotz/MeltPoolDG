@@ -8,7 +8,6 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_base.hpp>
 

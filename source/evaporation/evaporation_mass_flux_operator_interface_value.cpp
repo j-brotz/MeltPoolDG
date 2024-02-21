@@ -12,15 +12,15 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   EvaporationMassFluxOperatorInterfaceValue<dim>::EvaporationMassFluxOperatorInterfaceValue(
-    const ScratchData<dim>         &scratch_data,
-    const NearestPointData<double> &data,
-    const EvaporationModelBase     &evaporation_model,
-    const VectorType               &level_set_as_heaviside,
-    const VectorType               &distance,
-    const BlockVectorType          &normal_vector,
-    const unsigned int              ls_dof_idx_in,
-    const unsigned int              temp_hanging_nodes_dof_idx_in,
-    const unsigned int              evapor_mass_flux_dof_idx_in)
+    const ScratchData<dim>                   &scratch_data,
+    const LevelSet::NearestPointData<double> &data,
+    const EvaporationModelBase               &evaporation_model,
+    const VectorType                         &level_set_as_heaviside,
+    const VectorType                         &distance,
+    const BlockVectorType                    &normal_vector,
+    const unsigned int                        ls_dof_idx_in,
+    const unsigned int                        temp_hanging_nodes_dof_idx_in,
+    const unsigned int                        evapor_mass_flux_dof_idx_in)
     : scratch_data(scratch_data)
     , nearest_point_data(data)
     , evaporation_model(evaporation_model)

@@ -6,9 +6,10 @@
 #pragma once
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/material/material_data.hpp>
 
 namespace MeltPoolDG::Evaporation
 {

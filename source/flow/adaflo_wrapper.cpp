@@ -3,6 +3,7 @@
 
 #  include <deal.II/grid/grid_generator.h>
 
+#  include <meltpooldg/evaporation/evaporation_data.hpp>
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/dof_monitor.hpp>
@@ -113,7 +114,8 @@ namespace MeltPoolDG::Flow
 
     if (do_evaporative_mass_flux)
       {
-        if (parameters.evapor.formulation_source_term_continuity != InterfaceForceType::sharp)
+        if (parameters.evapor.formulation_source_term_continuity !=
+            Evaporation::InterfaceForceType::sharp)
           {
             AssertThrow(
               parameters.adaflo_params.params.beta_convective_term_momentum_balance == 0,

@@ -9,6 +9,7 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/curvature/curvature_operation_base.hpp>
+#include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>

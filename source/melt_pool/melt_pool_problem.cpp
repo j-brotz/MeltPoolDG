@@ -33,6 +33,7 @@
 #include <deal.II/numerics/vector_tools_common.h>
 #include <deal.II/numerics/vector_tools_integrate_difference.h>
 
+#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper.hpp>
 #include <meltpooldg/heat/laser_analytical_temperature_field.hpp>
@@ -40,6 +41,7 @@
 #include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
+#include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -160,8 +162,8 @@ namespace MeltPoolDG::MeltPool
 
             // Only if a spatially constant evaporative mass flux is given as an analytical
             // function, the time is needed to evaluate the function.
-            if (evaporation_operation &&
-                base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
+            if (evaporation_operation && base_in->parameters.evapor.evaporation_model ==
+                                           Evaporation::EvaporationModelType::constant)
               evaporation_operation->set_time(time_iterator->get_current_time());
 
             /******************************************************************************************
@@ -240,9 +242,12 @@ namespace MeltPoolDG::MeltPool
                         switch (base_in->parameters.evapor.level_set_source_term_type)
                           {
                             default:
-                            case EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy:
-                            case EvaporationLevelSetSourceTermType::interface_velocity_sharp:
-                              case EvaporationLevelSetSourceTermType::interface_velocity: {
+                            case Evaporation::EvaporationLevelSetSourceTermType::
+                              interface_velocity_sharp_heavy:
+                            case Evaporation::EvaporationLevelSetSourceTermType::
+                              interface_velocity_sharp:
+                              case Evaporation::EvaporationLevelSetSourceTermType::
+                                interface_velocity: {
                                 // Option 1: compute modified advection velocity due to evaporation
                                 if (problem_specific_parameters.do_extrapolate_coupling_terms)
                                   {
@@ -253,9 +258,10 @@ namespace MeltPoolDG::MeltPool
                                 interface_velocity += evaporation_operation->get_velocity();
 
                                 if (base_in->parameters.evapor.level_set_source_term_type ==
-                                      EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
+                                      Evaporation::EvaporationLevelSetSourceTermType::
+                                        interface_velocity_sharp ||
                                     base_in->parameters.evapor.level_set_source_term_type ==
-                                      EvaporationLevelSetSourceTermType::
+                                      Evaporation::EvaporationLevelSetSourceTermType::
                                         interface_velocity_sharp_heavy)
                                   {
                                     VectorType interface_velocity_interface;
@@ -263,12 +269,12 @@ namespace MeltPoolDG::MeltPool
                                     scratch_data->initialize_dof_vector(
                                       interface_velocity_interface, vel_dof_idx);
 
-                                    NearestPointData<double> nearest_point_data =
+                                    LevelSet::NearestPointData<double> nearest_point_data =
                                       base_in->parameters.ls.nearest_point;
 
                                     nearest_point_data.isocontour =
                                       (base_in->parameters.evapor.level_set_source_term_type !=
-                                       EvaporationLevelSetSourceTermType::
+                                       Evaporation::EvaporationLevelSetSourceTermType::
                                          interface_velocity_sharp_heavy) ?
                                         0 : /*distance at heaviside==1*/
                                         level_set_operation->get_distance_to_level_set()
@@ -298,7 +304,7 @@ namespace MeltPoolDG::MeltPool
                                 break;
                               }
 
-                            case EvaporationLevelSetSourceTermType::rhs:
+                            case Evaporation::EvaporationLevelSetSourceTermType::rhs:
                               // Option 2: use source term as rhs in the level set equation
                               scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
                               evaporation_operation->compute_level_set_source_term(
@@ -313,20 +319,23 @@ namespace MeltPoolDG::MeltPool
                     else
                       {
                         if (base_in->parameters.evapor.level_set_source_term_type ==
-                              EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
+                              Evaporation::EvaporationLevelSetSourceTermType::
+                                interface_velocity_sharp ||
                             base_in->parameters.evapor.level_set_source_term_type ==
-                              EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy)
+                              Evaporation::EvaporationLevelSetSourceTermType::
+                                interface_velocity_sharp_heavy)
                           {
                             VectorType interface_velocity_interface;
                             scratch_data->initialize_dof_vector(interface_velocity_interface,
                                                                 vel_dof_idx);
 
-                            NearestPointData<double> nearest_point_data =
+                            LevelSet::NearestPointData<double> nearest_point_data =
                               base_in->parameters.ls.nearest_point;
 
                             nearest_point_data.isocontour =
                               (base_in->parameters.evapor.level_set_source_term_type !=
-                               EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy) ?
+                               Evaporation::EvaporationLevelSetSourceTermType::
+                                 interface_velocity_sharp_heavy) ?
                                 0 :
                                 level_set_operation->get_distance_to_level_set().linfty_norm() *
                                   std::tanh(1.5) / std::tanh(4);
@@ -389,9 +398,9 @@ namespace MeltPoolDG::MeltPool
 
                 if (evaporation_operation &&
                     (base_in->parameters.evapor.formulation_source_term_heat ==
-                       EvaporCoolingInterfaceFluxType::sharp ||
+                       Evaporation::EvaporCoolingInterfaceFluxType::sharp ||
                      base_in->parameters.evapor.formulation_source_term_continuity ==
-                       InterfaceForceType::sharp))
+                       Evaporation::InterfaceForceType::sharp))
                   level_set_operation->update_surface_mesh();
               }
 
@@ -492,7 +501,7 @@ namespace MeltPoolDG::MeltPool
                       {
                         if (!((evaporation_operation &&
                                (base_in->parameters.evapor.evaporation_model ==
-                                EvaporationModelType::constant)) ||
+                                Evaporation::EvaporationModelType::constant)) ||
                               base_in->parameters.laser.heat_source_model ==
                                 LaserHeatSourceModel::Analytical))
                           heat_operation->solve(false);
@@ -1160,11 +1169,11 @@ namespace MeltPoolDG::MeltPool
             "interface value")
           scratch_data->create_remote_point_evaluation(evapor_mass_flux_dof_idx);
         if ((base_in->parameters.evapor.level_set_source_term_type ==
-               EvaporationLevelSetSourceTermType::interface_velocity ||
+               Evaporation::EvaporationLevelSetSourceTermType::interface_velocity ||
              base_in->parameters.evapor.level_set_source_term_type ==
-               EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
+               Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
              base_in->parameters.evapor.level_set_source_term_type ==
-               EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy))
+               Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy))
           scratch_data->create_remote_point_evaluation(vel_dof_idx);
         /*
          * register temperature field
@@ -1178,7 +1187,7 @@ namespace MeltPoolDG::MeltPool
                                       temp_dof_idx);
 
         if (base_in->parameters.evapor.formulation_source_term_continuity ==
-            InterfaceForceType::sharp)
+            Evaporation::InterfaceForceType::sharp)
           evaporation_operation->register_surface_mesh(
             level_set_operation->get_surface_mesh_info());
 
@@ -1224,7 +1233,7 @@ namespace MeltPoolDG::MeltPool
         if (problem_specific_parameters.do_evaporative_heat_flux)
           {
             if (base_in->parameters.evapor.formulation_source_term_heat ==
-                EvaporCoolingInterfaceFluxType::sharp)
+                Evaporation::EvaporCoolingInterfaceFluxType::sharp)
               heat_operation->register_surface_mesh(level_set_operation->get_surface_mesh_info());
 
             heat_operation->register_evaporative_mass_flux(
@@ -1386,8 +1395,8 @@ namespace MeltPoolDG::MeltPool
             temp_dof_idx);
         else if
           // constant evaporative mass flux --> no need to set initial condition
-          (!(evaporation_operation &&
-             base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant))
+          (!(evaporation_operation && base_in->parameters.evapor.evaporation_model ==
+                                        Evaporation::EvaporationModelType::constant))
           heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
                                                 base_in->parameters.time_stepping.start_time);
       }
@@ -1415,16 +1424,17 @@ namespace MeltPoolDG::MeltPool
       {
         // Only if a spatially constant evaporative mass flux is given as an analytical function,
         // the time is needed to evaluate the function.
-        if (base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
+        if (base_in->parameters.evapor.evaporation_model ==
+            Evaporation::EvaporationModelType::constant)
           evaporation_operation->set_time(time_iterator->get_current_time());
 
         evaporation_operation->compute_evaporative_mass_flux();
       }
 
     if (evaporation_operation && (base_in->parameters.evapor.formulation_source_term_heat ==
-                                    EvaporCoolingInterfaceFluxType::sharp ||
+                                    Evaporation::EvaporCoolingInterfaceFluxType::sharp ||
                                   base_in->parameters.evapor.formulation_source_term_continuity ==
-                                    InterfaceForceType::sharp))
+                                    Evaporation::InterfaceForceType::sharp))
       level_set_operation->update_surface_mesh();
   }
 
@@ -1521,7 +1531,7 @@ namespace MeltPoolDG::MeltPool
                         (base_in->parameters.laser.impact_type ==
                            LaserImpactType::interface_sharp_conforming ||
                          base_in->parameters.evapor.formulation_source_term_heat ==
-                           EvaporCoolingInterfaceFluxType::sharp_conforming)
+                           Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
                         /*enable_inner_face_loops*/);
 
     if (do_reinit)
@@ -1908,11 +1918,11 @@ namespace MeltPoolDG::MeltPool
 
       if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump &&
           (base_in->parameters.evapor.level_set_source_term_type ==
-             EvaporationLevelSetSourceTermType::interface_velocity ||
+             Evaporation::EvaporationLevelSetSourceTermType::interface_velocity ||
            base_in->parameters.evapor.level_set_source_term_type ==
-             EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
+             Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
            base_in->parameters.evapor.level_set_source_term_type ==
-             EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy))
+             Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy))
         {
           /*
            *  interface velocity

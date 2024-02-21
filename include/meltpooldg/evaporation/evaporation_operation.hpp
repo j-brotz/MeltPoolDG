@@ -8,11 +8,15 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_base.hpp>
 #include <meltpooldg/evaporation/evaporation_model_base.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_base.hpp>
+#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/level_set/nearest_point_data.hpp>
+#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
 namespace MeltPoolDG::Evaporation
@@ -44,7 +48,7 @@ namespace MeltPoolDG::Evaporation
     /**
      *  parameters controlling the evaporation
      */
-    EvaporationData<double> evaporation_data;
+    const EvaporationData<double> &evaporation_data;
 
     const MaterialData<double> &material;
     /**
@@ -106,13 +110,13 @@ namespace MeltPoolDG::Evaporation
      * Configure the evaporation operation with temperature dependence.
      */
     void
-    reinit(const VectorType                 *temperature_in,
-           const VectorType                 &distance,
-           const RecoilPressureData<double> &recoil_data,
-           const NearestPointData<double>   &nearest_point_data,
-           const double                      constant_epsilon,
-           const double                      scale_factor_epsilon,
-           const unsigned int                temp_dof_idx_in);
+    reinit(const VectorType                         *temperature_in,
+           const VectorType                         &distance,
+           const RecoilPressureData<double>         &recoil_data,
+           const LevelSet::NearestPointData<double> &nearest_point_data,
+           const double                              constant_epsilon,
+           const double                              scale_factor_epsilon,
+           const unsigned int                        temp_dof_idx_in);
 
     /*
      * Compute DoF vector holding evaporative mass flux depending on the given evaporation model

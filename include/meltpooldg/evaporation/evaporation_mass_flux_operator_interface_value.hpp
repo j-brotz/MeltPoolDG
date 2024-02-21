@@ -10,9 +10,10 @@
 
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_base.hpp>
 #include <meltpooldg/evaporation/evaporation_model_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
+#include <meltpooldg/level_set/nearest_point_data.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -30,7 +31,7 @@ namespace MeltPoolDG::Evaporation
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
     const ScratchData<dim>                                     &scratch_data;
-    mutable NearestPointData<double>                            nearest_point_data;
+    mutable LevelSet::NearestPointData<double>                  nearest_point_data;
     const EvaporationModelBase                                 &evaporation_model;
     const VectorType                                           &level_set_as_heaviside;
     const VectorType                                           &distance;
@@ -43,15 +44,15 @@ namespace MeltPoolDG::Evaporation
 
 
   public:
-    EvaporationMassFluxOperatorInterfaceValue(const ScratchData<dim>         &scratch_data,
-                                              const NearestPointData<double> &data,
-                                              const EvaporationModelBase     &evaporation_model,
-                                              const VectorType      &level_set_as_heaviside,
-                                              const VectorType      &distance,
-                                              const BlockVectorType &normal_vector,
-                                              const unsigned int     ls_dof_idx,
-                                              const unsigned int     temp_hanging_nodes_dof_idx,
-                                              const unsigned int     evapor_mass_flux_dof_idx);
+    EvaporationMassFluxOperatorInterfaceValue(const ScratchData<dim> &scratch_data,
+                                              const LevelSet::NearestPointData<double> &data,
+                                              const EvaporationModelBase &evaporation_model,
+                                              const VectorType           &level_set_as_heaviside,
+                                              const VectorType           &distance,
+                                              const BlockVectorType      &normal_vector,
+                                              const unsigned int          ls_dof_idx,
+                                              const unsigned int temp_hanging_nodes_dof_idx,
+                                              const unsigned int evapor_mass_flux_dof_idx);
 
     /**
      * DOCU: TODO

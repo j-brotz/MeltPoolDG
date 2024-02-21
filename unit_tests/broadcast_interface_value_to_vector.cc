@@ -20,8 +20,8 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
+#include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -76,7 +76,7 @@ compute_projected_point_analytically(const Point<dim> &p,
 
 template <int n_components, int n_refinements, int n_iter>
 void
-run_test(const NearestPointType type = NearestPointType::closest_point_normal)
+run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::closest_point_normal)
 {
   std::cout.precision(8);
   MPI_Comm                   mpi_comm(MPI_COMM_WORLD);
@@ -204,7 +204,7 @@ run_test(const NearestPointType type = NearestPointType::closest_point_normal)
    * ------------------------------------------------------------------------------------
    * ------------------------------------------------------------------------------------
    */
-  NearestPointData<double> nearest_point_data;
+  LevelSet::NearestPointData<double> nearest_point_data;
 
   nearest_point_data.rel_tol               = 1e-10;
   nearest_point_data.narrow_band_threshold = 0.125;
@@ -449,9 +449,9 @@ main(int argc, char *argv[])
   run_test<1, 6, 1>();
   run_test<1, 6, 16>();
   run_test<2, 6, 5>();
-  run_test<2, 6, 5>(NearestPointType::closest_point_normal_collinear);
-  run_test<2, 6, 1>(NearestPointType::nearest_point);
-  run_test<2, 6, 5>(NearestPointType::closest_point_normal_collinear_coquerelle);
+  run_test<2, 6, 5>(LevelSet::NearestPointType::closest_point_normal_collinear);
+  run_test<2, 6, 1>(LevelSet::NearestPointType::nearest_point);
+  run_test<2, 6, 5>(LevelSet::NearestPointType::closest_point_normal_collinear_coquerelle);
 
   return 0;
 }
