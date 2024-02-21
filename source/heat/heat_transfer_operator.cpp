@@ -3,6 +3,7 @@
 
 #include <deal.II/matrix_free/tools.h>
 
+#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/interface/parameters.hpp>
@@ -101,14 +102,14 @@ namespace MeltPoolDG::Heat
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::register_evaporative_mass_flux(
-    VectorType                          *evaporative_mass_flux_in,
-    const unsigned int                   evapor_mass_flux_dof_idx_in,
-    const double                         latent_heat_of_evaporation_in,
-    const bool                           do_phenomenological_recoil_pressure_in,
-    const EvaporCoolingInterfaceFluxType type)
+    VectorType                                       *evaporative_mass_flux_in,
+    const unsigned int                                evapor_mass_flux_dof_idx_in,
+    const double                                      latent_heat_of_evaporation_in,
+    const bool                                        do_phenomenological_recoil_pressure_in,
+    const Evaporation::EvaporCoolingInterfaceFluxType type)
   {
     evapor_flux_type = type;
-    AssertThrow(surface_mesh_info || (type != EvaporCoolingInterfaceFluxType::sharp),
+    AssertThrow(surface_mesh_info || (type != Evaporation::EvaporCoolingInterfaceFluxType::sharp),
                 ExcMessage("If you would like to use a sharp flux model, you first"
                            "need to register the surface mesh."));
 
@@ -230,7 +231,8 @@ namespace MeltPoolDG::Heat
                                                    temp_quad_idx);
 
     std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
-    if (evaporative_mass_flux && evapor_flux_type == EvaporCoolingInterfaceFluxType::diffuse)
+    if (evaporative_mass_flux &&
+        evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::diffuse)
       {
         evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                          evapor_mass_flux_dof_idx,
@@ -300,7 +302,8 @@ namespace MeltPoolDG::Heat
                                                    temp_hanging_nodes_dof_idx,
                                                    temp_quad_idx);
     std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
-    if (evaporative_mass_flux && evapor_flux_type == EvaporCoolingInterfaceFluxType::diffuse)
+    if (evaporative_mass_flux &&
+        evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::diffuse)
       {
         evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                          evapor_mass_flux_dof_idx,
@@ -352,7 +355,8 @@ namespace MeltPoolDG::Heat
                                                    temp_hanging_nodes_dof_idx,
                                                    temp_quad_idx);
     std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
-    if (evaporative_mass_flux && evapor_flux_type == EvaporCoolingInterfaceFluxType::diffuse)
+    if (evaporative_mass_flux &&
+        evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::diffuse)
       {
         evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                          evapor_mass_flux_dof_idx,
@@ -406,7 +410,8 @@ namespace MeltPoolDG::Heat
                                                      temp_hanging_nodes_dof_idx,
                                                      temp_quad_idx);
       std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
-      if (evaporative_mass_flux && evapor_flux_type == EvaporCoolingInterfaceFluxType::diffuse)
+      if (evaporative_mass_flux &&
+          evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::diffuse)
         {
           evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                            evapor_mass_flux_dof_idx,
@@ -552,7 +557,8 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
 
-    if (evaporative_mass_flux && evapor_flux_type == EvaporCoolingInterfaceFluxType::diffuse)
+    if (evaporative_mass_flux &&
+        evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::diffuse)
       {
         evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
                                                                          evapor_mass_flux_dof_idx,
@@ -723,7 +729,7 @@ namespace MeltPoolDG::Heat
   HeatTransferOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
   {
     // evaluate the evaporative heat loss term as surface integral
-    if (evapor_flux_type == EvaporCoolingInterfaceFluxType::sharp)
+    if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp)
       {
         Assert(evaporative_mass_flux,
                ExcMessage("You need to register the evaporative mass flux."));
@@ -821,7 +827,7 @@ namespace MeltPoolDG::Heat
 
         dst += evapor_heat_source;
       }
-    else if (evapor_flux_type == EvaporCoolingInterfaceFluxType::sharp_conforming)
+    else if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
       {
         Assert(evaporative_mass_flux,
                ExcMessage("You need to register the evaporative mass flux."));
@@ -1001,8 +1007,8 @@ namespace MeltPoolDG::Heat
   HeatTransferOperator<dim, number>::reinit()
   {
     // TODO: only if output variable is requested
-    if (evapor_flux_type == EvaporCoolingInterfaceFluxType::sharp ||
-        evapor_flux_type == EvaporCoolingInterfaceFluxType::sharp_conforming)
+    if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp ||
+        evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
       scratch_data.initialize_dof_vector(evapor_heat_source, temp_dof_idx);
   }
 
@@ -1065,8 +1071,8 @@ namespace MeltPoolDG::Heat
         if (evaporative_mass_flux)
           {
             scratch_data.initialize_dof_vector(evapor_heat_source_projected, temp_dof_idx);
-            if (evapor_flux_type == EvaporCoolingInterfaceFluxType::sharp ||
-                evapor_flux_type == EvaporCoolingInterfaceFluxType::sharp_conforming)
+            if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp ||
+                evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
               {
                 VectorTools::project_vector<1, dim>(scratch_data.get_mapping(),
                                                     scratch_data.get_dof_handler(temp_dof_idx),

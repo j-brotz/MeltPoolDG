@@ -2,14 +2,20 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
+#include <meltpooldg/interface/base_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
+#include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
+#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
@@ -23,53 +29,7 @@ namespace MeltPoolDG
 {
   using namespace dealii;
 
-  BETTER_ENUM(ProblemType,
-              char,
-              advection_diffusion,
-              reinitialization,
-              level_set,
-              melt_pool,
-              level_set_with_evaporation,
-              heat_transfer,
-              radiative_transport,
-              none)
   BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
-
-  // evaporation specific @todo: move to own file evaporation_data.hpp
-  BETTER_ENUM(
-    EvaporationModelType,
-    char,
-    // prescribe a (time-dependent) function for an evaporative mass flux being constant
-    // over the domain
-    constant,
-    // calculate the evaporative mass flux from the recoil pressure
-    recoil_pressure,
-    // calculate the evaporative mass flux according to the model proposed by Hardt & Wondra
-    hardt_wondra)
-
-  BETTER_ENUM(EvaporationLevelSetSourceTermType,
-              char,
-              // calculate the interface velocity by using the liquid velocity (H(phi)=1)
-              interface_velocity_sharp_heavy,
-              // calculate the interface velocity by using the value at the level set 0 iso contour
-              interface_velocity_sharp,
-              // calculate a divergence-free interface velocity and use it to advect the level set
-              interface_velocity,
-              // use the source term due to evaporation as right hand-side term
-              rhs)
-
-  BETTER_ENUM(InterfaceForceType, char, diffuse, sharp)
-  BETTER_ENUM(EvaporCoolingInterfaceFluxType, char, none, diffuse, sharp, sharp_conforming)
-
-  // choose the particular predictor type for the nonlinear/linear solver
-  BETTER_ENUM(PredictorType,
-              char,
-              // no predictor specified; use old value as initial guess
-              none,
-              // calculate the predictor by a linear combination from the two old solution vectors
-              linear_extrapolation,
-              // least squares projection (WIP)
-              least_squares_projection)
 
   BETTER_ENUM(TimeType, char, real, simulation)
 
@@ -91,79 +51,6 @@ namespace MeltPoolDG
               // reciprocal interpolation using a smooth Heaviside function
               reciprocal)
 
-  BETTER_ENUM(NearestPointType,
-              char,
-              // closest point in normal direction
-              closest_point_normal,
-              // closest point in normal direction and enforcing collinearity; here we
-              // perform an iterative sequence of (1) correction in normal direction until the
-              // tolerance is fulfilled and (2) subsequent correction in tangential direction
-              closest_point_normal_collinear,
-              // closest point in normal direction and enforcing collinearity considering the
-              // algorithm by Coquerelle (2014); here we
-              // perform an iterative sequence of (1) correction in tangential direction and
-              // (2) subsequent iterative correction in normal direction
-              closest_point_normal_collinear_coquerelle,
-              // nearest point in the point cloud
-              nearest_point)
-
-  template <typename number = double>
-  class PredictorData
-  {
-  public:
-    PredictorData()
-    {
-      all.emplace_back(this);
-    }
-
-    PredictorType type                   = PredictorType::none;
-    unsigned int  n_old_solution_vectors = 2;
-
-    void
-    add_parameters(ParameterHandler &prm)
-    {
-      prm.enter_subsection("predictor");
-      {
-        prm.add_parameter("type", type, "Choose a predictor type.");
-        prm.add_parameter("n old solutions",
-                          n_old_solution_vectors,
-                          "Choose the number of old solution vectors considered."
-                          "This parameter is only relevant for least squares projection.");
-      }
-      prm.leave_subsection();
-    }
-
-    void
-    set_default_values()
-    {
-      if (type == PredictorType::none)
-        n_old_solution_vectors = 1;
-      else if (type == PredictorType::linear_extrapolation)
-        n_old_solution_vectors = 2;
-    }
-
-    static std::vector<PredictorData<number> *> all;
-  };
-
-
-  template <typename number>
-  std::vector<PredictorData<number> *> PredictorData<number>::all;
-
-  template <typename number = double>
-  struct BaseData
-  {
-    std::string  application_name    = "none";
-    ProblemType  problem_name        = ProblemType::advection_diffusion;
-    unsigned int dimension           = 2;
-    unsigned int global_refinements  = 1;
-    unsigned int degree              = 1;
-    int          n_q_points_1d       = -1;
-    bool         do_print_parameters = true;
-    bool         do_simplex          = false;
-    number       gravity             = 0.0;
-    unsigned int verbosity_level     = 0;
-  };
-
   struct AdaptiveMeshingData
   {
     bool         do_amr                       = false;
@@ -174,52 +61,6 @@ namespace MeltPoolDG
     int          every_n_step                 = 1;
     unsigned int max_grid_refinement_level    = 12;
     int          min_grid_refinement_level    = 1;
-  };
-
-  // TODO: rename to NearestPointData
-  template <typename number = double>
-  struct NearestPointData
-  {
-    number           rel_tol  = 1e-6;
-    int              max_iter = 20;
-    NearestPointType type     = NearestPointType::closest_point_normal;
-    // TODO: add to parsing
-    double       narrow_band_threshold = -1;
-    double       isocontour            = 0.0;
-    unsigned int verbosity_level       = 0;
-  };
-
-  template <typename number = double>
-  struct LevelSetData
-  {
-    bool                     do_reinitialization     = true;
-    int                      n_initial_reinit_steps  = -1.0;
-    std::string              time_integration_scheme = "crank_nicolson";
-    bool                     do_curvature_correction = false;
-    int                      n_subdivisions          = 1;
-    bool                     do_localized_heaviside  = true;
-    std::string              implementation          = "meltpooldg";
-    number                   reinit_time_step_size   = -1.;
-    number                   tol_reinit              = std::numeric_limits<number>::min();
-    NearestPointData<number> nearest_point;
-  };
-
-  template <typename number = double>
-  struct ReinitializationData
-  {
-    ReinitializationData()
-    {
-      linear_solver.solver_type         = LinearSolverType::CG;
-      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
-    }
-
-    unsigned int             max_n_steps          = 5; //@todo: move to LevelSetData
-    number                   constant_epsilon     = -1.0;
-    number                   scale_factor_epsilon = 0.5;
-    std::string              modeltype            = "olsson2007";
-    std::string              implementation       = "meltpooldg";
-    PredictorData<number>    predictor;
-    LinearSolverData<number> linear_solver;
   };
 
   template <typename number = double>
@@ -283,29 +124,6 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
-  struct HeatData
-  {
-    HeatData()
-    {
-      linear_solver.solver_type         = LinearSolverType::GMRES;
-      linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
-    }
-
-    int                                         degree                   = -1;
-    int                                         n_subdivisions           = 1;
-    int                                         n_q_points_1d            = -1;
-    number                                      emissivity               = 0.0;
-    number                                      convection_coefficient   = 0.0;
-    number                                      temperature_infinity     = 0.0;
-    bool                                        enable_time_dependent_bc = false;
-    NonlinearSolverData<number>                 nlsolve;
-    LinearSolverData<number>                    linear_solver;
-    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
-    bool                  use_volume_specific_thermal_capacity_for_phase_interpolation = false;
-    PredictorData<number> predictor;
-  };
-
-  template <typename number = double>
   struct MeltPoolData
   {
     struct
@@ -334,27 +152,6 @@ namespace MeltPoolDG
     number                  mushy_zone_morphology   = 0.0;
     number                  avoid_div_zero_constant = 1e-3;
     DarcyDampingFormulation formulation             = DarcyDampingFormulation::explicit_formulation;
-  };
-
-  template <typename number = double>
-  struct EvaporationData
-  {
-    number                         evaporative_mass_flux_scale_factor = 1.0;
-    std::string                    evaporative_mass_flux              = "0.0";
-    number                         ls_value_liquid                    = 1.0;
-    number                         ls_value_gas                       = -1.0;
-    InterfaceForceType             formulation_source_term_continuity = InterfaceForceType::diffuse;
-    EvaporCoolingInterfaceFluxType formulation_source_term_heat =
-      EvaporCoolingInterfaceFluxType::diffuse;
-    std::string formulation_evaporative_mass_flux_over_interface =
-      "continuous"; // not needed if evaporation_model == "constant"
-    EvaporationModelType              evaporation_model = EvaporationModelType::constant;
-    number                            coefficient       = 0.0;
-    unsigned int                      line_integral_n_subdivisions_per_side = 10;
-    unsigned int                      line_integral_n_subdivisions_MCA      = 1;
-    EvaporationLevelSetSourceTermType level_set_source_term_type =
-      EvaporationLevelSetSourceTermType::interface_velocity;
-    bool do_level_set_pressure_gradient_interpolation = false;
   };
 
   template <typename number = double>
@@ -442,19 +239,19 @@ namespace MeltPoolDG
     BaseData<number>                                   base;
     TimeSteppingData<number>                           time_stepping;
     AdaptiveMeshingData                                amr;
-    LevelSetData<number>                               ls;
-    ReinitializationData<number>                       reinit;
+    LevelSet::LevelSetData<number>                     ls;
+    Reinitialization::ReinitializationData<number>     reinit;
     AdvectionDiffusionData<number>                     advec_diff;
     NormalVectorData<number>                           normal_vec;
     CurvatureData<number>                              curv;
-    HeatData<number>                                   heat;
+    Heat::HeatData<number>                             heat;
     LaserData<number>                                  laser;
     RadiativeTransport::RadiativeTransportData<number> rte;
     MeltPoolData<number>                               mp;
     SurfaceTensionData<number>                         surface_tension;
     DarcyDampingData<number>                           darcy;
     Evaporation::RecoilPressureData<number>            recoil;
-    EvaporationData<number>                            evapor;
+    Evaporation::EvaporationData<number>               evapor;
     MaterialData<number>                               material;
     ParaviewData<number>                               paraview;
     ProfilingData<number>                              profiling;

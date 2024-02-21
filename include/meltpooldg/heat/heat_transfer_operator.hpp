@@ -8,9 +8,10 @@
 #include <tuple>
 
 // MeltPoolDG
+#include <meltpooldg/evaporation/evaporation_data.hpp>
+#include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -188,7 +189,7 @@ namespace MeltPoolDG::Heat
                                    const unsigned int evapor_mass_flux_dof_idx_in,
                                    const double       latent_heat_of_evaporation,
                                    const bool         do_phenomenological_recoil_pressure,
-                                   const EvaporCoolingInterfaceFluxType type);
+                                   const Evaporation::EvaporCoolingInterfaceFluxType type);
 
     void
     register_surface_mesh(
@@ -353,6 +354,7 @@ namespace MeltPoolDG::Heat
                                  std::vector<double> /*weights*/
                                  >> *surface_mesh_info = nullptr;
 
-    EvaporCoolingInterfaceFluxType evapor_flux_type = EvaporCoolingInterfaceFluxType::none;
+    Evaporation::EvaporCoolingInterfaceFluxType evapor_flux_type =
+      Evaporation::EvaporCoolingInterfaceFluxType::none;
   };
 } // namespace MeltPoolDG::Heat

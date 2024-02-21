@@ -109,13 +109,13 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   void
-  EvaporationOperation<dim>::reinit(const VectorType                 *temperature_in,
-                                    const VectorType                 &distance,
-                                    const RecoilPressureData<double> &recoil_data,
-                                    const NearestPointData<double>   &nearest_point_data,
-                                    const double                      constant_epsilon,
-                                    const double                      scale_factor_epsilon,
-                                    const unsigned int                temp_dof_idx_in)
+  EvaporationOperation<dim>::reinit(const VectorType                         *temperature_in,
+                                    const VectorType                         &distance,
+                                    const RecoilPressureData<double>         &recoil_data,
+                                    const LevelSet::NearestPointData<double> &nearest_point_data,
+                                    const double                              constant_epsilon,
+                                    const double                              scale_factor_epsilon,
+                                    const unsigned int                        temp_dof_idx_in)
   {
     temperature  = temperature_in;
     temp_dof_idx = temp_dof_idx_in;

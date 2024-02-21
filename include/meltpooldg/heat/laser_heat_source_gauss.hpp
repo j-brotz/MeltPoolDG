@@ -5,7 +5,6 @@
 
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
 #include <meltpooldg/material/material_data.hpp>
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/mpi_remote_point_evaluation.h>
 
@@ -6,7 +7,7 @@
 
 #include <deal.II/numerics/rtree.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>

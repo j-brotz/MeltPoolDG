@@ -5,8 +5,8 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
+#include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
-#include <meltpooldg/interface/parameters.hpp>
 
 namespace MeltPoolDG::Heat
 {

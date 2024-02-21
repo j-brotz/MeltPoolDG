@@ -4,25 +4,33 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <deal.II/dofs/dof_tools.h>
 
+#include <deal.II/base/function.h>
+#include <deal.II/base/point.h>
+
+#include <deal.II/grid/tria.h>
+
+#include <deal.II/lac/diagonal_matrix.h>
 #include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/trilinos_precondition.h>
 
-#include <deal.II/numerics/data_out.h>
-
-#include "meltpooldg/interface/parameters.hpp"
+#include <meltpooldg/evaporation/evaporation_data.hpp>
+#include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
-#include <meltpooldg/interface/periodic_boundary_conditions.hpp>
+#include <meltpooldg/interface/boundary_conditions.hpp>
+#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
-#include <meltpooldg/linear_algebra/linear_solver.hpp>
-#include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
+#include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace MeltPoolDG::Heat
 {
@@ -104,7 +112,7 @@ namespace MeltPoolDG::Heat
                                    const unsigned int evapor_mass_flux_dof_idx_in,
                                    const double       latent_heat_of_evaporation,
                                    const bool         do_phenomenological_recoil_pressure,
-                                   const EvaporCoolingInterfaceFluxType flux_type);
+                                   const Evaporation::EvaporCoolingInterfaceFluxType flux_type);
     void
     register_surface_mesh(
       const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
@@ -129,9 +137,9 @@ namespace MeltPoolDG::Heat
     finish_time_advance();
 
     void
-    compute_interface_temperature(const VectorType               &distance,
-                                  const BlockVectorType          &normal_vector,
-                                  const NearestPointData<double> &nearest_point_data);
+    compute_interface_temperature(const VectorType                         &distance,
+                                  const BlockVectorType                    &normal_vector,
+                                  const LevelSet::NearestPointData<double> &nearest_point_data);
 
     void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);

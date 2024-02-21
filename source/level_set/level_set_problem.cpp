@@ -19,6 +19,7 @@
 
 #include <deal.II/numerics/data_out.h>
 
+#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_problem.hpp>
@@ -59,7 +60,8 @@ namespace MeltPoolDG::LevelSet
           {
             // Only if a spatially constant evaporative mass flux is given as an analytical
             // function, the time is needed to evaluate the function.
-            if (base_in->parameters.evapor.evaporation_model == EvaporationModelType::constant)
+            if (base_in->parameters.evapor.evaporation_model ==
+                Evaporation::EvaporationModelType::constant)
               evaporation_operation->set_time(time_iterator->get_current_time());
             else
               AssertThrow(false,

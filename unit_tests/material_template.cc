@@ -1,6 +1,10 @@
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/parameter_handler.h>
+
 #include <meltpooldg/material/material_data.hpp>
 
 #include <iostream>
+#include <sstream>
 
 // Test that parameters are read in order they are specified in the parameter file.
 
@@ -15,7 +19,7 @@ main()
 
     material_data.add_parameters(prm);
 
-    std::istringstream is("{\"material template\" : \"stainless_steel\"}");
+    std::istringstream is("{\"material\": {\"material template\" : \"stainless_steel\"}}");
     prm.parse_input_from_json(is);
 
     AssertDimension(material_data.first.capacity,
@@ -29,8 +33,8 @@ main()
 
     material_data.add_parameters(prm);
 
-    std::istringstream is("{\"material first capacity\" : \"5\", "
-                          "\"material template\" : \"stainless_steel\"}");
+    std::istringstream is("{\"material\": {\"material first capacity\" : \"5\", "
+                          "\"material template\" : \"stainless_steel\"}}");
     prm.parse_input_from_json(is);
 
     AssertDimension(material_data.first.capacity,
@@ -44,8 +48,8 @@ main()
 
     material_data.add_parameters(prm);
 
-    std::istringstream is("{\"material template\" : \"stainless_steel\", "
-                          "\"material first capacity\" : \"5\"}");
+    std::istringstream is("{\"material\": {\"material template\" : \"stainless_steel\", "
+                          "\"material first capacity\" : \"5\"}}");
     prm.parse_input_from_json(is);
 
     AssertDimension(material_data.first.capacity, 5);

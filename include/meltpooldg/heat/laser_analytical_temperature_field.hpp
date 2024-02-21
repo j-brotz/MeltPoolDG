@@ -7,8 +7,9 @@
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Heat

@@ -1,11 +1,17 @@
-#include "meltpooldg/interface/parameters.hpp"
+#include <deal.II/base/exceptions.h>
+
+#include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/vector_tools_interpolate.h>
+
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
-#include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
+#include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -70,11 +76,11 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   HeatTransferOperation<dim>::register_evaporative_mass_flux(
-    VectorType                          *evaporative_mass_flux_in,
-    const unsigned int                   evapor_mass_flux_dof_idx_in,
-    const double                         latent_heat_of_evaporation,
-    const bool                           do_phenomenological_recoil_pressure,
-    const EvaporCoolingInterfaceFluxType type)
+    VectorType                                       *evaporative_mass_flux_in,
+    const unsigned int                                evapor_mass_flux_dof_idx_in,
+    const double                                      latent_heat_of_evaporation,
+    const bool                                        do_phenomenological_recoil_pressure,
+    const Evaporation::EvaporCoolingInterfaceFluxType type)
   {
     heat_operator->register_evaporative_mass_flux(evaporative_mass_flux_in,
                                                   evapor_mass_flux_dof_idx_in,
@@ -301,9 +307,9 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   HeatTransferOperation<dim>::compute_interface_temperature(
-    const VectorType               &distance,
-    const BlockVectorType          &normal_vector,
-    const NearestPointData<double> &nearest_point_data)
+    const VectorType                         &distance,
+    const BlockVectorType                    &normal_vector,
+    const LevelSet::NearestPointData<double> &nearest_point_data)
   {
     if (!nearest_point_search)
       nearest_point_search = std::make_unique<LevelSet::Tools::NearestPoint<dim>>(

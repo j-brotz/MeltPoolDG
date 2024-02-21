@@ -6,7 +6,12 @@
 // #include <deal.II/lac/trilinos_precondition.h>
 // #include <deal.II/lac/trilinos_sparse_matrix.h>
 //
-#include <meltpooldg/interface/parameters.hpp>
+
+#include <deal.II/base/exceptions.h>
+
+#include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+
+#include <memory>
 
 using namespace dealii;
 

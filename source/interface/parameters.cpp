@@ -35,10 +35,8 @@ namespace MeltPoolDG
     /************************************************************************************
      * set input-file-dependent default parameters
      ************************************************************************************/
-    /*
-     *  set the number of quadrature points in 1d
-     */
-    base.n_q_points_1d = (base.n_q_points_1d < 1) ? base.degree + 1 : base.n_q_points_1d;
+    base.post();
+
     /*
      *  set the min grid refinement level if not user-specified
      */
@@ -107,33 +105,18 @@ namespace MeltPoolDG
     if (restart.load >= 0)
       amr.n_initial_refinement_cycles = 0;
 
-    // set the number of initial reinitialization steps equal to the number of reinit steps
-    // if no value is provided
-    if (ls.do_reinitialization && ls.n_initial_reinit_steps < 0.0)
-      ls.n_initial_reinit_steps = reinit.max_n_steps;
-
-    laser.post(base.dimension, material);
-
     // recoil pressure: set default value of activation temperature equal to the boiling
     // temperature
     if (dealii::numbers::is_invalid(recoil.activation_temperature))
       recoil.activation_temperature = material.boiling_temperature;
 
     // set automatic weights of asymmetric delta functions, if requested
-    heat.delta_approximation_phase_weighted.set_parameters(material);
     surface_tension.delta_approximation_phase_weighted.set_parameters(material);
     recoil.delta_approximation_phase_weighted.set_parameters(material);
 
-    // set heat degree equal to base degree if it is not set
-    if (heat.degree < 1)
-      heat.degree = base.degree;
-
-    if (heat.n_q_points_1d < 1)
-      heat.n_q_points_1d = heat.degree + 1;
-
-    // sync verbosity level with base verbosity if not set
-    if (heat.nlsolve.verbosity_level == -1)
-      heat.nlsolve.verbosity_level = base.verbosity_level;
+    heat.post(base.degree, base.verbosity_level, material);
+    laser.post(base.dimension, material);
+    ls.post(reinit.max_n_steps);
 
     // set default values dependent on predictor type
     for (unsigned int i = 0; i < PredictorData<number>::all.size(); ++i)
@@ -187,46 +170,10 @@ namespace MeltPoolDG
   void
   Parameters<number>::check_input_parameters() const
   {
-    /*
-     * The level set problem for simplices can only be solved when no subdivision of the
-     * finite element is undertaken.
-     */
-    AssertThrow(
-      (!base.do_simplex || (ls.n_subdivisions == 1 && heat.n_subdivisions == 1)),
-      ExcMessage(
-        "If you use a simplex mesh, n_subdivisions for the level set and the heat equation must be 1."));
-    AssertThrow((ls.n_subdivisions == 1 || base.degree == 1),
-                ExcMessage("If you use n_subdivisions for the level set, degree must be 1."));
-
-    AssertThrow((heat.n_subdivisions == 1 || heat.degree == 1),
-                ExcMessage("If you use n_subdivisions for the heat equation, degree must be 1."));
-
-
-    AssertThrow((ls.n_subdivisions == 1 ||
-                 evapor.formulation_evaporative_mass_flux_over_interface != "line integral"),
-                ExcMessage(
-                  "If you use the formulation of the evaporative mass flux over the interface "
-                  "using the value at the interface or a line integral, n_subdivisions for the "
-                  "level set must be 1."));
-
-    switch (base.problem_name)
-      {
-        case ProblemType::advection_diffusion:
-        case ProblemType::reinitialization:
-        case ProblemType::heat_transfer:
-          AssertThrow(
-            ls.n_subdivisions == 1,
-            ExcMessage(
-              "n_subdivisions for the level set is not supported for your requested problem_type."));
-          break;
-        default:
-          break;
-      }
-    /*
-     *  check if level set assignment of gaseous/liquid phase is done correctly
-     */
-    AssertThrow(evapor.ls_value_liquid != evapor.ls_value_gas,
-                ExcMessage("Parameterhandler: ls value liquid must not be equal to ls value gas."));
+    base.check_input_parameters(ls.n_subdivisions);
+    heat.check_input_parameters(base.do_simplex, ls.n_subdivisions);
+    ls.check_input_parameters(base.degree);
+    evapor.check_input_parameters(ls.n_subdivisions);
 
     // check if curvature computation is enabled in case of surface tension
     const bool do_compute_surface_tension =
@@ -267,34 +214,7 @@ namespace MeltPoolDG
     /*
      *    base
      */
-    prm.enter_subsection("base");
-    {
-      prm.add_parameter(
-        "application name",
-        base.application_name,
-        "Sets the base name for the application that will be fed to the problem type.");
-      prm.add_parameter("problem name",
-                        base.problem_name,
-                        "Sets the base name for the problem that should be solved.");
-      prm.add_parameter("dimension", base.dimension, "Defines the dimension of the problem");
-      prm.add_parameter("global refinements",
-                        base.global_refinements,
-                        "Defines the number of initial global refinements");
-      prm.add_parameter("degree", base.degree, "Defines the interpolation degree");
-      prm.add_parameter("n q points 1d",
-                        base.n_q_points_1d,
-                        "Defines the number of quadrature points");
-      prm.add_parameter("do print parameters",
-                        base.do_print_parameters,
-                        "Set this parameter to true to list parameters in output");
-      prm.add_parameter("do simplex", base.do_simplex, "Use simplices");
-      prm.add_parameter("gravity", base.gravity, "Set the value for the gravity");
-      prm.add_parameter(
-        "verbosity level",
-        base.verbosity_level,
-        "Sets the maximum verbosity level of the console output. Set this parameter to 0 in case of test files.");
-    }
-    prm.leave_subsection();
+    base.add_parameters(prm);
     /*
      *   time stepping
      */
@@ -369,101 +289,11 @@ namespace MeltPoolDG
     /*
      *   levelset
      */
-    prm.enter_subsection("levelset");
-    {
-      prm.add_parameter("ls do reinitialization",
-                        ls.do_reinitialization,
-                        "Defines if reinitialization of level set function is activated");
-      prm.add_parameter(
-        "ls n initial reinit steps",
-        ls.n_initial_reinit_steps,
-        "Defines the number of initial reinitialization steps of the level set function.");
-      prm.add_parameter("ls reinit time step size",
-                        ls.reinit_time_step_size,
-                        "Defines the time step size of the reinitialization.");
-      prm.add_parameter("ls time integration scheme",
-                        ls.time_integration_scheme,
-                        "Determines the time integration scheme.",
-                        Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson"));
-      prm.add_parameter(
-        "ls do curvature correction",
-        ls.do_curvature_correction,
-        "Set this parameter to true if in areas outside the interface region a correction "
-        "of the curvature values should be applied. This parameter can be helpful to avoid "
-        "numerical instabilities.");
-      prm.add_parameter("ls implementation",
-                        ls.implementation,
-                        "Choose the corresponding implementation of the ls operation.",
-                        Patterns::Selection("meltpooldg|adaflo"));
-      prm.add_parameter(
-        "ls n subdivisions",
-        ls.n_subdivisions,
-        "Set the number of subdivisions for the finite element of the level set operation.");
-      prm.add_parameter("ls do localized heaviside",
-                        ls.do_localized_heaviside,
-                        "Determine if the heaviside representation of the level set should be "
-                        "calculated as a localized function, being exactly 0 and 1 outside of "
-                        "the interface region.");
-
-      prm.add_parameter("tol reinit",
-                        ls.tol_reinit,
-                        "Set the tolerance for reinitialization. If the "
-                        "maximum change of the level set field, i.e. ||ΔФ||∞, exceeds the "
-                        "tolerance, reinitialization steps will be performed.");
-      prm.enter_subsection("nearest point");
-      {
-        prm.add_parameter(
-          "max iter",
-          ls.nearest_point.max_iter,
-          "Maximum number of corrections of the point projection towards the interface.");
-        prm.add_parameter("rel tol",
-                          ls.nearest_point.rel_tol,
-                          "Relative tolerance to be achieved within the projection.");
-        prm.add_parameter("narrow band threshold",
-                          ls.nearest_point.narrow_band_threshold,
-                          "Maximum value of the level set for defining narrow band where "
-                          "CPP is performed.");
-        prm.add_parameter("type",
-                          ls.nearest_point.type,
-                          "Choose the type for calculating the nearest point to the interface.");
-        prm.add_parameter("verbosity level",
-                          ls.nearest_point.verbosity_level,
-                          "Set the verbosity level.");
-      }
-      prm.leave_subsection();
-    }
-    prm.leave_subsection();
-
+    ls.add_parameters(prm);
     /*
      *   reinitialization
      */
-    prm.enter_subsection("reinitialization");
-    {
-      prm.add_parameter("reinit max n steps",
-                        reinit.max_n_steps,
-                        "Sets the maximum number of reinitialization steps");
-      prm.add_parameter("reinit constant epsilon",
-                        reinit.constant_epsilon,
-                        "Defines the length parameter of the level set function to be constant and"
-                        "not to dependent on the mesh size (default: -1.0 i.e. grid size dependent"
-                        "which can be controlled by reinit_epsilon_scale_factor");
-      prm.add_parameter(
-        "reinit scale factor epsilon",
-        reinit.scale_factor_epsilon,
-        "Defines the scaling factor of the diffusion parameter in the reinitialization "
-        "equation; the scaling factor is multipled by the mesh size (default: 0.5 i.e. eps=0.5*h_min");
-      prm.add_parameter("reinit modeltype",
-                        reinit.modeltype,
-                        "Sets the type of reinitialization model that should be used.");
-      prm.add_parameter(
-        "reinit implementation",
-        reinit.implementation,
-        "Choose the corresponding implementation of the reinitialization operation.",
-        Patterns::Selection("meltpooldg|adaflo"));
-      reinit.predictor.add_parameters(prm);
-      reinit.linear_solver.add_parameters(prm);
-    }
-    prm.leave_subsection();
+    reinit.add_parameters(prm);
     /*
      *   normal vector
      */
@@ -533,70 +363,7 @@ namespace MeltPoolDG
     /*
      *   heat
      */
-    prm.enter_subsection("heat");
-    {
-      prm.add_parameter("degree", heat.degree, "Defines the interpolation degree");
-      prm.add_parameter("n q points 1d",
-                        heat.n_q_points_1d,
-                        "Defines the number of quadrature points");
-      prm.add_parameter(
-        "n subdivisions",
-        heat.n_subdivisions,
-        "Set the number of subdivisions for the finite element of the level set operation.");
-      prm.add_parameter("heat convection coefficient",
-                        heat.convection_coefficient,
-                        "Convection coefficient for the radiative boundary condition");
-      prm.add_parameter("heat emissivity",
-                        heat.emissivity,
-                        "Emissivity for the radiative boundary condition");
-      prm.add_parameter("heat temperature infinity",
-                        heat.temperature_infinity,
-                        "Infinity temperature for the conductive and radiative boundary condition");
-
-      // TODO: use heat.nlsolve.add_parameters() routine
-      prm.add_parameter("heat nlsolve max nonlinear iterations",
-                        heat.nlsolve.max_nonlinear_iterations,
-                        "Set the number of maximum nonlinear iterations with standard tolerances.");
-      prm.add_parameter(
-        "heat nlsolve field correction tolerance",
-        heat.nlsolve.field_correction_tolerance,
-        "Set the tolerance for the maximum allowed correction of the unknown field.");
-      prm.add_parameter(
-        "heat nlsolve residual tolerance",
-        heat.nlsolve.residual_tolerance,
-        "Set the tolerance for the maximum allowed residual of the nonlinear system.");
-      prm.add_parameter(
-        "heat nlsolve max nonlinear iterations alt",
-        heat.nlsolve.max_nonlinear_iterations_alt,
-        "Set the number of maximum nonlinear iterations with alternative tolerances.");
-      prm.add_parameter(
-        "heat nlsolve field correction tolerance alt",
-        heat.nlsolve.field_correction_tolerance_alt,
-        "Set the alternative tolerance for the maximum allowed correction of the unknown field.");
-      prm.add_parameter(
-        "heat nlsolve residual tolerance alt",
-        heat.nlsolve.residual_tolerance_alt,
-        "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
-
-      // override default value
-      heat.predictor.type = PredictorType::linear_extrapolation;
-      heat.predictor.add_parameters(prm);
-      prm.add_parameter("enable time dependent bc",
-                        heat.enable_time_dependent_bc,
-                        "Set this parameter to true to enable time-dependent bc.");
-      prm.add_parameter(
-        "use volume-specific thermal capacity for phase interpolation",
-        heat.use_volume_specific_thermal_capacity_for_phase_interpolation,
-        "Perform phase interpolation via the volumetric thermal capacity (product of density "
-        " and capacity) instead of interpolating density and thermal capacity individually.");
-      // add deprecated status
-      prm.declare_alias("use volume-specific thermal capacity for phase interpolation",
-                        "interpolate rho times cp",
-                        true);
-      heat.delta_approximation_phase_weighted.add_parameters(prm);
-      heat.linear_solver.add_parameters(prm);
-    }
-    prm.leave_subsection();
+    heat.add_parameters(prm);
     /*
      *   laser
      */
@@ -682,74 +449,11 @@ namespace MeltPoolDG
     /*
      *  evaporation
      */
-    prm.enter_subsection("evaporation");
-    {
-      prm.add_parameter("evapor evaporative mass flux scale factor",
-                        evapor.evaporative_mass_flux_scale_factor,
-                        "Scale factor for the evaporative flux");
-      prm.add_parameter(
-        "evapor evaporative mass flux",
-        evapor.evaporative_mass_flux,
-        "For evapor evaporation model == constant, prescribe a spatially constant "
-        "mass flux due to evaporation (SI unit in kg/m²s), as a function over time t "
-        ", e.g. min(2.*t,0.01).");
-      prm.add_parameter("evapor ls value liquid",
-                        evapor.ls_value_liquid,
-                        "Set the level set value corresponding to the liquid domain.",
-                        Patterns::Selection("1|-1|1.|-1.|1.0|-1.0"));
-      prm.add_parameter("evapor ls value gas",
-                        evapor.ls_value_gas,
-                        "Set the level set value corresponding to the gaseous domain.",
-                        Patterns::Selection("1|-1|1.|-1.|1.0|-1.0"));
-      prm.add_parameter("evapor formulation source term continuity",
-                        evapor.formulation_source_term_continuity,
-                        "Select how the additional source term due to evaporation in the"
-                        " continuity equation is computed.");
-      prm.add_parameter("evapor formulation source term heat",
-                        evapor.formulation_source_term_heat,
-                        "Select how the additional source term due to evaporation in the"
-                        " heat equation is computed.");
-      // @todo must be modified
-      prm.add_parameter(
-        "evapor formulation evaporative mass flux over interface",
-        evapor.formulation_evaporative_mass_flux_over_interface,
-        "Choose the formulation how the (local) evaporative mass flux will be converted to a DoF vector."
-        "will be calculated.",
-        Patterns::Selection("continuous|interface value|line integral"));
-      prm.add_parameter("evapor evaporation model",
-                        evapor.evaporation_model,
-                        "Choose the formulation how the evaporative mass flux mDot (kg/(m2s)) "
-                        "will be calculated.");
-      prm.add_parameter("evapor coefficient", evapor.coefficient, "Evaporation coefficient.");
-      prm.add_parameter("evapor line integral n subdivisions per side",
-                        evapor.line_integral_n_subdivisions_per_side,
-                        "Number of subdivisions per side to compute the points perpendicular to "
-                        "the interface for the evaporative mass flux evaluation by "
-                        "means of the line integral.");
-      prm.add_parameter("evapor line integral n subdivisions MCA",
-                        evapor.line_integral_n_subdivisions_MCA,
-                        "Number of subdivisions for the marching cube algorithm within the "
-                        "evaporative mass flux evaluation by means of the line integral.");
-      prm.add_parameter("evapor level set source term type",
-                        evapor.level_set_source_term_type,
-                        "Set the type how the evaporative mass flux should be considered "
-                        "in the level set equation.");
-      prm.add_parameter("evapor do level set pressure gradient interpolation",
-                        evapor.do_level_set_pressure_gradient_interpolation,
-                        "Set if the level set gradient for computing the delta function within "
-                        "the evaporative mass flux source terms should be computed based on an "
-                        "interpolation to the pressure space. This is only implemented for "
-                        "evapor_level_set_source_term_type = rhs.");
-    }
-    prm.leave_subsection();
+    evapor.add_parameters(prm);
     /*
      *  material
      */
-    prm.enter_subsection("material");
-    {
-      material.add_parameters(prm);
-    }
-    prm.leave_subsection();
+    material.add_parameters(prm);
     /*
      *   paraview
      */

@@ -16,7 +16,6 @@
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_base.hpp>
 #include <meltpooldg/interface/boundary_conditions.hpp>
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
