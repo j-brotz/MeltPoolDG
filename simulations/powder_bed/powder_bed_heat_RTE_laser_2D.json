@@ -17,8 +17,8 @@
   },
   "laser": {
     "starting position": "0.0,0.0",
-    "laser RTE laser beam radius": "70e-6",
     "laser heat source model": "RTE",
+    "laser gauss laser beam radius": "70e-6",
     "laser impact type": "interface",
     "laser power": "100"
   },

@@ -1,6 +1,11 @@
 #pragma once
 // MeltPoolDG
+#include <deal.II/base/mpi.h>
+
 #include <meltpooldg/interface/simulation_base.hpp>
+
+#include <memory>
+#include <string>
 
 namespace MeltPoolDG
 {

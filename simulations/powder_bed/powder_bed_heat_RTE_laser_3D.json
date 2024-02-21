@@ -18,6 +18,7 @@
   "laser": {
     "starting position": "0.0,0.0,0.0",
     "laser heat source model": "RTE",
+    "laser gauss laser beam radius": "70e-6",
     "laser impact type": "interface",
     "laser power": "100"
   },
@@ -47,7 +48,6 @@
     "domain z min": "-50e-6",
     "domain z max": "100e-6",
     "cell repetitions": "4,4,3",
-    "RTE laser beam radius": "70e-6",
     "initial temperature": "500.0",
     "powder bed": {
       "particle list file": "particles_in_domain.csv",

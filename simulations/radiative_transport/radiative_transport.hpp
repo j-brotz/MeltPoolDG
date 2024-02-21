@@ -1,15 +1,32 @@
 #pragma once
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/numbers.h>
+#include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
+
+#include <deal.II/distributed/shared_tria.h>
+#include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_tools_geometry.h>
 
+#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
+#include <meltpooldg/utilities/enum.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
+#include <algorithm>
 #include <cmath>
-#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
 
 /**
  * TODO: documentation
@@ -25,36 +42,39 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   static constexpr double x_min = -1;
   static constexpr double x_max = 1;
 
+  // boundary condition for RTE
   template <int dim>
   class IntensityBoundary : public Function<dim>
   {
   public:
-    IntensityBoundary(const double             power_in,
-                      const double             radius_in,
-                      const Point<dim, double> center_in)
+    IntensityBoundary(const double                 power_in,
+                      const double                 radius_in,
+                      const Point<dim, double>     laser_position_in,
+                      const Tensor<1, dim, double> laser_direction_in)
       : Function<dim>(1)
       , power(power_in)
       , radius(radius_in)
-      , center(center_in)
+      , laser_position(laser_position_in)
+      , laser_direction(laser_direction_in)
+      , surf_peak_power_density_factor(1. / (radius_in * radius_in * numbers::PI / 2))
     {}
 
     double
     value(const Point<dim> &p, const unsigned int) const override
     {
-      const double peak_factor = 1. / (radius * radius * numbers::PI * 0.5);
-
-      const double r = center.distance(p);
+      const double r = Heat::compute_distance_to_line(p, laser_position, laser_direction);
 
       const double s          = r / radius;
-      const double peak_power = power * peak_factor;
+      const double peak_power = surf_peak_power_density_factor * power;
       return peak_power * std::exp(-2. * s * s);
-      // TODO: verify if this works for 2D, 3D
     }
 
   private:
-    const double             power;
-    const double             radius;
-    const Point<dim, double> center;
+    const double                 power;
+    const double                 radius;
+    const Point<dim, double>     laser_position;
+    const Tensor<1, dim, double> laser_direction;
+    const double                 surf_peak_power_density_factor;
   };
 
   template <int dim>
@@ -209,11 +229,11 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                 face->set_boundary_id(upper_bc);
             }
 
-      this->attach_dirichlet_boundary_condition(upper_bc,
-                                                std::make_shared<IntensityBoundary<dim>>(power_in,
-                                                                                         radius_in,
-                                                                                         center_in),
-                                                "intensity");
+      this->attach_dirichlet_boundary_condition(
+        upper_bc,
+        std::make_shared<IntensityBoundary<dim>>(
+          power_in, radius_in, center_in, -dealii::Point<dim>::unit_vector(dim - 1)),
+        "intensity");
     }
 
     void

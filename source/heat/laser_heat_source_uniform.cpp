@@ -1,8 +1,7 @@
 #include <deal.II/base/exceptions.h>
 
 #include <meltpooldg/heat/laser_heat_source_uniform.hpp>
-
-#include <meltpooldg/heat/laser_utilities.h>
+#include <meltpooldg/heat/laser_utilities.hpp>
 
 namespace MeltPoolDG::Heat
 {

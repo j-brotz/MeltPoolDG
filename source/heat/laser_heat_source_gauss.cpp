@@ -2,9 +2,8 @@
 #include <deal.II/base/utilities.h>
 
 #include <meltpooldg/heat/laser_heat_source_gauss.hpp>
+#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
-
-#include <meltpooldg/heat/laser_utilities.h>
 
 #include <cmath>
 

@@ -48,7 +48,7 @@ namespace MeltPoolDG::RadiativeTransport
                         "Sets the absorptivity of the gas phase.");
     }
     prm.leave_subsection();
-  };
+  }
 
   template <typename number>
   void
@@ -65,7 +65,7 @@ namespace MeltPoolDG::RadiativeTransport
                         "Sets the absorptivity of the liquid phase.");
     }
     prm.leave_subsection();
-  };
+  }
 
   template struct RadiativeTransportData<double>;
 } // namespace MeltPoolDG::RadiativeTransport

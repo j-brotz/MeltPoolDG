@@ -2,8 +2,13 @@
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/utilities.h>
 
 #include <deal.II/distributed/shared_tria.h>
 #include <deal.II/distributed/tria.h>
@@ -11,44 +16,52 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_refinement.h>
 
+#include <meltpooldg/heat/laser_data.hpp>
+#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/melt_pool/powder_bed.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace MeltPoolDG::Simulation::PowderBed
 {
+  // boundary condition for RTE
   template <int dim>
   class IntensityBoundary : public Function<dim>
   {
   public:
-    IntensityBoundary(const double             power_in,
-                      const double             radius_in,
-                      const Point<dim, double> center_in)
+    IntensityBoundary(const double                 power_in,
+                      const double                 radius_in,
+                      const Point<dim, double>     laser_position_in,
+                      const Tensor<1, dim, double> laser_direction_in)
       : Function<dim>(1)
       , power(power_in)
       , radius(radius_in)
-      , center(center_in)
+      , laser_position(laser_position_in)
+      , laser_direction(laser_direction_in)
+      , surf_peak_power_density_factor(1. / (radius_in * radius_in * numbers::PI / 2))
     {}
+
     double
     value(const Point<dim> &p, const unsigned int) const override
     {
-      const double peak_factor = 1. / (radius * radius * numbers::PI * 0.5);
-
-      const double r = center.distance(p);
+      const double r = Heat::compute_distance_to_line(p, laser_position, laser_direction);
 
       const double s          = r / radius;
-      const double peak_power = power * peak_factor;
+      const double peak_power = surf_peak_power_density_factor * power;
       return peak_power * std::exp(-2. * s * s);
     }
 
   private:
-    const double             power;
-    const double             radius;
-    const Point<dim, double> center;
+    const double                 power;
+    const double                 radius;
+    const Point<dim, double>     laser_position;
+    const Tensor<1, dim, double> laser_direction;
+    const double                 surf_peak_power_density_factor;
   };
 
 
@@ -56,13 +69,12 @@ namespace MeltPoolDG::Simulation::PowderBed
   class SimulationPowderBed : public SimulationBase<dim>
   {
   private:
-    double                    domain_x_min          = 0;
-    double                    domain_x_max          = 0;
-    double                    domain_y_min          = 0;
-    double                    domain_y_max          = 0;
-    double                    domain_z_min          = 0;
-    double                    domain_z_max          = 0;
-    double                    rte_laser_beam_radius = 0;
+    double                    domain_x_min = 0;
+    double                    domain_x_max = 0;
+    double                    domain_y_min = 0;
+    double                    domain_y_max = 0;
+    double                    domain_z_min = 0;
+    double                    domain_z_max = 0;
     std::vector<unsigned int> cell_repetitions;
     double                    T_initial = 500;
     MeltPool::PowderBedData   powder_bed_data;
@@ -100,9 +112,6 @@ namespace MeltPoolDG::Simulation::PowderBed
                           cell_repetitions,
                           "cell repetitions per dim applied before global refinement or amr");
         prm.add_parameter("initial temperature", T_initial, "Set the initial temperature.");
-        prm.add_parameter("RTE laser beam radius",
-                          rte_laser_beam_radius,
-                          "Laser beam radius in case of an RTE heat source is used.");
         powder_bed_data.add_parameters(prm);
       }
       prm.leave_subsection();
@@ -210,9 +219,11 @@ namespace MeltPoolDG::Simulation::PowderBed
           laser_center[dim - 1] = domain_z_max;
           this->attach_dirichlet_boundary_condition(
             upper_bc,
-            std::make_shared<IntensityBoundary<dim>>(this->parameters.laser.power,
-                                                     rte_laser_beam_radius,
-                                                     laser_center),
+            std::make_shared<IntensityBoundary<dim>>(
+              this->parameters.laser.power,
+              this->parameters.laser.gauss.laser_beam_radius,
+              this->parameters.laser.template get_starting_position<dim>(),
+              this->parameters.laser.template get_direction<dim>()),
             "intensity");
         }
     }
