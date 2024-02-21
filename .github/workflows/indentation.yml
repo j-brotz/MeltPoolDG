@@ -37,3 +37,10 @@ jobs:
     - name: python-check
       if: steps.autopep8.outputs.exit-code == 2
       run: exit 1
+    - name: parameter-sanity-check
+      run: |
+        scripts/parameters/check-all-json
+        git diff
+        git diff-files --quiet || exit $?
+
+
