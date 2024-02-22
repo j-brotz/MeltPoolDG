@@ -4,8 +4,6 @@
 
 #include <meltpooldg/utilities/enum.hpp>
 
-#include <vector>
-
 namespace MeltPoolDG
 {
   // choose the particular predictor type for the nonlinear/linear solver
@@ -20,11 +18,9 @@ namespace MeltPoolDG
 
 
   template <typename number = double>
-  class PredictorData
+  struct PredictorData
   {
   public:
-    PredictorData();
-
     PredictorType type                   = PredictorType::none;
     unsigned int  n_old_solution_vectors = 2;
 
@@ -32,12 +28,6 @@ namespace MeltPoolDG
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    set_default_values();
-
-    static std::vector<PredictorData<number> *> all;
+    post();
   };
-
-
-  template <typename number>
-  std::vector<PredictorData<number> *> PredictorData<number>::all;
 } // namespace MeltPoolDG

@@ -121,10 +121,10 @@ namespace MeltPoolDG
                heat.use_volume_specific_thermal_capacity_for_phase_interpolation,
                material);
     ls.post(reinit.max_n_steps);
-
-    // set default values dependent on predictor type
-    for (unsigned int i = 0; i < PredictorData<number>::all.size(); ++i)
-      PredictorData<number>::all[i]->set_default_values();
+    advec_diff.post();
+    reinit.post();
+    normal_vec.post();
+    curv.post();
 
     /************************************************************************************
      * check input parameters for validity

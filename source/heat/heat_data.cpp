@@ -103,6 +103,8 @@ namespace MeltPoolDG::Heat
     // sync verbosity level with base verbosity if not set
     if (nlsolve.verbosity_level == -1)
       nlsolve.verbosity_level = base_verbosity_level;
+
+    predictor.post();
   }
 
   template <typename number>

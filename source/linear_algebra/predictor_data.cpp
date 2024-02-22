@@ -3,12 +3,6 @@
 namespace MeltPoolDG
 {
   template <typename number>
-  PredictorData<number>::PredictorData()
-  {
-    all.emplace_back(this);
-  }
-
-  template <typename number>
   void
   PredictorData<number>::add_parameters(dealii::ParameterHandler &prm)
   {
@@ -25,7 +19,7 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  PredictorData<number>::set_default_values()
+  PredictorData<number>::post()
   {
     if (type == PredictorType::none)
       n_old_solution_vectors = 1;
@@ -33,5 +27,5 @@ namespace MeltPoolDG
       n_old_solution_vectors = 2;
   }
 
-  template class PredictorData<double>;
+  template struct PredictorData<double>;
 } // namespace MeltPoolDG
