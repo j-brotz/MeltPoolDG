@@ -2,7 +2,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 
-#include <meltpooldg/level_set/delta_approximation_phase_weighted_parameters.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
@@ -14,16 +14,16 @@ namespace MeltPoolDG::Heat
   {
     HeatData();
 
-    int                                         degree                   = -1;
-    int                                         n_subdivisions           = 1;
-    int                                         n_q_points_1d            = -1;
-    number                                      emissivity               = 0.0;
-    number                                      convection_coefficient   = 0.0;
-    number                                      temperature_infinity     = 0.0;
-    bool                                        enable_time_dependent_bc = false;
-    NonlinearSolverData<number>                 nlsolve;
-    LinearSolverData<number>                    linear_solver;
-    DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+    int                                                   degree                   = -1;
+    int                                                   n_subdivisions           = 1;
+    int                                                   n_q_points_1d            = -1;
+    number                                                emissivity               = 0.0;
+    number                                                convection_coefficient   = 0.0;
+    number                                                temperature_infinity     = 0.0;
+    bool                                                  enable_time_dependent_bc = false;
+    NonlinearSolverData<number>                           nlsolve;
+    LinearSolverData<number>                              linear_solver;
+    LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
     bool                  use_volume_specific_thermal_capacity_for_phase_interpolation = false;
     PredictorData<number> predictor;
 

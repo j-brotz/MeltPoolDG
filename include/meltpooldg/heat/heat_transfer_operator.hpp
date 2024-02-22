@@ -156,7 +156,7 @@ namespace MeltPoolDG::Heat
     mutable AlignedVector<VectorizedArray<double>> q_vapor;
 
     // phase weighted delta functin, only used for evaporative heat loss
-    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
 
     mutable AlignedVector<VectorizedArray<double>> conductivity_at_q;
     mutable VectorType                             conductivity_vec;

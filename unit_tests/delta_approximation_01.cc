@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-using namespace MeltPoolDG;
+using namespace MeltPoolDG::LevelSet;
 using namespace dealii;
 
 template <typename Number>

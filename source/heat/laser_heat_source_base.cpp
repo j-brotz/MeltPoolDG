@@ -22,7 +22,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   LaserHeatSourceBase<dim>::LaserHeatSourceBase(
-    const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data)
+    const LevelSet::DeltaApproximationPhaseWeightedData<double>
+      &delta_approximation_phase_weighted_data)
   {
     delta_phase_weighted =
       create_phase_weighted_delta_approximation(delta_approximation_phase_weighted_data);

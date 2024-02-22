@@ -20,8 +20,8 @@ namespace MeltPoolDG::Heat
   public:
     LaserHeatSourceBase();
 
-    LaserHeatSourceBase(
-      const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data);
+    LaserHeatSourceBase(const LevelSet::DeltaApproximationPhaseWeightedData<double>
+                          &delta_approximation_phase_weighted_data);
 
     /**
      * Compute a DoF vector of the volumetric heat source.
@@ -118,6 +118,6 @@ namespace MeltPoolDG::Heat
                                           const double                  delta_value,
                                           const double                  heaviside) const = 0;
 
-    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
   };
 } // namespace MeltPoolDG::Heat

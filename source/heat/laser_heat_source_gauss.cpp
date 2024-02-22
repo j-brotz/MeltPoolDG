@@ -13,10 +13,11 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   LaserHeatSourceGauss<dim>::LaserHeatSourceGauss(
-    const LaserData<double>::GaussData                &data_in,
-    const Tensor<1, dim, double>                      &laser_direction_in,
-    const TwoPhaseFluidPropertiesTransitionType       &variable_properties_over_interface,
-    const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data)
+    const LaserData<double>::GaussData          &data_in,
+    const Tensor<1, dim, double>                &laser_direction_in,
+    const TwoPhaseFluidPropertiesTransitionType &variable_properties_over_interface,
+    const LevelSet::DeltaApproximationPhaseWeightedData<double>
+      &delta_approximation_phase_weighted_data)
     : LaserHeatSourceBase<dim>(delta_approximation_phase_weighted_data)
     , data(data_in)
     , laser_direction(laser_direction_in)

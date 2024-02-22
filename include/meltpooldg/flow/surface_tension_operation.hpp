@@ -75,7 +75,7 @@ namespace MeltPoolDG::Flow
     const bool         do_level_set_pressure_gradient_interpolation;
     FullMatrix<double> ls_to_pressure_grad_interpolation_matrix;
 
-    std::unique_ptr<const DeltaApproximationBase<double>> delta_phase_weighted;
+    std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
 
     const double alpha_residual;
 

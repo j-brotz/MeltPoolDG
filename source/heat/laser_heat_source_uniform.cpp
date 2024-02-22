@@ -7,8 +7,9 @@ namespace MeltPoolDG::Heat
 {
   template <int dim>
   LaserHeatSourceUniform<dim>::LaserHeatSourceUniform(
-    const Tensor<1, dim, double>                      &laser_direction_in,
-    const DeltaApproximationPhaseWeightedData<double> &delta_approximation_phase_weighted_data)
+    const Tensor<1, dim, double> &laser_direction_in,
+    const LevelSet::DeltaApproximationPhaseWeightedData<double>
+      &delta_approximation_phase_weighted_data)
     : LaserHeatSourceBase<dim>(delta_approximation_phase_weighted_data)
     , laser_direction(laser_direction_in)
   {}
