@@ -45,5 +45,12 @@ namespace MeltPoolDG::Reinitialization
     prm.leave_subsection();
   }
 
+  template <typename number>
+  void
+  ReinitializationData<number>::post()
+  {
+    predictor.post();
+  }
+
   template struct ReinitializationData<double>;
 } // namespace MeltPoolDG::Reinitialization

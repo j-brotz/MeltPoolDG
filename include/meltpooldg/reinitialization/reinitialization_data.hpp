@@ -24,5 +24,8 @@ namespace MeltPoolDG::Reinitialization
 
     void
     add_parameters(dealii::ParameterHandler &prm);
+
+    void
+    post();
   };
 } // namespace MeltPoolDG::Reinitialization

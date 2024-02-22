@@ -84,6 +84,12 @@ namespace MeltPoolDG
 
     PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
+
+    void
+    post()
+    {
+      predictor.post();
+    }
   };
 
   template <typename number = double>
@@ -102,6 +108,12 @@ namespace MeltPoolDG
     PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
     number                   narrow_band_threshold = 0.9999999;
+
+    void
+    post()
+    {
+      predictor.post();
+    }
   };
 
   template <typename number = double>
@@ -121,6 +133,12 @@ namespace MeltPoolDG
     PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
     number                   narrow_band_threshold = 0.9999999;
+
+    void
+    post()
+    {
+      predictor.post();
+    }
   };
 
   template <typename number = double>
