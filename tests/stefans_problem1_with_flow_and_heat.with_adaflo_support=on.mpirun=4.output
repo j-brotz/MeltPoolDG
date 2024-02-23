@@ -12,7 +12,6 @@
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.52215576172e-01                                               normal_vector |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -28,7 +27,6 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.53167462349e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.10767e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -48,7 +46,6 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.53683459759e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.08964e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -68,7 +65,6 @@
 | || normal_0 ||L2 = 1.52364935062e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.53936362267e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.07941e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -88,7 +84,6 @@
 | || normal_0 ||L2 = 1.47392904601e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.54052770138e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.07558e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -108,7 +103,6 @@
 | || normal_0 ||L2 = 1.06182131209e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.54103791714e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.07732e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -128,7 +122,6 @@
 | || normal_0 ||L2 = 6.35950219216e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.54125189781e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.08400e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -148,7 +141,6 @@
 | || normal_0 ||L2 = 2.67184446522e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.54133772850e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.09513e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -168,7 +160,6 @@
 | || normal_0 ||L2 = 1.12071935103e-15                                               normal_vector |
 | || normal_1 ||L2 = 5.54137408733e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.11032e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -188,7 +179,6 @@
 | || normal_0 ||L2 = 4.71188387871e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.54139554501e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.12919e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -208,7 +198,6 @@
 | || normal_0 ||L2 = 2.84470774319e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.54142057896e-01                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 6.15142e-03                newton_raphson_solver |
-|  total mass = 9.765625e-10                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |

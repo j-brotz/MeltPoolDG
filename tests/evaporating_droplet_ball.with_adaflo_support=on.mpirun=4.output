@@ -1,7 +1,6 @@
 | || normal_0 ||L2 = 4.48949324711e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.48949330598e+00                                               normal_vector |
 | || curvature ||L2 = 4.97333125853e+00                                                  curvature |
-|  total mass = 4.2567342132e-06                                                 melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -17,7 +16,6 @@
 | || normal_0 ||L2 = 4.49297748194e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.49297744905e+00                                               normal_vector |
 | || curvature ||L2 = 4.97343343229e+00                                                  curvature |
-|  total mass = 4.2579352525e-06                                                 melt_pool_problem |
 | evaporation: jump in the velocity field = -2.84125e-12       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.1339848405e-13            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -37,7 +35,6 @@
 | || normal_0 ||L2 = 4.49694059465e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.49694070277e+00                                               normal_vector |
 | || curvature ||L2 = 4.97352287439e+00                                                  curvature |
-|  total mass = 4.2598851661e-06                                                 melt_pool_problem |
 | evaporation: jump in the velocity field = -2.84329e-12       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.1358365208e-13            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -57,7 +54,6 @@
 | || normal_0 ||L2 = 4.50014313576e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.50014303451e+00                                               normal_vector |
 | || curvature ||L2 = 4.97356384498e+00                                                  curvature |
-|  total mass = 4.2620132897e-06                                                 melt_pool_problem |
 | evaporation: jump in the velocity field = -2.84446e-12       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.1374406201e-13            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -77,7 +73,6 @@
 | || normal_0 ||L2 = 4.50246973645e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.50246972176e+00                                               normal_vector |
 | || curvature ||L2 = 4.97357991323e+00                                                  curvature |
-|  total mass = 4.2638730852e-06                                                 melt_pool_problem |
 | evaporation: jump in the velocity field = -2.84517e-12       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.1386399773e-13            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -97,7 +92,6 @@
 | || normal_0 ||L2 = 4.50407416645e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.50407407321e+00                                               normal_vector |
 | || curvature ||L2 = 4.97358449032e+00                                                  curvature |
-|  total mass = 4.2652962759e-06                                                 melt_pool_problem |
 | evaporation: jump in the velocity field = -2.84563e-12       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.1394929776e-13            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |

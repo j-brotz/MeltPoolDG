@@ -5,6 +5,7 @@
 
 #  include <meltpooldg/evaporation/evaporation_data.hpp>
 #  include <meltpooldg/flow/adaflo_wrapper.hpp>
+#  include <meltpooldg/material/material.templates.hpp>
 #  include <meltpooldg/utilities/constraints.hpp>
 #  include <meltpooldg/utilities/dof_monitor.hpp>
 #  include <meltpooldg/utilities/iteration_monitor.hpp>
@@ -374,6 +375,81 @@ namespace MeltPoolDG::Flow
     );
 
     ready_for_time_advance = false;
+  }
+
+
+
+  template <int dim>
+  void
+  AdafloWrapper<dim>::set_density_taylor_hood(const Material<double> &material,
+                                              const VectorType       &ls_as_heaviside,
+                                              const unsigned int      ls_dof_idx,
+                                              const VectorType       *temperature,
+                                              const unsigned int      temp_dof_idx)
+  {
+    if (adaflo_params.augmented_taylor_hood == true)
+      {
+        FEValues<dim> ls_values(scratch_data.get_mapping(),
+                                scratch_data.get_fe(ls_dof_idx),
+                                get_face_center_quad(),
+                                update_values);
+
+        std::unique_ptr<FEValues<dim>> temp_values;
+        if (temperature && material.has_dependency(Material<double>::FieldType::temperature))
+          temp_values = std::make_unique<FEValues<dim>>(scratch_data.get_mapping(),
+                                                        scratch_data.get_fe(temp_dof_idx),
+                                                        get_face_center_quad(),
+                                                        update_values);
+
+        std::vector<double> hs(ls_values.n_quadrature_points);
+        std::vector<double> temp(ls_values.n_quadrature_points);
+
+        for (const auto &cell : scratch_data.get_triangulation().active_cell_iterators())
+          {
+            if (cell->is_locally_owned())
+              {
+                TriaIterator<DoFCellAccessor<dim, dim, false>> ls_dof_cell(
+                  &scratch_data.get_triangulation(),
+                  cell->level(),
+                  cell->index(),
+                  &scratch_data.get_dof_handler(ls_dof_idx));
+
+                ls_values.reinit(ls_dof_cell);
+                ls_values.get_function_values(ls_as_heaviside, hs);
+
+                std::vector<double> rho_ls(ls_values.n_quadrature_points);
+
+                TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
+                  &scratch_data.get_triangulation(),
+                  cell->level(),
+                  cell->index(),
+                  &scratch_data.get_dof_handler(temp_dof_idx));
+
+                if (temp_values)
+                  {
+                    temp_values->reinit(temp_dof_cell);
+                    temp_values->get_function_values(*temperature, temp);
+                  }
+
+                for (unsigned int f = 0; f < GeometryInfo<dim>::faces_per_cell; ++f)
+                  {
+                    if (temp_values)
+                      {
+                        const auto material_values = material.template compute_parameters<double>(
+                          hs[f], temp[f], MaterialUpdateFlags::density);
+                        set_face_average_density(cell, f, material_values.density);
+                      }
+                    else
+                      {
+                        const auto material_values = material.template compute_parameters<double>(
+                          hs[f], MaterialUpdateFlags::density);
+
+                        set_face_average_density(cell, f, material_values.density);
+                      }
+                  }
+              }
+          }
+      }
   }
 
   template <int dim>

@@ -1,7 +1,6 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.86185073853e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.45246305521                                                    melt_pool_problem |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0 (analytical: 0.99)
 POSTPROCESSOR: max pressure: 0 (analytical: 0.0099)
@@ -27,7 +26,6 @@ POSTPROCESSOR: min pressure: 0 (analytical: 0)
 | || normal_0 ||L2 = 8.10959837361e-16                                               normal_vector |
 | || normal_1 ||L2 = 4.87016278556e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.45236658551                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.6008953296e-02            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.901718909033192e-01                                    navier_stokes_adaflo |
@@ -57,7 +55,6 @@ POSTPROCESSOR: min pressure: 1.58e-10 (analytical: 0)
 | || normal_0 ||L2 = 2.23285531287e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.87129474479e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.45231478168                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.5926162172e-02            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.901546786033801e-01                                    navier_stokes_adaflo |
@@ -87,7 +84,6 @@ POSTPROCESSOR: min pressure: 7.96e-10 (analytical: 0)
 | || normal_0 ||L2 = 9.02540107699e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.87255759908e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.45227728319                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.5867297649e-02            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.901433818610896e-01                                    navier_stokes_adaflo |
@@ -117,7 +113,6 @@ POSTPROCESSOR: min pressure: 1.31e-09 (analytical: 0)
 | || normal_0 ||L2 = 7.38405797686e-12                                               normal_vector |
 | || normal_1 ||L2 = 4.87391809628e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.45225049369                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 9.5826575430e-02            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.901367225586212e-01                                    navier_stokes_adaflo |

@@ -5,6 +5,11 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
+#include <deal.II/base/vectorization.h>
+
+#include "meltpooldg/flow/darcy_damping_operation.hpp"
+
+#include <memory>
 #ifdef MELT_POOL_DG_WITH_ADAFLO
 
 #  include <deal.II/lac/generic_linear_algebra.h>
@@ -13,6 +18,7 @@
 #  include <meltpooldg/flow/flow_base.hpp>
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulation_base.hpp>
+#  include <meltpooldg/material/material.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/utilities/time_iterator.hpp>
 #  include <meltpooldg/utilities/utility_functions.hpp>
@@ -58,6 +64,13 @@ namespace MeltPoolDG::Flow
      */
     void
     solve() override;
+
+    void
+    set_density_taylor_hood(const Material<double> &material,
+                            const VectorType       &ls_as_heaviside,
+                            const unsigned int      ls_dof_idx,
+                            const VectorType       *temperature  = nullptr,
+                            unsigned int            temp_dof_idx = -1);
 
     const LinearAlgebra::distributed::Vector<double> &
     get_velocity() const override;
@@ -181,6 +194,7 @@ namespace MeltPoolDG::Flow
     time_stepping_synchronized();
 
     ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data;
+
     /**
      * Timer
      */

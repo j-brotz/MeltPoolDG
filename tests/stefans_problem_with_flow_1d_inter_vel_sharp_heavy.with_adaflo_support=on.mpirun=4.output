@@ -1,4 +1,3 @@
-|  total mass = 0.44684179555                                                    melt_pool_problem |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0 (analytical: 0.99)
 POSTPROCESSOR: max pressure: 0 (analytical: 0.0099)
@@ -19,7 +18,6 @@ POSTPROCESSOR: min pressure: 0 (analytical: 0)
 |  τ = 0.0025                                                                     reinitialization |
 | || delta phi ||L2 = 1.695175870973173e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-|  total mass = 0.44684130089                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 6.0624871286e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.852812260594365e-01                                    navier_stokes_adaflo |
@@ -44,7 +42,6 @@ POSTPROCESSOR: min pressure: 2.92e-10 (analytical: 0)
 |  τ = 0.0025                                                                     reinitialization |
 | || delta phi ||L2 = 1.654557661442259e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-|  total mass = 0.44684079549                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 6.0624871757e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.852845359231876e-01                                    navier_stokes_adaflo |
@@ -69,7 +66,6 @@ POSTPROCESSOR: min pressure: -6.11e-10 (analytical: 0)
 |  τ = 0.0025                                                                     reinitialization |
 | || delta phi ||L2 = 1.614524864266092e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-|  total mass = 0.44684028194                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 6.0624872562e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.852878767714372e-01                                    navier_stokes_adaflo |
@@ -94,7 +90,6 @@ POSTPROCESSOR: min pressure: -1.32e-10 (analytical: 0)
 |  τ = 0.0025                                                                     reinitialization |
 | || delta phi ||L2 = 1.575091760342488e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-|  total mass = 0.44683976075                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.99              evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 6.0624873716e-01            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.852912581758116e-01                                    navier_stokes_adaflo |

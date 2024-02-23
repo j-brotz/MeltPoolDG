@@ -10,7 +10,6 @@
 |  τ = 2e-05                                                                      reinitialization |
 | || delta phi ||L2 = 1.087143209588248e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-|  total mass = 0.001                                                            melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -28,7 +27,6 @@
 | || delta phi ||L2 = 1.024083667289233e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.18053e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -50,7 +48,6 @@
 | || delta phi ||L2 = 9.884077371680178e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.16229e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -72,7 +69,6 @@
 | || delta phi ||L2 = 9.588490684109274e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.15193e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -94,7 +90,6 @@
 | || delta phi ||L2 = 9.314088856626768e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.14806e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -116,7 +111,6 @@
 | || delta phi ||L2 = 9.055296686710790e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.14981e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -138,7 +132,6 @@
 | || delta phi ||L2 = 8.810458894004114e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.15657e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -160,7 +153,6 @@
 | || delta phi ||L2 = 8.578440429118928e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.16784e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -182,7 +174,6 @@
 | || delta phi ||L2 = 8.358253580809105e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.18321e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -204,7 +195,6 @@
 | || delta phi ||L2 = 8.149016139213927e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.20231e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -226,7 +216,6 @@
 | || delta phi ||L2 = 7.949927748995833e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 6.22480e+00                newton_raphson_solver |
-|  total mass = 0.001                                                            melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |

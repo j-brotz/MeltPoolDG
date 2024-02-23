@@ -12,7 +12,6 @@
 |  τ = 3.125e-05                                                                  reinitialization |
 | || delta phi ||L2 = 1.368581820325689e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-|  total mass = 0.000950916                                                      melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -21,7 +20,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 4.97236e-01                newton_raphson_solver |
-|  total mass = 0.000950916                                                      melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -32,7 +30,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.00511e-01                newton_raphson_solver |
-|  total mass = 0.000950916                                                      melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -43,7 +40,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.02884e-01                newton_raphson_solver |
-|  total mass = 0.000950916                                                      melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -54,7 +50,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.04831e-01                newton_raphson_solver |
-|  total mass = 0.000950916                                                      melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -65,7 +60,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 5.06523e-01                newton_raphson_solver |
-|  total mass = 0.000950916                                                      melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

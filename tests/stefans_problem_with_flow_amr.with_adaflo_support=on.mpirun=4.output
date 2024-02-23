@@ -1,32 +1,26 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.86185073853e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
-|  total mass = 0.45246305521                                                    melt_pool_problem |
 | cycle: 0 n_dofs: 1089(ls) + 8450(vel) + 1089(p) T.size 1089                    melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
-|  total mass = 0.45255263258                                                    melt_pool_problem |
 | cycle: 1 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
-|  total mass = 0.45255263258                                                    melt_pool_problem |
 | cycle: 2 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
-|  total mass = 0.45255263258                                                    melt_pool_problem |
 | cycle: 3 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
-|  total mass = 0.45255263258                                                    melt_pool_problem |
 | cycle: 4 n_dofs: 1315(ls) + 10250(vel) + 1315(p) T.size 1315                   melt_pool_problem |
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 5.12157535553e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
-|  total mass = 0.45255263258                                                    melt_pool_problem |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0 (analytical: 0.099)
 POSTPROCESSOR: max pressure: 0 (analytical: 9.9e-05)
@@ -52,7 +46,6 @@ POSTPROCESSOR: min pressure: 0 (analytical: 0)
 | || normal_0 ||L2 = 9.79334492747e-16                                               normal_vector |
 | || normal_1 ||L2 = 5.11610384684e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980187893e+00                                                  curvature |
-|  total mass = 0.45229617988                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -0.099             evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 5.7629101381e-03            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.902860397404927e-02                                    navier_stokes_adaflo |

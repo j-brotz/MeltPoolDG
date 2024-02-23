@@ -5,6 +5,7 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 // for parallelization
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/material/material_data.hpp>
@@ -98,6 +99,12 @@ namespace MeltPoolDG
   class Material
   {
   public:
+    enum FieldType
+    {
+      temperature,
+      level_set
+    };
+
     Material(const MaterialData<number> &material_data, const MaterialTypes material_type);
 
     /**
@@ -166,6 +173,26 @@ namespace MeltPoolDG
                        const FECellIntegrator<dim, 1, number>         &temperature_val,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags,
                        const unsigned int                              q_index) const;
+
+    bool
+    has_dependency(const FieldType &field_type) const
+    {
+      switch (field_type)
+        {
+          case FieldType::temperature:
+            return material_type == MaterialTypes::liquid_solid ||
+                   material_type == MaterialTypes::gas_liquid_solid ||
+                   material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
+          case FieldType::level_set:
+            return material_type == MaterialTypes::gas_liquid ||
+                   material_type == MaterialTypes::gas_liquid_consistent_with_evaporation ||
+                   material_type == MaterialTypes::gas_liquid_solid ||
+                   material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
+          default:
+            AssertThrow(false, ExcNotImplemented());
+            return false;
+        }
+    }
 
   private:
     /**

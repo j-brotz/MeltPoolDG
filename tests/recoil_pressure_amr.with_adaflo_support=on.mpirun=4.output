@@ -3,17 +3,14 @@
 | || normal_0 ||L2 = 0.0000000000e+00                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 5.0274562512e+00                                         normal_vector_adaflo |
 | || curvature ||L2 = 0.0000000000e+00                                            curvature_adaflo |
-|  total mass = 0.00042084325796                                                 melt_pool_problem |
 | cycle: 0 n_dofs: 4225(ls) + 33282(vel) + 4225(p) T.size 4225 solid.size 4225   melt_pool_problem |
 | || normal_0 ||L2 = 6.2055163246e-03                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 5.8325114979e+00                                         normal_vector_adaflo |
 | || curvature ||L2 = 1.1405064794e-02                                            curvature_adaflo |
-|  total mass = 0.00042083110502                                                 melt_pool_problem |
 | cycle: 1 n_dofs: 5661(ls) + 44770(vel) + 5661(p) T.size 5661 solid.size 5661   melt_pool_problem |
 | || normal_0 ||L2 = 4.5823731834e-03                                         normal_vector_adaflo |
 | || normal_1 ||L2 = 6.1408953827e+00                                         normal_vector_adaflo |
 | || curvature ||L2 = 2.2542723068e-02                                            curvature_adaflo |
-|  total mass = 0.00042083017281                                                 melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -37,7 +34,6 @@
 | || curvature ||L2 = 1.3027479195e-02                                            curvature_adaflo |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 0.00042082874288                                                 melt_pool_problem |
 | || velocity ||L2 = 2.772949316931761e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.692651718832342e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -63,7 +59,6 @@
 | || curvature ||L2 = 3.4398437222e-02                                            curvature_adaflo |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 0.00042082570306                                                 melt_pool_problem |
 | || velocity ||L2 = 4.887523912949779e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.781571982808384e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -89,7 +84,6 @@
 | || curvature ||L2 = 8.4358276320e-02                                            curvature_adaflo |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 0.00042082584366                                                 melt_pool_problem |
 | || velocity ||L2 = 6.056039796788436e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.819436313537660e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
