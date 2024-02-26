@@ -1,27 +1,40 @@
 #pragma once
 
-#include <deal.II/base/exceptions.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
 
+#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+
+#include <meltpooldg/heat/laser_data.hpp>
+#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
+
+#include <memory>
 
 namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
   /**
-   * Laser heat source model interface.
+   * Projection based laser heat source model.
    */
   template <int dim>
-  class LaserHeatSourceBase
+  class LaserHeatSourceProjectionBased
   {
-  public:
-    LaserHeatSourceBase();
+    using VectorType      = LinearAlgebra::distributed::Vector<double>;
+    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    LaserHeatSourceBase(const LevelSet::DeltaApproximationPhaseWeightedData<double>
-                          &delta_approximation_phase_weighted_data);
+  public:
+    LaserHeatSourceProjectionBased(
+      const LaserData<double>                                      &laser_data_in,
+      std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile_in,
+      const Tensor<1, dim, double>                                 &laser_direction_in,
+      const bool variable_properties_over_interface_in,
+      const LevelSet::DeltaApproximationPhaseWeightedData<double>
+        &delta_approximation_phase_weighted_data);
 
     /**
      * Compute a DoF vector of the volumetric heat source.
@@ -30,8 +43,6 @@ namespace MeltPoolDG::Heat
     compute_volumetric_heat_source(VectorType             &heat_source_vector,
                                    const ScratchData<dim> &scratch_data,
                                    const unsigned int      temp_dof_idx,
-                                   const double            laser_power,
-                                   const Point<dim>       &laser_position,
                                    const bool              zero_out = true) const;
 
     /**
@@ -41,8 +52,6 @@ namespace MeltPoolDG::Heat
     compute_interfacial_heat_source(VectorType             &heat_source_vector,
                                     const ScratchData<dim> &scratch_data,
                                     const unsigned int      temp_dof_idx,
-                                    const double            laser_power,
-                                    const Point<dim>       &laser_position,
                                     const VectorType       &level_set_heaviside,
                                     const unsigned int      ls_dof_idx,
                                     const bool              zero_out       = true,
@@ -57,8 +66,6 @@ namespace MeltPoolDG::Heat
     compute_interfacial_heat_source_sharp(VectorType             &heat_rhs,
                                           const ScratchData<dim> &scratch_data,
                                           const unsigned int      temp_dof_idx,
-                                          const double            laser_power,
-                                          const Point<dim>       &laser_position,
                                           const VectorType       &level_set_heaviside,
                                           const unsigned int      ls_dof_idx,
                                           const bool              zero_out       = true,
@@ -82,15 +89,12 @@ namespace MeltPoolDG::Heat
      *
      * @note This function should only be used, if the level-set isosurface
      * is aligned with element faces and does not cross the cells.
-     *
      */
     void
     compute_interfacial_heat_source_sharp_conforming(VectorType             &heat_rhs,
                                                      const ScratchData<dim> &scratch_data,
                                                      const unsigned int      temp_dof_idx,
                                                      const unsigned int      temp_quad_idx,
-                                                     const double            laser_power,
-                                                     const Point<dim>       &laser_position,
                                                      const VectorType       &level_set_heaviside,
                                                      const unsigned int      ls_dof_idx,
                                                      const bool              zero_out,
@@ -99,24 +103,23 @@ namespace MeltPoolDG::Heat
 
   private:
     /**
-     * Local volumetric heat source
-     */
-    virtual double
-    local_compute_volumetric_heat_source(const Point<dim> &position,
-                                         const Point<dim> &laser_position,
-                                         double            power) const = 0;
-    /**
      * Local interfacial heat source
      *
-     * For the sharp interfacial heat source, set @p delta_value to 1.
+     * For the sharp interfacial heat source, set @param delta_value to 1.
      */
-    virtual double
-    local_compute_interfacial_heat_source(const Point<dim>             &position,
-                                          const Point<dim>             &laser_position,
-                                          const double                  power,
+    double
+    local_compute_interfacial_heat_source(const Point<dim>             &p,
                                           const Tensor<1, dim, double> &normal_vector,
                                           const double                  delta_value,
-                                          const double                  heaviside) const = 0;
+                                          const double                  heaviside) const;
+
+    const LaserData<double> &laser_data;
+
+    std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile;
+
+    const Tensor<1, dim, double> &laser_direction;
+
+    const bool variable_properties_over_interface;
 
     std::unique_ptr<const LevelSet::DeltaApproximationBase<double>> delta_phase_weighted;
   };

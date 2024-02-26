@@ -32,13 +32,13 @@
     "normal vec damping scale factor": "4"
   },
   "laser": {
-    "laser power": "10.",
     "starting position": "3e-4",
-    "laser heat source model": "Gauss",
-    "laser impact type": "interface_sharp",
-    "laser gauss laser beam radius": "0.06e-3",
-    "laser gauss absorptivity gas": "0.5",
-    "laser gauss absorptivity liquid": "0.5"
+    "model": "interface_projection_sharp",
+    "intensity profile": "Gauss",
+    "power": "10.",
+    "absorptivity gas": "0.5",
+    "absorptivity liquid": "0.5",
+    "radius": "0.06e-3"
   },
   "material": {
     "material template": "Ti64",

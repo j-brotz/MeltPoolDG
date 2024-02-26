@@ -87,9 +87,6 @@
       "preconditioner type": "DiagonalReduced"
     }
   },
-  "laser": {
-    "laser heat source model": "Gusarov"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {

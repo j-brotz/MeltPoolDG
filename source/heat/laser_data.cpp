@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <iterator>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
@@ -17,77 +17,69 @@ namespace MeltPoolDG
   {
     prm.enter_subsection("laser");
     {
-      prm.add_parameter("laser power", power, "Intensity of the laser");
-      prm.add_parameter("laser power over time",
+      prm.add_parameter(
+        "model",
+        model,
+        "Laser model. "
+        "analytical_temperature: see Mirkoohi et al. (2019); "
+        "volumetric: volumetric heat source, the intensity is defined by \"\"intensity profile\"\"; "
+        "interface_projection: projection-based regularized continuum surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; "
+        "interface_projection_sharp: projection-based sharp surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; "
+        "interface_projection_sharp_conforming: projection-based sharp surface flux in \"direction\" on a conforming mesh, the intensity is defined by \"\"intensity profile\"\"; "
+        "RTE: continuum surface flux projected using the radiative transport equation in \"direction\", supporting shadowing of undercuts, the intensity is defined by \"\"intensity profile\"\"; ");
+      prm.add_parameter(
+        "intensity profile",
+        intensity_profile,
+        "Laser intensity profile. "
+        "uniform: note that the \"power\" input is treated as the uniform power density in the whole domain; "
+        "Gauss: Gaussian laser intensity shape with \"radius\" that retains the \"power\"; "
+        "Gusarov: see Gusarov et al. (2009); ");
+      prm.add_parameter("power", power, "Laser power");
+      prm.add_parameter("power over time",
                         power_over_time,
                         "Temporal distribution of the laser power",
                         Patterns::Selection("constant|ramp"));
-      prm.add_parameter("laser power start time",
+      prm.add_parameter("power start time",
                         power_start_time,
                         "In case of time-dependent laser power: activation time of ");
-      prm.add_parameter("laser power end time",
+      prm.add_parameter("power end time",
                         power_end_time,
                         "In case of time-dependent laser power: end time of ");
+
+      prm.add_parameter("absorptivity gas",
+                        absorptivity_gas,
+                        "Laser energy absorptivity of the gaseous part of the domain.");
+      prm.add_parameter("absorptivity liquid",
+                        absorptivity_liquid,
+                        "Laser energy absorptivity of the liquid part of the domain.");
+      prm.add_parameter(
+        "do move",
+        do_move,
+        "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.");
       prm.add_parameter(
         "starting position",
         starting_position,
         "Center coordinates of the laser beam starting position on the interface melt/gas.");
-      prm.declare_alias("starting position", "laser center", true);
-      prm.add_parameter("laser scan speed", scan_speed, "Scan speed of the laser");
-      prm.add_parameter(
-        "laser do move",
-        do_move,
-        "Set this parameter to true to move the laser in x-direction with the given parameter scan speed.");
+      prm.add_parameter("scan speed", scan_speed, "Scan speed of the laser");
       prm.add_parameter("direction", direction, "Laser beam direction.");
-      prm.add_parameter(
-        "laser impact type",
-        impact_type,
-        "Laser impact model. "
-        "volumetric: volumetric heat source; "
-        "interface: surface heat source at the two-phase interface modelled as a "
-        "continuum surface force within the interface region; "
-        "interface sharp: impact of surface heat source at the two-phase interface modelled as a "
-        "a sharp surface force (evaluation of a surface integral);");
-      delta_approximation_phase_weighted.add_parameters(prm);
-      prm.add_parameter("laser heat source model", heat_source_model, "Laser heat source model.");
+      prm.add_parameter("radius", radius, "Laser beam radius.");
       /*
        *   Gusarov
        */
-      prm.add_parameter("laser gusarov laser beam radius",
-                        gusarov.laser_beam_radius,
-                        "Laser beam radius.");
-      prm.add_parameter("laser gusarov reflectivity",
-                        gusarov.reflectivity,
-                        "Reflectivity of the material.");
-      prm.add_parameter("laser gusarov extinction coefficient",
-                        gusarov.extinction_coefficient,
-                        "Extinction coefficient in [1/m].");
-      prm.add_parameter("laser gusarov layer thickness",
-                        gusarov.layer_thickness,
-                        "Layer thickness");
+      prm.enter_subsection("gusarov");
+      {
+        prm.add_parameter("reflectivity", gusarov.reflectivity, "Reflectivity of the material.");
+        prm.add_parameter("extinction coefficient",
+                          gusarov.extinction_coefficient,
+                          "Extinction coefficient in [1/m].");
+        prm.add_parameter("layer thickness", gusarov.layer_thickness, "Layer thickness");
+      }
+      prm.leave_subsection();
       /*
-       *   Gauss
+       *   Analytical temperature field
        */
-      prm.add_parameter("laser gauss laser beam radius",
-                        gauss.laser_beam_radius,
-                        "Laser beam radius.");
-      prm.add_parameter("laser gauss absorptivity gas",
-                        gauss.absorptivity_gas,
-                        "Laser energy absorptivity of the gaseous part of the domain.");
-      prm.add_parameter("laser gauss absorptivity liquid",
-                        gauss.absorptivity_liquid,
-                        "Laser energy absorptivity of the liquid part of the domain.");
       prm.enter_subsection("analytical");
       {
-        /*
-         *   Analytical temperature field
-         */
-        prm.add_parameter("absorptivity liquid",
-                          analytical.absorptivity_liquid,
-                          "Absorptivity of the liquid part of domain");
-        prm.add_parameter("absorptivity gas",
-                          analytical.absorptivity_gas,
-                          "Absorptivity of the gaseous part of domain");
         prm.add_parameter("ambient temperature",
                           analytical.ambient_temperature,
                           "Ambient temperature in the inert gas.");
@@ -101,6 +93,8 @@ namespace MeltPoolDG
                           "This factor scales the analytical temperature field to be anisotropic.");
       }
       prm.leave_subsection();
+
+      delta_approximation_phase_weighted.add_parameters(prm);
     }
     prm.leave_subsection();
   }
@@ -150,6 +144,22 @@ namespace MeltPoolDG
   }
 
   template <typename number>
+  void
+  LaserData<number>::check_input_parameters() const
+  {
+    if (power <= 0.0)
+      return;
+    if (model == LaserModelType::analytical_temperature)
+      return;
+
+    if (intensity_profile != LaserIntensityProfileType::uniform)
+      AssertThrow(radius > 0.0, ExcMessage("The radius cannot be zero!"));
+    if (intensity_profile == LaserIntensityProfileType::Gusarov)
+      AssertThrow(model == LaserModelType::volumetric,
+                  ExcMessage("For the Gusarov laser profile, the laser model must be volumetric!"));
+  }
+
+  template <typename number>
   template <int dim>
   Point<dim, number>
   LaserData<number>::get_starting_position() const
@@ -180,4 +190,4 @@ namespace MeltPoolDG
   LaserData<double>::get_direction<2>() const;
   template Tensor<1, 3, double>
   LaserData<double>::get_direction<3>() const;
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::Heat

@@ -263,7 +263,7 @@ namespace MeltPoolDG
     NormalVectorData<number>                           normal_vec;
     CurvatureData<number>                              curv;
     Heat::HeatData<number>                             heat;
-    LaserData<number>                                  laser;
+    Heat::LaserData<number>                            laser;
     RadiativeTransport::RadiativeTransportData<number> rte;
     MeltPoolData<number>                               mp;
     SurfaceTensionData<number>                         surface_tension;

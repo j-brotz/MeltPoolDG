@@ -13,7 +13,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
-#include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material.hpp>

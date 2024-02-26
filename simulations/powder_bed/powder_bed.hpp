@@ -3,7 +3,6 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/mpi.h>
-#include <deal.II/base/numbers.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -22,13 +21,13 @@
 #include <meltpooldg/melt_pool/powder_bed.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
-#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace MeltPoolDG::Simulation::PowderBed
 {
+
   // boundary condition for RTE
   template <int dim>
   class IntensityBoundary : public Function<dim>
@@ -39,29 +38,17 @@ namespace MeltPoolDG::Simulation::PowderBed
                       const Point<dim, double>     laser_position_in,
                       const Tensor<1, dim, double> laser_direction_in)
       : Function<dim>(1)
-      , power(power_in)
-      , radius(radius_in)
-      , laser_position(laser_position_in)
-      , laser_direction(laser_direction_in)
-      , surf_peak_power_density_factor(1. / (radius_in * radius_in * numbers::PI / 2))
+      , gauss(power_in, radius_in, laser_position_in, laser_direction_in)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int) const override
     {
-      const double r = Heat::compute_distance_to_line(p, laser_position, laser_direction);
-
-      const double s          = r / radius;
-      const double peak_power = surf_peak_power_density_factor * power;
-      return peak_power * std::exp(-2. * s * s);
+      return gauss.compute_intensity(p);
     }
 
   private:
-    const double                 power;
-    const double                 radius;
-    const Point<dim, double>     laser_position;
-    const Tensor<1, dim, double> laser_direction;
-    const double                 surf_peak_power_density_factor;
+    const Heat::GaussProjectionIntensityProfile<dim, double> gauss;
   };
 
 
@@ -211,7 +198,7 @@ namespace MeltPoolDG::Simulation::PowderBed
       /*
        * BC for RTE
        */
-      if (this->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+      if (this->parameters.laser.model == Heat::LaserModelType::RTE)
         {
           Point<dim> laser_center;
           for (int i = 0; i < dim; i++)
@@ -221,7 +208,7 @@ namespace MeltPoolDG::Simulation::PowderBed
             upper_bc,
             std::make_shared<IntensityBoundary<dim>>(
               this->parameters.laser.power,
-              this->parameters.laser.gauss.laser_beam_radius,
+              this->parameters.laser.radius,
               this->parameters.laser.template get_starting_position<dim>(),
               this->parameters.laser.template get_direction<dim>()),
             "intensity");
@@ -231,7 +218,7 @@ namespace MeltPoolDG::Simulation::PowderBed
     void
     set_field_conditions() override
     {
-      if (this->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+      if (this->parameters.laser.model == Heat::LaserModelType::RTE)
         this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
                                        "intensity");
       if (this->parameters.base.problem_name == ProblemType::heat_transfer)

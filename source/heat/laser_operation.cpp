@@ -1,10 +1,7 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_simplex_p.h>
 
-#include <meltpooldg/heat/laser.hpp>
-#include <meltpooldg/heat/laser_heat_source_gauss.hpp>
-#include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
-#include <meltpooldg/heat/laser_heat_source_uniform.hpp>
+#include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Heat
@@ -16,71 +13,104 @@ namespace MeltPoolDG::Heat
                                       const unsigned int        hs_dof_idx_in)
     : scratch_data(scratch_data_in)
     , laser_data(data_in.laser)
-    , material(data_in.material)
     , laser_position(laser_data.get_starting_position<dim>())
     , laser_direction(laser_data.get_direction<dim>())
   {
+    if (laser_data.model == LaserModelType::analytical_temperature)
+      return;
+
+    switch (laser_data.intensity_profile)
+      {
+          case LaserIntensityProfileType::uniform: {
+            intensity_profile =
+              std::make_shared<UniformIntensityProfile<dim, double>>(get_laser_power());
+            break;
+          }
+          case LaserIntensityProfileType::Gauss: {
+            if (laser_data.model == LaserModelType::volumetric)
+              intensity_profile = std::make_shared<GaussVolumetricIntensityProfile<dim, double>>(
+                get_laser_power(), laser_data.radius, get_laser_position());
+            else
+              intensity_profile = std::make_shared<GaussProjectionIntensityProfile<dim, double>>(
+                get_laser_power(), laser_data.radius, get_laser_position(), laser_direction);
+            break;
+          }
+          case LaserIntensityProfileType::Gusarov: {
+            intensity_profile = std::make_shared<GusarovIntensityProfile<dim, double>>(
+              laser_data.gusarov, get_laser_power(), laser_data.radius, get_laser_position());
+            break;
+          }
+        default:
+          AssertThrow(false, ExcNotImplemented());
+      }
+
     /*
      * Factory for the laser heat source model
      */
-    if (laser_data.heat_source_model == LaserHeatSourceModel::Gusarov)
+    switch (laser_data.model)
       {
-        laser_heat_source_operation =
-          std::make_shared<Heat::LaserHeatSourceGusarov<dim>>(laser_data.gusarov);
+          case LaserModelType::volumetric: {
+            laser_heat_source_operation_volumetric =
+              std::make_unique<Heat::LaserHeatSourceVolumetric<dim>>(intensity_profile);
+            break;
+          }
+        case LaserModelType::interface_projection_regularized:
+        case LaserModelType::interface_projection_sharp:
+          case LaserModelType::interface_projection_sharp_conforming: {
+            laser_heat_source_operation_projection =
+              std::make_unique<Heat::LaserHeatSourceProjectionBased<dim>>(
+                laser_data,
+                intensity_profile,
+                laser_direction,
+                data_in.material.two_phase_properties_transition_type !=
+                  TwoPhaseFluidPropertiesTransitionType::sharp,
+                laser_data.delta_approximation_phase_weighted);
+            break;
+          }
+          case LaserModelType::RTE: {
+            AssertThrow(heaviside_in, ExcMessage("The RTE laser model requires a heaviside!"));
+
+            rte_dof_handler.reinit(scratch_data.get_dof_handler(hs_dof_idx_in).get_triangulation());
+
+            scratch_data_in.attach_dof_handler(rte_dof_handler);
+            scratch_data_in.attach_dof_handler(rte_dof_handler);
+
+            rte_dof_idx = scratch_data_in.attach_constraint_matrix(rte_constraints_dirichlet);
+            rte_hanging_nodes_dof_idx =
+              scratch_data_in.attach_constraint_matrix(rte_hanging_node_constraints);
+
+            if (data_in.base.do_simplex)
+              rte_quad_idx =
+                scratch_data_in.attach_quadrature(QGaussSimplex<dim>(data_in.base.n_q_points_1d));
+            else
+              rte_quad_idx =
+                scratch_data_in.attach_quadrature(QGauss<dim>(data_in.base.n_q_points_1d));
+
+            // TODO give RTE a bc with the intensity profile
+            rte_operation = std::make_unique<RadiativeTransport::RadiativeTransportOperation<dim>>(
+              scratch_data,
+              data_in.rte,
+              laser_direction,
+              *heaviside_in,
+              rte_dof_idx,
+              rte_hanging_nodes_dof_idx,
+              rte_quad_idx,
+              hs_dof_idx_in);
+            break;
+          }
+        default:
+          AssertThrow(laser_data.model == LaserModelType::analytical_temperature,
+                      ExcMessage(
+                        "No requested laser model found. Please specify the "
+                        "heat source model in the laser section of the input parameters."));
       }
-    else if (laser_data.heat_source_model == LaserHeatSourceModel::Gauss)
-      {
-        laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceGauss<dim>>(
-          laser_data.gauss,
-          laser_direction,
-          material.two_phase_properties_transition_type,
-          laser_data.delta_approximation_phase_weighted);
-      }
-    else if (laser_data.heat_source_model == LaserHeatSourceModel::uniform)
-      {
-        laser_heat_source_operation = std::make_shared<Heat::LaserHeatSourceUniform<dim>>(
-          laser_direction, laser_data.delta_approximation_phase_weighted);
-      }
-    else if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
-      {
-        AssertThrow(heaviside_in, ExcMessage("The RTE laser model requires a heaviside!"));
-
-        rte_dof_handler.reinit(scratch_data.get_dof_handler(hs_dof_idx_in).get_triangulation());
-
-        scratch_data_in.attach_dof_handler(rte_dof_handler);
-        scratch_data_in.attach_dof_handler(rte_dof_handler);
-
-        rte_dof_idx = scratch_data_in.attach_constraint_matrix(rte_constraints_dirichlet);
-        rte_hanging_nodes_dof_idx =
-          scratch_data_in.attach_constraint_matrix(rte_hanging_node_constraints);
-
-        if (data_in.base.do_simplex)
-          rte_quad_idx =
-            scratch_data_in.attach_quadrature(QGaussSimplex<dim>(data_in.base.n_q_points_1d));
-        else
-          rte_quad_idx = scratch_data_in.attach_quadrature(QGauss<dim>(data_in.base.n_q_points_1d));
-
-        rte_operation = std::make_shared<RadiativeTransport::RadiativeTransportOperation<dim>>(
-          scratch_data,
-          data_in.rte,
-          laser_direction,
-          *heaviside_in,
-          rte_dof_idx,
-          rte_hanging_nodes_dof_idx,
-          rte_quad_idx,
-          hs_dof_idx_in);
-      }
-    else
-      AssertThrow(laser_data.heat_source_model == LaserHeatSourceModel::Analytical,
-                  ExcMessage("No requested laser model found. Please specify the "
-                             "heat source model in the laser section of the input parameters."));
   }
 
   template <int dim>
   void
   LaserOperation<dim>::distribute_dofs(const BaseData<double> &base_data)
   {
-    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+    if (laser_data.model == LaserModelType::RTE)
       {
         if (base_data.do_simplex)
           rte_dof_handler.distribute_dofs(FE_SimplexP<dim>(base_data.degree));
@@ -97,7 +127,7 @@ namespace MeltPoolDG::Heat
                                           &dirichlet_bc,
     const PeriodicBoundaryConditions<dim> &periodic_bc)
   {
-    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+    if (laser_data.model == LaserModelType::RTE)
       {
         rte_operation->setup_constraints(mutable_scratch_data,
                                          dirichlet_bc("intensity"),
@@ -112,7 +142,7 @@ namespace MeltPoolDG::Heat
   void
   LaserOperation<dim>::distribute_constraints()
   {
-    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+    if (laser_data.model == LaserModelType::RTE)
       {
         rte_operation->distribute_constraints();
       }
@@ -122,7 +152,7 @@ namespace MeltPoolDG::Heat
   void
   LaserOperation<dim>::reinit()
   {
-    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+    if (laser_data.model == LaserModelType::RTE)
       {
         rte_operation->reinit();
       }
@@ -134,7 +164,7 @@ namespace MeltPoolDG::Heat
     std::vector<
       std::pair<const DoFHandler<dim> *, std::function<void(std::vector<VectorType *> &)>>> &data)
   {
-    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+    if (laser_data.model == LaserModelType::RTE)
       {
         data.emplace_back(&rte_dof_handler, [&](std::vector<VectorType *> &vectors) {
           rte_operation->attach_vectors(vectors);
@@ -146,7 +176,7 @@ namespace MeltPoolDG::Heat
   void
   LaserOperation<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
   {
-    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+    if (laser_data.model == LaserModelType::RTE)
       {
         rte_operation->attach_output_vectors(data_out);
       }
@@ -187,7 +217,7 @@ namespace MeltPoolDG::Heat
   double
   LaserOperation<dim>::get_laser_power() const
   {
-    return laser_intensity * laser_data.power;
+    return current_power;
   }
 
   template <int dim>
@@ -216,6 +246,10 @@ namespace MeltPoolDG::Heat
       }
     else
       AssertThrow(false, ExcNotImplemented());
+
+    current_power = laser_data.power * laser_intensity;
+    if (intensity_profile)
+      intensity_profile->update_power(current_power);
   }
 
   /* TODO: add function parameters*/
@@ -231,44 +265,18 @@ namespace MeltPoolDG::Heat
                                            const BlockVectorType *normal_vector,
                                            const unsigned int     normal_dof_idx) const
   {
-    if (laser_data.heat_source_model == LaserHeatSourceModel::RTE)
+    switch (laser_data.model)
       {
-        rte_operation->solve();
-        rte_operation->compute_heat_source(heat_source, temp_hanging_nodes_dof_idx, zero_out);
-        return;
-      }
-
-    switch (laser_data.impact_type)
-      {
-          case LaserImpactType::volumetric: {
-            laser_heat_source_operation->compute_volumetric_heat_source(heat_source,
-                                                                        scratch_data,
-                                                                        temp_hanging_nodes_dof_idx,
-                                                                        get_laser_power(),
-                                                                        get_laser_position(),
-                                                                        zero_out);
+          case LaserModelType::volumetric: {
+            laser_heat_source_operation_volumetric->compute_volumetric_heat_source(
+              heat_source, scratch_data, temp_hanging_nodes_dof_idx, zero_out);
             break;
           }
-          case LaserImpactType::interface: {
-            laser_heat_source_operation->compute_interfacial_heat_source(heat_source,
-                                                                         scratch_data,
-                                                                         temp_hanging_nodes_dof_idx,
-                                                                         get_laser_power(),
-                                                                         get_laser_position(),
-                                                                         level_set_as_heaviside,
-                                                                         ls_dof_idx,
-                                                                         zero_out,
-                                                                         normal_vector,
-                                                                         normal_dof_idx);
-            break;
-          }
-          case LaserImpactType::interface_sharp: {
-            laser_heat_source_operation->compute_interfacial_heat_source_sharp(
-              heat_user_rhs,
+          case LaserModelType::interface_projection_regularized: {
+            laser_heat_source_operation_projection->compute_interfacial_heat_source(
+              heat_source,
               scratch_data,
               temp_hanging_nodes_dof_idx,
-              get_laser_power(),
-              get_laser_position(),
               level_set_as_heaviside,
               ls_dof_idx,
               zero_out,
@@ -276,19 +284,34 @@ namespace MeltPoolDG::Heat
               normal_dof_idx);
             break;
           }
-          case LaserImpactType::interface_sharp_conforming: {
-            laser_heat_source_operation->compute_interfacial_heat_source_sharp_conforming(
+          case LaserModelType::interface_projection_sharp: {
+            laser_heat_source_operation_projection->compute_interfacial_heat_source_sharp(
               heat_user_rhs,
               scratch_data,
               temp_hanging_nodes_dof_idx,
-              temp_quad_idx,
-              get_laser_power(),
-              get_laser_position(),
               level_set_as_heaviside,
               ls_dof_idx,
               zero_out,
               normal_vector,
               normal_dof_idx);
+            break;
+          }
+          case LaserModelType::interface_projection_sharp_conforming: {
+            laser_heat_source_operation_projection
+              ->compute_interfacial_heat_source_sharp_conforming(heat_user_rhs,
+                                                                 scratch_data,
+                                                                 temp_hanging_nodes_dof_idx,
+                                                                 temp_quad_idx,
+                                                                 level_set_as_heaviside,
+                                                                 ls_dof_idx,
+                                                                 zero_out,
+                                                                 normal_vector,
+                                                                 normal_dof_idx);
+            break;
+          }
+          case LaserModelType::RTE: {
+            rte_operation->solve();
+            rte_operation->compute_heat_source(heat_source, temp_hanging_nodes_dof_idx, zero_out);
             break;
           }
           default: {

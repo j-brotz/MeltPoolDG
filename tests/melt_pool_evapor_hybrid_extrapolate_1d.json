@@ -60,10 +60,10 @@
     "heat nlsolve residual tolerance": "1e-5"
   },
   "laser": {
-    "laser gauss laser beam radius": "70.e-6",
-    "laser heat source model": "Gauss",
-    "laser impact type": "interface",
-    "laser power": "0"
+    "model": "interface_projection_regularized",
+    "intensity profile": "Gauss",
+    "power": "0",
+    "radius": "70.e-6"
   },
   "levelset": {
     "ls do reinitialization": "true",

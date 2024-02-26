@@ -35,11 +35,11 @@
     }
   },
   "laser": {
-    "laser gauss absorptivity gas": "1.0",
-    "laser gauss absorptivity liquid": "1.0",
-    "laser heat source model": "uniform",
-    "laser impact type": "interface_sharp",
-    "laser power": "1e10"
+    "model": "interface_projection_sharp",
+    "intensity profile": "uniform",
+    "power": "1e10",
+    "absorptivity gas": "1.0",
+    "absorptivity liquid": "1.0"
   },
   "material": {
     "material template": "Ti64",

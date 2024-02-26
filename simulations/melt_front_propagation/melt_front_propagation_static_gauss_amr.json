@@ -32,13 +32,14 @@
     "do solidification": "true"
   },
   "laser": {
-    "laser power": "30.",
     "starting position": "0.0,0.0",
-    "laser do move": "false",
-    "laser heat source model": "Gauss",
-    "laser gauss laser beam radius": "0.06e-3",
-    "laser gauss absorptivity gas": "0.5",
-    "laser gauss absorptivity liquid": "0.5"
+    "model": "volumetric",
+    "intensity profile": "Gauss",
+    "power": "30.",
+    "absorptivity gas": "0.5",
+    "absorptivity liquid": "0.5",
+    "do move": "false",
+    "radius": "0.06e-3"
   },
   "material": {
     "material second conductivity": "55.563",

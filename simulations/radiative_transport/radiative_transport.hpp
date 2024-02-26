@@ -4,7 +4,6 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
-#include <deal.II/base/numbers.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -23,7 +22,6 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <algorithm>
-#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -47,34 +45,24 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   class IntensityBoundary : public Function<dim>
   {
   public:
-    IntensityBoundary(const double                 power_in,
-                      const double                 radius_in,
-                      const Point<dim, double>     laser_position_in,
-                      const Tensor<1, dim, double> laser_direction_in)
+    IntensityBoundary(const double                  power_in,
+                      const double                  radius_in,
+                      const Point<dim, double>     &laser_position_in,
+                      const Tensor<1, dim, double> &laser_direction_in)
       : Function<dim>(1)
-      , power(power_in)
-      , radius(radius_in)
-      , laser_position(laser_position_in)
-      , laser_direction(laser_direction_in)
-      , surf_peak_power_density_factor(1. / (radius_in * radius_in * numbers::PI / 2))
+      , direction(laser_direction_in)
+      , gauss(power_in, radius_in, laser_position_in, direction)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int) const override
     {
-      const double r = Heat::compute_distance_to_line(p, laser_position, laser_direction);
-
-      const double s          = r / radius;
-      const double peak_power = surf_peak_power_density_factor * power;
-      return peak_power * std::exp(-2. * s * s);
+      return gauss.compute_intensity(p);
     }
 
   private:
-    const double                 power;
-    const double                 radius;
-    const Point<dim, double>     laser_position;
-    const Tensor<1, dim, double> laser_direction;
-    const double                 surf_peak_power_density_factor;
+    const Tensor<1, dim, double>                             direction;
+    const Heat::GaussProjectionIntensityProfile<dim, double> gauss;
   };
 
   template <int dim>

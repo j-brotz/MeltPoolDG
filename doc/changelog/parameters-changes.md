@@ -1,6 +1,50 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-02-22
+- Refactor laser data
+```diff
+{
+  "laser": {
+-    "laser heat source model": "",
++    "model": "analytical_temperature|volumetric|interface_projection_regularized|interface_projection_sharp|interface_projection_sharp_conforming|RTE",
+-    "laser impact type": "",
++    "intensity profile": "uniform|Gauss|Gusarov",
+-    "laser power": "",
++    "power": "",
+-    "laser power over time": "",
++    "power over time": "",
+-    "laser power start time": "",
++    "power start time": "",
+-    "laser power end time": "",
++    "power end time": "",
+-    "laser gauss absorptivity gas": "",
++    "absorptivity gas": "",
+-    "laser gauss absorptivity liquid": "",
++    "absorptivity liquid": "",
+-    "laser do move": "",
++    "do move": "",
+-    "laser scan speed": "",
++    "scan speed": "",
+-    "laser gauss laser beam radius": "",
+-    "laser gusarov laser beam radius": "",
++    "radius": "",
+-    "laser gusarov reflectivity": "",
+-    "laser gusarov extinction coefficient": "",
+-    "laser gusarov layer thickness": "",
++    "gusarov": {
++      "reflectivity": "",
++      "extinction coefficient": "",
++      "layer thickness": "",
++    },
+    "analytical": {
+-      "absorptivity liquid": "",
+-      "absorptivity gas": "",
+    }
+  }
+}
+```
+
 ## 2024-02-20
 - Refactor laser data
 ```diff

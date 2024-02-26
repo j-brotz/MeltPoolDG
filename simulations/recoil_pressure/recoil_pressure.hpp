@@ -6,7 +6,6 @@
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
-#include <deal.II/base/numbers.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -26,7 +25,6 @@
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 
-#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
@@ -75,34 +73,24 @@ namespace MeltPoolDG::Simulation::RecoilPressure
   class IntensityBoundary : public Function<dim>
   {
   public:
-    IntensityBoundary(const double                 power_in,
-                      const double                 radius_in,
-                      const Point<dim, double>     laser_position_in,
-                      const Tensor<1, dim, double> laser_direction_in)
+    IntensityBoundary(const double                  power_in,
+                      const double                  radius_in,
+                      const Point<dim, double>     &laser_position_in,
+                      const Tensor<1, dim, double> &laser_direction_in)
       : Function<dim>(1)
-      , power(power_in)
-      , radius(radius_in)
-      , laser_position(laser_position_in)
-      , laser_direction(laser_direction_in)
-      , surf_peak_power_density_factor(1. / (radius_in * radius_in * numbers::PI / 2))
+      , direction(laser_direction_in)
+      , gauss(power_in, radius_in, laser_position_in, direction)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int) const override
     {
-      const double r = Heat::compute_distance_to_line(p, laser_position, laser_direction);
-
-      const double s          = r / radius;
-      const double peak_power = surf_peak_power_density_factor * power;
-      return peak_power * std::exp(-2. * s * s);
+      return gauss.compute_intensity(p);
     }
 
   private:
-    const double                 power;
-    const double                 radius;
-    const Point<dim, double>     laser_position;
-    const Tensor<1, dim, double> laser_direction;
-    const double                 surf_peak_power_density_factor;
+    const Tensor<1, dim, double>                             direction;
+    const Heat::GaussProjectionIntensityProfile<dim, double> gauss;
   };
 
   template <int dim>
@@ -573,7 +561,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       /*
        * BC for heat transfer
        */
-      if (this->parameters.laser.heat_source_model != LaserHeatSourceModel::Analytical)
+      if (this->parameters.laser.model != Heat::LaserModelType::analytical_temperature)
         {
           if (evaporation_boundary && this->parameters.heat.convection_coefficient > 0)
             this->attach_convection_boundary_condition(upper_bc, "heat_transfer");
@@ -602,12 +590,12 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       /*
        * BC for RTE
        */
-      if (this->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+      if (this->parameters.laser.model == Heat::LaserModelType::RTE)
         this->attach_dirichlet_boundary_condition(
           upper_bc,
           std::make_shared<IntensityBoundary<dim>>(
             this->parameters.laser.power,
-            this->parameters.laser.gauss.laser_beam_radius,
+            this->parameters.laser.radius,
             this->parameters.laser.template get_starting_position<dim>(),
             this->parameters.laser.template get_direction<dim>()),
           "intensity");
@@ -680,13 +668,13 @@ namespace MeltPoolDG::Simulation::RecoilPressure
         "signed_distance");
       this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
-      if (this->parameters.laser.heat_source_model != LaserHeatSourceModel::Analytical)
+      if (this->parameters.laser.model != Heat::LaserModelType::analytical_temperature)
         this->attach_initial_condition(
           std::make_shared<InitialConditionTemperature<dim>>(
             T_initial_bottom, T_initial_top, domain_y_min, domain_y_max),
           "heat_transfer");
 
-      if (this->parameters.laser.heat_source_model == LaserHeatSourceModel::RTE)
+      if (this->parameters.laser.model == Heat::LaserModelType::RTE)
         this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
                                        "intensity");
     }

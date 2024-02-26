@@ -9,9 +9,10 @@
     "verbosity level": "0"
   },
   "laser": {
-    "laser heat source model": "RTE",
-    "laser impact type": "interface",
-    "laser power": "99."
+    "model": "RTE",
+    "intensity profile": "Gauss",
+    "power": "0.1",
+    "radius": "0.5"
   },
   "rte": {
     "rte verbosity level": "1",

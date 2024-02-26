@@ -416,13 +416,12 @@ namespace MeltPoolDG::MeltPool
                   {
                     laser_operation->move_laser(dt);
 
-                    if (base_in->parameters.laser.heat_source_model ==
-                        LaserHeatSourceModel::Analytical)
+                    if (base_in->parameters.laser.model ==
+                        Heat::LaserModelType::analytical_temperature)
                       Heat::LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
                         *scratch_data,
                         base_in->parameters.material,
-                        base_in->parameters.laser.analytical,
-                        base_in->parameters.laser.scan_speed,
+                        base_in->parameters.laser,
                         laser_operation->get_laser_power(),
                         laser_operation->get_laser_position(),
                         heat_operation->get_temperature(),
@@ -502,8 +501,8 @@ namespace MeltPoolDG::MeltPool
                         if (!((evaporation_operation &&
                                (base_in->parameters.evapor.evaporation_model ==
                                 Evaporation::EvaporationModelType::constant)) ||
-                              base_in->parameters.laser.heat_source_model ==
-                                LaserHeatSourceModel::Analytical))
+                              base_in->parameters.laser.model ==
+                                Heat::LaserModelType::analytical_temperature))
                           heat_operation->solve(false);
                       }
 
@@ -1382,12 +1381,11 @@ namespace MeltPoolDG::MeltPool
     if (heat_operation)
       {
         if (laser_operation &&
-            base_in->parameters.laser.heat_source_model == LaserHeatSourceModel::Analytical)
+            base_in->parameters.laser.model == Heat::LaserModelType::analytical_temperature)
           Heat::LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
             *scratch_data,
             base_in->parameters.material,
-            base_in->parameters.laser.analytical,
-            base_in->parameters.laser.scan_speed,
+            base_in->parameters.laser,
             laser_operation->get_laser_power(),
             laser_operation->get_laser_position(),
             heat_operation->get_temperature(),
@@ -1527,12 +1525,12 @@ namespace MeltPoolDG::MeltPool
         base_in->get_periodic_bc());
 
     // TODO: add function to each operation to check the requirements on ScratchData
-    scratch_data->build(problem_specific_parameters.do_heat_transfer,
-                        (base_in->parameters.laser.impact_type ==
-                           LaserImpactType::interface_sharp_conforming ||
-                         base_in->parameters.evapor.formulation_source_term_heat ==
-                           Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming)
-                        /*enable_inner_face_loops*/);
+    scratch_data->build(/*enable_boundary_face_loops*/ problem_specific_parameters.do_heat_transfer,
+                        /*enable_inner_face_loops*/ (
+                          base_in->parameters.laser.model ==
+                            Heat::LaserModelType::interface_projection_sharp_conforming ||
+                          base_in->parameters.evapor.formulation_source_term_heat ==
+                            Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming));
 
     if (do_reinit)
       {

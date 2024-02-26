@@ -49,7 +49,8 @@
     }
   },
   "laser": {
-    "laser heat source model": "Gusarov"
+    "model": "volumetric",
+    "intensity profile": "Gusarov"
   },
   "levelset": {
     "ls do reinitialization": "true",

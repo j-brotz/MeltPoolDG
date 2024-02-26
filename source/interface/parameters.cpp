@@ -176,6 +176,7 @@ namespace MeltPoolDG
   {
     base.check_input_parameters(ls.n_subdivisions);
     heat.check_input_parameters(base.do_simplex, ls.n_subdivisions);
+    laser.check_input_parameters();
     ls.check_input_parameters(base.degree);
     evapor.check_input_parameters(ls.n_subdivisions);
 

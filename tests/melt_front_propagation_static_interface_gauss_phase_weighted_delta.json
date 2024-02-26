@@ -33,19 +33,19 @@
     "do solidification": "true"
   },
   "laser": {
-    "laser power": "10.",
     "starting position": "0.0,0.0",
-    "laser do move": "false",
-    "laser heat source model": "Gauss",
-    "laser impact type": "interface",
-    "laser gauss laser beam radius": "0.06e-3",
-    "laser gauss absorptivity gas": "0.5",
-    "laser gauss absorptivity liquid": "0.5",
     "dirac delta function approximation": {
       "type": "heaviside_phase_weighted",
       "gas phase weight": "0",
       "heavy phase weight": "1"
-    }
+    },
+    "model": "interface_projection_regularized",
+    "intensity profile": "Gauss",
+    "power": "10.",
+    "absorptivity gas": "0.5",
+    "absorptivity liquid": "0.5",
+    "do move": "false",
+    "radius": "0.06e-3"
   },
   "material": {
     "material first capacity": "0",

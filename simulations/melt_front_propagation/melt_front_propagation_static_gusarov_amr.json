@@ -32,14 +32,17 @@
     "do solidification": "true"
   },
   "laser": {
-    "laser power": "30.",
     "starting position": "0.0,0.0",
-    "laser do move": "false",
-    "laser heat source model": "Gusarov",
-    "laser gusarov laser beam radius": "0.06e-3",
-    "laser gusarov reflectivity": "0.7",
-    "laser gusarov extinction coefficient": "60.0e3",
-    "laser gusarov layer thickness": "0.05e-3"
+    "radius": "0.06e-3",
+    "model": "volumetric",
+    "intensity profile": "Gusarov",
+    "power": "30.",
+    "do move": "false",
+    "gusarov": {
+      "reflectivity": "0.7",
+      "extinction coefficient": "60.0e3",
+      "layer thickness": "0.05e-3"
+    }
   },
   "material": {
     "material second conductivity": "55.563",

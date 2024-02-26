@@ -53,20 +53,20 @@
     "evapor evaporation model": "recoil_pressure"
   },
   "laser": {
-    "laser power": "156.",
     "starting position": "0.0,0.00000",
-    "laser scan speed": "0.003",
-    "laser do move": "false",
-    "laser heat source model": "Gauss",
-    "laser impact type": "interface",
-    "laser gauss laser beam radius": "70.e-6",
-    "laser gauss absorptivity gas": "0.25",
-    "laser gauss absorptivity liquid": "0.25",
     "dirac delta function approximation": {
       "type": "quad_heaviside_phase_weighted",
       "gas phase weight": "0",
       "heavy phase weight": "1"
-    }
+    },
+    "model": "interface_projection_regularized",
+    "intensity profile": "Gauss",
+    "power": "156.",
+    "absorptivity gas": "0.25",
+    "absorptivity liquid": "0.25",
+    "do move": "false",
+    "scan speed": "0.003",
+    "radius": "70.e-6"
   },
   "melt pool": {
     "mp do not reinitialize in solid": "false",

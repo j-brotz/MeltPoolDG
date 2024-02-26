@@ -204,10 +204,10 @@ namespace MeltPoolDG::Heat
      *    set level-set as heaviside field
      */
     VectorType *level_set_as_heaviside_ptr = nullptr;
-    heaviside_field_function               = base_in->get_initial_condition(
-      "prescribed_heaviside",
-      (base_in->parameters.laser.heat_source_model !=
-       LaserHeatSourceModel::RTE) /*is_optional if laser is not RTE*/);
+    heaviside_field_function =
+      base_in->get_initial_condition("prescribed_heaviside",
+                                     (base_in->parameters.laser.model !=
+                                      LaserModelType::RTE) /*is_optional if laser is not RTE*/);
     if (heaviside_field_function)
       {
         compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
@@ -346,9 +346,10 @@ namespace MeltPoolDG::Heat
         },
         base_in->get_periodic_bc());
 
-    scratch_data->build(true /*enable_boundary_faces*/,
-                        base_in->parameters.laser.impact_type ==
-                          LaserImpactType::interface_sharp_conforming /*enable_inner_face_loops*/);
+    scratch_data->build(
+      true /*enable_boundary_faces*/,
+      base_in->parameters.laser.model ==
+        LaserModelType::interface_projection_sharp_conforming /*enable_inner_face_loops*/);
 
     if (do_reinit)
       {
