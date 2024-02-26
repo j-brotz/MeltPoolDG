@@ -48,6 +48,11 @@ namespace MeltPoolDG
   void
   BaseData<number>::check_input_parameters(const unsigned int ls_n_subdivisions) const
   {
+    AssertThrow(problem_name != ProblemType::not_initialized,
+                ExcMessage("The problem name must be specified!"));
+    AssertThrow(application_name != ApplicationName::not_initialized,
+                ExcMessage("The application name must be specified!"));
+
     switch (problem_name)
       {
         case ProblemType::advection_diffusion:

@@ -38,104 +38,106 @@ namespace MeltPoolDG::Simulation
 {
   template <int dim>
   std::shared_ptr<SimulationBase<dim>>
-  SimulationSelector<dim>::get_simulation(const std::string simulation_name,
-                                          const std::string parameter_file,
-                                          const MPI_Comm    mpi_communicator)
+  SimulationSelector<dim>::get_simulation(const ApplicationName simulation_name,
+                                          const std::string     parameter_file,
+                                          const MPI_Comm        mpi_communicator)
   {
-    if (simulation_name == "reinit_circle")
-      return std::make_shared<ReinitCircle::SimulationReinit<dim>>(parameter_file,
-                                                                   mpi_communicator);
-    else if (simulation_name == "advection_diffusion")
-      return std::make_shared<AdvectionDiffusion::SimulationAdvec<dim>>(parameter_file,
-                                                                        mpi_communicator);
-    else if (simulation_name == "advection_diffusion_user_output")
-      return std::make_shared<AdvectionDiffusion::SimulationAdvectionDiffusionUserOutput<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "rotating_bubble")
-      return std::make_shared<RotatingBubble::SimulationRotatingBubble<dim>>(parameter_file,
-                                                                             mpi_communicator);
-    else if (simulation_name == "flow_past_cylinder")
-      return std::make_shared<FlowPastCylinder::SimulationFlowPastCylinder<dim>>(parameter_file,
-                                                                                 mpi_communicator);
-
-    else if (simulation_name == "spurious_currents")
-      return std::make_shared<SpuriousCurrents::SimulationSpuriousCurrents<dim>>(parameter_file,
-                                                                                 mpi_communicator);
-
-    else if (simulation_name == "rising_bubble")
-      return std::make_shared<RisingBubble::SimulationRisingBubble<dim>>(parameter_file,
-                                                                         mpi_communicator);
-    else if (simulation_name == "zalesak_disk")
-      return std::make_shared<ZalesakDisk::SimulationZalesakDisk<dim>>(parameter_file,
+    switch (simulation_name)
+      {
+        case ApplicationName::reinit_circle:
+          return std::make_shared<ReinitCircle::SimulationReinit<dim>>(parameter_file,
                                                                        mpi_communicator);
-    else if (simulation_name == "recoil_pressure")
-      return std::make_shared<RecoilPressure::SimulationRecoilPressure<dim>>(parameter_file,
-                                                                             mpi_communicator);
-    else if (simulation_name == "vortex_bubble")
-      return std::make_shared<VortexBubble::SimulationVortexBubble<dim>>(parameter_file,
-                                                                         mpi_communicator);
-    else if (simulation_name == "stefans_problem")
-      return std::make_shared<StefansProblem::SimulationStefansProblem<dim>>(parameter_file,
-                                                                             mpi_communicator);
-    else if (simulation_name == "stefans_problem_with_flow")
-      return std::make_shared<StefansProblemWithFlow::SimulationStefansProblemWithFlow<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "stefans_problem1_with_flow_and_heat")
-      return std::make_shared<
-        StefansProblem1WithFlowAndHeat::SimulationStefansProblem1WithFlowAndHeat<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "stefans_problem2_with_flow_and_heat")
-      return std::make_shared<
-        StefansProblem2WithFlowAndHeat::SimulationStefansProblem2WithFlowAndHeat<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "evaporating_droplet")
-      return std::make_shared<EvaporatingDroplet::SimulationEvaporatingDroplet<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "evaporating_shell")
-      return std::make_shared<EvaporatingShell::SimulationEvaporatingShell<dim>>(parameter_file,
+        case ApplicationName::advection_diffusion:
+          return std::make_shared<AdvectionDiffusion::SimulationAdvec<dim>>(parameter_file,
+                                                                            mpi_communicator);
+        case ApplicationName::advection_diffusion_user_output:
+          return std::make_shared<AdvectionDiffusion::SimulationAdvectionDiffusionUserOutput<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::rotating_bubble:
+          return std::make_shared<RotatingBubble::SimulationRotatingBubble<dim>>(parameter_file,
                                                                                  mpi_communicator);
-    else if (simulation_name == "evaporating_droplet_with_heat")
-      return std::make_shared<
-        EvaporatingDropletWithHeat::SimulationEvaporatingDropletWithHeat<dim>>(parameter_file,
-                                                                               mpi_communicator);
-    else if (simulation_name == "unidirectional_heat_transfer")
-      return std::make_shared<
-        UnidirectionalHeatTransfer::SimulationUnidirectionalHeatTransfer<dim>>(parameter_file,
-                                                                               mpi_communicator);
-    else if (simulation_name == "thermo_capillary_droplet")
-      return std::make_shared<ThermoCapillaryDroplet::SimulationThermoCapillaryDroplet<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "thermo_capillary_two_droplets")
-      return std::make_shared<
-        ThermoCapillaryTwoDroplets::SimulationThermoCapillaryTwoDroplets<dim>>(parameter_file,
-                                                                               mpi_communicator);
-    else if (simulation_name == "solidification_slab")
-      return std::make_shared<SolidificationSlab::SimulationSolidificationSlab<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "film_boiling")
-      return std::make_shared<FilmBoiling::SimulationFilmBoiling<dim>>(parameter_file,
-                                                                       mpi_communicator);
-    else if (simulation_name == "melt_front_propagation")
-      return std::make_shared<MeltFrontPropagation::SimulationMeltFrontPropagation<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "oscillating_droplet")
-      return std::make_shared<OscillatingDroplet::SimulationOscillatingDroplet<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "moving_droplet")
-      return std::make_shared<MovingDroplet::SimulationMovingDroplet<dim>>(parameter_file,
+        case ApplicationName::flow_past_cylinder:
+          return std::make_shared<FlowPastCylinder::SimulationFlowPastCylinder<dim>>(
+            parameter_file, mpi_communicator);
+
+        case ApplicationName::spurious_currents:
+          return std::make_shared<SpuriousCurrents::SimulationSpuriousCurrents<dim>>(
+            parameter_file, mpi_communicator);
+
+        case ApplicationName::rising_bubble:
+          return std::make_shared<RisingBubble::SimulationRisingBubble<dim>>(parameter_file,
+                                                                             mpi_communicator);
+        case ApplicationName::zalesak_disk:
+          return std::make_shared<ZalesakDisk::SimulationZalesakDisk<dim>>(parameter_file,
                                                                            mpi_communicator);
-    else if (simulation_name == "radiative_transport")
-      return std::make_shared<RadiativeTransport::RadiativeTransportSimulation<dim>>(
-        parameter_file, mpi_communicator);
-    else if (simulation_name == "powder_bed")
-      return std::make_shared<PowderBed::SimulationPowderBed<dim>>(parameter_file,
-                                                                   mpi_communicator);
-
-    /* add your simulation here*/
-    else
-      AssertThrow(false,
-                  ExcMessage(
-                    "The input-file for your requested application does not exist. Abort ..."));
+        case ApplicationName::recoil_pressure:
+          return std::make_shared<RecoilPressure::SimulationRecoilPressure<dim>>(parameter_file,
+                                                                                 mpi_communicator);
+        case ApplicationName::vortex_bubble:
+          return std::make_shared<VortexBubble::SimulationVortexBubble<dim>>(parameter_file,
+                                                                             mpi_communicator);
+        case ApplicationName::stefans_problem:
+          return std::make_shared<StefansProblem::SimulationStefansProblem<dim>>(parameter_file,
+                                                                                 mpi_communicator);
+        case ApplicationName::stefans_problem_with_flow:
+          return std::make_shared<StefansProblemWithFlow::SimulationStefansProblemWithFlow<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::stefans_problem1_with_flow_and_heat:
+          return std::make_shared<
+            StefansProblem1WithFlowAndHeat::SimulationStefansProblem1WithFlowAndHeat<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::stefans_problem2_with_flow_and_heat:
+          return std::make_shared<
+            StefansProblem2WithFlowAndHeat::SimulationStefansProblem2WithFlowAndHeat<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::evaporating_droplet:
+          return std::make_shared<EvaporatingDroplet::SimulationEvaporatingDroplet<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::evaporating_shell:
+          return std::make_shared<EvaporatingShell::SimulationEvaporatingShell<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::evaporating_droplet_with_heat:
+          return std::make_shared<
+            EvaporatingDropletWithHeat::SimulationEvaporatingDropletWithHeat<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::unidirectional_heat_transfer:
+          return std::make_shared<
+            UnidirectionalHeatTransfer::SimulationUnidirectionalHeatTransfer<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::thermo_capillary_droplet:
+          return std::make_shared<ThermoCapillaryDroplet::SimulationThermoCapillaryDroplet<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::thermo_capillary_two_droplets:
+          return std::make_shared<
+            ThermoCapillaryTwoDroplets::SimulationThermoCapillaryTwoDroplets<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::solidification_slab:
+          return std::make_shared<SolidificationSlab::SimulationSolidificationSlab<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::film_boiling:
+          return std::make_shared<FilmBoiling::SimulationFilmBoiling<dim>>(parameter_file,
+                                                                           mpi_communicator);
+        case ApplicationName::melt_front_propagation:
+          return std::make_shared<MeltFrontPropagation::SimulationMeltFrontPropagation<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::oscillating_droplet:
+          return std::make_shared<OscillatingDroplet::SimulationOscillatingDroplet<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::moving_droplet:
+          return std::make_shared<MovingDroplet::SimulationMovingDroplet<dim>>(parameter_file,
+                                                                               mpi_communicator);
+        case ApplicationName::radiative_transport:
+          return std::make_shared<RadiativeTransport::RadiativeTransportSimulation<dim>>(
+            parameter_file, mpi_communicator);
+        case ApplicationName::powder_bed:
+          return std::make_shared<PowderBed::SimulationPowderBed<dim>>(parameter_file,
+                                                                       mpi_communicator);
+        /* add your simulation here*/
+        default:
+          AssertThrow(false,
+                      ExcMessage(
+                        "The input-file for your requested application does not exist. Abort ..."));
+      }
   }
 
   template class SimulationSelector<MELT_POOL_DG_DIM>;

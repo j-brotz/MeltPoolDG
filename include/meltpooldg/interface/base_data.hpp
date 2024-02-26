@@ -4,34 +4,64 @@
 
 #include <meltpooldg/utilities/enum.hpp>
 
-#include <string>
-
 namespace MeltPoolDG
 {
   BETTER_ENUM(ProblemType,
               char,
+              not_initialized,
               advection_diffusion,
               reinitialization,
               level_set,
               melt_pool,
               level_set_with_evaporation,
               heat_transfer,
+              radiative_transport)
+
+
+  BETTER_ENUM(ApplicationName,
+              char,
+              not_initialized,
+              reinit_circle,
+              advection_diffusion,
+              advection_diffusion_user_output,
+              rotating_bubble,
+              flow_past_cylinder,
+              spurious_currents,
+              rising_bubble,
+              zalesak_disk,
+              recoil_pressure,
+              vortex_bubble,
+              stefans_problem,
+              stefans_problem_with_flow,
+              stefans_problem1_with_flow_and_heat,
+              stefans_problem2_with_flow_and_heat,
+              evaporating_droplet,
+              evaporating_shell,
+              evaporating_droplet_with_heat,
+              unidirectional_heat_transfer,
+              thermo_capillary_droplet,
+              thermo_capillary_two_droplets,
+              solidification_slab,
+              film_boiling,
+              melt_front_propagation,
+              oscillating_droplet,
+              moving_droplet,
               radiative_transport,
-              none)
+              powder_bed)
 
   template <typename number = double>
   struct BaseData
   {
-    std::string  application_name    = "none";
-    ProblemType  problem_name        = ProblemType::advection_diffusion;
-    unsigned int dimension           = 2;
-    unsigned int global_refinements  = 1;
-    unsigned int degree              = 1;
-    int          n_q_points_1d       = -1;
-    bool         do_print_parameters = true;
-    bool         do_simplex          = false;
-    number       gravity             = 0.0;
-    unsigned int verbosity_level     = 0;
+    ApplicationName application_name    = ApplicationName::not_initialized;
+    ProblemType     problem_name        = ProblemType::advection_diffusion;
+    unsigned int    dimension           = 2;
+    unsigned int    global_refinements  = 1;
+    unsigned int    degree              = 1;
+    int             n_q_points_1d       = -1;
+    bool            do_print_parameters = true;
+    bool            do_simplex          = false;
+    number          gravity             = 0.0;
+    unsigned int    verbosity_level     = 0;
 
     void
     add_parameters(dealii::ParameterHandler &prm);
