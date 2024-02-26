@@ -44,7 +44,7 @@
   },
   "laser": {
     "starting position": "0.0,0.0",
-    "model": "interface_projection",
+    "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
     "power": "10",
     "power end time": "1e-4",

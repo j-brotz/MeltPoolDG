@@ -60,7 +60,7 @@
     "heat nlsolve residual tolerance": "1e-5"
   },
   "laser": {
-    "model": "interface_projection",
+    "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
     "power": "0",
     "radius": "70.e-6"

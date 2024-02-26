@@ -38,7 +38,7 @@
       "type": "heaviside_times_heaviside_phase_weighted",
       "auto weights": "true"
     },
-    "model": "interface_projection",
+    "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
     "power": "10.",
     "absorptivity gas": "0.5",

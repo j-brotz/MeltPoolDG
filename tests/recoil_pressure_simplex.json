@@ -79,7 +79,7 @@
       "max temperature": "3500.",
       "temperature x to y ratio": "3."
     },
-    "model": "Analytical",
+    "model": "analytical_temperature",
     "power": "75.",
     "do move": "false",
     "scan speed": "0.003"

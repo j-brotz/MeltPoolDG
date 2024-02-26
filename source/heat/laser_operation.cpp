@@ -16,7 +16,7 @@ namespace MeltPoolDG::Heat
     , laser_position(laser_data.get_starting_position<dim>())
     , laser_direction(laser_data.get_direction<dim>())
   {
-    if (laser_data.model == LaserModelType::Analytical)
+    if (laser_data.model == LaserModelType::analytical_temperature)
       return;
 
     switch (laser_data.intensity_profile)
@@ -54,7 +54,7 @@ namespace MeltPoolDG::Heat
               std::make_unique<Heat::LaserHeatSourceVolumetric<dim>>(intensity_profile);
             break;
           }
-        case LaserModelType::interface_projection:
+        case LaserModelType::interface_projection_regularized:
         case LaserModelType::interface_projection_sharp:
           case LaserModelType::interface_projection_sharp_conforming: {
             laser_heat_source_operation_projection =
@@ -99,7 +99,7 @@ namespace MeltPoolDG::Heat
             break;
           }
         default:
-          AssertThrow(laser_data.model == LaserModelType::Analytical,
+          AssertThrow(laser_data.model == LaserModelType::analytical_temperature,
                       ExcMessage(
                         "No requested laser model found. Please specify the "
                         "heat source model in the laser section of the input parameters."));
@@ -272,7 +272,7 @@ namespace MeltPoolDG::Heat
               heat_source, scratch_data, temp_hanging_nodes_dof_idx, zero_out);
             break;
           }
-          case LaserModelType::interface_projection: {
+          case LaserModelType::interface_projection_regularized: {
             laser_heat_source_operation_projection->compute_interfacial_heat_source(
               heat_source,
               scratch_data,

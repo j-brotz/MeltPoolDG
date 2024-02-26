@@ -50,7 +50,7 @@
     "evapor evaporation model": "recoil_pressure"
   },
   "laser": {
-    "model": "interface_projection",
+    "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
     "power": "156.",
     "absorptivity gas": "0.5",

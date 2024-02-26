@@ -35,7 +35,7 @@
     }
   },
   "laser": {
-    "model": "interface_projection",
+    "model": "interface_projection_regularized",
     "intensity profile": "uniform",
     "power": "1e10",
     "absorptivity gas": "1.0",

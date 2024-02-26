@@ -50,7 +50,7 @@
     "evapor formulation source term heat": "sharp_conforming"
   },
   "laser": {
-    "model": "interface_projection",
+    "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
     "power": "0",
     "absorptivity gas": "0.0",

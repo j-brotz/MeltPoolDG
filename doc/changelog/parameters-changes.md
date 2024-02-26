@@ -7,7 +7,7 @@ All notable changes of the input parameters will be documented in this file.
 {
   "laser": {
 -    "laser heat source model": "",
-+    "model": "Analytical|volumetric|interface_projection|interface_projection_sharp|interface_projection_sharp_conforming|RTE",
++    "model": "analytical_temperature|volumetric|interface_projection_regularized|interface_projection_sharp|interface_projection_sharp_conforming|RTE",
 -    "laser impact type": "",
 +    "intensity profile": "uniform|Gauss|Gusarov",
 -    "laser power": "",

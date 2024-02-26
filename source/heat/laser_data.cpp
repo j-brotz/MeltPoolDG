@@ -21,9 +21,9 @@ namespace MeltPoolDG::Heat
         "model",
         model,
         "Laser model. "
-        "Analytical: see Mirkoohi et al. (2019); "
+        "analytical_temperature: see Mirkoohi et al. (2019); "
         "volumetric: volumetric heat source, the intensity is defined by \"\"intensity profile\"\"; "
-        "interface_projection: projection-based continuum surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; "
+        "interface_projection: projection-based regularized continuum surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; "
         "interface_projection_sharp: projection-based sharp surface flux in \"direction\", the intensity is defined by \"\"intensity profile\"\"; "
         "interface_projection_sharp_conforming: projection-based sharp surface flux in \"direction\" on a conforming mesh, the intensity is defined by \"\"intensity profile\"\"; "
         "RTE: continuum surface flux projected using the radiative transport equation in \"direction\", supporting shadowing of undercuts, the intensity is defined by \"\"intensity profile\"\"; ");
@@ -147,9 +147,9 @@ namespace MeltPoolDG::Heat
   void
   LaserData<number>::check_input_parameters() const
   {
-    if (!(power > 0.0))
+    if (power <= 0.0)
       return;
-    if (model == LaserModelType::Analytical)
+    if (model == LaserModelType::analytical_temperature)
       return;
 
     if (intensity_profile != LaserIntensityProfileType::uniform)

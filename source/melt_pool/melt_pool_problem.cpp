@@ -416,7 +416,8 @@ namespace MeltPoolDG::MeltPool
                   {
                     laser_operation->move_laser(dt);
 
-                    if (base_in->parameters.laser.model == Heat::LaserModelType::Analytical)
+                    if (base_in->parameters.laser.model ==
+                        Heat::LaserModelType::analytical_temperature)
                       Heat::LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
                         *scratch_data,
                         base_in->parameters.material,
@@ -500,7 +501,8 @@ namespace MeltPoolDG::MeltPool
                         if (!((evaporation_operation &&
                                (base_in->parameters.evapor.evaporation_model ==
                                 Evaporation::EvaporationModelType::constant)) ||
-                              base_in->parameters.laser.model == Heat::LaserModelType::Analytical))
+                              base_in->parameters.laser.model ==
+                                Heat::LaserModelType::analytical_temperature))
                           heat_operation->solve(false);
                       }
 
@@ -1378,7 +1380,8 @@ namespace MeltPoolDG::MeltPool
     // set initial conditions of the temperature field
     if (heat_operation)
       {
-        if (laser_operation && base_in->parameters.laser.model == Heat::LaserModelType::Analytical)
+        if (laser_operation &&
+            base_in->parameters.laser.model == Heat::LaserModelType::analytical_temperature)
           Heat::LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
             *scratch_data,
             base_in->parameters.material,

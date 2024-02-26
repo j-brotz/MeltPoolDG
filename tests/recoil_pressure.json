@@ -68,7 +68,7 @@
     "starting position": "0.0,0.00004",
     "scan speed": "0.003",
     "do move": "false",
-    "model": "Analytical",
+    "model": "analytical_temperature",
     "analytical": {
       "ambient temperature": "500.",
       "max temperature": "3500.",

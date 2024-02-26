@@ -39,7 +39,7 @@
       "gas phase weight": "0",
       "heavy phase weight": "1"
     },
-    "model": "interface_projection",
+    "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
     "power": "10.",
     "absorptivity gas": "0.5",

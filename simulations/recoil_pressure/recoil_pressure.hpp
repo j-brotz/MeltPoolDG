@@ -561,7 +561,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       /*
        * BC for heat transfer
        */
-      if (this->parameters.laser.model != Heat::LaserModelType::Analytical)
+      if (this->parameters.laser.model != Heat::LaserModelType::analytical_temperature)
         {
           if (evaporation_boundary && this->parameters.heat.convection_coefficient > 0)
             this->attach_convection_boundary_condition(upper_bc, "heat_transfer");
@@ -668,7 +668,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
         "signed_distance");
       this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
                                      "navier_stokes_u");
-      if (this->parameters.laser.model != Heat::LaserModelType::Analytical)
+      if (this->parameters.laser.model != Heat::LaserModelType::analytical_temperature)
         this->attach_initial_condition(
           std::make_shared<InitialConditionTemperature<dim>>(
             T_initial_bottom, T_initial_top, domain_y_min, domain_y_max),

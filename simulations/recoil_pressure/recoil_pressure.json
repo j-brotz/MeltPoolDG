@@ -38,7 +38,7 @@
     "analytical": {
       "ambient temperature": "300."
     },
-    "model": "Analytical",
+    "model": "analytical_temperature",
     "power": "10.",
     "do move": "false",
     "scan speed": "0.003"

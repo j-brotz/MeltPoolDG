@@ -21,11 +21,11 @@ namespace MeltPoolDG::Heat
     // must be specified by user
     not_initialized,
     // analytical laser model, see MeltPoolDG::Heat::LaserAnalyticalTemperatureField
-    Analytical,
+    analytical_temperature,
     // volumetric heat source
     volumetric,
     // interfacial heat source; use continuum surface force modeling within the interface region
-    interface_projection,
+    interface_projection_regularized,
     // interfacial heat source; evaluate integral as surface integral over the sharp interface,
     // determined by the margin cube algorithm
     interface_projection_sharp,

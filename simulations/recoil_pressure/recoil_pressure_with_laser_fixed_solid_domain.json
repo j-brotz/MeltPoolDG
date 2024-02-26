@@ -41,7 +41,7 @@
   },
   "laser": {
     "starting position": "0.0,0.00004",
-    "model": "interface_projection",
+    "model": "interface_projection_regularized",
     "intensity profile": "Gauss",
     "power": "113.",
     "absorptivity gas": "0.5",
