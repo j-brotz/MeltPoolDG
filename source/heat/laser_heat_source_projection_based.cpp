@@ -1,89 +1,89 @@
-#include <deal.II/base/mpi.h>
+#include <deal.II/base/array_view.h>
+#include <deal.II/base/data_out_base.h>
+#include <deal.II/base/quadrature.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/vectorization.h>
 
-#include <deal.II/grid/grid_tools.h>
+#include <deal.II/dofs/dof_accessor.h>
+
+#include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_values.h>
+
+#include <deal.II/grid/tria_iterator.h>
+
+#include <deal.II/lac/vector.h>
+#include <deal.II/lac/vector_operation.h>
+
+#include <deal.II/matrix_free/evaluation_flags.h>
+#include <deal.II/matrix_free/fe_point_evaluation.h>
 
 #include <deal.II/numerics/data_out.h>
 
-#include "meltpooldg/level_set/level_set_tools.hpp"
-#include <meltpooldg/heat/laser_heat_source_base.hpp>
+#include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
+#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <algorithm>
-#include <memory>
+#include <cmath>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace MeltPoolDG::Heat
 {
   using namespace dealii;
 
   template <int dim>
-  LaserHeatSourceBase<dim>::LaserHeatSourceBase()
-  {}
-
-  template <int dim>
-  LaserHeatSourceBase<dim>::LaserHeatSourceBase(
+  LaserHeatSourceProjectionBased<dim>::LaserHeatSourceProjectionBased(
+    const LaserData<double>                                      &laser_data_in,
+    std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile_in,
+    const Tensor<1, dim, double>                                 &laser_direction_in,
+    const bool variable_properties_over_interface_in,
     const LevelSet::DeltaApproximationPhaseWeightedData<double>
       &delta_approximation_phase_weighted_data)
+    : laser_data(laser_data_in)
+    , intensity_profile(intensity_profile_in)
+    , laser_direction(laser_direction_in)
+    , variable_properties_over_interface(variable_properties_over_interface_in)
   {
     delta_phase_weighted =
       create_phase_weighted_delta_approximation(delta_approximation_phase_weighted_data);
   }
 
+
   template <int dim>
-  void
-  LaserHeatSourceBase<dim>::compute_volumetric_heat_source(VectorType &heat_source_vector,
-                                                           const ScratchData<dim> &scratch_data,
-                                                           const unsigned int heat_source_dof_idx,
-                                                           const double       laser_power,
-                                                           const Point<dim>  &laser_position,
-                                                           const bool         zero_out) const
+  double
+  LaserHeatSourceProjectionBased<dim>::local_compute_interfacial_heat_source(
+    const Point<dim>             &p,
+    const Tensor<1, dim, double> &normal_vector,
+    const double                  delta_value,
+    const double                  heaviside) const
   {
-    if (zero_out)
-      scratch_data.initialize_dof_vector(heat_source_vector, heat_source_dof_idx);
+    const auto projection_factor = compute_projection_factor(laser_direction, normal_vector);
 
-    FEValues<dim> heat_source_eval(
-      scratch_data.get_mapping(),
-      scratch_data.get_dof_handler(heat_source_dof_idx).get_fe(),
-      Quadrature<dim>(
-        scratch_data.get_dof_handler(heat_source_dof_idx).get_fe().get_unit_support_points()),
-      update_quadrature_points);
+    const auto weight =
+      variable_properties_over_interface ? heaviside : ((heaviside > 0.5) ? 1.0 : 0.0);
+    const auto absorptivity = LevelSet::Tools::interpolate(weight,
+                                                           laser_data.absorptivity_gas,
+                                                           laser_data.absorptivity_liquid);
 
-    const unsigned int dofs_per_cell =
-      scratch_data.get_dof_handler(heat_source_dof_idx).get_fe().n_dofs_per_cell();
-    std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
-    for (const auto &cell :
-         scratch_data.get_dof_handler(heat_source_dof_idx).active_cell_iterators())
-      {
-        if (cell->is_locally_owned())
-          {
-            cell->get_dof_indices(local_dof_indices);
-
-            heat_source_eval.reinit(cell);
-
-            for (const auto q : heat_source_eval.quadrature_point_indices())
-              heat_source_vector[local_dof_indices[q]] =
-                local_compute_volumetric_heat_source(heat_source_eval.quadrature_point(q),
-                                                     laser_position,
-                                                     laser_power);
-          }
-      }
-
-    scratch_data.get_constraint(heat_source_dof_idx).distribute(heat_source_vector);
+    return intensity_profile->compute_intensity(p) * projection_factor * absorptivity * delta_value;
   }
 
   template <int dim>
   void
-  LaserHeatSourceBase<dim>::compute_interfacial_heat_source(VectorType &heat_source_vector,
-                                                            const ScratchData<dim> &scratch_data,
-                                                            const unsigned int      temp_dof_idx,
-                                                            const double            laser_power,
-                                                            const Point<dim>       &laser_position,
-                                                            const VectorType  &level_set_heaviside,
-                                                            const unsigned int ls_dof_idx,
-                                                            const bool         zero_out,
-                                                            const BlockVectorType *normal_vector,
-                                                            const unsigned int normal_dof_idx) const
+  LaserHeatSourceProjectionBased<dim>::compute_interfacial_heat_source(
+    VectorType             &heat_source_vector,
+    const ScratchData<dim> &scratch_data,
+    const unsigned int      temp_dof_idx,
+    const VectorType       &level_set_heaviside,
+    const unsigned int      ls_dof_idx,
+    const bool              zero_out,
+    const BlockVectorType  *normal_vector,
+    const unsigned int      normal_dof_idx) const
   {
     if (zero_out)
       heat_source_vector = 0.0;
@@ -284,8 +284,6 @@ namespace MeltPoolDG::Heat
 
                 heat_source_vector_local[q] =
                   local_compute_interfacial_heat_source(heat_source_eval.quadrature_point(q),
-                                                        laser_position,
-                                                        laser_power,
                                                         normal_at_q[q],
                                                         delta_value,
                                                         ls_heaviside_at_q[q]);
@@ -321,13 +319,11 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  LaserHeatSourceBase<dim>::compute_interfacial_heat_source_sharp_conforming(
+  LaserHeatSourceProjectionBased<dim>::compute_interfacial_heat_source_sharp_conforming(
     VectorType             &heat_rhs,
     const ScratchData<dim> &scratch_data,
     const unsigned int      temp_dof_idx,
     const unsigned int      temp_quad_idx,
-    const double            laser_power,
-    const Point<dim>       &laser_position,
     const VectorType       &level_set_heaviside,
     const unsigned int      ls_dof_idx,
     const bool              zero_out,
@@ -426,13 +422,8 @@ namespace MeltPoolDG::Heat
                 for (unsigned int d = 0; d < dim; ++d)
                   normal_v[d] = unit_normal[d][v];
 
-                local_result_face[v] =
-                  local_compute_interfacial_heat_source(position_v,
-                                                        laser_position,
-                                                        laser_power,
-                                                        normal_v,
-                                                        1.0 /*delta value*/,
-                                                        ls_eval.get_value(q)[v]);
+                local_result_face[v] = local_compute_interfacial_heat_source(
+                  position_v, normal_v, 1.0 /*delta value*/, ls_eval.get_value(q)[v]);
               }
             rhs_eval.submit_value(local_result_face, q);
           }
@@ -449,12 +440,10 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  LaserHeatSourceBase<dim>::compute_interfacial_heat_source_sharp(
+  LaserHeatSourceProjectionBased<dim>::compute_interfacial_heat_source_sharp(
     VectorType             &heat_rhs,
     const ScratchData<dim> &scratch_data,
     const unsigned int      temp_dof_idx,
-    const double            laser_power,
-    const Point<dim>       &laser_position,
     const VectorType       &level_set_heaviside,
     const unsigned int      ls_dof_idx,
     const bool              zero_out,
@@ -578,8 +567,7 @@ namespace MeltPoolDG::Heat
 
             const auto ls_at_q = ls.get_value(q);
             const auto result =
-              local_compute_interfacial_heat_source(
-                points_real[q], laser_position, laser_power, unit_normal, 1.0, ls_at_q) *
+              local_compute_interfacial_heat_source(points_real[q], unit_normal, 1.0, ls_at_q) *
               JxW[q];
 
             heat_source_vals.submit_value(result, q);
@@ -620,7 +608,7 @@ namespace MeltPoolDG::Heat
       }
   }
 
-  template class LaserHeatSourceBase<1>;
-  template class LaserHeatSourceBase<2>;
-  template class LaserHeatSourceBase<3>;
+  template class LaserHeatSourceProjectionBased<1>;
+  template class LaserHeatSourceProjectionBased<2>;
+  template class LaserHeatSourceProjectionBased<3>;
 } // namespace MeltPoolDG::Heat

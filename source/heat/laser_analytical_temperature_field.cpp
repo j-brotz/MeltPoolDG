@@ -6,15 +6,14 @@ namespace MeltPoolDG::Heat
   template <int dim>
   void
   LaserAnalyticalTemperatureField<dim>::compute_temperature_field(
-    const ScratchData<dim>                  &scratch_data,
-    const MaterialData<double>              &material,
-    const LaserData<double>::AnalyticalData &laser_data,
-    const double                             scan_speed,
-    const double                             laser_power,
-    const Point<dim>                        &laser_position,
-    VectorType                              &temperature,
-    const VectorType                        &level_set_as_heaviside,
-    const unsigned int                       temp_dof_idx)
+    const ScratchData<dim>     &scratch_data,
+    const MaterialData<double> &material,
+    const LaserData<double>    &laser_data,
+    const double                laser_power,
+    const Point<dim>           &laser_position,
+    VectorType                 &temperature,
+    const VectorType           &level_set_as_heaviside,
+    const unsigned int          temp_dof_idx)
   {
     // set the maximum temperature of the melt pool if not specified
 
@@ -45,11 +44,12 @@ namespace MeltPoolDG::Heat
                                                 laser_data,
                                                 support_points[local_dof_indices[i]],
                                                 level_set_as_heaviside[local_dof_indices[i]],
-                                                scan_speed,
+                                                laser_data.scan_speed,
                                                 laser_power,
                                                 laser_position);
-              temperature[local_dof_indices[i]] =
-                (T > laser_data.max_temperature) ? laser_data.max_temperature : T;
+              temperature[local_dof_indices[i]] = (T > laser_data.analytical.max_temperature) ?
+                                                    laser_data.analytical.max_temperature :
+                                                    T;
             }
         }
 
@@ -66,17 +66,17 @@ namespace MeltPoolDG::Heat
   template <int dim>
   double
   LaserAnalyticalTemperatureField<dim>::local_compute_temperature_field(
-    const MaterialData<double>              &material,
-    const LaserData<double>::AnalyticalData &laser_data,
-    const Point<dim>                        &point,
-    const double                             heaviside,
-    const double                             scan_speed,
-    const double                             laser_power,
-    const Point<dim>                        &laser_position)
+    const MaterialData<double> &material,
+    const LaserData<double>    &laser_data,
+    const Point<dim>           &point,
+    const double                heaviside,
+    const double                scan_speed,
+    const double                laser_power,
+    const Point<dim>           &laser_position)
   {
     const double P  = laser_power;
     const double v  = scan_speed;
-    const double T0 = laser_data.ambient_temperature;
+    const double T0 = laser_data.analytical.ambient_temperature;
 
     const double weight = (material.two_phase_properties_transition_type !=
                            TwoPhaseFluidPropertiesTransitionType::sharp) ?
@@ -106,9 +106,9 @@ namespace MeltPoolDG::Heat
     // modify temperature profile to be anisotropic
     Point<dim> point_scaled = point;
 
-    if (std::abs(laser_data.temperature_x_to_y_ratio - 1.0) > 1e-10)
+    if (std::abs(laser_data.analytical.temperature_x_to_y_ratio - 1.0) > 1e-10)
       for (int d = 0; d < dim - 1; d++)
-        point_scaled[d] *= laser_data.temperature_x_to_y_ratio;
+        point_scaled[d] *= laser_data.analytical.temperature_x_to_y_ratio;
 
     double R = point_scaled.distance(laser_position);
 

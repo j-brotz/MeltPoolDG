@@ -32,16 +32,16 @@
     "recoil temperature constant": "10000."
   },
   "laser": {
-    "laser power": "10.",
     "starting position": "0.0,0.00004",
-    "laser scan speed": "0.003",
-    "laser heat source model": "Analytical",
-    "laser do move": "false",
+    "absorptivity liquid": "0.5",
+    "absorptivity gas": "0",
     "analytical": {
-      "absorptivity liquid": "0.5",
-      "absorptivity gas": "0",
       "ambient temperature": "300."
-    }
+    },
+    "model": "Analytical",
+    "power": "10.",
+    "do move": "false",
+    "scan speed": "0.003"
   },
   "simulation specific domain": {
     "domain x min": "-0.0002",

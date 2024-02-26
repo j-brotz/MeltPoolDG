@@ -53,15 +53,15 @@
     "ls n initial reinit steps": "0"
   },
   "laser": {
-    "laser power": "75.",
-    "laser heat source model": "Analytical",
+    "absorptivity liquid": "0.5",
+    "absorptivity gas": "0",
     "analytical": {
-      "absorptivity liquid": "0.5",
-      "absorptivity gas": "0",
       "ambient temperature": "500.",
       "max temperature": "3500.",
       "temperature x to y ratio": "3."
-    }
+    },
+    "model": "Analytical",
+    "power": "75."
   },
   "simulation specific domain": {
     "domain x min": "-0.0001",

@@ -50,14 +50,14 @@
     "evapor formulation source term heat": "sharp_conforming"
   },
   "laser": {
-    "laser power": "0",
-    "laser scan speed": "0.003",
-    "laser do move": "false",
-    "laser heat source model": "Gauss",
-    "laser impact type": "interface",
-    "laser gauss laser beam radius": "70.e-6",
-    "laser gauss absorptivity gas": "0.0",
-    "laser gauss absorptivity liquid": "0.5"
+    "model": "interface_projection",
+    "intensity profile": "Gauss",
+    "power": "0",
+    "absorptivity gas": "0.0",
+    "absorptivity liquid": "0.5",
+    "do move": "false",
+    "scan speed": "0.003",
+    "radius": "70.e-6"
   },
   "melt pool": {
     "mp do not reinitialize in solid": "false",

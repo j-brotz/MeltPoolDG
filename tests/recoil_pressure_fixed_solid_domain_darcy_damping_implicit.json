@@ -77,21 +77,21 @@
     "recoil temperature constant": "10000."
   },
   "laser": {
-    "laser power": "75.",
     "starting position": "0.0,0.00000",
-    "laser scan speed": "0.003",
-    "laser do move": "false",
-    "laser power end time": "1.e-5",
-    "laser power over time": "constant",
-    "laser power start time": "-1.e-4",
-    "laser heat source model": "Analytical",
+    "absorptivity liquid": "0.5",
+    "absorptivity gas": "0",
     "analytical": {
       "max temperature": "3500.",
-      "absorptivity liquid": "0.5",
-      "absorptivity gas": "0",
       "ambient temperature": "500.",
       "temperature x to y ratio": "3."
-    }
+    },
+    "model": "Analytical",
+    "power": "75.",
+    "power over time": "constant",
+    "power start time": "-1.e-4",
+    "power end time": "1.e-5",
+    "do move": "false",
+    "scan speed": "0.003"
   },
   "melt pool": {
     "mp do not reinitialize in solid": "false",

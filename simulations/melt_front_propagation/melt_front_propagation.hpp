@@ -8,9 +8,6 @@
 #include <cmath>
 #include <iostream>
 // MeltPoolDG
-#include <meltpooldg/heat/laser_heat_source_base.hpp>
-#include <meltpooldg/heat/laser_heat_source_gauss.hpp>
-#include <meltpooldg/heat/laser_heat_source_gusarov.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/distance_functions.hpp>
 

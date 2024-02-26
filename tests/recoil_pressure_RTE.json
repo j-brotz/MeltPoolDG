@@ -52,9 +52,10 @@
     }
   },
   "laser": {
-    "laser heat source model": "RTE",
-    "laser power": "156",
-    "laser gauss laser beam radius": "120e-6"
+    "model": "RTE",
+    "intensity profile": "Gauss",
+    "power": "156",
+    "radius": "120e-6"
   },
   "rte": {
     "rte verbosity level": "1",

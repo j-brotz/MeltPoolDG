@@ -28,11 +28,11 @@
     "heat nlsolve residual tolerance": "1e0"
   },
   "laser": {
-    "laser gauss absorptivity gas": "1.0",
-    "laser gauss absorptivity liquid": "1.0",
-    "laser heat source model": "uniform",
-    "laser impact type": "interface_sharp",
-    "laser power": "1000000000.0"
+    "model": "uniform",
+    "intensity profile": "interface_sharp",
+    "power": "1000000000.0",
+    "absorptivity gas": "1.0",
+    "absorptivity liquid": "1.0"
   },
   "material": {
     "material template": "Ti64",

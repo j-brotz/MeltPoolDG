@@ -20,7 +20,7 @@
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_operation.hpp>
-#include <meltpooldg/heat/laser.hpp>
+#include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>

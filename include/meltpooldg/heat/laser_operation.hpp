@@ -14,7 +14,9 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/heat/laser_heat_source_base.hpp>
+#include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
+#include <meltpooldg/heat/laser_heat_source_volumetric.hpp>
+#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
@@ -43,9 +45,6 @@ namespace MeltPoolDG::Heat
     // Laser parameters
     const LaserData<double> &laser_data;
 
-    // Material parameters
-    const MaterialData<double> &material;
-
     // current laser position defined as spot center of the laser beam
     Point<dim> laser_position;
     // current unit laser direction vector
@@ -54,12 +53,16 @@ namespace MeltPoolDG::Heat
     double current_time;
     // current intensity of the laser (between 0 and 1)
     double laser_intensity;
+    double current_power;
+
+    std::shared_ptr<LaserIntensityProfileBase<dim, double>> intensity_profile;
 
     // Requested laser model
-    std::shared_ptr<LaserHeatSourceBase<dim>> laser_heat_source_operation;
+    std::unique_ptr<LaserHeatSourceVolumetric<dim>>      laser_heat_source_operation_volumetric;
+    std::unique_ptr<LaserHeatSourceProjectionBased<dim>> laser_heat_source_operation_projection;
 
     // RTE
-    std::shared_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
+    std::unique_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
     DoFHandler<dim>                                                       rte_dof_handler;
     AffineConstraints<double>                                             rte_constraints_dirichlet;
     AffineConstraints<double> rte_hanging_node_constraints;

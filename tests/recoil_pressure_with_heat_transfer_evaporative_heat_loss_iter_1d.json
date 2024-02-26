@@ -50,14 +50,14 @@
     "evapor evaporation model": "recoil_pressure"
   },
   "laser": {
-    "laser power": "156.",
-    "laser scan speed": "0.003",
-    "laser do move": "false",
-    "laser heat source model": "Gauss",
-    "laser impact type": "interface",
-    "laser gauss laser beam radius": "70.e-6",
-    "laser gauss absorptivity gas": "0.5",
-    "laser gauss absorptivity liquid": "0.5"
+    "model": "interface_projection",
+    "intensity profile": "Gauss",
+    "power": "156.",
+    "absorptivity gas": "0.5",
+    "absorptivity liquid": "0.5",
+    "do move": "false",
+    "scan speed": "0.003",
+    "radius": "70.e-6"
   },
   "darcy damping": {
     "avoid div zero constant": "1.",
