@@ -22,7 +22,6 @@ namespace MeltPoolDG
     operator std::string() const
     {
       return boost::algorithm::join(path, "::");
-      ;
     }
 
   private:
