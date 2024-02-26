@@ -1,4 +1,5 @@
 #include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
 
 #include <deal.II/dofs/dof_handler.h>
@@ -16,7 +17,6 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <iostream>
@@ -32,8 +32,7 @@ class InitializePhi1 : public Function<dim>
 public:
   InitializePhi1(const Point<dim> &center, const double &radius)
     : Function<dim>()
-    , center(center)
-    , radius(radius)
+    , sphere(center, radius)
   {}
 
   double
@@ -41,12 +40,10 @@ public:
   {
     (void)component;
 
-    return UtilityFunctions::CharacteristicFunctions::sgn(
-      DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+    return UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p));
   }
 
-  Point<dim> center;
-  double     radius;
+  const Functions::SignedDistance::Sphere<dim> sphere;
 };
 
 template <int dim>
@@ -55,8 +52,7 @@ class InitializePhi2 : public Function<dim>
 public:
   InitializePhi2(const Point<dim> &center, const double &radius)
     : Function<dim>()
-    , center(center)
-    , radius(radius)
+    , sphere(center, radius)
   {}
 
   double
@@ -64,12 +60,12 @@ public:
   {
     (void)component;
 
-    return -UtilityFunctions::CharacteristicFunctions::sgn(
-      DistanceFunctions::spherical_manifold<dim>(p, center, radius));
+    return UtilityFunctions::CharacteristicFunctions::sgn(sphere.value(p));
   }
 
-  Point<dim> center;
-  double     radius;
+  Point<dim>                                   center;
+  double                                       radius;
+  const Functions::SignedDistance::Sphere<dim> sphere;
 };
 
 template <int dim>
@@ -78,8 +74,7 @@ class InitializePhi3 : public Function<dim>
 public:
   InitializePhi3(const Point<dim> &center, const double &radius)
     : Function<dim>()
-    , center(center)
-    , radius(radius)
+    , sphere(center, radius)
   {}
 
   virtual double
@@ -88,13 +83,10 @@ public:
     (void)component;
 
     return UtilityFunctions::CharacteristicFunctions::heaviside(
-      UtilityFunctions::CharacteristicFunctions::sgn(
-        DistanceFunctions::spherical_manifold<dim>(p, center, radius)),
-      0);
+      UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)), 0);
   }
 
-  Point<dim> center;
-  double     radius;
+  const Functions::SignedDistance::Sphere<dim> sphere;
 };
 
 template <int dim>
@@ -103,8 +95,7 @@ class InitializePhi4 : public Function<dim>
 public:
   InitializePhi4(const Point<dim> &center, const double &radius)
     : Function<dim>()
-    , center(center)
-    , radius(radius)
+    , sphere(center, radius)
   {}
 
   virtual double
@@ -113,13 +104,10 @@ public:
     (void)component;
 
     return UtilityFunctions::CharacteristicFunctions::heaviside(
-      -UtilityFunctions::CharacteristicFunctions::sgn(
-        DistanceFunctions::spherical_manifold<dim>(p, center, radius)),
-      0);
+      -UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)), 0);
   }
 
-  Point<dim> center;
-  double     radius;
+  const Functions::SignedDistance::Sphere<dim> sphere;
 };
 
 template <int dim>
@@ -128,8 +116,7 @@ class InitializePhi5 : public Function<dim>
 public:
   InitializePhi5(const Point<dim> &center, const double &radius)
     : Function<dim>()
-    , center(center)
-    , radius(radius)
+    , sphere(center, radius)
   {}
 
   virtual double
@@ -137,13 +124,12 @@ public:
   {
     (void)component;
 
-    return 5 * UtilityFunctions::CharacteristicFunctions::sgn(
-                 DistanceFunctions::spherical_manifold<dim>(p, center, radius)) +
-           1.0;
+    return 5 * UtilityFunctions::CharacteristicFunctions::sgn(-sphere.value(p)) + 1.0;
   }
 
-  Point<dim> center;
-  double     radius;
+  Point<dim>                                   center;
+  double                                       radius;
+  const Functions::SignedDistance::Sphere<dim> sphere;
 };
 
 
@@ -224,7 +210,7 @@ main(int argc, char *argv[])
     pcout << "level_set_1 ∩ level_set_2 : " << merged_level_set_intersect.l2_norm() << std::endl;
     pcout << "level_set_1 - level_set_2 : " << merged_level_set_subtract.l2_norm() << std::endl;
 
-#if 1
+#if 0
     // write paraview output
     DataOut<dim> data_out;
     data_out.attach_dof_handler(dof_handler);

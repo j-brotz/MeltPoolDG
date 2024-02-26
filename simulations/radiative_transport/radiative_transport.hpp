@@ -17,7 +17,6 @@
 
 #include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
