@@ -39,18 +39,6 @@ namespace MeltPoolDG
               // streamline upwind Petrov-Galerkin stabilization
               SUPG)
 
-  BETTER_ENUM(InterpolateMaterialParameterType,
-              char,
-              // no parameter interpolation typre specified; use the interpolation type specified
-              // in MaterialData
-              none,
-              // sharp interpolation using a Heaviside function
-              sharp,
-              // interpolation using a smooth Heaviside function
-              smooth,
-              // reciprocal interpolation using a smooth Heaviside function
-              reciprocal)
-
   struct AdaptiveMeshingData
   {
     bool         do_amr                       = false;
