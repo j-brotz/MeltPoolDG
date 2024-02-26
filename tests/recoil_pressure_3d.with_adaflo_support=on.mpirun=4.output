@@ -3,7 +3,6 @@
 | || normal_0 ||L2 = 2.02201582198e-16                                               normal_vector |
 | || normal_1 ||L2 = 3.04815888177e+00                                               normal_vector |
 | || curvature ||L2 = 1.40910592235e-16                                                  curvature |
-|  total mass = 0.000410414625                                                   melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -21,7 +20,6 @@
 | || curvature ||L2 = 1.36125019123e-16                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 0.000410414625                                                   melt_pool_problem |
 | || velocity ||L2 = 4.459529858042824e-07                                    navier_stokes_adaflo |
 | || pressure ||L2 = 3.662116533507151e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -41,7 +39,6 @@
 | || curvature ||L2 = 2.78709656162e-05                                                  curvature |
 | current laser position: 0 4e-05                                                            laser |
 | current laser intensity: 1                                                                 laser |
-|  total mass = 0.000410414625                                                   melt_pool_problem |
 | || velocity ||L2 = 8.474297394044293e-07                                    navier_stokes_adaflo |
 | || pressure ||L2 = 3.949562623080534e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

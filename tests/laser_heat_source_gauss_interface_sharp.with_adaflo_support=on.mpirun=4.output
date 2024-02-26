@@ -7,7 +7,6 @@
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 9.12401777917e+00                                               normal_vector |
 | || curvature ||L2 = 1.56027639627e+01                                                  curvature |
-|  total mass = 0.000495732                                                      melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -19,7 +18,6 @@
 | current laser position: 0.0003 0                                                           laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 4.90014e-01                newton_raphson_solver |
-|  total mass = 0.000495732                                                      melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

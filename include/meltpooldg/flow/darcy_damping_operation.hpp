@@ -4,8 +4,10 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
 
 namespace MeltPoolDG::Flow
 {
@@ -68,6 +70,23 @@ namespace MeltPoolDG::Flow
                           const bool        zero_out = true);
 
     /**
+     * Loop over all cells and quadrature points (defined via @p flow_quad_idx),
+     * compute the Darcy damping coefficient and store it.
+     *
+     * @param material Material object holding the phase parameters.
+     * @param ls_as_heaviside Indicator function between gas and heavy phase.
+     * @param temperature DoF vector of the temperature field.
+     * @param ls_hanging_nodes_dof_idx DoF index of the indicator field inside ScratchData.
+     * @param temp_dof_idx DoF index of the temperature field.
+     */
+    void
+    set_darcy_damping_at_q(const Material<double> &material,
+                           const VectorType       &ls_as_heaviside,
+                           const VectorType       &temperature,
+                           const unsigned int      ls_hanging_nodes_dof_idx,
+                           const unsigned int      temp_dof_idx);
+
+    /**
      * Compute the contribution of the Darcy damping force into a force vector @param force_rhs.
      *
      * @note To use this function, the Darcy damping coefficient at the quadrature points of every
@@ -79,11 +98,14 @@ namespace MeltPoolDG::Flow
                           const VectorType &velocity_vec,
                           const bool        zero_out = true);
 
+    void
+    reinit();
+
     /**
      * Compute the Darcy damping coefficient based on a given @param solid_fraction.
      */
     VectorizedArray<double>
-    get_darcy_damping_coefficient(const VectorizedArray<double> &solid_fraction) const;
+    compute_darcy_damping_coefficient(const VectorizedArray<double> &solid_fraction) const;
 
     /**
      * Store the damping coefficients in a global DoF vector and attach it to the output data.

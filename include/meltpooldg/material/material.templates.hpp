@@ -143,6 +143,31 @@ namespace MeltPoolDG
 
 
   template <typename number>
+  bool
+  Material<number>::has_dependency(const FieldType &field_type) const
+  {
+    switch (field_type)
+      {
+        case FieldType::none:
+          return material_type == MaterialTypes::single_phase;
+        case FieldType::temperature:
+          return material_type == MaterialTypes::liquid_solid ||
+                 material_type == MaterialTypes::gas_liquid_solid ||
+                 material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
+        case FieldType::level_set:
+          return material_type == MaterialTypes::gas_liquid ||
+                 material_type == MaterialTypes::gas_liquid_consistent_with_evaporation ||
+                 material_type == MaterialTypes::gas_liquid_solid ||
+                 material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
+        default:
+          AssertThrow(false, ExcNotImplemented());
+          return false;
+      }
+  }
+
+
+
+  template <typename number>
   template <typename value_type>
   inline MaterialParameterValues<value_type>
   Material<number>::compute_parameters_internal(
@@ -195,7 +220,7 @@ namespace MeltPoolDG
             // are zero.
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
-                t.gas_fraction    = 1. - level_set_heaviside;
+                t.gas_fraction    = value_type(1.) - level_set_heaviside;
                 t.liquid_fraction = level_set_heaviside;
               }
             break;
@@ -245,7 +270,7 @@ namespace MeltPoolDG
                   s.volume_specific_capacity);
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
-                t.liquid_fraction = 1. - temperature_dependent_solid_fraction;
+                t.liquid_fraction = value_type(1.) - temperature_dependent_solid_fraction;
                 t.solid_fraction  = temperature_dependent_solid_fraction;
                 // @note gas_fraction = 0
               }
@@ -349,7 +374,7 @@ namespace MeltPoolDG
                   s.volume_specific_capacity);
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
-                t.gas_fraction = 1. - level_set_heaviside;
+                t.gas_fraction = value_type(1.) - level_set_heaviside;
                 t.liquid_fraction =
                   (1. - temperature_dependent_solid_fraction) * level_set_heaviside;
                 t.solid_fraction = temperature_dependent_solid_fraction * level_set_heaviside;

@@ -3,7 +3,6 @@
 | || normal_0 ||L2 = 1.52778744372e-15                                               normal_vector |
 | || normal_1 ||L2 = 3.84241923492e+00                                               normal_vector |
 | || curvature ||L2 = 1.65095480976e-14                                                  curvature |
-|  total mass = 0.00030315076234                                                 melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -38,7 +37,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.76756e-01                newton_raphson_solver |
-|  total mass = 0.00030315101161                                                 melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -52,7 +50,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.79813e-01                newton_raphson_solver |
-|  total mass = 0.0003031088118                                                  melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -66,7 +63,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.82664e-01                newton_raphson_solver |
-|  total mass = 0.00030298733038                                                 melt_pool_problem |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -80,7 +76,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.85376e-01                newton_raphson_solver |
-|  total mass = 0.00030286116082                                                 melt_pool_problem |
 | || velocity ||L2 = 3.369674459512151e-11                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.040647864141947e-07                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -117,7 +112,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.87985e-01                newton_raphson_solver |
-|  total mass = 0.00030274213146                                                 melt_pool_problem |
 | || velocity ||L2 = 3.730557290388888e-09                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.222577660793382e-04                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -154,7 +148,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.90509e-01                newton_raphson_solver |
-|  total mass = 0.000302632811                                                   melt_pool_problem |
 | || velocity ||L2 = 2.034409962974236e-08                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.227540401180829e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -191,7 +184,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.92962e-01                newton_raphson_solver |
-|  total mass = 0.00030253319746                                                 melt_pool_problem |
 | || velocity ||L2 = 6.664996819862010e-08                                    navier_stokes_adaflo |
 | || pressure ||L2 = 3.732417487616714e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -228,7 +220,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.95354e-01                newton_raphson_solver |
-|  total mass = 0.00030244231335                                                 melt_pool_problem |
 | || velocity ||L2 = 1.687899767195173e-07                                    navier_stokes_adaflo |
 | || pressure ||L2 = 8.709466613972419e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -265,7 +256,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.97691e-01                newton_raphson_solver |
-|  total mass = 0.00030235901448                                                 melt_pool_problem |
 | || velocity ||L2 = 3.640716478066104e-07                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.736736623471430e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -302,7 +292,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 1.99979e-01                newton_raphson_solver |
-|  total mass = 0.00030228242588                                                 melt_pool_problem |
 | || velocity ||L2 = 7.020683541016610e-07                                    navier_stokes_adaflo |
 | || pressure ||L2 = 3.113140679697941e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -339,7 +328,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.02220e-01                newton_raphson_solver |
-|  total mass = 0.0003022099195                                                  melt_pool_problem |
 | || velocity ||L2 = 1.245155755944846e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 5.159749056118653e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -376,7 +364,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.04417e-01                newton_raphson_solver |
-|  total mass = 0.00030214140026                                                 melt_pool_problem |
 | || velocity ||L2 = 2.068415211750006e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 8.052105419501011e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -413,7 +400,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.06573e-01                newton_raphson_solver |
-|  total mass = 0.0003020773665                                                  melt_pool_problem |
 | || velocity ||L2 = 3.257458941082139e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.196474556424994e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -450,7 +436,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.08690e-01                newton_raphson_solver |
-|  total mass = 0.00030201700056                                                 melt_pool_problem |
 | || velocity ||L2 = 4.869610223403833e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 1.678851742915574e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -487,7 +472,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.10768e-01                newton_raphson_solver |
-|  total mass = 0.00030195927553                                                 melt_pool_problem |
 | || velocity ||L2 = 6.939515304569625e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.244114635930269e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -524,7 +508,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.12811e-01                newton_raphson_solver |
-|  total mass = 0.00030190384221                                                 melt_pool_problem |
 | || velocity ||L2 = 9.499270485695474e-06                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.898837382304331e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -561,7 +544,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.14818e-01                newton_raphson_solver |
-|  total mass = 0.00030185169573                                                 melt_pool_problem |
 | || velocity ||L2 = 1.258190144109804e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 3.652986215695603e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -598,7 +580,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.16792e-01                newton_raphson_solver |
-|  total mass = 0.00030180129779                                                 melt_pool_problem |
 | || velocity ||L2 = 1.622184448840068e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.508300281036016e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -635,7 +616,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.18734e-01                newton_raphson_solver |
-|  total mass = 0.00030175269088                                                 melt_pool_problem |
 | || velocity ||L2 = 2.045560457187780e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 5.477372203011019e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -672,7 +652,6 @@
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.20646e-01                newton_raphson_solver |
-|  total mass = 0.00030170425863                                                 melt_pool_problem |
 | || velocity ||L2 = 2.531929543008347e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 6.565805983033278e-01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

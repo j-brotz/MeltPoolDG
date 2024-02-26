@@ -6,13 +6,16 @@
 #pragma once
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
+#  include <deal.II/base/vectorization.h>
 
 #  include <deal.II/lac/generic_linear_algebra.h>
 
 #  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#  include <meltpooldg/flow/darcy_damping_operation.hpp>
 #  include <meltpooldg/flow/flow_base.hpp>
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulation_base.hpp>
+#  include <meltpooldg/material/material.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>
 #  include <meltpooldg/utilities/time_iterator.hpp>
 #  include <meltpooldg/utilities/utility_functions.hpp>
@@ -20,6 +23,8 @@
 
 #  include <adaflo/navier_stokes.h>
 #  include <adaflo/parameters.h>
+
+#  include <memory>
 
 namespace MeltPoolDG::Flow
 {
@@ -58,6 +63,32 @@ namespace MeltPoolDG::Flow
      */
     void
     solve() override;
+
+    /**
+     * Set phase-dependent densities on faces for face integrals in augmented
+     * Taylor-Hood elements with a pressure ansatz space containing elementwise
+     * constant functions (element type FE_Q_DG0).
+     *
+     * This function calculates and assigns phase-dependent densities on faces for
+     * use in face integrals of augmented Taylor-Hood elements.
+     * The densities may depend on both the level-set field and the temperature
+     * field.
+     *
+     * @param material [in] Material object holding the phase-specific parameters
+     *                 necessary for density calculation.
+     * @param ls_as_heaviside [in] DoF vector representing the indicator function.
+     * @param ls_dof_idx [in] DoF index of the indicator function within the
+     *                   matrix-free object.
+     * @param temperature [in, opt] DoF vector representing the temperature field.
+     * @param temp_dof_idx [in, opt] DoF index of the temperature function within
+     *                     the matrix-free object.
+     */
+    void
+    set_face_average_density_augmented_taylor_hood(const Material<double> &material,
+                                                   const VectorType       &ls_as_heaviside,
+                                                   const unsigned int      ls_dof_idx,
+                                                   const VectorType       *temperature  = nullptr,
+                                                   unsigned int            temp_dof_idx = -1);
 
     const LinearAlgebra::distributed::Vector<double> &
     get_velocity() const override;
@@ -181,6 +212,7 @@ namespace MeltPoolDG::Flow
     time_stepping_synchronized();
 
     ScratchData<dim, dim, double, VectorizedArray<double>> &scratch_data;
+
     /**
      * Timer
      */

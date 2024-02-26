@@ -4,7 +4,6 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-// for parallelization
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/material/material_data.hpp>
@@ -98,6 +97,13 @@ namespace MeltPoolDG
   class Material
   {
   public:
+    enum FieldType
+    {
+      none,
+      temperature,
+      level_set
+    };
+
     Material(const MaterialData<number> &material_data, const MaterialTypes material_type);
 
     /**
@@ -166,6 +172,14 @@ namespace MeltPoolDG
                        const FECellIntegrator<dim, 1, number>         &temperature_val,
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags,
                        const unsigned int                              q_index) const;
+
+    /**
+     * Check whether the material type depends on a certain field variable.
+     *
+     * @param field_type Potentially dependent field variable.
+     */
+    bool
+    has_dependency(const FieldType &field_type) const;
 
   private:
     /**

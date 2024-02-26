@@ -1,4 +1,5 @@
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
+#include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Flow
@@ -22,6 +23,8 @@ namespace MeltPoolDG::Flow
                   "When using the Darcy damping force, the parameter \"mp solid "
                   "darcy damping avoid div zero constant\" must be greater than zero! Abort.."));
   }
+
+
 
   template <int dim>
   void
@@ -68,7 +71,7 @@ namespace MeltPoolDG::Flow
             for (unsigned int q_index = 0; q_index < darcy_damping_force.n_q_points; ++q_index)
               {
                 damping_at_q[cell * darcy_damping_force.n_q_points + q_index] =
-                  get_darcy_damping_coefficient(solid.get_value(q_index));
+                  compute_darcy_damping_coefficient(solid.get_value(q_index));
 
                 darcy_damping_force.submit_value(
                   damping_at_q[cell * darcy_damping_force.n_q_points + q_index] *
@@ -117,10 +120,9 @@ namespace MeltPoolDG::Flow
 
             for (unsigned int q_index = 0; q_index < darcy_damping_force.n_q_points; ++q_index)
               {
-                darcy_damping_force.submit_value(
-                  damping_at_q[cell * darcy_damping_force.n_q_points + q_index] *
-                    velocity.get_value(q_index),
-                  q_index);
+                darcy_damping_force.submit_value(get_damping(cell, q_index) *
+                                                   velocity.get_value(q_index),
+                                                 q_index);
               }
             darcy_damping_force.integrate_scatter(EvaluationFlags::values, force_rhs);
           }
@@ -130,9 +132,68 @@ namespace MeltPoolDG::Flow
       zero_out);
   }
 
+
+
+  template <int dim>
+  void
+  DarcyDampingOperation<dim>::set_darcy_damping_at_q(const Material<double> &material,
+                                                     const VectorType       &ls_as_heaviside,
+                                                     const VectorType       &temperature,
+                                                     const unsigned int ls_hanging_nodes_dof_idx,
+                                                     const unsigned int temp_dof_idx)
+  {
+    // check if damping_at_q has its correct size
+    AssertDimension(damping_at_q.size(),
+                    scratch_data.get_matrix_free().n_cell_batches() *
+                      scratch_data.get_n_q_points(flow_quad_idx));
+
+    double dummy;
+    scratch_data.get_matrix_free().template cell_loop<double, VectorType>(
+      [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto macro_cells) {
+        FECellIntegrator<dim, 1, double> ls_values(matrix_free,
+                                                   ls_hanging_nodes_dof_idx,
+                                                   flow_quad_idx);
+
+        std::unique_ptr<FECellIntegrator<dim, 1, double>> temp_values;
+
+        if (material.has_dependency(Material<double>::FieldType::temperature))
+          temp_values = std::make_unique<FECellIntegrator<dim, 1, double>>(matrix_free,
+                                                                           temp_dof_idx,
+                                                                           flow_quad_idx);
+
+        for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
+          {
+            ls_values.reinit(cell);
+            ls_values.read_dof_values_plain(ls_as_heaviside);
+            ls_values.evaluate(EvaluationFlags::values);
+
+            if (temp_values)
+              {
+                temp_values->reinit(cell);
+                temp_values->read_dof_values_plain(temperature);
+                temp_values->evaluate(EvaluationFlags::values);
+              }
+
+            for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
+              {
+                const auto material_values =
+                  material.template compute_parameters<VectorizedArray<double>>(
+                    ls_values, *temp_values, MaterialUpdateFlags::phase_fractions, q);
+
+                get_damping(cell, q) =
+                  compute_darcy_damping_coefficient(material_values.solid_fraction);
+              }
+          }
+      },
+      dummy,
+      ls_as_heaviside);
+  }
+
+
+
   template <int dim>
   VectorizedArray<double>
-  DarcyDampingOperation<dim>::get_darcy_damping_coefficient(
+  DarcyDampingOperation<dim>::compute_darcy_damping_coefficient(
     const VectorizedArray<double> &solid_fraction) const
   {
     // K = -C * fs² / ( (1-fs)³ + b )
@@ -173,6 +234,13 @@ namespace MeltPoolDG::Flow
                                  damping,
                                  "Darcy_damping");
       }
+  }
+  template <int dim>
+  void
+  DarcyDampingOperation<dim>::reinit()
+  {
+    damping_at_q.resize_fast(scratch_data.get_matrix_free().n_cell_batches() *
+                             scratch_data.get_n_q_points(flow_quad_idx));
   }
 
   template <int dim>

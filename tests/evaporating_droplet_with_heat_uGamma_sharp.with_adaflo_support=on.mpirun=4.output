@@ -13,7 +13,6 @@
 | || normal_0 ||L2 = 2.90494167720e+00                                               normal_vector |
 | || normal_1 ||L2 = 2.90494174340e+00                                               normal_vector |
 | || curvature ||L2 = 4.45595853961e+00                                                  curvature |
-|  total mass = 0.1444517449                                                     melt_pool_problem |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-03 ( dt = 1.0000e-03 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -24,7 +23,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.90494174340e+00                                               normal_vector |
 | || curvature ||L2 = 4.45595853961e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.64868e-01                newton_raphson_solver |
-|  total mass = 0.1444517449                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 2.084906205055401e-07                                    navier_stokes_adaflo |
@@ -46,7 +44,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.90641646114e+00                                               normal_vector |
 | || curvature ||L2 = 4.45638829433e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.83144e-01                newton_raphson_solver |
-|  total mass = 0.14464828919                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 4.514721919545665e-07                                    navier_stokes_adaflo |
@@ -68,7 +65,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.90766560893e+00                                               normal_vector |
 | || curvature ||L2 = 4.45668641851e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 1.97962e-01                newton_raphson_solver |
-|  total mass = 0.14481054983                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 8.855820282475763e-07                                    navier_stokes_adaflo |
@@ -90,7 +86,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.90870267615e+00                                               normal_vector |
 | || curvature ||L2 = 4.45689844238e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.10307e-01                newton_raphson_solver |
-|  total mass = 0.14494273195                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.463009006401559e-06                                    navier_stokes_adaflo |
@@ -112,7 +107,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.90955316561e+00                                               normal_vector |
 | || curvature ||L2 = 4.45704997962e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.20900e-01                newton_raphson_solver |
-|  total mass = 0.14504906081                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 2.139053591598702e-06                                    navier_stokes_adaflo |
@@ -134,7 +128,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91024535089e+00                                               normal_vector |
 | || curvature ||L2 = 4.45715768474e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.30204e-01                newton_raphson_solver |
-|  total mass = 0.14513402076                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 2.881525008096389e-06                                    navier_stokes_adaflo |
@@ -156,7 +149,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91080641314e+00                                               normal_vector |
 | || curvature ||L2 = 4.45723330659e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.38525e-01                newton_raphson_solver |
-|  total mass = 0.145201759                                                      melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 3.667975203238275e-06                                    navier_stokes_adaflo |
@@ -178,7 +170,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91125990366e+00                                               normal_vector |
 | || curvature ||L2 = 4.45728501462e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.46071e-01                newton_raphson_solver |
-|  total mass = 0.14525577971                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 4.482940755029907e-06                                    navier_stokes_adaflo |
@@ -200,7 +191,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91162618710e+00                                               normal_vector |
 | || curvature ||L2 = 4.45731881107e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.52987e-01                newton_raphson_solver |
-|  total mass = 0.14529891706                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 5.315709624611333e-06                                    navier_stokes_adaflo |
@@ -222,7 +212,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91192190731e+00                                               normal_vector |
 | || curvature ||L2 = 4.45733919266e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.59383e-01                newton_raphson_solver |
-|  total mass = 0.14533342141                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 6.158742156765676e-06                                    navier_stokes_adaflo |
@@ -244,7 +233,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91216059540e+00                                               normal_vector |
 | || curvature ||L2 = 4.45734992082e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.65338e-01                newton_raphson_solver |
-|  total mass = 0.14536106818                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 7.006599833006040e-06                                    navier_stokes_adaflo |
@@ -266,7 +254,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91235325950e+00                                               normal_vector |
 | || curvature ||L2 = 4.45735319495e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.70917e-01                newton_raphson_solver |
-|  total mass = 0.14538325683                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -2.64836e-08       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 4.8233174531e-09            evaporation_source_terms_continuous |
 | || velocity ||L2 = 7.854695155554420e-06                                    navier_stokes_adaflo |
@@ -288,7 +275,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91250910362e+00                                               normal_vector |
 | || curvature ||L2 = 4.45735119759e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.76167e-01                newton_raphson_solver |
-|  total mass = 0.14540109208                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -5.92425e-08       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.0809581061e-08            evaporation_source_terms_continuous |
 | || velocity ||L2 = 8.700252787315241e-06                                    navier_stokes_adaflo |
@@ -310,7 +296,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91263512472e+00                                               normal_vector |
 | || curvature ||L2 = 4.45734533219e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.81129e-01                newton_raphson_solver |
-|  total mass = 0.14541544804                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -9.08226e-08       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.6583286295e-08            evaporation_source_terms_continuous |
 | || velocity ||L2 = 9.540990227467672e-06                                    navier_stokes_adaflo |
@@ -332,7 +317,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91273708867e+00                                               normal_vector |
 | || curvature ||L2 = 4.45733657175e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.85834e-01                newton_raphson_solver |
-|  total mass = 0.14542701812                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -1.21264e-07       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.2149987375e-08            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.037499457803893e-05                                    navier_stokes_adaflo |
@@ -354,7 +338,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91281970685e+00                                               normal_vector |
 | || curvature ||L2 = 4.45732593635e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.90310e-01                newton_raphson_solver |
-|  total mass = 0.14543635378                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -1.50606e-07       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.7515460545e-08            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.120070454946838e-05                                    navier_stokes_adaflo |
@@ -376,7 +359,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91288671529e+00                                               normal_vector |
 | || curvature ||L2 = 4.45731383948e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.94578e-01                newton_raphson_solver |
-|  total mass = 0.14544389463                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -1.78882e-07       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 3.2685374124e-08            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.201682787045688e-05                                    navier_stokes_adaflo |
@@ -398,7 +380,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91294117319e+00                                               normal_vector |
 | || curvature ||L2 = 4.45730103095e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 2.98658e-01                newton_raphson_solver |
-|  total mass = 0.1454499918                                                     melt_pool_problem |
 | evaporation: jump in the velocity field = -2.13816e-07       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 3.7685649784e-08            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.282225720978892e-05                                    navier_stokes_adaflo |
@@ -420,7 +401,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91298542570e+00                                               normal_vector |
 | || curvature ||L2 = 4.45728760743e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.02564e-01                newton_raphson_solver |
-|  total mass = 0.14545492634                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -9.61126e-07       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.0994999107e-07            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.360745377364733e-05                                    navier_stokes_adaflo |
@@ -442,7 +422,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91302135980e+00                                               normal_vector |
 | || curvature ||L2 = 4.45727422206e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.06312e-01                newton_raphson_solver |
-|  total mass = 0.14545892353                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -4.51551e-06       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 5.2628970612e-07            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.435146261497242e-05                                    navier_stokes_adaflo |
@@ -464,7 +443,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91305059195e+00                                               normal_vector |
 | || curvature ||L2 = 4.45726104444e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.09912e-01                newton_raphson_solver |
-|  total mass = 0.14546216425                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -8.40674e-06       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.0234931262e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.512668856899479e-05                                    navier_stokes_adaflo |
@@ -486,7 +464,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91307452562e+00                                               normal_vector |
 | || curvature ||L2 = 4.45724774582e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.13375e-01                newton_raphson_solver |
-|  total mass = 0.14546479397                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -1.21729e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.5093104145e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.592620712871906e-05                                    navier_stokes_adaflo |
@@ -508,7 +485,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91309400934e+00                                               normal_vector |
 | || curvature ||L2 = 4.45723477198e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.16710e-01                newton_raphson_solver |
-|  total mass = 0.14546692975                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -1.58118e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 1.9796432149e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.673871273114268e-05                                    navier_stokes_adaflo |
@@ -530,7 +506,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91310989863e+00                                               normal_vector |
 | || curvature ||L2 = 4.45722249897e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.19926e-01                newton_raphson_solver |
-|  total mass = 0.14546866597                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -1.93228e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.4336400154e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.755576717674392e-05                                    navier_stokes_adaflo |
@@ -552,7 +527,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91312304551e+00                                               normal_vector |
 | || curvature ||L2 = 4.45721025522e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.23029e-01                newton_raphson_solver |
-|  total mass = 0.14547007871                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -2.27063e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 2.8711194802e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.837084423521581e-05                                    navier_stokes_adaflo |
@@ -574,7 +548,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91313377441e+00                                               normal_vector |
 | || curvature ||L2 = 4.45719885574e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.26027e-01                newton_raphson_solver |
-|  total mass = 0.14547122943                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -2.59667e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 3.2921729056e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.917905096381793e-05                                    navier_stokes_adaflo |
@@ -596,7 +569,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91314249731e+00                                               normal_vector |
 | || curvature ||L2 = 4.45718751876e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.28925e-01                newton_raphson_solver |
-|  total mass = 0.14547216778                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -2.91921e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 3.6971047623e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.998243549452133e-05                                    navier_stokes_adaflo |
@@ -618,7 +590,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91314977548e+00                                               normal_vector |
 | || curvature ||L2 = 4.45717686963e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.31728e-01                newton_raphson_solver |
-|  total mass = 0.14547293391                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.25349e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 4.0870899550e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 2.079068568620420e-05                                    navier_stokes_adaflo |
@@ -640,7 +611,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91315575042e+00                                               normal_vector |
 | || curvature ||L2 = 4.45716701218e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.34442e-01                newton_raphson_solver |
-|  total mass = 0.14547356032                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -3.61167e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 4.4649676072e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 2.161490867700446e-05                                    navier_stokes_adaflo |
@@ -662,7 +632,6 @@ WARNING: The tolerance of 1 points is not yet attained. Max distance value: 0.02
 | || normal_1 ||L2 = 2.91316078929e+00                                               normal_vector |
 | || curvature ||L2 = 4.45715703390e+00                                                  curvature |
 | Newton Raphson solver converged: ||solution|| = 3.37071e-01                newton_raphson_solver |
-|  total mass = 0.14547407332                                                    melt_pool_problem |
 | evaporation: jump in the velocity field = -4.00809e-05       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 4.8381545921e-06            evaporation_source_terms_continuous |
 | || velocity ||L2 = 2.247307285636653e-05                                    navier_stokes_adaflo |

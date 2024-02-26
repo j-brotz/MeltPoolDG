@@ -139,11 +139,9 @@ namespace MeltPoolDG::MeltPool
 
     /**
      * Update material parameter of the phases.
-     *
-     * @todo Find a better place.
      */
     void
-    update_phases(const VectorType &ls_as_heaviside, const Parameters<double> &parameters) const;
+    set_phase_dependent_parameters_flow(const Parameters<double> &parameters);
 
     /**
      * Compute gravity force.

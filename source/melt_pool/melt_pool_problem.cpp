@@ -42,6 +42,7 @@
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
+#include <meltpooldg/material/material.templates.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/melt_pool/melt_pool_problem.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -568,10 +569,10 @@ namespace MeltPoolDG::MeltPool
               {
                 ScopedName         sc("compute_fluxes");
                 TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+
                 // update the phases for the flow solver considering the updated level set and
                 // temperature
-                update_phases(level_set_operation->get_level_set_as_heaviside(),
-                              base_in->parameters);
+                set_phase_dependent_parameters_flow(base_in->parameters);
 
                 // ... a) gravity force
                 compute_gravity_force(vel_force_rhs,
@@ -1271,12 +1272,17 @@ namespace MeltPoolDG::MeltPool
          *    initialize the darcy damping operation class
          */
         if (base_in->parameters.darcy.mushy_zone_morphology > 0.0)
-          darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim>>(
-            base_in->parameters.darcy,
-            *scratch_data,
-            flow_operation->get_dof_handler_idx_velocity(),
-            flow_operation->get_quad_idx_velocity(),
-            temp_hanging_nodes_dof_idx);
+          {
+            AssertThrow(heat_operation,
+                        ExcMessage("Heat operation needs to be set up "
+                                   "for solidification via Darcy damping."));
+            darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim>>(
+              base_in->parameters.darcy,
+              *scratch_data,
+              flow_operation->get_dof_handler_idx_velocity(),
+              flow_operation->get_quad_idx_velocity(),
+              temp_hanging_nodes_dof_idx);
+          }
       }
 
     if (problem_specific_parameters.do_solidification)
@@ -1415,7 +1421,10 @@ namespace MeltPoolDG::MeltPool
       }
 
     // update the phases for the flow solver considering the updated level set and temperature
-    update_phases(level_set_operation->get_level_set_as_heaviside(), base_in->parameters);
+    if (darcy_operation)
+      darcy_operation->reinit();
+
+    set_phase_dependent_parameters_flow(base_in->parameters);
 
     // compute the evaporative mass flux from the initial temperature field
     if (evaporation_operation)
@@ -1552,6 +1561,8 @@ namespace MeltPoolDG::MeltPool
           heat_operation->reinit();
         if (laser_operation)
           laser_operation->reinit();
+        if (darcy_operation)
+          darcy_operation->reinit();
       }
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -1588,18 +1599,29 @@ namespace MeltPoolDG::MeltPool
     }
   }
 
-  // todo: clean-up
   template <int dim>
   void
-  MeltPoolProblem<dim>::update_phases(const VectorType         &ls_as_heaviside,
-                                      const Parameters<double> &parameters) const
+  MeltPoolProblem<dim>::set_phase_dependent_parameters_flow(const Parameters<double> &parameters)
   {
-    const bool ls_update_ghosts = !ls_as_heaviside.has_ghost_elements();
-    if (ls_update_ghosts)
-      ls_as_heaviside.update_ghost_values();
+    // compute damping coefficients at the quadrature points of the fluid
+    // solver
+    if (darcy_operation)
+      {
+        darcy_operation->set_darcy_damping_at_q(*material,
+                                                level_set_operation->get_level_set_as_heaviside(),
+                                                heat_operation->get_temperature(),
+                                                ls_hanging_nodes_dof_idx,
+                                                temp_dof_idx);
+      }
 
-    bool temp_update_ghosts = true;
-    if (heat_operation && problem_specific_parameters.do_solidification)
+    // compute density and viscosity at the quadrature points.
+    const bool ls_update_ghosts =
+      !level_set_operation->get_level_set_as_heaviside().has_ghost_elements();
+    if (ls_update_ghosts)
+      level_set_operation->get_level_set_as_heaviside().update_ghost_values();
+
+    bool temp_update_ghosts = false;
+    if (material->has_dependency(Material<double>::FieldType::temperature) && heat_operation)
       {
         temp_update_ghosts = !heat_operation->get_temperature().has_ghost_elements();
 
@@ -1608,55 +1630,15 @@ namespace MeltPoolDG::MeltPool
       }
 
     double dummy;
-
-    double mass = 0.0;
-
-#if 0
-    // compute the limit values of the material parameters
-    const double max_density =
-      problem_specific_parameters.do_solidification ?
-        std::max({parameters.material.solid.density,
-                  parameters.material.first.density,
-                  parameters.material.second.density}) :
-        std::max(parameters.material.first.density, parameters.material.second.density);
-    const double min_density =
-      problem_specific_parameters.do_solidification ?
-        std::min({parameters.material.solid.density,
-                  parameters.material.first.density,
-                  parameters.material.second.density}) :
-        std::min(parameters.material.first.density, parameters.material.second.density);
-    const double max_viscosity =
-      problem_specific_parameters.do_solidification ?
-        std::max({parameters.material.solid.viscosity,
-                  parameters.material.first.viscosity,
-                  parameters.material.second.viscosity}) :
-        std::max(parameters.material.first.viscosity, parameters.material.second.viscosity);
-    const double min_viscosity =
-      problem_specific_parameters.do_solidification ?
-        std::min({parameters.material.solid.viscosity,
-                  parameters.material.first.viscosity,
-                  parameters.material.second.viscosity}) :
-        std::min(parameters.material.first.viscosity, parameters.material.second.viscosity);
-#endif
-
     scratch_data->get_matrix_free().template cell_loop<double, VectorType>(
       [&](const auto &matrix_free, auto &, const auto &ls_as_heaviside, auto macro_cells) {
         FECellIntegrator<dim, 1, double> ls_values(matrix_free,
                                                    ls_hanging_nodes_dof_idx,
                                                    flow_operation->get_quad_idx_velocity());
 
-        std::unique_ptr<FECellIntegrator<dim, 1, double>> temp_values;
-
-        if (heat_operation && problem_specific_parameters.do_solidification)
-          temp_values = std::make_unique<FECellIntegrator<dim, 1, double>>(
-            matrix_free, temp_dof_idx, flow_operation->get_quad_idx_velocity());
-
-        if (darcy_operation)
-          darcy_operation->get_damping_at_q().resize_fast(matrix_free.n_cell_batches() *
-                                                          ls_values.n_q_points);
-        const auto &material    = parameters.material;
-        const auto  rho_g       = VectorizedArray<double>(material.first.density);
-        const auto  viscosity_g = VectorizedArray<double>(material.first.viscosity);
+        FECellIntegrator<dim, 1, double> temp_values(matrix_free,
+                                                     temp_dof_idx,
+                                                     flow_operation->get_quad_idx_velocity());
 
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
@@ -1664,194 +1646,53 @@ namespace MeltPoolDG::MeltPool
             ls_values.read_dof_values_plain(ls_as_heaviside);
             ls_values.evaluate(EvaluationFlags::values);
 
-            if (temp_values)
+            if (heat_operation &&
+                material->has_dependency(Material<double>::FieldType::temperature))
               {
-                temp_values->reinit(cell);
-                temp_values->read_dof_values_plain(heat_operation->get_temperature());
-                temp_values->evaluate(EvaluationFlags::values);
+                temp_values.reinit(cell);
+                temp_values.read_dof_values_plain(heat_operation->get_temperature());
+                temp_values.evaluate(EvaluationFlags::values);
               }
 
             for (unsigned int q = 0; q < ls_values.n_q_points; ++q)
               {
-                const auto indicator = material.two_phase_properties_transition_type ==
-                                           TwoPhaseFluidPropertiesTransitionType::sharp ?
-                                         UtilityFunctions::heaviside(ls_values.get_value(q), 0.5) :
-                                         ls_values.get_value(q);
+                auto material_values =
+                  material->template compute_parameters<VectorizedArray<double>>(
+                    ls_values,
+                    temp_values,
+                    MaterialUpdateFlags::density | MaterialUpdateFlags::viscosity,
+                    q);
 
-                /*
-                 * overwrite the liquid parameters in case of a solid/liquid mixture,
-                 * e.g. rho_l = rho_ls(sf, rho_l, rho_s)
-                 */
-                auto rho_l       = VectorizedArray<double>(material.second.density);
-                auto viscosity_l = VectorizedArray<double>(material.second.viscosity);
+                // set density and viscosity of the fluid solver
+                flow_operation->get_density(cell, q)   = material_values.density;
+                flow_operation->get_viscosity(cell, q) = material_values.viscosity;
 
-                if (temp_values)
-                  {
-                    const auto solid_fraction =
-                      melt_front_propagation->compute_solid_fraction(temp_values->get_value(q));
-
-                    rho_l = LevelSet::Tools::interpolate_cubic(solid_fraction,
-                                                               material.second.density,
-                                                               material.solid.density);
-
-
-                    viscosity_l = LevelSet::Tools::interpolate_cubic(solid_fraction,
-                                                                     material.second.viscosity,
-                                                                     material.solid.viscosity);
-
-                    if (darcy_operation)
-                      {
-                        darcy_operation->get_damping(cell, q) =
-                          darcy_operation->get_darcy_damping_coefficient(solid_fraction *
-                                                                         ls_values.get_value(q));
-                        if (parameters.darcy.formulation ==
-                            DarcyDampingFormulation::implicit_formulation)
-                          flow_operation->get_damping(cell, q) =
-                            darcy_operation->get_damping(cell, q);
-                      }
-                  }
-
-                /*
-                 * Interpolate the parameters for the two-phase flow system
-                 * consisting of the two phases
-                 *
-                 *    gas <--> liquid
-                 *
-                 * or
-                 *
-                 *    gas <--> liquid/solid mixture
-                 *
-                 * in case of solidification.
-                 */
-
-                if (material.two_phase_properties_transition_type ==
-                    TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation)
-                  {
-                    flow_operation->get_density(cell, q) =
-                      LevelSet::Tools::interpolate_reciprocal(indicator, rho_g, rho_l);
-                  }
-                else
-                  flow_operation->get_density(cell, q) =
-                    LevelSet::Tools::interpolate(indicator, rho_g, rho_l);
-
-                flow_operation->get_viscosity(cell, q) =
-                  LevelSet::Tools::interpolate(indicator, viscosity_g, viscosity_l);
-#if 0
-                // check if no spurious densities or viscosities are computed
-                for (auto dens : flow_operation->get_density(cell, q))
-                  if (min_density > dens || dens > max_density)
-                    std::cout << "WARNING: density does not comply with input:" << dens
-                              << std::endl;
-                for (auto visc : flow_operation->get_viscosity(cell, q))
-                  if (min_viscosity > visc || visc > max_viscosity)
-                    std::cout << "WARNING: viscosity does not comply with input:" << visc
-                              << std::endl;
-#endif
-
-                // TODO: move to postprocesser
-                // compute overall mass
-                const auto mass_contrib = flow_operation->get_density(cell, q) * ls_values.JxW(q);
-                for (unsigned int v = 0;
-                     v < scratch_data->get_matrix_free().n_active_entries_per_cell_batch(cell);
-                     ++v)
-                  {
-                    mass += mass_contrib[v];
-                  }
+                // set damping coefficient of the fluid solver
+                if (darcy_operation &&
+                    (parameters.darcy.formulation == DarcyDampingFormulation::implicit_formulation))
+                  flow_operation->get_damping(cell, q) = darcy_operation->get_damping(cell, q);
               }
           }
       },
       dummy,
-      ls_as_heaviside);
-
-    if (evaporation_operation || melt_front_propagation)
-      {
-        std::ostringstream str;
-        str << " total mass = " << std::setprecision(11)
-            << Utilities::MPI::sum(mass, scratch_data->get_mpi_comm());
-        Journal::print_line(scratch_data->get_pcout(), str.str(), "melt_pool_problem");
-      }
+      level_set_operation->get_level_set_as_heaviside());
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    if (parameters.adaflo_params.params.augmented_taylor_hood == true)
-      {
-        FEValues<dim> ls_values(
-          scratch_data->get_mapping(),
-          scratch_data->get_fe(ls_dof_idx),
-          dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->get_face_center_quad(),
-          update_values);
-
-        std::unique_ptr<FEValues<dim>> temp_values;
-        if (heat_operation && problem_specific_parameters.do_solidification)
-          temp_values = std::make_unique<FEValues<dim>>(
-            scratch_data->get_mapping(),
-            scratch_data->get_fe(temp_dof_idx),
-            dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())->get_face_center_quad(),
-            update_values);
-
-        std::vector<double> hs(ls_values.n_quadrature_points);
-        std::vector<double> temp(ls_values.n_quadrature_points);
-
-        for (const auto &cell : scratch_data->get_triangulation().active_cell_iterators())
-          {
-            if (cell->is_locally_owned())
-              {
-                TriaIterator<DoFCellAccessor<dim, dim, false>> ls_dof_cell(
-                  &scratch_data->get_triangulation(),
-                  cell->level(),
-                  cell->index(),
-                  &scratch_data->get_dof_handler(ls_dof_idx));
-
-                ls_values.reinit(ls_dof_cell);
-                ls_values.get_function_values(ls_as_heaviside, hs);
-
-                const auto indicator = parameters.material.two_phase_properties_transition_type ==
-                                           TwoPhaseFluidPropertiesTransitionType::sharp ?
-                                         UtilityFunctions::heaviside(hs, 0.5) :
-                                         hs;
-
-                std::vector<double> rho_ls(ls_values.n_quadrature_points,
-                                           parameters.material.second.density);
-
-                if (temp_values)
-                  {
-                    TriaIterator<DoFCellAccessor<dim, dim, false>> temp_dof_cell(
-                      &scratch_data->get_triangulation(),
-                      cell->level(),
-                      cell->index(),
-                      &scratch_data->get_dof_handler(temp_dof_idx));
-
-                    temp_values->reinit(temp_dof_cell);
-                    temp_values->get_function_values(heat_operation->get_temperature(), temp);
-
-                    for (unsigned int i = 0; i < rho_ls.size(); ++i)
-                      rho_ls[i] = LevelSet::Tools::interpolate_cubic(
-                        melt_front_propagation->compute_solid_fraction(temp[i]),
-                        parameters.material.second.density,
-                        parameters.material.solid.density);
-                  }
-
-                const double rho_g = parameters.material.first.density;
-
-                for (unsigned int f = 0; f < GeometryInfo<dim>::faces_per_cell; ++f)
-                  dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())
-                    ->set_face_average_density(
-                      cell,
-                      f,
-                      (parameters.material.two_phase_properties_transition_type ==
-                       TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation) ?
-                        LevelSet::Tools::interpolate_reciprocal(indicator[f], rho_g, rho_ls[f]) :
-                        LevelSet::Tools::interpolate(indicator[f], rho_g, rho_ls[f]));
-              }
-          }
-      }
+    dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())
+      ->set_face_average_density_augmented_taylor_hood(
+        *material,
+        level_set_operation->get_level_set_as_heaviside(),
+        ls_hanging_nodes_dof_idx,
+        ((heat_operation) ? &heat_operation->get_temperature() : nullptr),
+        temp_dof_idx);
 #endif
-
-    if (heat_operation && problem_specific_parameters.do_solidification && temp_update_ghosts)
-      heat_operation->get_temperature().zero_out_ghost_values();
-
     if (ls_update_ghosts)
-      ls_as_heaviside.zero_out_ghost_values();
+      level_set_operation->get_level_set_as_heaviside().zero_out_ghost_values();
+    if (temp_update_ghosts)
+      heat_operation->get_temperature().zero_out_ghost_values();
   }
+
+
 
   template <int dim>
   void
