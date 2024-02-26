@@ -14,7 +14,7 @@ np=${np:-4}
 ##############################################################
 mkdir -p $depDir
 cd $depDir
-bash $mpDir/scripts/config/download_and_install_dependencies.sh $np
+bash $mpDir/scripts/config/download_and_install_dependencies.sh $np || exit 1
 
 ###############################################################
 ## install MeltPoolDG
@@ -23,4 +23,4 @@ dealii_dir=$depDir/dealii-build
 adaflo_include=$depDir/adaflo/include
 adaflo_dir=$depDir/adaflo/build_release
 
-$mpDir/scripts/config/install_meltpooldg.sh $np $dealii_dir $adaflo_include $adaflo_dir
+$mpDir/scripts/config/install_meltpooldg.sh $np $dealii_dir $adaflo_include $adaflo_dir || exit 1
