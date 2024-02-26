@@ -43,7 +43,7 @@ From: dealii/dealii:master-focal
   mkdir -p /external_libs
   cd /external_libs/
   mkdir -p adaflo-build
-  git clone https://github.com/kronbichler/adaflo
+  git clone https://github.com/MeltPoolDG/adaflo
   cd adaflo-build
   rm -rf CMakeFiles/ CMakeCache.txt || true
   cmake ../adaflo -DDEAL_II_DIR=/usr/local/share/deal.II/
@@ -54,8 +54,8 @@ From: dealii/dealii:master-focal
   # meltpooldg
   #-------------------------------------- 
   cd /
-  git clone https://github.com/MeltPoolDG/MeltPoolDG
-  cd MeltPoolDG
+  git clone https://github.com/MeltPoolDG/MeltPoolDG-dev
+  cd MeltPoolDG-dev
   mkdir -p build
   cd build
   rm -rf CMakeFiles/ CMakeCache.txt || true
@@ -63,5 +63,5 @@ From: dealii/dealii:master-focal
   make release
   make -j$MAKE_JOBS
   # make a symbolic link --> @todo: this should be replaced by make install
-  ln -s /MeltPoolDG/build/meltpooldg /usr/bin/meltpooldg
+  ln -s /MeltPoolDG-dev/build/meltpooldg /usr/bin/meltpooldg
 

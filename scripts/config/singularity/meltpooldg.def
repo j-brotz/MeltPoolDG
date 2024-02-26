@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: ubuntu:20.04
+From: ubuntu:22.04
 
 %setup
     # directory of the external libraries
@@ -9,9 +9,6 @@ From: ubuntu:20.04
     # recommended directories for HPC
     mkdir $SINGULARITY_ROOTFS/scratch
     mkdir $SINGULARITY_ROOTFS/data
-
-    # copy config files 
-    cp -r configure/*.sh $singularity_folder_libs
 
 %environment
     export LC_ALL=C
@@ -68,74 +65,37 @@ From: ubuntu:20.04
     mpiexec --version
 
     #--------------------------------------
-    # p4est
+    # install MeltPoolDG
     #--------------------------------------
-    echo "install p4est"
-    cd /external_libs/
-    wget https://github.com/p4est/p4est.github.io/raw/master/release/p4est-2.2.tar.gz
+    git clone https://github.com/MeltPoolDG/MeltPoolDG-dev
+    mpDir=$pwd/MeltPoolDG-dev
+    echo "Install MeltPoolDG into $mpDir"
+
+    # install dependencies
+    depDir=$mpDir/../external_libs
+    echo "Install dependencies into $depDir"
+    mkdir -p $depDir
+    cd $depDir
     ls -l
-    mkdir -p p4est-build
-    bash p4est-setup.sh p4est-2.2.tar.gz /external_libs/p4est-build
-
-    #--------------------------------------
-    # trilinos
-    #--------------------------------------
-    echo "install trilinos"
-    cd /external_libs/
-    wget https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz
-    mv trilinos-release-12-12-1.tar.gz trilinos-release-12-12-1.tar
-    tar -xvf trilinos-release-12-12-1.tar
-    mkdir -p trilinos-build
-    cd trilinos-build
-    rm -rf CMakeFiles/ CMakeCache.txt || true
-    bash ../trilinos-setup.sh
-    make -j$MAKE_JOBS install
-
-    #--------------------------------------
-    # dealii
-    #-------------------------------------- 
-    echo "install dealii"
-    cd /external_libs/
-    git clone https://github.com/dealii/dealii
-    mkdir -p dealii-build
-    cd dealii-build
-    rm -rf CMakeFiles/ CMakeCache.txt || true
-    bash ../dealii-setup.sh
-    make -j$MAKE_JOBS
-    
-    #--------------------------------------
-    # adaflo
-    #-------------------------------------- 
-    cd /external_libs/
-    mkdir -p adaflo-build
-    git clone https://github.com/kronbichler/adaflo
-    cd adaflo-build
-    rm -rf CMakeFiles/ CMakeCache.txt || true
-    cmake ../adaflo -DDEAL_II_DIR=/external_libs/dealii-build
-    make release
-    make -j$MAKE_JOBS
+    bash $mpDir/scripts/config/download_and_install_dependencies.sh ${MAKE_JOBS} || exit 1
      
-    #--------------------------------------
-    # meltpooldg
-    #-------------------------------------- 
-    cd /
-    git clone https://github.com/MeltPoolDG/MeltPoolDG
-    cd MeltPoolDG
-    mkdir -p build
-    cd build
-    rm -rf CMakeFiles/ CMakeCache.txt || true
-    cmake .. -DDEAL_II_DIR=/external_libs/dealii-build -DADAFLO_INCLUDE=/external_libs/adaflo/include -DADAFLO_LIB=/external_libs/adaflo-build
-    make release
-    make -j$MAKE_JOBS
+    dealii_dir=$depDir/dealii-build
+    adaflo_include=$depDir/adaflo/include
+    adaflo_dir=$depDir/adaflo/build_release
+    
+    cd $mpDir
+    mkdir -p build_release
+    cd build_release
+    bash $mpDir/scripts/config/install_meltpooldg.sh  ${MAKE_JOBS} $dealii_dir $adaflo_include $adaflo_dir
     # make a symbolic link --> @todo: this should be replaced by make install
-    ln -s /MeltPoolDG/build/meltpooldg /usr/bin/meltpooldg
+    ln -s $mpDir/build_release/meltpooldg /usr/bin/meltpooldg
 
     #--------------------------------------
     # delete files to reduce container size
     #-------------------------------------- 
     if [ "${DELETE_CACHE}" = "true" ];
     then
-    	cd /external_libs/
+    	cd $depDir
         echo "Deleting dealii source files"
         rm -r dealii/* || true
         echo "Deleting trilinos source files"
@@ -143,5 +103,3 @@ From: ubuntu:20.04
         echo "Deleting p4est source files"
         rm -r p4est-2.2* || true
     fi
-
-
