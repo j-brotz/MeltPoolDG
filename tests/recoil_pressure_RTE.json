@@ -42,13 +42,15 @@
     "material first capacity": "1130.0"
   },
   "heat": {
-    "heat nlsolve field correction tolerance": "1e-10",
-    "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve residual tolerance": "1e-7",
     "use volume-specific thermal capacity for phase interpolation": "true",
     "linear solver": {
       "rel tolerance": "1e-6",
       "preconditioner type": "Diagonal"
+    },
+    "nlsolve": {
+      "max nonlinear iterations": "20",
+      "field correction tolerance": "1e-10",
+      "residual tolerance": "1e-7"
     }
   },
   "laser": {

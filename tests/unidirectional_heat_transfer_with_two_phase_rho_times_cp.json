@@ -15,13 +15,15 @@
     "max n steps": "5"
   },
   "heat": {
-    "heat emissivity": "0.98",
-    "heat convection coefficient": "25",
-    "heat temperature infinity": "300.0",
     "use volume-specific thermal capacity for phase interpolation": "true",
-    "heat nlsolve residual tolerance": "1e-6",
     "linear solver": {
       "rel tolerance": "1e-12"
+    },
+    "convection coefficient": "25",
+    "emissivity": "0.98",
+    "temperature infinity": "300.0",
+    "nlsolve": {
+      "residual tolerance": "1e-6"
     }
   },
   "simulation specific": {

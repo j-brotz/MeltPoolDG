@@ -95,12 +95,14 @@
     "output material id": "true"
   },
   "heat": {
-    "heat nlsolve residual tolerance": "1.0",
-    "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve field correction tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-4",
       "preconditioner type": "DiagonalReduced"
+    },
+    "nlsolve": {
+      "max nonlinear iterations": "20",
+      "field correction tolerance": "1e-8",
+      "residual tolerance": "1.0"
     }
   },
   "Navier-Stokes": {

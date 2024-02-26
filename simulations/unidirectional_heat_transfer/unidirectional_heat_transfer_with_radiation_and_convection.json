@@ -15,12 +15,14 @@
     "max n steps": "100"
   },
   "heat": {
-    "heat emissivity": "0.98",
-    "heat convection coefficient": "25",
-    "heat temperature infinity": "300.0",
-    "heat nlsolve residual tolerance": "5e-9",
     "linear solver": {
       "rel tolerance": "1e-12"
+    },
+    "convection coefficient": "25",
+    "emissivity": "0.98",
+    "temperature infinity": "300.0",
+    "nlsolve": {
+      "residual tolerance": "5e-9"
     }
   },
   "material": {

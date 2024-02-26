@@ -1,6 +1,35 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-02-26
+- Rafactor heat data
+```diff
+{
+  "heat": {
+-    "heat convection coefficient": "",  
++    "convection coefficient": "",
+-    "heat emissivity": "",  
++    "emissivity": "",
+-    "heat temperature infinity": "",  
++    "temperature infinity": "",
+-    "heat nlsolve max nonlinear iterations": "",
+-    "heat nlsolve field correction tolerance": "",
+-    "heat nlsolve residual tolerance": "",
+-    "heat nlsolve max nonlinear iterations alt": "",
+-    "heat nlsolve field correction tolerance alt": "",
+-    "heat nlsolve residual tolerance alt": ""
+    "nlsolve":  {
++      "max nonlinear iterations": "",
++      "field correction tolerance": "",
++      "residual tolerance": "",
++      "max nonlinear iterations alt": "",
++      "field correction tolerance alt": "",
++      "residual tolerance alt": ""
+    }
+  }
+} 
+```
+
 ## 2024-02-22
 - Refactor laser data
 ```diff
