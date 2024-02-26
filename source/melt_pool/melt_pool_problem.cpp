@@ -1274,6 +1274,9 @@ namespace MeltPoolDG::MeltPool
          */
         if (base_in->parameters.darcy.mushy_zone_morphology > 0.0)
           {
+            AssertThrow(heat_operation,
+                        ExcMessage("Heat operation needs to be set up "
+                                   "for solidification via Darcy damping."));
             darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim>>(
               base_in->parameters.darcy,
               *scratch_data,
@@ -1606,9 +1609,6 @@ namespace MeltPoolDG::MeltPool
     // solver
     if (darcy_operation)
       {
-        AssertThrow(heat_operation,
-                    ExcMessage("Heat operation needs to be set up "
-                               "for solidification via Darcy damping."));
         darcy_operation->set_darcy_damping_at_q(*material,
                                                 level_set_operation->get_level_set_as_heaviside(),
                                                 heat_operation->get_temperature(),
@@ -1680,11 +1680,12 @@ namespace MeltPoolDG::MeltPool
 
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     dynamic_cast<Flow::AdafloWrapper<dim> *>(flow_operation.get())
-      ->set_density_taylor_hood(*material,
-                                level_set_operation->get_level_set_as_heaviside(),
-                                ls_hanging_nodes_dof_idx,
-                                ((heat_operation) ? &heat_operation->get_temperature() : nullptr),
-                                temp_dof_idx);
+      ->set_face_average_density_augmented_taylor_hood(
+        *material,
+        level_set_operation->get_level_set_as_heaviside(),
+        ls_hanging_nodes_dof_idx,
+        ((heat_operation) ? &heat_operation->get_temperature() : nullptr),
+        temp_dof_idx);
 #endif
     if (ls_update_ghosts)
       level_set_operation->get_level_set_as_heaviside().zero_out_ghost_values();

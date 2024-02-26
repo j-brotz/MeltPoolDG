@@ -101,6 +101,7 @@ namespace MeltPoolDG
   public:
     enum FieldType
     {
+      none,
       temperature,
       level_set
     };
@@ -174,25 +175,13 @@ namespace MeltPoolDG
                        const MaterialUpdateFlags::MaterialUpdateFlags &flags,
                        const unsigned int                              q_index) const;
 
+    /**
+     * Check whether the material type depends on a certain field variable.
+     *
+     * @param field_type Potentially dependent field variable.
+     */
     bool
-    has_dependency(const FieldType &field_type) const
-    {
-      switch (field_type)
-        {
-          case FieldType::temperature:
-            return material_type == MaterialTypes::liquid_solid ||
-                   material_type == MaterialTypes::gas_liquid_solid ||
-                   material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
-          case FieldType::level_set:
-            return material_type == MaterialTypes::gas_liquid ||
-                   material_type == MaterialTypes::gas_liquid_consistent_with_evaporation ||
-                   material_type == MaterialTypes::gas_liquid_solid ||
-                   material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
-          default:
-            AssertThrow(false, ExcNotImplemented());
-            return false;
-        }
-    }
+    has_dependency(const FieldType &field_type) const;
 
   private:
     /**
