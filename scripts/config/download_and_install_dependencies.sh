@@ -17,7 +17,7 @@ if [[ ${sorted[0]} == "$cmp" ]]; then
     echo "cmake version $ver >= $cmp"
 else
     echo "ERROR: cmake version too low; update to at least $cmp."
-    exit
+    exit 1
 fi
 
 ##############################################################
