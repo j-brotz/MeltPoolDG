@@ -1,6 +1,7 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/revision.h>
 
+#include <meltpooldg/interface/base_data.hpp>
 #include <meltpooldg/interface/problem_selector.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/revision.hpp>
@@ -17,9 +18,9 @@ namespace MeltPoolDG
     void
     run_simulation(const std::string parameter_file, const MPI_Comm mpi_communicator)
     {
-      unsigned int dim          = 0;
-      ProblemType  problem_type = ProblemType::none;
-      std::string  app          = "";
+      unsigned int    dim          = 0;
+      ProblemType     problem_type = ProblemType::not_initialized;
+      ApplicationName app          = ApplicationName::not_initialized;
 
       {
         // The parameters will be read here to get information on the selection variables, i.e.,
