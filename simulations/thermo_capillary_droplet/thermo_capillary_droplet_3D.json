@@ -110,7 +110,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "thermocapillary_droplet",
-    "directory": "output/"
+    "directory": "output/",
+    "paraview": {
+      "filename": "thermocapillary_droplet"
+    }
   }
 }

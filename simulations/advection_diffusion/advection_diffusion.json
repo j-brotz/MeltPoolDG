@@ -23,6 +23,8 @@
     "compute volume output": "true",
     "filename volume output": "myVolumes.txt",
     "do output": "true",
-    "filename": "solution_advection_diffusion"
+    "paraview": {
+      "filename": "solution_advection_diffusion"
+    }
   }
 }

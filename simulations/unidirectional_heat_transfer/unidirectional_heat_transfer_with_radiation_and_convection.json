@@ -32,7 +32,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_heat_transfer_convection_radiation",
-    "print boundary id": "true"
+    "paraview": {
+      "filename": "solution_heat_transfer_convection_radiation",
+      "print boundary id": "true"
+    }
   }
 }

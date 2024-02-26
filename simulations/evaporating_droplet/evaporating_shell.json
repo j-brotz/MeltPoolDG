@@ -58,6 +58,8 @@
   "output": {
     "do output": "true",
     "directory": "evaporating_shell_3d",
-    "print boundary id": "true"
+    "paraview": {
+      "print boundary id": "true"
+    }
   }
 }

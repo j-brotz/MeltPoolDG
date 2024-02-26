@@ -31,6 +31,8 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_heat_transfer_radiation"
+    "paraview": {
+      "filename": "solution_heat_transfer_radiation"
+    }
   }
 }

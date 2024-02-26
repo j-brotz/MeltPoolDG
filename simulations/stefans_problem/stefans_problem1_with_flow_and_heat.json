@@ -111,7 +111,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution",
-    "directory": "output_stefan_1/"
+    "directory": "output_stefan_1/",
+    "paraview": {
+      "filename": "solution"
+    }
   }
 }

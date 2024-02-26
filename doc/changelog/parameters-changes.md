@@ -10,24 +10,33 @@ All notable changes of the input parameters will be documented in this file.
 +  "output": {
 -    "paraview do output": "",
 +    "do output": "",
--    "paraview filename": "",
-+    "filename": "",
 -    "paraview directory": "",
 +    "directory": "",
 -    "paraview write frequency": "",
 +    "write frequency": "",
 -    "paraview write time step size": "",
 +    "write time step size": "",
--    "paraview print boundary id": "",
-+    "print boundary id": "",
--    "paraview output subdomains": "",
-+    "output subdomains": "",
+-    "paraview filename": "",
 -    "paraview n digits timestep": "",
-+    "n digits timestep": "",
+-    "output variables": "",
+-    "paraview print boundary id": "",
+-    "paraview output subdomains": "",
+-    "output material id": "",
+-    "write higher order cells": "",
 -    "paraview n groups": "",
-+    "n groups": "",
 -    "paraview n patches": "",
-+    "n patches": ""
++    "paraview": {
++      "enable": "true|false",
++      "filename": "",
++      "n digits timestep": "",
++      "output variables": "",
++      "print boundary id": "",
++      "output subdomains": "",
++      "output material id": "",
++      "write higher order cells": "",
++      "n groups": "",
++      "n patches": ""
++    }
   }
 }
 ```

@@ -63,7 +63,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_evaporation",
-    "directory": "output_amr/"
+    "directory": "output_amr/",
+    "paraview": {
+      "filename": "solution_evaporation"
+    }
   }
 }

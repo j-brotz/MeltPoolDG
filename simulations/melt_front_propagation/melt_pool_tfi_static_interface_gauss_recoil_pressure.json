@@ -133,7 +133,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "melt_pool_tfi_static_interface_gauss_recoil_pressure",
-    "directory": "output_recoil_pressure"
+    "directory": "output_recoil_pressure",
+    "paraview": {
+      "filename": "melt_pool_tfi_static_interface_gauss_recoil_pressure"
+    }
   }
 }

@@ -212,7 +212,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
               if (this->parameters.output.do_output)
                 {
                   const auto file_name = this->parameters.output.directory + "/" +
-                                         this->parameters.output.filename + "_pressure_profile_" +
+                                         this->parameters.output.paraview.filename +
+                                         "_pressure_profile_" +
                                          std::to_string(generic_data_out.get_time()) + ".txt";
                   file_pressure_profile.open(file_name);
                   file_pressure_profile

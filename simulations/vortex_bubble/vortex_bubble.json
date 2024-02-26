@@ -36,6 +36,8 @@
   },
   "output": {
     "do output": "true",
-    "print boundary id": "true"
+    "paraview": {
+      "print boundary id": "true"
+    }
   }
 }

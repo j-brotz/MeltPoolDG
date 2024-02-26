@@ -31,6 +31,8 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_reinitialization"
+    "paraview": {
+      "filename": "solution_reinitialization"
+    }
   }
 }

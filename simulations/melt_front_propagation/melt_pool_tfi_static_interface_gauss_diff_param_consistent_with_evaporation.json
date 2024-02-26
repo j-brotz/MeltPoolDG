@@ -124,7 +124,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "melt_pool_tfi_static_interface_gauss_diff_param",
-    "directory": "output"
+    "directory": "output",
+    "paraview": {
+      "filename": "melt_pool_tfi_static_interface_gauss_diff_param"
+    }
   }
 }

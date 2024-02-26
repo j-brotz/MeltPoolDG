@@ -44,7 +44,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_heat_transfer_two_phase",
-    "print boundary id": "true"
+    "paraview": {
+      "filename": "solution_heat_transfer_two_phase",
+      "print boundary id": "true"
+    }
   }
 }

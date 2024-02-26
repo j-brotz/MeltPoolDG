@@ -60,7 +60,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "melt_front_propagation_moving_surface_gauss",
-    "directory": "output"
+    "directory": "output",
+    "paraview": {
+      "filename": "melt_front_propagation_moving_surface_gauss"
+    }
   }
 }

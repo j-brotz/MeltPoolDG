@@ -45,7 +45,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_heat_transfer_velocity_and_solidification",
-    "directory": "output/"
+    "directory": "output/",
+    "paraview": {
+      "filename": "solution_heat_transfer_velocity_and_solidification"
+    }
   }
 }

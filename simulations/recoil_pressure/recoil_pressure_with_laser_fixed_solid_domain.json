@@ -143,8 +143,10 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_recoil_pressure_temperature_dependent",
     "directory": "output_recoil_pressure_fixed_solid_domain_eps1e-6_refine8_variable_props",
-    "write frequency": "1"
+    "write frequency": "1",
+    "paraview": {
+      "filename": "solution_recoil_pressure_temperature_dependent"
+    }
   }
 }

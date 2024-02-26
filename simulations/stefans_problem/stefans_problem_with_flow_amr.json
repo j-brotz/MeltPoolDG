@@ -103,7 +103,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_evaporation",
-    "directory": "stefans_problem_with_flow/"
+    "directory": "stefans_problem_with_flow/",
+    "paraview": {
+      "filename": "solution_evaporation"
+    }
   }
 }

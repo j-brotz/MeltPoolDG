@@ -63,7 +63,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "melt_front_propagation_static_gauss",
-    "directory": "output"
+    "directory": "output",
+    "paraview": {
+      "filename": "melt_front_propagation_static_gauss"
+    }
   }
 }

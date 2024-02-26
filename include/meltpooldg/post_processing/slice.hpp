@@ -106,17 +106,17 @@ namespace MeltPoolDG::PostProcessingTools
           // write slice data to vtu files
           const std::string pvtu_filename =
             data_out.write_vtu_with_pvtu_record(output_data.directory + "/",
-                                                output_data.filename + "_slice",
+                                                output_data.paraview.filename + "_slice",
                                                 n_time_step,
                                                 tria_slice.get_communicator(),
-                                                output_data.n_digits_timestep,
-                                                output_data.n_groups);
+                                                output_data.paraview.n_digits_timestep,
+                                                output_data.paraview.n_groups);
 
           // write a pvd file relating the pvtu-file with a simulation time
           if (Utilities::MPI::this_mpi_process(tria_slice.get_communicator()) == 0)
             {
               times_and_names.emplace_back(generic_data_out->get_time(), pvtu_filename);
-              std::ofstream pvd_output(output_data.directory + "/" + output_data.filename +
+              std::ofstream pvd_output(output_data.directory + "/" + output_data.paraview.filename +
                                        "_slice.pvd");
               DataOutBase::write_pvd_record(pvd_output, times_and_names);
             }

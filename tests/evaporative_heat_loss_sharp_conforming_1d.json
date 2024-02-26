@@ -138,6 +138,8 @@
   },
   "output": {
     "do output": "false",
-    "output material id": "true"
+    "paraview": {
+      "output material id": "true"
+    }
   }
 }

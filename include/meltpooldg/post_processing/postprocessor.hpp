@@ -99,9 +99,9 @@ namespace MeltPoolDG
     clean_pvd();
 
     void
-    write_output_files(const unsigned int         n_time_step,
-                       const double               time,
-                       const GenericDataOut<dim> &generic_data_out);
+    write_paraview_files(const unsigned int         n_time_step,
+                         const double               time,
+                         const GenericDataOut<dim> &generic_data_out);
 
     void
     print_boundary_ids();

@@ -37,7 +37,9 @@
   },
   "output": {
     "do output": "true",
-    "print boundary id": "true",
-    "n patches": "3"
+    "paraview": {
+      "print boundary id": "true",
+      "n patches": "3"
+    }
   }
 }

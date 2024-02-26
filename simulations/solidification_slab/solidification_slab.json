@@ -38,6 +38,8 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_solidification_slab"
+    "paraview": {
+      "filename": "solution_solidification_slab"
+    }
   }
 }

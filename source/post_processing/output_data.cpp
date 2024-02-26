@@ -6,48 +6,62 @@
 
 namespace MeltPoolDG
 {
-  template <typename number>
   void
-  OutputData<number>::add_parameters(dealii::ParameterHandler &prm)
+  ParaviewData::add_parameters(dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("output");
+    prm.enter_subsection("paraview");
     {
-      prm.add_parameter("do output", do_output, "boolean for producing paraview output files");
-      prm.add_parameter("filename", filename, "Sets the base name for the output file");
-      prm.add_parameter("directory", directory, "Sets the base directory for the output files");
-      prm.add_parameter("write frequency",
-                        write_frequency,
-                        "every n timestep that should be written");
-      prm.add_parameter("write time step size",
-                        write_time_step_size,
-                        "Write output output every given time step. If this parameter is "
-                        "set, the output write frequency is overwritten.");
+      prm.add_parameter("enable",
+                        enable,
+                        "Set this parameter to true to activate paraview output.");
+      prm.add_parameter("filename", filename, "Sets the base name for paraview output files.");
+      prm.add_parameter("n digits timestep",
+                        n_digits_timestep,
+                        "Number of digits for the frame number of the vtu-file.");
+      prm.add_parameter("output variables",
+                        output_variables,
+                        "Specify variables that you request to output.");
       prm.add_parameter("print boundary id",
                         print_boundary_id,
-                        "boolean for printing a vtk-file with the boundary id");
+                        "Set this parameter to true to output a vtu-file with the boundary id.");
       prm.add_parameter("output subdomains",
                         output_subdomains,
-                        "boolean for outputting the subdomain ranks");
+                        "Set this parameter to true to output the subdomain ranks.");
       prm.add_parameter("output material id",
                         output_material_id,
                         "Set to true to output the material id.");
-      prm.add_parameter("n digits timestep",
-                        n_digits_timestep,
-                        "number of digits for the frame number of the vtk-file.");
-      prm.add_parameter("n groups", n_groups, "number of parallel written vtk-files.");
-      prm.add_parameter("n patches", n_patches, "Control number of patches to enable high-order");
       prm.add_parameter(
         "write higher order cells",
         write_higher_order_cells,
         "Set this parameter to false to write bi- or trilinear data only. "
         "Set this parameter to true to write higher order cell data. Note: higher order "
         "cell data can only be written for hexaeder meshes and 2 or 3 dimensions.");
-      prm.add_parameter("output variables",
-                        output_variables,
-                        "Specify variables that you request to output.");
+      prm.add_parameter("n groups", n_groups, "Number of parallel written vtu-files.");
+      prm.add_parameter("n patches", n_patches, "Control number of patches to enable high-order.");
+    }
+    prm.leave_subsection();
+  }
+
+  template <typename number>
+  void
+  OutputData<number>::add_parameters(dealii::ParameterHandler &prm)
+  {
+    prm.enter_subsection("output");
+    {
+      prm.add_parameter("do output", do_output, "Set this parameter to true to activate output.");
+      prm.add_parameter("directory", directory, "Sets the base directory for all output.");
+      prm.add_parameter("write frequency",
+                        write_frequency,
+                        "Every n timestep that should be written");
+      prm.add_parameter("write time step size",
+                        write_time_step_size,
+                        "Write output output every given time step. If this parameter is "
+                        "set, the output write frequency is overwritten.");
       prm.add_parameter("do user defined postprocessing",
                         do_user_defined_postprocessing,
                         "Set this parameter to true to enable user defined postprocessing.");
+
+      paraview.add_parameters(prm);
     }
     prm.leave_subsection();
   }

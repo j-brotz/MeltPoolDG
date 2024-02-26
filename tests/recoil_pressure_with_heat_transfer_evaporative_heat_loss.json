@@ -147,7 +147,9 @@
   },
   "output": {
     "do output": "false",
-    "filename": "solution_recoil_pressure",
-    "write frequency": "1"
+    "write frequency": "1",
+    "paraview": {
+      "filename": "solution_recoil_pressure"
+    }
   }
 }

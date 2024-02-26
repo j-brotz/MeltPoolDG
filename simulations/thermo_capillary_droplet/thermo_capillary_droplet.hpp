@@ -120,7 +120,8 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
       : SimulationBase<dim>(parameter_file, mpi_communicator)
     {
       if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-        file.open(this->parameters.output.directory + "/" + this->parameters.output.filename +
+        file.open(this->parameters.output.directory + "/" +
+                  this->parameters.output.paraview.filename +
                   "_droplet_velocity_over_time_normalized.csv");
       velocity_reference =
         this->parameters.surface_tension.temperature_dependent_surface_tension_coefficient *

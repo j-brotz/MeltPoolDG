@@ -47,7 +47,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "projection_2d",
-    "output variables": "temperature,heat_source,heaviside"
+    "paraview": {
+      "filename": "projection_2d",
+      "output variables": "temperature,heat_source,heaviside"
+    }
   }
 }

@@ -160,8 +160,10 @@
   },
   "output": {
     "do output": "false",
-    "filename": "solution_recoil_pressure",
     "directory": "recoil_pressure_lssubdivisions",
-    "write time step size": "2e-8"
+    "write time step size": "2e-8",
+    "paraview": {
+      "filename": "solution_recoil_pressure"
+    }
   }
 }

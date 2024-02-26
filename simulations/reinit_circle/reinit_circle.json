@@ -25,6 +25,8 @@
   },
   "output": {
     "do output": "true",
-    "filename": "output/reinit_circle/solution_reinitialization"
+    "paraview": {
+      "filename": "output/reinit_circle/solution_reinitialization"
+    }
   }
 }

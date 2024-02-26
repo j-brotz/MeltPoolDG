@@ -48,7 +48,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_heat_transfer_two_phase_and_solidification",
-    "directory": "output/"
+    "directory": "output/",
+    "paraview": {
+      "filename": "solution_heat_transfer_two_phase_and_solidification"
+    }
   }
 }

@@ -286,7 +286,7 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
                                          current_time,
-                                         base_in->parameters.output.output_variables);
+                                         base_in->parameters.output.paraview.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing

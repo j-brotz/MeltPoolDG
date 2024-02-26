@@ -53,13 +53,14 @@ namespace MeltPoolDG
                               const bool                   force_output,
                               const std::function<void()> &post_operation)
   {
-    if (now(n_time_step, time) || force_output)
+    if (not(now(n_time_step, time) || force_output))
+      return;
+
+    if (output_data.paraview.enable)
       {
-        Journal::print_line(pcout, "write output files", "postprocessor");
+        write_paraview_files(n_time_step, time, data_out);
 
-        write_output_files(n_time_step, time, data_out);
-
-        if (output_data.print_boundary_id)
+        if (output_data.paraview.print_boundary_id)
           print_boundary_ids();
 
         // record written output time
@@ -81,17 +82,18 @@ namespace MeltPoolDG
     const double                                      time,
     const std::function<void()>                      &post_operation)
   {
-    if (now(n_time_step, time))
+    if (not now(n_time_step, time))
+      return;
+
+    if (output_data.paraview.enable)
       {
-        GenericDataOut<dim> data_out(mapping, time, output_data.output_variables);
+        GenericDataOut<dim> data_out(mapping, time, output_data.paraview.output_variables);
 
         attach_output_vectors(data_out);
 
-        Journal::print_line(pcout, "write output files", "postprocessor");
+        write_paraview_files(n_time_step, time, data_out);
 
-        write_output_files(n_time_step, time, data_out);
-
-        if (output_data.print_boundary_id)
+        if (output_data.paraview.print_boundary_id)
           print_boundary_ids();
 
         // record written output time
@@ -104,16 +106,19 @@ namespace MeltPoolDG
 
   template <int dim>
   void
-  Postprocessor<dim>::write_output_files(const unsigned int         n_time_step,
-                                         const double               time,
-                                         const GenericDataOut<dim> &generic_data_out)
+  Postprocessor<dim>::write_paraview_files(const unsigned int         n_time_step,
+                                           const double               time,
+                                           const GenericDataOut<dim> &generic_data_out)
   {
+    Journal::print_line(pcout, "write paraview files", "postprocessor");
+
     namespace fs = std::filesystem;
     dealii::DataOut<dim> data_out;
 
     // do search algorithm only once
     if (idx_req_vars.size() == 0)
-      idx_req_vars = generic_data_out.get_indices_data_request(output_data.output_variables);
+      idx_req_vars =
+        generic_data_out.get_indices_data_request(output_data.paraview.output_variables);
 
     for (const auto &i : idx_req_vars)
       {
@@ -125,7 +130,7 @@ namespace MeltPoolDG
                                  std::get<3>(data));
       }
 
-    if (output_data.output_subdomains)
+    if (output_data.paraview.output_subdomains)
       {
         const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
         dealii::Vector<double> subdomains(tria.n_active_cells());
@@ -133,7 +138,7 @@ namespace MeltPoolDG
 
         data_out.add_data_vector(subdomains, "subdomains");
       }
-    if (output_data.output_material_id)
+    if (output_data.paraview.output_material_id)
       {
         const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
         dealii::Vector<double> material_id(tria.n_active_cells());
@@ -146,10 +151,10 @@ namespace MeltPoolDG
 
     dealii::DataOutBase::VtkFlags flags;
     if ((do_simplex == false) && (dim > 1))
-      flags.write_higher_order_cells = output_data.write_higher_order_cells;
+      flags.write_higher_order_cells = output_data.paraview.write_higher_order_cells;
     data_out.set_flags(flags);
 
-    unsigned int n_patches = output_data.n_patches;
+    unsigned int n_patches = output_data.paraview.n_patches;
 
     if (n_patches == 0)
       for (const auto &data : generic_data_out.entries)
@@ -158,7 +163,7 @@ namespace MeltPoolDG
     data_out.build_patches(mapping, n_patches);
 
     std::string pvtu_filename;
-    if (output_data.n_groups == 1)
+    if (output_data.paraview.n_groups == 1)
       {
         pvtu_filename =
           fs::path(output_data.paraview.filename + "_" +
@@ -193,7 +198,7 @@ namespace MeltPoolDG
         clean_pvd();
 
         std::ofstream pvd_output(fs::path(output_data.directory) /
-                                 fs::path(output_data.filename + ".pvd"));
+                                 fs::path(output_data.paraview.filename + ".pvd"));
         dealii::DataOutBase::write_pvd_record(pvd_output, times_and_names);
       }
   }
@@ -226,7 +231,7 @@ namespace MeltPoolDG
     namespace fs = std::filesystem;
 
     std::ofstream output(fs::path(output_data.directory) /
-                         fs::path(output_data.filename + "_boundary_ids" +
+                         fs::path(output_data.paraview.filename + "_boundary_ids" +
                                   dealii::Utilities::int_to_string(rank, n_digits) + ".vtk"));
 
     dealii::GridOut           grid_out;

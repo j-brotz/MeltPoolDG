@@ -112,7 +112,9 @@
   },
   "output": {
     "do output": "true",
-    "filename": "solution_recoil_pressure_3d",
-    "write frequency": "1"
+    "write frequency": "1",
+    "paraview": {
+      "filename": "solution_recoil_pressure_3d"
+    }
   }
 }

@@ -137,7 +137,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     {
       if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
         file_level_set_contour.open(this->parameters.output.directory + "/" +
-                                    this->parameters.output.filename +
+                                    this->parameters.output.paraview.filename +
                                     "_level_set_contour_over_time");
     }
 
