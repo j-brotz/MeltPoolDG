@@ -4,8 +4,6 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-// for parallelization
-#include <deal.II/base/exceptions.h>
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/material/material_data.hpp>

@@ -10,8 +10,8 @@
 
 #  include <deal.II/lac/generic_linear_algebra.h>
 
-#  include "meltpooldg/flow/darcy_damping_operation.hpp"
 #  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#  include <meltpooldg/flow/darcy_damping_operation.hpp>
 #  include <meltpooldg/flow/flow_base.hpp>
 #  include <meltpooldg/interface/scratch_data.hpp>
 #  include <meltpooldg/interface/simulation_base.hpp>

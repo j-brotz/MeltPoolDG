@@ -573,7 +573,7 @@ namespace MeltPoolDG::MeltPool
 
                 // update the phases for the flow solver considering the updated level set and
                 // temperature
-                set_phase_dependent_parameters_flow();
+                set_phase_dependent_parameters_flow(base_in->parameters);
 
                 // ... a) gravity force
                 compute_gravity_force(vel_force_rhs,
@@ -1426,7 +1426,7 @@ namespace MeltPoolDG::MeltPool
     if (darcy_operation)
       darcy_operation->reinit();
 
-    set_phase_dependent_parameters_flow();
+    set_phase_dependent_parameters_flow(base_in->parameters);
 
     // compute the evaporative mass flux from the initial temperature field
     if (evaporation_operation)
@@ -1603,7 +1603,7 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::set_phase_dependent_parameters_flow()
+  MeltPoolProblem<dim>::set_phase_dependent_parameters_flow(const Parameters<double> &parameters)
   {
     // compute damping coefficients at the quadrature points of the fluid
     // solver
@@ -1670,7 +1670,8 @@ namespace MeltPoolDG::MeltPool
                 flow_operation->get_viscosity(cell, q) = material_values.viscosity;
 
                 // set damping coefficient of the fluid solver
-                if (darcy_operation)
+                if (darcy_operation &&
+                    (parameters.darcy.formulation == DarcyDampingFormulation::implicit_formulation))
                   flow_operation->get_damping(cell, q) = darcy_operation->get_damping(cell, q);
               }
           }
