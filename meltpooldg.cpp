@@ -7,6 +7,7 @@
 #include <meltpooldg/utilities/revision.hpp>
 
 #include <iostream>
+#include <string>
 
 #include "simulations/simulation_selector.hpp"
 
@@ -29,21 +30,27 @@ namespace MeltPoolDG
         Parameters<number> parameters;
         parameters.process_parameters_file(prm, parameter_file);
 
-        // print GIT hashes if verbosity level >= 1
+        // print number of processes and GIT hashes if verbosity level >= 1
         if (parameters.base.verbosity_level >= 1)
           {
             dealii::ConditionalOStream pcout(std::cout,
-                                             Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0);
+                                             Utilities::MPI::this_mpi_process(mpi_communicator) ==
+                                               0);
+            Journal::print_decoration_line(pcout);
+            Journal::print_line(
+              pcout,
+              "Running MeltPoolDG on " +
+                std::to_string(Utilities::MPI::n_mpi_processes(mpi_communicator)) + " ranks.");
 
             Journal::print_decoration_line(pcout);
-            pcout << "  - deal.II ("
-                  << "branch: " << DEAL_II_GIT_BRANCH << "; "
-                  << "revision: " << DEAL_II_GIT_REVISION << "; short: " << DEAL_II_GIT_SHORTREV
-                  << ")" << std::endl;
-            pcout << "  - MeltPoolDG ("
-                  << "branch: " << LOCAL_GIT_BRANCH "; "
-                  << "revision: " << LOCAL_GIT_REVISION << "; short: " << LOCAL_GIT_SHORTREV << ")"
-                  << std::endl;
+            pcout << "  - deal.II:" << std::endl
+                  << "      * branch: " << DEAL_II_GIT_BRANCH << std::endl
+                  << "      * revision: " << DEAL_II_GIT_REVISION << std::endl
+                  << "      * short: " << DEAL_II_GIT_SHORTREV << std::endl;
+            pcout << "  - MeltPoolDG:" << std::endl
+                  << "      * branch: " << LOCAL_GIT_BRANCH << std::endl
+                  << "      * revision: " << LOCAL_GIT_REVISION << std::endl
+                  << "      * short: " << LOCAL_GIT_SHORTREV << std::endl;
             Journal::print_decoration_line(pcout);
           }
 
