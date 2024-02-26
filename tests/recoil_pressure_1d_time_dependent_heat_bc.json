@@ -44,13 +44,15 @@
     "curv verbosity level": "1"
   },
   "heat": {
-    "heat nlsolve field correction tolerance": "1e-6",
-    "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve residual tolerance": "1e-1",
     "enable time dependent bc": "true",
     "linear solver": {
       "preconditioner type": "DiagonalReduced",
       "rel tolerance": "1e-4"
+    },
+    "nlsolve": {
+      "max nonlinear iterations": "20",
+      "field correction tolerance": "1e-6",
+      "residual tolerance": "1e-1"
     }
   },
   "material": {

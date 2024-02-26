@@ -9,6 +9,7 @@ namespace MeltPoolDG::Heat
   {
     linear_solver.solver_type         = LinearSolverType::GMRES;
     linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
+    predictor.type                    = PredictorType::linear_extrapolation;
   }
 
   template <typename number>
@@ -23,44 +24,15 @@ namespace MeltPoolDG::Heat
         "n subdivisions",
         n_subdivisions,
         "Set the number of subdivisions for the finite element of the level set operation.");
-      prm.add_parameter("heat convection coefficient",
+      prm.add_parameter("convection coefficient",
                         convection_coefficient,
                         "Convection coefficient for the radiative boundary condition");
-      prm.add_parameter("heat emissivity",
+      prm.add_parameter("emissivity",
                         emissivity,
                         "Emissivity for the radiative boundary condition");
-      prm.add_parameter("heat temperature infinity",
+      prm.add_parameter("temperature infinity",
                         temperature_infinity,
                         "Infinity temperature for the conductive and radiative boundary condition");
-
-      // TODO: use heat.nlsolve.add_parameters() routine
-      prm.add_parameter("heat nlsolve max nonlinear iterations",
-                        nlsolve.max_nonlinear_iterations,
-                        "Set the number of maximum nonlinear iterations with standard tolerances.");
-      prm.add_parameter(
-        "heat nlsolve field correction tolerance",
-        nlsolve.field_correction_tolerance,
-        "Set the tolerance for the maximum allowed correction of the unknown field.");
-      prm.add_parameter(
-        "heat nlsolve residual tolerance",
-        nlsolve.residual_tolerance,
-        "Set the tolerance for the maximum allowed residual of the nonlinear system.");
-      prm.add_parameter(
-        "heat nlsolve max nonlinear iterations alt",
-        nlsolve.max_nonlinear_iterations_alt,
-        "Set the number of maximum nonlinear iterations with alternative tolerances.");
-      prm.add_parameter(
-        "heat nlsolve field correction tolerance alt",
-        nlsolve.field_correction_tolerance_alt,
-        "Set the alternative tolerance for the maximum allowed correction of the unknown field.");
-      prm.add_parameter(
-        "heat nlsolve residual tolerance alt",
-        nlsolve.residual_tolerance_alt,
-        "Set the alternative tolerance for the maximum allowed residual of the nonlinear system.");
-
-      // override default value
-      predictor.type = PredictorType::linear_extrapolation;
-      predictor.add_parameters(prm);
       prm.add_parameter("enable time dependent bc",
                         enable_time_dependent_bc,
                         "Set this parameter to true to enable time-dependent bc.");
@@ -73,8 +45,11 @@ namespace MeltPoolDG::Heat
       prm.declare_alias("use volume-specific thermal capacity for phase interpolation",
                         "interpolate rho times cp",
                         true);
-      delta_approximation_phase_weighted.add_parameters(prm);
+
+      nlsolve.add_parameters(prm);
       linear_solver.add_parameters(prm);
+      delta_approximation_phase_weighted.add_parameters(prm);
+      predictor.add_parameters(prm);
     }
     prm.leave_subsection();
   }

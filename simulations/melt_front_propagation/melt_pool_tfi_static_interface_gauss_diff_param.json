@@ -105,10 +105,12 @@
     }
   },
   "heat": {
-    "heat nlsolve residual tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "ILU"
+    },
+    "nlsolve": {
+      "residual tolerance": "1e-8"
     }
   },
   "paraview": {

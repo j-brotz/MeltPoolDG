@@ -60,12 +60,14 @@
     "do level set pressure gradient interpolation": "true"
   },
   "heat": {
-    "heat nlsolve field correction tolerance": "1e-5",
-    "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve residual tolerance": "1e-7",
     "linear solver": {
       "rel tolerance": "1e-4",
       "preconditioner type": "AMG"
+    },
+    "nlsolve": {
+      "max nonlinear iterations": "20",
+      "field correction tolerance": "1e-5",
+      "residual tolerance": "1e-7"
     }
   },
   "laser": {

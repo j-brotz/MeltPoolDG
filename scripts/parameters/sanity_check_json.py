@@ -41,6 +41,15 @@ old_parameter_names = [
     ["laser", "laser gusarov reflectivity"],
     ["laser", "laser gusarov extinction coefficient"],
     ["laser", "laser gusarov layer thickness"],
+    ["heat", "heat convection coefficient"],
+    ["heat", "heat emissivity"],
+    ["heat", "heat temperature infinity"],
+    ["heat", "heat nlsolve max nonlinear iterations"],
+    ["heat", "heat nlsolve field correction tolerance"],
+    ["heat", "heat nlsolve residual tolerance"],
+    ["heat", "heat nlsolve max nonlinear iterations alt"],
+    ["heat", "heat nlsolve field correction tolerance alt"],
+    ["heat", "heat nlsolve residual tolerance alt"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -65,6 +74,15 @@ new_parameter_names = [
     ["laser", "gusarov", "reflectivity"],
     ["laser", "gusarov", "extinction coefficient"],
     ["laser", "gusarov", "layer thickness"],
+    ["heat", "convection coefficient"],
+    ["heat", "emissivity"],
+    ["heat", "temperature infinity"],
+    ["heat", "nlsolve", "max nonlinear iterations"],
+    ["heat", "nlsolve", "field correction tolerance"],
+    ["heat", "nlsolve", "residual tolerance"],
+    ["heat", "nlsolve", "max nonlinear iterations alt"],
+    ["heat", "nlsolve", "field correction tolerance alt"],
+    ["heat", "nlsolve", "residual tolerance alt"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]

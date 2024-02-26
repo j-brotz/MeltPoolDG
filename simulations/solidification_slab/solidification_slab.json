@@ -15,10 +15,12 @@
     "verbosity level": "2"
   },
   "heat": {
-    "heat nlsolve residual tolerance": "1e-8",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "AMG"
+    },
+    "nlsolve": {
+      "residual tolerance": "1e-8"
     }
   },
   "problem specific": {

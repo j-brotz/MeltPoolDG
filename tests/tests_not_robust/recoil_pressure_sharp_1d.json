@@ -23,9 +23,11 @@
     "reinit scale factor epsilon": "1.5"
   },
   "heat": {
-    "heat nlsolve field correction tolerance": "1.e-9",
-    "heat nlsolve max nonlinear iterations": "15",
-    "heat nlsolve residual tolerance": "1e0"
+    "nlsolve": {
+      "max nonlinear iterations": "15",
+      "field correction tolerance": "1.e-9",
+      "residual tolerance": "1e0"
+    }
   },
   "laser": {
     "model": "uniform",

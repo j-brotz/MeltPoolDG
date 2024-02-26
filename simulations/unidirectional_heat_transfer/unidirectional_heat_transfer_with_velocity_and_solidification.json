@@ -16,10 +16,12 @@
     "verbosity level": "2"
   },
   "heat": {
-    "heat nlsolve residual tolerance": "1e-7",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "ILU"
+    },
+    "nlsolve": {
+      "residual tolerance": "1e-7"
     }
   },
   "simulation specific": {

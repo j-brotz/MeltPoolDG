@@ -75,12 +75,14 @@
     "paraview do output": "false"
   },
   "heat": {
-    "heat nlsolve residual tolerance": "1e-7",
-    "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve field correction tolerance": "1e-5",
     "linear solver": {
       "rel tolerance": "1e-4",
       "preconditioner type": "DiagonalReduced"
+    },
+    "nlsolve": {
+      "max nonlinear iterations": "20",
+      "field correction tolerance": "1e-5",
+      "residual tolerance": "1e-7"
     }
   },
   "Navier-Stokes": {

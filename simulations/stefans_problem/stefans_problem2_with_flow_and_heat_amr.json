@@ -93,10 +93,12 @@
     "evapor coefficient": "0.1"
   },
   "heat": {
-    "heat nlsolve residual tolerance": "0.5",
     "linear solver": {
       "rel tolerance": "1e-12",
       "preconditioner type": "AMG"
+    },
+    "nlsolve": {
+      "residual tolerance": "0.5"
     }
   },
   "paraview": {

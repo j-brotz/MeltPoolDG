@@ -55,9 +55,11 @@
     "evapor mass flux scale factor": "1.464"
   },
   "heat": {
-    "heat nlsolve field correction tolerance": "1e-6",
-    "heat nlsolve max nonlinear iterations": "20",
-    "heat nlsolve residual tolerance": "1e-5"
+    "nlsolve": {
+      "max nonlinear iterations": "20",
+      "field correction tolerance": "1e-6",
+      "residual tolerance": "1e-5"
+    }
   },
   "laser": {
     "model": "interface_projection_regularized",

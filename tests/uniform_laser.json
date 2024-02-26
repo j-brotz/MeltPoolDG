@@ -25,13 +25,15 @@
     }
   },
   "heat": {
-    "heat nlsolve field correction tolerance": "1e-06",
-    "heat nlsolve max nonlinear iterations": "15",
-    "heat nlsolve residual tolerance": "1e-2",
     "linear solver": {
       "rel tolerance": "0.0001",
       "abs tolerance": "1e-12",
       "preconditioner type": "ILU"
+    },
+    "nlsolve": {
+      "max nonlinear iterations": "15",
+      "field correction tolerance": "1e-06",
+      "residual tolerance": "1e-2"
     }
   },
   "laser": {
