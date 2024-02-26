@@ -30,14 +30,14 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview print boundary id": "true",
-    "paraview n patches": "3"
-  },
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "print boundary id": "true",
+    "n patches": "3"
   }
 }

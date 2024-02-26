@@ -248,7 +248,7 @@ namespace MeltPoolDG::Heat
      */
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(temp_dof_idx),
-                                           base_in->parameters.paraview,
+                                           base_in->parameters.output,
                                            base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(temp_dof_idx),
@@ -366,7 +366,7 @@ namespace MeltPoolDG::Heat
                                            std::shared_ptr<SimulationBase<dim>> base_in)
   {
     if (!post_processor->now(n_time_step, time) &&
-        !base_in->parameters.paraview.do_user_defined_postprocessing)
+        !base_in->parameters.output.do_user_defined_postprocessing)
       return;
     /**
      * collect all relevant output data
@@ -401,14 +401,14 @@ namespace MeltPoolDG::Heat
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
                                          time,
-                                         base_in->parameters.paraview.output_variables);
+                                         base_in->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
-    if (base_in->parameters.paraview.do_user_defined_postprocessing)
+    if (base_in->parameters.output.do_user_defined_postprocessing)
       base_in->do_postprocessing(generic_data_out);
 
-    // paraview postprocessing
+    // postprocessing
     post_processor->process(n_time_step, generic_data_out, time);
   }
 

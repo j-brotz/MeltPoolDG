@@ -45,9 +45,9 @@
       "slice location": "50e-6"
     }
   },
-  "paraview": {
-    "output variables": "temperature,heat_source,heaviside",
-    "paraview do output": "true",
-    "paraview filename": "projection_2d"
+  "output": {
+    "do output": "true",
+    "filename": "projection_2d",
+    "output variables": "temperature,heat_source,heaviside"
   }
 }

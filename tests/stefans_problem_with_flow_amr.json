@@ -87,10 +87,6 @@
     "evapor ls value liquid": "1",
     "evapor ls value gas": "-1"
   },
-  "paraview": {
-    "paraview do output": "false",
-    "do user defined postprocessing": "true"
-  },
   "problem specific": {
     "do evaporative heat flux": "false",
     "do heat transfer": "true",
@@ -100,5 +96,9 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "false",
+    "do user defined postprocessing": "true"
   }
 }

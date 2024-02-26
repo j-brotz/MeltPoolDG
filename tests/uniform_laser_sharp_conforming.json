@@ -110,7 +110,7 @@
       "abs tolerance": "1e-14"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "do output": "false"
   }
 }

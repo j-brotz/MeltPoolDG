@@ -64,9 +64,9 @@
     "max grid refinement level": "6",
     "every n step": "1"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output_amr",
-    "paraview filename": "melt_front_propagation_static_gusarov"
+  "output": {
+    "do output": "true",
+    "filename": "melt_front_propagation_static_gusarov",
+    "directory": "output_amr"
   }
 }

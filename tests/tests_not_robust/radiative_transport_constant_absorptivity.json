@@ -26,13 +26,13 @@
       "preconditioner type": "AMG"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "problem specific": {
     "direction": "0.0,-1.0"
   },
   "simulation specific parameters": {
     "power": "0.1"
+  },
+  "output": {
+    "do output": "false"
   }
 }

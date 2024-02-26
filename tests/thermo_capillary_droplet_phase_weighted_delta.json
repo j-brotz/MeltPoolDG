@@ -91,12 +91,12 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "false"
   }
 }

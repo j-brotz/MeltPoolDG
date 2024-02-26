@@ -80,7 +80,7 @@ namespace MeltPoolDG::LevelSet
         level_set_operation->solve();
 
 
-        // do paraview output if requested
+        // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time(),
                        base_in);
@@ -231,7 +231,7 @@ namespace MeltPoolDG::LevelSet
      */
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(ls_dof_idx),
-                                           base_in->parameters.paraview,
+                                           base_in->parameters.output,
                                            base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(ls_dof_idx),
@@ -355,7 +355,7 @@ namespace MeltPoolDG::LevelSet
     hanging_node_constraints_velocity.distribute(advection_velocity);
   }
   /*
-   *  This function is to create paraview output
+   *  This function is to create output
    */
   template <int dim>
   void
@@ -388,14 +388,14 @@ namespace MeltPoolDG::LevelSet
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
                                          time,
-                                         base_in->parameters.paraview.output_variables);
+                                         base_in->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
-    if (base_in->parameters.paraview.do_user_defined_postprocessing)
+    if (base_in->parameters.output.do_user_defined_postprocessing)
       base_in->do_postprocessing(generic_data_out);
 
-    // paraview postprocessing
+    // postprocessing
     post_processor->process(time_step, generic_data_out, time);
   }
 

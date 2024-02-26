@@ -87,9 +87,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "problem specific": {
     "do heat transfer": "true"
   },
@@ -97,5 +94,8 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "false"
   }
 }

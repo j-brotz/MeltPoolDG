@@ -1,23 +1,21 @@
 #pragma once
-#include <deal.II/base/table_handler.h>
+#include <deal.II/base/mpi.h>
 
-#include <deal.II/distributed/tria.h>
-
-#include <deal.II/fe/fe_q.h>
-
-#include <deal.II/grid/grid_out.h>
+#include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <deal.II/numerics/data_out.h>
-#include <deal.II/numerics/vector_tools.h>
-
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/time_stepping_data.hpp>
+
+#include <functional>
+#include <string>
+#include <utility>
+#include <vector>
 
 
 using namespace dealii;
@@ -32,14 +30,14 @@ namespace MeltPoolDG
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    const MPI_Comm              mpi_communicator;
-    const ParaviewData<double> &pv_data;
-    const Mapping<dim>         &mapping;
-    const Triangulation<dim>   &triangulation;
-    const ConditionalOStream    pcout;
-    const bool                  do_simplex;
-    const double                end_time;
-    double                      time_at_last_output = 0.0;
+    const MPI_Comm            mpi_communicator;
+    const OutputData<double> &output_data;
+    const Mapping<dim>       &mapping;
+    const Triangulation<dim> &triangulation;
+    const ConditionalOStream  pcout;
+    const bool                do_simplex;
+    const double              end_time;
+    double                    time_at_last_output = 0.0;
 
     // list of indices for the requested variables
     std::vector<unsigned int> idx_req_vars;
@@ -49,7 +47,7 @@ namespace MeltPoolDG
 
   public:
     Postprocessor(const MPI_Comm                  mpi_communicator_in,
-                  const ParaviewData<double>     &pv_data_in,
+                  const OutputData<double>       &output_data_in,
                   const TimeSteppingData<double> &time_data,
                   const Mapping<dim>             &mapping_in,
                   const Triangulation<dim>       &triangulation_in,
@@ -80,12 +78,12 @@ namespace MeltPoolDG
     inline bool
     now(const int n_time_step, const double time)
     {
-      return (!pv_data.do_output) ? false :
+      return (!output_data.do_output) ? false :
              (n_time_step == 0) || (std::abs(time - end_time) <= 1e-10) ?
-                                    true :
-             (time - time_at_last_output >= pv_data.write_time_step_size) ?
-                                    true :
-                                    !(n_time_step % pv_data.write_frequency);
+                                        true :
+             (time - time_at_last_output >= output_data.write_time_step_size) ?
+                                        true :
+                                        !(n_time_step % output_data.write_frequency);
     }
 
     template <class Archive>
@@ -101,9 +99,9 @@ namespace MeltPoolDG
     clean_pvd();
 
     void
-    write_paraview_files(const unsigned int         n_time_step,
-                         const double               time,
-                         const GenericDataOut<dim> &generic_data_out);
+    write_output_files(const unsigned int         n_time_step,
+                       const double               time,
+                       const GenericDataOut<dim> &generic_data_out);
 
     void
     print_boundary_ids();

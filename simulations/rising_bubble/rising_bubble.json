@@ -44,9 +44,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -77,5 +74,8 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true"
   }
 }

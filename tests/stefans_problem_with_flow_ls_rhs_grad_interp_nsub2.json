@@ -79,10 +79,6 @@
     "evapor level set source term type": "rhs",
     "evapor do level set pressure gradient interpolation": "true"
   },
-  "paraview": {
-    "paraview do output": "false",
-    "do user defined postprocessing": "true"
-  },
   "problem specific": {
     "do evaporative heat flux": "false",
     "do heat transfer": "true",
@@ -92,5 +88,9 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "false",
+    "do user defined postprocessing": "true"
   }
 }

@@ -29,13 +29,13 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview print boundary id": "false"
-  },
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "print boundary id": "false"
   }
 }

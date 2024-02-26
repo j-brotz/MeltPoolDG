@@ -55,14 +55,14 @@
     "material first density": "0.01",
     "material second density": "1"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview filename": "solution_evaporation",
-    "paraview directory": "output_down_amr/"
-  },
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "filename": "solution_evaporation",
+    "directory": "output_down_amr/"
   }
 }

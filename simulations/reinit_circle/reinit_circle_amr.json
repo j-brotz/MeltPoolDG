@@ -29,8 +29,8 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview filename": "solution_reinitialization",
-    "paraview do output": "true"
+  "output": {
+    "do output": "true",
+    "filename": "solution_reinitialization"
   }
 }

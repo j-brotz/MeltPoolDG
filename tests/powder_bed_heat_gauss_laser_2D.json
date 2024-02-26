@@ -45,7 +45,7 @@
       "slice location": "50e-6"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "do output": "false"
   }
 }

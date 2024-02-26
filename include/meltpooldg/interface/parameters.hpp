@@ -14,6 +14,7 @@
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
+#include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/radiative_transport/radiative_transport_data.hpp>
 #include <meltpooldg/reinitialization/reinitialization_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
@@ -21,7 +22,6 @@
 #include <meltpooldg/utilities/numbers.hpp>
 #include <meltpooldg/utilities/time_stepping_data.hpp>
 
-#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -179,25 +179,6 @@ namespace MeltPoolDG
     TimeType    time_type            = TimeType::real;
   };
 
-  template <typename number = double>
-  struct ParaviewData
-  {
-    bool                     do_output                      = false;
-    bool                     do_user_defined_postprocessing = false;
-    std::string              filename                       = "solution";
-    std::string              directory                      = "./";
-    int                      write_frequency                = 1;
-    double                   write_time_step_size           = 0.0;
-    bool                     print_boundary_id              = false;
-    bool                     output_subdomains              = false;
-    bool                     output_material_id             = false;
-    int                      n_digits_timestep              = 4;
-    int                      n_groups                       = 1;
-    int                      n_patches                      = 0;
-    bool                     write_higher_order_cells       = true;
-    std::vector<std::string> output_variables               = {"all"};
-  };
-
   /**
    * Utility function to print parameters from a given ParameterHandler object.
    */
@@ -259,7 +240,7 @@ namespace MeltPoolDG
     Evaporation::RecoilPressureData<number>            recoil;
     Evaporation::EvaporationData<number>               evapor;
     MaterialData<number>                               material;
-    ParaviewData<number>                               paraview;
+    OutputData<number>                                 output;
     ProfilingData<number>                              profiling;
     RestartData<number>                                restart;
     Flow::AdafloWrapperParameters                      adaflo_params;

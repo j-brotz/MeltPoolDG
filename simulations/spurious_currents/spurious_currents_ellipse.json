@@ -86,9 +86,9 @@
       }
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output_ellipse",
-    "paraview filename": "sol_spurious_currents"
+  "output": {
+    "do output": "true",
+    "filename": "sol_spurious_currents",
+    "directory": "output_ellipse"
   }
 }

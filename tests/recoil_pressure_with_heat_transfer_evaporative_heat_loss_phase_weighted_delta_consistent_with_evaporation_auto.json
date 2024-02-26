@@ -86,9 +86,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "heat": {
     "dirac delta function approximation": {
       "type": "reciprocal_times_heaviside_phase_weighted",
@@ -144,5 +141,8 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "false"
   }
 }

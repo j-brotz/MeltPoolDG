@@ -19,11 +19,6 @@
     "material first viscosity": "1e-3",
     "material first density": "1.0"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "evaporating_shell_3d",
-    "paraview print boundary id": "true"
-  },
   "simulation specific": {
     "velocity": "1e-3"
   },
@@ -59,5 +54,10 @@
     "do evaporative heat flux": "false",
     "do heat transfer": "false",
     "do evaporative velocity jump": "false"
+  },
+  "output": {
+    "do output": "true",
+    "directory": "evaporating_shell_3d",
+    "print boundary id": "true"
   }
 }

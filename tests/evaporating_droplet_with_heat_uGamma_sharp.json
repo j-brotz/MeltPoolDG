@@ -55,9 +55,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-12",
@@ -111,5 +108,8 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "false"
   }
 }

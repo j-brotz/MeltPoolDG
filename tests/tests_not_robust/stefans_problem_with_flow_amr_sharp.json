@@ -89,10 +89,6 @@
     "evapor ls value gas": "-1",
     "evapor formulation source term continuity": "sharp"
   },
-  "paraview": {
-    "paraview do output": "false",
-    "do user defined postprocessing": "true"
-  },
   "problem specific": {
     "do heat transfer": "true",
     "do evaporative velocity jump": "true",
@@ -102,5 +98,9 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "false",
+    "do user defined postprocessing": "true"
   }
 }

@@ -1,8 +1,17 @@
-#include <deal.II/numerics/data_out_dof_data.h>
+#include <deal.II/base/data_out_base.h>
+#include <deal.II/base/exceptions.h>
+
+#include <deal.II/grid/grid_out.h>
+
+#include <deal.II/lac/vector.h>
+
+#include <deal.II/numerics/data_out.h>
 
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <string>
 
@@ -10,13 +19,13 @@ namespace MeltPoolDG
 {
   template <int dim>
   Postprocessor<dim>::Postprocessor(const MPI_Comm                  mpi_communicator_in,
-                                    const ParaviewData<double>     &pv_data_in,
+                                    const OutputData<double>       &output_data_in,
                                     const TimeSteppingData<double> &time_data,
                                     const Mapping<dim>             &mapping_in,
                                     const Triangulation<dim>       &triangulation_in,
                                     const ConditionalOStream       &pcout_in)
     : mpi_communicator(mpi_communicator_in)
-    , pv_data(pv_data_in)
+    , output_data(output_data_in)
     , mapping(mapping_in)
     , triangulation(triangulation_in)
     , pcout(pcout_in)
@@ -24,11 +33,11 @@ namespace MeltPoolDG
     , end_time(time_data.end_time)
     , time_at_last_output(time_data.start_time)
   {
-    if (pv_data.write_time_step_size > 0.0)
+    if (output_data.write_time_step_size > 0.0)
       {
-        AssertThrow(pv_data.write_time_step_size >= time_data.time_step_size,
-                    ExcMessage(
-                      "The time step size for writing paraview files must be equal or larger "
+        AssertThrow(output_data.write_time_step_size >= time_data.time_step_size,
+                    dealii::ExcMessage(
+                      "The time step size for writing output files must be equal or larger "
                       "than the simulation time step size."));
       }
   }
@@ -46,11 +55,11 @@ namespace MeltPoolDG
   {
     if (now(n_time_step, time) || force_output)
       {
-        Journal::print_line(pcout, "write paraview files", "postprocessor");
+        Journal::print_line(pcout, "write output files", "postprocessor");
 
-        write_paraview_files(n_time_step, time, data_out);
+        write_output_files(n_time_step, time, data_out);
 
-        if (pv_data.print_boundary_id)
+        if (output_data.print_boundary_id)
           print_boundary_ids();
 
         // record written output time
@@ -74,15 +83,15 @@ namespace MeltPoolDG
   {
     if (now(n_time_step, time))
       {
-        GenericDataOut<dim> data_out(mapping, time, pv_data.output_variables);
+        GenericDataOut<dim> data_out(mapping, time, output_data.output_variables);
 
         attach_output_vectors(data_out);
 
-        Journal::print_line(pcout, "write paraview files", "postprocessor");
+        Journal::print_line(pcout, "write output files", "postprocessor");
 
-        write_paraview_files(n_time_step, time, data_out);
+        write_output_files(n_time_step, time, data_out);
 
-        if (pv_data.print_boundary_id)
+        if (output_data.print_boundary_id)
           print_boundary_ids();
 
         // record written output time
@@ -95,16 +104,16 @@ namespace MeltPoolDG
 
   template <int dim>
   void
-  Postprocessor<dim>::write_paraview_files(const unsigned int         n_time_step,
-                                           const double               time,
-                                           const GenericDataOut<dim> &generic_data_out)
+  Postprocessor<dim>::write_output_files(const unsigned int         n_time_step,
+                                         const double               time,
+                                         const GenericDataOut<dim> &generic_data_out)
   {
     namespace fs = std::filesystem;
-    DataOut<dim> data_out;
+    dealii::DataOut<dim> data_out;
 
     // do search algorithm only once
     if (idx_req_vars.size() == 0)
-      idx_req_vars = generic_data_out.get_indices_data_request(pv_data.output_variables);
+      idx_req_vars = generic_data_out.get_indices_data_request(output_data.output_variables);
 
     for (const auto &i : idx_req_vars)
       {
@@ -116,18 +125,18 @@ namespace MeltPoolDG
                                  std::get<3>(data));
       }
 
-    if (pv_data.output_subdomains)
+    if (output_data.output_subdomains)
       {
-        const auto    &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
-        Vector<double> subdomains(tria.n_active_cells());
-        subdomains = Utilities::MPI::this_mpi_process(mpi_communicator);
+        const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
+        dealii::Vector<double> subdomains(tria.n_active_cells());
+        subdomains = dealii::Utilities::MPI::this_mpi_process(mpi_communicator);
 
         data_out.add_data_vector(subdomains, "subdomains");
       }
-    if (pv_data.output_material_id)
+    if (output_data.output_material_id)
       {
-        const auto    &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
-        Vector<double> material_id(tria.n_active_cells());
+        const auto &tria = std::get<0>(generic_data_out.entries.front())->get_triangulation();
+        dealii::Vector<double> material_id(tria.n_active_cells());
 
         for (const auto &cell : tria.active_cell_iterators())
           material_id[cell->active_cell_index()] = cell->material_id();
@@ -135,12 +144,12 @@ namespace MeltPoolDG
         data_out.add_data_vector(material_id, "material_id", DataOut<dim>::type_cell_data);
       }
 
-    DataOutBase::VtkFlags flags;
+    dealii::DataOutBase::VtkFlags flags;
     if ((do_simplex == false) && (dim > 1))
-      flags.write_higher_order_cells = pv_data.write_higher_order_cells;
+      flags.write_higher_order_cells = output_data.write_higher_order_cells;
     data_out.set_flags(flags);
 
-    unsigned int n_patches = pv_data.n_patches;
+    unsigned int n_patches = output_data.n_patches;
 
     if (n_patches == 0)
       for (const auto &data : generic_data_out.entries)
@@ -149,23 +158,23 @@ namespace MeltPoolDG
     data_out.build_patches(mapping, n_patches);
 
     std::string pvtu_filename;
-    if (pv_data.n_groups == 1)
+    if (output_data.n_groups == 1)
       {
         pvtu_filename =
-          fs::path(pv_data.filename + "_" +
-                   Utilities::int_to_string(n_time_step, pv_data.n_digits_timestep) + ".vtu");
+          fs::path(output_data.paraview.filename + "_" +
+                   Utilities::int_to_string(n_time_step, output_data.paraview.n_digits_timestep) + ".vtu");
 
-        data_out.write_vtu_in_parallel(fs::path(pv_data.directory) / pvtu_filename,
+        data_out.write_vtu_in_parallel(fs::path(output_data.directory) / pvtu_filename,
                                        mpi_communicator);
       }
     else
       {
-        pvtu_filename = data_out.write_vtu_with_pvtu_record(pv_data.directory + "/",
-                                                            pv_data.filename,
+        pvtu_filename = data_out.write_vtu_with_pvtu_record(output_data.directory + "/",
+                                                            output_data.paraview.filename,
                                                             n_time_step,
                                                             mpi_communicator,
-                                                            pv_data.n_digits_timestep,
-                                                            pv_data.n_groups);
+                                                            output_data.paraview.n_digits_timestep,
+                                                            output_data.paraview.n_groups);
       }
 
     // write a pvd file relating the pvtu-file to a simulation time
@@ -179,12 +188,13 @@ namespace MeltPoolDG
                                     times_and_names[len - 1].second != pvtu_filename))
       times_and_names.emplace_back(time, pvtu_filename);
 
-    if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
+    if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 && time >= 0.0)
       {
         clean_pvd();
 
-        std::ofstream pvd_output(fs::path(pv_data.directory) / fs::path(pv_data.filename + ".pvd"));
-        DataOutBase::write_pvd_record(pvd_output, times_and_names);
+        std::ofstream pvd_output(fs::path(output_data.directory) /
+                                 fs::path(output_data.filename + ".pvd"));
+        dealii::DataOutBase::write_pvd_record(pvd_output, times_and_names);
       }
   }
 
@@ -200,7 +210,7 @@ namespace MeltPoolDG
     // compared to the original simulation.
     //
     std::erase_if(times_and_names, [this](const std::pair<double, std::string> &x) {
-      return !fs::exists(fs::path(pv_data.directory) / fs::path(x.second));
+      return !fs::exists(fs::path(output_data.directory) / fs::path(x.second));
     });
   }
 
@@ -208,19 +218,19 @@ namespace MeltPoolDG
   void
   Postprocessor<dim>::print_boundary_ids()
   {
-    const unsigned int rank    = Utilities::MPI::this_mpi_process(mpi_communicator);
-    const unsigned int n_ranks = Utilities::MPI::n_mpi_processes(mpi_communicator);
+    const unsigned int rank    = dealii::Utilities::MPI::this_mpi_process(mpi_communicator);
+    const unsigned int n_ranks = dealii::Utilities::MPI::n_mpi_processes(mpi_communicator);
 
     const unsigned int n_digits = static_cast<int>(std::ceil(std::log10(std::fabs(n_ranks))));
 
     namespace fs = std::filesystem;
 
-    std::ofstream output(fs::path(pv_data.directory) /
-                         fs::path(pv_data.filename + "_boundary_ids" +
-                                  Utilities::int_to_string(rank, n_digits) + ".vtk"));
+    std::ofstream output(fs::path(output_data.directory) /
+                         fs::path(output_data.filename + "_boundary_ids" +
+                                  dealii::Utilities::int_to_string(rank, n_digits) + ".vtk"));
 
-    GridOut           grid_out;
-    GridOutFlags::Vtk flags;
+    dealii::GridOut           grid_out;
+    dealii::GridOutFlags::Vtk flags;
     flags.output_cells         = false;
     flags.output_faces         = true;
     flags.output_edges         = false;

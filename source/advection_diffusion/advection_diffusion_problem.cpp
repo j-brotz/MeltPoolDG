@@ -31,7 +31,7 @@ namespace MeltPoolDG::AdvectionDiffusion
         compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
         advec_diff_operation->solve();
         /*
-         *  do paraview output if requested
+         *  do output if requested
          */
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time(),
@@ -230,7 +230,7 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(advec_diff_dof_idx),
-                                           base_in->parameters.paraview,
+                                           base_in->parameters.output,
                                            base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(advec_diff_dof_idx),
@@ -269,7 +269,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                  std::shared_ptr<SimulationBase<dim>> base_in)
   {
     if (!post_processor->now(time_step, current_time) &&
-        !base_in->parameters.paraview.do_user_defined_postprocessing)
+        !base_in->parameters.output.do_user_defined_postprocessing)
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
@@ -286,14 +286,14 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
                                          current_time,
-                                         base_in->parameters.paraview.output_variables);
+                                         base_in->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
-    if (base_in->parameters.paraview.do_user_defined_postprocessing)
+    if (base_in->parameters.output.do_user_defined_postprocessing)
       base_in->do_postprocessing(generic_data_out);
 
-    // paraview postprocessing
+    // postprocessing
     post_processor->process(time_step, generic_data_out, current_time);
   }
 

@@ -21,7 +21,7 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true"
+  "output": {
+    "do output": "true"
   }
 }

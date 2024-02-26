@@ -93,11 +93,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false",
-    "paraview write frequency": "1",
-    "paraview filename": "solution_recoil_pressure"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-4",
@@ -149,5 +144,10 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "false",
+    "filename": "solution_recoil_pressure",
+    "write frequency": "1"
   }
 }

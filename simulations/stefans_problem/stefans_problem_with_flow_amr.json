@@ -91,11 +91,6 @@
     "evapor ls value liquid": "1",
     "evapor ls value gas": "-1"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview filename": "solution_evaporation",
-    "paraview directory": "stefans_problem_with_flow/"
-  },
   "problem specific": {
     "do evaporative heat flux": "false",
     "do heat transfer": "true",
@@ -105,5 +100,10 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "filename": "solution_evaporation",
+    "directory": "stefans_problem_with_flow/"
   }
 }

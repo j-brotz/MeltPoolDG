@@ -65,7 +65,7 @@
     "max grid refinement level": "6",
     "every n step": "1"
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "do output": "false"
   }
 }

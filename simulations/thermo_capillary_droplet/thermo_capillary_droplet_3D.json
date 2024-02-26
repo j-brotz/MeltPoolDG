@@ -100,11 +100,6 @@
     "max grid refinement level": "5",
     "every n step": "1"
   },
-  "paraview": {
-    "paraview directory": "output/",
-    "paraview filename": "thermocapillary_droplet",
-    "paraview do output": "true"
-  },
   "problem specific": {
     "do heat transfer": "true"
   },
@@ -112,5 +107,10 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "filename": "thermocapillary_droplet",
+    "directory": "output/"
   }
 }

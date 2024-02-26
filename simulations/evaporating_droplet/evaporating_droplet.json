@@ -45,9 +45,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true"
-  },
   "evaporation": {
     "evapor evaporative mass flux": "1.0e-3",
     "evapor ls value liquid": "1",
@@ -89,5 +86,8 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true"
   }
 }

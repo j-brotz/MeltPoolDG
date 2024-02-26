@@ -52,9 +52,6 @@
     "do heat transfer": "true",
     "do solidification": "true"
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Output options": {
@@ -62,5 +59,8 @@
         "output wall times": "0"
       }
     }
+  },
+  "output": {
+    "do output": "false"
   }
 }

@@ -63,7 +63,7 @@
     "material two phase properties transition type": "smooth",
     "material solidification type": "mushy_zone"
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "do output": "false"
   }
 }

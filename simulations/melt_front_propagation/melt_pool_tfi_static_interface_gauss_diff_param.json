@@ -113,11 +113,6 @@
       "residual tolerance": "1e-8"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output",
-    "paraview filename": "melt_pool_tfi_static_interface_gauss_diff_param"
-  },
   "problem specific": {
     "do heat transfer": "true",
     "do solidification": "true"
@@ -126,5 +121,10 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "filename": "melt_pool_tfi_static_interface_gauss_diff_param",
+    "directory": "output"
   }
 }

@@ -23,7 +23,7 @@
       "type": "SUPG"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "do output": "false"
   }
 }

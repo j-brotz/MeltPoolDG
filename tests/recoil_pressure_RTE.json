@@ -92,9 +92,6 @@
     "recoil pressure constant": "54000.0",
     "recoil temperature constant": "50700.0"
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -123,5 +120,8 @@
         "scheme": "bdf_2"
       }
     }
+  },
+  "output": {
+    "do output": "false"
   }
 }

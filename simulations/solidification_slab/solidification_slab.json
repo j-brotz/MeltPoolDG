@@ -36,8 +36,8 @@
     "material solidus temperature": "270.0",
     "material liquidus temperature": "276.0"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview filename": "solution_solidification_slab"
+  "output": {
+    "do output": "true",
+    "filename": "solution_solidification_slab"
   }
 }

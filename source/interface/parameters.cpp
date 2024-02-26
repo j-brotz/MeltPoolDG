@@ -2,6 +2,7 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <filesystem>
+#include <fstream>
 
 namespace MeltPoolDG
 {
@@ -44,22 +45,6 @@ namespace MeltPoolDG
       amr.min_grid_refinement_level = base.global_refinements;
 
     /*
-     * calculate the paraview write frequency if a time step for producing the output
-     * is specified
-     */
-    if (paraview.write_time_step_size > 0.0)
-      {
-        AssertThrow(
-          paraview.write_time_step_size >= time_stepping.time_step_size,
-          ExcMessage(
-            "The "
-            "time step size for writing paraview files must be equal or larger than the simulation "
-            "time step size."));
-        paraview.write_frequency =
-          paraview.write_time_step_size /
-          time_stepping.time_step_size; //@todo: adapt in case of adaptive time stepping
-      }
-    /*
      * calculate the profiling output frequency if a time step size
      */
     if (profiling.write_time_step_size > 0.0)
@@ -95,7 +80,7 @@ namespace MeltPoolDG
      */
     namespace fs = std::filesystem;
     if (restart.directory == "")
-      restart.directory = fs::path(fs::current_path()) / fs::path(paraview.directory);
+      restart.directory = fs::path(fs::current_path()) / fs::path(output.directory);
 
     // modify the value of prefix for easy internal access
     restart.prefix = fs::path(restart.directory) / fs::path(restart.prefix);
@@ -125,48 +110,13 @@ namespace MeltPoolDG
     reinit.post();
     normal_vec.post();
     curv.post();
+    output.post(time_stepping.time_step_size, parameter_filename);
 
     /************************************************************************************
      * check input parameters for validity
      ************************************************************************************/
     check_input_parameters();
 
-    /************************************************************************************
-     * create output directory and copy parameter file to output directory
-     ************************************************************************************/
-    {
-      const fs::path dir = fs::current_path() / paraview.directory;
-      // check if the requested paraview directory exists and if not create the directory
-      AssertThrow(!fs::exists(dir) || fs::is_directory(dir),
-                  ExcMessage("You are trying to create a folder with the name <" +
-                             std::string(dir) +
-                             ">. However, a file with the same name already exists! "
-                             "Possible solutions could be to either rename the output "
-                             "folder in the parameter file or to rename/move the existing file."));
-
-      if (!fs::exists(dir))
-        fs::create_directory(dir);
-
-      try
-        {
-          fs::copy(parameter_filename, dir, fs::copy_options::overwrite_existing);
-        }
-      catch (...)
-        {
-          // copy parameter file (workaround since overwrite_existing complains with certain
-          // compilers)
-          const auto path_orig = fs::path(parameter_filename);
-          const auto path_dest = fs::path(dir) / fs::path(parameter_filename).filename();
-
-          if (!fs::equivalent(path_orig, path_dest))
-            {
-              if (fs::exists(path_dest))
-                fs::remove(path_dest);
-
-              fs::copy(path_orig, path_dest, fs::copy_options::overwrite_existing);
-            }
-        }
-    }
     parameters_read = true;
   }
 
@@ -460,58 +410,9 @@ namespace MeltPoolDG
      */
     material.add_parameters(prm);
     /*
-     *   paraview
+     *   output
      */
-    prm.enter_subsection("paraview");
-    {
-      prm.add_parameter("paraview do output",
-                        paraview.do_output,
-                        "boolean for producing paraview output files");
-      prm.add_parameter("paraview filename",
-                        paraview.filename,
-                        "Sets the base name for the paraview file output.");
-      prm.add_parameter("paraview directory",
-                        paraview.directory,
-                        "Sets the base directory for the paraview file output.");
-      prm.add_parameter("paraview write frequency",
-                        paraview.write_frequency,
-                        "every n timestep that should be written");
-      prm.add_parameter("paraview write time step size",
-                        paraview.write_time_step_size,
-                        "Write paraview output every given time step. If this parameter is "
-                        "set, the paraview write frequency is overwritten.");
-      prm.add_parameter("paraview print boundary id",
-                        paraview.print_boundary_id,
-                        "boolean for printing a vtk-file with the boundary id");
-      prm.add_parameter("paraview output subdomains",
-                        paraview.output_subdomains,
-                        "boolean for outputting the subdomain ranks");
-      prm.add_parameter("output material id",
-                        paraview.output_material_id,
-                        "Set to true to output the material id.");
-      prm.add_parameter("paraview n digits timestep",
-                        paraview.n_digits_timestep,
-                        "number of digits for the frame number of the vtk-file.");
-      prm.add_parameter("paraview n groups",
-                        paraview.n_groups,
-                        "number of parallel written vtk-files.");
-      prm.add_parameter("paraview n patches",
-                        paraview.n_patches,
-                        "Control number of patches to enable high-order output.");
-      prm.add_parameter(
-        "write higher order cells",
-        paraview.write_higher_order_cells,
-        "Set this parameter to false to write bi- or trilinear data only. "
-        "Set this parameter to true to write higher order cell data. Note: higher order "
-        "cell data can only be written for hexaeder meshes and 2 or 3 dimensions.");
-      prm.add_parameter("output variables",
-                        paraview.output_variables,
-                        "Specify variables that you request to output to paraview.");
-      prm.add_parameter("do user defined postprocessing",
-                        paraview.do_user_defined_postprocessing,
-                        "Set this parameter to true to enable user defined postprocessing.");
-    }
-    prm.leave_subsection();
+    output.add_parameters(prm);
     /*
      *   profiling
      */

@@ -27,9 +27,9 @@
   "normal vector": {
     "normal vec do matrix free": "false"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview filename": "solution_test",
-    "paraview directory": "output"
+  "output": {
+    "do output": "true",
+    "filename": "solution_test",
+    "directory": "output"
   }
 }

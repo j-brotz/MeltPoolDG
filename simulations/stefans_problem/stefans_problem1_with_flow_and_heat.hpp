@@ -136,8 +136,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
 
     {
       if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-        file_level_set_contour.open(this->parameters.paraview.directory + "/" +
-                                    this->parameters.paraview.filename +
+        file_level_set_contour.open(this->parameters.output.directory + "/" +
+                                    this->parameters.output.filename +
                                     "_level_set_contour_over_time");
     }
 
@@ -316,7 +316,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     void
     do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
     {
-      if (this->parameters.paraview.do_output)
+      if (this->parameters.output.do_output)
         {
           if constexpr (dim > 1)
             {

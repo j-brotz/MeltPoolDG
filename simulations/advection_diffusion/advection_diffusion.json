@@ -18,13 +18,11 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview filename": "solution_advection_diffusion"
-  },
   "output": {
     "do compute error": "true",
     "compute volume output": "true",
-    "filename volume output": "myVolumes.txt"
+    "filename volume output": "myVolumes.txt",
+    "do output": "true",
+    "filename": "solution_advection_diffusion"
   }
 }

@@ -81,11 +81,6 @@
       }
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "moving_droplet",
-    "paraview write frequency": "2"
-  },
   "problem specific": {
     "do evaporation": "false",
     "do recoil pressure": "false",
@@ -101,5 +96,10 @@
   },
   "simulation specific": {
     "radius": "50e-6"
+  },
+  "output": {
+    "do output": "true",
+    "directory": "moving_droplet",
+    "write frequency": "2"
   }
 }

@@ -88,10 +88,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview directory": "output_thermo_capillary/",
-    "paraview do output": "true"
-  },
   "problem specific": {
     "do heat transfer": "true"
   },
@@ -99,5 +95,9 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "directory": "output_thermo_capillary/"
   }
 }

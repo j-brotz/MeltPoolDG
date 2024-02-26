@@ -102,11 +102,6 @@
       "residual tolerance": "1e-7"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output_stefan_1/",
-    "paraview filename": "solution_1d"
-  },
   "problem specific": {
     "do evaporative heat flux": "true",
     "do evaporative velocity jump": "true",
@@ -116,5 +111,10 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "filename": "solution_1d",
+    "directory": "output_stefan_1/"
   }
 }

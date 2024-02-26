@@ -29,8 +29,8 @@
     "material first capacity": "1.0",
     "material first density": "1.0"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview filename": "solution_heat_transfer_radiation"
+  "output": {
+    "do output": "true",
+    "filename": "solution_heat_transfer_radiation"
   }
 }

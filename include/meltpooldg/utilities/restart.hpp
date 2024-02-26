@@ -85,7 +85,7 @@ namespace MeltPoolDG::Restart
                   /// certain / compilers)
                   // const auto path_orig = fs::path(parameter_filename);
                   // const auto path_dest =
-                  // fs::path(paraview.directory) / fs::path(parameter_filename).filename();
+                  // fs::path(output.directory) / fs::path(parameter_filename).filename();
 
                   // if (!fs::equivalent(path_orig, path_dest))
                   //{

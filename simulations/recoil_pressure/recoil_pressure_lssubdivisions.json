@@ -119,12 +119,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview directory": "recoil_pressure_lssubdivisions",
-    "paraview do output": "true",
-    "paraview filename": "solution_recoil_pressure",
-    "paraview write time step size": "2e-8"
-  },
   "recoil pressure": {
     "recoil pressure constant": "5.e4",
     "recoil temperature constant": "5.e4"
@@ -161,5 +155,11 @@
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "filename": "solution_recoil_pressure",
+    "directory": "recoil_pressure_lssubdivisions",
+    "write time step size": "2e-8"
   }
 }

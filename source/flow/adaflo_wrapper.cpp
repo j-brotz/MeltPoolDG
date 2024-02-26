@@ -88,7 +88,7 @@ namespace MeltPoolDG::Flow
         scratch_data.attach_quadrature(QGauss<dim>(adaflo_params.velocity_degree));
 
     // dof handler for output of densities and viscosities
-    // @todo: introduce only if paraview output == true
+    // @todo: introduce only if do output == true
     dof_handler_parameters.reinit(*base_in->triangulation);
     dof_index_parameters = scratch_data.attach_dof_handler(dof_handler_parameters);
     scratch_data.attach_constraint_matrix(constraints_parameters);

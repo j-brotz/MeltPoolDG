@@ -53,14 +53,14 @@
     "evapor ls value liquid": "1",
     "evapor ls value gas": "-1"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview filename": "solution_evaporation",
-    "paraview directory": "rotating_bubble_evapor/"
-  },
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
     }
+  },
+  "output": {
+    "do output": "true",
+    "filename": "solution_evaporation",
+    "directory": "rotating_bubble_evapor/"
   }
 }
