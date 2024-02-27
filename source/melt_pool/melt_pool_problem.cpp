@@ -688,6 +688,13 @@ namespace MeltPoolDG::MeltPool
 
             if (profiling_monitor && profiling_monitor->now())
               {
+                // call destructor as a workaround to also print the accumalated
+                // time of mp::run at this stage
+                scope.reset();
+                sc.reset();
+                sc    = std::make_unique<ScopedName>("mp::run");
+                scope = std::make_unique<TimerOutput::Scope>(scratch_data->get_timer(), *sc);
+
                 profiling_monitor->print(scratch_data->get_pcout(),
                                          scratch_data->get_timer(),
                                          scratch_data->get_mpi_comm());
