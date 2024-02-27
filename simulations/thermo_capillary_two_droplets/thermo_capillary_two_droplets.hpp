@@ -1,13 +1,13 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 // c++
@@ -109,26 +109,31 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     InitialValuesLS(const double eps)
       : Function<dim>()
       , eps(eps)
+      , center1(dim == 2 ? Point<dim>(2.9 * radius, 4.0 * radius) :
+                           Point<dim>(2.9 * radius, 0, 4.0 * radius))
+
+      , center2(dim == 2 ? Point<dim>(5.1 * radius, 5.8 * radius) :
+                           Point<dim>(5.1 * radius, 0, 5.8 * radius))
+      , sphere1(center1, radius)
+      , sphere2(center2, radius)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
-      Point<dim> center1 = dim == 2 ? Point<dim>(2.9 * radius, 4.0 * radius) :
-                                      Point<dim>(2.9 * radius, 0, 4.0 * radius);
-
-      Point<dim> center2 = dim == 2 ? Point<dim>(5.1 * radius, 5.8 * radius) :
-                                      Point<dim>(5.1 * radius, 0, 5.8 * radius);
-
       if ((p - center1).norm() < (p - center2).norm()) // closer to first droplet center
         return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          DistanceFunctions::spherical_manifold<dim>(p, center1, radius), eps);
+          -sphere1.value(p), eps);
       else // closer to second droplet center
         return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          DistanceFunctions::spherical_manifold<dim>(p, center2, radius), eps);
+          -sphere2.value(p), eps);
     }
 
-    double eps;
+    const double                                 eps;
+    const Point<dim>                             center1;
+    const Point<dim>                             center2;
+    const Functions::SignedDistance::Sphere<dim> sphere1;
+    const Functions::SignedDistance::Sphere<dim> sphere2;
   };
 
 

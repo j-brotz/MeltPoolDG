@@ -9,7 +9,7 @@
 #include <iostream>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/utilities/distance_functions.hpp>
+
 
 /**
  * This simulation represents simple test examples for heat transfer with melt front propagation.

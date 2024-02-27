@@ -1,6 +1,5 @@
 #pragma once
 
-// deal-specific libraries
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/point.h>
@@ -11,9 +10,10 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
-#include <iostream>
-// MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/utilities/functions.hpp>
+
+#include <iostream>
 
 namespace MeltPoolDG::Simulation::SpuriousCurrents
 {
