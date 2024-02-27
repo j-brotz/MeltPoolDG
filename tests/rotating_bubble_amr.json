@@ -44,14 +44,16 @@
       "do matrix free": "false"
     }
   },
-  "paraview": {
-    "paraview do output": "false",
-    "paraview filename": "solution_rotaitng_bubble"
-  },
   "advection diffusion": {
     "linear solver": {
       "preconditioner type": "ILU",
       "do matrix free": "false"
+    }
+  },
+  "output": {
+    "paraview": {
+      "filename": "solution_rotaitng_bubble",
+      "enable": "false"
     }
   }
 }

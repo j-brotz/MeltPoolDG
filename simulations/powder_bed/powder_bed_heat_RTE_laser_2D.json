@@ -65,9 +65,11 @@
     "n initial refinement cycles": "2",
     "upper perc to refine": "0.3"
   },
-  "paraview": {
-    "output variables": "temperature,heat_source,heaviside",
-    "paraview do output": "true",
-    "paraview filename": "rte_2d"
+  "output": {
+    "paraview": {
+      "filename": "rte_2d",
+      "enable": "true"
+    },
+    "output variables": "temperature,heat_source,heaviside"
   }
 }

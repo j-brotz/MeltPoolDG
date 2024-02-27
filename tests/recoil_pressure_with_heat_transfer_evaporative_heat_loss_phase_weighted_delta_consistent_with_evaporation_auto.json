@@ -86,9 +86,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "heat": {
     "dirac delta function approximation": {
       "type": "reciprocal_times_heaviside_phase_weighted",
@@ -143,6 +140,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

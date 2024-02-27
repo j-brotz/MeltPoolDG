@@ -91,11 +91,6 @@
     "evapor ls value liquid": "1",
     "evapor ls value gas": "-1"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview filename": "solution_evaporation",
-    "paraview directory": "stefans_problem_with_flow/"
-  },
   "problem specific": {
     "do evaporative heat flux": "false",
     "do heat transfer": "true",
@@ -104,6 +99,13 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "directory": "stefans_problem_with_flow/",
+    "paraview": {
+      "filename": "solution_evaporation",
+      "enable": "true"
     }
   }
 }

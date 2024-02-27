@@ -104,9 +104,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "reinitialization": {
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
@@ -123,6 +120,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

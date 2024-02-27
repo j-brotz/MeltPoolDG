@@ -4,11 +4,30 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/base/data_out_base.h>
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
+
+#include <deal.II/fe/mapping_q1.h>
+
+#include <deal.II/grid/tria.h>
+
+#include <deal.II/numerics/data_out_resample.h>
+
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/post_processing/post_processor_base.hpp>
+
+#include <fstream>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace MeltPoolDG::PostProcessingTools
 {
+  using namespace dealii;
+
   /**
    * Create a (dim-1,dim) slice through a (dim,dim) triangulation.
    *
@@ -21,7 +40,7 @@ namespace MeltPoolDG::PostProcessingTools
     const GenericDataOut<dim>         *generic_data_out = nullptr;
     const Triangulation<dim - 1, dim> &tria_slice;
     const std::vector<std::string>     request_variables;
-    const ParaviewData<double>        &pv_data;
+    const OutputData<double>          &output_data;
 
     // Collect file name and corresponding time step for the pvd-file
     std::vector<std::pair<double, std::string>> times_and_names;
@@ -34,11 +53,11 @@ namespace MeltPoolDG::PostProcessingTools
     SliceCreator(const GenericDataOut<dim>         &generic_data_out,
                  const Triangulation<dim - 1, dim> &tria_slice,
                  const std::vector<std::string>     request_variables,
-                 const ParaviewData<double>        &pv_data)
+                 const OutputData<double>          &output_data_in)
       : generic_data_out(&generic_data_out)
       , tria_slice(tria_slice)
       , request_variables(request_variables)
-      , pv_data(pv_data)
+      , output_data(output_data_in)
       , idx_req_vars(generic_data_out.get_indices_data_request(request_variables))
     {}
 
@@ -86,18 +105,19 @@ namespace MeltPoolDG::PostProcessingTools
 
           // write slice data to vtu files
           const std::string pvtu_filename =
-            data_out.write_vtu_with_pvtu_record(pv_data.directory + "/",
-                                                pv_data.filename + "_slice",
+            data_out.write_vtu_with_pvtu_record(output_data.directory + "/",
+                                                output_data.paraview.filename + "_slice",
                                                 n_time_step,
                                                 tria_slice.get_communicator(),
-                                                pv_data.n_digits_timestep,
-                                                pv_data.n_groups);
+                                                output_data.paraview.n_digits_timestep,
+                                                output_data.paraview.n_groups);
 
           // write a pvd file relating the pvtu-file with a simulation time
           if (Utilities::MPI::this_mpi_process(tria_slice.get_communicator()) == 0)
             {
               times_and_names.emplace_back(generic_data_out->get_time(), pvtu_filename);
-              std::ofstream pvd_output(pv_data.directory + "/" + pv_data.filename + "_slice.pvd");
+              std::ofstream pvd_output(output_data.directory + "/" + output_data.paraview.filename +
+                                       "_slice.pvd");
               DataOutBase::write_pvd_record(pvd_output, times_and_names);
             }
         }

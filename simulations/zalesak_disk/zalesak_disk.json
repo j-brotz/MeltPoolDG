@@ -24,8 +24,10 @@
   "normal vector": {
     "normal vec damping scale factor": "0.5"
   },
-  "paraview": {
-    "paraview directory": "output",
-    "paraview do output": "true"
+  "output": {
+    "directory": "output",
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

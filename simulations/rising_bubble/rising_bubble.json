@@ -44,9 +44,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -76,6 +73,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "true"
     }
   }
 }

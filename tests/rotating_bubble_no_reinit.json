@@ -34,13 +34,15 @@
   "curvature": {
     "curv damping scale factor": "16"
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "advection diffusion": {
     "linear solver": {
       "preconditioner type": "ILU",
       "do matrix free": "false"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

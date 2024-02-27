@@ -54,10 +54,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview directory": "evaporating_droplet_test",
-    "paraview do output": "true"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-12",
@@ -109,6 +105,12 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "directory": "evaporating_droplet_test",
+    "paraview": {
+      "enable": "true"
     }
   }
 }

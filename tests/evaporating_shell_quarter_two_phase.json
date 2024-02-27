@@ -24,10 +24,6 @@
     "material second conductivity": "1e-3",
     "material two phase properties transition type": "consistent_with_evaporation"
   },
-  "paraview": {
-    "paraview do output": "false",
-    "paraview directory": "evaporating_shell_2d"
-  },
   "reinitialization": {
     "reinit constant epsilon": "0.02",
     "reinit max n steps": "5"
@@ -78,5 +74,11 @@
     "do evaporative heat flux": "false",
     "do heat transfer": "true",
     "do evaporative velocity jump": "true"
+  },
+  "output": {
+    "directory": "evaporating_shell_2d",
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

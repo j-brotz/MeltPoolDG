@@ -98,7 +98,9 @@
   "normal vector": {
     "normal vec damping scale factor": "2"
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

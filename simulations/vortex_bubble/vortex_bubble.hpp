@@ -287,8 +287,9 @@ namespace MeltPoolDG
               if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
                 {
                   namespace fs = std::filesystem;
-                  std::ofstream output(fs::path(this->parameters.paraview.directory) /
-                                       fs::path(this->parameters.paraview.filename + ".txt"));
+                  std::ofstream output(
+                    fs::path(this->parameters.output.directory) /
+                    fs::path(this->parameters.output.paraview.filename + ".txt"));
                   table.write_text(output);
                 }
 
@@ -299,8 +300,8 @@ namespace MeltPoolDG
                 {
                   namespace fs = std::filesystem;
                   std::ofstream output(
-                    fs::path(this->parameters.paraview.directory) /
-                    fs::path(this->parameters.paraview.filename + "_L2norm.txt"));
+                    fs::path(this->parameters.output.directory) /
+                    fs::path(this->parameters.output.paraview.filename + "_L2norm.txt"));
 
 
                   generic_data_out.get_vector("distance").update_ghost_values();

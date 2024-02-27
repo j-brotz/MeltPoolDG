@@ -27,10 +27,12 @@
   "problem specific": {
     "direction": "0.0,-1.0"
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "simulation specific parameters": {
     "power": "0.1"
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

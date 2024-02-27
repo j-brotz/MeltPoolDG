@@ -222,7 +222,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           prm.add_parameter("output variables",
                             slice_data.output_variables,
                             "Specify variables that you request to output for the slice."
-                            "In the default case, the one specified within the paraview "
+                            "In the default case, the one specified within the output "
                             "section will be adopted.");
           prm.add_parameter("n global refinement",
                             slice_data.n_global_refinement,
@@ -255,7 +255,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       // set default values of parameters @todo --> make own overwritten base function
       slice_data.output_variables = (slice_data.output_variables.size() > 0) ?
                                       slice_data.output_variables :
-                                      this->parameters.paraview.output_variables;
+                                      this->parameters.output.output_variables;
 
       if (this->parameters.base.do_simplex || dim == 1)
         {
@@ -682,7 +682,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     void
     do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
     {
-      if (this->parameters.paraview.do_output == false || !slice_data.enable)
+      if (this->parameters.output.do_user_defined_postprocessing == false || !slice_data.enable)
         return;
 
       // create slice
@@ -690,11 +690,8 @@ namespace MeltPoolDG::Simulation::RecoilPressure
         {
           if (!slice)
             {
-              slice =
-                std::make_shared<PostProcessingTools::SliceCreator<3>>(generic_data_out,
-                                                                       tria_slice,
-                                                                       slice_data.output_variables,
-                                                                       this->parameters.paraview);
+              slice = std::make_shared<PostProcessingTools::SliceCreator<3>>(
+                generic_data_out, tria_slice, slice_data.output_variables, this->parameters.output);
             }
           // @todo: We need to reinit, since generic_data_out is currently created
           // for every time step.

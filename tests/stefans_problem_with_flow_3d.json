@@ -77,10 +77,6 @@
   "evaporation": {
     "evapor evaporative mass flux": "1.e-2"
   },
-  "paraview": {
-    "paraview do output": "false",
-    "do user defined postprocessing": "true"
-  },
   "problem specific": {
     "do evaporative heat flux": "false",
     "do heat transfer": "true",
@@ -89,6 +85,12 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "do user defined postprocessing": "true",
+    "paraview": {
+      "enable": "false"
     }
   }
 }

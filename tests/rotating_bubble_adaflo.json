@@ -47,8 +47,9 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false",
-    "paraview print curvature": "true"
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

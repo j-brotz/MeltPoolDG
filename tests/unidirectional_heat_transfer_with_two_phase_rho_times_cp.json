@@ -43,7 +43,9 @@
     "material second density": "7850",
     "material two phase properties transition type": "smooth"
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

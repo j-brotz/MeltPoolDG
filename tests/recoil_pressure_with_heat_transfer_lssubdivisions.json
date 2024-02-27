@@ -121,12 +121,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview directory": "recoil_pressure_lssubdivisions",
-    "paraview do output": "false",
-    "paraview filename": "solution_recoil_pressure",
-    "paraview write time step size": "2e-8"
-  },
   "recoil pressure": {
     "recoil pressure constant": "5.e4",
     "recoil temperature constant": "5.e4"
@@ -162,6 +156,14 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "directory": "recoil_pressure_lssubdivisions",
+    "write time step size": "2e-8",
+    "paraview": {
+      "filename": "solution_recoil_pressure",
+      "enable": "false"
     }
   }
 }

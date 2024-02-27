@@ -86,9 +86,6 @@
   "curvature": {
     "enable": "false"
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-4",
@@ -135,5 +132,10 @@
     "do heat transfer": "true",
     "do solidification": "true",
     "do evaporative velocity jump": "false"
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

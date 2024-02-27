@@ -2,6 +2,43 @@
 All notable changes of the input parameters will be documented in this file.
 
 ## 2024-02-26
+- Refactor output data
+
+```diff
+{
+-  "paraview": {
++  "output": {
+-    "paraview do output": "",
+-    "paraview directory": "",
++    "directory": "",
+-    "paraview write frequency": "",
++    "write frequency": "",
+-    "paraview write time step size": "",
++    "write time step size": "",
+-    "paraview filename": "",
+-    "paraview n digits timestep": "",
+-    "paraview print boundary id": "",
+-    "paraview output subdomains": "",
+-    "output material id": "",
+-    "write higher order cells": "",
+-    "paraview n groups": "",
+-    "paraview n patches": "",
++    "paraview": {
++      "enable": "true|false",
++      "filename": "",
++      "n digits timestep": "",
++      "print boundary id": "",
++      "output subdomains": "",
++      "output material id": "",
++      "write higher order cells": "",
++      "n groups": "",
++      "n patches": ""
++    }
+  }
+}
+```
+
+## 2024-02-26
 - Rafactor heat data
 ```diff
 {

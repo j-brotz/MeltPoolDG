@@ -73,9 +73,6 @@
       }
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "problem specific": {
     "amr": {
       "strategy": "adaflo",
@@ -88,5 +85,10 @@
     "radius": "0.25",
     "side length": "2.0",
     "velocity": "0.1"
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

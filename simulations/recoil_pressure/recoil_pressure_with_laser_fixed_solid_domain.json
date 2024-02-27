@@ -96,12 +96,6 @@
       "residual tolerance": "1e-7"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview write frequency": "1",
-    "paraview directory": "output_recoil_pressure_fixed_solid_domain_eps1e-6_refine8_variable_props",
-    "paraview filename": "solution_recoil_pressure_temperature_dependent"
-  },
   "adaptive meshing": {
     "do amr": "false",
     "upper perc to refine": "     0.1",
@@ -145,6 +139,14 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "directory": "output_recoil_pressure_fixed_solid_domain_eps1e-6_refine8_variable_props",
+    "write frequency": "1",
+    "paraview": {
+      "filename": "solution_recoil_pressure_temperature_dependent",
+      "enable": "true"
     }
   }
 }

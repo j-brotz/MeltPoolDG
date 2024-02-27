@@ -49,9 +49,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "evaporation": {
     "evapor evaporative mass flux": "1.0e-6"
   },
@@ -90,6 +87,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

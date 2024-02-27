@@ -32,13 +32,15 @@
       "do matrix free": "false"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "advection diffusion": {
     "linear solver": {
       "preconditioner type": "ILU",
       "do matrix free": "false"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

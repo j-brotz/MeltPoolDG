@@ -28,10 +28,6 @@
     "material first viscosity": "1e-3",
     "material first density": "1.0"
   },
-  "paraview": {
-    "do user defined postprocessing": "true",
-    "paraview do output": "false"
-  },
   "simulation specific": {
     "velocity": "1e-3"
   },
@@ -66,5 +62,11 @@
   "problem specific": {
     "do heat transfer": "false",
     "do evaporative velocity jump": "false"
+  },
+  "output": {
+    "do user defined postprocessing": "true",
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

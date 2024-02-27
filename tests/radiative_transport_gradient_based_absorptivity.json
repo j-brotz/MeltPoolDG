@@ -28,9 +28,6 @@
       "preconditioner type": "AMG"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "problem specific": {
     "direction": "0.0,-1.0"
   },
@@ -40,5 +37,10 @@
     "interface case": "single_powder_particle",
     "offset": "0.35",
     "droplet radius": "0.06"
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

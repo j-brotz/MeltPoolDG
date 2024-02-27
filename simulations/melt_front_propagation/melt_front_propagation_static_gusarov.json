@@ -56,9 +56,11 @@
     "material solidus temperature": "1966.0",
     "material liquidus temperature": "1974.0"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output",
-    "paraview filename": "melt_front_propagation_static_gusarov"
+  "output": {
+    "directory": "output",
+    "paraview": {
+      "filename": "melt_front_propagation_static_gusarov",
+      "enable": "true"
+    }
   }
 }

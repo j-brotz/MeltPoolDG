@@ -46,9 +46,11 @@
       "substrate level": "0.0"
     }
   },
-  "paraview": {
-    "output variables": "temperature,heat_source,heaviside",
-    "paraview do output": "true",
-    "paraview filename": "projection_3d"
+  "output": {
+    "paraview": {
+      "filename": "projection_3d",
+      "enable": "true"
+    },
+    "output variables": "temperature,heat_source,heaviside"
   }
 }

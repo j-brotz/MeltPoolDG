@@ -121,11 +121,6 @@
       "residual tolerance": "1e-8"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output_recoil_pressure",
-    "paraview filename": "melt_pool_tfi_static_interface_gauss_recoil_pressure"
-  },
   "problem specific": {
     "do recoil pressure": "true",
     "do heat transfer": "true",
@@ -134,6 +129,13 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "directory": "output_recoil_pressure",
+    "paraview": {
+      "filename": "melt_pool_tfi_static_interface_gauss_recoil_pressure",
+      "enable": "true"
     }
   }
 }

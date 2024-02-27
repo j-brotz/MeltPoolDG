@@ -111,9 +111,6 @@
       "residual tolerance": "1e-8"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "problem specific": {
     "do heat transfer": "true",
     "do solidification": "true"
@@ -121,6 +118,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

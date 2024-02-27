@@ -44,9 +44,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true"
-  },
   "Time stepping": {
     "scheme": "bdf_2"
   },
@@ -80,6 +77,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "true"
     }
   }
 }

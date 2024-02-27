@@ -73,9 +73,6 @@
   "normal vector": {
     "normal vec damping scale factor": "2."
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "reinitialization": {
     "reinit max n steps": "0",
     "reinit scale factor epsilon": "2"
@@ -90,6 +87,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

@@ -169,7 +169,7 @@ namespace MeltPoolDG::Reinitialization
      */
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(reinit_dof_idx),
-                                           base_in->parameters.paraview,
+                                           base_in->parameters.output,
                                            base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(reinit_dof_idx),
@@ -233,8 +233,8 @@ namespace MeltPoolDG::Reinitialization
                                                const double                         time,
                                                std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    if (!post_processor->now(time_step, time) &&
-        !base_in->parameters.paraview.do_user_defined_postprocessing)
+    if (!post_processor->is_output_timestep(time_step, time) &&
+        !base_in->parameters.output.do_user_defined_postprocessing)
       return;
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
       reinit_operation->attach_output_vectors(data_out);
@@ -242,14 +242,14 @@ namespace MeltPoolDG::Reinitialization
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
                                          time,
-                                         base_in->parameters.paraview.output_variables);
+                                         base_in->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
-    if (base_in->parameters.paraview.do_user_defined_postprocessing)
+    if (base_in->parameters.output.do_user_defined_postprocessing)
       base_in->do_postprocessing(generic_data_out);
 
-    // paraview postprocessing
+    // postprocessing
     post_processor->process(time_step, generic_data_out, time);
   }
 

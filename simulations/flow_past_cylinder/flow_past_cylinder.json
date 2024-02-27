@@ -32,8 +32,8 @@
   "Time stepping": {
     "scheme": "bdf_2"
   },
-  "paraview": {
-    "paraview do ouput": "false"
+  "output": {
+    "do ouput": "false"
   },
   "Navier-Stokes": {
     "physical type": "incompressible",

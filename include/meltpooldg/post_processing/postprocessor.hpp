@@ -1,23 +1,21 @@
 #pragma once
-#include <deal.II/base/table_handler.h>
+#include <deal.II/base/mpi.h>
 
-#include <deal.II/distributed/tria.h>
-
-#include <deal.II/fe/fe_q.h>
-
-#include <deal.II/grid/grid_out.h>
+#include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <deal.II/numerics/data_out.h>
-#include <deal.II/numerics/vector_tools.h>
-
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/post_processing/output_data.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
+#include <meltpooldg/utilities/time_stepping_data.hpp>
+
+#include <functional>
+#include <string>
+#include <utility>
+#include <vector>
 
 
 using namespace dealii;
@@ -32,14 +30,14 @@ namespace MeltPoolDG
   private:
     using VectorType = LinearAlgebra::distributed::Vector<double>;
 
-    const MPI_Comm              mpi_communicator;
-    const ParaviewData<double> &pv_data;
-    const Mapping<dim>         &mapping;
-    const Triangulation<dim>   &triangulation;
-    const ConditionalOStream    pcout;
-    const bool                  do_simplex;
-    const double                end_time;
-    double                      time_at_last_output = 0.0;
+    const MPI_Comm            mpi_communicator;
+    const OutputData<double> &output_data;
+    const Mapping<dim>       &mapping;
+    const Triangulation<dim> &triangulation;
+    const ConditionalOStream  pcout;
+    const bool                do_simplex;
+    const double              end_time;
+    double                    time_at_last_output = 0.0;
 
     // list of indices for the requested variables
     std::vector<unsigned int> idx_req_vars;
@@ -49,7 +47,7 @@ namespace MeltPoolDG
 
   public:
     Postprocessor(const MPI_Comm                  mpi_communicator_in,
-                  const ParaviewData<double>     &pv_data_in,
+                  const OutputData<double>       &output_data_in,
                   const TimeSteppingData<double> &time_data,
                   const Mapping<dim>             &mapping_in,
                   const Triangulation<dim>       &triangulation_in,
@@ -59,11 +57,10 @@ namespace MeltPoolDG
      *  This function collects and performs all relevant postprocessing steps.
      */
     void
-    process(const int                    n_time_step,
-            const GenericDataOut<dim>   &generic_data_out,
-            const double                 time           = -1.0,
-            const bool                   force_output   = false,
-            const std::function<void()> &post_operation = {});
+    process(const int                  n_time_step,
+            const GenericDataOut<dim> &generic_data_out,
+            const double               time         = -1.0,
+            const bool                 force_output = false);
 
     /**
      *  This function collects and performs all relevant postprocessing steps.
@@ -71,21 +68,21 @@ namespace MeltPoolDG
     void
     process(const int                                         n_time_step,
             const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
-            const double                                      time           = -1.0,
-            const std::function<void()>                      &post_operation = {});
+            const double                                      time = -1.0);
 
     /**
      * Determines whether postprocessing should be performed now.
      */
     inline bool
-    now(const int n_time_step, const double time)
+    is_output_timestep(const int n_time_step, const double time) const
     {
-      return (!pv_data.do_output) ? false :
-             (n_time_step == 0) || (std::abs(time - end_time) <= 1e-10) ?
-                                    true :
-             (time - time_at_last_output >= pv_data.write_time_step_size) ?
-                                    true :
-                                    !(n_time_step % pv_data.write_frequency);
+      if (n_time_step == 0)
+        return true;
+      if (std::abs(time - end_time) <= 1e-10)
+        return true;
+      if (time - time_at_last_output >= output_data.write_time_step_size)
+        return true;
+      return !(n_time_step % output_data.write_frequency);
     }
 
     template <class Archive>

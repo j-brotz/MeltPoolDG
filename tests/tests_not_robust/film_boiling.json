@@ -93,9 +93,6 @@
       "residual tolerance": "1e-6"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "material": {
     "material boiling temperature": "500.",
     "material two phase properties transition type": "consistent_with_evaporation",
@@ -118,6 +115,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

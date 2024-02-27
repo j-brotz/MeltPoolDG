@@ -72,9 +72,6 @@
       }
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "problem specific": {
     "do recoil pressure": "false",
     "do heat transfer": "false",

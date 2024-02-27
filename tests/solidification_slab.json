@@ -36,7 +36,9 @@
     "material liquidus temperature": "276.0",
     "material solidification type": "mushy_zone"
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

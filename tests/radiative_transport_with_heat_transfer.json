@@ -38,10 +38,12 @@
     "material second conductivity": "1.0",
     "material second density": "1.0"
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "time stepping": {
     "max n steps": "4"
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

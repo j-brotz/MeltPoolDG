@@ -58,9 +58,11 @@
     "material solidus temperature": "1966.0",
     "material liquidus temperature": "1974.0"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output",
-    "paraview filename": "melt_front_propagation_moving_surface_gauss"
+  "output": {
+    "directory": "output",
+    "paraview": {
+      "filename": "melt_front_propagation_moving_surface_gauss",
+      "enable": "true"
+    }
   }
 }

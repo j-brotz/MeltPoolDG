@@ -93,9 +93,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-4",
@@ -151,6 +148,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

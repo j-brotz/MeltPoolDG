@@ -96,10 +96,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "false",
-    "paraview directory": "solution_recoil_pressure"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-4",
@@ -145,5 +141,11 @@
     "do heat transfer": "true",
     "do solidification": "true",
     "do advect level set": "true"
+  },
+  "output": {
+    "directory": "solution_recoil_pressure",
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

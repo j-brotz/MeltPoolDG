@@ -42,9 +42,11 @@
     "material second conductivity": "55.563",
     "material second density": "7850"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview print boundary id": "true",
-    "paraview filename": "solution_heat_transfer_two_phase"
+  "output": {
+    "paraview": {
+      "filename": "solution_heat_transfer_two_phase",
+      "print boundary id": "true",
+      "enable": "true"
+    }
   }
 }

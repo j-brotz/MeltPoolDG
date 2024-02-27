@@ -76,10 +76,6 @@
   "evaporation": {
     "evapor evaporative mass flux": "1.e-2"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "not_amr"
-  },
   "problem specific": {
     "do evaporative heat flux": "false",
     "do heat transfer": "true",
@@ -88,6 +84,12 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "directory": "not_amr",
+    "paraview": {
+      "enable": "true"
     }
   }
 }

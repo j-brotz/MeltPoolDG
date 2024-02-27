@@ -92,9 +92,11 @@
   "curvature": {
     "curv damping scale factor": "0.5"
   },
-  "paraview": {
-    "paraview directory": "output_thermo_capillary/",
-    "paraview do output": "true",
-    "paraview write time step size": "1.e-3"
+  "output": {
+    "directory": "output_thermo_capillary/",
+    "write time step size": "1.e-3",
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

@@ -163,9 +163,10 @@ namespace MeltPoolDG
 
     AssertThrow(
       req_idx.size() > 0,
-      ExcMessage("Your requested output variables could not be read. In case you don't want "
-                 "to produce output set 'paraview do output' to false. Otherwise make sure that you"
-                 " specify your variables in a comma separated list, e.g. 'var1,var2'."));
+      ExcMessage(
+        "Your requested output variables could not be read. In case you don't want "
+        "to produce output set \"output\": \"do output\" to false. Otherwise make sure that you"
+        " specify your variables in a comma separated list, e.g. 'var1,var2'."));
 
     return req_idx;
   }

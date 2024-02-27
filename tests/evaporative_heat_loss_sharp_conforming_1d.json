@@ -90,10 +90,6 @@
     "curv damping scale factor": "0.5",
     "curv verbosity level": "1"
   },
-  "paraview": {
-    "paraview do output": "false",
-    "output material id": "true"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-4",
@@ -139,5 +135,11 @@
     "do heat transfer": "true",
     "do solidification": "true",
     "do advect level set": "true"
+  },
+  "output": {
+    "paraview": {
+      "output material id": "true",
+      "enable": "false"
+    }
   }
 }

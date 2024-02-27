@@ -40,9 +40,6 @@
   "curvature": {
     "curv damping scale factor": "4"
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Time stepping": {
@@ -67,6 +64,11 @@
         "output verbosity": "0",
         "output wall times": "0"
       }
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

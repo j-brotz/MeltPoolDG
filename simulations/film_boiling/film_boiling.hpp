@@ -275,7 +275,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     void
     do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
     {
-      if (this->parameters.paraview.do_output == false)
+      if (this->parameters.output.do_user_defined_postprocessing == false)
         return;
 
       // create slice
@@ -286,7 +286,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
               const std::vector<std::string> req_vars = {"level_set", "temperature", "velocity"};
 
               slice = std::make_shared<PostProcessingTools::SliceCreator<3>>(
-                generic_data_out, tria_slice, req_vars, this->parameters.paraview);
+                generic_data_out, tria_slice, req_vars, this->parameters.output);
             }
           // @todo: We need to reinit, since generic_data_out is currently created
           // for every time step.

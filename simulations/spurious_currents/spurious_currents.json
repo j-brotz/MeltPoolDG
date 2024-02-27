@@ -86,9 +86,11 @@
       }
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output_circle",
-    "paraview filename": "sol_spurious_currents"
+  "output": {
+    "directory": "output_circle",
+    "paraview": {
+      "filename": "sol_spurious_currents",
+      "enable": "true"
+    }
   }
 }

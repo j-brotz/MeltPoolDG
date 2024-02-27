@@ -153,7 +153,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
       dealii::ConditionalOStream pcout(std::cout,
                                        Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
                                          0);
-      if (!(n_time_step % this->parameters.paraview.write_frequency) ||
+      if (!(n_time_step % this->parameters.output.write_frequency) ||
           generic_data_out.get_time() == this->parameters.time_stepping.end_time)
         {
           std::cout.precision(3);
@@ -209,10 +209,11 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
           // write values to file
           if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
-              if (this->parameters.paraview.do_output)
+              if (this->parameters.output.do_user_defined_postprocessing)
                 {
-                  const auto file_name = this->parameters.paraview.directory + "/" +
-                                         this->parameters.paraview.filename + "_pressure_profile_" +
+                  const auto file_name = this->parameters.output.directory + "/" +
+                                         this->parameters.output.paraview.filename +
+                                         "_pressure_profile_" +
                                          std::to_string(generic_data_out.get_time()) + ".txt";
                   file_pressure_profile.open(file_name);
                   file_pressure_profile

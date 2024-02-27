@@ -48,12 +48,14 @@
     "material first density": "0.01",
     "material second density": "1"
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

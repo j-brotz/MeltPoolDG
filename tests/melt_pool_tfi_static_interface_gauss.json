@@ -105,11 +105,13 @@
       "residual tolerance": "1e-8"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "problem specific": {
     "do heat transfer": "true",
     "do solidification": "true"
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

@@ -47,9 +47,6 @@
       "do matrix free": "false"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Time stepping": {
@@ -80,6 +77,11 @@
     "linear solver": {
       "preconditioner type": "ILU",
       "do matrix free": "false"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

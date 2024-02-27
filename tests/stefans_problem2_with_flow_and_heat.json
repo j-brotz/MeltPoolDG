@@ -102,9 +102,6 @@
       "preconditioner type": "AMG"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
-  },
   "problem specific": {
     "do evaporative heat flux": "true",
     "do evaporative velocity jump": "true",
@@ -113,6 +110,11 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
     }
   }
 }

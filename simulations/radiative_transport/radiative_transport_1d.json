@@ -24,11 +24,13 @@
       "preconditioner type": "ILU"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview output subdomains": "true"
-  },
   "simulation specific parameters": {
     "power": "0.1"
+  },
+  "output": {
+    "paraview": {
+      "output subdomains": "true",
+      "enable": "true"
+    }
   }
 }

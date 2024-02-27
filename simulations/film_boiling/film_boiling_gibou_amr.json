@@ -97,11 +97,6 @@
       "residual tolerance": "1e-6"
     }
   },
-  "paraview": {
-    "paraview directory": "output_film_boiling",
-    "paraview do output": "true",
-    "paraview write time step size": "0.01"
-  },
   "material": {
     "material boiling temperature": "500.",
     "material first capacity": "200",
@@ -130,6 +125,13 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "directory": "output_film_boiling",
+    "write time step size": "0.01",
+    "paraview": {
+      "enable": "true"
     }
   }
 }

@@ -38,7 +38,9 @@
     "material first capacity": "460",
     "material first density": "7850.0"
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

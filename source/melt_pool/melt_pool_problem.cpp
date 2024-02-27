@@ -1307,7 +1307,7 @@ namespace MeltPoolDG::MeltPool
      */
     post_processor =
       std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(vel_dof_idx),
-                                           base_in->parameters.paraview,
+                                           base_in->parameters.output,
                                            base_in->parameters.time_stepping,
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(vel_dof_idx),
@@ -1739,8 +1739,8 @@ namespace MeltPoolDG::MeltPool
                                        std::shared_ptr<SimulationBase<dim>> base_in,
                                        const bool                           force_output)
   {
-    if (!post_processor->now(n_time_step, current_time) && !force_output &&
-        !base_in->parameters.paraview.do_user_defined_postprocessing)
+    if (!post_processor->is_output_timestep(n_time_step, current_time) && !force_output &&
+        !base_in->parameters.output.do_user_defined_postprocessing)
       return;
     /**
      * collect all relevant output data
@@ -1786,14 +1786,14 @@ namespace MeltPoolDG::MeltPool
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
                                          current_time,
-                                         base_in->parameters.paraview.output_variables);
+                                         base_in->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
 
     // user-defined postprocessing
-    if (base_in->parameters.paraview.do_user_defined_postprocessing)
+    if (base_in->parameters.output.do_user_defined_postprocessing)
       base_in->do_postprocessing(generic_data_out);
 
-    // paraview postprocessing
+    // postprocessing
     {
       ScopedName         sc("process");
       TimerOutput::Scope scope(scratch_data->get_timer(), sc);

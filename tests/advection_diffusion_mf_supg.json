@@ -23,7 +23,9 @@
       "type": "SUPG"
     }
   },
-  "paraview": {
-    "paraview do output": "false"
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

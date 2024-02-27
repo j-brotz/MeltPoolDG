@@ -73,11 +73,6 @@
       "do matrix free": "true"
     }
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview write frequency": "1",
-    "paraview filename": "solution_recoil_pressure_3d"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -113,6 +108,13 @@
   "advection diffusion": {
     "linear solver": {
       "do matrix free": "true"
+    }
+  },
+  "output": {
+    "write frequency": "1",
+    "paraview": {
+      "filename": "solution_recoil_pressure_3d",
+      "enable": "true"
     }
   }
 }

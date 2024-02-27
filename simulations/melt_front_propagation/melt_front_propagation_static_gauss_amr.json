@@ -61,9 +61,11 @@
     "max grid refinement level": "7",
     "every n step": "1"
   },
-  "paraview": {
-    "paraview do output": "true",
-    "paraview directory": "output",
-    "paraview filename": "melt_front_propagation_static_gauss"
+  "output": {
+    "directory": "output",
+    "paraview": {
+      "filename": "melt_front_propagation_static_gauss",
+      "enable": "true"
+    }
   }
 }
