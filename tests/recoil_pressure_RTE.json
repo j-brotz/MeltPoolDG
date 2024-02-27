@@ -90,7 +90,7 @@
   },
   "recoil pressure": {
     "temperature constant": "50700.0",
-    "pressure coefficient": 0.54
+    "pressure coefficient": "0.5330700888450149"
   },
   "Navier-Stokes": {
     "adaflo": {

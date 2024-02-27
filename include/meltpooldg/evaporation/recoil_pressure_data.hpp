@@ -33,11 +33,12 @@ namespace MeltPoolDG::Evaporation
   struct RecoilPressureData
   {
     // ambient gas pressure
-    number ambient_gas_pressure = 1e5;
+    // default value for air in Pa
+    number ambient_gas_pressure = 1.013e5;
 
     // recoil pressure constant
     // recommended as c_p = 0.55
-    number pressure_coefficient = 0.0;
+    number pressure_coefficient = 0.55;
 
     // temperature constant
     // Only used if it is set >=0. In the default case it is computed from

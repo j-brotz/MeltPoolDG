@@ -49,7 +49,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.82990e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.82989e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -62,7 +62,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.86646e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.86644e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -75,7 +75,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.89985e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.89980e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -88,7 +88,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.93096e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.93086e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -101,7 +101,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.96026e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.96010e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -114,7 +114,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 1.98809e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.98784e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -127,7 +127,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.01467e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.01432e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -140,7 +140,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.04016e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.03969e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -153,7 +153,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.06471e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.06411e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -166,7 +166,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.08842e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.08766e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -179,7 +179,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.11136e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.11044e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -192,7 +192,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.13361e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.13251e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -205,7 +205,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.15521e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.15393e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -218,7 +218,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.17623e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.17476e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -231,7 +231,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.19669e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.19503e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -244,7 +244,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.21664e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.21479e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -257,7 +257,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.23611e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.23406e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -270,7 +270,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.25512e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.25288e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -283,7 +283,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.27370e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.27128e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -296,7 +296,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.29187e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.28927e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -309,7 +309,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.30965e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.30687e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -322,7 +322,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.32707e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.32412e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -335,7 +335,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.34413e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.34103e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -348,7 +348,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.36086e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.35760e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -361,7 +361,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.37727e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.37387e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -374,7 +374,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.39337e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.38984e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -387,7 +387,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.40918e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.40553e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -400,7 +400,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.42471e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.42095e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
@@ -413,7 +413,7 @@
 | || curvature ||L2 = 9.11785557816e-14                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| Newton Raphson solver converged: ||solution|| = 2.43997e-01                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 2.43612e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+

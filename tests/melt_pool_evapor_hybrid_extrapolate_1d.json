@@ -95,7 +95,7 @@
     "activation temperature": "500",
     "model type": "hybrid",
     "temperature constant": "1.0",
-    "pressure coefficient": 1e-05
+    "pressure coefficient": "9.871668311944721e-06"
   },
   "reinitialization": {
     "reinit max n steps": "3",

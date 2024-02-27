@@ -31,7 +31,7 @@
       "auto weights": "true"
     },
     "temperature constant": "10000.",
-    "pressure coefficient": 0.1
+    "pressure coefficient": "0.0987166831194472"
   },
   "evaporation": {
     "evapor evaporation model": "recoil_pressure"

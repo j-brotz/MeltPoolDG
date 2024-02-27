@@ -123,7 +123,7 @@ new_parameter_names = [
 
 # Optional: attach lambda function to modify value of new parameter name
 new_parameter_names_lambda = [
-    (["recoil pressure", "pressure coefficient"], lambda x: x/1e5)
+    (["recoil pressure", "pressure coefficient"], lambda x: x * 1.e-5/1.013)
 ]
 
 rename_parameter_values = [
