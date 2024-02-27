@@ -4,6 +4,7 @@
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <filesystem>
+#include <string>
 
 namespace MeltPoolDG
 {
@@ -146,15 +147,28 @@ namespace MeltPoolDG
         n_patches = std::max(n_patches, std::get<0>(data)->get_fe().degree);
 
     data_out.build_patches(mapping, n_patches);
-    const std::string pvtu_filename = data_out.write_vtu_with_pvtu_record(pv_data.directory + "/",
-                                                                          pv_data.filename,
-                                                                          n_time_step,
-                                                                          mpi_communicator,
-                                                                          pv_data.n_digits_timestep,
-                                                                          pv_data.n_groups);
+
+    std::string pvtu_filename;
+    if (pv_data.n_groups == 1)
+      {
+        pvtu_filename =
+          fs::path(pv_data.filename + "_" +
+                   Utilities::int_to_string(n_time_step, pv_data.n_digits_timestep) + ".vtu");
+
+        data_out.write_vtu_in_parallel(fs::path(pv_data.directory) / pvtu_filename,
+                                       mpi_communicator);
+      }
+    else
+      {
+        pvtu_filename = data_out.write_vtu_with_pvtu_record(pv_data.directory + "/",
+                                                            pv_data.filename,
+                                                            n_time_step,
+                                                            mpi_communicator,
+                                                            pv_data.n_digits_timestep,
+                                                            pv_data.n_groups);
+      }
 
     // write a pvd file relating the pvtu-file to a simulation time
-    //
     // if times_and_names is not empty
     const unsigned int len = times_and_names.size();
 
