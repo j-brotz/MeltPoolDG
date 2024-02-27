@@ -19,9 +19,6 @@
     }
   },
   "output": {
-    "do compute error": "true",
-    "compute volume output": "true",
-    "filename volume output": "myVolumes.txt",
     "paraview": {
       "filename": "solution_advection_diffusion",
       "enable": "true"
