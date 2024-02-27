@@ -41,6 +41,8 @@
     "every n step": "1"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

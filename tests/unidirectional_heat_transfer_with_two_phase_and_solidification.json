@@ -47,6 +47,8 @@
     "material solidification type": "mushy_zone"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

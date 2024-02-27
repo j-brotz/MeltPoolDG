@@ -30,9 +30,9 @@
     "material first density": "7850.0"
   },
   "output": {
-    "do output": "true",
     "paraview": {
-      "filename": "solution_heat_transfer_radiation"
+      "filename": "solution_heat_transfer_radiation",
+      "enable": "true"
     }
   }
 }

@@ -76,14 +76,15 @@ namespace MeltPoolDG
      * Determines whether postprocessing should be performed now.
      */
     inline bool
-    now(const int n_time_step, const double time)
+    is_output_timestep(const int n_time_step, const double time) const
     {
-      return (!output_data.do_output) ? false :
-             (n_time_step == 0) || (std::abs(time - end_time) <= 1e-10) ?
-                                        true :
-             (time - time_at_last_output >= output_data.write_time_step_size) ?
-                                        true :
-                                        !(n_time_step % output_data.write_frequency);
+      if (n_time_step == 0)
+        return true;
+      if (std::abs(time - end_time) <= 1e-10)
+        return true;
+      if (time - time_at_last_output >= output_data.write_time_step_size)
+        return true;
+      return !(n_time_step % output_data.write_frequency);
     }
 
     template <class Archive>

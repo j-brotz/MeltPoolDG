@@ -100,7 +100,9 @@
     }
   },
   "output": {
-    "do output": "false",
-    "do user defined postprocessing": "true"
+    "do user defined postprocessing": "true",
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

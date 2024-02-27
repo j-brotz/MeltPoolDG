@@ -118,6 +118,8 @@
     "max n steps": "5"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

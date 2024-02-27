@@ -30,9 +30,9 @@
     }
   },
   "output": {
-    "do output": "true",
     "paraview": {
-      "filename": "solution_reinitialization"
+      "filename": "solution_reinitialization",
+      "enable": "true"
     }
   }
 }

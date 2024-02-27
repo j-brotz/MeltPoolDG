@@ -89,6 +89,8 @@
     "time step size": "1e-10"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

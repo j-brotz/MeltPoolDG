@@ -62,10 +62,10 @@
     "every n step": "1"
   },
   "output": {
-    "do output": "true",
     "directory": "output",
     "paraview": {
-      "filename": "melt_front_propagation_static_gauss"
+      "filename": "melt_front_propagation_static_gauss",
+      "enable": "true"
     }
   }
 }

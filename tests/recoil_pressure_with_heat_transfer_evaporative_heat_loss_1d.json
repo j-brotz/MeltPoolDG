@@ -134,6 +134,8 @@
     "do evaporative velocity jump": "false"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

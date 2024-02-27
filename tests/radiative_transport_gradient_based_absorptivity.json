@@ -39,6 +39,8 @@
     "droplet radius": "0.06"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

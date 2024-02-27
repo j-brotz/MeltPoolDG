@@ -87,10 +87,10 @@
     }
   },
   "output": {
-    "do output": "true",
     "directory": "output_circle",
     "paraview": {
-      "filename": "sol_spurious_currents"
+      "filename": "sol_spurious_currents",
+      "enable": "true"
     }
   }
 }

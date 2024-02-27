@@ -9,7 +9,6 @@ All notable changes of the input parameters will be documented in this file.
 -  "paraview": {
 +  "output": {
 -    "paraview do output": "",
-+    "do output": "",
 -    "paraview directory": "",
 +    "directory": "",
 -    "paraview write frequency": "",

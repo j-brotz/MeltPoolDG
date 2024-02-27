@@ -1,8 +1,14 @@
 #!/bin/bash
 
+set -e 
+
 test()
   {
-    result=$(find tests -type f -name "*.json" | xargs grep "$1" | grep -E "$2" | cut -d':' -f1)
+    result=$(
+      for f in $(find tests/ -type f -name "*.json"); do
+        python3 scripts/check-json.py "$1" "$2" $f
+      done
+      )
 
     [ -z "$result" ] && return 0
 
@@ -18,15 +24,12 @@ test()
     return 1
   }
 
-# test 1: "output" -> "do output"
-test '\"do output\"' 'true' 'output is enabled in following files' || return 1
+# test 1: "output" -> "paraview" -> "enable" : false
+test 'output,paraview,enable' 'false' 'output is enabled in following files'
 
-# test 2: "base" -> "verbosity level"
-test '\"verbosity level\"' '\"1\"|\"2\"|\"3\"|\"4\"|\"5\"' 'verbosity level is not correct in following files' || return 1
+# test 2: "base" -> "verbosity level" : 0
+test 'base,verbosity level' '0' 'verbosity level is not correct in following files'
 
-# test 3: "Navier-Stokes" -> "Output options" -> "output verbosity"
-test '\"output verbosity\"' '\"1\"|\"2\"|\"3\"' 'output verbosity is not correct in following files' || return 1
-
-# test 4: "Navier-Stokes" -> "Output options" -> "output verbosity"
-test '\"monitor type\"' '\"none\"' 'monitor type is not correct in following files' || return 1
+# test 3: "Navier-Stokes" -> "adaflo" -> "Output options" -> "output verbosity" : 0
+test 'Navier-Stokes,adaflo,Output options,output verbosity' '0' 'output verbosity is not correct in following files'
 

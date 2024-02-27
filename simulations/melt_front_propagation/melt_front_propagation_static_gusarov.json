@@ -57,10 +57,10 @@
     "material liquidus temperature": "1974.0"
   },
   "output": {
-    "do output": "true",
     "directory": "output",
     "paraview": {
-      "filename": "melt_front_propagation_static_gusarov"
+      "filename": "melt_front_propagation_static_gusarov",
+      "enable": "true"
     }
   }
 }

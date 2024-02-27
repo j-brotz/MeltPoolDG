@@ -87,6 +87,8 @@
     "velocity": "0.01"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

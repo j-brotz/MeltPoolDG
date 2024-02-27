@@ -40,10 +40,10 @@
     "material first density": "7850.0"
   },
   "output": {
-    "do output": "true",
     "paraview": {
       "filename": "solution_heat_transfer_velocity",
-      "print boundary id": "true"
+      "print boundary id": "true",
+      "enable": "true"
     }
   }
 }

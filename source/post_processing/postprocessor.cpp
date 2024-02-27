@@ -53,7 +53,7 @@ namespace MeltPoolDG
                               const bool                   force_output,
                               const std::function<void()> &post_operation)
   {
-    if (not(now(n_time_step, time) || force_output))
+    if (not(is_output_timestep(n_time_step, time) || force_output))
       return;
 
     if (output_data.paraview.enable)
@@ -82,7 +82,7 @@ namespace MeltPoolDG
     const double                                      time,
     const std::function<void()>                      &post_operation)
   {
-    if (not now(n_time_step, time))
+    if (not is_output_timestep(n_time_step, time))
       return;
 
     if (output_data.paraview.enable)

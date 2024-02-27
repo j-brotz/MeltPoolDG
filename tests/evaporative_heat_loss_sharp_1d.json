@@ -142,7 +142,9 @@
     "do advect level set": "true"
   },
   "output": {
-    "do output": "false",
-    "directory": "solution_recoil_pressure"
+    "directory": "solution_recoil_pressure",
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

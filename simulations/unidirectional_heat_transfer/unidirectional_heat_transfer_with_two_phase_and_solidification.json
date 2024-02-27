@@ -47,10 +47,10 @@
     "material liquidus temperature": "1974.0"
   },
   "output": {
-    "do output": "true",
     "directory": "output/",
     "paraview": {
-      "filename": "solution_heat_transfer_two_phase_and_solidification"
+      "filename": "solution_heat_transfer_two_phase_and_solidification",
+      "enable": "true"
     }
   }
 }

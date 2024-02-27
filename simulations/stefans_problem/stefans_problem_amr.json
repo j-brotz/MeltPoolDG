@@ -62,10 +62,10 @@
     }
   },
   "output": {
-    "do output": "true",
     "directory": "output_amr/",
     "paraview": {
-      "filename": "solution_evaporation"
+      "filename": "solution_evaporation",
+      "enable": "true"
     }
   }
 }

@@ -59,10 +59,10 @@
     }
   },
   "output": {
-    "do output": "true",
     "directory": "rotating_bubble_evapor/",
     "paraview": {
-      "filename": "solution_evaporation"
+      "filename": "solution_evaporation",
+      "enable": "true"
     }
   }
 }

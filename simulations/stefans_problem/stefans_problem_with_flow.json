@@ -87,7 +87,9 @@
     }
   },
   "output": {
-    "do output": "true",
-    "directory": "not_amr"
+    "directory": "not_amr",
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

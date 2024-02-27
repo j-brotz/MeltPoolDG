@@ -65,10 +65,10 @@
     "every n step": "1"
   },
   "output": {
-    "do output": "true",
     "directory": "output_amr",
     "paraview": {
-      "filename": "melt_front_propagation_static_gusarov"
+      "filename": "melt_front_propagation_static_gusarov",
+      "enable": "true"
     }
   }
 }

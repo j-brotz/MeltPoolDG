@@ -44,6 +44,8 @@
     "power": "0.1"
   },
   "output": {
-    "do output": "true"
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

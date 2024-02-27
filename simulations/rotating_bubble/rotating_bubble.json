@@ -36,10 +36,10 @@
     }
   },
   "output": {
-    "do output": "true",
     "paraview": {
       "print boundary id": "true",
-      "n patches": "3"
+      "n patches": "3",
+      "enable": "true"
     }
   }
 }

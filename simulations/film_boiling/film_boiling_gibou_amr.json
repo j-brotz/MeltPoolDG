@@ -128,8 +128,10 @@
     }
   },
   "output": {
-    "do output": "true",
     "directory": "output_film_boiling",
-    "write time step size": "0.01"
+    "write time step size": "0.01",
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

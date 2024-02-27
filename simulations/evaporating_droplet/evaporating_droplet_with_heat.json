@@ -108,7 +108,9 @@
     }
   },
   "output": {
-    "do output": "true",
-    "directory": "evaporating_droplet_test"
+    "directory": "evaporating_droplet_test",
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

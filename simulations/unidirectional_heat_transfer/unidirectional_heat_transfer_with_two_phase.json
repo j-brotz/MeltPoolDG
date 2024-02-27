@@ -43,10 +43,10 @@
     "material second density": "7850"
   },
   "output": {
-    "do output": "true",
     "paraview": {
       "filename": "solution_heat_transfer_two_phase",
-      "print boundary id": "true"
+      "print boundary id": "true",
+      "enable": "true"
     }
   }
 }

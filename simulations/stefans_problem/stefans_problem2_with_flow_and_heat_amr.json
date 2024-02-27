@@ -110,7 +110,9 @@
     }
   },
   "output": {
-    "do output": "true",
-    "directory": "output_stefan_with_heat"
+    "directory": "output_stefan_with_heat",
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

@@ -30,6 +30,8 @@
     "material first density": "1.0"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

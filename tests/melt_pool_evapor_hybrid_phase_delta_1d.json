@@ -123,7 +123,9 @@
     "max n steps": "5"
   },
   "output": {
-    "do output": "false",
-    "directory": "output_hybrid_phase_weighted"
+    "directory": "output_hybrid_phase_weighted",
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

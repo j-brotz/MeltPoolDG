@@ -76,8 +76,5 @@
     "do recoil pressure": "false",
     "do heat transfer": "false",
     "do solidification": "false"
-  },
-  "output": {
-    "do output": "false"
   }
 }

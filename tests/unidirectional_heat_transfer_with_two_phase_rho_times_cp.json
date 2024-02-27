@@ -44,6 +44,8 @@
     "material two phase properties transition type": "smooth"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

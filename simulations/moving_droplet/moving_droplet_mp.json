@@ -98,8 +98,10 @@
     "radius": "50e-6"
   },
   "output": {
-    "do output": "true",
     "directory": "moving_droplet",
-    "write frequency": "2"
+    "write frequency": "2",
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

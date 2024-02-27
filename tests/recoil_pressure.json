@@ -106,8 +106,5 @@
     "linear solver": {
       "do matrix free": "true"
     }
-  },
-  "output": {
-    "do output": "false"
   }
 }

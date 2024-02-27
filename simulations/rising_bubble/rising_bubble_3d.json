@@ -80,6 +80,8 @@
     }
   },
   "output": {
-    "do output": "true"
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

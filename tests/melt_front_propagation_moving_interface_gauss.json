@@ -61,6 +61,8 @@
     "material liquidus temperature": "1974.0"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

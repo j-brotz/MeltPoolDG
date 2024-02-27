@@ -35,9 +35,9 @@
     }
   },
   "output": {
-    "do output": "true",
     "paraview": {
-      "print boundary id": "false"
+      "print boundary id": "false",
+      "enable": "true"
     }
   }
 }

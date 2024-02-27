@@ -9,7 +9,7 @@ namespace MeltPoolDG
 {
   struct ParaviewData
   {
-    bool        enable                   = true;
+    bool        enable                   = false;
     std::string filename                 = "solution";
     int         n_digits_timestep        = 4;
     bool        print_boundary_id        = false;
@@ -26,7 +26,6 @@ namespace MeltPoolDG
   template <typename number = double>
   struct OutputData
   {
-    bool                     do_output                      = false;
     std::string              directory                      = "./";
     int                      write_frequency                = 1;
     number                   write_time_step_size           = 0.0;

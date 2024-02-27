@@ -76,7 +76,9 @@
     "do evaporative velocity jump": "true"
   },
   "output": {
-    "do output": "false",
-    "directory": "evaporating_shell_2d"
+    "directory": "evaporating_shell_2d",
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

@@ -113,10 +113,10 @@
     }
   },
   "output": {
-    "do output": "true",
     "directory": "output_stefan_1/",
     "paraview": {
-      "filename": "solution_1d"
+      "filename": "solution_1d",
+      "enable": "true"
     }
   }
 }

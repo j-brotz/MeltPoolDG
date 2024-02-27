@@ -137,9 +137,9 @@
     "do advect level set": "true"
   },
   "output": {
-    "do output": "false",
     "paraview": {
-      "output material id": "true"
+      "output material id": "true",
+      "enable": "false"
     }
   }
 }

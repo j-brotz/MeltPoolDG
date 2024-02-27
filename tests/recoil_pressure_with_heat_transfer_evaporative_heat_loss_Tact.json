@@ -147,8 +147,10 @@
     }
   },
   "output": {
-    "do output": "false",
     "directory": "solution_recoil_pressure",
-    "write frequency": "1"
+    "write frequency": "1",
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

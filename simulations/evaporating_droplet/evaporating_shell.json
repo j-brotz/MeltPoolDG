@@ -56,10 +56,10 @@
     "do evaporative velocity jump": "false"
   },
   "output": {
-    "do output": "true",
     "directory": "evaporating_shell_3d",
     "paraview": {
-      "print boundary id": "true"
+      "print boundary id": "true",
+      "enable": "true"
     }
   }
 }

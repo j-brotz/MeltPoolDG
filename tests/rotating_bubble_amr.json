@@ -51,9 +51,9 @@
     }
   },
   "output": {
-    "do output": "false",
     "paraview": {
-      "filename": "solution_rotaitng_bubble"
+      "filename": "solution_rotaitng_bubble",
+      "enable": "false"
     }
   }
 }

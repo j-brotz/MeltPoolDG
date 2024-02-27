@@ -42,6 +42,8 @@
     "max n steps": "4"
   },
   "output": {
-    "do output": "false"
+    "paraview": {
+      "enable": "false"
+    }
   }
 }

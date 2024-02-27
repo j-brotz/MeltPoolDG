@@ -26,9 +26,9 @@
     }
   },
   "output": {
-    "do output": "false",
     "paraview": {
-      "filename": "solution_reinitialization"
+      "filename": "solution_reinitialization",
+      "enable": "false"
     }
   }
 }

@@ -96,7 +96,9 @@
     }
   },
   "output": {
-    "do output": "true",
-    "directory": "output_thermo_capillary/"
+    "directory": "output_thermo_capillary/",
+    "paraview": {
+      "enable": "true"
+    }
   }
 }

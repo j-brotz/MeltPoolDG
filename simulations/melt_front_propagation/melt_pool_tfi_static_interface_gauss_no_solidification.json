@@ -115,10 +115,10 @@
     }
   },
   "output": {
-    "do output": "true",
     "directory": "output",
     "paraview": {
-      "filename": "melt_pool_tfi_static_interface_gauss"
+      "filename": "melt_pool_tfi_static_interface_gauss",
+      "enable": "true"
     }
   }
 }

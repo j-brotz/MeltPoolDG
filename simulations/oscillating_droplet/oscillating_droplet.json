@@ -107,11 +107,11 @@
     "do solidification": "false"
   },
   "output": {
-    "do output": "true",
     "directory": "result_viscosity_ratio_1000_dt_1e-6_surften_1.8_etaN_1_etaK_3e-4_refine_8_reinit_scale_1.5/",
     "write frequency": "2",
     "paraview": {
-      "filename": "result_viscosity_ratio_1000_dt_1e-6_surften_1.8_etaN_1_etaK_3e-4_refine_8_reinit_scale_1.5"
+      "filename": "result_viscosity_ratio_1000_dt_1e-6_surften_1.8_etaN_1_etaK_3e-4_refine_8_reinit_scale_1.5",
+      "enable": "true"
     }
   }
 }

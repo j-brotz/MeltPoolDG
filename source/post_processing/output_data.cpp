@@ -45,7 +45,6 @@ namespace MeltPoolDG
   {
     prm.enter_subsection("output");
     {
-      prm.add_parameter("do output", do_output, "Set this parameter to true to activate output.");
       prm.add_parameter("directory", directory, "Sets the base directory for all output.");
       prm.add_parameter("write frequency",
                         write_frequency,
