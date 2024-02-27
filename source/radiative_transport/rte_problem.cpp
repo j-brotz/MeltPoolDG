@@ -264,7 +264,7 @@ namespace MeltPoolDG::RadiativeTransport
                                                  const double                         time,
                                                  std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    if (!post_processor->now(time_step, time) &&
+    if (!post_processor->is_output_timestep(time_step, time) &&
         !base_in->parameters.output.do_user_defined_postprocessing)
       return;
 

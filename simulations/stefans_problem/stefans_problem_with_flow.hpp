@@ -209,7 +209,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
           // write values to file
           if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
-              if (this->parameters.output.do_output)
+              if (this->parameters.output.do_user_defined_postprocessing)
                 {
                   const auto file_name = this->parameters.output.directory + "/" +
                                          this->parameters.output.paraview.filename +

@@ -682,7 +682,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     void
     do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
     {
-      if (this->parameters.output.do_output == false || !slice_data.enable)
+      if (this->parameters.output.do_user_defined_postprocessing == false || !slice_data.enable)
         return;
 
       // create slice

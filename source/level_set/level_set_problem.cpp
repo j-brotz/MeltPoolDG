@@ -365,7 +365,7 @@ namespace MeltPoolDG::LevelSet
   {
     ScopedName         sc("output_results");
     TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-    if (!post_processor->now(time_step, time))
+    if (!post_processor->is_output_timestep(time_step, time))
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {

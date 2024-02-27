@@ -316,7 +316,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     void
     do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
     {
-      if (this->parameters.output.do_output)
+      if (this->parameters.output.do_user_defined_postprocessing)
         {
           if constexpr (dim > 1)
             {

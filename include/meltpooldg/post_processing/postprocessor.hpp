@@ -57,11 +57,10 @@ namespace MeltPoolDG
      *  This function collects and performs all relevant postprocessing steps.
      */
     void
-    process(const int                    n_time_step,
-            const GenericDataOut<dim>   &generic_data_out,
-            const double                 time           = -1.0,
-            const bool                   force_output   = false,
-            const std::function<void()> &post_operation = {});
+    process(const int                  n_time_step,
+            const GenericDataOut<dim> &generic_data_out,
+            const double               time         = -1.0,
+            const bool                 force_output = false);
 
     /**
      *  This function collects and performs all relevant postprocessing steps.
@@ -69,8 +68,7 @@ namespace MeltPoolDG
     void
     process(const int                                         n_time_step,
             const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
-            const double                                      time           = -1.0,
-            const std::function<void()>                      &post_operation = {});
+            const double                                      time = -1.0);
 
     /**
      * Determines whether postprocessing should be performed now.

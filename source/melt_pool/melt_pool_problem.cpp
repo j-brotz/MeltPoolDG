@@ -1739,7 +1739,7 @@ namespace MeltPoolDG::MeltPool
                                        std::shared_ptr<SimulationBase<dim>> base_in,
                                        const bool                           force_output)
   {
-    if (!post_processor->now(n_time_step, current_time) && !force_output &&
+    if (!post_processor->is_output_timestep(n_time_step, current_time) && !force_output &&
         !base_in->parameters.output.do_user_defined_postprocessing)
       return;
     /**

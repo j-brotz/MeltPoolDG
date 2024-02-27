@@ -268,7 +268,7 @@ namespace MeltPoolDG::AdvectionDiffusion
                                                  const double                         current_time,
                                                  std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    if (!post_processor->now(time_step, current_time) &&
+    if (!post_processor->is_output_timestep(time_step, current_time) &&
         !base_in->parameters.output.do_user_defined_postprocessing)
       return;
 

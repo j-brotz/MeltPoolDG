@@ -47,11 +47,10 @@ namespace MeltPoolDG
    */
   template <int dim>
   void
-  Postprocessor<dim>::process(const int                    n_time_step,
-                              const GenericDataOut<dim>   &data_out,
-                              const double                 time,
-                              const bool                   force_output,
-                              const std::function<void()> &post_operation)
+  Postprocessor<dim>::process(const int                  n_time_step,
+                              const GenericDataOut<dim> &data_out,
+                              const double               time,
+                              const bool                 force_output)
   {
     if (not(is_output_timestep(n_time_step, time) || force_output))
       return;
@@ -66,9 +65,6 @@ namespace MeltPoolDG
         // record written output time
         time_at_last_output = time;
       }
-
-    if (post_operation)
-      post_operation();
   }
 
   /*
@@ -79,8 +75,7 @@ namespace MeltPoolDG
   Postprocessor<dim>::process(
     const int                                         n_time_step,
     const std::function<void(GenericDataOut<dim> &)> &attach_output_vectors,
-    const double                                      time,
-    const std::function<void()>                      &post_operation)
+    const double                                      time)
   {
     if (not is_output_timestep(n_time_step, time))
       return;
@@ -99,9 +94,6 @@ namespace MeltPoolDG
         // record written output time
         time_at_last_output = time;
       }
-
-    if (post_operation)
-      post_operation();
   }
 
   template <int dim>
