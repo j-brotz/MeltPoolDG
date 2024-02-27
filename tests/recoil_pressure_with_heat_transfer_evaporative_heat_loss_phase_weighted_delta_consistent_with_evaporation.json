@@ -28,13 +28,13 @@
     "material two phase properties transition type": "consistent_with_evaporation"
   },
   "recoil pressure": {
-    "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000.",
     "dirac delta function approximation": {
       "type": "reciprocal_phase_weighted",
       "gas phase weight": "44.1",
       "heavy phase weight": "4087"
-    }
+    },
+    "temperature constant": "10000.",
+    "pressure coefficient": 0.1
   },
   "evaporation": {
     "evapor evaporation model": "recoil_pressure"

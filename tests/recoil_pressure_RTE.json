@@ -89,8 +89,8 @@
     "normal vec damping scale factor": "2"
   },
   "recoil pressure": {
-    "recoil pressure constant": "54000.0",
-    "recoil temperature constant": "50700.0"
+    "temperature constant": "50700.0",
+    "pressure coefficient": 0.54
   },
   "Navier-Stokes": {
     "adaflo": {

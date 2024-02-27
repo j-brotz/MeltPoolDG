@@ -45,9 +45,13 @@ namespace MeltPoolDG::Evaporation
   template <typename number>
   RecoilPressurePhenomenologicalModel<number>::RecoilPressurePhenomenologicalModel(
     const RecoilPressureData<number> &recoil_data,
-    const number                      boiling_temperature)
+    const number                      boiling_temperature,
+    const number                      molar_mass,
+    const number                      latent_heat_evaporation)
     : recoil_data(recoil_data)
     , boiling_temperature(boiling_temperature)
+    , molar_mass(molar_mass)
+    , latent_heat_evaporation(latent_heat_evaporation)
   {
     AssertThrow(boiling_temperature > 0.0,
                 ExcMessage("The boiling temperature must be greater than zero! Abort..."));
@@ -65,12 +69,16 @@ namespace MeltPoolDG::Evaporation
   {
     const number T_ac = recoil_data.activation_temperature;
     const number T_v  = boiling_temperature;
-    const number c_p  = recoil_data.pressure_constant;
-    const number c_T  = recoil_data.temperature_constant;
 
     const VectorizedArray<number> scaling_coeff = internal::compute_scaling_coeff(T, T_ac, T_v);
 
-    return scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v));
+    return scaling_coeff * recoil_data.pressure_coefficient *
+           compute_saturated_gas_pressure(T,
+                                          T_v,
+                                          molar_mass,
+                                          latent_heat_evaporation,
+                                          recoil_data.ambient_gas_pressure,
+                                          recoil_data.temperature_constant);
   }
 
   template <typename number>
@@ -83,10 +91,13 @@ namespace MeltPoolDG::Evaporation
 
     const number scaling_coeff = internal::compute_scaling_coeff(T, T_ac, T_v);
 
-    const number c_p = recoil_data.pressure_constant;
-    const number c_T = recoil_data.temperature_constant;
-
-    return scaling_coeff * c_p * std::exp(-c_T * (1. / T - 1. / T_v));
+    return scaling_coeff * recoil_data.pressure_coefficient *
+           compute_saturated_gas_pressure(T,
+                                          T_v,
+                                          molar_mass,
+                                          latent_heat_evaporation,
+                                          recoil_data.ambient_gas_pressure,
+                                          recoil_data.temperature_constant);
   }
 
   /*******************************************************************
@@ -99,7 +110,10 @@ namespace MeltPoolDG::Evaporation
     : recoil_data(recoil_data)
     , boiling_temperature(material.boiling_temperature)
     , density_coeff(1. / material.first.density - 1. / material.second.density)
-    , recoil_phenomenological(recoil_data, material.boiling_temperature)
+    , recoil_phenomenological(recoil_data,
+                              material.boiling_temperature,
+                              material.molar_mass,
+                              material.latent_heat_of_evaporation)
   {}
 
   template <typename number>
@@ -150,7 +164,10 @@ namespace MeltPoolDG::Evaporation
         case RecoilPressureModelType::phenomenological:
           recoil_pressure_model =
             std::make_unique<const RecoilPressurePhenomenologicalModel<double>>(
-              data_in.recoil, data_in.material.boiling_temperature);
+              data_in.recoil,
+              data_in.material.boiling_temperature,
+              data_in.material.molar_mass,
+              data_in.material.latent_heat_of_evaporation);
           break;
         case RecoilPressureModelType::hybrid:
           recoil_pressure_model =

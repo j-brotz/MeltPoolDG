@@ -2,12 +2,14 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include "meltpooldg/evaporation/evaporation_model_saturated_vapor_pressure.hpp"
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_thickness_integration.hpp>
 #include <meltpooldg/evaporation/evaporation_model_constant.hpp>
 #include <meltpooldg/evaporation/evaporation_model_hardt_wondra.hpp>
 #include <meltpooldg/evaporation/evaporation_model_recoil_pressure.hpp>
+#include <meltpooldg/evaporation/evaporation_model_saturated_vapor_pressure.hpp>
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_source_terms_sharp.hpp>
@@ -127,6 +129,15 @@ namespace MeltPoolDG::Evaporation
         material.boiling_temperature,
         material.sticking_constant,
         material.molar_mass,
+        material.latent_heat_of_evaporation,
+        evaporation_data.evaporative_mass_flux_scale_factor);
+    else if (evaporation_data.evaporation_model == EvaporationModelType::saturated_vapor_pressure)
+      evapor_model = std::make_shared<EvaporationModelSaturatedVaporPressure>(
+        recoil_data,
+        material.boiling_temperature,
+        material.sticking_constant,
+        material.molar_mass,
+        material.latent_heat_of_evaporation,
         evaporation_data.evaporative_mass_flux_scale_factor);
     else if (evaporation_data.evaporation_model == EvaporationModelType::hardt_wondra)
       evapor_model =

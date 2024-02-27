@@ -64,9 +64,9 @@
   },
   "recoil pressure": {
     "interface distributed flux type": "local_value",
-    "recoil pressure constant": "2e3",
-    "recoil temperature constant": "2e3",
-    "activation temperature": "0"
+    "activation temperature": "0",
+    "temperature constant": "2e3",
+    "pressure coefficient": 0.02
   },
   "Navier-Stokes": {
     "adaflo": {

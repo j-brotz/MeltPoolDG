@@ -17,6 +17,8 @@ namespace MeltPoolDG::Evaporation
     constant,
     // calculate the evaporative mass flux from the recoil pressure
     recoil_pressure,
+    // calculate the evaporative mass flux from the saturated vapor pressure
+    saturated_vapor_pressure,
     // calculate the evaporative mass flux according to the model proposed by Hardt & Wondra
     hardt_wondra)
 

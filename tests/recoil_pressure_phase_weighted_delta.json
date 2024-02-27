@@ -30,13 +30,13 @@
     "material specific enthalpy reference temperature": "663.731"
   },
   "recoil pressure": {
-    "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000.",
     "dirac delta function approximation": {
       "type": "heaviside_phase_weighted",
       "gas phase weight": "74.30",
       "heavy phase weight": "7074.3"
-    }
+    },
+    "temperature constant": "10000.",
+    "pressure coefficient": 0.1
   },
   "evaporation": {
     "evapor evaporation model": "recoil_pressure"

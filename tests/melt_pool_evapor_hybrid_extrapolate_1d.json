@@ -92,10 +92,10 @@
   },
   "recoil pressure": {
     "interface distributed flux type": "local_value",
-    "recoil pressure constant": "1.0",
-    "recoil temperature constant": "1.0",
     "activation temperature": "500",
-    "model type": "hybrid"
+    "model type": "hybrid",
+    "temperature constant": "1.0",
+    "pressure coefficient": 1e-05
   },
   "reinitialization": {
     "reinit max n steps": "3",

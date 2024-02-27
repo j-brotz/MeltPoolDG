@@ -120,8 +120,8 @@
     }
   },
   "recoil pressure": {
-    "recoil pressure constant": "5.e4",
-    "recoil temperature constant": "5.e4"
+    "temperature constant": "5.e4",
+    "pressure coefficient": 0.5
   },
   "reinitialization": {
     "reinit max n steps": "2",

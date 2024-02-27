@@ -60,8 +60,8 @@
     "ls time integration scheme": "crank_nicolson"
   },
   "recoil pressure": {
-    "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000."
+    "temperature constant": "10000.",
+    "pressure coefficient": 0.1
   },
   "laser": {
     "power": "75.",
