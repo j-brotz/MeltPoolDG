@@ -164,9 +164,9 @@ namespace MeltPoolDG
     std::string pvtu_filename;
     if (output_data.paraview.n_groups == 1)
       {
-        pvtu_filename =
-          fs::path(output_data.paraview.filename + "_" +
-                   Utilities::int_to_string(n_time_step, output_data.paraview.n_digits_timestep) + ".vtu");
+        pvtu_filename = fs::path(
+          output_data.paraview.filename + "_" +
+          Utilities::int_to_string(n_time_step, output_data.paraview.n_digits_timestep) + ".vtu");
 
         data_out.write_vtu_in_parallel(fs::path(output_data.directory) / pvtu_filename,
                                        mpi_communicator);
