@@ -18,8 +18,8 @@ test()
     return 1
   }
 
-# test 1: "paraview" -> "paraview do output"
-test '\"paraview do output\"' 'true' 'output is enabled in following files' || return 1
+# test 1: "output" -> "do output"
+test '\"do output\"' 'true' 'output is enabled in following files' || return 1
 
 # test 2: "base" -> "verbosity level"
 test '\"verbosity level\"' '\"1\"|\"2\"|\"3\"|\"4\"|\"5\"' 'verbosity level is not correct in following files' || return 1

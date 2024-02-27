@@ -68,8 +68,8 @@
   "output": {
     "do output": "true",
     "paraview": {
-      "filename": "rte_2d",
-      "output variables": "temperature,heat_source,heaviside"
-    }
+      "filename": "rte_2d"
+    },
+    "output variables": "temperature,heat_source,heaviside"
   }
 }

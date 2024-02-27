@@ -87,7 +87,7 @@ namespace MeltPoolDG
 
     if (output_data.paraview.enable)
       {
-        GenericDataOut<dim> data_out(mapping, time, output_data.paraview.output_variables);
+        GenericDataOut<dim> data_out(mapping, time, output_data.output_variables);
 
         attach_output_vectors(data_out);
 
@@ -117,8 +117,7 @@ namespace MeltPoolDG
 
     // do search algorithm only once
     if (idx_req_vars.size() == 0)
-      idx_req_vars =
-        generic_data_out.get_indices_data_request(output_data.paraview.output_variables);
+      idx_req_vars = generic_data_out.get_indices_data_request(output_data.output_variables);
 
     for (const auto &i : idx_req_vars)
       {

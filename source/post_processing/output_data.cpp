@@ -18,9 +18,6 @@ namespace MeltPoolDG
       prm.add_parameter("n digits timestep",
                         n_digits_timestep,
                         "Number of digits for the frame number of the vtu-file.");
-      prm.add_parameter("output variables",
-                        output_variables,
-                        "Specify variables that you request to output.");
       prm.add_parameter("print boundary id",
                         print_boundary_id,
                         "Set this parameter to true to output a vtu-file with the boundary id.");
@@ -57,6 +54,9 @@ namespace MeltPoolDG
                         write_time_step_size,
                         "Write output output every given time step. If this parameter is "
                         "set, the output write frequency is overwritten.");
+      prm.add_parameter("output variables",
+                        output_variables,
+                        "Specify variables that you request to output.");
       prm.add_parameter("do user defined postprocessing",
                         do_user_defined_postprocessing,
                         "Set this parameter to true to enable user defined postprocessing.");

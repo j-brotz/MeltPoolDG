@@ -255,7 +255,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
       // set default values of parameters @todo --> make own overwritten base function
       slice_data.output_variables = (slice_data.output_variables.size() > 0) ?
                                       slice_data.output_variables :
-                                      this->parameters.output.paraview.output_variables;
+                                      this->parameters.output.output_variables;
 
       if (this->parameters.base.do_simplex || dim == 1)
         {
