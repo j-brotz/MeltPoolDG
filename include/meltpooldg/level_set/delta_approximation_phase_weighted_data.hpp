@@ -13,8 +13,7 @@ namespace MeltPoolDG::LevelSet
     char,
     norm_of_indicator_gradient, // use δ = ||∇ϕ|| as approximation for the Dirac delta function
     // with the heaviside representation of the level set ϕ
-    heaviside_phase_weighted,      // see DeltaApproximationHeavisidePhaseWeighted
-    quad_heaviside_phase_weighted, // see DeltaApproximationQuadHeavisidePhaseWeighted
+    heaviside_phase_weighted, // see DeltaApproximationHeavisidePhaseWeighted
     heaviside_times_heaviside_phase_weighted,
     // see DeltaApproximationHeavisideTimesHeavisidePhaseWeighted
     reciprocal_phase_weighted,                 // see DeltaApproximationReciprocalPhaseWeighted
