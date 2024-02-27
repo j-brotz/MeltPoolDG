@@ -15,6 +15,16 @@ All notable changes of the input parameters will be documented in this file.
     }
 }
 ```
+- Add new evaporation model type
+```diff
+{
+    "evaporation":
+    {
+~       "evapor evaporation model type": "saturated_vapor_pressure",
+    }
+}
+```
+
 
 
 ## 2024-02-26
