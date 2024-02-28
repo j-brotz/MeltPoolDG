@@ -1,4 +1,8 @@
+#include <deal.II/base/exceptions.h>
+
 #include <meltpooldg/flow/characteristic_numbers.hpp>
+
+#include <limits>
 
 namespace MeltPoolDG::Flow
 {
@@ -13,9 +17,10 @@ namespace MeltPoolDG::Flow
   CharacteristicNumbers<number>::Reynolds(const number &characteristic_velocity,
                                           const number &characteristic_length) const
   {
-    AssertThrow(material.viscosity >= std::numeric_limits<number>::epsilon(),
+    AssertThrow(material.dynamic_viscosity >= std::numeric_limits<number>::epsilon(),
                 ExcMessage("The dynamic viscosity must be >0. Abort ..."));
-    return material.density * characteristic_length * characteristic_velocity / material.viscosity;
+    return material.density * characteristic_length * characteristic_velocity /
+           material.dynamic_viscosity;
   }
 
   template <typename number>
@@ -23,10 +28,10 @@ namespace MeltPoolDG::Flow
   CharacteristicNumbers<number>::Mach(const number &characteristic_velocity,
                                       const number &characteristic_length) const
   {
-    AssertThrow(material.conductivity >= std::numeric_limits<number>::epsilon(),
+    AssertThrow(material.thermal_conductivity >= std::numeric_limits<number>::epsilon(),
                 ExcMessage("The conductivity must be >0. Abort ..."));
-    return material.density * material.capacity * characteristic_length * characteristic_velocity /
-           material.conductivity;
+    return material.density * material.specific_heat_capacity * characteristic_length *
+           characteristic_velocity / material.thermal_conductivity;
   }
 
   template <typename number>
@@ -36,7 +41,7 @@ namespace MeltPoolDG::Flow
   {
     AssertThrow(surface_tension_coefficient >= std::numeric_limits<number>::epsilon(),
                 ExcMessage("The surface tension coefficient must be >0. Abort ..."));
-    return material.viscosity * characteristic_velocity / surface_tension_coefficient;
+    return material.dynamic_viscosity * characteristic_velocity / surface_tension_coefficient;
   }
 
   template class CharacteristicNumbers<double>;

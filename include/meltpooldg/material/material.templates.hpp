@@ -4,6 +4,8 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/base/exceptions.h>
+
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -63,7 +65,7 @@ namespace MeltPoolDG
   {
     Assert(
       material_type == MaterialTypes::single_phase,
-      ExcMessage(
+      dealii::ExcMessage(
         "This compute_parameters() implementation should not be called for the current material type! Abort..."));
 
     return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
@@ -81,7 +83,7 @@ namespace MeltPoolDG
       material_type == MaterialTypes::gas_liquid ||
         material_type == MaterialTypes::gas_liquid_consistent_with_evaporation ||
         material_type == MaterialTypes::liquid_solid,
-      ExcMessage(
+      dealii::ExcMessage(
         "This compute_parameters() implementation should not be called for the current material type! Abort..."));
 
     return compute_parameters_internal(v, value_type(0.0), flags);
@@ -99,7 +101,7 @@ namespace MeltPoolDG
     Assert(
       material_type == MaterialTypes::gas_liquid_solid ||
         material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation,
-      ExcMessage(
+      dealii::ExcMessage(
         "This compute_parameters() implementation should not be called for the current material type! Abort..."));
 
     return compute_parameters_internal(level_set_heaviside, temperature, flags);
@@ -135,7 +137,7 @@ namespace MeltPoolDG
         case MaterialTypes::single_phase:
           return compute_parameters_internal(value_type(0.0), value_type(0.0), flags);
         default:
-          Assert(false, ExcNotImplemented());
+          Assert(false, dealii::ExcNotImplemented());
           return MaterialParameterValues<VectorizedArray<number>>();
       }
   }
@@ -160,7 +162,7 @@ namespace MeltPoolDG
                  material_type == MaterialTypes::gas_liquid_solid ||
                  material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation;
         default:
-          AssertThrow(false, ExcNotImplemented());
+          AssertThrow(false, dealii::ExcNotImplemented());
           return false;
       }
   }
@@ -188,14 +190,17 @@ namespace MeltPoolDG
 
             const auto &level_set_heaviside = v1;
 
-            if (flags & MaterialUpdateFlags::capacity)
-              t.capacity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                                        g.capacity,
-                                                                        l.capacity);
-            if (flags & MaterialUpdateFlags::conductivity)
-              t.conductivity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                                            g.conductivity,
-                                                                            l.conductivity);
+            if (flags & MaterialUpdateFlags::thermal_conductivity)
+              t.thermal_conductivity =
+                compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                             g.thermal_conductivity,
+                                                             l.thermal_conductivity);
+
+            if (flags & MaterialUpdateFlags::specific_heat_capacity)
+              t.specific_heat_capacity =
+                compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                             g.specific_heat_capacity,
+                                                             l.specific_heat_capacity);
             if (flags & MaterialUpdateFlags::density)
               {
                 if (material_type == MaterialTypes::gas_liquid_consistent_with_evaporation)
@@ -207,15 +212,16 @@ namespace MeltPoolDG
                                                                            g.density,
                                                                            l.density);
               }
-            if (flags & MaterialUpdateFlags::viscosity)
-              t.viscosity = compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                                         g.viscosity,
-                                                                         l.viscosity);
-            if (flags & MaterialUpdateFlags::volume_specific_capacity)
-              t.volume_specific_capacity =
+            if (flags & MaterialUpdateFlags::dynamic_viscosity)
+              t.dynamic_viscosity =
                 compute_two_phase_fluid_property<value_type>(level_set_heaviside,
-                                                             g.volume_specific_capacity,
-                                                             l.volume_specific_capacity);
+                                                             g.dynamic_viscosity,
+                                                             l.dynamic_viscosity);
+            if (flags & MaterialUpdateFlags::volume_specific_heat_capacity)
+              t.volume_specific_heat_capacity =
+                compute_two_phase_fluid_property<value_type>(level_set_heaviside,
+                                                             g.volume_specific_heat_capacity,
+                                                             l.volume_specific_heat_capacity);
             // note: For the gas-liquid phase case, the derivatives with respect to temperature
             // are zero.
             if (flags & MaterialUpdateFlags::phase_fractions)
@@ -233,41 +239,49 @@ namespace MeltPoolDG
             const auto  temperature_dependent_solid_fraction =
               compute_temperature_dependent_solid_fraction(temperature);
 
-            if (flags & MaterialUpdateFlags::capacity)
-              t.capacity = compute_solid_liquid_phases_property<value_type>(
-                temperature_dependent_solid_fraction, l.capacity, s.capacity);
-            if (flags & MaterialUpdateFlags::conductivity)
-              t.conductivity = compute_solid_liquid_phases_property<value_type>(
-                temperature_dependent_solid_fraction, l.conductivity, s.conductivity);
+            if (flags & MaterialUpdateFlags::thermal_conductivity)
+              t.thermal_conductivity = compute_solid_liquid_phases_property<value_type>(
+                temperature_dependent_solid_fraction,
+                l.thermal_conductivity,
+                s.thermal_conductivity);
+            if (flags & MaterialUpdateFlags::specific_heat_capacity)
+              t.specific_heat_capacity = compute_solid_liquid_phases_property<value_type>(
+                temperature_dependent_solid_fraction,
+                l.specific_heat_capacity,
+                s.specific_heat_capacity);
             if (flags & MaterialUpdateFlags::density)
               t.density = compute_solid_liquid_phases_property<value_type>(
                 temperature_dependent_solid_fraction, l.density, s.density);
-            if (flags & MaterialUpdateFlags::viscosity)
-              t.viscosity = compute_solid_liquid_phases_property<value_type>(
-                temperature_dependent_solid_fraction, l.viscosity, s.viscosity);
-            if (flags & MaterialUpdateFlags::volume_specific_capacity)
-              t.volume_specific_capacity = compute_solid_liquid_phases_property<value_type>(
+            if (flags & MaterialUpdateFlags::dynamic_viscosity)
+              t.dynamic_viscosity = compute_solid_liquid_phases_property<value_type>(
+                temperature_dependent_solid_fraction, l.dynamic_viscosity, s.dynamic_viscosity);
+            if (flags & MaterialUpdateFlags::volume_specific_heat_capacity)
+              t.volume_specific_heat_capacity = compute_solid_liquid_phases_property<value_type>(
                 temperature_dependent_solid_fraction,
-                l.volume_specific_capacity,
-                s.volume_specific_capacity);
-            if (flags & MaterialUpdateFlags::d_capacity_d_T)
-              t.d_capacity_d_T =
+                l.volume_specific_heat_capacity,
+                s.volume_specific_heat_capacity);
+            if (flags & MaterialUpdateFlags::d_thermal_conductivity_d_T)
+              t.d_thermal_conductivity_d_T =
                 compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
-                  temperature_dependent_solid_fraction, l.capacity, s.capacity);
-            if (flags & MaterialUpdateFlags::d_conductivity_d_T)
-              t.d_conductivity_d_T =
+                  temperature_dependent_solid_fraction,
+                  l.thermal_conductivity,
+                  s.thermal_conductivity);
+            if (flags & MaterialUpdateFlags::d_specific_heat_capacity_d_T)
+              t.d_specific_heat_capacity_d_T =
                 compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
-                  temperature_dependent_solid_fraction, l.conductivity, s.conductivity);
+                  temperature_dependent_solid_fraction,
+                  l.specific_heat_capacity,
+                  s.specific_heat_capacity);
             if (flags & MaterialUpdateFlags::d_density_d_T)
               t.d_density_d_T =
                 compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
                   temperature_dependent_solid_fraction, l.density, s.density);
-            if (flags & MaterialUpdateFlags::d_volume_specific_capacity_d_T)
-              t.d_volume_specific_capacity_d_T =
+            if (flags & MaterialUpdateFlags::d_volume_specific_heat_capacity_d_T)
+              t.d_volume_specific_heat_capacity_d_T =
                 compute_temperature_derivative_of_solid_liquid_phases_property<value_type>(
                   temperature_dependent_solid_fraction,
-                  l.volume_specific_capacity,
-                  s.volume_specific_capacity);
+                  l.volume_specific_heat_capacity,
+                  s.volume_specific_heat_capacity);
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
                 t.liquid_fraction = value_type(1.) - temperature_dependent_solid_fraction;
@@ -287,20 +301,20 @@ namespace MeltPoolDG
             const auto  temperature_dependent_solid_fraction =
               compute_temperature_dependent_solid_fraction(temperature);
 
-            if (flags & MaterialUpdateFlags::capacity)
-              t.capacity = compute_solid_liquid_gas_phases_property<value_type>(
+            if (flags & MaterialUpdateFlags::thermal_conductivity)
+              t.thermal_conductivity = compute_solid_liquid_gas_phases_property<value_type>(
                 level_set_heaviside,
                 temperature_dependent_solid_fraction,
-                g.capacity,
-                l.capacity,
-                s.capacity);
-            if (flags & MaterialUpdateFlags::conductivity)
-              t.conductivity = compute_solid_liquid_gas_phases_property<value_type>(
+                g.thermal_conductivity,
+                l.thermal_conductivity,
+                s.thermal_conductivity);
+            if (flags & MaterialUpdateFlags::specific_heat_capacity)
+              t.specific_heat_capacity = compute_solid_liquid_gas_phases_property<value_type>(
                 level_set_heaviside,
                 temperature_dependent_solid_fraction,
-                g.conductivity,
-                l.conductivity,
-                s.conductivity);
+                g.specific_heat_capacity,
+                l.specific_heat_capacity,
+                s.specific_heat_capacity);
             if (flags & MaterialUpdateFlags::density)
               {
                 if (material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation)
@@ -319,34 +333,35 @@ namespace MeltPoolDG
                     l.density,
                     s.density);
               }
-            if (flags & MaterialUpdateFlags::viscosity)
-              t.viscosity = compute_solid_liquid_gas_phases_property<value_type>(
+            if (flags & MaterialUpdateFlags::dynamic_viscosity)
+              t.dynamic_viscosity = compute_solid_liquid_gas_phases_property<value_type>(
                 level_set_heaviside,
                 temperature_dependent_solid_fraction,
-                g.viscosity,
-                l.viscosity,
-                s.viscosity);
-            if (flags & MaterialUpdateFlags::volume_specific_capacity)
-              t.volume_specific_capacity = compute_solid_liquid_gas_phases_property<value_type>(
-                level_set_heaviside,
-                temperature_dependent_solid_fraction,
-                g.volume_specific_capacity,
-                l.volume_specific_capacity,
-                s.volume_specific_capacity);
-            if (flags & MaterialUpdateFlags::d_capacity_d_T)
-              t.d_capacity_d_T =
+                g.dynamic_viscosity,
+                l.dynamic_viscosity,
+                s.dynamic_viscosity);
+            if (flags & MaterialUpdateFlags::volume_specific_heat_capacity)
+              t.volume_specific_heat_capacity =
+                compute_solid_liquid_gas_phases_property<value_type>(
+                  level_set_heaviside,
+                  temperature_dependent_solid_fraction,
+                  g.volume_specific_heat_capacity,
+                  l.volume_specific_heat_capacity,
+                  s.volume_specific_heat_capacity);
+            if (flags & MaterialUpdateFlags::d_thermal_conductivity_d_T)
+              t.d_thermal_conductivity_d_T =
                 compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
                   level_set_heaviside,
                   temperature_dependent_solid_fraction,
-                  l.capacity,
-                  s.capacity);
-            if (flags & MaterialUpdateFlags::d_conductivity_d_T)
-              t.d_conductivity_d_T =
+                  l.thermal_conductivity,
+                  s.thermal_conductivity);
+            if (flags & MaterialUpdateFlags::d_specific_heat_capacity_d_T)
+              t.d_specific_heat_capacity_d_T =
                 compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
                   level_set_heaviside,
                   temperature_dependent_solid_fraction,
-                  l.conductivity,
-                  s.conductivity);
+                  l.specific_heat_capacity,
+                  s.specific_heat_capacity);
             if (flags & MaterialUpdateFlags::d_density_d_T)
               {
                 if (material_type == MaterialTypes::gas_liquid_solid_consistent_with_evaporation)
@@ -365,13 +380,13 @@ namespace MeltPoolDG
                       l.density,
                       s.density);
               }
-            if (flags & MaterialUpdateFlags::d_volume_specific_capacity_d_T)
-              t.d_volume_specific_capacity_d_T =
+            if (flags & MaterialUpdateFlags::d_volume_specific_heat_capacity_d_T)
+              t.d_volume_specific_heat_capacity_d_T =
                 compute_temperature_derivative_of_solid_liquid_gas_property<value_type>(
                   level_set_heaviside,
                   temperature_dependent_solid_fraction,
-                  l.volume_specific_capacity,
-                  s.volume_specific_capacity);
+                  l.volume_specific_heat_capacity,
+                  s.volume_specific_heat_capacity);
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
                 t.gas_fraction = value_type(1.) - level_set_heaviside;
@@ -382,7 +397,7 @@ namespace MeltPoolDG
             break;
           }
           default: {
-            Assert(false, ExcNotImplemented());
+            Assert(false, dealii::ExcNotImplemented());
           }
       }
 
@@ -554,7 +569,7 @@ namespace MeltPoolDG
         (data.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
     else if (data.solidification_type == SolidLiquidPropertiesTransitionType::sharp)
       return temperature < data.melting_point ? 1.0 : 0.0;
-    Assert(false, ExcNotImplemented());
+    Assert(false, dealii::ExcNotImplemented());
     return 0.0;
   }
 
@@ -573,7 +588,7 @@ namespace MeltPoolDG
                                                                data.melting_point,
                                                                1.0,
                                                                0.0);
-    Assert(false, ExcNotImplemented());
+    Assert(false, dealii::ExcNotImplemented());
     return VectorizedArray<number>(0.0);
   }
 

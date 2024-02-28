@@ -75,8 +75,10 @@
   },
   "material": {
     "material template": "Ti64",
-    "material two phase properties transition type": "consistent_with_evaporation",
-    "material first density": "4.087"
+    "gas": {
+      "density": "4.087"
+    },
+    "two phase properties transition type": "consistent_with_evaporation"
   },
   "normal vector": {
     "normal vec damping scale factor": "0.1"

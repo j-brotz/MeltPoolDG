@@ -60,14 +60,18 @@
     "initial temperature": "1000.0"
   },
   "material": {
-    "material first capacity": "0",
-    "material first conductivity": "10",
-    "material first density": "74.303",
-    "material first viscosity": "0.0006",
-    "material second conductivity": "55.563",
-    "material second capacity": "460.0",
-    "material second density": "7850.0",
-    "material second viscosity": "0.006"
+    "gas": {
+      "thermal conductivity": "10",
+      "specific heat capacity": "0",
+      "density": "74.303",
+      "dynamic viscosity": "0.0006"
+    },
+    "liquid": {
+      "thermal conductivity": "55.563",
+      "specific heat capacity": "460.0",
+      "density": "7850.0",
+      "dynamic viscosity": "0.006"
+    }
   },
   "levelset": {
     "ls do reinitialization": "true",

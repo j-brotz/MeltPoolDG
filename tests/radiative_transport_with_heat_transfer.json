@@ -31,12 +31,16 @@
     "interface case": "straight"
   },
   "material": {
-    "material first conductivity": "1.0",
-    "material first capacity": "1.0",
-    "material first density": "1.0",
-    "material second capacity": "1.0",
-    "material second conductivity": "1.0",
-    "material second density": "1.0"
+    "gas": {
+      "thermal conductivity": "1.0",
+      "specific heat capacity": "1.0",
+      "density": "1.0"
+    },
+    "liquid": {
+      "thermal conductivity": "1.0",
+      "specific heat capacity": "1.0",
+      "density": "1.0"
+    }
   },
   "time stepping": {
     "max n steps": "4"

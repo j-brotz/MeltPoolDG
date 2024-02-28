@@ -27,9 +27,11 @@
     }
   },
   "material": {
-    "material first conductivity": "55.563",
-    "material first capacity": "460",
-    "material first density": "7850.0"
+    "gas": {
+      "thermal conductivity": "55.563",
+      "specific heat capacity": "460",
+      "density": "7850.0"
+    }
   },
   "adaptive meshing": {
     "do amr": "true",

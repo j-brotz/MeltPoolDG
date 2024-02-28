@@ -15,18 +15,22 @@
     "time step size": "1e-5"
   },
   "material": {
-    "material two phase properties transition type": "consistent_with_evaporation",
-    "material boiling temperature": "373.15",
-    "material first density": "0.01",
-    "material first viscosity": "0.001",
-    "material first conductivity": "0.01",
-    "material first capacity": "1000",
-    "material second density": "1.0",
-    "material second viscosity": "0.01",
-    "material second conductivity": "0.01",
-    "material second capacity": "1000",
-    "material molar mass": "0.01801528",
-    "material latent heat of evaporation": "1.e3"
+    "gas": {
+      "thermal conductivity": "0.01",
+      "specific heat capacity": "1000",
+      "density": "0.01",
+      "dynamic viscosity": "0.001"
+    },
+    "liquid": {
+      "thermal conductivity": "0.01",
+      "specific heat capacity": "1000",
+      "density": "1.0",
+      "dynamic viscosity": "0.01"
+    },
+    "two phase properties transition type": "consistent_with_evaporation",
+    "boiling temperature": "373.15",
+    "latent heat of evaporation": "1.e3",
+    "molar mass": "0.01801528"
   },
   "Navier-Stokes": {
     "adaflo": {

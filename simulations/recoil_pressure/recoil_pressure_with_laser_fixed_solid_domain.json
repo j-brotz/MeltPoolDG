@@ -18,22 +18,28 @@
     "surface tension coefficient": "1.8"
   },
   "material": {
-    "material boiling temperature": "3500.",
-    "material two phase properties transition type": "smooth",
-    "material first capacity": "965",
-    "material first conductivity": "35.95",
-    "material first density": "74.30",
-    "material first viscosity": "0.0006",
-    "material second capacity": "965",
-    "material second conductivity": "35.95",
-    "material second density": "7430",
-    "material second viscosity": "0.006",
-    "material solid conductivity": "35.95",
-    "material solid capacity": "965",
-    "material solid density": "7430.0",
-    "material solid viscosity": "1.0",
-    "material solidus temperature": "1400.0",
-    "material liquidus temperature": "1700.0"
+    "gas": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "74.30",
+      "dynamic viscosity": "0.0006"
+    },
+    "liquid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7430",
+      "dynamic viscosity": "0.006"
+    },
+    "solid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7430.0",
+      "dynamic viscosity": "1.0"
+    },
+    "solidus temperature": "1400.0",
+    "liquidus temperature": "1700.0",
+    "two phase properties transition type": "smooth",
+    "boiling temperature": "3500."
   },
   "recoil pressure": {
     "temperature constant": "10000.",

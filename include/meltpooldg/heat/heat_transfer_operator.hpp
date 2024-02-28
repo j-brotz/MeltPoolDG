@@ -319,7 +319,7 @@ namespace MeltPoolDG::Heat
      * Determine the material parameters. This function takes two-phase flow and solidification
      * effects into account.
      *
-     * The values of @p rho_cp and @p conductivity must be set to the material.first values
+     * The values of @p rho_cp and @p conductivity must be set to the material.gas values
      * initially. This function only modifies their values if necessary. I.e. in case of no
      * two-phase flow and no solidification this function does nothing.
      */
@@ -333,7 +333,7 @@ namespace MeltPoolDG::Heat
      * two-phase flow and solidification effects into account.
      *
      * The values of @p rho_cp, @p conductivity, @p d_rho_cp_d_T and @p d_conductivity_dT must be set
-     * to the material.first values initially (0 for the derivatives). This function only modifies
+     * to the material.gas values initially (0 for the derivatives). This function only modifies
      * their values if necessary. I.e. in case of no two-phase flow and no solidification this
      * function does nothing.
      *

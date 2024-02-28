@@ -1,7 +1,11 @@
 #pragma once
 
+#include <deal.II/base/parameter_handler.h>
+
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
+
+#include <string>
 
 namespace MeltPoolDG
 {
@@ -29,6 +33,18 @@ namespace MeltPoolDG
                                 // evaporation formulation
   )
 
+  template <typename number = double>
+  struct MaterialPhaseData
+  {
+    number thermal_conductivity   = 0.0;
+    number specific_heat_capacity = 0.0;
+    number density                = 0.0;
+    number dynamic_viscosity      = 0.0;
+
+    void
+    add_parameters(dealii::ParameterHandler &prm, const std::string &phase_name);
+  };
+
   /**
    * Parameters of the Material class.
    *
@@ -44,37 +60,19 @@ namespace MeltPoolDG
 
   public:
     /**
-     * Default material. In case of two-phase flow; heaviside(level set) == 0
+     * Material parameters of the gas phase; heaviside(level set) == 0
      */
-    struct First
-    {
-      number capacity     = 0.0;
-      number conductivity = 0.0;
-      number density      = 0.0;
-      number viscosity    = 0.0;
-    } first;
+    MaterialPhaseData<number> gas;
 
     /**
-     * Secondary material. In case of two-phase-flow; heaviside(level set) == 1
+     * Material parameters of the liquid phase; heaviside(level set) == 1
      */
-    struct Second
-    {
-      number capacity     = 0.0;
-      number conductivity = 0.0;
-      number density      = 0.0;
-      number viscosity    = 0.0;
-    } second;
+    MaterialPhaseData<number> liquid;
 
     /**
      * Solid material.
      */
-    struct Solid
-    {
-      number capacity     = 0.0;
-      number conductivity = 0.0;
-      number density      = 0.0;
-      number viscosity    = 0.0;
-    } solid;
+    MaterialPhaseData<number> solid;
 
     number solidus_temperature        = 0.0;
     number liquidus_temperature       = 0.0;
@@ -93,7 +91,7 @@ namespace MeltPoolDG
                                                     // set default value to smooth
 
     void
-    add_parameters(ParameterHandler &prm);
+    add_parameters(dealii::ParameterHandler &prm);
 
     /**
      * Creates MaterialData with all parameters set to the values of stainless steel:

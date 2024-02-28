@@ -36,10 +36,12 @@
   },
   "material": {
     "material template": "Ti64",
-    "material two phase properties transition type": "smooth",
-    "material solidification type": "mushy_zone",
-    "material first density": "408.70",
-    "material first capacity": "1130.0"
+    "gas": {
+      "specific heat capacity": "1130.0",
+      "density": "408.70"
+    },
+    "solidification type": "mushy_zone",
+    "two phase properties transition type": "smooth"
   },
   "heat": {
     "use volume-specific thermal capacity for phase interpolation": "true",

@@ -18,27 +18,33 @@
     "surface tension coefficient": "0.0"
   },
   "material": {
-    "material first capacity": "0",
-    "material first conductivity": "10",
-    "material first density": "74.30",
-    "material first viscosity": "0.0006",
-    "material second capacity": "965",
-    "material second conductivity": "35.95",
-    "material second density": "7074.3",
-    "material second viscosity": "0.006",
-    "material solid conductivity": "35.95",
-    "material solid capacity": "965",
-    "material solid density": "7430.0",
-    "material solid viscosity": "0.06",
-    "material solidus temperature": "1000",
-    "material liquidus temperature": "1700.0",
-    "material two phase properties transition type": "sharp",
-    "material solidification type": "mushy_zone",
-    "material boiling temperature": "2000.",
-    "material latent heat of evaporation": "1.e6",
-    "material sticking constant": "1",
-    "material molar mass": "0.05224130936",
-    "material specific enthalpy reference temperature": "663.731"
+    "gas": {
+      "thermal conductivity": "10",
+      "specific heat capacity": "0",
+      "density": "74.30",
+      "dynamic viscosity": "0.0006"
+    },
+    "liquid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7074.3",
+      "dynamic viscosity": "0.006"
+    },
+    "solid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7430.0",
+      "dynamic viscosity": "0.06"
+    },
+    "solidus temperature": "1000",
+    "liquidus temperature": "1700.0",
+    "specific enthalpy reference temperature": "663.731",
+    "solidification type": "mushy_zone",
+    "two phase properties transition type": "sharp",
+    "boiling temperature": "2000.",
+    "latent heat of evaporation": "1.e6",
+    "molar mass": "0.05224130936",
+    "sticking constant": "1"
   },
   "recoil pressure": {
     "temperature constant": "10000.",

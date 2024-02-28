@@ -16,31 +16,31 @@ namespace MeltPoolDG
   template <typename value_type>
   struct MaterialParameterValues
   {
-    MaterialParameterValues(const double capacity                       = 0.0,
-                            const double conductivity                   = 0.0,
-                            const double density                        = 0.0,
-                            const double viscosity                      = 0.0,
-                            const double volume_specific_capacity       = 0.0,
-                            const double d_capacity_d_T                 = 0.0,
-                            const double d_conductivity_d_T             = 0.0,
-                            const double d_density_d_T                  = 0.0,
-                            const double d_volume_specific_capacity_d_T = 0.0,
-                            const double gas_fraction                   = 0.0,
-                            const double liquid_fraction                = 0.0,
-                            const double solid_fraction                 = 0.0);
+    MaterialParameterValues(const double thermal_conductivity_in                = 0.0,
+                            const double specific_heat_capacity_in              = 0.0,
+                            const double density_in                             = 0.0,
+                            const double dynamic_viscosity_in                   = 0.0,
+                            const double volume_specific_heat_capacity_in       = 0.0,
+                            const double d_thermal_conductivity_d_T_in          = 0.0,
+                            const double d_specific_heat_capacity_d_T_in        = 0.0,
+                            const double d_density_d_T_in                       = 0.0,
+                            const double d_volume_specific_heat_capacity_d_T_in = 0.0,
+                            const double gas_fraction_in                        = 0.0,
+                            const double liquid_fraction_in                     = 0.0,
+                            const double solid_fraction_in                      = 0.0);
 
     template <typename material_phase_data_struct>
     MaterialParameterValues(const material_phase_data_struct &data);
 
-    value_type capacity;
-    value_type conductivity;
+    value_type thermal_conductivity;
+    value_type specific_heat_capacity;
     value_type density;
-    value_type viscosity;
-    value_type volume_specific_capacity;
-    value_type d_capacity_d_T;
-    value_type d_conductivity_d_T;
+    value_type dynamic_viscosity;
+    value_type volume_specific_heat_capacity;
+    value_type d_thermal_conductivity_d_T;
+    value_type d_specific_heat_capacity_d_T;
     value_type d_density_d_T;
-    value_type d_volume_specific_capacity_d_T;
+    value_type d_volume_specific_heat_capacity_d_T;
     value_type gas_fraction;
     value_type liquid_fraction;
     value_type solid_fraction;
@@ -65,17 +65,17 @@ namespace MeltPoolDG
   {
     enum MaterialUpdateFlags
     {
-      none                           = 0,
-      capacity                       = 1 << 0,
-      conductivity                   = 1 << 1,
-      density                        = 1 << 2,
-      viscosity                      = 2 << 2,
-      d_capacity_d_T                 = 2 << 3,
-      d_conductivity_d_T             = 2 << 4,
-      d_density_d_T                  = 2 << 5,
-      phase_fractions                = 2 << 6,
-      volume_specific_capacity       = 2 << 7,
-      d_volume_specific_capacity_d_T = 2 << 8
+      none                                = 0,
+      thermal_conductivity                = 1 << 0,
+      specific_heat_capacity              = 1 << 1,
+      density                             = 1 << 2,
+      dynamic_viscosity                   = 1 << 3,
+      volume_specific_heat_capacity       = 1 << 4,
+      d_thermal_conductivity_d_T          = 1 << 5,
+      d_specific_heat_capacity_d_T        = 1 << 6,
+      d_density_d_T                       = 1 << 7,
+      d_volume_specific_heat_capacity_d_T = 1 << 8,
+      phase_fractions                     = 1 << 9
     };
 
     inline MaterialUpdateFlags
@@ -455,30 +455,30 @@ namespace MeltPoolDG
 
   template <typename value_type>
   MaterialParameterValues<value_type>::MaterialParameterValues(
-    const double capacity,
-    const double conductivity,
-    const double density,
-    const double viscosity,
-    const double volume_specific_capacity,
-    const double d_capacity_d_T,
-    const double d_conductivity_d_T,
-    const double d_density_d_T,
-    const double d_volume_specific_capacity_d_T,
-    const double gas_fraction,
-    const double liquid_fraction,
-    const double solid_fraction)
-    : capacity(capacity)
-    , conductivity(conductivity)
-    , density(density)
-    , viscosity(viscosity)
-    , volume_specific_capacity(volume_specific_capacity)
-    , d_capacity_d_T(d_capacity_d_T)
-    , d_conductivity_d_T(d_conductivity_d_T)
-    , d_density_d_T(d_density_d_T)
-    , d_volume_specific_capacity_d_T(d_volume_specific_capacity_d_T)
-    , gas_fraction(gas_fraction)
-    , liquid_fraction(liquid_fraction)
-    , solid_fraction(solid_fraction)
+    const double thermal_conductivity_in,
+    const double specific_heat_capacity_in,
+    const double density_in,
+    const double dynamic_viscosity_in,
+    const double volume_specific_heat_capacity_in,
+    const double d_thermal_conductivity_d_T_in,
+    const double d_specific_heat_capacity_d_T_in,
+    const double d_density_d_T_in,
+    const double d_volume_specific_heat_capacity_d_T_in,
+    const double gas_fraction_in,
+    const double liquid_fraction_in,
+    const double solid_fraction_in)
+    : thermal_conductivity(thermal_conductivity_in)
+    , specific_heat_capacity(specific_heat_capacity_in)
+    , density(density_in)
+    , dynamic_viscosity(dynamic_viscosity_in)
+    , volume_specific_heat_capacity(volume_specific_heat_capacity_in)
+    , d_thermal_conductivity_d_T(d_thermal_conductivity_d_T_in)
+    , d_specific_heat_capacity_d_T(d_specific_heat_capacity_d_T_in)
+    , d_density_d_T(d_density_d_T_in)
+    , d_volume_specific_heat_capacity_d_T(d_volume_specific_heat_capacity_d_T_in)
+    , gas_fraction(gas_fraction_in)
+    , liquid_fraction(liquid_fraction_in)
+    , solid_fraction(solid_fraction_in)
   {}
 
 
@@ -487,15 +487,15 @@ namespace MeltPoolDG
   template <typename material_phase_data_struct>
   MaterialParameterValues<value_type>::MaterialParameterValues(
     const material_phase_data_struct &data)
-    : capacity(data.capacity)
-    , conductivity(data.conductivity)
+    : thermal_conductivity(data.thermal_conductivity)
+    , specific_heat_capacity(data.specific_heat_capacity)
     , density(data.density)
-    , viscosity(data.viscosity)
-    , volume_specific_capacity(data.density * data.capacity)
-    , d_capacity_d_T(0.0)
-    , d_conductivity_d_T(0.0)
+    , dynamic_viscosity(data.dynamic_viscosity)
+    , volume_specific_heat_capacity(data.density * data.specific_heat_capacity)
+    , d_thermal_conductivity_d_T(0.0)
+    , d_specific_heat_capacity_d_T(0.0)
     , d_density_d_T(0.0)
-    , d_volume_specific_capacity_d_T(0.0)
+    , d_volume_specific_heat_capacity_d_T(0.0)
     , gas_fraction(1.0)
     , liquid_fraction(0.0)
     , solid_fraction(0.0)
@@ -507,8 +507,8 @@ namespace MeltPoolDG
   Material<number>::Material(const MaterialData<number> &material_data,
                              const MaterialTypes         material_type)
     : data(material_data)
-    , gas(data.first)
-    , liquid(data.second)
+    , gas(data.gas)
+    , liquid(data.liquid)
     , solid(data.solid)
     , material_type(material_type)
     , inv_mushy_interval(material_type == MaterialTypes::liquid_solid ||

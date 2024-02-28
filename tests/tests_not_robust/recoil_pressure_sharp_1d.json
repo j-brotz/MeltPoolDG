@@ -38,8 +38,8 @@
   },
   "material": {
     "material template": "Ti64",
-    "material boiling temperature": "600",
-    "material two phase properties transition type": "sharp"
+    "two phase properties transition type": "sharp",
+    "boiling temperature": "600"
   },
   "simulation specific domain": {
     "domain y max": "0.0001",

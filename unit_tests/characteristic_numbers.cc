@@ -11,10 +11,10 @@ main()
   MaterialParameterValues<double> material_data;
 
   // parameter values taken from Meier et al. (2020)
-  material_data.capacity     = 1e-4;
-  material_data.conductivity = 2.4e-6;
-  material_data.density      = 500.0;
-  material_data.viscosity    = 0.024;
+  material_data.thermal_conductivity   = 2.4e-6;
+  material_data.specific_heat_capacity = 1e-4;
+  material_data.density                = 500.0;
+  material_data.dynamic_viscosity      = 0.024;
 
   // testing values
   const double surface_tension_coefficient = 0.01;

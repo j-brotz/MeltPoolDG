@@ -35,13 +35,17 @@
     "do solidification": "false"
   },
   "material": {
-    "material first capacity": "230",
-    "material first conductivity": "27.7815",
-    "material first density": "3925",
-    "material second capacity": "460",
-    "material second conductivity": "55.563",
-    "material second density": "7850",
-    "material two phase properties transition type": "smooth"
+    "gas": {
+      "thermal conductivity": "27.7815",
+      "specific heat capacity": "230",
+      "density": "3925"
+    },
+    "liquid": {
+      "thermal conductivity": "55.563",
+      "specific heat capacity": "460",
+      "density": "7850"
+    },
+    "two phase properties transition type": "smooth"
   },
   "output": {
     "paraview": {

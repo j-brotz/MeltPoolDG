@@ -26,15 +26,19 @@
     "do solidification": "true"
   },
   "material": {
-    "material second capacity": "4226.0",
-    "material second conductivity": "0.556",
-    "material second density": "1000.0",
-    "material solid capacity": "1762.0",
-    "material solid conductivity": "2.22",
-    "material solid density": "1000.0",
-    "material solidus temperature": "270.0",
-    "material liquidus temperature": "276.0",
-    "material solidification type": "mushy_zone"
+    "liquid": {
+      "thermal conductivity": "0.556",
+      "specific heat capacity": "4226.0",
+      "density": "1000.0"
+    },
+    "solid": {
+      "thermal conductivity": "2.22",
+      "specific heat capacity": "1762.0",
+      "density": "1000.0"
+    },
+    "solidus temperature": "270.0",
+    "liquidus temperature": "276.0",
+    "solidification type": "mushy_zone"
   },
   "output": {
     "paraview": {

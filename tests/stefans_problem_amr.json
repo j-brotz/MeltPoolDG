@@ -54,8 +54,12 @@
     "evapor ls value gas": "-1"
   },
   "material": {
-    "material first density": "0.01",
-    "material second density": "1"
+    "gas": {
+      "density": "0.01"
+    },
+    "liquid": {
+      "density": "1"
+    }
   },
   "advection diffusion": {
     "linear solver": {

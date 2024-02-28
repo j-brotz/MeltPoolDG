@@ -45,8 +45,10 @@
   },
   "material": {
     "material template": "Ti64",
-    "material first density": "4.087",
-    "material two phase properties transition type": "sharp"
+    "gas": {
+      "density": "4.087"
+    },
+    "two phase properties transition type": "sharp"
   },
   "simulation specific domain": {
     "domain x max": "1e-07",

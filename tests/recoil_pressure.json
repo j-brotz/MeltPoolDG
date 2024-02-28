@@ -51,9 +51,11 @@
   },
   "material": {
     "material template": "stainless_steel",
-    "material first capacity": "0",
-    "material two phase properties transition type": "sharp",
-    "material melting point": "1700"
+    "gas": {
+      "specific heat capacity": "0"
+    },
+    "melting point": "1700",
+    "two phase properties transition type": "sharp"
   },
   "levelset": {
     "ls do reinitialization": "true",

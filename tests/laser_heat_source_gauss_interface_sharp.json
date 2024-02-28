@@ -46,7 +46,7 @@
   },
   "material": {
     "material template": "Ti64",
-    "material two phase properties transition type": "sharp"
+    "two phase properties transition type": "sharp"
   },
   "problem specific": {
     "do heat transfer": "true",

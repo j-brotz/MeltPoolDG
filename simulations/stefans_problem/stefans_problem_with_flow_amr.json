@@ -16,11 +16,15 @@
     "time step size": "0.000001"
   },
   "material": {
-    "material two phase properties transition type": "consistent_with_evaporation",
-    "material first density": "0.01",
-    "material first viscosity": "0.0006",
-    "material second density": "1.0",
-    "material second viscosity": "0.006"
+    "gas": {
+      "density": "0.01",
+      "dynamic viscosity": "0.0006"
+    },
+    "liquid": {
+      "density": "1.0",
+      "dynamic viscosity": "0.006"
+    },
+    "two phase properties transition type": "consistent_with_evaporation"
   },
   "Navier-Stokes": {
     "adaflo": {

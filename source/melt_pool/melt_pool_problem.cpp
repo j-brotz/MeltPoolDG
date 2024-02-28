@@ -586,8 +586,8 @@ namespace MeltPoolDG::MeltPool
                 if (base_in->parameters.surface_tension.time_step_limit.enable)
                   {
                     const auto dt_lim = surface_tension_operation->compute_time_step_limit(
-                      base_in->parameters.material.first.density,
-                      base_in->parameters.material.second.density);
+                      base_in->parameters.material.gas.density,
+                      base_in->parameters.material.liquid.density);
 
                     AssertThrow(time_iterator->check_time_step_limit(dt_lim),
                                 ExcMessage("The time step limit for surface tension (dt=" +
@@ -1667,12 +1667,12 @@ namespace MeltPoolDG::MeltPool
                   material->template compute_parameters<VectorizedArray<double>>(
                     ls_values,
                     temp_values,
-                    MaterialUpdateFlags::density | MaterialUpdateFlags::viscosity,
+                    MaterialUpdateFlags::density | MaterialUpdateFlags::dynamic_viscosity,
                     q);
 
                 // set density and viscosity of the fluid solver
                 flow_operation->get_density(cell, q)   = material_values.density;
-                flow_operation->get_viscosity(cell, q) = material_values.viscosity;
+                flow_operation->get_viscosity(cell, q) = material_values.dynamic_viscosity;
 
                 // set damping coefficient of the fluid solver
                 if (darcy_operation &&

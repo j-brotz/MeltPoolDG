@@ -234,8 +234,8 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
           };
 
           const auto analytical_pressure = [&](const double &r) -> double {
-            const double rho = this->parameters.material.first.density;
-            const double mu  = this->parameters.material.first.viscosity;
+            const double rho = this->parameters.material.gas.density;
+            const double mu  = this->parameters.material.gas.dynamic_viscosity;
             const double u0  = velocity;
             return rho * u0 * u0 * inner_radius * inner_radius * 0.5 *
                      (1. / std::pow(outer_radius, 2) - 1 / (r * r)) -

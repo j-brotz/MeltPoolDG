@@ -1,5 +1,6 @@
-#include <meltpooldg/material/material.hpp>
+#include <deal.II/base/exceptions.h>
 
+#include <meltpooldg/material/material.hpp>
 
 namespace MeltPoolDG
 {
@@ -28,7 +29,7 @@ namespace MeltPoolDG
     else // do_two_phase == false
       {
         Assert(do_evaporation == false,
-               ExcMessage(
+               dealii::ExcMessage(
                  "In the case that no two phase flow is enabled, the material cannot be determined "
                  "consistent with evaporation! Abort..."));
         if (do_solidification)

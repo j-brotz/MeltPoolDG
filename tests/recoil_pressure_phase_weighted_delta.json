@@ -15,19 +15,23 @@
     "max n steps": "1"
   },
   "material": {
-    "material first capacity": "1000",
-    "material first conductivity": "10",
-    "material first density": "74.30",
-    "material first viscosity": "0.0006",
-    "material second capacity": "1000",
-    "material second conductivity": "35.95",
-    "material second density": "7074.3",
-    "material second viscosity": "0.006",
-    "material two phase properties transition type": "smooth",
-    "material boiling temperature": "499.",
-    "material latent heat of evaporation": "1.e6",
-    "material molar mass": "0.05224130936",
-    "material specific enthalpy reference temperature": "663.731"
+    "gas": {
+      "thermal conductivity": "10",
+      "specific heat capacity": "1000",
+      "density": "74.30",
+      "dynamic viscosity": "0.0006"
+    },
+    "liquid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "1000",
+      "density": "7074.3",
+      "dynamic viscosity": "0.006"
+    },
+    "specific enthalpy reference temperature": "663.731",
+    "two phase properties transition type": "smooth",
+    "boiling temperature": "499.",
+    "latent heat of evaporation": "1.e6",
+    "molar mass": "0.05224130936"
   },
   "recoil pressure": {
     "dirac delta function approximation": {

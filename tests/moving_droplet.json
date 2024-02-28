@@ -16,11 +16,15 @@
     "max n steps": "3"
   },
   "material": {
-    "material first density": "10",
-    "material first viscosity": "1e-6",
-    "material second density": "1000",
-    "material second viscosity": "1e-4",
-    "material two phase properties transition type": "smooth"
+    "gas": {
+      "density": "10",
+      "dynamic viscosity": "1e-6"
+    },
+    "liquid": {
+      "density": "1000",
+      "dynamic viscosity": "1e-4"
+    },
+    "two phase properties transition type": "smooth"
   },
   "levelset": {
     "ls do reinitialization": "true",
