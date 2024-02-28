@@ -4,14 +4,28 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
+
 #include <deal.II/distributed/solution_transfer.h>
-#include <deal.II/distributed/tria_base.h>
+#include <deal.II/distributed/tria.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/grid/tria.h>
 
 #include <deal.II/numerics/solution_transfer.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/utilities/restart_data.hpp>
+#include <meltpooldg/utilities/time_iterator.hpp>
 
+#include <chrono>
 #include <filesystem>
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace MeltPoolDG::Restart
 {
@@ -20,7 +34,6 @@ namespace MeltPoolDG::Restart
   template <typename number = double>
   class RestartMonitor
   {
-    // TODO: take TimeIterator
   public:
     RestartMonitor(const RestartData<number> &data, const TimeIterator<number> &time)
       : data(data)

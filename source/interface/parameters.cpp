@@ -44,31 +44,6 @@ namespace MeltPoolDG
     if (amr.min_grid_refinement_level == 1)
       amr.min_grid_refinement_level = base.global_refinements;
     /*
-     * calculate the restart output frequency if a time step size
-     */
-    if (restart.write_time_step_size > 0.0)
-      {
-        AssertThrow(restart.time_type == TimeType::real ||
-                      restart.write_time_step_size >= time_stepping.time_step_size,
-                    ExcMessage(
-                      "The time step size for restart must be equal or larger than the simulation "
-                      "time step size."));
-      }
-    else
-      {
-        restart.time_type            = TimeType::real;
-        restart.write_time_step_size = 3600; // 1 hour
-      }
-    /*
-     * set default value of restart prefix
-     */
-    namespace fs = std::filesystem;
-    if (restart.directory == "")
-      restart.directory = fs::path(fs::current_path()) / fs::path(output.directory);
-
-    // modify the value of prefix for easy internal access
-    restart.prefix = fs::path(restart.directory) / fs::path(restart.prefix);
-    /*
      * do not allow initial refinement cycles in case of restart load
      */
     if (restart.load >= 0)
@@ -85,8 +60,9 @@ namespace MeltPoolDG
     normal_vec.post();
     curv.post();
     surface_tension.post(material);
-    profiling.post(base.verbosity_level);
     output.post(time_stepping.time_step_size, parameter_filename);
+    profiling.post(base.verbosity_level);
+    restart.post(output.directory);
 
     /************************************************************************************
      * check input parameters for validity
@@ -107,6 +83,7 @@ namespace MeltPoolDG
     evapor.check_input_parameters(ls.n_subdivisions);
     surface_tension.check_input_parameters(curv.enable);
     profiling.check_input_parameters(time_stepping.time_step_size);
+    restart.check_input_parameters(time_stepping.time_step_size);
 
     AssertThrow((advec_diff.conv_stab.type == ConvectionStabilizationType::SUPG &&
                  advec_diff.linear_solver.do_matrix_free &&
@@ -351,29 +328,7 @@ namespace MeltPoolDG
     /*
      *   restart
      */
-    prm.enter_subsection("restart");
-    {
-      prm.add_parameter(
-        "save",
-        restart.save,
-        "Set this parameter to any number >= 0 to specify how many restart files should be kept. "
-        "-1 means no restart save.");
-      prm.add_parameter(
-        "load",
-        restart.load,
-        "Set this parameter to any number >= 0 to specify which restart file should be loaded. "
-        "-1 means no restart load.");
-      prm.add_parameter("write time step size",
-                        restart.write_time_step_size,
-                        "Write restart output every given time step size. If this parameter is "
-                        "set, the specified parameter for write frequency is overwritten.");
-      prm.add_parameter("time type",
-                        restart.time_type,
-                        "Choose the type of time measure to write restart.");
-      prm.add_parameter("directory", restart.directory, "Write restart directory");
-      prm.add_parameter("prefix", restart.prefix, "Write restart prefix");
-    }
-    prm.leave_subsection();
+    restart.add_parameters(prm);
   }
 
   template <typename number>
