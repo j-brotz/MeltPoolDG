@@ -8,8 +8,9 @@ namespace MeltPoolDG::Evaporation
     const double                      boiling_temperature,
     const double                      sticking_constant,
     const double                      molar_mass,
+    const double                      latent_heat_evaporation,
     const double                      mass_flux_scale_factor)
-    : recoil_model(recoil_data, boiling_temperature)
+    : recoil_model(recoil_data, boiling_temperature, molar_mass, latent_heat_evaporation)
     , mass_flux_scale_factor(mass_flux_scale_factor)
     , sticking_constant(sticking_constant)
     , Cm(molar_mass / (2. * numbers::PI * PhysicalConstants::universal_gas_constant))

@@ -17,6 +17,7 @@ from operator import getitem
 from functools import reduce
 import collections
 import json
+
 old_parameter_names = [
     ["laser", "laser center"],
     ["heat", "interpolate rho times cp"],
@@ -64,9 +65,12 @@ old_parameter_names = [
     ["paraview", "write higher order cells"],
     ["paraview", "paraview n groups"],
     ["paraview", "paraview n patches"],
+    ["recoil pressure", "recoil pressure constant"],
+    ["recoil pressure", "recoil temperature constant"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
+
 new_parameter_names = [
     ["laser", "starting position"],
     ["heat", "use volume-specific thermal capacity for phase interpolation"],
@@ -111,8 +115,15 @@ new_parameter_names = [
     ["output", "paraview", "write higher order cells"],
     ["output", "paraview", "n groups"],
     ["output", "paraview", "n patches"],
+    ["recoil pressure", "pressure coefficient"],
+    ["recoil pressure", "temperature constant"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
+]
+
+# Optional: attach lambda function to modify value of new parameter name
+new_parameter_names_lambda = [
+    (["recoil pressure", "pressure coefficient"], lambda x: x * 1.e-5/1.013)
 ]
 
 rename_parameter_values = [
@@ -211,7 +222,7 @@ def create_dict_from_tree_list(tree_list):
     return tree_dict
 
 
-def sanity_check_json(j, old_parameter_names, new_parameter_names, delete_parameter_names, rename_parameter_values, always_yes, write_json, appendix=""):
+def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter_names_lambda, delete_parameter_names, rename_parameter_values, always_yes, write_json, appendix=""):
     assert len(old_parameter_names) == len(new_parameter_names)
 
     errors = 0
@@ -243,12 +254,24 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, delete_parame
                                 new_parameter_names[i])
                             update(datastore, tree_dict)
 
+                        # apply lambda function if it exists
+                        for key, lambda_fun in new_parameter_names_lambda:
+                            if key == new_parameter_names[i]:
+                                new_val = lambda_fun(float(val))
+                                print_success(
+                                    f"CHANGE VALUE: Apply lambda function to change value of {new_parameter_names[i]} "
+                                    f"from {val} to {new_val}")
+                                val = str(new_val)
+
                         # replace parameter name and set value from the old parameter
-                        set_nested_item(datastore, new_parameter_names[i], val)
+                        set_nested_item(
+                            datastore, new_parameter_names[i], val)
+
                         # delete the outdated parameter pair
                         delete_nested_item(datastore, o, val)
                         print_success(
                             f"RENAME: {o} to {new_parameter_names[i]}")
+
             except:
                 continue
 
@@ -325,5 +348,5 @@ if __name__ == "__main__":
     if args.nv:
         sys.stdout = open(os.devnull, 'w')
 
-    sanity_check_json(args.file, old_parameter_names, new_parameter_names,
+    sanity_check_json(args.file, old_parameter_names, new_parameter_names, new_parameter_names_lambda,
                       delete_parameter_names, rename_parameter_values, args.y, args.w, args.appendix)

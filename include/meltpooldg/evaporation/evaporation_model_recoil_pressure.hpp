@@ -37,6 +37,7 @@ namespace MeltPoolDG::Evaporation
                                    const double                      boiling_temperature,
                                    const double                      sticking_constant,
                                    const double                      molar_mass,
+                                   const double                      latent_heat_evaporation,
                                    const double                      mass_flux_scale_factor);
 
     /*

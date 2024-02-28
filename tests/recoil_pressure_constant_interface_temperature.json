@@ -31,9 +31,9 @@
     "material two phase properties transition type": "smooth"
   },
   "recoil pressure": {
-    "recoil pressure constant": "10.",
-    "recoil temperature constant": "10.",
-    "interface distributed flux type": "interface_value"
+    "interface distributed flux type": "interface_value",
+    "temperature constant": "10.",
+    "pressure coefficient": "9.871668311944721e-05"
   },
   "evaporation": {
     "evapor evaporation model": "recoil_pressure"

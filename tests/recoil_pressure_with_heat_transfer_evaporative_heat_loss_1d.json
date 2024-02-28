@@ -43,8 +43,8 @@
   },
   "recoil pressure": {
     "activation temperature": "0",
-    "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000."
+    "temperature constant": "10000.",
+    "pressure coefficient": "0.0987166831194472"
   },
   "evaporation": {
     "evapor evaporation model": "recoil_pressure"

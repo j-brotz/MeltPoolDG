@@ -90,17 +90,11 @@ namespace MeltPoolDG
     if (restart.load >= 0)
       amr.n_initial_refinement_cycles = 0;
 
-    // recoil pressure: set default value of activation temperature equal to the boiling
-    // temperature
-    if (dealii::numbers::is_invalid(recoil.activation_temperature))
-      recoil.activation_temperature = material.boiling_temperature;
-
     // set automatic weights of asymmetric delta functions, if requested
     surface_tension.delta_approximation_phase_weighted.set_parameters(
       material, LevelSet::ParameterScaledInterpolationType::density);
-    recoil.delta_approximation_phase_weighted.set_parameters(
-      material, LevelSet::ParameterScaledInterpolationType::density);
 
+    recoil.post(material);
     heat.post(base.degree, base.verbosity_level, material);
     laser.post(base.dimension,
                heat.use_volume_specific_thermal_capacity_for_phase_interpolation,

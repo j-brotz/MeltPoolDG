@@ -12,6 +12,9 @@
 
 namespace MeltPoolDG::Evaporation
 {
+
+
+
   /**
    * Base class for the recoil pressure model
    */
@@ -63,10 +66,15 @@ namespace MeltPoolDG::Evaporation
   private:
     const RecoilPressureData<number> &recoil_data;
     const number                      boiling_temperature;
+    const number                      molar_mass;
+    const number                      latent_heat_evaporation;
+
 
   public:
     RecoilPressurePhenomenologicalModel(const RecoilPressureData<number> &recoil_data,
-                                        const number                      boiling_temperature);
+                                        const number                      boiling_temperature,
+                                        const number                      molar_mass,
+                                        const number                      latent_heat_evaporation);
 
     /**
      * Compute the recoil pressure p_v(T) in terms of the temperature T

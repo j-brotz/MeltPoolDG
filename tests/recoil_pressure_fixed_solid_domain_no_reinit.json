@@ -67,8 +67,8 @@
     "ls do reinitialization": "true"
   },
   "recoil pressure": {
-    "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000."
+    "temperature constant": "10000.",
+    "pressure coefficient": "0.0987166831194472"
   },
   "laser": {
     "starting position": "0.0,0.0",

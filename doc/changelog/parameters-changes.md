@@ -1,6 +1,32 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-02-27
+- Refactor recoil pressure data
+```diff
+{
+    "recoil pressure":
+    {
++       "ambient gas pressure": "",
+-       "recoil pressure constant": "",
++       "pressure coefficient": "0...1",
+-       "recoil temperature constant": "",
++       "temperature constant": "",
+    }
+}
+```
+- Add new evaporation model type
+```diff
+{
+    "evaporation":
+    {
+~       "evapor evaporation model type": "saturated_vapor_pressure",
+    }
+}
+```
+
+
+
 ## 2024-02-26
 - Refactor output data
 

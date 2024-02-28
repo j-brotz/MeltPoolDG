@@ -143,7 +143,7 @@ namespace MeltPoolDG
 
 
   template <typename number>
-  bool
+  inline bool
   Material<number>::has_dependency(const FieldType &field_type) const
   {
     switch (field_type)

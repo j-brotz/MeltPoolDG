@@ -41,9 +41,9 @@
     "material specific enthalpy reference temperature": "663.731"
   },
   "recoil pressure": {
-    "recoil pressure constant": "10000.",
-    "recoil temperature constant": "10000.",
-    "activation temperature": "800"
+    "activation temperature": "800",
+    "temperature constant": "10000.",
+    "pressure coefficient": "0.0987166831194472"
   },
   "evaporation": {
     "evapor evaporation model": "recoil_pressure"
