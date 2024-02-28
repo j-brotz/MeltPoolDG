@@ -4,7 +4,6 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include "meltpooldg/utilities/physical_constants.hpp"
 #include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
@@ -13,34 +12,6 @@
 
 namespace MeltPoolDG::Evaporation
 {
-  /**
-   * Compute saturated gas pressure.
-   *
-   * @param[in] T Temperature.
-   * @param[in] boiling_temperature Boiling point.
-   * @param[in] molar_mass Molar mass.
-   * @param[in] latent_heat_evaporation Latent heat of evaporation.
-   * @param[in] ambient_gas_pressure Ambient gas pressure.
-   * @param[in,opt] temperature_constant Temperature constant; In the default
-   * case (temperature_constant <= 0) it is computed from the
-   * physical parameters.
-   */
-  template <typename number, typename number_2>
-  number_2
-  compute_saturated_gas_pressure(const number_2 &T,
-                                 const number    boiling_temperature,
-                                 const number    molar_mass,
-                                 const number    latent_heat_evaporation,
-                                 const number    ambient_gas_pressure,
-                                 const number    temperature_constant = -1)
-  {
-    const number T_v = boiling_temperature;
-    const number c_T = (temperature_constant) >= 0 ? temperature_constant :
-                                                     latent_heat_evaporation * molar_mass /
-                                                       PhysicalConstants::universal_gas_constant;
-
-    return ambient_gas_pressure * std::exp(-c_T * (1. / T - 1. / T_v));
-  }
 
 
 

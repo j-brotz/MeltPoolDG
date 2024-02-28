@@ -1,6 +1,10 @@
+#include <deal.II/base/numbers.h>
+
 #include <meltpooldg/evaporation/evaporation_model_saturated_vapor_pressure.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_operation.hpp>
+#include <meltpooldg/evaporation/recoil_pressure_operation.templates.hpp>
 #include <meltpooldg/utilities/physical_constants.hpp>
+
+#include <cmath>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -26,8 +30,6 @@ namespace MeltPoolDG::Evaporation
     return mass_flux_scale_factor * 0.82 * sticking_constant *
            compute_saturated_gas_pressure(T,
                                           boiling_temperature,
-                                          molar_mass,
-                                          latent_heat_evaporation,
                                           recoil_data.ambient_gas_pressure,
                                           recoil_data.temperature_constant) *
            std::sqrt(Cm / T);

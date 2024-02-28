@@ -2,7 +2,6 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include "meltpooldg/evaporation/evaporation_model_saturated_vapor_pressure.hpp"
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_thickness_integration.hpp>

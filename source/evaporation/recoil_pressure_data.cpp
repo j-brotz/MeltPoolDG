@@ -1,9 +1,10 @@
+#include <deal.II/base/patterns.h>
+
 #include <meltpooldg/evaporation/recoil_pressure_data.hpp>
+#include <meltpooldg/utilities/physical_constants.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
-  using namespace dealii;
-
   template <typename number>
   void
   RecoilPressureData<number>::add_parameters(dealii::ParameterHandler &prm)
@@ -19,7 +20,10 @@ namespace MeltPoolDG::Evaporation
                         Patterns::Double(0.0, 1.0));
       prm.add_parameter("temperature constant",
                         temperature_constant,
-                        "Temperature constant for the recoil pressure model.");
+                        "Temperature constant for the recoil pressure model. "
+                        "If this parameter is not set, the value is computed by "
+                        "latent_heat_evaporation * molar_mass / "
+                        "universal_gas_constant;");
       prm.add_parameter("interface distributed flux type",
                         interface_distributed_flux_type,
                         "Type that determines how the recoil pressure force is computed in the "
@@ -52,6 +56,11 @@ namespace MeltPoolDG::Evaporation
     // set automatic weights of asymmetric delta functions, if requested
     this->delta_approximation_phase_weighted.set_parameters(
       material, LevelSet::ParameterScaledInterpolationType::density);
+
+    // set default value of temperature constant
+    if (temperature_constant < 0)
+      temperature_constant = material.latent_heat_of_evaporation * material.molar_mass /
+                             PhysicalConstants::universal_gas_constant;
   }
   template struct RecoilPressureData<double>;
 } // namespace MeltPoolDG::Evaporation
