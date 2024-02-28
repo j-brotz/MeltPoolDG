@@ -22,6 +22,7 @@
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
+#include <meltpooldg/utilities/profiling_data.hpp>
 #include <meltpooldg/utilities/time_stepping_data.hpp>
 
 #include <iostream>
@@ -141,14 +142,6 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
-  struct ProfilingData
-  {
-    bool     enable               = false;
-    double   write_time_step_size = 10.0;
-    TimeType time_type            = TimeType::real;
-  };
-
-  template <typename number = double>
   struct RestartData
   {
     int         load                 = -1;
@@ -221,7 +214,7 @@ namespace MeltPoolDG
     Evaporation::EvaporationData<number>               evapor;
     MaterialData<number>                               material;
     OutputData<number>                                 output;
-    ProfilingData<number>                              profiling;
+    Profiling::ProfilingData<number>                   profiling;
     RestartData<number>                                restart;
     Flow::AdafloWrapperParameters                      adaflo_params;
   };
