@@ -5,6 +5,7 @@
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#include <meltpooldg/flow/surface_tension_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/interface/base_data.hpp>
@@ -141,18 +142,6 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
-  struct SurfaceTensionData
-  {
-    number surface_tension_coefficient                       = 0.0;
-    number temperature_dependent_surface_tension_coefficient = 0.0;
-    number reference_temperature                             = numbers::invalid_double;
-    number coefficient_residual_fraction                     = 0.0;
-    LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
-    bool                                                  zero_surface_tension_in_solid = false;
-    TimeStepLimitData<number>                             time_step_limit;
-  };
-
-  template <typename number = double>
   struct DarcyDampingData
   {
     number                  mushy_zone_morphology   = 0.0;
@@ -235,7 +224,7 @@ namespace MeltPoolDG
     Heat::LaserData<number>                            laser;
     RadiativeTransport::RadiativeTransportData<number> rte;
     MeltPoolData<number>                               mp;
-    SurfaceTensionData<number>                         surface_tension;
+    Flow::SurfaceTensionData<number>                   surface_tension;
     DarcyDampingData<number>                           darcy;
     Evaporation::RecoilPressureData<number>            recoil;
     Evaporation::EvaporationData<number>               evapor;

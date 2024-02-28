@@ -1,6 +1,17 @@
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
+#include <deal.II/base/utilities.h>
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/matrix_free/evaluation_flags.h>
+
 #include <meltpooldg/flow/surface_tension_operation.hpp>
+#include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+
+#include <cmath>
 
 namespace MeltPoolDG::Flow
 {

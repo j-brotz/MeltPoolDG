@@ -90,10 +90,6 @@ namespace MeltPoolDG
     if (restart.load >= 0)
       amr.n_initial_refinement_cycles = 0;
 
-    // set automatic weights of asymmetric delta functions, if requested
-    surface_tension.delta_approximation_phase_weighted.set_parameters(
-      material, LevelSet::ParameterScaledInterpolationType::density);
-
     recoil.post(material);
     heat.post(base.degree, base.verbosity_level, material);
     laser.post(base.dimension,
@@ -104,6 +100,7 @@ namespace MeltPoolDG
     reinit.post();
     normal_vec.post();
     curv.post();
+    surface_tension.post(material);
     output.post(time_stepping.time_step_size, parameter_filename);
 
     /************************************************************************************
@@ -123,13 +120,7 @@ namespace MeltPoolDG
     laser.check_input_parameters();
     ls.check_input_parameters(base.degree);
     evapor.check_input_parameters(ls.n_subdivisions);
-
-    // check if curvature computation is enabled in case of surface tension
-    const bool do_compute_surface_tension =
-      std::abs(surface_tension.surface_tension_coefficient) > 1e-10 ||
-      std::abs(surface_tension.temperature_dependent_surface_tension_coefficient) > 1e-10;
-    AssertThrow(!do_compute_surface_tension || curv.enable,
-                ExcMessage("Curvature computation must be enabled in case of surface tension."));
+    surface_tension.check_input_parameters(curv.enable);
 
     AssertThrow((advec_diff.conv_stab.type == ConvectionStabilizationType::SUPG &&
                  advec_diff.linear_solver.do_matrix_free &&
@@ -350,31 +341,7 @@ namespace MeltPoolDG
     /*
      * surface tension
      */
-    prm.enter_subsection("surface tension");
-    {
-      prm.add_parameter("surface tension coefficient",
-                        surface_tension.surface_tension_coefficient,
-                        "Constant coefficient for calculating surface tension");
-      prm.add_parameter("temperature dependent surface tension coefficient",
-                        surface_tension.temperature_dependent_surface_tension_coefficient,
-                        "Temperature-dependent coefficient for calculating temperetaure-dependent "
-                        "surface tension (Marangoni convection)");
-      prm.add_parameter("reference temperature",
-                        surface_tension.reference_temperature,
-                        "Reference temperature for calculating surface tension");
-      prm.add_parameter(
-        "coefficient residual fraction",
-        surface_tension.coefficient_residual_fraction,
-        "Define the minimum fraction of the constant surface tension reference value "
-        "that can be reached.");
-      surface_tension.delta_approximation_phase_weighted.add_parameters(prm);
-      prm.add_parameter(
-        "zero surface tension in solid",
-        surface_tension.zero_surface_tension_in_solid,
-        "Set this parameter to true to only apply surface tension if the solid fraction is zero.");
-      surface_tension.time_step_limit.add_parameters(prm);
-    }
-    prm.leave_subsection();
+    surface_tension.add_parameters(prm);
     /*
      * Darcy Damping
      */
