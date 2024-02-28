@@ -1,12 +1,15 @@
 #pragma once
-#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/base/aligned_vector.h>
+#include <deal.II/base/vectorization.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/flow/darcy_damping_data.hpp>
+#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
-#include <meltpooldg/utilities/vector_tools.hpp>
 
 
 namespace MeltPoolDG::Flow

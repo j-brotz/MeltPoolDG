@@ -5,6 +5,8 @@
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#include <meltpooldg/flow/darcy_damping_data.hpp>
+#include <meltpooldg/flow/surface_tension_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/interface/base_data.hpp>
@@ -20,6 +22,8 @@
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/numbers.hpp>
+#include <meltpooldg/utilities/profiling_data.hpp>
+#include <meltpooldg/utilities/restart_data.hpp>
 #include <meltpooldg/utilities/time_stepping_data.hpp>
 
 #include <iostream>
@@ -28,10 +32,6 @@
 namespace MeltPoolDG
 {
   using namespace dealii;
-
-  BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
-
-  BETTER_ENUM(TimeType, char, real, simulation)
 
   BETTER_ENUM(ConvectionStabilizationType,
               char,
@@ -140,45 +140,6 @@ namespace MeltPoolDG
     } solid;
   };
 
-  template <typename number = double>
-  struct SurfaceTensionData
-  {
-    number surface_tension_coefficient                       = 0.0;
-    number temperature_dependent_surface_tension_coefficient = 0.0;
-    number reference_temperature                             = numbers::invalid_double;
-    number coefficient_residual_fraction                     = 0.0;
-    LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
-    bool                                                  zero_surface_tension_in_solid = false;
-    TimeStepLimitData<number>                             time_step_limit;
-  };
-
-  template <typename number = double>
-  struct DarcyDampingData
-  {
-    number                  mushy_zone_morphology   = 0.0;
-    number                  avoid_div_zero_constant = 1e-3;
-    DarcyDampingFormulation formulation             = DarcyDampingFormulation::explicit_formulation;
-  };
-
-  template <typename number = double>
-  struct ProfilingData
-  {
-    bool     enable               = false;
-    double   write_time_step_size = 10.0;
-    TimeType time_type            = TimeType::real;
-  };
-
-  template <typename number = double>
-  struct RestartData
-  {
-    int         load                 = -1;
-    int         save                 = -1;
-    std::string directory            = "";
-    std::string prefix               = "restart";
-    double      write_time_step_size = 0.0;
-    TimeType    time_type            = TimeType::real;
-  };
-
   /**
    * Utility function to print parameters from a given ParameterHandler object.
    */
@@ -235,14 +196,14 @@ namespace MeltPoolDG
     Heat::LaserData<number>                            laser;
     RadiativeTransport::RadiativeTransportData<number> rte;
     MeltPoolData<number>                               mp;
-    SurfaceTensionData<number>                         surface_tension;
-    DarcyDampingData<number>                           darcy;
+    Flow::SurfaceTensionData<number>                   surface_tension;
+    Flow::DarcyDampingData<number>                     darcy;
     Evaporation::RecoilPressureData<number>            recoil;
     Evaporation::EvaporationData<number>               evapor;
     MaterialData<number>                               material;
     OutputData<number>                                 output;
-    ProfilingData<number>                              profiling;
-    RestartData<number>                                restart;
+    Profiling::ProfilingData<number>                   profiling;
+    Restart::RestartData<number>                       restart;
     Flow::AdafloWrapperParameters                      adaflo_params;
   };
 } // namespace MeltPoolDG

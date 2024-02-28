@@ -99,7 +99,8 @@
   },
   "darcy damping": {
     "mushy zone morphology": "1e8",
-    "avoid div zero constant": "1e-3"
+    "avoid div zero constant": "1e-3",
+    "formulation": "explicit_formulation"
   },
   "simulation specific domain": {
     "domain x max": "0.000100",

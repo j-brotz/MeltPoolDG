@@ -1,6 +1,11 @@
 #pragma once
 
 #include <deal.II/base/convergence_table.h>
+#include <deal.II/base/table_handler.h>
+
+#include <algorithm>
+#include <map>
+#include <string>
 
 namespace MeltPoolDG
 {
@@ -58,7 +63,7 @@ namespace MeltPoolDG
     print(StreamType &ss)
     {
       {
-        ConvergenceTable table;
+        dealii::ConvergenceTable table;
 
         for (const auto &entry : stat_cells)
           {
@@ -72,11 +77,11 @@ namespace MeltPoolDG
           }
 
         if (ss.is_active())
-          table.write_text(ss.get_stream(), TableHandler::TextOutputFormat::org_mode_table);
+          table.write_text(ss.get_stream(), dealii::TableHandler::TextOutputFormat::org_mode_table);
       }
 
       {
-        ConvergenceTable table;
+        dealii::ConvergenceTable table;
 
         for (const auto &entry : stat_cells)
           {
@@ -89,7 +94,7 @@ namespace MeltPoolDG
         table.set_scientific("cell_size_max", 4);
 
         if (ss.is_active())
-          table.write_text(ss.get_stream(), TableHandler::TextOutputFormat::org_mode_table);
+          table.write_text(ss.get_stream(), dealii::TableHandler::TextOutputFormat::org_mode_table);
       }
     }
 

@@ -43,56 +43,11 @@ namespace MeltPoolDG
      */
     if (amr.min_grid_refinement_level == 1)
       amr.min_grid_refinement_level = base.global_refinements;
-
-    /*
-     * calculate the profiling output frequency if a time step size
-     */
-    if (profiling.write_time_step_size > 0.0)
-      {
-        AssertThrow(
-          profiling.time_type == TimeType::real ||
-            profiling.write_time_step_size >= time_stepping.time_step_size,
-          ExcMessage("The time step size for profiling must be equal or larger than the simulation "
-                     "time step size."));
-      }
-
-    // enable profiling for verbosity level higher than 1
-    if (base.verbosity_level >= 1)
-      profiling.enable = true;
-    /*
-     * calculate the restart output frequency if a time step size
-     */
-    if (restart.write_time_step_size > 0.0)
-      {
-        AssertThrow(restart.time_type == TimeType::real ||
-                      restart.write_time_step_size >= time_stepping.time_step_size,
-                    ExcMessage(
-                      "The time step size for restart must be equal or larger than the simulation "
-                      "time step size."));
-      }
-    else
-      {
-        restart.time_type            = TimeType::real;
-        restart.write_time_step_size = 3600; // 1 hour
-      }
-    /*
-     * set default value of restart prefix
-     */
-    namespace fs = std::filesystem;
-    if (restart.directory == "")
-      restart.directory = fs::path(fs::current_path()) / fs::path(output.directory);
-
-    // modify the value of prefix for easy internal access
-    restart.prefix = fs::path(restart.directory) / fs::path(restart.prefix);
     /*
      * do not allow initial refinement cycles in case of restart load
      */
     if (restart.load >= 0)
       amr.n_initial_refinement_cycles = 0;
-
-    // set automatic weights of asymmetric delta functions, if requested
-    surface_tension.delta_approximation_phase_weighted.set_parameters(
-      material, LevelSet::ParameterScaledInterpolationType::density);
 
     recoil.post(material);
     heat.post(base.degree, base.verbosity_level, material);
@@ -104,7 +59,10 @@ namespace MeltPoolDG
     reinit.post();
     normal_vec.post();
     curv.post();
+    surface_tension.post(material);
     output.post(time_stepping.time_step_size, parameter_filename);
+    profiling.post(base.verbosity_level);
+    restart.post(output.directory);
 
     /************************************************************************************
      * check input parameters for validity
@@ -123,13 +81,9 @@ namespace MeltPoolDG
     laser.check_input_parameters();
     ls.check_input_parameters(base.degree);
     evapor.check_input_parameters(ls.n_subdivisions);
-
-    // check if curvature computation is enabled in case of surface tension
-    const bool do_compute_surface_tension =
-      std::abs(surface_tension.surface_tension_coefficient) > 1e-10 ||
-      std::abs(surface_tension.temperature_dependent_surface_tension_coefficient) > 1e-10;
-    AssertThrow(!do_compute_surface_tension || curv.enable,
-                ExcMessage("Curvature computation must be enabled in case of surface tension."));
+    surface_tension.check_input_parameters(curv.enable);
+    profiling.check_input_parameters(time_stepping.time_step_size);
+    restart.check_input_parameters(time_stepping.time_step_size);
 
     AssertThrow((advec_diff.conv_stab.type == ConvectionStabilizationType::SUPG &&
                  advec_diff.linear_solver.do_matrix_free &&
@@ -350,51 +304,11 @@ namespace MeltPoolDG
     /*
      * surface tension
      */
-    prm.enter_subsection("surface tension");
-    {
-      prm.add_parameter("surface tension coefficient",
-                        surface_tension.surface_tension_coefficient,
-                        "Constant coefficient for calculating surface tension");
-      prm.add_parameter("temperature dependent surface tension coefficient",
-                        surface_tension.temperature_dependent_surface_tension_coefficient,
-                        "Temperature-dependent coefficient for calculating temperetaure-dependent "
-                        "surface tension (Marangoni convection)");
-      prm.add_parameter("reference temperature",
-                        surface_tension.reference_temperature,
-                        "Reference temperature for calculating surface tension");
-      prm.add_parameter(
-        "coefficient residual fraction",
-        surface_tension.coefficient_residual_fraction,
-        "Define the minimum fraction of the constant surface tension reference value "
-        "that can be reached.");
-      surface_tension.delta_approximation_phase_weighted.add_parameters(prm);
-      prm.add_parameter(
-        "zero surface tension in solid",
-        surface_tension.zero_surface_tension_in_solid,
-        "Set this parameter to true to only apply surface tension if the solid fraction is zero.");
-      surface_tension.time_step_limit.add_parameters(prm);
-    }
-    prm.leave_subsection();
+    surface_tension.add_parameters(prm);
     /*
      * Darcy Damping
      */
-    prm.enter_subsection("darcy damping");
-    {
-      prm.add_parameter("mushy zone morphology",
-                        darcy.mushy_zone_morphology,
-                        "Mushy zone morphology for Darcy damping");
-      prm.add_parameter("avoid div zero constant",
-                        darcy.avoid_div_zero_constant,
-                        "This parameter exists to avoid division by zero in the "
-                        "Kozeny–Carman equation for the Darcy damping force.");
-      prm.add_parameter("formulation",
-                        darcy.formulation,
-                        "Set the formulation of the Darcy damping force.",
-                        Patterns::Selection("explicit_formulation|implicit_formulation"));
-    }
-    prm.leave_subsection();
-
-
+    darcy.add_parameters(prm);
     /*
      *  evaporation
      */
@@ -410,48 +324,11 @@ namespace MeltPoolDG
     /*
      *   profiling
      */
-    prm.enter_subsection("profiling");
-    {
-      prm.add_parameter(
-        "enable",
-        profiling.enable,
-        "Set this parameter to true if profiling should be enabled. It will be automatically"
-        "enabled for verbosity level >=1.");
-      prm.add_parameter("write time step size",
-                        profiling.write_time_step_size,
-                        "Write profiling output every given time step size. If this parameter is "
-                        "set, the specified parameter for write frequency is overwritten.");
-      prm.add_parameter("time type",
-                        restart.time_type,
-                        "Choose the type of time measure to write profiling information.");
-    }
-    prm.leave_subsection();
+    profiling.add_parameters(prm);
     /*
      *   restart
      */
-    prm.enter_subsection("restart");
-    {
-      prm.add_parameter(
-        "save",
-        restart.save,
-        "Set this parameter to any number >= 0 to specify how many restart files should be kept. "
-        "-1 means no restart save.");
-      prm.add_parameter(
-        "load",
-        restart.load,
-        "Set this parameter to any number >= 0 to specify which restart file should be loaded. "
-        "-1 means no restart load.");
-      prm.add_parameter("write time step size",
-                        restart.write_time_step_size,
-                        "Write restart output every given time step size. If this parameter is "
-                        "set, the specified parameter for write frequency is overwritten.");
-      prm.add_parameter("time type",
-                        restart.time_type,
-                        "Choose the type of time measure to write restart.");
-      prm.add_parameter("directory", restart.directory, "Write restart directory");
-      prm.add_parameter("prefix", restart.prefix, "Write restart prefix");
-    }
-    prm.leave_subsection();
+    restart.add_parameters(prm);
   }
 
   template <typename number>

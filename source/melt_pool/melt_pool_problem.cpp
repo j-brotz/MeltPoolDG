@@ -51,6 +51,7 @@
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/restart.templates.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
