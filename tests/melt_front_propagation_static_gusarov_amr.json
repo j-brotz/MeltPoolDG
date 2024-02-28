@@ -59,7 +59,7 @@
     },
     "solidus temperature": "1966.0",
     "liquidus temperature": "1974.0",
-    "solidification type": "mushy_zone"
+    "solid liquid properties transition type": "mushy_zone"
   },
   "adaptive meshing": {
     "do amr": "true",

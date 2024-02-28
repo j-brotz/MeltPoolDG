@@ -55,7 +55,7 @@
       "specific heat capacity": "0"
     },
     "melting point": "1700",
-    "two phase properties transition type": "sharp"
+    "two phase fluid properties transition type": "sharp"
   },
   "levelset": {
     "ls do reinitialization": "true",

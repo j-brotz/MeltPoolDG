@@ -23,7 +23,8 @@
       "thermal conductivity": "1e-16",
       "density": "1.0",
       "dynamic viscosity": "0.01"
-    }
+    },
+    "two phase fluid properties transition type": "sharp"
   },
   "Navier-Stokes": {
     "adaflo": {

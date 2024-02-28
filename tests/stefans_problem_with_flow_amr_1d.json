@@ -25,7 +25,7 @@
       "density": "1.0",
       "dynamic viscosity": "1e-6"
     },
-    "two phase properties transition type": "consistent_with_evaporation"
+    "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "Navier-Stokes": {
     "adaflo": {

@@ -110,10 +110,10 @@
     "solidus temperature": "1500",
     "liquidus temperature": "1700.0",
     "specific enthalpy reference temperature": "663.731",
-    "solidification type": "mushy_zone",
-    "two phase properties transition type": "smooth",
     "boiling temperature": "3000.",
-    "latent heat of evaporation": "1e6"
+    "latent heat of evaporation": "1e6",
+    "two phase fluid properties transition type": "smooth",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "melt pool": {
     "mp boiling temperature": "3000.",

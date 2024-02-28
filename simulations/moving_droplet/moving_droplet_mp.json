@@ -25,7 +25,7 @@
       "density": "40.87",
       "dynamic viscosity": "1e-10"
     },
-    "two phase properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth"
   },
   "levelset": {
     "ls do reinitialization": "true",

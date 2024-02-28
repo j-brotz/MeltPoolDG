@@ -36,18 +36,12 @@ All notable changes of the input parameters will be documented in this file.
 +      "density": "",
 +      "dynamic viscosity": "",
 +    }
--    "material melting point": "",
-+    "melting point": "",
 -    "material solidus temperature": "",
 +    "solidus temperature": "",
 -    "material liquidus temperature": "",
 +    "liquidus temperature": "",
--    "material specific enthalpy reference temperature": "",
-+    "specific enthalpy reference temperature": "",
--    "material solidification type": "",
-+    "solidification type": "",
--    "material two phase properties transition type": "",
-+    "two phase properties transition type": "",
+-    "material melting point": "",
++    "melting point": "",
 -    "material boiling temperature": "",
 +    "boiling temperature": "",
 -    "material latent heat of evaporation": "",
@@ -56,6 +50,12 @@ All notable changes of the input parameters will be documented in this file.
 +    "molar mass": "",
 -    "material sticking constant": "",
 +    "sticking constant": "",
+-    "material specific enthalpy reference temperature": "",
++    "specific enthalpy reference temperature": "",
+-    "material two phase properties transition type": "",
++    "two phase fluid properties transition type": "",
+-    "material solidification type": "",
++    "solid liquid properties transition type": "",
   }
 }
 ```

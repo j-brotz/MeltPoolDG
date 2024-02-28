@@ -30,10 +30,10 @@
       "density": "200",
       "dynamic viscosity": "0.1"
     },
-    "two phase properties transition type": "consistent_with_evaporation",
     "boiling temperature": "1.",
     "latent heat of evaporation": "1.e3",
-    "molar mass": "0.01801528"
+    "molar mass": "0.01801528",
+    "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "levelset": {
     "ls do reinitialization": "true",

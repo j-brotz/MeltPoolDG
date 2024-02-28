@@ -53,8 +53,9 @@ main()
   material_data.solid.density                = 7000.0;
   material_data.solid.dynamic_viscosity      = 1000.0;
 
-  material_data.solidification_type = SolidLiquidPropertiesTransitionType::mushy_zone;
-  material_data.two_phase_properties_transition_type =
+  material_data.solid_liquid_properties_transition_type =
+    SolidLiquidPropertiesTransitionType::mushy_zone;
+  material_data.two_phase_fluid_properties_transition_type =
     TwoPhaseFluidPropertiesTransitionType::smooth;
   material_data.solidus_temperature  = 0.0;
   material_data.liquidus_temperature = 100.0;

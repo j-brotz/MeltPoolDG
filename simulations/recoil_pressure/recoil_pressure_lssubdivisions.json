@@ -109,9 +109,9 @@
     },
     "solidus temperature": "1500",
     "liquidus temperature": "1700.0",
-    "two phase properties transition type": "smooth",
     "boiling temperature": "3000.",
-    "latent heat of evaporation": "1e6"
+    "latent heat of evaporation": "1e6",
+    "two phase fluid properties transition type": "smooth"
   },
   "melt pool": {
     "mp boiling temperature": "3000.",

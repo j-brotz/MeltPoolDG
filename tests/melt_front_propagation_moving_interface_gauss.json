@@ -64,7 +64,8 @@
     },
     "solidus temperature": "1966.0",
     "liquidus temperature": "1974.0",
-    "solidification type": "mushy_zone"
+    "two phase fluid properties transition type": "sharp",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "output": {
     "paraview": {

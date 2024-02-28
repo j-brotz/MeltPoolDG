@@ -38,7 +38,7 @@
     "gas": {
       "density": "4.087"
     },
-    "two phase properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth"
   },
   "reinitialization": {
     "reinit scale factor epsilon": "1.5"

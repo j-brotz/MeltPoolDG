@@ -84,8 +84,8 @@
     },
     "solidus temperature": "100.0",
     "liquidus temperature": "200.0",
-    "solidification type": "mushy_zone",
-    "two phase properties transition type": "consistent_with_evaporation"
+    "two phase fluid properties transition type": "consistent_with_evaporation",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "levelset": {
     "ls do reinitialization": "true",

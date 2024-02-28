@@ -48,7 +48,7 @@
     "gas": {
       "density": "4.087"
     },
-    "two phase properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth"
   },
   "simulation specific domain": {
     "domain x max": "1e-06",

@@ -65,7 +65,7 @@ namespace MeltPoolDG::Evaporation
         tolerance_normal_vector,
         material.gas.density,
         material.liquid.density,
-        material.two_phase_properties_transition_type);
+        material.two_phase_fluid_properties_transition_type);
     else if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::sharp)
       evapor_source_terms_operator =
         std::make_shared<EvaporationSourceTermsSharp<dim>>(scratch_data,

@@ -45,7 +45,7 @@
   },
   "material": {
     "material template": "stainless_steel",
-    "two phase properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth"
   },
   "levelset": {
     "ls do reinitialization": "true",

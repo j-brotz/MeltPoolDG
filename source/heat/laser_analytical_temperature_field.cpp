@@ -78,7 +78,7 @@ namespace MeltPoolDG::Heat
     const double v  = scan_speed;
     const double T0 = laser_data.analytical.ambient_temperature;
 
-    const double weight = (material.two_phase_properties_transition_type !=
+    const double weight = (material.two_phase_fluid_properties_transition_type !=
                            TwoPhaseFluidPropertiesTransitionType::sharp) ?
                             heaviside :
                             ((heaviside > 0.5) ? 1.0 : 0.0);
@@ -95,7 +95,7 @@ namespace MeltPoolDG::Heat
                                                          material.liquid.specific_heat_capacity);
 
     const double density =
-      material.two_phase_properties_transition_type ==
+      material.two_phase_fluid_properties_transition_type ==
           TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation ?
         LevelSet::Tools::interpolate_reciprocal(weight,
                                                 material.gas.density,

@@ -38,7 +38,7 @@
     },
     "solidus temperature": "270.0",
     "liquidus temperature": "276.0",
-    "solidification type": "mushy_zone"
+    "solid liquid properties transition type": "mushy_zone"
   },
   "output": {
     "paraview": {

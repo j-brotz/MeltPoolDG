@@ -53,7 +53,8 @@
     },
     "liquid": {
       "density": "1"
-    }
+    },
+    "two phase fluid properties transition type": "sharp"
   },
   "advection diffusion": {
     "linear solver": {

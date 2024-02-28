@@ -45,7 +45,7 @@
       "specific heat capacity": "460",
       "density": "7850"
     },
-    "two phase properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth"
   },
   "output": {
     "paraview": {

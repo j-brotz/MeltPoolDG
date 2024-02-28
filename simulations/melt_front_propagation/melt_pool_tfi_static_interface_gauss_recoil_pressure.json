@@ -91,8 +91,8 @@
     },
     "solidus temperature": "1966.0",
     "liquidus temperature": "1974.0",
-    "two phase properties transition type": "smooth",
-    "boiling temperature": "3000."
+    "boiling temperature": "3000.",
+    "two phase fluid properties transition type": "smooth"
   },
   "levelset": {
     "ls do reinitialization": "true",

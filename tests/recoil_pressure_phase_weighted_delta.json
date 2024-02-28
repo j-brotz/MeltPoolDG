@@ -28,10 +28,10 @@
       "dynamic viscosity": "0.006"
     },
     "specific enthalpy reference temperature": "663.731",
-    "two phase properties transition type": "smooth",
     "boiling temperature": "499.",
     "latent heat of evaporation": "1.e6",
-    "molar mass": "0.05224130936"
+    "molar mass": "0.05224130936",
+    "two phase fluid properties transition type": "smooth"
   },
   "recoil pressure": {
     "dirac delta function approximation": {

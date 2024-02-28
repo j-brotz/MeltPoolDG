@@ -23,7 +23,7 @@
   },
   "material": {
     "material template": "Ti64",
-    "two phase properties transition type": "consistent_with_evaporation"
+    "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "recoil pressure": {
     "dirac delta function approximation": {

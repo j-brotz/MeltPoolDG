@@ -83,7 +83,7 @@
     },
     "solidus temperature": "1966.0",
     "liquidus temperature": "1974.0",
-    "two phase properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth"
   },
   "levelset": {
     "ls do reinitialization": "true",

@@ -413,10 +413,10 @@ namespace MeltPoolDG
                                                      const value_type &gas_value,
                                                      const value_type &liquid_solid_value) const
   {
-    const value_type weight =
-      (data.two_phase_properties_transition_type != TwoPhaseFluidPropertiesTransitionType::sharp) ?
-        level_set_heaviside :
-        UtilityFunctions::heaviside(level_set_heaviside, 0.5);
+    const value_type weight = (data.two_phase_fluid_properties_transition_type !=
+                               TwoPhaseFluidPropertiesTransitionType::sharp) ?
+                                level_set_heaviside :
+                                UtilityFunctions::heaviside(level_set_heaviside, 0.5);
     return LevelSet::Tools::interpolate(weight, gas_value, liquid_solid_value);
   }
 
@@ -526,10 +526,10 @@ namespace MeltPoolDG
   {
     const auto temp = compute_temperature_derivative_of_solid_liquid_phases_property(
       temperature_dependent_solid_fraction, liquid_value, solid_value);
-    const auto weight =
-      (data.two_phase_properties_transition_type != TwoPhaseFluidPropertiesTransitionType::sharp) ?
-        level_set_heaviside :
-        UtilityFunctions::heaviside(level_set_heaviside, 0.5);
+    const auto weight = (data.two_phase_fluid_properties_transition_type !=
+                         TwoPhaseFluidPropertiesTransitionType::sharp) ?
+                          level_set_heaviside :
+                          UtilityFunctions::heaviside(level_set_heaviside, 0.5);
     return temp * weight;
   }
 
@@ -564,10 +564,12 @@ namespace MeltPoolDG
   inline number
   Material<number>::compute_temperature_dependent_solid_fraction(const number temperature) const
   {
-    if (data.solidification_type == SolidLiquidPropertiesTransitionType::mushy_zone)
+    if (data.solid_liquid_properties_transition_type ==
+        SolidLiquidPropertiesTransitionType::mushy_zone)
       return UtilityFunctions::limit_to_bounds(
         (data.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
-    else if (data.solidification_type == SolidLiquidPropertiesTransitionType::sharp)
+    else if (data.solid_liquid_properties_transition_type ==
+             SolidLiquidPropertiesTransitionType::sharp)
       return temperature < data.melting_point ? 1.0 : 0.0;
     Assert(false, dealii::ExcNotImplemented());
     return 0.0;
@@ -580,10 +582,12 @@ namespace MeltPoolDG
   Material<number>::compute_temperature_dependent_solid_fraction(
     const VectorizedArray<number> &temperature) const
   {
-    if (data.solidification_type == SolidLiquidPropertiesTransitionType::mushy_zone)
+    if (data.solid_liquid_properties_transition_type ==
+        SolidLiquidPropertiesTransitionType::mushy_zone)
       return UtilityFunctions::limit_to_bounds(
         (data.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
-    else if (data.solidification_type == SolidLiquidPropertiesTransitionType::sharp)
+    else if (data.solid_liquid_properties_transition_type ==
+             SolidLiquidPropertiesTransitionType::sharp)
       return compare_and_apply_mask<SIMDComparison::less_than>(temperature,
                                                                data.melting_point,
                                                                1.0,

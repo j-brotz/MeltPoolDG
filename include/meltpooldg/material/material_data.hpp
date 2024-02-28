@@ -18,7 +18,6 @@ namespace MeltPoolDG
   )
   BETTER_ENUM(SolidLiquidPropertiesTransitionType,
               char,
-              not_initialized,
               mushy_zone, // the liquid and solid properties are smeared between the liquidus and
                           // solididus temperature
               sharp       // the liquid and solid properties jump at melting temperature
@@ -26,7 +25,6 @@ namespace MeltPoolDG
   BETTER_ENUM(
     TwoPhaseFluidPropertiesTransitionType,
     char,
-    not_initialized,
     sharp,  // properties jump at level-set = 0
     smooth, // properties are smeared between the phases with the factor level-set-as-heaviside
     consistent_with_evaporation // the density is smeared between the phases consistent with the
@@ -84,11 +82,10 @@ namespace MeltPoolDG
 
     number specific_enthalpy_reference_temperature = numbers::invalid_double;
 
-    SolidLiquidPropertiesTransitionType solidification_type =
-      SolidLiquidPropertiesTransitionType::sharp; // TODO rename parameter according to enum
-    TwoPhaseFluidPropertiesTransitionType two_phase_properties_transition_type =
-      TwoPhaseFluidPropertiesTransitionType::sharp; // TODO rename parameter according to enum  and
-                                                    // set default value to smooth
+    SolidLiquidPropertiesTransitionType solid_liquid_properties_transition_type =
+      SolidLiquidPropertiesTransitionType::mushy_zone;
+    TwoPhaseFluidPropertiesTransitionType two_phase_fluid_properties_transition_type =
+      TwoPhaseFluidPropertiesTransitionType::smooth;
 
     void
     add_parameters(dealii::ParameterHandler &prm);

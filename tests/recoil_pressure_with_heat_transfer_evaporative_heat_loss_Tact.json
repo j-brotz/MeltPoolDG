@@ -39,12 +39,12 @@
     "solidus temperature": "600",
     "liquidus temperature": "700",
     "specific enthalpy reference temperature": "663.731",
-    "solidification type": "mushy_zone",
-    "two phase properties transition type": "smooth",
     "boiling temperature": "1200.",
     "latent heat of evaporation": "1.e6",
     "molar mass": "0.05224130936",
-    "sticking constant": "1"
+    "sticking constant": "1",
+    "two phase fluid properties transition type": "smooth",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "recoil pressure": {
     "activation temperature": "800",

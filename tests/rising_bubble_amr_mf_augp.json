@@ -32,7 +32,7 @@
       "density": "0.1",
       "dynamic viscosity": "0.001"
     },
-    "two phase properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth"
   },
   "advection diffusion": {
     "linear solver": {

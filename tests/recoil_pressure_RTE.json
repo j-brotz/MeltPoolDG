@@ -40,8 +40,8 @@
       "specific heat capacity": "1130.0",
       "density": "408.70"
     },
-    "solidification type": "mushy_zone",
-    "two phase properties transition type": "smooth"
+    "two phase fluid properties transition type": "smooth",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "heat": {
     "use volume-specific thermal capacity for phase interpolation": "true",

@@ -63,25 +63,26 @@ namespace MeltPoolDG
       liquid.add_parameters(prm, "liquid");
       solid.add_parameters(prm, "solid");
 
-      prm.add_parameter("melting point", melting_point, "Melting point (K)");
       prm.add_parameter("solidus temperature", solidus_temperature, "Solidus temperature");
       prm.add_parameter("liquidus temperature", liquidus_temperature, "Liquidus temperature");
-      prm.add_parameter("specific enthalpy reference temperature",
-                        specific_enthalpy_reference_temperature,
-                        "Reference temperature of the specific enthalpy");
-      prm.add_parameter(
-        "solidification type",
-        solidification_type,
-        "Choose how to interpolate the properties over between the liquid and the solid phase.");
-      prm.add_parameter("two phase properties transition type",
-                        two_phase_properties_transition_type,
-                        "Choose how to interpolate the properties over the interface.");
+      prm.add_parameter("melting point", melting_point, "Melting point (K)");
       prm.add_parameter("boiling temperature", boiling_temperature, "Boiling temperature (K).");
       prm.add_parameter("latent heat of evaporation",
                         latent_heat_of_evaporation,
                         "Latent heat of evaporation (J/kg).");
       prm.add_parameter("molar mass", molar_mass, "Molar mass (mol/kg).");
       prm.add_parameter("sticking constant", sticking_constant, "Sticking constant.");
+      prm.add_parameter("specific enthalpy reference temperature",
+                        specific_enthalpy_reference_temperature,
+                        "Reference temperature of the specific enthalpy");
+
+      prm.add_parameter("two phase fluid properties transition type",
+                        two_phase_fluid_properties_transition_type,
+                        "Choose how to interpolate the properties over the interface.");
+      prm.add_parameter(
+        "solid liquid properties transition type",
+        solid_liquid_properties_transition_type,
+        "Choose how to interpolate the properties over between the liquid and the solid phase.");
     }
     prm.leave_subsection();
   }
@@ -114,8 +115,8 @@ namespace MeltPoolDG
     data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 663.731; //  K
 
-    data.solidification_type                  = SolidLiquidPropertiesTransitionType::mushy_zone;
-    data.two_phase_properties_transition_type = TwoPhaseFluidPropertiesTransitionType::smooth;
+    data.solid_liquid_properties_transition_type = SolidLiquidPropertiesTransitionType::mushy_zone;
+    data.two_phase_fluid_properties_transition_type = TwoPhaseFluidPropertiesTransitionType::smooth;
     return data;
   }
 
@@ -147,8 +148,8 @@ namespace MeltPoolDG
     data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 538.0;   //  K
 
-    data.solidification_type                  = SolidLiquidPropertiesTransitionType::mushy_zone;
-    data.two_phase_properties_transition_type = TwoPhaseFluidPropertiesTransitionType::smooth;
+    data.solid_liquid_properties_transition_type = SolidLiquidPropertiesTransitionType::mushy_zone;
+    data.two_phase_fluid_properties_transition_type = TwoPhaseFluidPropertiesTransitionType::smooth;
     return data;
   }
 
