@@ -5,6 +5,7 @@
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
+#include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/flow/surface_tension_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
@@ -29,8 +30,6 @@
 namespace MeltPoolDG
 {
   using namespace dealii;
-
-  BETTER_ENUM(DarcyDampingFormulation, char, implicit_formulation, explicit_formulation)
 
   BETTER_ENUM(TimeType, char, real, simulation)
 
@@ -142,14 +141,6 @@ namespace MeltPoolDG
   };
 
   template <typename number = double>
-  struct DarcyDampingData
-  {
-    number                  mushy_zone_morphology   = 0.0;
-    number                  avoid_div_zero_constant = 1e-3;
-    DarcyDampingFormulation formulation             = DarcyDampingFormulation::explicit_formulation;
-  };
-
-  template <typename number = double>
   struct ProfilingData
   {
     bool     enable               = false;
@@ -225,7 +216,7 @@ namespace MeltPoolDG
     RadiativeTransport::RadiativeTransportData<number> rte;
     MeltPoolData<number>                               mp;
     Flow::SurfaceTensionData<number>                   surface_tension;
-    DarcyDampingData<number>                           darcy;
+    Flow::DarcyDampingData<number>                     darcy;
     Evaporation::RecoilPressureData<number>            recoil;
     Evaporation::EvaporationData<number>               evapor;
     MaterialData<number>                               material;
