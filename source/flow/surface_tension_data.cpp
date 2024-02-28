@@ -1,4 +1,5 @@
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/patterns.h>
 
 #include <meltpooldg/flow/surface_tension_data.hpp>
 
@@ -24,7 +25,8 @@ namespace MeltPoolDG::Flow
         "coefficient residual fraction",
         coefficient_residual_fraction,
         "Define the minimum fraction of the constant surface tension reference value "
-        "that can be reached.");
+        "that can be reached.",
+        dealii::Patterns::Double(0.0, 1.0));
       prm.add_parameter(
         "zero surface tension in solid",
         zero_surface_tension_in_solid,
