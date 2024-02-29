@@ -120,13 +120,6 @@ namespace MeltPoolDG::Evaporation
             evap_flux.read_dof_values_plain(evaporative_mass_flux);
             evap_flux.evaluate(EvaluationFlags::values);
 
-            // The normal vector field is oriented such that the normal vector points from
-            // the negative level set value (= default for representing the gas phase) to the
-            // positive value (= default for representing the liquid phase). Thus, in case the
-            // gas phase corresponds to a level set value of 1, the sign of the normal vector
-            // has to be changed.
-            AssertThrow(evapor_data.ls_value_gas == -1.0, ExcNotImplemented());
-
             for (unsigned int q_index = 0; q_index < ls.n_q_points; ++q_index)
               {
                 ls.submit_value(-evap_flux.get_value(q_index) *
@@ -223,13 +216,6 @@ namespace MeltPoolDG::Evaporation
                                   LevelSet::Tools::interpolate(ls.get_value(q_index),
                                                                1. / density_vapor,
                                                                1. / density_liquid);
-
-            // The normal vector field is oriented such that the normal vector points from
-            // the negative level set value (= default for representing the gas phase) to the
-            // positive value (= default for representing the liquid phase). Thus, in case the
-            // gas phase corresponds to a level set value of 1, the sign of the normal vector
-            // has to be changed.
-            AssertThrow(evapor_data.ls_value_gas == -1.0, ExcNotImplemented());
           }
       }
     if (update_ghosts)

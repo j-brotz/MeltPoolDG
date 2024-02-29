@@ -79,14 +79,20 @@
     }
   },
   "evaporation": {
-    "evapor evaporative mass flux": "1.e-2",
-    "evapor level set source term type": "rhs",
-    "evapor do level set pressure gradient interpolation": "true"
+    "analytical": {
+      "function": "1.e-2"
+    },
+    "formulation source term level set": "rhs",
+    "do level set pressure gradient interpolation": "true",
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
-    "do heat transfer": "true",
-    "do evaporative velocity jump": "true"
+    "do heat transfer": "true"
   },
   "advection diffusion": {
     "linear solver": {

@@ -62,12 +62,16 @@
     }
   },
   "problem specific": {
-    "do heat transfer": "false",
-    "do evaporative velocity jump": "false"
+    "do heat transfer": "false"
   },
   "output": {
     "do user defined postprocessing": "true",
     "paraview": {
+      "enable": "false"
+    }
+  },
+  "evaporation": {
+    "evaporative dilation rate": {
       "enable": "false"
     }
   }

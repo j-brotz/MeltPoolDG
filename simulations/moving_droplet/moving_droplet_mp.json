@@ -86,8 +86,6 @@
     }
   },
   "problem specific": {
-    "do evaporation": "false",
-    "do recoil pressure": "false",
     "do heat transfer": "false",
     "amr": {
       "strategy": "adaflo",
@@ -106,6 +104,11 @@
     "write frequency": "2",
     "paraview": {
       "enable": "true"
+    }
+  },
+  "evaporation": {
+    "recoil pressure": {
+      "enable": "false"
     }
   }
 }

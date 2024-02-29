@@ -108,11 +108,12 @@ namespace MeltPoolDG::Heat
                           const bool        do_solidifiaction                     = false);
 
     void
-    register_evaporative_mass_flux(VectorType        *evaporative_mass_flux_in,
-                                   const unsigned int evapor_mass_flux_dof_idx_in,
-                                   const double       latent_heat_of_evaporation,
-                                   const bool         do_phenomenological_recoil_pressure,
-                                   const Evaporation::EvaporCoolingInterfaceFluxType flux_type);
+    register_evaporative_mass_flux(
+      VectorType        *evaporative_mass_flux_in,
+      const unsigned int evapor_mass_flux_dof_idx_in,
+      const double       latent_heat_of_evaporation,
+      const typename Evaporation::EvaporationData<double>::EvaporativeCooling &evapor_cooling_data);
+
     void
     register_surface_mesh(
       const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,

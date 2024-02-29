@@ -56,24 +56,24 @@ namespace MeltPoolDG::Evaporation
     , ls_dof_idx(ls_dof_idx_in)
     , temp_dof_idx(temp_dof_idx_in)
     , do_level_set_pressure_gradient_interpolation(scratch_data.is_FE_Q_iso_Q_1(ls_dof_idx_in))
-    , model_type(data_in.recoil.model_type)
+    , model_type(data_in.evapor.recoil.type)
     , delta_phase_weighted(create_phase_weighted_delta_approximation(
-        data_in.recoil.delta_approximation_phase_weighted))
+        data_in.evapor.recoil.delta_approximation_phase_weighted))
   {
-    switch (data_in.recoil.model_type)
+    switch (data_in.evapor.recoil.type)
       {
         default:
         case RecoilPressureModelType::phenomenological:
           recoil_pressure_model =
             std::make_unique<const RecoilPressurePhenomenologicalModel<double>>(
-              data_in.recoil,
+              data_in.evapor.recoil,
               data_in.material.boiling_temperature,
               data_in.material.molar_mass,
               data_in.material.latent_heat_of_evaporation);
           break;
         case RecoilPressureModelType::hybrid:
           recoil_pressure_model =
-            std::make_unique<const RecoilPressureHybridModel<double>>(data_in.recoil,
+            std::make_unique<const RecoilPressureHybridModel<double>>(data_in.evapor.recoil,
                                                                       data_in.material);
           break;
       }

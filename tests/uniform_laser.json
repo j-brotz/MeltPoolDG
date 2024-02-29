@@ -59,10 +59,6 @@
     "periodic boundary": "false"
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
-    "do evaporative mass flux": "false",
-    "do evaporation": "false",
-    "do recoil pressure": "false",
     "do heat transfer": "true",
     "do advect level set": "false",
     "do solidification": "true"
@@ -114,6 +110,14 @@
   },
   "output": {
     "paraview": {
+      "enable": "false"
+    }
+  },
+  "evaporation": {
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "recoil pressure": {
       "enable": "false"
     }
   }

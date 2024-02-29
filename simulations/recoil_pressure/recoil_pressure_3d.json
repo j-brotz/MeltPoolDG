@@ -31,10 +31,6 @@
     },
     "boiling temperature": "3000."
   },
-  "recoil pressure": {
-    "temperature constant": "10000.",
-    "pressure coefficient": "0.0987166831194472"
-  },
   "laser": {
     "starting position": "0.0,0.00004",
     "absorptivity liquid": "0.5",
@@ -119,6 +115,12 @@
     "paraview": {
       "filename": "solution_recoil_pressure_3d",
       "enable": "true"
+    }
+  },
+  "evaporation": {
+    "recoil pressure": {
+      "temperature constant": "10000.",
+      "pressure coefficient": "0.0987166831194472"
     }
   }
 }

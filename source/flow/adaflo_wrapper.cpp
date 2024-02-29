@@ -113,10 +113,10 @@ namespace MeltPoolDG::Flow
                            "within the adaflo section, which is ignored by MeltPoolDG. "
                            "Please use the >material: material first density:< section instead. "));
 
+    // TODO: move to check in evaporation data
     if (do_evaporative_mass_flux)
       {
-        if (parameters.evapor.formulation_source_term_continuity !=
-            Evaporation::InterfaceForceType::sharp)
+        if (parameters.evapor.evaporative_dilation_rate.enable)
           {
             AssertThrow(
               parameters.adaflo_params.params.beta_convective_term_momentum_balance == 0,

@@ -49,8 +49,8 @@ namespace MeltPoolDG
     if (restart.load >= 0)
       amr.n_initial_refinement_cycles = 0;
 
-    recoil.post(material);
-    heat.post(base.degree, base.verbosity_level, material);
+    heat.post(base.degree, base.verbosity_level);
+    evapor.post(material, heat.use_volume_specific_thermal_capacity_for_phase_interpolation);
     laser.post(base.dimension,
                heat.use_volume_specific_thermal_capacity_for_phase_interpolation,
                material);
@@ -80,7 +80,7 @@ namespace MeltPoolDG
     heat.check_input_parameters(base.do_simplex, ls.n_subdivisions);
     laser.check_input_parameters();
     ls.check_input_parameters(base.degree);
-    evapor.check_input_parameters(ls.n_subdivisions);
+    evapor.check_input_parameters(ls.n_subdivisions, material);
     surface_tension.check_input_parameters(curv.enable);
     profiling.check_input_parameters(time_stepping.time_step_size);
     restart.check_input_parameters(time_stepping.time_step_size);
@@ -275,10 +275,6 @@ namespace MeltPoolDG
      *   radiative transfer equaton (RTE)
      */
     rte.add_parameters(prm);
-    /*
-     * recoil pressure
-     */
-    recoil.add_parameters(prm);
     /*
      *   melt pool
      */

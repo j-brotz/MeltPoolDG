@@ -41,10 +41,6 @@
     "boiling temperature": "3500.",
     "two phase fluid properties transition type": "smooth"
   },
-  "recoil pressure": {
-    "temperature constant": "10000.",
-    "pressure coefficient": "0.0987166831194472"
-  },
   "laser": {
     "starting position": "0.0,0.00004",
     "model": "interface_projection_regularized",
@@ -138,7 +134,6 @@
     }
   },
   "problem specific": {
-    "do recoil pressure": "true",
     "do heat transfer": "true",
     "do solidification": "true"
   },
@@ -152,6 +147,13 @@
     "write frequency": "1",
     "paraview": {
       "filename": "solution_recoil_pressure_temperature_dependent",
+      "enable": "true"
+    }
+  },
+  "evaporation": {
+    "recoil pressure": {
+      "temperature constant": "10000.",
+      "pressure coefficient": "0.0987166831194472",
       "enable": "true"
     }
   }

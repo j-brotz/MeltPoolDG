@@ -95,8 +95,16 @@
     }
   },
   "evaporation": {
-    "evapor evaporation model": "hardt_wondra",
-    "evapor coefficient": "0.1"
+    "evaporative mass flux model": "hardt_wondra",
+    "hardt wondra": {
+      "coefficient": "0.1"
+    },
+    "evaporative cooling": {
+      "enable": "true"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "heat": {
     "linear solver": {
@@ -108,8 +116,6 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
-    "do evaporative velocity jump": "true",
     "do heat transfer": "true"
   },
   "advection diffusion": {

@@ -50,7 +50,15 @@
     }
   },
   "evaporation": {
-    "evapor evaporative mass flux": "1.0e-6"
+    "analytical": {
+      "function": "1.0e-6"
+    },
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -80,9 +88,7 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
-    "do heat transfer": "true",
-    "do evaporative velocity jump": "true"
+    "do heat transfer": "true"
   },
   "advection diffusion": {
     "linear solver": {

@@ -78,12 +78,18 @@
     }
   },
   "evaporation": {
-    "evapor evaporative mass flux": "1.*t"
+    "analytical": {
+      "function": "1.*t"
+    },
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
-    "do heat transfer": "true",
-    "do evaporative velocity jump": "true"
+    "do heat transfer": "true"
   },
   "advection diffusion": {
     "linear solver": {

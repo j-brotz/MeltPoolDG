@@ -162,10 +162,9 @@ namespace MeltPoolDG::MeltPool
                   level_set_operation->init_time_advance();
               }
 
-            // Only if a spatially constant evaporative mass flux is given as an analytical
+            // E.g. if a spatially constant evaporative mass flux is given as an analytical
             // function, the time is needed to evaluate the function.
-            if (evaporation_operation && base_in->parameters.evapor.evaporation_model ==
-                                           Evaporation::EvaporationModelType::constant)
+            if (evaporation_operation)
               evaporation_operation->set_time(time_iterator->get_current_time());
 
             /******************************************************************************************
@@ -236,12 +235,12 @@ namespace MeltPoolDG::MeltPool
                     interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
 
                     if (evaporation_operation &&
-                        problem_specific_parameters.do_evaporative_velocity_jump)
+                        base_in->parameters.evapor.evaporative_dilation_rate.enable)
                       {
                         ScopedName         sc("evaporation::level_set_source_term");
                         TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
-                        switch (base_in->parameters.evapor.level_set_source_term_type)
+                        switch (base_in->parameters.evapor.formulation_source_term_level_set)
                           {
                             default:
                             case Evaporation::EvaporationLevelSetSourceTermType::
@@ -249,7 +248,7 @@ namespace MeltPoolDG::MeltPool
                             case Evaporation::EvaporationLevelSetSourceTermType::
                               interface_velocity_sharp:
                               case Evaporation::EvaporationLevelSetSourceTermType::
-                                interface_velocity: {
+                                interface_velocity_local: {
                                 // Option 1: compute modified advection velocity due to evaporation
                                 if (problem_specific_parameters.do_extrapolate_coupling_terms)
                                   {
@@ -259,10 +258,10 @@ namespace MeltPoolDG::MeltPool
                                 evaporation_operation->compute_evaporation_velocity();
                                 interface_velocity += evaporation_operation->get_velocity();
 
-                                if (base_in->parameters.evapor.level_set_source_term_type ==
+                                if (base_in->parameters.evapor.formulation_source_term_level_set ==
                                       Evaporation::EvaporationLevelSetSourceTermType::
                                         interface_velocity_sharp ||
-                                    base_in->parameters.evapor.level_set_source_term_type ==
+                                    base_in->parameters.evapor.formulation_source_term_level_set ==
                                       Evaporation::EvaporationLevelSetSourceTermType::
                                         interface_velocity_sharp_heavy)
                                   {
@@ -275,7 +274,8 @@ namespace MeltPoolDG::MeltPool
                                       base_in->parameters.ls.nearest_point;
 
                                     nearest_point_data.isocontour =
-                                      (base_in->parameters.evapor.level_set_source_term_type !=
+                                      (base_in->parameters.evapor
+                                         .formulation_source_term_level_set !=
                                        Evaporation::EvaporationLevelSetSourceTermType::
                                          interface_velocity_sharp_heavy) ?
                                         0 : /*distance at heaviside==1*/
@@ -320,10 +320,10 @@ namespace MeltPoolDG::MeltPool
                       }
                     else
                       {
-                        if (base_in->parameters.evapor.level_set_source_term_type ==
+                        if (base_in->parameters.evapor.formulation_source_term_level_set ==
                               Evaporation::EvaporationLevelSetSourceTermType::
                                 interface_velocity_sharp ||
-                            base_in->parameters.evapor.level_set_source_term_type ==
+                            base_in->parameters.evapor.formulation_source_term_level_set ==
                               Evaporation::EvaporationLevelSetSourceTermType::
                                 interface_velocity_sharp_heavy)
                           {
@@ -335,7 +335,7 @@ namespace MeltPoolDG::MeltPool
                               base_in->parameters.ls.nearest_point;
 
                             nearest_point_data.isocontour =
-                              (base_in->parameters.evapor.level_set_source_term_type !=
+                              (base_in->parameters.evapor.formulation_source_term_level_set !=
                                Evaporation::EvaporationLevelSetSourceTermType::
                                  interface_velocity_sharp_heavy) ?
                                 0 :
@@ -377,8 +377,9 @@ namespace MeltPoolDG::MeltPool
                         // update evaporative mass flux if it is extrapolated from quantities at the
                         // interface
                         if (evaporation_operation &&
-                            base_in->parameters.evapor
-                                .formulation_evaporative_mass_flux_over_interface != "continuous")
+                            base_in->parameters.evapor.interface_temperature_evaluation_type !=
+                              Evaporation::EvaporativeMassFluxTemperatureEvaluationType::
+                                local_value)
                           evaporation_operation->compute_evaporative_mass_flux();
                       }
                   }
@@ -399,10 +400,10 @@ namespace MeltPoolDG::MeltPool
                 level_set_operation->finish_time_advance();
 
                 if (evaporation_operation &&
-                    (base_in->parameters.evapor.formulation_source_term_heat ==
+                    (base_in->parameters.evapor.evaporative_cooling.model ==
                        Evaporation::EvaporCoolingInterfaceFluxType::sharp ||
-                     base_in->parameters.evapor.formulation_source_term_continuity ==
-                       Evaporation::InterfaceForceType::sharp))
+                     base_in->parameters.evapor.evaporative_dilation_rate.model ==
+                       Evaporation::InterfaceFluxType::sharp))
                   level_set_operation->update_surface_mesh();
               }
 
@@ -501,8 +502,8 @@ namespace MeltPoolDG::MeltPool
                     if (heat_operation)
                       {
                         if (!((evaporation_operation &&
-                               (base_in->parameters.evapor.evaporation_model ==
-                                Evaporation::EvaporationModelType::constant)) ||
+                               (base_in->parameters.evapor.evaporative_mass_flux_model ==
+                                Evaporation::EvaporationModelType::analytical)) ||
                               base_in->parameters.laser.model ==
                                 Heat::LaserModelType::analytical_temperature))
                           heat_operation->solve(false);
@@ -600,7 +601,7 @@ namespace MeltPoolDG::MeltPool
 
                 // .... d) evaporative mass fluxes
                 if (evaporation_operation &&
-                    problem_specific_parameters.do_evaporative_velocity_jump)
+                    base_in->parameters.evapor.evaporative_dilation_rate.enable)
                   {
                     evaporation_operation->compute_mass_balance_source_term(
                       mass_balance_rhs,
@@ -612,7 +613,7 @@ namespace MeltPoolDG::MeltPool
                 // ... e) recoil pressure forces
                 if (recoil_pressure_operation)
                   {
-                    if (base_in->parameters.recoil.interface_distributed_flux_type ==
+                    if (base_in->parameters.evapor.recoil.interface_distributed_flux_type ==
                         Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::
                           interface_value)
                       {
@@ -653,7 +654,7 @@ namespace MeltPoolDG::MeltPool
                 // Compute potential mass fluxes due to evaporation and set the corresponding rhs in
                 // the mass balance equation
                 if (evaporation_operation &&
-                    problem_specific_parameters.do_evaporative_velocity_jump)
+                    base_in->parameters.evapor.evaporative_dilation_rate.enable)
                   flow_operation->set_mass_balance_rhs(mass_balance_rhs);
               }
 
@@ -824,22 +825,6 @@ namespace MeltPoolDG::MeltPool
         problem_specific_parameters.do_solidification,
         "Set this parameter to true if you want to consider melting/solidification effects.");
       prm.add_parameter(
-        "do evaporative heat flux",
-        problem_specific_parameters.do_evaporative_heat_flux,
-        "Set this parameter to true if you want to the evaporation-induced jump in the enthalpy of the heat equation.");
-      prm.add_parameter(
-        "do evaporative velocity jump",
-        problem_specific_parameters.do_evaporative_velocity_jump,
-        "Set this parameter to true if you want to consider the evaporation-induced jump in the normal velocity. "
-        "The latter is relevant for the source term in the continuity equation and the level set equation.");
-      prm.add_parameter(
-        "do recoil pressure",
-        problem_specific_parameters.do_recoil_pressure,
-        "Set this parameter to true to prescribe the evaporation-induced jump in the pressure field "
-        "(i.e. recoil pressure), considered as an interfacial force in the momentum balance equation."
-        "If 'do evaporative velocity jump' is set to true, this pressure jump will be added to the "
-        "one resulting from the discontinuous normal velocity field.");
-      prm.add_parameter(
         "do advect level set",
         problem_specific_parameters.do_advect_level_set,
         "Set this parameter to true if you want to advect the level set with the fluid velocity.");
@@ -916,22 +901,8 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::check_input_parameters(
-    Parameters<double> &parameters /*todo: could be made const*/)
+  MeltPoolProblem<dim>::check_input_parameters()
   {
-    AssertThrow(!problem_specific_parameters.do_recoil_pressure ||
-                  (problem_specific_parameters.do_evaporative_velocity_jump ||
-                   parameters.recoil.model_type ==
-                     Evaporation::RecoilPressureModelType::phenomenological),
-                ExcMessage("For the phenomenological recoil pressure model, no velocity jump "
-                           "is allowed."));
-
-    AssertThrow(!problem_specific_parameters.do_evaporative_heat_flux ||
-                  parameters.material.latent_heat_of_evaporation > 0.0,
-                ExcMessage("To consider the evaporative heat flux the value for "
-                           ">>> latent heat of evaporation <<< "
-                           "must be larger than zero."));
-
     if (problem_specific_parameters.do_solidification &&
         !problem_specific_parameters.do_heat_transfer)
       AssertThrow(false,
@@ -961,7 +932,7 @@ namespace MeltPoolDG::MeltPool
     /*
      *  Check parameters for validity
      */
-    check_input_parameters(base_in->parameters);
+    check_input_parameters();
     /*
      *  setup DoFHandler
      */
@@ -1041,7 +1012,7 @@ namespace MeltPoolDG::MeltPool
       *scratch_data,
       base_in,
       *time_iterator,
-      problem_specific_parameters.do_evaporative_velocity_jump);
+      base_in->parameters.evapor.evaporative_cooling.enable);
     flow_vel_no_solid_dof_idx =
       scratch_data->attach_constraint_matrix(flow_velocity_constraints_no_solid);
     scratch_data->attach_dof_handler(flow_operation->get_dof_handler_velocity());
@@ -1137,7 +1108,7 @@ namespace MeltPoolDG::MeltPool
 
 
     // create recoil pressure operation
-    if (problem_specific_parameters.do_recoil_pressure)
+    if (base_in->parameters.evapor.recoil.enable)
       {
         recoil_pressure_operation = std::make_shared<Evaporation::RecoilPressureOperation<dim>>(
           *scratch_data,
@@ -1146,20 +1117,20 @@ namespace MeltPoolDG::MeltPool
           flow_operation->get_quad_idx_velocity(),
           flow_operation->get_dof_handler_idx_pressure(),
           ls_hanging_nodes_dof_idx,
-          (base_in->parameters.recoil.interface_distributed_flux_type ==
+          (base_in->parameters.evapor.recoil.interface_distributed_flux_type ==
            Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value) ?
             temp_hanging_nodes_dof_idx :
             temp_dof_idx);
 
-        if (base_in->parameters.recoil.interface_distributed_flux_type ==
+        if (base_in->parameters.evapor.recoil.interface_distributed_flux_type ==
             Evaporation::RegularizedRecoilPressureTemperatureEvaluationType::interface_value)
           scratch_data->create_remote_point_evaluation(temp_hanging_nodes_dof_idx);
       }
     /*
      *    initialize the evaporation class
      */
-    if (problem_specific_parameters.do_evaporative_heat_flux ||
-        problem_specific_parameters.do_evaporative_velocity_jump)
+    if (base_in->parameters.evapor.evaporative_cooling.enable ||
+        base_in->parameters.evapor.evaporative_dilation_rate.enable)
       {
         evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
           *scratch_data,
@@ -1173,14 +1144,14 @@ namespace MeltPoolDG::MeltPool
           ls_hanging_nodes_dof_idx,
           ls_quad_idx);
 
-        if (base_in->parameters.evapor.formulation_evaporative_mass_flux_over_interface ==
-            "interface value")
+        if (base_in->parameters.evapor.interface_temperature_evaluation_type ==
+            Evaporation::EvaporativeMassFluxTemperatureEvaluationType::interface_value)
           scratch_data->create_remote_point_evaluation(evapor_mass_flux_dof_idx);
-        if ((base_in->parameters.evapor.level_set_source_term_type ==
-               Evaporation::EvaporationLevelSetSourceTermType::interface_velocity ||
-             base_in->parameters.evapor.level_set_source_term_type ==
+        if ((base_in->parameters.evapor.formulation_source_term_level_set ==
+               Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_local ||
+             base_in->parameters.evapor.formulation_source_term_level_set ==
                Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
-             base_in->parameters.evapor.level_set_source_term_type ==
+             base_in->parameters.evapor.formulation_source_term_level_set ==
                Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy))
           scratch_data->create_remote_point_evaluation(vel_dof_idx);
         /*
@@ -1188,14 +1159,15 @@ namespace MeltPoolDG::MeltPool
          */
         evaporation_operation->reinit(&heat_operation->get_temperature(),
                                       level_set_operation->get_distance_to_level_set(),
-                                      base_in->parameters.recoil,
+                                      base_in->parameters.evapor.recoil,
                                       base_in->parameters.ls.nearest_point,
                                       base_in->parameters.reinit.constant_epsilon,
                                       base_in->parameters.reinit.scale_factor_epsilon,
                                       temp_dof_idx);
 
-        if (base_in->parameters.evapor.formulation_source_term_continuity ==
-            Evaporation::InterfaceForceType::sharp)
+        if (base_in->parameters.evapor.evaporative_dilation_rate.enable &&
+            base_in->parameters.evapor.evaporative_dilation_rate.model ==
+              Evaporation::InterfaceFluxType::sharp)
           evaporation_operation->register_surface_mesh(
             level_set_operation->get_surface_mesh_info());
 
@@ -1238,21 +1210,18 @@ namespace MeltPoolDG::MeltPool
         /*
          * register evaporative mass flux to compute the heat sink
          */
-        if (problem_specific_parameters.do_evaporative_heat_flux)
+        if (base_in->parameters.evapor.evaporative_cooling.enable)
           {
-            if (base_in->parameters.evapor.formulation_source_term_heat ==
-                Evaporation::EvaporCoolingInterfaceFluxType::sharp)
+            if (base_in->parameters.evapor.evaporative_cooling.enable &&
+                base_in->parameters.evapor.evaporative_cooling.model ==
+                  Evaporation::EvaporCoolingInterfaceFluxType::sharp)
               heat_operation->register_surface_mesh(level_set_operation->get_surface_mesh_info());
 
             heat_operation->register_evaporative_mass_flux(
               &evaporation_operation->get_evaporative_mass_flux(),
               evapor_mass_flux_dof_idx,
               base_in->parameters.material.latent_heat_of_evaporation,
-              problem_specific_parameters.do_recoil_pressure &&
-                !problem_specific_parameters
-                   .do_evaporative_velocity_jump /*do phenomenological recoil pressure model*/,
-              base_in->parameters.evapor.formulation_source_term_heat); // @todo:
-                                                                        // clean-up
+              base_in->parameters.evapor.evaporative_cooling);
           }
       }
     /*
@@ -1407,8 +1376,8 @@ namespace MeltPoolDG::MeltPool
             temp_dof_idx);
         else if
           // constant evaporative mass flux --> no need to set initial condition
-          (!(evaporation_operation && base_in->parameters.evapor.evaporation_model ==
-                                        Evaporation::EvaporationModelType::constant))
+          (!(evaporation_operation && base_in->parameters.evapor.evaporative_mass_flux_model ==
+                                        Evaporation::EvaporationModelType::analytical))
           heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
                                                 base_in->parameters.time_stepping.start_time);
       }
@@ -1437,19 +1406,17 @@ namespace MeltPoolDG::MeltPool
     // compute the evaporative mass flux from the initial temperature field
     if (evaporation_operation)
       {
-        // Only if a spatially constant evaporative mass flux is given as an analytical function,
+        // E.g. if a spatially constant evaporative mass flux is given as an analytical function,
         // the time is needed to evaluate the function.
-        if (base_in->parameters.evapor.evaporation_model ==
-            Evaporation::EvaporationModelType::constant)
-          evaporation_operation->set_time(time_iterator->get_current_time());
+        evaporation_operation->set_time(time_iterator->get_current_time());
 
         evaporation_operation->compute_evaporative_mass_flux();
       }
 
-    if (evaporation_operation && (base_in->parameters.evapor.formulation_source_term_heat ==
+    if (evaporation_operation && (base_in->parameters.evapor.evaporative_cooling.model ==
                                     Evaporation::EvaporCoolingInterfaceFluxType::sharp ||
-                                  base_in->parameters.evapor.formulation_source_term_continuity ==
-                                    Evaporation::InterfaceForceType::sharp))
+                                  base_in->parameters.evapor.evaporative_dilation_rate.model ==
+                                    Evaporation::InterfaceFluxType::sharp))
       level_set_operation->update_surface_mesh();
   }
 
@@ -1546,7 +1513,7 @@ namespace MeltPoolDG::MeltPool
                         /*enable_inner_face_loops*/ (
                           base_in->parameters.laser.model ==
                             Heat::LaserModelType::interface_projection_sharp_conforming ||
-                          base_in->parameters.evapor.formulation_source_term_heat ==
+                          base_in->parameters.evapor.evaporative_cooling.model ==
                             Evaporation::EvaporCoolingInterfaceFluxType::sharp_conforming));
 
     if (do_reinit)
@@ -1763,12 +1730,12 @@ namespace MeltPoolDG::MeltPool
       if (darcy_operation)
         darcy_operation->attach_output_vectors(data_out);
 
-      if (evaporation_operation && problem_specific_parameters.do_evaporative_velocity_jump &&
-          (base_in->parameters.evapor.level_set_source_term_type ==
-             Evaporation::EvaporationLevelSetSourceTermType::interface_velocity ||
-           base_in->parameters.evapor.level_set_source_term_type ==
+      if (evaporation_operation && base_in->parameters.evapor.evaporative_dilation_rate.enable &&
+          (base_in->parameters.evapor.formulation_source_term_level_set ==
+             Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_local ||
+           base_in->parameters.evapor.formulation_source_term_level_set ==
              Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
-           base_in->parameters.evapor.level_set_source_term_type ==
+           base_in->parameters.evapor.formulation_source_term_level_set ==
              Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy))
         {
           /*
@@ -2180,7 +2147,7 @@ namespace MeltPoolDG::MeltPool
                 }
               // ensure that solid regions at high temperatures are refined
               else if ((solid_vals[i] > 0.0 ||
-                        problem_specific_parameters.do_evaporative_velocity_jump) &&
+                        base_in->parameters.evapor.evaporative_dilation_rate.enable) &&
                        temp_vals[i] >= problem_specific_parameters.amr
                                            .fraction_of_melting_point_refined_in_solid *
                                          base_in->parameters.material.solidus_temperature)

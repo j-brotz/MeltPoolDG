@@ -25,16 +25,27 @@
     "material template": "Ti64",
     "two phase fluid properties transition type": "consistent_with_evaporation"
   },
-  "recoil pressure": {
-    "dirac delta function approximation": {
-      "type": "reciprocal_phase_weighted",
-      "auto weights": "true"
-    },
-    "temperature constant": "10000.",
-    "pressure coefficient": "0.0987166831194472"
-  },
   "evaporation": {
-    "evapor evaporation model": "recoil_pressure"
+    "evaporative mass flux model": "recoil_pressure",
+    "recoil pressure": {
+      "dirac delta function approximation": {
+        "type": "reciprocal_phase_weighted",
+        "auto weights": "true"
+      },
+      "temperature constant": "10000.",
+      "pressure coefficient": "0.0987166831194472",
+      "enable": "true"
+    },
+    "evaporative cooling": {
+      "enable": "true",
+      "dirac delta function approximation": {
+        "type": "reciprocal_times_heaviside_phase_weighted",
+        "auto weights": "true"
+      }
+    },
+    "evaporative dilation rate": {
+      "enable": "false"
+    }
   },
   "laser": {
     "starting position": "0.0,0.00000",
@@ -87,10 +98,6 @@
     }
   },
   "heat": {
-    "dirac delta function approximation": {
-      "type": "reciprocal_times_heaviside_phase_weighted",
-      "auto weights": "true"
-    },
     "linear solver": {
       "rel tolerance": "1e-4",
       "preconditioner type": "DiagonalReduced"
@@ -131,11 +138,8 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
-    "do recoil pressure": "true",
     "do heat transfer": "true",
-    "do solidification": "true",
-    "do evaporative velocity jump": "false"
+    "do solidification": "true"
   },
   "advection diffusion": {
     "linear solver": {

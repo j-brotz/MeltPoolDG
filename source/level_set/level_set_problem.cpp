@@ -60,8 +60,8 @@ namespace MeltPoolDG::LevelSet
           {
             // Only if a spatially constant evaporative mass flux is given as an analytical
             // function, the time is needed to evaluate the function.
-            if (base_in->parameters.evapor.evaporation_model ==
-                Evaporation::EvaporationModelType::constant)
+            if (base_in->parameters.evapor.evaporative_mass_flux_model ==
+                Evaporation::EvaporationModelType::analytical)
               evaporation_operation->set_time(time_iterator->get_current_time());
             else
               AssertThrow(false,

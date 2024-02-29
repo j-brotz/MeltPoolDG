@@ -89,15 +89,19 @@
     }
   },
   "evaporation": {
-    "evapor evaporative mass flux": "1.e-3",
-    "evapor ls value liquid": "1",
-    "evapor ls value gas": "-1",
-    "evapor formulation source term continuity": "sharp"
+    "analytical": {
+      "function": "1.e-3"
+    },
+    "evaporative dilation rate": {
+      "model": "sharp",
+      "enable": "true"
+    },
+    "evaporative cooling": {
+      "enable": "false"
+    }
   },
   "problem specific": {
-    "do heat transfer": "true",
-    "do evaporative velocity jump": "true",
-    "do evaporative heat flux": "false"
+    "do heat transfer": "true"
   },
   "advection diffusion": {
     "linear solver": {

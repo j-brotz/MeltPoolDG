@@ -113,18 +113,8 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
       const types::boundary_id lower_bc = 2 * (dim - 1);
       const types::boundary_id upper_bc = 2 * (dim - 1) + 1;
 
-      if (this->parameters.evapor.ls_value_liquid == -1)
-        {
-          this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
-          this->attach_open_boundary_condition(lower_bc, "navier_stokes_u");
-        }
-      else if (this->parameters.evapor.ls_value_liquid == 1)
-        {
-          this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-          this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
-        }
-      else
-        AssertThrow(false, ExcNotImplemented());
+      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
+      this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
 
       // collect boundary ids of side walls
       std::vector<types::boundary_id> side_walls;
@@ -189,7 +179,7 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
                                                    generic_data_out.get_vector("velocity"));
 
           const auto m_dot =
-            Evaporation::EvaporationModelConstant(this->parameters.evapor.evaporative_mass_flux);
+            Evaporation::EvaporationModelConstant(this->parameters.evapor.analytical.function);
 
           const auto analytical_velocity = [&](const double &ls) -> double {
             return m_dot.local_compute_evaporative_mass_flux(generic_data_out.get_time()) *

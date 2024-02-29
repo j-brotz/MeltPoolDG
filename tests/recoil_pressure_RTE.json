@@ -18,9 +18,6 @@
     "periodic boundary": "true"
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
-    "do evaporative velocity jump": "false",
-    "do recoil pressure": "true",
     "do heat transfer": "true",
     "do solidification": "true"
   },
@@ -75,7 +72,18 @@
     "formulation": "implicit_formulation"
   },
   "evaporation": {
-    "evapor evaporation model": "recoil_pressure"
+    "evaporative mass flux model": "recoil_pressure",
+    "recoil pressure": {
+      "temperature constant": "50700.0",
+      "pressure coefficient": "0.5330700888450149",
+      "enable": "true"
+    },
+    "evaporative cooling": {
+      "enable": "true"
+    },
+    "evaporative dilation rate": {
+      "enable": "false"
+    }
   },
   "surface tension": {
     "surface tension coefficient": "1.493"
@@ -89,10 +97,6 @@
   },
   "normal vector": {
     "normal vec damping scale factor": "2"
-  },
-  "recoil pressure": {
-    "temperature constant": "50700.0",
-    "pressure coefficient": "0.5330700888450149"
   },
   "Navier-Stokes": {
     "adaflo": {

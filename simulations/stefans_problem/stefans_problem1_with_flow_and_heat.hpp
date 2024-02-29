@@ -216,20 +216,15 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
       const types::boundary_id left_bc  = 3;
       const types::boundary_id right_bc = 4;
 
-      if (this->parameters.evapor.ls_value_liquid == 1)
-        {
-          // lower part = gas; upper part = liquid
-          this->attach_dirichlet_boundary_condition(
-            upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(1.0), "level_set");
-          this->attach_dirichlet_boundary_condition(
-            lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
-          this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-          // no volume expansion in case of equal densities
-          this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
-          // this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
-        }
-      else
-        AssertThrow(false, ExcNotImplemented());
+      // lower part = gas; upper part = liquid
+      this->attach_dirichlet_boundary_condition(
+        upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(1.0), "level_set");
+      this->attach_dirichlet_boundary_condition(
+        lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
+      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
+      // no volume expansion in case of equal densities
+      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
+      // this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
 
       // no volume expansion in case of equal densities
       this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");

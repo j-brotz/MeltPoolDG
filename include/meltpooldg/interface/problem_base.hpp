@@ -57,18 +57,5 @@ namespace MeltPoolDG
                     "If problem specific parameters should be added, "
                     "add_parameters() has to be overriden in the derived class. Abort..."));
     }
-
-    /**
-     *
-     * Check the input parameters for validity.
-     *
-     * This function is intended to be overriden by derived classes.
-     */
-
-    virtual void
-    check_input_parameters(Parameters<double> &)
-    {
-      // default: do nothing
-    }
   };
 } // namespace MeltPoolDG

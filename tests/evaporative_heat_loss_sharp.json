@@ -46,13 +46,16 @@
     "two phase fluid properties transition type": "sharp",
     "solid liquid properties transition type": "mushy_zone"
   },
-  "recoil pressure": {
-    "temperature constant": "10000.",
-    "pressure coefficient": "0.0987166831194472"
-  },
   "evaporation": {
-    "evapor evaporation model": "recoil_pressure",
-    "evapor formulation source term heat": "sharp"
+    "evaporative mass flux model": "recoil_pressure",
+    "evaporative cooling": {
+      "model": "sharp",
+      "enable": "true"
+    },
+    "recoil pressure": {
+      "temperature constant": "10000.",
+      "pressure coefficient": "0.0987166831194472"
+    }
   },
   "laser": {
     "starting position": "0,0",
@@ -143,7 +146,6 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
     "do heat transfer": "true",
     "do solidification": "true",
     "do advect level set": "true"

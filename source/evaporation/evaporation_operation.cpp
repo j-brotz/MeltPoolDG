@@ -2,6 +2,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_thickness_integration.hpp>
@@ -50,7 +51,7 @@ namespace MeltPoolDG::Evaporation
     AssertThrow(material.gas.density > 0.0 && material.liquid.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
 
-    if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::diffuse)
+    if (evaporation_data.evaporative_dilation_rate.model == InterfaceFluxType::regularized)
       evapor_source_terms_operator = std::make_shared<EvaporationSourceTermsContinuous<dim>>(
         scratch_data,
         evaporation_data,
@@ -66,7 +67,7 @@ namespace MeltPoolDG::Evaporation
         material.gas.density,
         material.liquid.density,
         material.two_phase_fluid_properties_transition_type);
-    else if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::sharp)
+    else if (evaporation_data.evaporative_dilation_rate.model == InterfaceFluxType::sharp)
       evapor_source_terms_operator =
         std::make_shared<EvaporationSourceTermsSharp<dim>>(scratch_data,
                                                            evaporation_data,
@@ -86,13 +87,10 @@ namespace MeltPoolDG::Evaporation
 
     reinit();
 
-    /*                 .
-     * local operation m(T)
-     */
-    if (evaporation_data.evaporation_model == EvaporationModelType::constant)
+    if (evaporation_data.evaporative_mass_flux_model == EvaporationModelType::analytical)
       {
         evapor_model =
-          std::make_shared<EvaporationModelConstant>(evaporation_data.evaporative_mass_flux);
+          std::make_shared<EvaporationModelConstant>(evaporation_data.analytical.function);
       }
   }
 
@@ -122,25 +120,24 @@ namespace MeltPoolDG::Evaporation
     temp_dof_idx = temp_dof_idx_in;
 
     // setup of temperature-dependent evaporation models
-    if (evaporation_data.evaporation_model == EvaporationModelType::recoil_pressure)
-      evapor_model = std::make_shared<EvaporationModelRecoilPressure>(
-        recoil_data,
-        material.boiling_temperature,
-        material.sticking_constant,
-        material.molar_mass,
-        material.latent_heat_of_evaporation,
-        evaporation_data.evaporative_mass_flux_scale_factor);
-    else if (evaporation_data.evaporation_model == EvaporationModelType::saturated_vapor_pressure)
+    if (evaporation_data.evaporative_mass_flux_model == EvaporationModelType::recoil_pressure)
+      evapor_model =
+        std::make_shared<EvaporationModelRecoilPressure>(recoil_data,
+                                                         material.boiling_temperature,
+                                                         material.sticking_constant,
+                                                         material.molar_mass,
+                                                         material.latent_heat_of_evaporation);
+    else if (evaporation_data.evaporative_mass_flux_model ==
+             EvaporationModelType::saturated_vapor_pressure)
       evapor_model = std::make_shared<EvaporationModelSaturatedVaporPressure>(
         recoil_data,
         material.boiling_temperature,
         material.sticking_constant,
         material.molar_mass,
-        material.latent_heat_of_evaporation,
-        evaporation_data.evaporative_mass_flux_scale_factor);
-    else if (evaporation_data.evaporation_model == EvaporationModelType::hardt_wondra)
+        material.latent_heat_of_evaporation);
+    else if (evaporation_data.evaporative_mass_flux_model == EvaporationModelType::hardt_wondra)
       evapor_model =
-        std::make_shared<EvaporationModelHardtWondra>(evaporation_data.coefficient,
+        std::make_shared<EvaporationModelHardtWondra>(evaporation_data.hardt_wondra.coefficient,
                                                       material.latent_heat_of_evaporation,
                                                       material.gas.density,
                                                       material.molar_mass,
@@ -148,10 +145,12 @@ namespace MeltPoolDG::Evaporation
     /*
      * Computation of DoF-Vector
      */
-    if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "continuous")
+    if (evaporation_data.interface_temperature_evaluation_type ==
+        EvaporativeMassFluxTemperatureEvaluationType::local_value)
       evapor_mass_flux_operator =
         std::make_shared<EvaporationMassFluxOperatorContinuous<dim>>(scratch_data, *evapor_model);
-    else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "interface value")
+    else if (evaporation_data.interface_temperature_evaluation_type ==
+             EvaporativeMassFluxTemperatureEvaluationType::interface_value)
       {
         evapor_mass_flux_operator =
           std::make_shared<EvaporationMassFluxOperatorInterfaceValue<dim>>(
@@ -165,7 +164,8 @@ namespace MeltPoolDG::Evaporation
             temp_dof_idx,
             evapor_mass_flux_dof_idx);
       }
-    else if (evaporation_data.formulation_evaporative_mass_flux_over_interface == "line integral")
+    else if (evaporation_data.interface_temperature_evaluation_type ==
+             EvaporativeMassFluxTemperatureEvaluationType::thickness_integral)
       evapor_mass_flux_operator =
         std::make_shared<EvaporationMassFluxOperatorThicknessIntegration<dim>>(
           scratch_data,
@@ -178,8 +178,8 @@ namespace MeltPoolDG::Evaporation
           normal_dof_idx,
           temp_dof_idx,
           evapor_mass_flux_dof_idx,
-          evaporation_data.line_integral_n_subdivisions_per_side,
-          evaporation_data.line_integral_n_subdivisions_MCA);
+          evaporation_data.thickness_integral.subdivisions_per_side,
+          evaporation_data.thickness_integral.subdivisions_MCA);
   }
 
   template <int dim>
@@ -194,7 +194,7 @@ namespace MeltPoolDG::Evaporation
   EvaporationOperation<dim>::compute_evaporative_mass_flux()
   {
     // prescribe spatially constant, potentially time-dependent evaporative mass flux
-    if (evaporation_data.evaporation_model == EvaporationModelType::constant)
+    if (evaporation_data.evaporative_mass_flux_model == EvaporationModelType::analytical)
       {
         evaporative_mass_flux = evapor_model->local_compute_evaporative_mass_flux(time);
       }

@@ -77,8 +77,12 @@
     }
   },
   "problem specific": {
-    "do recoil pressure": "false",
     "do heat transfer": "false",
     "do solidification": "false"
+  },
+  "evaporation": {
+    "recoil pressure": {
+      "enable": "false"
+    }
   }
 }

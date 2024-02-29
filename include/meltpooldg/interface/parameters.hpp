@@ -3,7 +3,6 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/evaporation/evaporation_data.hpp>
-#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/flow/surface_tension_data.hpp>
@@ -198,7 +197,6 @@ namespace MeltPoolDG
     MeltPoolData<number>                               mp;
     Flow::SurfaceTensionData<number>                   surface_tension;
     Flow::DarcyDampingData<number>                     darcy;
-    Evaporation::RecoilPressureData<number>            recoil;
     Evaporation::EvaporationData<number>               evapor;
     MaterialData<number>                               material;
     OutputData<number>                                 output;
