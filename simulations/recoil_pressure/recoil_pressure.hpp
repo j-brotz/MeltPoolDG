@@ -563,7 +563,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
        */
       if (this->parameters.laser.model != Heat::LaserModelType::analytical_temperature)
         {
-          if (evaporation_boundary && this->parameters.heat.convection_coefficient > 0)
+          if (evaporation_boundary && this->parameters.heat.convection.convection_coefficient > 0)
             this->attach_convection_boundary_condition(upper_bc, "heat_transfer");
           else
             {

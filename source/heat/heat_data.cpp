@@ -24,15 +24,6 @@ namespace MeltPoolDG::Heat
         "n subdivisions",
         n_subdivisions,
         "Set the number of subdivisions for the finite element of the level set operation.");
-      prm.add_parameter("convection coefficient",
-                        convection_coefficient,
-                        "Convection coefficient for the radiative boundary condition");
-      prm.add_parameter("emissivity",
-                        emissivity,
-                        "Emissivity for the radiative boundary condition");
-      prm.add_parameter("temperature infinity",
-                        temperature_infinity,
-                        "Infinity temperature for the conductive and radiative boundary condition");
       prm.add_parameter("enable time dependent bc",
                         enable_time_dependent_bc,
                         "Set this parameter to true to enable time-dependent bc.");
@@ -41,6 +32,27 @@ namespace MeltPoolDG::Heat
         use_volume_specific_thermal_capacity_for_phase_interpolation,
         "Perform phase interpolation via the volumetric thermal capacity (product of density "
         " and capacity) instead of interpolating density and thermal capacity individually.");
+
+      prm.enter_subsection("radiative boundary condition");
+      {
+        prm.add_parameter("emissivity", radiation.emissivity, "Emissivity.");
+        prm.add_parameter("temperature infinity",
+                          radiation.temperature_infinity,
+                          "Infinity temperature.");
+      }
+      prm.leave_subsection();
+
+      prm.enter_subsection("convective boundary condition");
+      {
+        prm.add_parameter("convection coefficient",
+                          convection.convection_coefficient,
+                          "Convection coefficient.");
+        prm.add_parameter("temperature infinity",
+                          convection.temperature_infinity,
+                          "Infinity temperature.");
+      }
+      prm.leave_subsection();
+
       // add deprecated status
       prm.declare_alias("use volume-specific thermal capacity for phase interpolation",
                         "interpolate rho times cp",

@@ -88,6 +88,9 @@ old_parameter_names = [
     ["material", "material specific enthalpy reference temperature"],
     ["material", "material two phase properties transition type"],
     ["material", "material solidification type"],
+    ["heat", "emissivity"],
+    ["heat", "convection coefficient"],
+    ["heat", "temperature infinity"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -159,6 +162,9 @@ new_parameter_names = [
     ["material", "specific enthalpy reference temperature"],
     ["material", "two phase fluid properties transition type"],
     ["material", "solid liquid properties transition type"],
+    ["heat", "radiative boundary condition", "emissivity"],
+    ["heat", "convective boundary condition", "convection coefficient"],
+    ["heat", "convective boundary condition", "temperature infinity"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]

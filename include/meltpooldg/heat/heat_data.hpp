@@ -14,14 +14,24 @@ namespace MeltPoolDG::Heat
   {
     HeatData();
 
-    int    degree                                                       = -1;
-    int    n_subdivisions                                               = 1;
-    int    n_q_points_1d                                                = -1;
-    number emissivity                                                   = 0.0;
-    number convection_coefficient                                       = 0.0;
-    number temperature_infinity                                         = 0.0;
-    bool   enable_time_dependent_bc                                     = false;
-    bool   use_volume_specific_thermal_capacity_for_phase_interpolation = false;
+    int  degree                                                       = -1;
+    int  n_subdivisions                                               = 1;
+    int  n_q_points_1d                                                = -1;
+    bool enable_time_dependent_bc                                     = false;
+    bool use_volume_specific_thermal_capacity_for_phase_interpolation = false;
+
+    struct RadiationBC
+    {
+      number emissivity           = 0.0;
+      number temperature_infinity = 0.0;
+    } radiation;
+
+    struct ConvectionBC
+    {
+      number convection_coefficient = 0.0;
+      number temperature_infinity   = 0.0;
+    } convection;
+
     NonlinearSolverData<number>                           nlsolve;
     LinearSolverData<number>                              linear_solver;
     LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
