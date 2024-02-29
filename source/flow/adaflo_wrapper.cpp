@@ -147,15 +147,15 @@ namespace MeltPoolDG::Flow
     parameters.adaflo_params.params.density_diff   = 1.0;
     parameters.adaflo_params.params.viscosity_diff = 1.0;
 
-    if (parameters.material.first.density > 0.0)
+    if (parameters.material.gas.density > 0.0)
       {
         // adaflo assumes the parameter density to be the one of heaviside == 0
-        parameters.adaflo_params.params.density = parameters.material.first.density;
+        parameters.adaflo_params.params.density = parameters.material.gas.density;
       }
-    if (parameters.material.first.viscosity > 0.0)
+    if (parameters.material.gas.dynamic_viscosity > 0.0)
       {
         // adaflo assumes the parameter viscosity to be the one of heaviside == 0
-        parameters.adaflo_params.params.viscosity = parameters.material.first.viscosity;
+        parameters.adaflo_params.params.viscosity = parameters.material.gas.dynamic_viscosity;
       }
 
     /// synchronize time stepping schemes

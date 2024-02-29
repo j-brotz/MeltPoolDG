@@ -194,16 +194,16 @@ namespace MeltPoolDG::Simulation::StefansProblemWithFlow
           const auto analytical_velocity = [&](const double &ls) -> double {
             return m_dot.local_compute_evaporative_mass_flux(generic_data_out.get_time()) *
                    (1. - ls) *
-                   (1. / this->parameters.material.first.density -
-                    1. / this->parameters.material.second.density);
+                   (1. / this->parameters.material.gas.density -
+                    1. / this->parameters.material.liquid.density);
           };
 
           const auto analytical_pressure = [&](const double &ls) -> double {
             return std::pow(m_dot.local_compute_evaporative_mass_flux(generic_data_out.get_time()),
                             2) *
                    ls *
-                   (1. / this->parameters.material.first.density -
-                    1. / this->parameters.material.second.density);
+                   (1. / this->parameters.material.gas.density -
+                    1. / this->parameters.material.liquid.density);
           };
 
           // write values to file

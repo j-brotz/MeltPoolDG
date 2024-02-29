@@ -14,8 +14,10 @@
     "time step size": "0.02"
   },
   "material": {
-    "material first viscosity": "0.001",
-    "material first density": "0.005"
+    "gas": {
+      "density": "0.005",
+      "dynamic viscosity": "0.001"
+    }
   },
   "levelset": {
     "ls do reinitialization": "true",

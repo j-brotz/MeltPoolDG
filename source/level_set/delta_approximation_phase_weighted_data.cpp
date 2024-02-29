@@ -50,20 +50,20 @@ namespace MeltPoolDG::LevelSet
     switch (interpolation_type)
       {
           case ParameterScaledInterpolationType::volume_specific_heat_capacity: {
-            gas_phase_weight   = material.first.density * material.first.capacity;
-            heavy_phase_weight = material.second.density * material.second.capacity;
+            gas_phase_weight   = material.gas.density * material.gas.specific_heat_capacity;
+            heavy_phase_weight = material.liquid.density * material.liquid.specific_heat_capacity;
             break;
           }
           case ParameterScaledInterpolationType::specific_heat_capacity_times_density: {
-            gas_phase_weight     = material.first.density;
-            heavy_phase_weight   = material.second.density;
-            gas_phase_weight_2   = material.first.capacity;
-            heavy_phase_weight_2 = material.second.capacity;
+            gas_phase_weight     = material.gas.density;
+            heavy_phase_weight   = material.liquid.density;
+            gas_phase_weight_2   = material.gas.specific_heat_capacity;
+            heavy_phase_weight_2 = material.liquid.specific_heat_capacity;
             break;
           }
           case ParameterScaledInterpolationType::density: {
-            gas_phase_weight   = material.first.density;
-            heavy_phase_weight = material.second.density;
+            gas_phase_weight   = material.gas.density;
+            heavy_phase_weight = material.liquid.density;
             break;
           }
         default:

@@ -17,15 +17,19 @@
     "surface tension coefficient": "1.8"
   },
   "material": {
-    "material boiling temperature": "3000.",
-    "material first capacity": "0",
-    "material first conductivity": "10",
-    "material first density": "74.30",
-    "material first viscosity": "0.0006",
-    "material second capacity": "965",
-    "material second conductivity": "35.95",
-    "material second density": "7074.3",
-    "material second viscosity": "0.006"
+    "gas": {
+      "thermal conductivity": "10",
+      "specific heat capacity": "0",
+      "density": "74.30",
+      "dynamic viscosity": "0.0006"
+    },
+    "liquid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7074.3",
+      "dynamic viscosity": "0.006"
+    },
+    "boiling temperature": "3000."
   },
   "recoil pressure": {
     "temperature constant": "10000.",

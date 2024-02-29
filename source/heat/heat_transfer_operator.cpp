@@ -53,25 +53,25 @@ namespace MeltPoolDG::Heat
     // TODO move these asserts to a more central place -> to material perhaps?
     const auto &material_data = material.get_data();
     // TODO move solidification bool to material?
-    AssertThrow((material_data.first.conductivity > 0.0 && material_data.first.density > 0.0) ||
+    AssertThrow((material_data.gas.thermal_conductivity > 0.0 && material_data.gas.density > 0.0) ||
                   do_solidification,
                 ExcMessage(
                   "The material's conductivity and density must be greater than zero! Abort..."));
     AssertThrow(
       !level_set_as_heaviside ||
-        (material_data.second.conductivity > 0.0 && material_data.second.density > 0.0),
+        (material_data.liquid.thermal_conductivity > 0.0 && material_data.liquid.density > 0.0),
       ExcMessage(
         "The secondary material's conductivity and density must be greater than zero! Abort..."));
     AssertThrow(
       !do_solidification ||
-        (material_data.solid.conductivity > 0.0 && material_data.solid.density > 0.0),
+        (material_data.solid.thermal_conductivity > 0.0 && material_data.solid.density > 0.0),
       ExcMessage(
         "In case of solidification the solid's conductivity and density must be greater than zero! Abort..."));
     AssertThrow(
       !do_solidification ||
-        (material_data.second.conductivity > 0.0 && material_data.second.density > 0.0),
+        (material_data.liquid.thermal_conductivity > 0.0 && material_data.liquid.density > 0.0),
       ExcMessage(
-        "In case of solidification the liquid's (material_data.second) conductivity and density must be greater than zero! Abort..."));
+        "In case of solidification the liquid's (material_data.liquid) conductivity and density must be greater than zero! Abort..."));
     AssertThrow(
       !do_solidification || material_data.liquidus_temperature > material_data.solidus_temperature,
       ExcMessage(
@@ -134,8 +134,8 @@ namespace MeltPoolDG::Heat
                       "For the phenomenological recoil pressure model, the reference temperature "
                       "for computing the specific enthalpy must be specified. Abort..."));
 
-        AssertThrow(!do_solidification ||
-                      (material_data.solid.capacity == material_data.second.capacity),
+        AssertThrow(!do_solidification || (material_data.solid.specific_heat_capacity ==
+                                           material_data.liquid.specific_heat_capacity),
                     ExcMessage("The equation for specific enthalpy for evaporative heat sink "
                                "assumes equality between the solid and liquid "
                                "phase heat capacity! Abort..."));
@@ -697,7 +697,7 @@ namespace MeltPoolDG::Heat
                 if (do_phenomenological_recoil_pressure)
                   {
                     const auto &material_data = material.get_data();
-                    specific_enthalpy         = material_data.second.capacity *
+                    specific_enthalpy         = material_data.liquid.specific_heat_capacity *
                                         (temp_vals.get_value(q_index) -
                                          material_data.specific_enthalpy_reference_temperature);
                   }
@@ -805,7 +805,7 @@ namespace MeltPoolDG::Heat
                     if (do_phenomenological_recoil_pressure)
                       {
                         const auto &material_data = material.get_data();
-                        specific_enthalpy         = material_data.second.capacity *
+                        specific_enthalpy         = material_data.liquid.specific_heat_capacity *
                                             (temp_vals_surf.get_value(q) -
                                              material_data.specific_enthalpy_reference_temperature);
                       }
@@ -883,7 +883,7 @@ namespace MeltPoolDG::Heat
                 if (do_phenomenological_recoil_pressure)
                   {
                     const auto &material_data = material.get_data();
-                    specific_enthalpy         = material_data.second.capacity *
+                    specific_enthalpy         = material_data.liquid.specific_heat_capacity *
                                         (temp_eval.get_value(q) -
                                          material_data.specific_enthalpy_reference_temperature);
                   }
@@ -1247,8 +1247,8 @@ namespace MeltPoolDG::Heat
             const auto &material_data = material.get_data();
 
             val += evapor_vals->get_value(q_index) * temp_vals.get_value(q_index) *
-                   material_data.second.capacity * ls_vals_used.get_gradient(q_index).norm() *
-                   weight;
+                   material_data.liquid.specific_heat_capacity *
+                   ls_vals_used.get_gradient(q_index).norm() * weight;
           }
 
         temp_vals.submit_value(val, q_index);
@@ -1320,10 +1320,11 @@ namespace MeltPoolDG::Heat
         const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
           ls_heaviside_val,
           temp_lin_val,
-          MaterialUpdateFlags::capacity | MaterialUpdateFlags::conductivity |
+          MaterialUpdateFlags::thermal_conductivity | MaterialUpdateFlags::specific_heat_capacity |
             MaterialUpdateFlags::density,
           q_index);
-        return {material_values.capacity * material_values.density, material_values.conductivity};
+        return {material_values.specific_heat_capacity * material_values.density,
+                material_values.thermal_conductivity};
       }
     // special interpolation of volumetric heat capacity
     else
@@ -1331,9 +1332,11 @@ namespace MeltPoolDG::Heat
         const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
           ls_heaviside_val,
           temp_lin_val,
-          MaterialUpdateFlags::volume_specific_capacity | MaterialUpdateFlags::conductivity,
+          MaterialUpdateFlags::thermal_conductivity |
+            MaterialUpdateFlags::volume_specific_heat_capacity,
           q_index);
-        return {material_values.volume_specific_capacity, material_values.conductivity};
+        return {material_values.volume_specific_heat_capacity,
+                material_values.thermal_conductivity};
       }
   }
 
@@ -1354,16 +1357,17 @@ namespace MeltPoolDG::Heat
         const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
           ls_heaviside_val,
           temp_lin_val,
-          MaterialUpdateFlags::density | MaterialUpdateFlags::capacity |
-            MaterialUpdateFlags::conductivity | MaterialUpdateFlags::d_capacity_d_T |
-            MaterialUpdateFlags::d_density_d_T | MaterialUpdateFlags::d_conductivity_d_T,
+          MaterialUpdateFlags::thermal_conductivity | MaterialUpdateFlags::specific_heat_capacity |
+            MaterialUpdateFlags::density | MaterialUpdateFlags::d_thermal_conductivity_d_T |
+            MaterialUpdateFlags::d_specific_heat_capacity_d_T | MaterialUpdateFlags::d_density_d_T,
           q_index);
 
-        return {/* rho cp */ material_values.density * material_values.capacity,
-                /* conductivity */ material_values.conductivity,
-                /* d_rho_cp_d_T */ material_values.d_capacity_d_T * material_values.density +
-                  material_values.d_density_d_T * material_values.capacity,
-                /* d_conductivity_d_T */ material_values.d_conductivity_d_T};
+        return {/* rho cp */ material_values.density * material_values.specific_heat_capacity,
+                /* conductivity */ material_values.thermal_conductivity,
+                /* d_rho_cp_d_T */ material_values.d_specific_heat_capacity_d_T *
+                    material_values.density +
+                  material_values.d_density_d_T * material_values.specific_heat_capacity,
+                /* d_conductivity_d_T */ material_values.d_thermal_conductivity_d_T};
       }
     else
       {
@@ -1371,14 +1375,15 @@ namespace MeltPoolDG::Heat
         const auto material_values = material.template compute_parameters<VectorizedArray<number>>(
           ls_heaviside_val,
           temp_lin_val,
-          MaterialUpdateFlags::volume_specific_capacity |
-            MaterialUpdateFlags::d_volume_specific_capacity_d_T |
-            MaterialUpdateFlags::conductivity | MaterialUpdateFlags::d_conductivity_d_T,
+          MaterialUpdateFlags::thermal_conductivity |
+            MaterialUpdateFlags::volume_specific_heat_capacity |
+            MaterialUpdateFlags::d_thermal_conductivity_d_T |
+            MaterialUpdateFlags::d_volume_specific_heat_capacity_d_T,
           q_index);
-        return {/* rho cp */ material_values.volume_specific_capacity,
-                /* conductivity */ material_values.conductivity,
-                /* d_rho_cp_d_T */ material_values.d_volume_specific_capacity_d_T,
-                /* d_conductivity_d_T */ material_values.d_conductivity_d_T};
+        return {/* rho cp */ material_values.volume_specific_heat_capacity,
+                /* conductivity */ material_values.thermal_conductivity,
+                /* d_rho_cp_d_T */ material_values.d_volume_specific_heat_capacity_d_T,
+                /* d_conductivity_d_T */ material_values.d_thermal_conductivity_d_T};
       }
   }
 

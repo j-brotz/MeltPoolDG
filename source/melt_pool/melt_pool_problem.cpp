@@ -587,8 +587,8 @@ namespace MeltPoolDG::MeltPool
                 if (base_in->parameters.surface_tension.time_step_limit.enable)
                   {
                     const auto dt_lim = surface_tension_operation->compute_time_step_limit(
-                      base_in->parameters.material.first.density,
-                      base_in->parameters.material.second.density);
+                      base_in->parameters.material.gas.density,
+                      base_in->parameters.material.liquid.density);
 
                     AssertThrow(time_iterator->check_time_step_limit(dt_lim),
                                 ExcMessage("The time step limit for surface tension (dt=" +
@@ -1028,11 +1028,11 @@ namespace MeltPoolDG::MeltPool
     /*
      * initialize material
      */
-    const auto material_type =
-      determine_material_type(true,
-                              problem_specific_parameters.do_solidification,
-                              base_in->parameters.material.two_phase_properties_transition_type ==
-                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
+    const auto material_type = determine_material_type(
+      true,
+      problem_specific_parameters.do_solidification,
+      base_in->parameters.material.two_phase_fluid_properties_transition_type ==
+        TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
 
     material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
 
@@ -1668,12 +1668,12 @@ namespace MeltPoolDG::MeltPool
                   material->template compute_parameters<VectorizedArray<double>>(
                     ls_values,
                     temp_values,
-                    MaterialUpdateFlags::density | MaterialUpdateFlags::viscosity,
+                    MaterialUpdateFlags::density | MaterialUpdateFlags::dynamic_viscosity,
                     q);
 
                 // set density and viscosity of the fluid solver
                 flow_operation->get_density(cell, q)   = material_values.density;
-                flow_operation->get_viscosity(cell, q) = material_values.viscosity;
+                flow_operation->get_viscosity(cell, q) = material_values.dynamic_viscosity;
 
                 // set damping coefficient of the fluid solver
                 if (darcy_operation &&
@@ -2183,7 +2183,7 @@ namespace MeltPoolDG::MeltPool
                         problem_specific_parameters.do_evaporative_velocity_jump) &&
                        temp_vals[i] >= problem_specific_parameters.amr
                                            .fraction_of_melting_point_refined_in_solid *
-                                         base_in->parameters.material.melting_point)
+                                         base_in->parameters.material.solidus_temperature)
                 {
                   cell->clear_coarsen_flag();
                   cell->set_refine_flag();

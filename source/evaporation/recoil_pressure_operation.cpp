@@ -34,7 +34,7 @@ namespace MeltPoolDG::Evaporation
     const MaterialData<number>       &material)
     : recoil_data(recoil_data)
     , boiling_temperature(material.boiling_temperature)
-    , density_coeff(1. / material.first.density - 1. / material.second.density)
+    , density_coeff(1. / material.gas.density - 1. / material.liquid.density)
     , recoil_phenomenological(recoil_data,
                               material.boiling_temperature,
                               material.molar_mass,

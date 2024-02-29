@@ -89,23 +89,29 @@
     "ls n subdivisions": "2"
   },
   "material": {
-    "material first capacity": "10",
-    "material first conductivity": "0.026",
-    "material first density": "74.30",
-    "material first viscosity": "0.0006",
-    "material liquidus temperature": "1700.0",
-    "material second capacity": "965",
-    "material second conductivity": "35.95",
-    "material second density": "7430",
-    "material second viscosity": "0.006",
-    "material solid capacity": "965",
-    "material solid conductivity": "35.95",
-    "material solid density": "7430.0",
-    "material solid viscosity": "0.6",
-    "material solidus temperature": "1500",
-    "material two phase properties transition type": "smooth",
-    "material latent heat of evaporation": "1e6",
-    "material boiling temperature": "3000."
+    "gas": {
+      "thermal conductivity": "0.026",
+      "specific heat capacity": "10",
+      "density": "74.30",
+      "dynamic viscosity": "0.0006"
+    },
+    "liquid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7430",
+      "dynamic viscosity": "0.006"
+    },
+    "solid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7430.0",
+      "dynamic viscosity": "0.6"
+    },
+    "solidus temperature": "1500",
+    "liquidus temperature": "1700.0",
+    "boiling temperature": "3000.",
+    "latent heat of evaporation": "1e6",
+    "two phase fluid properties transition type": "smooth"
   },
   "melt pool": {
     "mp boiling temperature": "3000.",

@@ -16,11 +16,15 @@
     "time step size": "0.005"
   },
   "material": {
-    "material two phase properties transition type": "consistent_with_evaporation",
-    "material first viscosity": "0.001",
-    "material second viscosity": "0.01",
-    "material first density": "0.01",
-    "material second density": "1"
+    "gas": {
+      "density": "0.01",
+      "dynamic viscosity": "0.001"
+    },
+    "liquid": {
+      "density": "1",
+      "dynamic viscosity": "0.01"
+    },
+    "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "levelset": {
     "ls do reinitialization": "true",

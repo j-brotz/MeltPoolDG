@@ -216,11 +216,11 @@ namespace MeltPoolDG::Heat
     /*
      * initialize material
      */
-    const auto material_type =
-      determine_material_type(heaviside_field_function != nullptr,
-                              problem_specific_parameters.do_solidification,
-                              base_in->parameters.material.two_phase_properties_transition_type ==
-                                TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
+    const auto material_type = determine_material_type(
+      heaviside_field_function != nullptr,
+      problem_specific_parameters.do_solidification,
+      base_in->parameters.material.two_phase_fluid_properties_transition_type ==
+        TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
     material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
     /*
      *    initialize the heat operation class

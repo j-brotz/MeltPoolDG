@@ -78,7 +78,7 @@ namespace MeltPoolDG::Heat
     const double v  = scan_speed;
     const double T0 = laser_data.analytical.ambient_temperature;
 
-    const double weight = (material.two_phase_properties_transition_type !=
+    const double weight = (material.two_phase_fluid_properties_transition_type !=
                            TwoPhaseFluidPropertiesTransitionType::sharp) ?
                             heaviside :
                             ((heaviside > 0.5) ? 1.0 : 0.0);
@@ -88,18 +88,19 @@ namespace MeltPoolDG::Heat
                                                              laser_data.absorptivity_liquid);
 
     const double conductivity = LevelSet::Tools::interpolate(weight,
-                                                             material.first.conductivity,
-                                                             material.second.conductivity);
-    const double capacity =
-      LevelSet::Tools::interpolate(weight, material.first.capacity, material.second.capacity);
+                                                             material.gas.thermal_conductivity,
+                                                             material.liquid.thermal_conductivity);
+    const double capacity     = LevelSet::Tools::interpolate(weight,
+                                                         material.gas.specific_heat_capacity,
+                                                         material.liquid.specific_heat_capacity);
 
     const double density =
-      material.two_phase_properties_transition_type ==
+      material.two_phase_fluid_properties_transition_type ==
           TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation ?
         LevelSet::Tools::interpolate_reciprocal(weight,
-                                                material.first.density,
-                                                material.second.density) :
-        LevelSet::Tools::interpolate(weight, material.first.density, material.second.density);
+                                                material.gas.density,
+                                                material.liquid.density) :
+        LevelSet::Tools::interpolate(weight, material.gas.density, material.liquid.density);
 
     const double thermal_diffusivity = conductivity / (density * capacity);
 

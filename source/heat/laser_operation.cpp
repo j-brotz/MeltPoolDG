@@ -62,7 +62,7 @@ namespace MeltPoolDG::Heat
                 laser_data,
                 intensity_profile,
                 laser_direction,
-                data_in.material.two_phase_properties_transition_type !=
+                data_in.material.two_phase_fluid_properties_transition_type !=
                   TwoPhaseFluidPropertiesTransitionType::sharp,
                 laser_data.delta_approximation_phase_weighted);
             break;

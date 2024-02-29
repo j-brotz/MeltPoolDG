@@ -47,18 +47,25 @@
     "radius": "0.06e-3"
   },
   "material": {
-    "material first capacity": "0",
-    "material first conductivity": "10",
-    "material first density": "74.30",
-    "material second conductivity": "55.563",
-    "material second capacity": "460.0",
-    "material second density": "7850.0",
-    "material solid conductivity": "17.0",
-    "material solid capacity": "700.0",
-    "material solid density": "7850.0",
-    "material solidification type": "mushy_zone",
-    "material solidus temperature": "1966.0",
-    "material liquidus temperature": "1974.0"
+    "gas": {
+      "thermal conductivity": "10",
+      "specific heat capacity": "0",
+      "density": "74.30"
+    },
+    "liquid": {
+      "thermal conductivity": "55.563",
+      "specific heat capacity": "460.0",
+      "density": "7850.0"
+    },
+    "solid": {
+      "thermal conductivity": "17.0",
+      "specific heat capacity": "700.0",
+      "density": "7850.0"
+    },
+    "solidus temperature": "1966.0",
+    "liquidus temperature": "1974.0",
+    "two phase fluid properties transition type": "sharp",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "output": {
     "paraview": {

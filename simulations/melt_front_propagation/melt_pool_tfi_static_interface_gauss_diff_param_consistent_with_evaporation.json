@@ -64,21 +64,27 @@
     "mp set velocity to zero in solid": "false"
   },
   "material": {
-    "material two phase properties transition type": "consistent_with_evaporation",
-    "material first capacity": "0",
-    "material first conductivity": "10",
-    "material first density": "100",
-    "material first viscosity": "1e-3",
-    "material second capacity": "500.0",
-    "material second conductivity": "50",
-    "material second density": "1000.0",
-    "material second viscosity": "1e-2",
-    "material solid conductivity": "20.0",
-    "material solid capacity": "700.0",
-    "material solid density": "1100.0",
-    "material solid viscosity": "1e-1",
-    "material solidus temperature": "100.0",
-    "material liquidus temperature": "200.0"
+    "gas": {
+      "thermal conductivity": "10",
+      "specific heat capacity": "0",
+      "density": "100",
+      "dynamic viscosity": "1e-3"
+    },
+    "liquid": {
+      "thermal conductivity": "50",
+      "specific heat capacity": "500.0",
+      "density": "1000.0",
+      "dynamic viscosity": "1e-2"
+    },
+    "solid": {
+      "thermal conductivity": "20.0",
+      "specific heat capacity": "700.0",
+      "density": "1100.0",
+      "dynamic viscosity": "1e-1"
+    },
+    "solidus temperature": "100.0",
+    "liquidus temperature": "200.0",
+    "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "levelset": {
     "ls do reinitialization": "true",

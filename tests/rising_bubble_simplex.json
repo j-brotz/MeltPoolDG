@@ -18,10 +18,15 @@
     "surface tension coefficient": "0.0245"
   },
   "material": {
-    "material first density": "1",
-    "material second density": "0.1",
-    "material first viscosity": "0.01",
-    "material second viscosity": "0.001"
+    "gas": {
+      "density": "1",
+      "dynamic viscosity": "0.01"
+    },
+    "liquid": {
+      "density": "0.1",
+      "dynamic viscosity": "0.001"
+    },
+    "two phase fluid properties transition type": "sharp"
   },
   "levelset": {
     "ls do reinitialization": "true",

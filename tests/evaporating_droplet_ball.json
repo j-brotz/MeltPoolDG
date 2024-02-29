@@ -23,7 +23,7 @@
   },
   "material": {
     "material template": "Ti64",
-    "material two phase properties transition type": "consistent_with_evaporation"
+    "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "levelset": {
     "ls do reinitialization": "true",

@@ -16,13 +16,17 @@
     "max n steps": "5"
   },
   "material": {
-    "material first viscosity": "1e-3",
-    "material first density": "1.0",
-    "material second viscosity": "1e-3",
-    "material second density": "1000.0",
-    "material first conductivity": "1e-3",
-    "material second conductivity": "1e-3",
-    "material two phase properties transition type": "consistent_with_evaporation"
+    "gas": {
+      "thermal conductivity": "1e-3",
+      "density": "1.0",
+      "dynamic viscosity": "1e-3"
+    },
+    "liquid": {
+      "thermal conductivity": "1e-3",
+      "density": "1000.0",
+      "dynamic viscosity": "1e-3"
+    },
+    "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "reinitialization": {
     "reinit constant epsilon": "0.02",

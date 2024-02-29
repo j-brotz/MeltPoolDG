@@ -67,6 +67,27 @@ old_parameter_names = [
     ["paraview", "paraview n patches"],
     ["recoil pressure", "recoil pressure constant"],
     ["recoil pressure", "recoil temperature constant"],
+    ["material", "material first conductivity"],
+    ["material", "material first capacity"],
+    ["material", "material first density"],
+    ["material", "material first viscosity"],
+    ["material", "material second conductivity"],
+    ["material", "material second capacity"],
+    ["material", "material second density"],
+    ["material", "material second viscosity"],
+    ["material", "material solid conductivity"],
+    ["material", "material solid capacity"],
+    ["material", "material solid density"],
+    ["material", "material solid viscosity"],
+    ["material", "material solidus temperature"],
+    ["material", "material liquidus temperature"],
+    ["material", "material boiling temperature"],
+    ["material", "material latent heat of evaporation"],
+    ["material", "material molar mass"],
+    ["material", "material sticking constant"],
+    ["material", "material specific enthalpy reference temperature"],
+    ["material", "material two phase properties transition type"],
+    ["material", "material solidification type"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -117,6 +138,27 @@ new_parameter_names = [
     ["output", "paraview", "n patches"],
     ["recoil pressure", "pressure coefficient"],
     ["recoil pressure", "temperature constant"],
+    ["material", "gas", "thermal conductivity"],
+    ["material", "gas", "specific heat capacity"],
+    ["material", "gas", "density"],
+    ["material", "gas", "dynamic viscosity"],
+    ["material", "liquid", "thermal conductivity"],
+    ["material", "liquid", "specific heat capacity"],
+    ["material", "liquid", "density"],
+    ["material", "liquid", "dynamic viscosity"],
+    ["material", "solid", "thermal conductivity"],
+    ["material", "solid", "specific heat capacity"],
+    ["material", "solid", "density"],
+    ["material", "solid", "dynamic viscosity"],
+    ["material", "solidus temperature"],
+    ["material", "liquidus temperature"],
+    ["material", "boiling temperature"],
+    ["material", "latent heat of evaporation"],
+    ["material", "molar mass"],
+    ["material", "sticking constant"],
+    ["material", "specific enthalpy reference temperature"],
+    ["material", "two phase fluid properties transition type"],
+    ["material", "solid liquid properties transition type"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]
@@ -142,6 +184,7 @@ rename_parameter_values = [
 delete_parameter_names = [
     # ... add parameter names to be deleted
     ["heat", "interpolate k"],
+    ["material", "material melting point"],
 ]
 
 ##############################################################################

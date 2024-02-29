@@ -25,9 +25,11 @@
     }
   },
   "material": {
-    "material first conductivity": "1.0",
-    "material first capacity": "1.0",
-    "material first density": "1.0"
+    "gas": {
+      "thermal conductivity": "1.0",
+      "specific heat capacity": "1.0",
+      "density": "1.0"
+    }
   },
   "output": {
     "paraview": {

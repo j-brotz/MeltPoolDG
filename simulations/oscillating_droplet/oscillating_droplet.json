@@ -21,11 +21,15 @@
     "max n steps": "2000"
   },
   "material": {
-    "material first density": "7430e-3",
-    "material first viscosity": "6e-6",
-    "material second density": "7430",
-    "material second viscosity": "6e-3",
-    "material two phase properties transition type": "smooth"
+    "gas": {
+      "density": "7430e-3",
+      "dynamic viscosity": "6e-6"
+    },
+    "liquid": {
+      "density": "7430",
+      "dynamic viscosity": "6e-3"
+    },
+    "two phase fluid properties transition type": "smooth"
   },
   "surface tension": {
     "surface tension coefficient": "1.8"

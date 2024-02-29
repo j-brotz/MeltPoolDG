@@ -16,8 +16,10 @@
     "max n steps": "100"
   },
   "material": {
-    "material first viscosity": "1e-3",
-    "material first density": "1.0"
+    "gas": {
+      "density": "1.0",
+      "dynamic viscosity": "1e-3"
+    }
   },
   "simulation specific": {
     "velocity": "1e-3"

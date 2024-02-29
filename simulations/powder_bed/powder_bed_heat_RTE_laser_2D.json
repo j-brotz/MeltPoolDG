@@ -35,8 +35,10 @@
   },
   "material": {
     "material template": "Ti64",
-    "material two phase properties transition type": "smooth",
-    "material first density": "4.087"
+    "gas": {
+      "density": "4.087"
+    },
+    "two phase fluid properties transition type": "smooth"
   },
   "reinitialization": {
     "reinit scale factor epsilon": "1.5"

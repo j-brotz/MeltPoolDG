@@ -51,23 +51,29 @@
     "reference temperature": "1700"
   },
   "material": {
-    "material first capacity": "0",
-    "material first conductivity": "10",
-    "material first density": "74.30",
-    "material first viscosity": "0.0006",
-    "material second capacity": "965",
-    "material second conductivity": "35.95",
-    "material second density": "7430.0",
-    "material second viscosity": "0.006",
-    "material solidus temperature": "1200",
-    "material liquidus temperature": "1700.0",
-    "material solid capacity": "965",
-    "material solid conductivity": "35.95",
-    "material solid density": "7430.0",
-    "material boiling temperature": "3000.",
-    "material solid viscosity": "0.6",
-    "material solidification type": "mushy_zone",
-    "material melting point": "1700"
+    "gas": {
+      "thermal conductivity": "10",
+      "specific heat capacity": "0",
+      "density": "74.30",
+      "dynamic viscosity": "0.0006"
+    },
+    "liquid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7430.0",
+      "dynamic viscosity": "0.006"
+    },
+    "solid": {
+      "thermal conductivity": "35.95",
+      "specific heat capacity": "965",
+      "density": "7430.0",
+      "dynamic viscosity": "0.6"
+    },
+    "solidus temperature": "1200",
+    "liquidus temperature": "1700.0",
+    "boiling temperature": "3000.",
+    "two phase fluid properties transition type": "sharp",
+    "solid liquid properties transition type": "mushy_zone"
   },
   "levelset": {
     "ls do reinitialization": "true"

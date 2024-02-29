@@ -1,6 +1,64 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-02-28
+- Refactor material data
+```diff
+{
+  "material": {
+-    "material first ": "conductivity",
+-    "material first ": "capacity",
+-    "material first ": "density",
+-    "material first ": "viscosity",
++    "gas": {
++      "thermal conductivity": "",
++      "specific heat capacity": "",
++      "density": "",
++      "dynamic viscosity": "",
++    }
+-    "material second ": "conductivity",
+-    "material second ": "capacity",
+-    "material second ": "density",
+-    "material second ": "viscosity",
++    "liquid": {
++      "thermal conductivity": "",
++      "specific heat capacity": "",
++      "density": "",
++      "dynamic viscosity": "",
++    }
+-    "material solid ": "conductivity",
+-    "material solid ": "capacity",
+-    "material solid ": "density",
+-    "material solid ": "viscosity",
++    "solid": {
++      "thermal conductivity": "",
++      "specific heat capacity": "",
++      "density": "",
++      "dynamic viscosity": "",
++    }
+-    "material solidus temperature": "",
+-    "material melting point": "",
++    "solidus temperature": "",
+-    "material liquidus temperature": "",
++    "liquidus temperature": "",
+-    "material boiling temperature": "",
++    "boiling temperature": "",
+-    "material latent heat of evaporation": "",
++    "latent heat of evaporation": "",
+-    "material molar mass": "",
++    "molar mass": "",
+-    "material sticking constant": "",
++    "sticking constant": "",
+-    "material specific enthalpy reference temperature": "",
++    "specific enthalpy reference temperature": "",
+-    "material two phase properties transition type": "",
++    "two phase fluid properties transition type": "",
+-    "material solidification type": "",
++    "solid liquid properties transition type": "",
+  }
+}
+```
+
 ## 2024-02-27
 - Refactor recoil pressure data
 ```diff
@@ -24,8 +82,6 @@ All notable changes of the input parameters will be documented in this file.
     }
 }
 ```
-
-
 
 ## 2024-02-26
 - Refactor output data

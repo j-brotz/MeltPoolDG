@@ -13,14 +13,19 @@
     "degree": "2"
   },
   "material": {
-    "material first capacity": "1e-4",
-    "material first conductivity": "2.4e-6",
-    "material first density": "500",
-    "material first viscosity": "0.024",
-    "material second capacity": "5e-5",
-    "material second conductivity": "1.2e-6",
-    "material second density": "250",
-    "material second viscosity": "0.012"
+    "gas": {
+      "thermal conductivity": "2.4e-6",
+      "specific heat capacity": "1e-4",
+      "density": "500",
+      "dynamic viscosity": "0.024"
+    },
+    "liquid": {
+      "thermal conductivity": "1.2e-6",
+      "specific heat capacity": "5e-5",
+      "density": "250",
+      "dynamic viscosity": "0.012"
+    },
+    "two phase fluid properties transition type": "sharp"
   },
   "time stepping": {
     "start time": "0.0",

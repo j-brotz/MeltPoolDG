@@ -57,8 +57,8 @@ namespace MeltPoolDG
         : SimulationBase<dim>(parameter_file, mpi_communicator)
         , lambda(2. * numbers::PI *
                  std::sqrt(3. * this->parameters.surface_tension.surface_tension_coefficient /
-                           (9.81 * (this->parameters.material.second.density -
-                                    this->parameters.material.first.density))))
+                           (9.81 * (this->parameters.material.liquid.density -
+                                    this->parameters.material.gas.density))))
       {}
 
       void

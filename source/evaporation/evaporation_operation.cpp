@@ -47,7 +47,7 @@ namespace MeltPoolDG::Evaporation
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
   {
-    AssertThrow(material.first.density > 0.0 && material.second.density > 0.0,
+    AssertThrow(material.gas.density > 0.0 && material.liquid.density > 0.0,
                 ExcMessage("The materials' densities must be greater than zero! Abort..."));
 
     if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::diffuse)
@@ -63,9 +63,9 @@ namespace MeltPoolDG::Evaporation
         evapor_vel_dof_idx,
         evapor_mass_flux_dof_idx,
         tolerance_normal_vector,
-        material.first.density,
-        material.second.density,
-        material.two_phase_properties_transition_type);
+        material.gas.density,
+        material.liquid.density,
+        material.two_phase_fluid_properties_transition_type);
     else if (evaporation_data.formulation_source_term_continuity == InterfaceForceType::sharp)
       evapor_source_terms_operator =
         std::make_shared<EvaporationSourceTermsSharp<dim>>(scratch_data,
@@ -79,8 +79,8 @@ namespace MeltPoolDG::Evaporation
                                                            evapor_vel_dof_idx,
                                                            evapor_mass_flux_dof_idx,
                                                            tolerance_normal_vector,
-                                                           material.first.density,
-                                                           material.second.density);
+                                                           material.gas.density,
+                                                           material.liquid.density);
     else
       Assert(false, ExcMessage("Specified evaporation source term is not implemented!"));
 
@@ -142,7 +142,7 @@ namespace MeltPoolDG::Evaporation
       evapor_model =
         std::make_shared<EvaporationModelHardtWondra>(evaporation_data.coefficient,
                                                       material.latent_heat_of_evaporation,
-                                                      material.first.density,
+                                                      material.gas.density,
                                                       material.molar_mass,
                                                       material.boiling_temperature);
     /*

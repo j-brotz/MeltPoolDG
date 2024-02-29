@@ -14,13 +14,17 @@
     "time step size": "0.0005"
   },
   "material": {
-    "material two phase properties transition type": "consistent_with_evaporation",
-    "material first density": "0.01",
-    "material first viscosity": "1e-3",
-    "material first conductivity": "1e-16",
-    "material second density": "1.0",
-    "material second viscosity": "1e-3",
-    "material second conductivity": "1e-16"
+    "gas": {
+      "thermal conductivity": "1e-16",
+      "density": "0.01",
+      "dynamic viscosity": "1e-3"
+    },
+    "liquid": {
+      "thermal conductivity": "1e-16",
+      "density": "1.0",
+      "dynamic viscosity": "1e-3"
+    },
+    "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "Navier-Stokes": {
     "adaflo": {
