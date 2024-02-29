@@ -951,11 +951,12 @@ namespace MeltPoolDG::Heat
                         dQ_dT.get_normal_vector(q_index);
               }
             if (do_radiation)
-              temp -= data.emissivity * PhysicalConstants::stefan_boltzmann_constant *
+              temp -= data.radiation.emissivity * PhysicalConstants::stefan_boltzmann_constant *
                       (Utilities::fixed_power<4>(temp_vals) -
-                       Utilities::fixed_power<4>(data.temperature_infinity));
+                       Utilities::fixed_power<4>(data.radiation.temperature_infinity));
             if (do_convection)
-              temp -= data.convection_coefficient * (temp_vals - data.temperature_infinity);
+              temp -= data.convection.convection_coefficient *
+                      (temp_vals - data.convection.temperature_infinity);
 
             dQ_dT.submit_value(temp, q_index);
           }
@@ -1296,9 +1297,9 @@ namespace MeltPoolDG::Heat
         VectorizedArray<double> temp = 0;
 
         if (do_convection)
-          temp += data.convection_coefficient * inc_temp_vals_at_q;
+          temp += data.convection.convection_coefficient * inc_temp_vals_at_q;
         if (do_radiation)
-          temp += 4. * data.emissivity * PhysicalConstants::stefan_boltzmann_constant *
+          temp += 4. * data.radiation.emissivity * PhysicalConstants::stefan_boltzmann_constant *
                   pow<double>(temp_vals.get_value(q_index), 3) * inc_temp_vals_at_q;
 
         dQ_dT.submit_value(temp, q_index);

@@ -1,6 +1,26 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-02-29
+- Introduce substructures for heat radiation and convection BC
+```diff
+{
+  "heat": {
+-    "emissivity": "",
+-    "convection coefficient": "",
+-    "temperature infinity": "",
++    "radiative boundary condition": {
++      "emissivity": "",
++      "temperature infinity": "",
++    },
++    "convective boundary condition": {
++      "convection coefficient": "",
++      "temperature infinity": "",
++    }
+  }
+}
+```
+
 ## 2024-02-28
 - Refactor material data
 ```diff
@@ -82,6 +102,8 @@ All notable changes of the input parameters will be documented in this file.
     }
 }
 ```
+
+
 
 ## 2024-02-26
 - Refactor output data

@@ -221,10 +221,10 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       const types::boundary_id left_bc  = 1;
       const types::boundary_id right_bc = 2;
 
-      if (this->parameters.heat.emissivity > 0.0)
+      if (this->parameters.heat.radiation.emissivity > 0.0)
         this->attach_radiation_boundary_condition(right_bc, "heat_transfer");
 
-      if (this->parameters.heat.convection_coefficient > 0.0)
+      if (this->parameters.heat.convection.convection_coefficient > 0.0)
         this->attach_convection_boundary_condition(right_bc, "heat_transfer");
 
       if constexpr ((dim == 1) || (dim == 2))
@@ -253,8 +253,8 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       if (do_solidification)
         this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(1960.0, 1980.0),
                                        "heat_transfer");
-      else if (this->parameters.heat.emissivity > 0.0 ||
-               this->parameters.heat.convection_coefficient > 0.0)
+      else if (this->parameters.heat.radiation.emissivity > 0.0 ||
+               this->parameters.heat.convection.convection_coefficient > 0.0)
         this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(1000),
                                        "heat_transfer");
       else

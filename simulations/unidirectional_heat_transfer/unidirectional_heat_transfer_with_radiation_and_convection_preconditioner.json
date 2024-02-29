@@ -20,11 +20,16 @@
       "rel tolerance": "1e-12",
       "preconditioner type": "DiagonalReduced"
     },
-    "convection coefficient": "25",
-    "emissivity": "0.98",
-    "temperature infinity": "300.0",
     "nlsolve": {
       "residual tolerance": "1e-8"
+    },
+    "radiative boundary condition": {
+      "emissivity": "0.98",
+      "temperature infinity": "300.0"
+    },
+    "convective boundary condition": {
+      "convection coefficient": "25",
+      "temperature infinity": "300.0"
     }
   },
   "material": {

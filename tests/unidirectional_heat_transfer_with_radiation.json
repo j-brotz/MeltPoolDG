@@ -18,10 +18,15 @@
     "linear solver": {
       "rel tolerance": "1e-12"
     },
-    "emissivity": "0.98",
-    "temperature infinity": "300.0",
     "nlsolve": {
       "residual tolerance": "5e-9"
+    },
+    "radiative boundary condition": {
+      "emissivity": "0.98",
+      "temperature infinity": "300.0"
+    },
+    "convective boundary condition": {
+      "temperature infinity": "300.0"
     }
   },
   "material": {
