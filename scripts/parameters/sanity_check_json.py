@@ -81,7 +81,6 @@ old_parameter_names = [
     ["material", "material solid viscosity"],
     ["material", "material solidus temperature"],
     ["material", "material liquidus temperature"],
-    ["material", "material melting point"],
     ["material", "material boiling temperature"],
     ["material", "material latent heat of evaporation"],
     ["material", "material molar mass"],
@@ -153,7 +152,6 @@ new_parameter_names = [
     ["material", "solid", "dynamic viscosity"],
     ["material", "solidus temperature"],
     ["material", "liquidus temperature"],
-    ["material", "melting point"],
     ["material", "boiling temperature"],
     ["material", "latent heat of evaporation"],
     ["material", "molar mass"],
@@ -186,6 +184,7 @@ rename_parameter_values = [
 delete_parameter_names = [
     # ... add parameter names to be deleted
     ["heat", "interpolate k"],
+    ["material", "material melting point"],
 ]
 
 ##############################################################################

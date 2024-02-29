@@ -570,7 +570,7 @@ namespace MeltPoolDG
         (data.liquidus_temperature - temperature) * inv_mushy_interval, 0.0, 1.0);
     else if (data.solid_liquid_properties_transition_type ==
              SolidLiquidPropertiesTransitionType::sharp)
-      return temperature < data.melting_point ? 1.0 : 0.0;
+      return temperature < data.solidus_temperature ? 1.0 : 0.0;
     Assert(false, dealii::ExcNotImplemented());
     return 0.0;
   }
@@ -589,7 +589,7 @@ namespace MeltPoolDG
     else if (data.solid_liquid_properties_transition_type ==
              SolidLiquidPropertiesTransitionType::sharp)
       return compare_and_apply_mask<SIMDComparison::less_than>(temperature,
-                                                               data.melting_point,
+                                                               data.solidus_temperature,
                                                                1.0,
                                                                0.0);
     Assert(false, dealii::ExcNotImplemented());

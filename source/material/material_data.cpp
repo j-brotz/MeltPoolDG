@@ -63,9 +63,8 @@ namespace MeltPoolDG
       liquid.add_parameters(prm, "liquid");
       solid.add_parameters(prm, "solid");
 
-      prm.add_parameter("solidus temperature", solidus_temperature, "Solidus temperature");
-      prm.add_parameter("liquidus temperature", liquidus_temperature, "Liquidus temperature");
-      prm.add_parameter("melting point", melting_point, "Melting point (K)");
+      prm.add_parameter("solidus temperature", solidus_temperature, "Solidus temperature (K).");
+      prm.add_parameter("liquidus temperature", liquidus_temperature, "Liquidus temperature (K).");
       prm.add_parameter("boiling temperature", boiling_temperature, "Boiling temperature (K).");
       prm.add_parameter("latent heat of evaporation",
                         latent_heat_of_evaporation,
@@ -76,13 +75,19 @@ namespace MeltPoolDG
                         specific_enthalpy_reference_temperature,
                         "Reference temperature of the specific enthalpy");
 
-      prm.add_parameter("two phase fluid properties transition type",
-                        two_phase_fluid_properties_transition_type,
-                        "Choose how to interpolate the properties over the interface.");
+      prm.add_parameter(
+        "two phase fluid properties transition type",
+        two_phase_fluid_properties_transition_type,
+        "Choose how to interpolate the properties over the interface. "
+        "sharp: properties jump at heaviside = 0.5; "
+        "smooth: properties are smeared between the phases proportional to the heaviside (default); "
+        "consistent_with_evaporation: same as \"smooth\", but the density is interpolated proportional by the harmonic mean.");
       prm.add_parameter(
         "solid liquid properties transition type",
         solid_liquid_properties_transition_type,
-        "Choose how to interpolate the properties over between the liquid and the solid phase.");
+        "Choose how to interpolate the properties over between the liquid and the solid phase. "
+        "mushy_zone: solid and liquid properties are interpolated between the solidus and liquidus temperature (default); "
+        "sharp: the solid and liquid properties jump at the melting point, which is set via the solidus temperature.");
     }
     prm.leave_subsection();
   }
@@ -106,17 +111,14 @@ namespace MeltPoolDG
     data.liquid.density                = data.solid.density                = 7430.0; //  kg / m³
     data.liquid.dynamic_viscosity                                          = 6.0e-3; //  kg / (m s)
     data.solid.dynamic_viscosity                                           = 0.6;    //  kg / (m s)
-    data.solidus_temperature = data.melting_point                          = 1700.0; //  K
     // clang-format on
+    data.solidus_temperature                     = 1700.0;  //  K
     data.liquidus_temperature                    = 2100.0;  //  K
     data.boiling_temperature                     = 3000.0;  //  K
     data.latent_heat_of_evaporation              = 6.0e6;   //  J / kg
     data.molar_mass                              = 5.22e-2; //  kg / mol
     data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 663.731; //  K
-
-    data.solid_liquid_properties_transition_type = SolidLiquidPropertiesTransitionType::mushy_zone;
-    data.two_phase_fluid_properties_transition_type = TwoPhaseFluidPropertiesTransitionType::smooth;
     return data;
   }
 
@@ -139,17 +141,14 @@ namespace MeltPoolDG
     data.liquid.density                = data.solid.density                = 4087.0; //  kg / m³
     data.liquid.dynamic_viscosity                                          = 0.0035; //  kg / (m s)
     data.solid.dynamic_viscosity                                           = 0.35;   //  kg / (m s)
-    data.solidus_temperature = data.melting_point                          = 1933;   //  K
     // clang-format on
+    data.solidus_temperature                     = 1933;    //  K
     data.liquidus_temperature                    = 2200.0;  //  K
     data.boiling_temperature                     = 3133.0;  //  K
     data.latent_heat_of_evaporation              = 8.84e6;  //  J / kg
     data.molar_mass                              = 4.78e-2; //  kg / mol
     data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 538.0;   //  K
-
-    data.solid_liquid_properties_transition_type = SolidLiquidPropertiesTransitionType::mushy_zone;
-    data.two_phase_fluid_properties_transition_type = TwoPhaseFluidPropertiesTransitionType::smooth;
     return data;
   }
 

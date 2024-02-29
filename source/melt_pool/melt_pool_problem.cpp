@@ -2182,7 +2182,7 @@ namespace MeltPoolDG::MeltPool
                         problem_specific_parameters.do_evaporative_velocity_jump) &&
                        temp_vals[i] >= problem_specific_parameters.amr
                                            .fraction_of_melting_point_refined_in_solid *
-                                         base_in->parameters.material.melting_point)
+                                         base_in->parameters.material.solidus_temperature)
                 {
                   cell->clear_coarsen_flag();
                   cell->set_refine_flag();

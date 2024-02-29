@@ -54,7 +54,6 @@
     "gas": {
       "specific heat capacity": "0"
     },
-    "melting point": "1700",
     "two phase fluid properties transition type": "sharp"
   },
   "levelset": {

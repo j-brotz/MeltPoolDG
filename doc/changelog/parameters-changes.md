@@ -37,11 +37,10 @@ All notable changes of the input parameters will be documented in this file.
 +      "dynamic viscosity": "",
 +    }
 -    "material solidus temperature": "",
+-    "material melting point": "",
 +    "solidus temperature": "",
 -    "material liquidus temperature": "",
 +    "liquidus temperature": "",
--    "material melting point": "",
-+    "melting point": "",
 -    "material boiling temperature": "",
 +    "boiling temperature": "",
 -    "material latent heat of evaporation": "",
