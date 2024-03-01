@@ -23,6 +23,7 @@
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
+#include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 
 #include <memory>
 #include <string>
@@ -275,17 +276,13 @@ namespace MeltPoolDG::Simulation::RecoilPressure
           for (int d = 0; d < dim; d++)
             subdivisions[d] *= cell_repetitions[d];
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                   subdivisions,
-                                                                   bottom_left,
-                                                                   top_right);
+          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+            *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
         }
       else
         {
-          GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                    cell_repetitions,
-                                                    bottom_left,
-                                                    top_right);
+          GridGenerator::subdivided_hyper_rectangle(
+            *this->triangulation, cell_repetitions, bottom_left, top_right, true /*colorize*/);
         }
 
       // create slice for postprocessing
@@ -419,66 +416,17 @@ namespace MeltPoolDG::Simulation::RecoilPressure
        *
        * Note: For 1D we consider the constraints along the y-axis, i.e. lower_bc and upper_bc.
        */
-      const types::boundary_id lower_bc = 1;
-      const types::boundary_id upper_bc = 2;
-      const types::boundary_id left_bc  = 3;
-      const types::boundary_id right_bc = 4;
-      const types::boundary_id front_bc = 5;
-      const types::boundary_id back_bc  = 6;
 
-      const auto double_eq = [](const double a, const double b) { return std::abs(a - b) < 1e-10; };
-
-      if (dim == 1)
-        {
-          for (const auto &cell : this->triangulation->cell_iterators())
-            for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (double_eq(face->center()[0], domain_y_min))
-                    face->set_boundary_id(lower_bc);
-                  else if (double_eq(face->center()[0], domain_y_max))
-                    face->set_boundary_id(upper_bc);
-                }
-        }
-      else if ((dim == 2) || (dim == 3))
-        {
-          for (const auto &cell : this->triangulation->cell_iterators())
-            for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (double_eq(face->center()[0], domain_x_min))
-                    face->set_boundary_id(left_bc);
-                  else if (double_eq(face->center()[0], domain_x_max))
-                    face->set_boundary_id(right_bc);
-                  else if (dim == 2)
-                    {
-                      if (double_eq(face->center()[1], domain_y_min))
-                        face->set_boundary_id(lower_bc);
-                      else if (double_eq(face->center()[1], domain_y_max))
-                        face->set_boundary_id(upper_bc);
-                    }
-                  else // dim == 3
-                    {
-                      if (double_eq(face->center()[1], domain_x_min))
-                        face->set_boundary_id(back_bc);
-                      else if (double_eq(face->center()[1], domain_x_max))
-                        face->set_boundary_id(front_bc);
-                      else if (double_eq(face->center()[2], domain_y_min))
-                        face->set_boundary_id(lower_bc);
-                      else if (double_eq(face->center()[2], domain_y_max))
-                        face->set_boundary_id(upper_bc);
-                    }
-                }
-        }
-      else
-        AssertThrow(false, ExcNotImplemented());
+      // face numbering according to the deal.II colorize flag
+      const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
+        get_colorized_rectangle_boundary_ids<dim>();
 
       if (periodic_boundary)
         {
           if (dim >= 2)
-            this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+            this->attach_periodic_boundary_condition(left_bc, right_bc, 0 /*direction*/);
           if (dim == 3)
-            this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
+            this->attach_periodic_boundary_condition(front_bc, back_bc, 1 /*direction*/);
         }
 
       /*
@@ -502,8 +450,11 @@ namespace MeltPoolDG::Simulation::RecoilPressure
                 "navier_stokes_u");
               if (!periodic_boundary)
                 {
-                  this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-                  this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+                  if (dim == 2)
+                    {
+                      this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
+                      this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+                    }
                   if (dim == 3)
                     {
                       this->attach_symmetry_boundary_condition(front_bc, "navier_stokes_u");
@@ -519,8 +470,11 @@ namespace MeltPoolDG::Simulation::RecoilPressure
               add_slip_or_no_slip_boundary(upper_bc);
               if (!periodic_boundary)
                 {
-                  add_slip_or_no_slip_boundary(left_bc);
-                  add_slip_or_no_slip_boundary(right_bc);
+                  if (dim == 2)
+                    {
+                      add_slip_or_no_slip_boundary(left_bc);
+                      add_slip_or_no_slip_boundary(right_bc);
+                    }
                   if (dim == 3)
                     {
                       add_slip_or_no_slip_boundary(front_bc);
@@ -556,7 +510,6 @@ namespace MeltPoolDG::Simulation::RecoilPressure
                 }
 
               this->attach_dirichlet_boundary_condition(upper_bc, T_1, "heat_transfer");
-
               this->attach_dirichlet_boundary_condition(lower_bc, T_2, "heat_transfer");
             }
         }
