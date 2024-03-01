@@ -34,7 +34,7 @@ namespace MeltPoolDG::RadiativeTransport
 
     const RadiativeTransportData<double> rte_data;
 
-    const Tensor<1, dim, double> &laser_direction;
+    const Tensor<1, dim, double> laser_direction;
 
     const VectorType &heaviside;
 
@@ -71,8 +71,7 @@ namespace MeltPoolDG::RadiativeTransport
                       const DirichletBoundaryConditions<dim> &bc_data,
                       const PeriodicBoundaryConditions<dim>  &pbc,
                       const unsigned int                      rte_dof_idx_in,
-                      const unsigned int                      rte_dof_hanging_nodes_dof_idx_in,
-                      const bool                              set_inhomogeneities);
+                      const unsigned int                      rte_dof_hanging_nodes_dof_idx_in);
 
     void
     solve();

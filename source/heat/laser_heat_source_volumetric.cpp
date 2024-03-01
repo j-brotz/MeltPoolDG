@@ -13,7 +13,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   LaserHeatSourceVolumetric<dim>::LaserHeatSourceVolumetric(
-    std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile_in)
+    const std::shared_ptr<const Function<dim, double>> intensity_profile_in)
     : intensity_profile(intensity_profile_in)
   {}
 
@@ -50,7 +50,7 @@ namespace MeltPoolDG::Heat
 
             for (const auto q : heat_source_eval.quadrature_point_indices())
               heat_source_vector[local_dof_indices[q]] =
-                intensity_profile->compute_intensity(heat_source_eval.quadrature_point(q));
+                intensity_profile->value(heat_source_eval.quadrature_point(q));
           }
       }
 

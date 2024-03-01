@@ -232,8 +232,7 @@ namespace MeltPoolDG::RadiativeTransport
                                      base_in->get_dirichlet_bc("intensity"),
                                      base_in->get_periodic_bc(),
                                      rte_dof_idx,
-                                     rte_hanging_nodes_dof_idx,
-                                     true /*set_inhomogeneities*/);
+                                     rte_hanging_nodes_dof_idx);
     /*
      *  create the matrix-free object
      */

@@ -1,5 +1,7 @@
 #include <meltpooldg/interface/boundary_conditions.hpp>
 
+#include <algorithm>
+
 namespace MeltPoolDG
 {
   template <int dim>

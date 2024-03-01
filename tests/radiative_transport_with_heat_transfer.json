@@ -12,7 +12,8 @@
     "model": "RTE",
     "intensity profile": "Gauss",
     "power": "0.1",
-    "radius": "0.5"
+    "radius": "0.5",
+    "RTE boundary id": "1"
   },
   "rte": {
     "rte verbosity level": "1",
@@ -47,7 +48,8 @@
   },
   "output": {
     "paraview": {
-      "enable": "false"
+      "enable": "false",
+      "print boundary id": "false"
     }
   }
 }

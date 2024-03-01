@@ -4,13 +4,14 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
+#include <deal.II/base/types.h>
 
 #include <meltpooldg/interface/exceptions.hpp>
 
 #include <map>
 #include <memory>
-#include <string>
 
 namespace MeltPoolDG
 {

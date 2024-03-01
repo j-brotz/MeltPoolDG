@@ -16,7 +16,6 @@
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
 #include <meltpooldg/heat/laser_heat_source_volumetric.hpp>
-#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
@@ -45,17 +44,15 @@ namespace MeltPoolDG::Heat
     // Laser parameters
     const LaserData<double> &laser_data;
 
-    // current laser position defined as spot center of the laser beam
-    Point<dim> laser_position;
-    // current unit laser direction vector
-    Tensor<1, dim> laser_direction;
     // current time
     double current_time;
     // current intensity of the laser (between 0 and 1)
     double laser_intensity;
     double current_power;
+    // current laser position defined as spot center of the laser beam
+    Point<dim> laser_position;
 
-    std::shared_ptr<LaserIntensityProfileBase<dim, double>> intensity_profile;
+    std::shared_ptr<Function<dim, double>> intensity_profile;
 
     // Requested laser model
     std::unique_ptr<LaserHeatSourceVolumetric<dim>>      laser_heat_source_operation_volumetric;
@@ -63,12 +60,13 @@ namespace MeltPoolDG::Heat
 
     // RTE
     std::unique_ptr<RadiativeTransport::RadiativeTransportOperation<dim>> rte_operation;
-    DoFHandler<dim>                                                       rte_dof_handler;
-    AffineConstraints<double>                                             rte_constraints_dirichlet;
-    AffineConstraints<double> rte_hanging_node_constraints;
-    unsigned int              rte_dof_idx;
-    unsigned int              rte_hanging_nodes_dof_idx;
-    unsigned int              rte_quad_idx;
+    std::unique_ptr<DoFHandler<dim>>                                      rte_dof_handler;
+    std::unique_ptr<AffineConstraints<double>>                            rte_constraints_dirichlet;
+    std::unique_ptr<AffineConstraints<double>>        rte_hanging_node_constraints;
+    std::unique_ptr<DirichletBoundaryConditions<dim>> rte_dirichlet_boundary_condition;
+    unsigned int                                      rte_dof_idx;
+    unsigned int                                      rte_hanging_nodes_dof_idx;
+    unsigned int                                      rte_quad_idx;
 
   public:
     LaserOperation(ScratchData<dim>         &scratch_data_in,

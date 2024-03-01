@@ -59,7 +59,8 @@
     "model": "RTE",
     "intensity profile": "Gauss",
     "power": "156",
-    "radius": "120e-6"
+    "radius": "120e-6",
+    "RTE boundary id": "2"
   },
   "rte": {
     "rte verbosity level": "1",

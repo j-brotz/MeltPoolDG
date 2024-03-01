@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/function.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -60,38 +61,31 @@ namespace MeltPoolDG::Heat
   }
 
   template <int dim, typename number>
-  class LaserIntensityProfileBase
+  class UniformIntensityProfile : public Function<dim, number>
   {
   public:
-    virtual number
-    compute_intensity(const Point<dim, number> &p) const = 0;
-
-    virtual void
-    update_power(const number power_in) = 0;
-  };
-
-  template <int dim, typename number>
-  class UniformIntensityProfile : public LaserIntensityProfileBase<dim, number>
-  {
-  public:
-    UniformIntensityProfile(const number power_in)
-      : power(power_in)
+    UniformIntensityProfile(const std::function<number(void)> &power_updater_in)
+      : Function<dim, number>(1)
+      , power_updater(power_updater_in)
     {}
 
     inline number
-    compute_intensity(const Point<dim, number> &) const final
+    value(const Point<dim> &, const unsigned int /*component*/) const final
     {
       return power;
     }
 
     void
-    update_power(const number power_in) final
+    set_time(const number time) final
     {
-      power = power_in;
+      (void)time;
+      power = power_updater();
     }
 
   private:
     number power;
+
+    const std::function<number(void)> power_updater;
   };
 
   /**
@@ -103,42 +97,73 @@ namespace MeltPoolDG::Heat
    * @param laser_position and the @param laser_direction.
    */
   template <int dim, typename number>
-  class GaussProjectionIntensityProfile : public LaserIntensityProfileBase<dim, number>
+  class GaussProjectionIntensityProfile : public Function<dim, number>
   {
   public:
+    struct State
+    {
+      const number             power;
+      const Point<dim, number> position;
+    };
+
     GaussProjectionIntensityProfile(const number                  power,
                                     const number                  radius_in,
                                     const Point<dim, number>     &laser_position_in,
                                     const Tensor<1, dim, number> &laser_direction_in)
-      : radius(radius_in)
+      : Function<dim, number>(1)
+      , radius(radius_in)
       , laser_position(laser_position_in)
       , laser_direction(laser_direction_in)
+      , updater()
     {
       AssertThrow(radius > 0.0,
                   ExcMessage("The laser beam radius must be greater than zero! Abort.."));
+      update_peak_power_density(power);
+    }
 
-      update_power(power);
+    GaussProjectionIntensityProfile(const number                            radius_in,
+                                    const Tensor<1, dim, number>           &laser_direction_in,
+                                    const std::function<const State(void)> &updater_in)
+      : Function<dim, number>(1)
+      , radius(radius_in)
+      , laser_direction(laser_direction_in)
+      , updater(updater_in)
+    {
+      AssertThrow(radius > 0.0,
+                  ExcMessage("The laser beam radius must be greater than zero! Abort.."));
     }
 
     inline number
-    compute_intensity(const Point<dim, number> &p) const final
+    value(const Point<dim> &p, const unsigned int /*component*/) const final
     {
       const number s = compute_distance_to_line(p, laser_position, laser_direction) / radius;
       return peak_power_density * std::exp(-2. * s * s);
     }
 
     void
-    update_power(const number power) final
+    set_time(const number time) final
+    {
+      (void)time;
+      if (not updater)
+        return;
+      const auto state = updater();
+      update_peak_power_density(state.power);
+      laser_position = state.position;
+    }
+
+  private:
+    void
+    update_peak_power_density(const number power)
     {
       peak_power_density = power / (radius * radius * numbers::PI_2);
     }
 
+    const number                 radius;
+    Point<dim, number>           laser_position;
+    const Tensor<1, dim, number> laser_direction;
+    number                       peak_power_density;
 
-  private:
-    const number                  radius;
-    const Point<dim, number>     &laser_position;
-    const Tensor<1, dim, number> &laser_direction;
-    number                        peak_power_density;
+    const std::function<const State(void)> updater;
   };
 
   /**
@@ -149,38 +174,51 @@ namespace MeltPoolDG::Heat
    * where the distance is between the point @param p and the laser beam center defined by the @param laser_position
    */
   template <int dim, typename number>
-  class GaussVolumetricIntensityProfile : public LaserIntensityProfileBase<dim, number>
+  class GaussVolumetricIntensityProfile : public Function<dim, number>
   {
   public:
-    GaussVolumetricIntensityProfile(const number              power,
-                                    const number              radius_in,
-                                    const Point<dim, number> &laser_position_in)
-      : radius(radius_in)
-      , laser_position(laser_position_in)
+    struct State
+    {
+      const number             power;
+      const Point<dim, number> position;
+    };
+
+    GaussVolumetricIntensityProfile(const number                            radius_in,
+                                    const std::function<const State(void)> &updater_in)
+      : Function<dim, number>(1)
+      , radius(radius_in)
+      , updater(updater_in)
     {
       AssertThrow(radius > 0.0,
                   ExcMessage("The laser beam radius must be greater than zero! Abort.."));
-
-      update_power(power);
     }
 
     inline number
-    compute_intensity(const Point<dim, number> &p) const final
+    value(const Point<dim> &p, const unsigned int /*component*/) const final
     {
       const number s = p.distance(laser_position) / radius;
       return peak_power_density * std::exp(-2. * s * s);
     }
 
     void
-    update_power(const number power) final
+    set_time(const number time) final
     {
-      peak_power_density = power / Utilities::fixed_power<3>(radius * std::sqrt(numbers::PI_2));
+      (void)time;
+      if (not updater)
+        return;
+      const auto state = updater();
+      peak_power_density =
+        state.power / Utilities::fixed_power<3>(radius * std::sqrt(numbers::PI_2));
+      laser_position = state.position;
     }
 
+
   private:
-    const number              radius;
-    const Point<dim, number> &laser_position;
-    number                    peak_power_density;
+    const number       radius;
+    Point<dim, number> laser_position;
+    number             peak_power_density;
+
+    const std::function<const State(void)> updater;
   };
 
   /**
@@ -204,28 +242,33 @@ namespace MeltPoolDG::Heat
    * The laser beam is direction is assumed to be in the negative dim-1 direction.
    */
   template <int dim, typename number>
-  class GusarovIntensityProfile : public LaserIntensityProfileBase<dim, number>
+  class GusarovIntensityProfile : public Function<dim, number>
   {
   public:
-    GusarovIntensityProfile(const LaserData<number>::GusarovData &data_in,
-                            const number                          power_in,
-                            const number                          radius_in,
-                            const Point<dim, number>             &laser_position_in)
-      : data(data_in)
-      , power(power_in)
+    struct State
+    {
+      const number             power;
+      const Point<dim, number> position;
+    };
+
+    GusarovIntensityProfile(const LaserData<number>::GusarovData   &data_in,
+                            const number                            radius_in,
+                            const std::function<const State(void)> &updater_in)
+      : Function<dim, number>(1)
+      , data(data_in)
       , radius(radius_in)
-      , laser_position(laser_position_in)
       , lambda(data.extinction_coefficient * data.layer_thickness)
       , a(std::sqrt(1. - data.reflectivity))
       , D((1. - a) * (1. - a - data.reflectivity * (1. + a)) * std::exp(-2. * a * lambda) -
           (1. + a) * (1. + a - data.reflectivity * (1. - a)) * std::exp(2. * a * lambda))
+      , updater(updater_in)
     {
       AssertThrow(radius > 0.0,
                   ExcMessage("The laser beam radius must be greater than zero! Abort.."));
     }
 
     inline number
-    compute_intensity(const Point<dim, number> &p) const final
+    value(const Point<dim> &p, const unsigned int /*component*/) const final
     {
       const number distance = p.distance(laser_position);
       const number z        = -(p[dim - 1] - laser_position[dim - 1]);
@@ -237,9 +280,14 @@ namespace MeltPoolDG::Heat
     }
 
     void
-    update_power(const number power_in) final
+    set_time(const number time) final
     {
-      power = power_in;
+      (void)time;
+      if (not updater)
+        return;
+      const auto state = updater();
+      power            = state.power;
+      laser_position   = state.position;
     }
 
   private:
@@ -282,10 +330,12 @@ namespace MeltPoolDG::Heat
     const LaserData<number>::GusarovData &data;
     number                                power;
     const number                          radius;
-    const Point<dim, number>             &laser_position;
+    Point<dim, number>                    laser_position;
     const number                          lambda;
     const number                          a;
     const number                          D;
+
+    const std::function<const State(void)> updater;
   };
 
 } // namespace MeltPoolDG::Heat

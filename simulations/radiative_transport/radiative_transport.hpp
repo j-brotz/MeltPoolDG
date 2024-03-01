@@ -15,7 +15,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools_geometry.h>
 
-#include <meltpooldg/heat/laser_utilities.hpp>
+#include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -38,31 +38,6 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
   static constexpr double x_min = -1;
   static constexpr double x_max = 1;
-
-  // boundary condition for RTE
-  template <int dim>
-  class IntensityBoundary : public Function<dim>
-  {
-  public:
-    IntensityBoundary(const double                  power_in,
-                      const double                  radius_in,
-                      const Point<dim, double>     &laser_position_in,
-                      const Tensor<1, dim, double> &laser_direction_in)
-      : Function<dim>(1)
-      , direction(laser_direction_in)
-      , gauss(power_in, radius_in, laser_position_in, direction)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int) const override
-    {
-      return gauss.compute_intensity(p);
-    }
-
-  private:
-    const Tensor<1, dim, double>                             direction;
-    const Heat::GaussProjectionIntensityProfile<dim, double> gauss;
-  };
 
   template <int dim>
   class LevelSetHeaviside : public Function<dim>
@@ -218,7 +193,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
       this->attach_dirichlet_boundary_condition(
         upper_bc,
-        std::make_shared<IntensityBoundary<dim>>(
+        std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
           power_in, radius_in, center_in, -dealii::Point<dim>::unit_vector(dim - 1)),
         "intensity");
     }

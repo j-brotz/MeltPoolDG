@@ -1,10 +1,10 @@
 #pragma once
 
+#include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 
 #include <memory>
@@ -23,7 +23,7 @@ namespace MeltPoolDG::Heat
 
   public:
     LaserHeatSourceVolumetric(
-      std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile_in);
+      const std::shared_ptr<const Function<dim, double>> intensity_profile_in);
 
     /**
      * Compute a DoF vector of the volumetric heat source.
@@ -35,6 +35,6 @@ namespace MeltPoolDG::Heat
                                    const bool              zero_out = true) const;
 
   private:
-    std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile;
+    const std::shared_ptr<const Function<dim, double>> intensity_profile;
   };
 } // namespace MeltPoolDG::Heat

@@ -21,7 +21,6 @@
 #include <deal.II/grid/manifold_lib.h>
 
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 
@@ -66,31 +65,6 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     const double T_initial_top;
     const double y_min;
     const double grad_T;
-  };
-
-  // boundary condition for RTE
-  template <int dim>
-  class IntensityBoundary : public Function<dim>
-  {
-  public:
-    IntensityBoundary(const double                  power_in,
-                      const double                  radius_in,
-                      const Point<dim, double>     &laser_position_in,
-                      const Tensor<1, dim, double> &laser_direction_in)
-      : Function<dim>(1)
-      , direction(laser_direction_in)
-      , gauss(power_in, radius_in, laser_position_in, direction)
-    {}
-
-    double
-    value(const Point<dim> &p, const unsigned int) const override
-    {
-      return gauss.compute_intensity(p);
-    }
-
-  private:
-    const Tensor<1, dim, double>                             direction;
-    const Heat::GaussProjectionIntensityProfile<dim, double> gauss;
   };
 
   template <int dim>
@@ -446,7 +420,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
        * Note: For 1D we consider the constraints along the y-axis, i.e. lower_bc and upper_bc.
        */
       const types::boundary_id lower_bc = 1;
-      const types::boundary_id upper_bc = 2;
+      const types::boundary_id upper_bc = 2; // use colorize?
       const types::boundary_id left_bc  = 3;
       const types::boundary_id right_bc = 4;
       const types::boundary_id front_bc = 5;
@@ -586,19 +560,6 @@ namespace MeltPoolDG::Simulation::RecoilPressure
               this->attach_dirichlet_boundary_condition(lower_bc, T_2, "heat_transfer");
             }
         }
-
-      /*
-       * BC for RTE
-       */
-      if (this->parameters.laser.model == Heat::LaserModelType::RTE)
-        this->attach_dirichlet_boundary_condition(
-          upper_bc,
-          std::make_shared<IntensityBoundary<dim>>(
-            this->parameters.laser.power,
-            this->parameters.laser.radius,
-            this->parameters.laser.template get_starting_position<dim>(),
-            this->parameters.laser.template get_direction<dim>()),
-          "intensity");
 
       if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);

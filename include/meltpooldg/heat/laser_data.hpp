@@ -2,6 +2,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
 
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
@@ -72,6 +73,10 @@ namespace MeltPoolDG::Heat
     get_direction() const;
 
     number radius = 0.0;
+
+    // this is a workaround, until there is a dealii::Patterns::Unsigned_Integer that does not
+    // assert on invalid_unsigned_int
+    types::boundary_id rte_boundary_id = (unsigned int)(std::numeric_limits<int>::max());
 
     LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
 

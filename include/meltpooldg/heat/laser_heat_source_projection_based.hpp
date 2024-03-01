@@ -1,13 +1,12 @@
 #pragma once
 
+#include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
-#include <deal.II/base/tensor.h>
 
 #include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
 
 #include <meltpooldg/heat/laser_data.hpp>
-#include <meltpooldg/heat/laser_utilities.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted.hpp>
 #include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
@@ -29,21 +28,11 @@ namespace MeltPoolDG::Heat
 
   public:
     LaserHeatSourceProjectionBased(
-      const LaserData<double>                                      &laser_data_in,
-      std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile_in,
-      const Tensor<1, dim, double>                                 &laser_direction_in,
-      const bool variable_properties_over_interface_in,
+      const LaserData<double>                           &laser_data_in,
+      const std::shared_ptr<const Function<dim, double>> intensity_profile_in,
+      const bool                                         variable_properties_over_interface_in,
       const LevelSet::DeltaApproximationPhaseWeightedData<double>
         &delta_approximation_phase_weighted_data);
-
-    /**
-     * Compute a DoF vector of the volumetric heat source.
-     */
-    void
-    compute_volumetric_heat_source(VectorType             &heat_source_vector,
-                                   const ScratchData<dim> &scratch_data,
-                                   const unsigned int      temp_dof_idx,
-                                   const bool              zero_out = true) const;
 
     /**
      * Compute a DoF vector of the interfacial heat source.
@@ -115,9 +104,9 @@ namespace MeltPoolDG::Heat
 
     const LaserData<double> &laser_data;
 
-    std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile;
+    const std::shared_ptr<const Function<dim, double>> intensity_profile;
 
-    const Tensor<1, dim, double> &laser_direction;
+    const Tensor<1, dim, double> laser_direction;
 
     const bool variable_properties_over_interface;
 
