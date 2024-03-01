@@ -26,18 +26,15 @@
 #include <utility>
 
 /**
- * TODO: documentation
+ * This simulation is mainly ment to test the functionality of RTE
  */
 
 namespace MeltPoolDG::Simulation::RadiativeTransport
 {
-  BETTER_ENUM(InterfaceCase, char, straight, single_powder_particle, powderbed)
+  BETTER_ENUM(InterfaceCase, char, straight, single_powder_particle)
 
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
-
-  static constexpr double x_min = -1;
-  static constexpr double x_max = 1;
 
   template <int dim>
   class LevelSetHeaviside : public Function<dim>
@@ -57,9 +54,15 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     {
       if (interface_case == InterfaceCase::straight)
         {
-          const auto y = p[dim - 1];
+          const auto y            = p[dim - 1];
+          const auto current_time = this->get_time();
           return UtilityFunctions::CharacteristicFunctions::heaviside(
-            level + 0.5 * x_max * ((this->get_time() < 10.5) ? this->get_time() : 10) / 10 - y,
+            level +
+              interface_case_info.first *
+                ((current_time < interface_case_info.second) ? current_time :
+                                                               interface_case_info.second) /
+                interface_case_info.second -
+              y,
             eps); // 0 side of H() stands for gas, 1 side of H() stands for liquid
         }
       else if (interface_case == InterfaceCase::single_powder_particle)
@@ -80,11 +83,6 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           double                                       power_particle_value =
             UtilityFunctions::CharacteristicFunctions::heaviside(-distance_sphere.value(p), eps);
           return std::max(straight_value, power_particle_value);
-        }
-      else if (interface_case == InterfaceCase::powderbed)
-        {
-          AssertThrow(false, ExcNotImplemented());
-          return 0.0;
         }
       else
         {
@@ -109,26 +107,54 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
   public:
     RadiativeTransportSimulation(std::string parameter_file, const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
-    {
-      center_in[dim - 1] = x_max;
-    }
+      , cell_repetitions(dim, 1)
+    {}
 
     void
     add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
     {
       prm.enter_subsection("simulation specific parameters");
       {
-        prm.add_parameter("source center", center_in, "location of the heat source center");
-        prm.add_parameter("source radius", radius_in, "heat source radius");
-        prm.add_parameter("interface case",
-                          interface_case,
-                          "kind of interface for this simulation");
+        prm.add_parameter("domain x min",
+                          domain_x_min,
+                          "minimum x coordinate of simulation domain");
+        prm.add_parameter("domain y min",
+                          domain_y_min,
+                          "minimum y coordinate of simulation domain");
+        prm.add_parameter("domain x max",
+                          domain_x_max,
+                          "maximum x coordinate of simulation domain");
+        prm.add_parameter("domain y max",
+                          domain_y_max,
+                          "maximum y coordinate of simulation domain");
+        prm.add_parameter("cell repetitions",
+                          cell_repetitions,
+                          "cell repetitions per dim applied before global refinement or amr");
+
         prm.add_parameter("power",
                           power_in,
                           "Sets the intensity scale of the laser source. Is a scalar value");
-        prm.add_parameter("power_particle radius",
+        prm.add_parameter("source center", center_in, "location of the heat source center");
+        prm.add_parameter("source radius", radius_in, "heat source radius");
+
+        prm.add_parameter(
+          "interface case",
+          interface_case,
+          "kind of interface for this simulation. "
+          "straight: straigt interface that moves upwards; "
+          "single_powder_particle: a single hanging powder particle above a static straight interface; "
+          "powder bed: ");
+
+        prm.add_parameter("straight interface upward speed",
+                          speed,
+                          "straight interface upward speed");
+        prm.add_parameter("straight interface movement end time",
+                          end_time,
+                          "end time of the straight interface movement");
+
+        prm.add_parameter("power particle radius",
                           powder_particle_radius,
-                          "hanging power_particle radius");
+                          "hanging power particle radius");
         prm.add_parameter("powder particle offset",
                           powder_particle_offset,
                           "hanging power_particle offset from [dim-1] = 0 plane");
@@ -139,38 +165,55 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     void
     create_spatial_discretization() override
     {
-      if constexpr (dim == 1)
+      if (this->parameters.base.do_simplex || dim == 1)
         {
-          this->triangulation =
-            std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
-          // create mesh
-          const Point<1> left(x_min);
-          const Point<1> right(x_max);
-          GridGenerator::hyper_rectangle(*this->triangulation, left, right);
-          this->triangulation->refine_global(this->parameters.base.global_refinements);
-        }
-      else if constexpr (dim == 2)
-        {
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
-          // create mesh
-          const Point<2> left(x_min, x_min);
-          const Point<2> right(x_max, x_max);
-          GridGenerator::hyper_rectangle(*this->triangulation, left, right);
-          this->triangulation->refine_global(this->parameters.base.global_refinements);
-        }
-      else if constexpr (dim == 3)
-        {
-          const Point<3> lower_left(x_min, x_min, x_min);
-          const Point<3> upper_right(x_max, x_max, x_max);
-          this->triangulation =
-            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
-          GridGenerator::hyper_rectangle(*this->triangulation, lower_left, upper_right);
-          this->triangulation->refine_global(this->parameters.base.global_refinements);
+#ifdef DEAL_II_WITH_METIS
+          this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
+            this->mpi_communicator,
+            (Triangulation<dim>::MeshSmoothing::none),
+            true,
+            parallel::shared::Triangulation<dim>::Settings::partition_metis);
+#else
+          AssertThrow(
+            false,
+            ExcMessage(
+              "Missing Metis support of the deal.II installation. "
+              "Configure deal.II with -D DEAL_II_WITH_METIS='ON' to execute this example."));
+#endif
         }
       else
         {
-          AssertThrow(false, ExcImpossibleInDim(dim));
+          this->triangulation =
+            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        }
+
+      const Point<dim> bottom_left =
+        (dim == 1) ? Point<dim>(domain_y_min) :
+        (dim == 2) ? Point<dim>(domain_x_min, domain_y_min) :
+                     Point<dim>(domain_x_min, domain_x_min, domain_y_min);
+      const Point<dim> top_right =
+        (dim == 1) ? Point<dim>(domain_y_max) :
+        (dim == 2) ? Point<dim>(domain_x_max, domain_y_max) :
+                     Point<dim>(domain_x_max, domain_x_max, domain_y_max);
+      if (this->parameters.base.do_simplex)
+        {
+          std::vector<unsigned int> subdivisions(
+            dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
+          subdivisions[dim - 1] *= 2;
+          for (int d = 0; d < dim; d++)
+            subdivisions[d] *= cell_repetitions[d];
+
+          GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
+                                                                   subdivisions,
+                                                                   bottom_left,
+                                                                   top_right);
+        }
+      else
+        {
+          GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
+                                                    cell_repetitions,
+                                                    bottom_left,
+                                                    top_right);
         }
     }
 
@@ -187,7 +230,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
         for (auto &face : cell->face_iterators())
           if (face->at_boundary())
             {
-              if (face->center()[dim - 1] == x_max)
+              if (face->center()[dim - 1] == domain_y_max)
                 face->set_boundary_id(upper_bc);
             }
 
@@ -199,6 +242,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           "intensity");
       else
         this->parameters.laser.rte_boundary_id = upper_bc;
+
+      if (!this->parameters.base.do_simplex)
+        this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
     void
@@ -206,12 +252,11 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     {
       // pass simulation-specific parameters to the simulation class.
       // Done after json parsing, is relevant for heaviside
-      if (interface_case == InterfaceCase::single_powder_particle)
-        {
-          // TBD
-          interface_case_info_in =
-            std::pair<double, double>(powder_particle_offset, powder_particle_radius);
-        }
+      if (interface_case == InterfaceCase::straight)
+        interface_case_info = std::pair<double, double>(speed, end_time);
+      else if (interface_case == InterfaceCase::single_powder_particle)
+        interface_case_info =
+          std::pair<double, double>(powder_particle_offset, powder_particle_radius);
 
       // determine the interface epsilon parameter from minimum mesh size
       double       thickness_scale_factor = 2.5;
@@ -219,8 +264,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                                   std::sqrt(dim) * thickness_scale_factor;
 
       // attach the prescribed heaviside function field
-      this->attach_initial_condition(std::make_shared<LevelSetHeaviside<dim>>(
-                                       interface_case, interface_case_info_in, epsilon_cell),
+      this->attach_initial_condition(std::make_shared<LevelSetHeaviside<dim>>(interface_case,
+                                                                              interface_case_info,
+                                                                              epsilon_cell),
                                      "prescribed_heaviside");
 
       if (this->parameters.base.problem_name == ProblemType::radiative_transport)
@@ -237,12 +283,22 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     }
 
   private:
-    InterfaceCase             interface_case = InterfaceCase::straight;
-    std::pair<double, double> interface_case_info_in;
+    double                    domain_x_min = -1.;
+    double                    domain_x_max = 1.;
+    double                    domain_y_min = -1.;
+    double                    domain_y_max = 1.;
+    std::vector<unsigned int> cell_repetitions;
+    std::pair<double, double> interface_case_info;
+    double                    power_in = 0.1;
     Point<dim>                center_in;
-    double                    radius_in              = x_max / 5.;
-    double                    powder_particle_offset = x_max / 4.;
-    double                    powder_particle_radius = x_max / 6.;
-    double                    power_in               = 0.1;
+    double                    radius_in = domain_x_max / 5.;
+
+    InterfaceCase interface_case = InterfaceCase::straight;
+
+    double speed    = domain_x_max / 2;
+    double end_time = 10.0;
+
+    double powder_particle_offset = domain_x_max / 4.;
+    double powder_particle_radius = domain_x_max / 6.;
   };
 } // namespace MeltPoolDG::Simulation::RadiativeTransport

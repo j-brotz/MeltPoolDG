@@ -174,6 +174,7 @@ namespace MeltPoolDG::Heat
     if (base_in->parameters.laser.power > 0.0)
       {
         laser_operation = std::make_shared<LaserOperation<dim>>(*scratch_data,
+                                                                base_in->get_periodic_bc(),
                                                                 base_in->parameters,
                                                                 &level_set_as_heaviside,
                                                                 level_set_dof_idx);
@@ -339,12 +340,7 @@ namespace MeltPoolDG::Heat
                                                          temp_hanging_nodes_dof_idx);
 
     if (laser_operation)
-      laser_operation->setup_constraints(
-        *scratch_data,
-        [&](const std::string &operation_name) -> const DirichletBoundaryConditions<dim> & {
-          return base_in->get_dirichlet_bc(operation_name);
-        },
-        base_in->get_periodic_bc());
+      laser_operation->setup_constraints();
 
     scratch_data->build(
       true /*enable_boundary_faces*/,

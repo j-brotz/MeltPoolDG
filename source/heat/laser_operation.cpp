@@ -11,14 +11,22 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim>
-  LaserOperation<dim>::LaserOperation(ScratchData<dim>         &scratch_data_in,
-                                      const Parameters<double> &data_in,
-                                      const VectorType         *heaviside_in,
-                                      const unsigned int        hs_dof_idx_in)
+  LaserOperation<dim>::LaserOperation(ScratchData<dim>                      &scratch_data_in,
+                                      const PeriodicBoundaryConditions<dim> &periodic_bc_in,
+                                      const Parameters<double>              &data_in,
+                                      const VectorType                      *heaviside_in,
+                                      const unsigned int                     hs_dof_idx_in)
     : scratch_data(scratch_data_in)
+    , periodic_bc(periodic_bc_in)
     , laser_data(data_in.laser)
     , laser_position(laser_data.get_starting_position<dim>())
   {
+    AssertThrow(
+      laser_data.power_end_time > laser_data.power_start_time,
+      ExcMessage(
+        "For the temporal ramp distribution of the laser power,"
+        " the parameter laser power end time must be larger than laser power start time."));
+
     if (laser_data.model == LaserModelType::analytical_temperature)
       return;
 
@@ -150,15 +158,11 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  LaserOperation<dim>::setup_constraints(
-    ScratchData<dim> &mutable_scratch_data,
-    const std::function<const DirichletBoundaryConditions<dim> &(const std::string &)>
-                                          &dirichlet_bc,
-    const PeriodicBoundaryConditions<dim> &periodic_bc)
+  LaserOperation<dim>::setup_constraints()
   {
     if (laser_data.model == LaserModelType::RTE)
       {
-        (void)dirichlet_bc;
+        auto mutable_scratch_data = const_cast<ScratchData<dim> &>(scratch_data);
         rte_operation->setup_constraints(mutable_scratch_data,
                                          *rte_dirichlet_boundary_condition,
                                          periodic_bc,
@@ -230,17 +234,25 @@ namespace MeltPoolDG::Heat
   void
   LaserOperation<dim>::move_laser(const double dt)
   {
+    bool update_model = false;
+
     // 0) update current time
     current_time += dt;
     // 1) compute the current center of the laser beam
-    if (laser_data.do_move)
-      laser_position[0] += laser_data.scan_speed * dt;
+    if (laser_data.do_move && laser_data.scan_speed != 0.0)
+      {
+        laser_position[0] += laser_data.scan_speed * dt;
+        update_model = true;
+      }
     // 2) compute intensity
-    compute_laser_intensity();
-
-    // 3) update laser intensity
-    if (intensity_profile)
-      intensity_profile->set_time(current_time);
+    update_model = update_model || compute_laser_intensity();
+    // 3) update underlying laser model if required
+    if (update_model)
+      {
+        if (intensity_profile)
+          intensity_profile->set_time(current_time);
+        setup_constraints();
+      }
 
     print();
   }
@@ -260,16 +272,12 @@ namespace MeltPoolDG::Heat
   }
 
   template <int dim>
-  void
+  bool
   LaserOperation<dim>::compute_laser_intensity()
   {
+    const double previous_intensity = laser_intensity;
     if (laser_data.power_over_time == "ramp")
       {
-        AssertThrow(
-          laser_data.power_end_time > laser_data.power_start_time,
-          ExcMessage(
-            "For the temporal ramp distribution of the laser power,"
-            " the parameter laser power end time must be larger than laser power start time."));
         laser_intensity = (current_time - laser_data.power_start_time) /
                           (laser_data.power_end_time - laser_data.power_start_time);
         laser_intensity = std::min(std::max(0.0, laser_intensity), 1.0);
@@ -287,6 +295,8 @@ namespace MeltPoolDG::Heat
       AssertThrow(false, ExcNotImplemented());
 
     current_power = laser_data.power * laser_intensity;
+
+    return previous_intensity != laser_intensity;
   }
 
   /* TODO: add function parameters*/

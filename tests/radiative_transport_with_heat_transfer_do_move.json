@@ -5,14 +5,17 @@
     "degree": "1",
     "dimension": "2",
     "do print parameters": "false",
-    "global refinements": "6",
+    "global refinements": "5",
     "verbosity level": "0"
   },
   "laser": {
     "model": "RTE",
     "intensity profile": "Gauss",
     "power": "0.1",
-    "radius": "0.5"
+    "radius": "0.25",
+    "starting position": "-0.5,0",
+    "do move": "true",
+    "scan speed": "1.0"
   },
   "rte": {
     "rte verbosity level": "1",
@@ -23,9 +26,13 @@
     }
   },
   "simulation specific parameters": {
-    "power": "0.1",
-    "source radius": "0.5",
-    "interface case": "straight"
+    "domain x min": "-1.0",
+    "domain x max": "1.0",
+    "domain y min": "-0.5",
+    "domain y max": "0.5",
+    "cell repetitions": "2,1",
+    "interface case": "straight",
+    "straight interface upward speed": "0.0"
   },
   "material": {
     "gas": {
@@ -40,11 +47,10 @@
     }
   },
   "time stepping": {
-    "max n steps": "4"
+    "end time": "1.0",
+    "time step size": "0.1"
   },
-  "output": {
-    "paraview": {
-      "enable": "false"
-    }
+  "reinitialization": {
+    "reinit scale factor epsilon": "6.0"
   }
 }

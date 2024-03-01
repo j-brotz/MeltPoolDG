@@ -39,7 +39,8 @@ namespace MeltPoolDG::Heat
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim>                &scratch_data;
+    const PeriodicBoundaryConditions<dim> &periodic_bc;
 
     // Laser parameters
     const LaserData<double> &laser_data;
@@ -69,20 +70,17 @@ namespace MeltPoolDG::Heat
     unsigned int                                      rte_quad_idx;
 
   public:
-    LaserOperation(ScratchData<dim>         &scratch_data_in,
-                   const Parameters<double> &data_in,
-                   const VectorType         *heaviside_in  = nullptr,
-                   const unsigned int        hs_dof_idx_in = 0);
+    LaserOperation(ScratchData<dim>                      &scratch_data_in,
+                   const PeriodicBoundaryConditions<dim> &periodic_bc_in,
+                   const Parameters<double>              &data_in,
+                   const VectorType                      *heaviside_in  = nullptr,
+                   const unsigned int                     hs_dof_idx_in = 0);
 
     void
     distribute_dofs(const BaseData<double> &base_data);
 
     void
-    setup_constraints(
-      ScratchData<dim> &mutable_scratch_data,
-      const std::function<const DirichletBoundaryConditions<dim> &(const std::string &)>
-                                            &dirichlet_bc,
-      const PeriodicBoundaryConditions<dim> &periodic_bc);
+    setup_constraints();
 
     void
     distribute_constraints();
@@ -157,8 +155,10 @@ namespace MeltPoolDG::Heat
     /**
      * Compute the time-dependent laser intensity (between 0 and 1) from the user-provided
      * parameters.
+     *
+     * Return true if there is a change
      */
-    void
+    bool
     compute_laser_intensity();
   };
 } // namespace MeltPoolDG::Heat
