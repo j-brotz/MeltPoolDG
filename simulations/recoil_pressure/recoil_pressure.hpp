@@ -420,7 +420,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
        * Note: For 1D we consider the constraints along the y-axis, i.e. lower_bc and upper_bc.
        */
       const types::boundary_id lower_bc = 1;
-      const types::boundary_id upper_bc = 2; // use colorize?
+      const types::boundary_id upper_bc = 2;
       const types::boundary_id left_bc  = 3;
       const types::boundary_id right_bc = 4;
       const types::boundary_id front_bc = 5;
@@ -560,6 +560,9 @@ namespace MeltPoolDG::Simulation::RecoilPressure
               this->attach_dirichlet_boundary_condition(lower_bc, T_2, "heat_transfer");
             }
         }
+      // BC for RTE laser
+      if (this->parameters.laser.model == Heat::LaserModelType::RTE)
+        this->parameters.laser.rte_boundary_id = upper_bc;
 
       if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);

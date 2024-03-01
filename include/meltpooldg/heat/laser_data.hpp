@@ -1,4 +1,5 @@
 #pragma once
+
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
@@ -74,9 +75,8 @@ namespace MeltPoolDG::Heat
 
     number radius = 0.0;
 
-    // this is a workaround, until there is a dealii::Patterns::Unsigned_Integer that does not
-    // assert on invalid_unsigned_int
-    types::boundary_id rte_boundary_id = (unsigned int)(std::numeric_limits<int>::max());
+    // if model = RTE, this value must be set by the simulation
+    types::boundary_id rte_boundary_id = numbers::invalid_boundary_id;
 
     LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
 

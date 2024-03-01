@@ -63,13 +63,6 @@ namespace MeltPoolDG::Heat
       prm.add_parameter("scan speed", scan_speed, "Scan speed of the laser");
       prm.add_parameter("direction", direction, "Laser beam direction.");
       prm.add_parameter("radius", radius, "Laser beam radius.");
-
-      prm.add_parameter(
-        "RTE boundary id",
-        rte_boundary_id,
-        "Manually set the RTE boundary id. "
-        "By default, the value will be set to the top boundary according to GridGenerator::hyper_rectangle(colorize = true)");
-
       /*
        *   Gusarov
        */
@@ -148,12 +141,6 @@ namespace MeltPoolDG::Heat
     else
       delta_approximation_phase_weighted.set_parameters(
         material, LevelSet::ParameterScaledInterpolationType::specific_heat_capacity_times_density);
-
-    // set the RTE boundary to the top boundary according to GridGenerator::hyper_rectangle(colorize
-    // = true)
-    if (rte_boundary_id ==
-        /*TODO invalid_unsigned_int*/ (unsigned int)(std::numeric_limits<int>::max()))
-      rte_boundary_id = dim == 1 ? 1 : dim == 2 ? 3 : /* dim==3 */ 5;
   }
 
   template <typename number>

@@ -1,3 +1,6 @@
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/types.h>
+
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_simplex_p.h>
 
@@ -96,11 +99,15 @@ namespace MeltPoolDG::Heat
               scratch_data_in.attach_constraint_matrix(*rte_hanging_node_constraints);
 
             rte_dirichlet_boundary_condition = std::make_unique<DirichletBoundaryConditions<dim>>();
-            rte_dirichlet_boundary_condition->attach(laser_data.rte_boundary_id, intensity_profile);
+            AssertThrow(
+              laser_data.rte_boundary_id != numbers::invalid_boundary_id,
+              ExcMessage(
+                "The RTE laser model requires the RTE boundary id to be set by the simulation!"));
             if (data_in.output.paraview.print_boundary_id)
               Journal::print_line(scratch_data.get_pcout(),
                                   "RTE boundary id = " + std::to_string(laser_data.rte_boundary_id),
                                   "laser");
+            rte_dirichlet_boundary_condition->attach(laser_data.rte_boundary_id, intensity_profile);
 
             if (data_in.base.do_simplex)
               rte_quad_idx =

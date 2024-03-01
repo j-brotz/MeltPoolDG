@@ -191,11 +191,14 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                 face->set_boundary_id(upper_bc);
             }
 
-      this->attach_dirichlet_boundary_condition(
-        upper_bc,
-        std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
-          power_in, radius_in, center_in, -dealii::Point<dim>::unit_vector(dim - 1)),
-        "intensity");
+      if (this->parameters.base.problem_name == ProblemType::radiative_transport)
+        this->attach_dirichlet_boundary_condition(
+          upper_bc,
+          std::make_shared<Heat::GaussProjectionIntensityProfile<dim, double>>(
+            power_in, radius_in, center_in, -dealii::Point<dim>::unit_vector(dim - 1)),
+          "intensity");
+      else
+        this->parameters.laser.rte_boundary_id = upper_bc;
     }
 
     void
@@ -220,7 +223,9 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                                        interface_case, interface_case_info_in, epsilon_cell),
                                      "prescribed_heaviside");
 
-      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(), "intensity");
+      if (this->parameters.base.problem_name == ProblemType::radiative_transport)
+        this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(),
+                                       "intensity");
 
       // this is only used to TODO generate the comparison solution with the gaussian laser
       if (this->parameters.base.problem_name == ProblemType::heat_transfer)
