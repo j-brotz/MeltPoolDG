@@ -95,8 +95,7 @@ namespace MeltPoolDG::RadiativeTransport
     const DirichletBoundaryConditions<dim> &bc_data,
     const PeriodicBoundaryConditions<dim>  &pbc,
     const unsigned int                      rte_dof_idx_in,
-    const unsigned int                      rte_hanging_nodes_idx,
-    const bool                              set_inhomogeneities)
+    const unsigned int                      rte_hanging_nodes_idx)
   {
     // setup hanging constraints
     scratch_data_in.get_constraint(rte_hanging_nodes_idx).clear();
@@ -130,18 +129,12 @@ namespace MeltPoolDG::RadiativeTransport
       {
         for (const auto &bc : bc_data.get_data())
           {
-            if (set_inhomogeneities)
-              dealii::VectorTools::interpolate_boundary_values(
-                scratch_data_in.get_mapping(),
-                scratch_data_in.get_dof_handler(rte_dof_idx_in),
-                bc.first,
-                *bc.second,
-                scratch_data_in.get_constraint(rte_dof_idx_in));
-            else
-              dealii::DoFTools::make_zero_boundary_constraints(
-                scratch_data_in.get_dof_handler(rte_dof_idx_in),
-                bc.first,
-                scratch_data_in.get_constraint(rte_dof_idx_in));
+            dealii::VectorTools::interpolate_boundary_values(
+              scratch_data_in.get_mapping(),
+              scratch_data_in.get_dof_handler(rte_dof_idx_in),
+              bc.first,
+              *bc.second,
+              scratch_data_in.get_constraint(rte_dof_idx_in));
           }
       }
 

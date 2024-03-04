@@ -20,7 +20,7 @@
 #include <deal.II/numerics/data_out.h>
 
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
-#include <meltpooldg/heat/laser_utilities.hpp>
+#include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operator.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -38,15 +38,14 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   LaserHeatSourceProjectionBased<dim>::LaserHeatSourceProjectionBased(
-    const LaserData<double>                                      &laser_data_in,
-    std::shared_ptr<const LaserIntensityProfileBase<dim, double>> intensity_profile_in,
-    const Tensor<1, dim, double>                                 &laser_direction_in,
-    const bool variable_properties_over_interface_in,
+    const LaserData<double>                           &laser_data_in,
+    const std::shared_ptr<const Function<dim, double>> intensity_profile_in,
+    const bool                                         variable_properties_over_interface_in,
     const LevelSet::DeltaApproximationPhaseWeightedData<double>
       &delta_approximation_phase_weighted_data)
     : laser_data(laser_data_in)
     , intensity_profile(intensity_profile_in)
-    , laser_direction(laser_direction_in)
+    , laser_direction(laser_data.get_direction<dim>())
     , variable_properties_over_interface(variable_properties_over_interface_in)
   {
     delta_phase_weighted =
@@ -70,7 +69,7 @@ namespace MeltPoolDG::Heat
                                                            laser_data.absorptivity_gas,
                                                            laser_data.absorptivity_liquid);
 
-    return intensity_profile->compute_intensity(p) * projection_factor * absorptivity * delta_value;
+    return intensity_profile->value(p) * projection_factor * absorptivity * delta_value;
   }
 
   template <int dim>

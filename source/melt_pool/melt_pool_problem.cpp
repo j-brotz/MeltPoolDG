@@ -1078,6 +1078,7 @@ namespace MeltPoolDG::MeltPool
       {
         laser_operation = std::make_shared<Heat::LaserOperation<dim>>(
           *scratch_data,
+          base_in->get_periodic_bc(),
           base_in->parameters,
           &level_set_operation->get_level_set_as_heaviside(),
           ls_dof_idx);
@@ -1534,12 +1535,7 @@ namespace MeltPoolDG::MeltPool
                                                            temp_hanging_nodes_dof_idx);
 
     if (laser_operation)
-      laser_operation->setup_constraints(
-        *scratch_data,
-        [&](const std::string &operation_name) -> const DirichletBoundaryConditions<dim> & {
-          return base_in->get_dirichlet_bc(operation_name);
-        },
-        base_in->get_periodic_bc());
+      laser_operation->setup_constraints();
 
     // TODO: add function to each operation to check the requirements on ScratchData
     scratch_data->build(/*enable_boundary_face_loops*/ problem_specific_parameters.do_heat_transfer,

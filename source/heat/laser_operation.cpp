@@ -1,43 +1,68 @@
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/types.h>
+
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_simplex_p.h>
 
+#include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::Heat
 {
   template <int dim>
-  LaserOperation<dim>::LaserOperation(ScratchData<dim>         &scratch_data_in,
-                                      const Parameters<double> &data_in,
-                                      const VectorType         *heaviside_in,
-                                      const unsigned int        hs_dof_idx_in)
+  LaserOperation<dim>::LaserOperation(ScratchData<dim>                      &scratch_data_in,
+                                      const PeriodicBoundaryConditions<dim> &periodic_bc_in,
+                                      const Parameters<double>              &data_in,
+                                      const VectorType                      *heaviside_in,
+                                      const unsigned int                     hs_dof_idx_in)
     : scratch_data(scratch_data_in)
+    , periodic_bc(periodic_bc_in)
     , laser_data(data_in.laser)
     , laser_position(laser_data.get_starting_position<dim>())
-    , laser_direction(laser_data.get_direction<dim>())
   {
+    AssertThrow(
+      laser_data.power_end_time > laser_data.power_start_time,
+      ExcMessage(
+        "For the temporal ramp distribution of the laser power,"
+        " the parameter laser power end time must be larger than laser power start time."));
+
     if (laser_data.model == LaserModelType::analytical_temperature)
       return;
 
+    /*
+     * Factory for the intensity profile
+     */
     switch (laser_data.intensity_profile)
       {
           case LaserIntensityProfileType::uniform: {
-            intensity_profile =
-              std::make_shared<UniformIntensityProfile<dim, double>>(get_laser_power());
+            intensity_profile = std::make_shared<UniformIntensityProfile<dim, double>>(
+              [&]() { return get_laser_power(); });
             break;
           }
           case LaserIntensityProfileType::Gauss: {
             if (laser_data.model == LaserModelType::volumetric)
               intensity_profile = std::make_shared<GaussVolumetricIntensityProfile<dim, double>>(
-                get_laser_power(), laser_data.radius, get_laser_position());
+                laser_data.radius,
+                [&]() -> const GaussVolumetricIntensityProfile<dim, double>::State {
+                  return {.power = get_laser_power(), .position = get_laser_position()};
+                });
             else
               intensity_profile = std::make_shared<GaussProjectionIntensityProfile<dim, double>>(
-                get_laser_power(), laser_data.radius, get_laser_position(), laser_direction);
+                laser_data.radius,
+                laser_data.get_direction<dim>(),
+                [&]() -> const GaussProjectionIntensityProfile<dim, double>::State {
+                  return {.power = get_laser_power(), .position = get_laser_position()};
+                });
             break;
           }
           case LaserIntensityProfileType::Gusarov: {
             intensity_profile = std::make_shared<GusarovIntensityProfile<dim, double>>(
-              laser_data.gusarov, get_laser_power(), laser_data.radius, get_laser_position());
+              laser_data.gusarov,
+              laser_data.radius,
+              [&]() -> const GusarovIntensityProfile<dim, double>::State {
+                return {.power = get_laser_power(), .position = get_laser_position()};
+              });
             break;
           }
         default:
@@ -45,7 +70,7 @@ namespace MeltPoolDG::Heat
       }
 
     /*
-     * Factory for the laser heat source model
+     * Factory for the laser model
      */
     switch (laser_data.model)
       {
@@ -61,7 +86,6 @@ namespace MeltPoolDG::Heat
               std::make_unique<Heat::LaserHeatSourceProjectionBased<dim>>(
                 laser_data,
                 intensity_profile,
-                laser_direction,
                 data_in.material.two_phase_fluid_properties_transition_type !=
                   TwoPhaseFluidPropertiesTransitionType::sharp,
                 laser_data.delta_approximation_phase_weighted);
@@ -70,14 +94,28 @@ namespace MeltPoolDG::Heat
           case LaserModelType::RTE: {
             AssertThrow(heaviside_in, ExcMessage("The RTE laser model requires a heaviside!"));
 
-            rte_dof_handler.reinit(scratch_data.get_dof_handler(hs_dof_idx_in).get_triangulation());
+            rte_dof_handler = std::make_unique<DoFHandler<dim>>(
+              scratch_data.get_dof_handler(hs_dof_idx_in).get_triangulation());
 
-            scratch_data_in.attach_dof_handler(rte_dof_handler);
-            scratch_data_in.attach_dof_handler(rte_dof_handler);
+            scratch_data_in.attach_dof_handler(*rte_dof_handler);
+            scratch_data_in.attach_dof_handler(*rte_dof_handler);
 
-            rte_dof_idx = scratch_data_in.attach_constraint_matrix(rte_constraints_dirichlet);
+            rte_constraints_dirichlet    = std::make_unique<AffineConstraints<double>>();
+            rte_hanging_node_constraints = std::make_unique<AffineConstraints<double>>();
+            rte_dof_idx = scratch_data_in.attach_constraint_matrix(*rte_constraints_dirichlet);
             rte_hanging_nodes_dof_idx =
-              scratch_data_in.attach_constraint_matrix(rte_hanging_node_constraints);
+              scratch_data_in.attach_constraint_matrix(*rte_hanging_node_constraints);
+
+            rte_dirichlet_boundary_condition = std::make_unique<DirichletBoundaryConditions<dim>>();
+            AssertThrow(
+              laser_data.rte_boundary_id != numbers::invalid_boundary_id,
+              ExcMessage(
+                "The RTE laser model requires the RTE boundary id to be set by the simulation!"));
+            if (data_in.output.paraview.print_boundary_id)
+              Journal::print_line(scratch_data.get_pcout(),
+                                  "RTE boundary id = " + std::to_string(laser_data.rte_boundary_id),
+                                  "laser");
+            rte_dirichlet_boundary_condition->attach(laser_data.rte_boundary_id, intensity_profile);
 
             if (data_in.base.do_simplex)
               rte_quad_idx =
@@ -86,11 +124,10 @@ namespace MeltPoolDG::Heat
               rte_quad_idx =
                 scratch_data_in.attach_quadrature(QGauss<dim>(data_in.base.n_q_points_1d));
 
-            // TODO give RTE a bc with the intensity profile
             rte_operation = std::make_unique<RadiativeTransport::RadiativeTransportOperation<dim>>(
               scratch_data,
               data_in.rte,
-              laser_direction,
+              laser_data.get_direction<dim>(),
               *heaviside_in,
               rte_dof_idx,
               rte_hanging_nodes_dof_idx,
@@ -113,28 +150,24 @@ namespace MeltPoolDG::Heat
     if (laser_data.model == LaserModelType::RTE)
       {
         if (base_data.do_simplex)
-          rte_dof_handler.distribute_dofs(FE_SimplexP<dim>(base_data.degree));
+          rte_dof_handler->distribute_dofs(FE_SimplexP<dim>(base_data.degree));
         else
-          rte_dof_handler.distribute_dofs(FE_Q<dim>(base_data.degree));
+          rte_dof_handler->distribute_dofs(FE_Q<dim>(base_data.degree));
       }
   }
 
   template <int dim>
   void
-  LaserOperation<dim>::setup_constraints(
-    ScratchData<dim> &mutable_scratch_data,
-    const std::function<const DirichletBoundaryConditions<dim> &(const std::string &)>
-                                          &dirichlet_bc,
-    const PeriodicBoundaryConditions<dim> &periodic_bc)
+  LaserOperation<dim>::setup_constraints()
   {
     if (laser_data.model == LaserModelType::RTE)
       {
+        auto mutable_scratch_data = const_cast<ScratchData<dim> &>(scratch_data);
         rte_operation->setup_constraints(mutable_scratch_data,
-                                         dirichlet_bc("intensity"),
+                                         *rte_dirichlet_boundary_condition,
                                          periodic_bc,
                                          rte_dof_idx,
-                                         rte_hanging_nodes_dof_idx,
-                                         true /*set_inhomogeneities*/);
+                                         rte_hanging_nodes_dof_idx);
       }
   }
 
@@ -166,7 +199,7 @@ namespace MeltPoolDG::Heat
   {
     if (laser_data.model == LaserModelType::RTE)
       {
-        data.emplace_back(&rte_dof_handler, [&](std::vector<VectorType *> &vectors) {
+        data.emplace_back(rte_dof_handler.get(), [&](std::vector<VectorType *> &vectors) {
           rte_operation->attach_vectors(vectors);
         });
       }
@@ -188,6 +221,12 @@ namespace MeltPoolDG::Heat
   {
     current_time = start_time;
     compute_laser_intensity();
+    laser_position = laser_data.template get_starting_position<dim>();
+
+    // update laser intensity
+    if (intensity_profile)
+      intensity_profile->set_time(current_time);
+
     print();
   }
 
@@ -195,13 +234,26 @@ namespace MeltPoolDG::Heat
   void
   LaserOperation<dim>::move_laser(const double dt)
   {
+    bool intensity_or_laser_position_has_changed = false;
+
     // 0) update current time
     current_time += dt;
     // 1) compute the current center of the laser beam
-    if (laser_data.do_move)
-      laser_position[0] += laser_data.scan_speed * dt;
-    // 2) update intensity of the laser
-    compute_laser_intensity();
+    if (laser_data.do_move && laser_data.scan_speed != 0.0)
+      {
+        laser_position[0] += laser_data.scan_speed * dt;
+        intensity_or_laser_position_has_changed = true;
+      }
+    // 2) compute intensity
+    intensity_or_laser_position_has_changed =
+      compute_laser_intensity() || intensity_or_laser_position_has_changed;
+    // 3) update intensity according to the current time if required
+    if (intensity_or_laser_position_has_changed)
+      {
+        if (intensity_profile)
+          intensity_profile->set_time(current_time);
+        setup_constraints();
+      }
 
     print();
   }
@@ -221,16 +273,12 @@ namespace MeltPoolDG::Heat
   }
 
   template <int dim>
-  void
+  bool
   LaserOperation<dim>::compute_laser_intensity()
   {
+    const double previous_intensity = laser_intensity;
     if (laser_data.power_over_time == "ramp")
       {
-        AssertThrow(
-          laser_data.power_end_time > laser_data.power_start_time,
-          ExcMessage(
-            "For the temporal ramp distribution of the laser power,"
-            " the parameter laser power end time must be larger than laser power start time."));
         laser_intensity = (current_time - laser_data.power_start_time) /
                           (laser_data.power_end_time - laser_data.power_start_time);
         laser_intensity = std::min(std::max(0.0, laser_intensity), 1.0);
@@ -248,8 +296,8 @@ namespace MeltPoolDG::Heat
       AssertThrow(false, ExcNotImplemented());
 
     current_power = laser_data.power * laser_intensity;
-    if (intensity_profile)
-      intensity_profile->update_power(current_power);
+
+    return previous_intensity != laser_intensity;
   }
 
   /* TODO: add function parameters*/
