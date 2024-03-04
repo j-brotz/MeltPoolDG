@@ -234,7 +234,7 @@ namespace MeltPoolDG::Heat
   void
   LaserOperation<dim>::move_laser(const double dt)
   {
-    bool update_model = false;
+    bool intensity_or_laser_position_has_changed = false;
 
     // 0) update current time
     current_time += dt;
@@ -242,12 +242,13 @@ namespace MeltPoolDG::Heat
     if (laser_data.do_move && laser_data.scan_speed != 0.0)
       {
         laser_position[0] += laser_data.scan_speed * dt;
-        update_model = true;
+        intensity_or_laser_position_has_changed = true;
       }
     // 2) compute intensity
-    update_model = compute_laser_intensity() || update_model;
+    intensity_or_laser_position_has_changed =
+      compute_laser_intensity() || intensity_or_laser_position_has_changed;
     // 3) update intensity according to the current time if required
-    if (update_model)
+    if (intensity_or_laser_position_has_changed)
       {
         if (intensity_profile)
           intensity_profile->set_time(current_time);
