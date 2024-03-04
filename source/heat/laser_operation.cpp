@@ -245,7 +245,7 @@ namespace MeltPoolDG::Heat
         update_model = true;
       }
     // 2) compute intensity
-    update_model = update_model || compute_laser_intensity();
+    update_model = compute_laser_intensity() || update_model;
     // 3) update intensity according to the current time if required
     if (update_model)
       {
