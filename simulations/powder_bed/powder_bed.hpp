@@ -19,6 +19,7 @@
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/melt_pool/powder_bed.hpp>
+#include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <memory>
@@ -141,21 +142,8 @@ namespace MeltPoolDG::Simulation::PowderBed
     set_boundary_conditions() override
     {
       // face numbering according to the deal.II colorize flag
-
-      // boundaries perpendicular to the vertical axis i.e. faces in dim-1 direction
-      // the vertical axis in the z-axis in 3D and the y-axis in 2D
-      [[maybe_unused]] const types::boundary_id lower_bc = dim == 1 ? 0 :
-                                                           dim == 2 ? 2 :
-                                                                      /* dim==3 */ 4;
-      [[maybe_unused]] const types::boundary_id upper_bc = dim == 1 ? 1 :
-                                                           dim == 2 ? 3 :
-                                                                      /* dim==3 */ 5;
-      // boundaries aligned with vertical axis, perpendicular to the x-axis
-      [[maybe_unused]] const types::boundary_id left_bc  = 0;
-      [[maybe_unused]] const types::boundary_id right_bc = 1;
-      // boundaries aligned with vertical axis, perpendicular to the y-axis, only in 3D
-      [[maybe_unused]] const types::boundary_id front_bc = 2;
-      [[maybe_unused]] const types::boundary_id back_bc  = 3;
+      const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
+        get_colorized_rectangle_boundary_ids<dim>();
 
       /*
        * BC for two-phase flow

@@ -17,6 +17,7 @@
 
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -203,36 +204,22 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           for (int d = 0; d < dim; d++)
             subdivisions[d] *= cell_repetitions[d];
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                   subdivisions,
-                                                                   bottom_left,
-                                                                   top_right);
+          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+            *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
         }
       else
         {
-          GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                    cell_repetitions,
-                                                    bottom_left,
-                                                    top_right);
+          GridGenerator::subdivided_hyper_rectangle(
+            *this->triangulation, cell_repetitions, bottom_left, top_right, true /*colorize*/);
         }
     }
 
     void
     set_boundary_conditions() final
     {
-      /*
-       *  create a pair of (boundary_id, dirichlet_function)
-       */
-
-      const types::boundary_id upper_bc = 1;
-
-      for (const auto &cell : this->triangulation->cell_iterators())
-        for (auto &face : cell->face_iterators())
-          if (face->at_boundary())
-            {
-              if (face->center()[dim - 1] == domain_y_max)
-                face->set_boundary_id(upper_bc);
-            }
+      // face numbering according to the deal.II colorize flag
+      [[maybe_unused]] const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
+        get_colorized_rectangle_boundary_ids<dim>();
 
       if (this->parameters.base.problem_name == ProblemType::radiative_transport)
         this->attach_dirichlet_boundary_condition(

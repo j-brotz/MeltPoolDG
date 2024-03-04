@@ -1,25 +1,36 @@
 #pragma once
-// deal-specific libraries
+
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/numbers.h>
+#include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
+#include <deal.II/base/utilities.h>
+
+#include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/vector.h>
 
-#include <deal.II/numerics/data_out_resample.h>
+#include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
-// c++
-#include <cmath>
-#include <iostream>
-// MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
+#include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <cmath>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
 
 /**
@@ -213,10 +224,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     set_boundary_conditions() final
     {
       // face numbering according to the deal.II colorize flag
-
-      // faces in dim-1 direction
-      const types::boundary_id lower_bc = dim == 1 ? 0 : dim == 2 ? 2 : 4;
-      const types::boundary_id upper_bc = dim == 1 ? 1 : dim == 2 ? 3 : 5;
+      const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
+        get_colorized_rectangle_boundary_ids<dim>();
 
       this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
       this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
@@ -230,24 +239,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       this->attach_dirichlet_boundary_condition(
         lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1), "level_set");
 
-
       if (dim > 1)
-        {
-          // faces in x-direction
-          const types::boundary_id left_bc  = 0;
-          const types::boundary_id right_bc = 1;
-
-          this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
-        }
+        this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
 
       if (dim > 2)
-        {
-          // faces in y-direction
-          const types::boundary_id front_bc = 2;
-          const types::boundary_id back_bc  = 3;
-
-          this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
-        }
+        this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
 
       if (!this->parameters.base.do_simplex)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
@@ -260,8 +256,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         std::make_shared<InitialSignedDistance<dim>>(9. * lambda0 / 128., lambda0),
         "signed_distance");
 
-      this->attach_initial_condition(
-        std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
+      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+                                     "navier_stokes_u");
 
       // assign initial temperature such that at the interface the boiling temperature is met
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(

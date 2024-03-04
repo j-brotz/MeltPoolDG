@@ -1,21 +1,29 @@
 #pragma once
-// deal-specific libraries
+
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
-#include <deal.II/base/tensor_function.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
+
+#include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/numerics/vector_tools.h>
-// c++
-#include <cmath>
-#include <iostream>
-// MeltPoolDG
+
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <cmath>
+#include <iostream>
+#include <memory>
+#include <string>
 
 namespace MeltPoolDG
 {

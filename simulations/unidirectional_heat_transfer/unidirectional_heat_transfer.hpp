@@ -1,14 +1,24 @@
 #pragma once
-// deal-specific libraries
+
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
+#include <deal.II/base/mpi.h>
+#include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 
+#include <deal.II/distributed/tria.h>
+
 #include <deal.II/grid/grid_generator.h>
-// c++
+#include <deal.II/grid/tria.h>
+
+#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/utilities/boundary_ids_colorized.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
+
 #include <cmath>
 #include <iostream>
-// MeltPoolDG
-#include <meltpooldg/interface/simulation_base.hpp>
+#include <memory>
+#include <string>
 
 /**
  * This example represents a simple test example for heat transfer.
@@ -192,7 +202,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
           // create mesh
           const Point<1> left(x_min);
           const Point<1> right(x_max);
-          GridGenerator::hyper_rectangle(*this->triangulation, left, right);
+          GridGenerator::hyper_rectangle(*this->triangulation, left, right, true /*colorize*/);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
       else if constexpr (dim == 2)
@@ -202,7 +212,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
           // create mesh
           const Point<2> left(x_min, 0.0);
           const Point<2> right(x_max, 0.1);
-          GridGenerator::hyper_rectangle(*this->triangulation, left, right);
+          GridGenerator::hyper_rectangle(*this->triangulation, left, right, true /*colorize*/);
           this->triangulation->refine_global(this->parameters.base.global_refinements);
         }
       else
@@ -214,37 +224,15 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
     void
     set_boundary_conditions() final
     {
-      /*
-       *  create a pair of (boundary_id, dirichlet_function)
-       */
-
-      const types::boundary_id left_bc  = 1;
-      const types::boundary_id right_bc = 2;
+      // face numbering according to the deal.II colorize flag
+      [[maybe_unused]] const auto [lower_bc, upper_bc, left_bc, right_bc, front_bc, back_bc] =
+        get_colorized_rectangle_boundary_ids<dim>();
 
       if (this->parameters.heat.radiation.emissivity > 0.0)
-        this->attach_radiation_boundary_condition(right_bc, "heat_transfer");
+        this->attach_radiation_boundary_condition(dim == 1 ? lower_bc : right_bc, "heat_transfer");
 
       if (this->parameters.heat.convection.convection_coefficient > 0.0)
-        this->attach_convection_boundary_condition(right_bc, "heat_transfer");
-
-      if constexpr ((dim == 1) || (dim == 2))
-        {
-          for (const auto &cell : this->triangulation->cell_iterators())
-            for (auto &face : cell->face_iterators())
-              if (face->at_boundary())
-                {
-                  if (face->center()[0] == x_min)
-                    face->set_boundary_id(left_bc);
-                  else if (face->center()[0] == x_max)
-                    face->set_boundary_id(right_bc);
-                }
-        }
-      else
-        {
-          AssertThrow(false, ExcNotImplemented());
-          (void)left_bc;
-          (void)right_bc;
-        }
+        this->attach_convection_boundary_condition(dim == 1 ? lower_bc : right_bc, "heat_transfer");
     }
 
     void
