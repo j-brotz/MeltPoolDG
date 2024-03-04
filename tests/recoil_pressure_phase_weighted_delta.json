@@ -33,17 +33,24 @@
     "molar mass": "0.05224130936",
     "two phase fluid properties transition type": "smooth"
   },
-  "recoil pressure": {
-    "dirac delta function approximation": {
-      "type": "heaviside_phase_weighted",
-      "gas phase weight": "74.30",
-      "heavy phase weight": "7074.3"
-    },
-    "temperature constant": "10000.",
-    "pressure coefficient": "0.0987166831194472"
-  },
   "evaporation": {
-    "evapor evaporation model": "recoil_pressure"
+    "evaporative mass flux model": "recoil_pressure",
+    "recoil pressure": {
+      "dirac delta function approximation": {
+        "type": "heaviside_phase_weighted",
+        "gas phase weight": "74.30",
+        "heavy phase weight": "7074.3"
+      },
+      "temperature constant": "10000.",
+      "pressure coefficient": "0.0987166831194472",
+      "enable": "true"
+    },
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
+      "enable": "false"
+    }
   },
   "simulation specific domain": {
     "domain x min": "-0.0002",
@@ -116,10 +123,7 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
-    "do recoil pressure": "true",
     "do heat transfer": "true",
-    "do evaporative velocity jump": "false",
     "do solidification": "false"
   },
   "advection diffusion": {

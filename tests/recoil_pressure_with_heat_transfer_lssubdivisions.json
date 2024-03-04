@@ -52,8 +52,18 @@
     "formulation": "implicit_formulation"
   },
   "evaporation": {
-    "evapor evaporation model": "recoil_pressure",
-    "evapor latent heat of evaporation": "1.e6"
+    "evaporative mass flux model": "recoil_pressure",
+    "recoil pressure": {
+      "temperature constant": "5.e4",
+      "pressure coefficient": "0.493583415597236",
+      "enable": "true"
+    },
+    "evaporative cooling": {
+      "enable": "true"
+    },
+    "evaporative dilation rate": {
+      "enable": "false"
+    }
   },
   "surface tension": {
     "surface tension coefficient": "1.8",
@@ -127,10 +137,6 @@
       "do matrix free": "true"
     }
   },
-  "recoil pressure": {
-    "temperature constant": "5.e4",
-    "pressure coefficient": "0.493583415597236"
-  },
   "reinitialization": {
     "reinit max n steps": "2",
     "reinit modeltype": "olsson2007",
@@ -153,11 +159,8 @@
     "time step size": "2e-8"
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
-    "do recoil pressure": "true",
     "do heat transfer": "true",
-    "do solidification": "true",
-    "do evaporative velocity jump": "false"
+    "do solidification": "true"
   },
   "advection diffusion": {
     "linear solver": {

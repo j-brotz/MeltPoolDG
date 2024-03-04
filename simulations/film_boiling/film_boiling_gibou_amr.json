@@ -82,10 +82,18 @@
     "curv damping scale factor": "2"
   },
   "evaporation": {
-    "evapor evaporation model": "hardt_wondra",
-    "evapor coefficient": "1.",
-    "evapor level set source term type": "rhs",
-    "evapor do level set pressure gradient interpolation": "true"
+    "evaporative mass flux model": "hardt_wondra",
+    "hardt wondra": {
+      "coefficient": "1."
+    },
+    "formulation source term level set": "rhs",
+    "do level set pressure gradient interpolation": "true",
+    "evaporative cooling": {
+      "enable": "true"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "heat": {
     "linear solver": {
@@ -116,8 +124,6 @@
     "two phase fluid properties transition type": "consistent_with_evaporation"
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
-    "do evaporative velocity jump": "true",
     "do heat transfer": "true",
     "amr": {
       "strategy": "adaflo",

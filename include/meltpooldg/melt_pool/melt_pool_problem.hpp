@@ -69,7 +69,7 @@ namespace MeltPoolDG::MeltPool
     add_parameters(dealii::ParameterHandler &) final;
 
     void
-    check_input_parameters(Parameters<double> &) final;
+    check_input_parameters();
 
   private:
     void
@@ -80,12 +80,8 @@ namespace MeltPoolDG::MeltPool
 
     struct
     {
-      bool do_heat_transfer  = false;
-      bool do_solidification = false;
-      bool do_evaporative_heat_flux =
-        false; //@todo: move to struct "phase change", rename do_evaporative_enthalpy_jump
-      bool do_evaporative_velocity_jump  = false; //@todo: move to struct "phase change"
-      bool do_recoil_pressure            = false; //@todo: move to struct "phase change", rename
+      bool do_heat_transfer              = false;
+      bool do_solidification             = false;
       bool do_advect_level_set           = true;
       bool do_extrapolate_coupling_terms = false;
 

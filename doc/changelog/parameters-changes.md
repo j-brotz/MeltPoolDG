@@ -1,6 +1,110 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-03-01
+- Refactor evaporation data; moved recoil pressure to evaporation struct
+```diff
+    "evaporation": {
+-        "evapor do level set pressure gradient interpolation": "false",
++        "do level set pressure gradient interpolation": "false",
+-        "evapor level set source term type": "interface_velocity",
++        "formulation source term level set": "interface_velocity_local",
+-        "evapor formulation evaporative mass flux over interface": "continuous",
++        "interface temperature evaluation type": "local_value",
+-        "evapor evaporation model": "constant",
++        "evaporative mass flux model": "analytical",
+-        "evapor evaporative mass flux": "0.0",
++        "analytical": {
++            "function": "0.0"
++        },
+-        "evapor formulation source term heat": "diffuse",
++        "evaporative cooling": {
++            "consider enthalpy transport vapor mass flux": "false",
++            "enable": "false",
++            "model": "regularized",
++            "dirac delta function approximation": {
++                "auto weights": "false",
++                "gas phase weight": "1",
++                "gas phase weight 2": "1",
++                "heavy phase weight": "1",
++                "heavy phase weight 2": "1",
++                "type": "norm_of_indicator_gradient"
++            }
++        },
+-        "evapor formulation source term continuity": "diffuse",
++        "evaporative dilation rate": {
++            "enable": "false",
++            "model": "regularized"
++        },
+-        "evapor coefficient": "0",
++        "hardt wondra": {
++            "coefficient": "0"
++        },
+~        "recoil pressure": {
+~            "activation temperature": "0",
+~            "ambient gas pressure": "101300",
++            "enable": "false",
+~            "interface distributed flux type": "local_value",
+~            "pressure coefficient": "0.55",
+~            "temperature constant": "0",
+~            "type": "phenomenological",
+~            "dirac delta function approximation": {
+~                "auto weights": "false",
+~                "gas phase weight": "1",
+~                "gas phase weight 2": "1",
+~                "heavy phase weight": "1",
+~                "heavy phase weight 2": "1",
+~                "type": "norm_of_indicator_gradient"
+~            }
+~        },
++        "thickness integral": {
++            "subdivisions MCA": "1",
++            "subdivisions per side": "10"
++        }
+-        "evapor line integral n subdivisions MCA": "1",
+-        "evapor line integral n subdivisions per side": "10",
+    },
+    "heat": {
+-        "dirac delta function approximation": {
+-            "auto weights": "false",
+-            "gas phase weight": "1",
+-            "gas phase weight 2": "1",
+-            "heavy phase weight": "1",
+-            "heavy phase weight 2": "1",
+-            "type": "norm_of_indicator_gradient"
+-        },
+    },
+  "base": {
+    "problem name": "melt_pool"
+  },
+  "problem specific": {
+-   "do evaporative velocity jump": ""
+-   "do evaporative heat flux": ""
+-   "do recoil pressure": ""
+  }
+}
+```
+- new parameters (their action has not existed before)
+```diff
+{
+    "evaporation": {
++        "evaporative cooling": {
++            "consider enthalpy transport vapor mass flux": "false",
++        },
+    },
+}
+```
+- deleted parameters
+```diff
+{
+    "evaporation": {
+-        "evapor evaporative mass flux scale factor": "1",
+-        "evapor ls value gas": "-1",
+-        "evapor ls value liquid": "1"
+    },
+}
+```
+
 ## 2024-02-29
 - Introduce substructures for heat radiation and convection BC
 ```diff

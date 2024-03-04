@@ -26,8 +26,6 @@ namespace MeltPoolDG::Evaporation
   private:
     const RecoilPressurePhenomenologicalModel<double> recoil_model;
 
-    const double mass_flux_scale_factor;
-
     // according to Meier 2020
     const double sticking_constant;
     const double Cm; // molar_mass/(2*pi*molar_gas_constant)
@@ -37,8 +35,7 @@ namespace MeltPoolDG::Evaporation
                                    const double                      boiling_temperature,
                                    const double                      sticking_constant,
                                    const double                      molar_mass,
-                                   const double                      latent_heat_evaporation,
-                                   const double                      mass_flux_scale_factor);
+                                   const double                      latent_heat_evaporation);
 
     /*
      * The evaporative mass flux is computed as

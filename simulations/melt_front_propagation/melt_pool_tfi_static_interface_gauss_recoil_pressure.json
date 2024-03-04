@@ -66,10 +66,6 @@
   "melt pool": {
     "mp set velocity to zero in solid": "false"
   },
-  "recoil pressure": {
-    "temperature constant": "10000.",
-    "pressure coefficient": "0.0987166831194472"
-  },
   "material": {
     "gas": {
       "thermal conductivity": "10",
@@ -128,7 +124,6 @@
     }
   },
   "problem specific": {
-    "do recoil pressure": "true",
     "do heat transfer": "true",
     "do solidification": "true"
   },
@@ -141,6 +136,13 @@
     "directory": "output_recoil_pressure",
     "paraview": {
       "filename": "melt_pool_tfi_static_interface_gauss_recoil_pressure",
+      "enable": "true"
+    }
+  },
+  "evaporation": {
+    "recoil pressure": {
+      "temperature constant": "10000.",
+      "pressure coefficient": "0.0987166831194472",
       "enable": "true"
     }
   }

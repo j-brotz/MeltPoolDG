@@ -33,6 +33,9 @@ namespace MeltPoolDG::Evaporation
   template <typename number = double>
   struct RecoilPressureData
   {
+    // Enable or disable recoil-pressure related effects.
+    bool enable = false;
+
     // ambient gas pressure
     // default value for air in Pa
     number ambient_gas_pressure = 1.013e5;
@@ -64,7 +67,7 @@ namespace MeltPoolDG::Evaporation
     // Choose the model type to compute the recoil pressure:
     //   * phenomenological (default)
     //   * hybrid
-    RecoilPressureModelType model_type = RecoilPressureModelType::phenomenological;
+    RecoilPressureModelType type = RecoilPressureModelType::phenomenological;
 
     /**
      * Add parameters to the ParameterHandler

@@ -65,8 +65,6 @@
   },
   "problem specific": {
     "do advect level set": "false",
-    "do evaporative heat flux": "false",
-    "do evaporative velocity jump": "false",
     "do heat transfer": "true",
     "do solidification": "false"
   },
@@ -90,6 +88,14 @@
   },
   "output": {
     "paraview": {
+      "enable": "false"
+    }
+  },
+  "evaporation": {
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
       "enable": "false"
     }
   }

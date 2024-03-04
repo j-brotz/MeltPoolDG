@@ -2,6 +2,8 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/evaporation/recoil_pressure_data.hpp>
+#include <meltpooldg/level_set/delta_approximation_phase_weighted_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
 #include <string>
@@ -14,7 +16,7 @@ namespace MeltPoolDG::Evaporation
     char,
     // prescribe a (time-dependent) function for an evaporative mass flux being constant
     // over the domain
-    constant,
+    analytical,
     // calculate the evaporative mass flux from the recoil pressure
     recoil_pressure,
     // calculate the evaporative mass flux from the saturated vapor pressure
@@ -24,43 +26,130 @@ namespace MeltPoolDG::Evaporation
 
   BETTER_ENUM(EvaporationLevelSetSourceTermType,
               char,
+              // calculate the interface velocity from the velocity at the interface
+              // TODO: this only makes sense without evaporation --> remove for
+              // evaporation
+              interface_velocity_sharp,
               // calculate the interface velocity by using the liquid velocity (H(phi)=1)
               interface_velocity_sharp_heavy,
-              // calculate the interface velocity by using the value at the level set 0 iso contour
-              interface_velocity_sharp,
               // calculate a divergence-free interface velocity and use it to advect the level set
-              interface_velocity,
+              interface_velocity_local,
               // use the source term due to evaporation as right hand-side term
               rhs)
 
-  BETTER_ENUM(InterfaceForceType, char, diffuse, sharp)
+  BETTER_ENUM(InterfaceFluxType,
+              char,
+              // Regularized representation of the interface flux via a smoothed Dirac
+              // delta function.
+              regularized,
+              // Sharp representation of the interface flux by performing a surface
+              // integral over the interface.
+              sharp)
 
-  BETTER_ENUM(EvaporCoolingInterfaceFluxType, char, none, diffuse, sharp, sharp_conforming)
+  BETTER_ENUM(EvaporativeMassFluxTemperatureEvaluationType,
+              char,
+              // The evaporative mass flux distributed in the interfacial zone is computed based on
+              // local values evaluated at the quadrature points.
+              local_value,
+              // The flux distributed in the interfacial zone is computed based on values evaluated
+              // at the projected quadrature points to the level set = 0 isosurface.
+              interface_value,
+              // The flux distributed in the interfacial zone is computed based
+              // on integrating the local flux over the thickness and perform
+              // an averaging.
+              thickness_integral)
+
+  BETTER_ENUM(EvaporCoolingInterfaceFluxType,
+              char,
+              none,
+              // Regularized representation of the interface flux via a smoothed Dirac
+              // delta function.
+              regularized,
+              // Sharp representation of the interface flux by performing a surface
+              // integral over the interface.
+              sharp,
+              // Sharp representation of the interface flux by performing a surface
+              // integral over the element edges that represent the interface. The usage
+              // is only recommended for interfaces that are aligned with element
+              // edges.
+              sharp_conforming)
 
   template <typename number = double>
   struct EvaporationData
   {
-    number                         evaporative_mass_flux_scale_factor = 1.0;
-    std::string                    evaporative_mass_flux              = "0.0";
-    number                         ls_value_liquid                    = 1.0;
-    number                         ls_value_gas                       = -1.0;
-    InterfaceForceType             formulation_source_term_continuity = InterfaceForceType::diffuse;
-    EvaporCoolingInterfaceFluxType formulation_source_term_heat =
-      EvaporCoolingInterfaceFluxType::diffuse;
-    std::string formulation_evaporative_mass_flux_over_interface =
-      "continuous"; // not needed if evaporation_model == "constant"
-    EvaporationModelType              evaporation_model = EvaporationModelType::constant;
-    number                            coefficient       = 0.0;
-    unsigned int                      line_integral_n_subdivisions_per_side = 10;
-    unsigned int                      line_integral_n_subdivisions_MCA      = 1;
-    EvaporationLevelSetSourceTermType level_set_source_term_type =
-      EvaporationLevelSetSourceTermType::interface_velocity;
+    EvaporationModelType evaporative_mass_flux_model = EvaporationModelType::analytical;
+    EvaporativeMassFluxTemperatureEvaluationType interface_temperature_evaluation_type =
+      EvaporativeMassFluxTemperatureEvaluationType::local_value;
+
+    // source terms
+    struct EvaporativeDilationRate
+    {
+      bool              enable = false;
+      InterfaceFluxType model  = InterfaceFluxType::regularized;
+    } evaporative_dilation_rate;
+
+    struct EvaporativeCooling
+    {
+      bool                           enable          = false;
+      EvaporCoolingInterfaceFluxType model           = EvaporCoolingInterfaceFluxType::regularized;
+      number specific_enthalpy_reference_temperature = numbers::invalid_double;
+      // We consider the type "int" instead of bool to detect whether the
+      // parameter is explicitly set by the user or not.
+      unsigned int consider_enthalpy_transport_vapor_mass_flux = numbers::invalid_unsigned_int;
+      LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
+
+    } evaporative_cooling;
+
+    RecoilPressureData<number> recoil;
+
+    EvaporationLevelSetSourceTermType formulation_source_term_level_set =
+      EvaporationLevelSetSourceTermType::interface_velocity_local;
+
+    struct ThicknessIntegrationData
+    {
+      unsigned int subdivisions_per_side = 10;
+      unsigned int subdivisions_MCA      = 1;
+    } thickness_integral;
+
+    struct HardtWondraData
+    {
+      number coefficient = 0.0;
+    } hardt_wondra;
+
+    struct AnalyticalModelData
+    {
+      std::string function = "0.0";
+    } analytical;
+
     bool do_level_set_pressure_gradient_interpolation = false;
 
+    /**
+     * Add parameters to the ParameterHandler
+     *
+     * Attach the parsing recipe for evaporation related data to the
+     * ParameterHandler.
+     *
+     * @param[in, out] prm ParameterHandler.
+     */
     void
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    check_input_parameters(const unsigned int ls_n_subdivisions) const;
+    check_input_parameters(const unsigned int          ls_n_subdivisions,
+                           const MaterialData<number> &material) const;
+
+    /**
+     * Post operation
+     *
+     * Set default values of parameters, after parameters have been parsed.
+     *
+     * @param[in] material Material data.
+     * @param[in] use_volume_specific_thermal_capacity_for_phase_interpolation
+     * Set to true if the volume-specific heat capacity is interpolated
+     * as a single quantity across the interfaces.
+     */
+    void
+    post(const MaterialData<number> &material,
+         const bool                  use_volume_specific_thermal_capacity_for_phase_interpolation);
   };
 } // namespace MeltPoolDG::Evaporation

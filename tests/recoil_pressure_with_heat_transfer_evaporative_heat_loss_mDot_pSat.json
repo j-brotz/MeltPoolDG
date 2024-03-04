@@ -46,11 +46,18 @@
     "two phase fluid properties transition type": "smooth",
     "solid liquid properties transition type": "mushy_zone"
   },
-  "recoil pressure": {
-    "pressure coefficient": "0.0987166831194472"
-  },
   "evaporation": {
-    "evapor evaporation model": "saturated_vapor_pressure"
+    "evaporative mass flux model": "saturated_vapor_pressure",
+    "recoil pressure": {
+      "pressure coefficient": "0.0987166831194472",
+      "enable": "true"
+    },
+    "evaporative cooling": {
+      "enable": "true"
+    },
+    "evaporative dilation rate": {
+      "enable": "false"
+    }
   },
   "laser": {
     "starting position": "0.0,0.0",
@@ -139,11 +146,8 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
-    "do recoil pressure": "true",
     "do heat transfer": "true",
-    "do solidification": "true",
-    "do evaporative velocity jump": "false"
+    "do solidification": "true"
   },
   "advection diffusion": {
     "linear solver": {

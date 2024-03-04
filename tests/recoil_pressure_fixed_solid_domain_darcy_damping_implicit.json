@@ -78,10 +78,6 @@
   "levelset": {
     "ls do reinitialization": "true"
   },
-  "recoil pressure": {
-    "temperature constant": "10000.",
-    "pressure coefficient": "0.0987166831194472"
-  },
   "laser": {
     "starting position": "0.0,0.00000",
     "absorptivity liquid": "0.5",
@@ -129,7 +125,6 @@
     }
   },
   "problem specific": {
-    "do recoil pressure": "true",
     "do heat transfer": "true",
     "do solidification": "true"
   },
@@ -141,6 +136,13 @@
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "evaporation": {
+    "recoil pressure": {
+      "temperature constant": "10000.",
+      "pressure coefficient": "0.0987166831194472",
+      "enable": "true"
     }
   }
 }

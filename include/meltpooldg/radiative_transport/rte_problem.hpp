@@ -72,7 +72,7 @@ namespace MeltPoolDG::RadiativeTransport
     add_parameters(dealii::ParameterHandler &) final;
 
     void
-    check_input_parameters(Parameters<double> &) final;
+    check_input_parameters();
 
   private:
     /*

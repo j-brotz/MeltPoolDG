@@ -71,10 +71,20 @@
     }
   },
   "evaporation": {
-    "evapor evaporation model": "hardt_wondra",
-    "evapor evaporative mass flux": "0.000000",
-    "evapor coefficient": "0.01",
-    "evapor level set source term type": "interface_velocity_sharp"
+    "analytical": {
+      "function": "0.000000"
+    },
+    "evaporative mass flux model": "hardt_wondra",
+    "hardt wondra": {
+      "coefficient": "0.01"
+    },
+    "formulation source term level set": "interface_velocity_sharp",
+    "evaporative cooling": {
+      "enable": "true"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "Navier-Stokes": {
     "adaflo": {
@@ -104,8 +114,6 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
-    "do evaporative velocity jump": "true",
     "do heat transfer": "true"
   },
   "advection diffusion": {

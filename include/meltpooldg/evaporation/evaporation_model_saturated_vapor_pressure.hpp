@@ -28,7 +28,6 @@ namespace MeltPoolDG::Evaporation
     const double                     sticking_constant;
     const double                     molar_mass;
     const double                     latent_heat_evaporation;
-    const double                     mass_flux_scale_factor;
 
     // Model constant computed as molar_mass/(2*pi*molar_gas_constant)
     const double Cm;
@@ -38,8 +37,7 @@ namespace MeltPoolDG::Evaporation
                                            const double                      boiling_temperature,
                                            const double                      sticking_constant,
                                            const double                      molar_mass,
-                                           const double latent_heat_evaporation,
-                                           const double mass_flux_scale_factor);
+                                           const double latent_heat_evaporation);
 
     /*
      * The evaporative mass flux is computed as

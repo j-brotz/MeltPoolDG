@@ -92,9 +92,13 @@
     }
   },
   "evaporation": {
-    "evapor evaporation model": "hardt_wondra",
-    "evapor evaporative mass flux": "0.0",
-    "evapor coefficient": "0.1"
+    "analytical": {
+      "function": "0.0"
+    },
+    "evaporative mass flux model": "hardt_wondra",
+    "hardt wondra": {
+      "coefficient": "0.1"
+    }
   },
   "heat": {
     "linear solver": {

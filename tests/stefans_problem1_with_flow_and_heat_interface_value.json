@@ -97,9 +97,17 @@
     }
   },
   "evaporation": {
-    "evapor evaporation model": "hardt_wondra",
-    "evapor formulation evaporative mass flux over interface": "interface value",
-    "evapor coefficient": "1.0"
+    "interface temperature evaluation type": "interface_value",
+    "evaporative mass flux model": "hardt_wondra",
+    "hardt wondra": {
+      "coefficient": "1.0"
+    },
+    "evaporative cooling": {
+      "enable": "true"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "heat": {
     "linear solver": {
@@ -108,8 +116,6 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "true",
-    "do evaporative velocity jump": "true",
     "do heat transfer": "true"
   },
   "advection diffusion": {

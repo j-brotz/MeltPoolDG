@@ -47,11 +47,9 @@
     }
   },
   "evaporation": {
-    "evapor evaporative mass flux": "1.0e-4",
-    "evapor density liquid": "1",
-    "evapor density gas": "0.01",
-    "evapor ls value liquid": "1",
-    "evapor ls value gas": "-1"
+    "analytical": {
+      "function": "1.0e-4"
+    }
   },
   "advection diffusion": {
     "linear solver": {

@@ -49,10 +49,22 @@
     "mushy zone morphology": "1e11"
   },
   "evaporation": {
-    "evapor evaporation model": "recoil_pressure",
-    "evapor formulation evaporative mass flux over interface": "continuous",
-    "evapor level set source term type": "rhs",
-    "evapor mass flux scale factor": "1.464"
+    "interface temperature evaluation type": "local_value",
+    "evaporative mass flux model": "recoil_pressure",
+    "formulation source term level set": "rhs",
+    "recoil pressure": {
+      "activation temperature": "500",
+      "model type": "hybrid",
+      "temperature constant": "1.0",
+      "pressure coefficient": "9.871668311944721e-06",
+      "enable": "true"
+    },
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "heat": {
     "nlsolve": {
@@ -85,17 +97,8 @@
   },
   "problem specific": {
     "do advect level set": "true",
-    "do evaporative heat flux": "false",
-    "do evaporative velocity jump": "true",
     "do heat transfer": "true",
-    "do solidification": "true",
-    "do recoil pressure": "true"
-  },
-  "recoil pressure": {
-    "activation temperature": "500",
-    "model type": "hybrid",
-    "temperature constant": "1.0",
-    "pressure coefficient": "9.871668311944721e-06"
+    "do solidification": "true"
   },
   "reinitialization": {
     "reinit max n steps": "3",

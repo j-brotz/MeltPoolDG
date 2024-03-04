@@ -53,15 +53,21 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
-    "do heat transfer": "false",
-    "do evaporative velocity jump": "false"
+    "do heat transfer": "false"
   },
   "output": {
     "directory": "evaporating_shell_3d",
     "paraview": {
       "print boundary id": "true",
       "enable": "true"
+    }
+  },
+  "evaporation": {
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
+      "enable": "false"
     }
   }
 }

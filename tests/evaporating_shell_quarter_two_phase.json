@@ -33,8 +33,16 @@
     "reinit max n steps": "5"
   },
   "evaporation": {
-    "evapor evaporative mass flux": "0.01",
-    "evapor level set source term type": "interface_velocity"
+    "analytical": {
+      "function": "0.01"
+    },
+    "formulation source term level set": "interface_velocity_local",
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
+      "enable": "true"
+    }
   },
   "levelset": {
     "ls n subdivisions": "1"
@@ -75,9 +83,7 @@
     }
   },
   "problem specific": {
-    "do evaporative heat flux": "false",
-    "do heat transfer": "true",
-    "do evaporative velocity jump": "true"
+    "do heat transfer": "true"
   },
   "output": {
     "directory": "evaporating_shell_2d",

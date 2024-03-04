@@ -60,7 +60,6 @@ namespace MeltPoolDG::Heat
 
       nlsolve.add_parameters(prm);
       linear_solver.add_parameters(prm);
-      delta_approximation_phase_weighted.add_parameters(prm);
       predictor.add_parameters(prm);
     }
     prm.leave_subsection();
@@ -68,18 +67,8 @@ namespace MeltPoolDG::Heat
 
   template <typename number>
   void
-  HeatData<number>::post(const unsigned int          base_degree,
-                         const unsigned int          base_verbosity_level,
-                         const MaterialData<number> &material)
+  HeatData<number>::post(const unsigned int base_degree, const unsigned int base_verbosity_level)
   {
-    // set automatic weights of asymmetric delta functions, if requested
-    if (use_volume_specific_thermal_capacity_for_phase_interpolation)
-      delta_approximation_phase_weighted.set_parameters(
-        material, LevelSet::ParameterScaledInterpolationType::volume_specific_heat_capacity);
-    else
-      delta_approximation_phase_weighted.set_parameters(
-        material, LevelSet::ParameterScaledInterpolationType::specific_heat_capacity_times_density);
-
     // set heat degree equal to base degree if it is not set
     if (degree < 1)
       degree = base_degree;

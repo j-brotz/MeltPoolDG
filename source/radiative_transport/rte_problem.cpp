@@ -73,11 +73,8 @@ namespace MeltPoolDG::RadiativeTransport
 
   template <int dim>
   void
-  RadiativeTransportProblem<dim>::check_input_parameters(
-    Parameters<double> &parameters /*todo: could be made const*/)
+  RadiativeTransportProblem<dim>::check_input_parameters()
   {
-    (void)parameters;
-
     // if the laser direction is not specified, set it to the negative dim-1 direction
     if (laser_direction_input_prm.size() == 0)
       laser_direction = -Point<dim>::unit_vector(dim - 1);
@@ -98,7 +95,7 @@ namespace MeltPoolDG::RadiativeTransport
   void
   RadiativeTransportProblem<dim>::initialize(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    check_input_parameters(base_in->parameters);
+    check_input_parameters();
 
     /*
      *  setup scratch data

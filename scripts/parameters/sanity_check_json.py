@@ -91,6 +91,22 @@ old_parameter_names = [
     ["heat", "emissivity"],
     ["heat", "convection coefficient"],
     ["heat", "temperature infinity"],
+    # 24-02-29
+    ["evaporation", "evapor evaporative mass flux"],
+    ["evaporation", "evapor formulation evaporative mass flux over interface"],
+    ["evaporation", "evapor evaporation model"],
+    ["evaporation", "evapor coefficient"],
+    ["evaporation", "evapor line integral n subdivisions per side"],
+    ["evaporation", "evapor line integral n subdivisions MCA"],
+    ["evaporation", "evapor level set source term type"],
+    ["evaporation", "evapor formulation source term heat"],
+    ["evaporation", "evapor formulation source term continuity"],
+    ["evaporation", "evapor do level set pressure gradient interpolation"],
+    ["recoil pressure"],
+    ["problem specific", "do evaporative heat flux"],
+    ["problem specific", "do recoil pressure"],
+    ["problem specific", "do evaporative velocity jump"],
+    ["heat", "dirac delta function approximation"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -165,6 +181,22 @@ new_parameter_names = [
     ["heat", "radiative boundary condition", "emissivity"],
     ["heat", "convective boundary condition", "convection coefficient"],
     ["heat", "convective boundary condition", "temperature infinity"],
+    # 24-02-29
+    ["evaporation", "analytical", "function"],
+    ["evaporation", "interface temperature evaluation type"],
+    ["evaporation", "evaporative mass flux model"],
+    ["evaporation", "hardt wondra", "coefficient"],
+    ["evaporation", "thickness integral", "n subdivisions per side"],
+    ["evaporation", "thickness integral", "n subdivisions MCA"],
+    ["evaporation", "formulation source term level set"],
+    ["evaporation", "evaporative cooling", "model"],
+    ["evaporation", "evaporative dilation rate", "model"],
+    ["evaporation", "do level set pressure gradient interpolation"],
+    ["evaporation", "recoil pressure"],
+    ["evaporation", "evaporative cooling", "enable"],
+    ["evaporation", "recoil pressure", "enable"],
+    ["evaporation", "evaporative dilation rate", "enable"],
+    ["evaporation", "evaporative cooling", "dirac delta function approximation"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]
@@ -175,6 +207,8 @@ new_parameter_names_lambda = [
 ]
 
 rename_parameter_values = [
+    # add new parameter values to be renamed
+    # (["parameter", "category"], "old_value", "new_value"),
     (["heat", "use volume-specific thermal capacity for phase interpolation"],
      "smooth", "true"),
     (["recoil pressure", "interface distributed flux type"],
@@ -183,14 +217,30 @@ rename_parameter_values = [
      "Analytical", "analytical_temperature"),
     (["laser", "model"],
      "interface_projection", "interface_projection_regularized"),
-    # add new parameter values to be renamed
-    # (["parameter", "category"], "old_value", "new_value"),
+    # 24-02-29
+    (["evaporation", "analytical", "function"], "constant", "analytical"),
+    (["evaporation", "interface temperature evaluation type"],
+     "continuous", "local_value"),
+    (["evaporation", "interface temperature evaluation type"],
+     "interface value", "interface_value"),
+    (["evaporation", "interface temperature evaluation type"],
+     "line integral", "thickness_integral"),
+    (["evaporation", "formulation source term level set"],
+     "interface_velocity", "interface_velocity_local"),
+    (["evaporation", "formulation source term heat"], "diffuse", "regularized"),
+    (["evaporation", "formulation source term continuity"], "diffuse", "regularized"),
 ]
 
 delete_parameter_names = [
     # ... add parameter names to be deleted
     ["heat", "interpolate k"],
     ["material", "material melting point"],
+    # 24-02-29
+    ["evaporation", "evapor evaporative mass flux scale factor"],
+    ["evaporation", "evapor ls value liquid"],
+    ["evaporation", "evapor ls value gas"],
+    ["problem specific", "do evaporation"],
+    ["problem specific", "do evaporative mass flux"],
 ]
 
 ##############################################################################
