@@ -26,7 +26,7 @@
 #include <utility>
 
 /**
- * This simulation is mainly ment to test the functionality of RTE
+ * This simulation is mainly meant to test the functionality of RTE
  */
 
 namespace MeltPoolDG::Simulation::RadiativeTransport
@@ -77,12 +77,12 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
           Point<dim> sphere_center;
           sphere_center[dim - 1] = interface_case_info.first;
 
-          // now add a power_particle with gradient:
+          // now add a powder particle with gradient:
           const Functions::SignedDistance::Sphere<dim> distance_sphere(sphere_center,
                                                                        interface_case_info.second);
-          double                                       power_particle_value =
+          double                                       powder_particle_value =
             UtilityFunctions::CharacteristicFunctions::heaviside(-distance_sphere.value(p), eps);
-          return std::max(straight_value, power_particle_value);
+          return std::max(straight_value, powder_particle_value);
         }
       else
         {
@@ -152,12 +152,12 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
                           end_time,
                           "end time of the straight interface movement");
 
-        prm.add_parameter("power particle radius",
+        prm.add_parameter("powder particle radius",
                           powder_particle_radius,
-                          "hanging power particle radius");
+                          "hanging powder particle radius");
         prm.add_parameter("powder particle offset",
                           powder_particle_offset,
-                          "hanging power_particle offset from [dim-1] = 0 plane");
+                          "hanging powder particle offset from [dim-1] = 0 plane");
       }
       prm.leave_subsection();
     }
