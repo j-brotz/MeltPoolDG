@@ -19,9 +19,10 @@ namespace MeltPoolDG
     const VectorType               &data,
     const std::vector<std::string> &names,
     const std::vector<DataComponentInterpretation::DataComponentInterpretation>
-      &data_component_interpretation)
+              &data_component_interpretation,
+    const bool force_output)
   {
-    if (!is_requested(names[0]))
+    if (not(is_requested(names[0]) || force_output))
       return;
 
     entries.emplace_back(&dof_handler, &data, names, data_component_interpretation);
@@ -32,9 +33,10 @@ namespace MeltPoolDG
   void
   GenericDataOut<dim>::add_data_vector(const DoFHandler<dim> &dof_handler,
                                        const VectorType      &data,
-                                       const std::string     &name)
+                                       const std::string     &name,
+                                       const bool             force_output)
   {
-    if (!is_requested(name))
+    if (not(is_requested(name) || force_output))
       return;
 
     entries.emplace_back(&dof_handler,

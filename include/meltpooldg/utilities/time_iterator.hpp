@@ -31,7 +31,7 @@ namespace MeltPoolDG
     set_current_time_increment(const number value, const number factor = 1.0);
 
     void
-    reset_max_n_time_steps(const int time_steps_in);
+    reset_max_n_time_steps(const unsigned int time_steps_in);
 
     number
     get_current_time() const;
@@ -39,7 +39,7 @@ namespace MeltPoolDG
     number
     get_current_time_increment() const;
 
-    number
+    unsigned int
     get_current_time_step_number() const;
 
     number
@@ -79,7 +79,7 @@ namespace MeltPoolDG
     number                    current_time;
     number                    current_time_increment;
     number                    old_time_increment;
-    number                    n_time_steps;
+    unsigned int              n_time_steps;
     dealii::FunctionParser<1> time_step_size_function;
   };
 

@@ -103,9 +103,13 @@ namespace MeltPoolDG::Heat
      *  perform output of results
      */
     void
-    output_results(unsigned int                         time_step,
-                   double                               current_time,
-                   std::shared_ptr<SimulationBase<dim>> base_in);
+    output_results(std::shared_ptr<SimulationBase<dim>> base_in,
+                   const bool                           output_not_converged = false);
+    /*
+     * collect all relevant output data
+     */
+    void
+    attach_output_vectors(GenericDataOut<dim> &data_out) const;
     /*
      *  perform adaptive mesh refinement
      */

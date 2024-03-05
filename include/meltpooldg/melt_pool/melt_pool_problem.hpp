@@ -46,6 +46,7 @@ namespace MeltPoolDG::MeltPool
 
   BETTER_ENUM(AMRStrategy, char, generic, adaflo, KellyErrorEstimator)
   BETTER_ENUM(AutomaticGridRefinementType, char, fixed_fraction, fixed_number)
+  BETTER_ENUM(OutputNotConvergedOperation, char, none, navier_stokes, heat_transfer)
 
 
   template <int dim>
@@ -151,10 +152,22 @@ namespace MeltPoolDG::MeltPool
      *  perform output of results
      */
     void
-    output_results(const unsigned int                   time_step,
-                   const double                         current_time,
-                   std::shared_ptr<SimulationBase<dim>> base_in,
-                   const bool                           force_output = false);
+    output_results(std::shared_ptr<SimulationBase<dim>> base_in,
+                   const bool                           force_output = false,
+                   const OutputNotConvergedOperation    output_not_converged_operation =
+                     OutputNotConvergedOperation::none);
+    /*
+     * collect all relevant output data
+     */
+    void
+    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    /*
+     * finalize simulation in the case that an operaion didn't converge
+     */
+    void
+    finalize(std::shared_ptr<SimulationBase<dim>> base_in,
+             const OutputNotConvergedOperation    output_no_converged_operation =
+               OutputNotConvergedOperation::none);
     /*
      *  perform mesh refinement
      */
@@ -230,5 +243,7 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<Postprocessor<dim>>                        post_processor;
     std::unique_ptr<Profiling::ProfilingMonitor<double>>       profiling_monitor;
     std::shared_ptr<Restart::RestartMonitor<double>>           restart_monitor;
+
+    bool output_interface_velocity = false;
   };
 } // namespace MeltPoolDG::MeltPool

@@ -86,7 +86,7 @@ namespace MeltPoolDG
 
   template <typename number>
   void
-  TimeIterator<number>::reset_max_n_time_steps(const int time_steps_in)
+  TimeIterator<number>::reset_max_n_time_steps(const unsigned int time_steps_in)
   {
     time_data.max_n_steps = time_steps_in;
   }
@@ -106,7 +106,7 @@ namespace MeltPoolDG
   }
 
   template <typename number>
-  number
+  unsigned int
   TimeIterator<number>::get_current_time_step_number() const
   {
     return n_time_steps;

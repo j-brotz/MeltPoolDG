@@ -75,20 +75,7 @@ namespace MeltPoolDG::MeltPool
   void
   MeltPoolProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
   {
-    initialize(base_in); // no timing needed, since the function does it self
-
-    const auto finalize = [&](const bool force_output) {
-      output_results(time_iterator->get_current_time_step_number(),
-                     time_iterator->get_current_time(),
-                     base_in,
-                     force_output);
-
-      //... always print timing statistics
-      if (profiling_monitor)
-        profiling_monitor->print(scratch_data->get_pcout(),
-                                 scratch_data->get_timer(),
-                                 scratch_data->get_mpi_comm());
-    };
+    initialize(base_in); // no timing needed, since the function does itself
 
     try
       {
@@ -106,9 +93,7 @@ namespace MeltPoolDG::MeltPool
          * output and which must not be transferred to the new mesh everytime refine_mesh() is
          * called.
          */
-        output_results(time_iterator->get_current_time_step_number(),
-                       time_iterator->get_current_time(),
-                       base_in);
+        output_results(base_in);
 
         bool heat_up_finished = false;
 
@@ -147,7 +132,6 @@ namespace MeltPoolDG::MeltPool
             heat_up_modify_time_step();
 
             const auto dt = time_iterator->compute_next_time_increment();
-            const int  n  = time_iterator->get_current_time_step_number();
 
             time_iterator->print_me(scratch_data->get_pcout());
 
@@ -506,7 +490,9 @@ namespace MeltPoolDG::MeltPool
                                 Evaporation::EvaporationModelType::analytical)) ||
                               base_in->parameters.laser.model ==
                                 Heat::LaserModelType::analytical_temperature))
-                          heat_operation->solve(false);
+                          {
+                            heat_operation->solve(false);
+                          }
                       }
 
                     if (do_heat_iteration)
@@ -678,7 +664,7 @@ namespace MeltPoolDG::MeltPool
               TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
               // ... and output the results to vtk files.
-              output_results(n, time_iterator->get_current_time(), base_in);
+              output_results(base_in);
             }
 
             if (base_in->parameters.amr.do_amr)
@@ -723,26 +709,28 @@ namespace MeltPoolDG::MeltPool
                                      scratch_data->get_mpi_comm());
           }
       }
-    catch (const ExcNewtonDidNotConverge &e)
+    catch (const ExcHeatTransferNoConvergence &e)
       {
-        finalize(true /*force_output*/);
-
-        AssertThrow(false, ExcNewtonDidNotConverge());
-      }
-    catch (const SolverControl::NoConvergence &e)
-      {
-        finalize(true /*force_output*/);
-
+        finalize(base_in, OutputNotConvergedOperation::heat_transfer);
         AssertThrow(false, e);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     catch (const ExcNavierStokesNoConvergence &e)
       {
-        finalize(true /*force_output*/);
-
-        AssertThrow(false, ExcNavierStokesNoConvergence());
+        finalize(base_in, OutputNotConvergedOperation::navier_stokes);
+        AssertThrow(false, e);
       }
 #endif
+    catch (const ExcNewtonDidNotConverge &e)
+      {
+        finalize(base_in);
+        AssertThrow(false, e);
+      }
+    catch (const SolverControl::NoConvergence &e)
+      {
+        finalize(base_in);
+        AssertThrow(false, e);
+      }
   }
 
   template <int dim>
@@ -1283,6 +1271,14 @@ namespace MeltPoolDG::MeltPool
                                            scratch_data->get_mapping(),
                                            scratch_data->get_triangulation(vel_dof_idx),
                                            scratch_data->get_pcout(1));
+    output_interface_velocity =
+      (evaporation_operation && base_in->parameters.evapor.evaporative_dilation_rate.enable &&
+       (base_in->parameters.evapor.formulation_source_term_level_set ==
+          Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_local ||
+        base_in->parameters.evapor.formulation_source_term_level_set ==
+          Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
+        base_in->parameters.evapor.formulation_source_term_level_set ==
+          Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy));
     /*
      *  initialize profiling
      */
@@ -1698,60 +1694,36 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
-  MeltPoolProblem<dim>::output_results(const unsigned int                   n_time_step,
-                                       const double                         current_time,
-                                       std::shared_ptr<SimulationBase<dim>> base_in,
-                                       const bool                           force_output)
+  MeltPoolProblem<dim>::output_results(
+    std::shared_ptr<SimulationBase<dim>> base_in,
+    const bool                           force_output,
+    const OutputNotConvergedOperation    output_not_converged_operation)
   {
+    const unsigned int n_time_step  = time_iterator->get_current_time_step_number();
+    const double       current_time = time_iterator->get_current_time();
+
     if (!post_processor->is_output_timestep(n_time_step, current_time) && !force_output &&
         !base_in->parameters.output.do_user_defined_postprocessing)
       return;
-    /**
-     * collect all relevant output data
-     */
-    const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
-      level_set_operation->attach_output_vectors(data_out);
-
-      flow_operation->attach_output_vectors(data_out);
-
-      if (melt_front_propagation)
-        melt_front_propagation->attach_output_vectors(data_out);
-
-      if (evaporation_operation)
-        evaporation_operation->attach_output_vectors(data_out);
-      if (heat_operation)
-        heat_operation->attach_output_vectors(data_out);
-      if (laser_operation)
-        laser_operation->attach_output_vectors(data_out);
-      if (darcy_operation)
-        darcy_operation->attach_output_vectors(data_out);
-
-      if (evaporation_operation && base_in->parameters.evapor.evaporative_dilation_rate.enable &&
-          (base_in->parameters.evapor.formulation_source_term_level_set ==
-             Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_local ||
-           base_in->parameters.evapor.formulation_source_term_level_set ==
-             Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
-           base_in->parameters.evapor.formulation_source_term_level_set ==
-             Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy))
-        {
-          /*
-           *  interface velocity
-           */
-          std::vector<DataComponentInterpretation::DataComponentInterpretation>
-            vector_component_interpretation(
-              dim, DataComponentInterpretation::component_is_part_of_vector);
-
-          data_out.add_data_vector(scratch_data->get_dof_handler(vel_dof_idx),
-                                   interface_velocity,
-                                   std::vector<std::string>(dim, "interface_velocity"),
-                                   vector_component_interpretation);
-        }
-    };
 
     GenericDataOut<dim> generic_data_out(scratch_data->get_mapping(),
                                          current_time,
                                          base_in->parameters.output.output_variables);
     attach_output_vectors(generic_data_out);
+
+    switch (output_not_converged_operation)
+      {
+          case OutputNotConvergedOperation::navier_stokes: {
+            flow_operation->attach_output_vectors_failed_step(generic_data_out);
+            break;
+          }
+          case OutputNotConvergedOperation::heat_transfer: {
+            heat_operation->attach_output_vectors_failed_step(generic_data_out);
+            break;
+          }
+        case OutputNotConvergedOperation::none:
+          break;
+      }
 
     // user-defined postprocessing
     if (base_in->parameters.output.do_user_defined_postprocessing)
@@ -1762,8 +1734,62 @@ namespace MeltPoolDG::MeltPool
       ScopedName         sc("process");
       TimerOutput::Scope scope(scratch_data->get_timer(), sc);
 
-      post_processor->process(n_time_step, generic_data_out, current_time, force_output);
+      post_processor->process(n_time_step,
+                              generic_data_out,
+                              current_time,
+                              force_output,
+                              output_not_converged_operation != OutputNotConvergedOperation::none);
     }
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::finalize(std::shared_ptr<SimulationBase<dim>> base_in,
+                                 const OutputNotConvergedOperation    output_no_converged_operation)
+  {
+    output_results(base_in, true /* force_output */, output_no_converged_operation);
+
+    //... always print timing statistics
+    if (profiling_monitor)
+      profiling_monitor->print(scratch_data->get_pcout(),
+                               scratch_data->get_timer(),
+                               scratch_data->get_mpi_comm());
+  }
+
+  template <int dim>
+  void
+  MeltPoolProblem<dim>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  {
+    level_set_operation->attach_output_vectors(data_out);
+
+    flow_operation->attach_output_vectors(data_out);
+
+    if (melt_front_propagation)
+      melt_front_propagation->attach_output_vectors(data_out);
+
+    if (evaporation_operation)
+      evaporation_operation->attach_output_vectors(data_out);
+    if (heat_operation)
+      heat_operation->attach_output_vectors(data_out);
+    if (laser_operation)
+      laser_operation->attach_output_vectors(data_out);
+    if (darcy_operation)
+      darcy_operation->attach_output_vectors(data_out);
+
+    if (output_interface_velocity)
+      {
+        /*
+         *  interface velocity
+         */
+        std::vector<DataComponentInterpretation::DataComponentInterpretation>
+          vector_component_interpretation(dim,
+                                          DataComponentInterpretation::component_is_part_of_vector);
+
+        data_out.add_data_vector(scratch_data->get_dof_handler(vel_dof_idx),
+                                 interface_velocity,
+                                 std::vector<std::string>(dim, "interface_velocity"),
+                                 vector_component_interpretation);
+      }
   }
 
   template <int dim>
