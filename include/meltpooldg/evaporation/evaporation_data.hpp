@@ -95,7 +95,7 @@ namespace MeltPoolDG::Evaporation
       number specific_enthalpy_reference_temperature = numbers::invalid_double;
       // We consider the type "int" instead of bool to detect whether the
       // parameter is explicitly set by the user or not.
-      unsigned int consider_enthalpy_transport_vapor_mass_flux = numbers::invalid_unsigned_int;
+      std::string consider_enthalpy_transport_vapor_mass_flux = "default";
       LevelSet::DeltaApproximationPhaseWeightedData<number> delta_approximation_phase_weighted;
 
     } evaporative_cooling;

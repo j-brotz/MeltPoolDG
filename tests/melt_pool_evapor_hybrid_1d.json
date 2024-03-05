@@ -54,10 +54,10 @@
     "formulation source term level set": "rhs",
     "recoil pressure": {
       "activation temperature": "500",
-      "model type": "hybrid",
       "temperature constant": "1.0",
       "pressure coefficient": "9.871668311944721e-06",
-      "enable": "true"
+      "enable": "true",
+      "type": "hybrid"
     },
     "evaporative cooling": {
       "enable": "false"

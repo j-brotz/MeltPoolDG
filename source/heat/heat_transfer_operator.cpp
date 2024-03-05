@@ -125,7 +125,7 @@ namespace MeltPoolDG::Heat
     evapor_mass_flux_dof_idx   = evapor_mass_flux_dof_idx_in;
     latent_heat_of_evaporation = latent_heat_of_evaporation_in;
     do_phenomenological_recoil_pressure =
-      evapor_cooling_data.consider_enthalpy_transport_vapor_mass_flux > 0;
+      evapor_cooling_data.consider_enthalpy_transport_vapor_mass_flux == "true";
 
     if (do_phenomenological_recoil_pressure)
       {

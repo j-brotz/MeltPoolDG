@@ -55,14 +55,14 @@
     "recoil pressure": {
       "interface distributed flux type": "local_value",
       "activation temperature": "500",
-      "model type": "hybrid",
       "dirac delta function approximation": {
         "type": "heaviside_phase_weighted",
         "auto weights": "true"
       },
       "temperature constant": "1.0",
       "pressure coefficient": "9.871668311944721e-06",
-      "enable": "true"
+      "enable": "true",
+      "type": "hybrid"
     },
     "evaporative cooling": {
       "enable": "false"

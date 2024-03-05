@@ -91,7 +91,7 @@
         },
         "evaporative cooling":
         {
-            "consider enthalpy transport vapor mass flux": "false",
+            "consider enthalpy transport vapor mass flux": "default",
             "enable": "false",
             "model": "regularized",
             "dirac delta function approximation":

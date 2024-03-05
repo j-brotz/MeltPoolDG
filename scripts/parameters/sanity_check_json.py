@@ -107,6 +107,7 @@ old_parameter_names = [
     ["problem specific", "do recoil pressure"],
     ["problem specific", "do evaporative velocity jump"],
     ["heat", "dirac delta function approximation"],
+    ["evaporation", "recoil pressure", "model type"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -197,6 +198,7 @@ new_parameter_names = [
     ["evaporation", "recoil pressure", "enable"],
     ["evaporation", "evaporative dilation rate", "enable"],
     ["evaporation", "evaporative cooling", "dirac delta function approximation"],
+    ["evaporation", "recoil pressure", "type"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]
