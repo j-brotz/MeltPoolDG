@@ -29,12 +29,12 @@ namespace MeltPoolDG::UtilityFunctions
     IndexSet locally_active_dofs;
     DoFTools::extract_locally_active_dofs(dof_handler, locally_active_dofs);
 
-    AssertThrow(constraints.is_consistent_in_parallel(
-                  dealii::Utilities::MPI::all_gather(dof_handler.get_communicator(),
-                                                     dof_handler.locally_owned_dofs()),
-                  locally_active_dofs,
-                  dof_handler.get_communicator()),
-                ExcInternalError());
+    Assert(constraints.is_consistent_in_parallel(
+             dealii::Utilities::MPI::all_gather(dof_handler.get_communicator(),
+                                                dof_handler.locally_owned_dofs()),
+             locally_active_dofs,
+             dof_handler.get_communicator()),
+           ExcInternalError());
   }
   /**
    * Setup AffineConstraints according to given Dirichlet boundary conditions
