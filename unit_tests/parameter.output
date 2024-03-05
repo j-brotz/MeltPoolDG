@@ -81,19 +81,62 @@
     },
     "evaporation":
     {
-        "evapor coefficient": "0",
-        "evapor do level set pressure gradient interpolation": "false",
-        "evapor evaporation model": "constant",
-        "evapor evaporative mass flux": "0.0",
-        "evapor evaporative mass flux scale factor": "1",
-        "evapor formulation evaporative mass flux over interface": "continuous",
-        "evapor formulation source term continuity": "diffuse",
-        "evapor formulation source term heat": "diffuse",
-        "evapor level set source term type": "interface_velocity",
-        "evapor line integral n subdivisions MCA": "1",
-        "evapor line integral n subdivisions per side": "10",
-        "evapor ls value gas": "-1",
-        "evapor ls value liquid": "1"
+        "do level set pressure gradient interpolation": "false",
+        "evaporative mass flux model": "analytical",
+        "formulation source term level set": "interface_velocity_local",
+        "interface temperature evaluation type": "local_value",
+        "analytical":
+        {
+            "function": "0.0"
+        },
+        "evaporative cooling":
+        {
+            "consider enthalpy transport vapor mass flux": "false",
+            "enable": "false",
+            "model": "regularized",
+            "dirac delta function approximation":
+            {
+                "auto weights": "false",
+                "gas phase weight": "1",
+                "gas phase weight 2": "1",
+                "heavy phase weight": "1",
+                "heavy phase weight 2": "1",
+                "type": "norm_of_indicator_gradient"
+            }
+        },
+        "evaporative dilation rate":
+        {
+            "enable": "false",
+            "model": "regularized"
+        },
+        "hardt wondra":
+        {
+            "coefficient": "0"
+        },
+        "recoil pressure":
+        {
+            "activation temperature": "-1e+100",
+            "ambient gas pressure": "101300",
+            "enable": "false",
+            "interface distributed flux type": "local_value",
+            "pressure coefficient": "0.55",
+            "temperature constant": "-1",
+            "type": "phenomenological",
+            "dirac delta function approximation":
+            {
+                "auto weights": "false",
+                "gas phase weight": "1",
+                "gas phase weight 2": "1",
+                "heavy phase weight": "1",
+                "heavy phase weight 2": "1",
+                "type": "norm_of_indicator_gradient"
+            }
+        },
+        "thickness integral":
+        {
+            "subdivisions MCA": "1",
+            "subdivisions per side": "10"
+        }
     },
     "heat":
     {
@@ -111,15 +154,6 @@
         {
             "convection coefficient": "0",
             "temperature infinity": "0"
-        },
-        "dirac delta function approximation":
-        {
-            "auto weights": "false",
-            "gas phase weight": "1",
-            "gas phase weight 2": "1",
-            "heavy phase weight": "1",
-            "heavy phase weight 2": "1",
-            "type": "norm_of_indicator_gradient"
         },
         "linear solver":
         {
@@ -296,24 +330,6 @@
         "enable": "false",
         "time type": "real",
         "write time step size": "10"
-    },
-    "recoil pressure":
-    {
-        "activation temperature": "-1e+100",
-        "ambient gas pressure": "101300",
-        "interface distributed flux type": "local_value",
-        "model type": "phenomenological",
-        "pressure coefficient": "0.55",
-        "temperature constant": "-1",
-        "dirac delta function approximation":
-        {
-            "auto weights": "false",
-            "gas phase weight": "1",
-            "gas phase weight 2": "1",
-            "heavy phase weight": "1",
-            "heavy phase weight 2": "1",
-            "type": "norm_of_indicator_gradient"
-        }
     },
     "reinitialization":
     {
