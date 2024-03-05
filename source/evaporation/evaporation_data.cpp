@@ -81,11 +81,12 @@ namespace MeltPoolDG::Evaporation
                           "Set this parameter to true to consider evaporative cooling "
                           "in the heat equation");
         prm.add_parameter("consider enthalpy transport vapor mass flux",
-                          evaporative_cooling.enable,
+                          evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux,
                           "Set this parameter to true to account for the enthalpy "
                           "transported by the vapor mass flux in the heat equation. "
                           "This is only recommended if the vapor mass flux is not "
-                          "considered in the Navier-Stokes equations.");
+                          "considered in the Navier-Stokes equations.",
+                          Patterns::Selection("default|true|false"));
 
         evaporative_cooling.delta_approximation_phase_weighted.add_parameters(prm);
       }
@@ -125,13 +126,12 @@ namespace MeltPoolDG::Evaporation
 
     // Set increased enthalpy due to vapor mass flux, if it is not specified
     // by the user and the latter is not considered in the mass balance equation.
-    if (evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux ==
-        numbers::invalid_unsigned_int)
+    if (evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux == "default")
       {
         if (recoil.enable && recoil.type == RecoilPressureModelType::phenomenological)
-          evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux = 1;
+          evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux = "true";
         else
-          evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux = 0;
+          evaporative_cooling.consider_enthalpy_transport_vapor_mass_flux = "false";
       }
   }
 
