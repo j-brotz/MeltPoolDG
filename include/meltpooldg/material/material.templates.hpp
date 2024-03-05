@@ -284,8 +284,12 @@ namespace MeltPoolDG
                   s.volume_specific_heat_capacity);
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
-                t.liquid_fraction = value_type(1.) - temperature_dependent_solid_fraction;
-                t.solid_fraction  = temperature_dependent_solid_fraction;
+                const auto hs =
+                  LevelSet::Tools::interpolate_cubic(temperature_dependent_solid_fraction,
+                                                     value_type(0),
+                                                     value_type(1));
+                t.liquid_fraction = value_type(1.) - hs;
+                t.solid_fraction  = hs;
                 // @note gas_fraction = 0
               }
             break;
@@ -390,9 +394,12 @@ namespace MeltPoolDG
             if (flags & MaterialUpdateFlags::phase_fractions)
               {
                 t.gas_fraction = value_type(1.) - level_set_heaviside;
-                t.liquid_fraction =
-                  (1. - temperature_dependent_solid_fraction) * level_set_heaviside;
-                t.solid_fraction = temperature_dependent_solid_fraction * level_set_heaviside;
+                const auto liquid_solid_heaviside =
+                  LevelSet::Tools::interpolate_cubic(temperature_dependent_solid_fraction,
+                                                     value_type(0),
+                                                     value_type(1));
+                t.liquid_fraction = (1. - liquid_solid_heaviside) * level_set_heaviside;
+                t.solid_fraction  = liquid_solid_heaviside * level_set_heaviside;
               }
             break;
           }
