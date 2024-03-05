@@ -11,22 +11,24 @@
     "time step size": "0.005",
     "max n steps": "30"
   },
-  "reinitialization": {
-    "reinit modeltype": "olsson2007",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "filename": "output/reinit_circle/solution_reinitialization",
       "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "type": "olsson2007"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.5"
     }
   }
 }

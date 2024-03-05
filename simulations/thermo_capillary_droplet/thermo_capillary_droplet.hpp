@@ -266,8 +266,9 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     void
     set_field_conditions() final
     {
-      double eps =
-        UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+      const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+        GridTools::minimal_cell_diameter(*this->triangulation) /
+        this->parameters.ls.n_subdivisions / std::sqrt(dim));
 
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
       this->attach_initial_condition(

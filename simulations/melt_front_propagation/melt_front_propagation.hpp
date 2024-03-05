@@ -315,7 +315,9 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
       if (this->parameters.base.problem_name == ProblemType::melt_pool)
         {
           const double eps =
-            UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+            this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+              GridTools::minimal_cell_diameter(*this->triangulation) /
+              this->parameters.ls.n_subdivisions / std::sqrt(dim));
           this->attach_initial_condition(std::make_shared<InitialLevelSet<dim>>(0.0, eps),
                                          "level_set");
           this->attach_initial_condition(std::shared_ptr<Function<dim>>(

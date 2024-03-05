@@ -307,8 +307,10 @@ namespace MeltPoolDG
                   generic_data_out.get_vector("distance").update_ghost_values();
                   generic_data_out.get_vector("level_set").update_ghost_values();
 
-                  double eps = UtilityFunctions::compute_initial_epsilon<dim>(this->parameters,
-                                                                              *this->triangulation);
+                  const double eps =
+                    this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+                      GridTools::minimal_cell_diameter(*this->triangulation) /
+                      this->parameters.ls.n_subdivisions / std::sqrt(dim));
 
                   // compute L2Norm of level_set
                   Vector<float> difference_per_cell(this->triangulation->n_active_cells());

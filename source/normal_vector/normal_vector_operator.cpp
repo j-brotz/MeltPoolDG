@@ -4,7 +4,7 @@
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 
-namespace MeltPoolDG::NormalVector
+namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
   NormalVectorOperator<dim, number>::NormalVectorOperator(
@@ -13,20 +13,15 @@ namespace MeltPoolDG::NormalVector
     const unsigned int              normal_dof_idx_in,
     const unsigned int              normal_quad_idx_in,
     const unsigned int              ls_dof_idx_in,
-    const bool                      do_narrow_band_in,
     const VectorType               *solution_level_set_in)
     : scratch_data(scratch_data_in)
     , normal_vector_data(normal_vector_data_in)
     , normal_dof_idx(normal_dof_idx_in)
     , normal_quad_idx(normal_quad_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , do_narrow_band(do_narrow_band_in)
     , solution_level_set(solution_level_set_in)
   {
     this->reset_dof_index(normal_dof_idx_in);
-    AssertThrow(!do_narrow_band || normal_vector_data.narrow_band_threshold > 0.0,
-                ExcMessage(
-                  "The level set threshold for narrow band width must be positive! Abort..."));
   }
 
   template <int dim, typename number>
@@ -74,7 +69,7 @@ namespace MeltPoolDG::NormalVector
             level_set_in, normal_at_q); // compute normals from level set solution at tau=0
 
           const double damping = compute_cell_size_dependent_filter_parameter<dim>(
-            scratch_data, normal_dof_idx, cell, normal_vector_data.damping_scale_factor);
+            scratch_data, normal_dof_idx, cell, normal_vector_data.filter_parameter);
 
           for (const unsigned int q_index : normal_values.quadrature_point_indices())
             {
@@ -123,9 +118,9 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperator<dim, number>::vmult(BlockVectorType &dst, const BlockVectorType &src) const
   {
-    AssertThrow(!do_narrow_band || solution_level_set,
-                ExcMessage(
-                  "Level set solution vector must not be nullptr for a narrow band computation."));
+    Assert(!normal_vector_data.narrow_band.enable || solution_level_set,
+           ExcMessage(
+             "Level set solution vector must not be nullptr for a narrow band computation."));
 
     scratch_data.get_matrix_free().template cell_loop<BlockVectorType, BlockVectorType>(
       [&](const auto &, auto &dst, const auto &src, auto cell_range) {
@@ -178,9 +173,10 @@ namespace MeltPoolDG::NormalVector
             for (unsigned int q_index = 0; q_index < normal_vector.n_q_points; ++q_index)
               {
                 const VectorizedArray<number> narrow_band_mask =
-                  (do_narrow_band) ?
+                  (normal_vector_data.narrow_band.enable) ?
                     VectorTools::compute_mask_narrow_band<dim>(
-                      level_set.get_value(q_index), normal_vector_data.narrow_band_threshold) :
+                      level_set.get_value(q_index),
+                      normal_vector_data.narrow_band.level_set_threshold) :
                     1.0;
 
                 normal_vector.submit_value(narrow_band_mask * level_set.get_gradient(q_index),
@@ -287,7 +283,7 @@ namespace MeltPoolDG::NormalVector
   {
     normal_vector_vals.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
 
-    if (do_reinit_cells && do_narrow_band)
+    if (do_reinit_cells && normal_vector_data.narrow_band.enable)
       {
         level_set_vals.reinit(normal_vector_vals.get_current_cell_index());
         level_set_vals.read_dof_values_plain(*solution_level_set);
@@ -300,9 +296,10 @@ namespace MeltPoolDG::NormalVector
                               normal_vector_vals.get_gradient(q_index);
 
         const VectorizedArray<number> narrow_band_mask =
-          (do_narrow_band) ?
-            VectorTools::compute_mask_narrow_band<dim>(level_set_vals.get_value(q_index),
-                                                       normal_vector_data.narrow_band_threshold) :
+          (normal_vector_data.narrow_band.enable) ?
+            VectorTools::compute_mask_narrow_band<dim>(
+              level_set_vals.get_value(q_index),
+              normal_vector_data.narrow_band.level_set_threshold) :
             1.0;
 
         normal_vector_vals.submit_value(narrow_band_mask * normal_vector_vals.get_value(q_index),
@@ -350,7 +347,7 @@ namespace MeltPoolDG::NormalVector
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
             damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim>(
-              scratch_data, normal_dof_idx, cell, normal_vector_data.damping_scale_factor);
+              scratch_data, normal_dof_idx, cell, normal_vector_data.filter_parameter);
           }
       }
   }
@@ -358,4 +355,4 @@ namespace MeltPoolDG::NormalVector
   template class NormalVectorOperator<1, double>;
   template class NormalVectorOperator<2, double>;
   template class NormalVectorOperator<3, double>;
-} // namespace MeltPoolDG::NormalVector
+} // namespace MeltPoolDG::LevelSet

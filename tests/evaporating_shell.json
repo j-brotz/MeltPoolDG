@@ -9,20 +9,11 @@
     "do print parameters": "false",
     "verbosity level": "0"
   },
-  "levelset": {
-    "ls do reinitialization": "false"
-  },
   "time stepping": {
     "start time": "0.0",
     "end time": "0.01",
     "time step size": "1e-4",
     "max n steps": "10"
-  },
-  "normal vector": {
-    "normal vec verbosity level": "1"
-  },
-  "curvature": {
-    "curv verbosity level": "1"
   },
   "material": {
     "gas": {
@@ -72,6 +63,17 @@
   },
   "evaporation": {
     "evaporative dilation rate": {
+      "enable": "false"
+    }
+  },
+  "level set": {
+    "curvature": {
+      "verbosity level": "1"
+    },
+    "normal vector": {
+      "verbosity level": "1"
+    },
+    "reinitialization": {
       "enable": "false"
     }
   }

@@ -127,8 +127,9 @@ namespace MeltPoolDG
       void
       set_field_conditions() override
       {
-        double eps =
-          UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+        const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+          GridTools::minimal_cell_diameter(*this->triangulation) /
+          this->parameters.ls.n_subdivisions / std::sqrt(dim));
 
         AssertThrow(eps > 0, ExcNotImplemented());
 

@@ -84,21 +84,6 @@
       "bottom": "3200"
     }
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "0"
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "normal vec verbosity level": "1"
-  },
-  "curvature": {
-    "curv damping scale factor": "0.5",
-    "curv verbosity level": "1"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-4",
@@ -148,6 +133,20 @@
     "paraview": {
       "output material id": "true",
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "max n steps": "0"
+    },
+    "curvature": {
+      "filter parameter": "0.5",
+      "verbosity level": "1"
+    },
+    "normal vector": {
+      "filter parameter": "0.5",
+      "verbosity level": "1"
     }
   }
 }

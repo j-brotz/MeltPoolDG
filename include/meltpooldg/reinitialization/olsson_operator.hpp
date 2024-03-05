@@ -19,7 +19,7 @@
 
 namespace MeltPoolDG
 {
-  namespace Reinitialization
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -88,16 +88,16 @@ namespace MeltPoolDG
     private:
       const ScratchData<dim>             &scratch_data;
       const ReinitializationData<number> &reinit_data;
+      const double                        ls_n_subdivisions;
       const BlockVectorType              &normal_vec;
       const unsigned int                  reinit_quad_idx;
       const unsigned int                  normal_dof_idx;
       const unsigned int                  ls_dof_idx;
 
-      const double thickness_scale_factor;
       const double tolerance_normal_vector;
 
       AlignedVector<VectorizedArray<double>>                         diffusion_length;
       mutable AlignedVector<Tensor<1, dim, VectorizedArray<double>>> unit_normal;
     };
-  } // namespace Reinitialization
+  } // namespace LevelSet
 } // namespace MeltPoolDG

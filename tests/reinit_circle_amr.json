@@ -18,22 +18,27 @@
     "lower perc to coarsen": "    0.00",
     "max grid refinement level": "8"
   },
-  "reinitialization": {
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.05",
-    "linear solver": {
-      "do matrix free": "false",
-      "preconditioner type": "AMG"
-    }
-  },
-  "normal vector": {
-    "linear solver": {
-      "do matrix free": "false"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "false",
+        "preconditioner type": "AMG"
+      },
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.05"
+      }
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "false"
+      }
     }
   }
 }

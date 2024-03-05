@@ -10,9 +10,11 @@
 #include <deal.II/lac/la_parallel_block_vector.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_base.hpp>
 #include <meltpooldg/evaporation/evaporation_model_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 
 namespace MeltPoolDG::Evaporation
 {
@@ -30,14 +32,13 @@ namespace MeltPoolDG::Evaporation
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
 
-    const ScratchData<dim>     &scratch_data;
-    const EvaporationModelBase &evaporation_model;
+    const ScratchData<dim>                                  &scratch_data;
+    const EvaporationModelBase                              &evaporation_model;
+    const EvaporationData<double>::ThicknessIntegrationData &thickness_integration_data;
+    const LevelSet::ReinitializationData<double>            &reinit_data;
 
     const VectorType      &level_set_as_heaviside;
     const BlockVectorType &normal_vector;
-
-    const double constant_epsilon;
-    const double eps_scale_factor;
 
     const unsigned int ls_hanging_nodes_dof_idx;
     const unsigned int normal_dof_idx;
@@ -46,22 +47,18 @@ namespace MeltPoolDG::Evaporation
 
     const FESystem<dim> fe_dim;
 
-    const unsigned int n_subdivisions_per_side;
-    const unsigned int n_subdivisions_MCA;
-
   public:
-    EvaporationMassFluxOperatorThicknessIntegration(const ScratchData<dim>     &scratch_data,
-                                                    const EvaporationModelBase &evaporation_model,
-                                                    const VectorType      &level_set_as_heaviside,
-                                                    const BlockVectorType &normal_vector,
-                                                    const double           constant_epsilon,
-                                                    const double           eps_scale_factor,
-                                                    const unsigned int     ls_hanging_nodes_dof_idx,
-                                                    const unsigned int     normal_dof_idx,
-                                                    const unsigned int temp_hanging_nodes_dof_idx,
-                                                    const unsigned int evapor_mass_flux_dof_idx,
-                                                    const unsigned int n_subdivisions_per_side,
-                                                    const unsigned int n_subdivisions_MCA);
+    EvaporationMassFluxOperatorThicknessIntegration(
+      const ScratchData<dim>                                  &scratch_data,
+      const EvaporationModelBase                              &evaporation_model,
+      const EvaporationData<double>::ThicknessIntegrationData &thickness_integration_data,
+      const LevelSet::ReinitializationData<double>            &reinit_data,
+      const VectorType                                        &level_set_as_heaviside,
+      const BlockVectorType                                   &normal_vector,
+      const unsigned int                                       ls_hanging_nodes_dof_idx,
+      const unsigned int                                       normal_dof_idx,
+      const unsigned int                                       temp_hanging_nodes_dof_idx,
+      const unsigned int                                       evapor_mass_flux_dof_idx);
 
     /**
      *  Compute the evaporative mass flux by means of 1d integration across the

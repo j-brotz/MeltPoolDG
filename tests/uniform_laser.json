@@ -14,16 +14,6 @@
     "start time": "0.0",
     "max n steps": "10"
   },
-  "levelset": {
-    "ls n initial reinit steps": "0"
-  },
-  "reinitialization": {
-    "reinit constant epsilon": "5e-06",
-    "linear solver": {
-      "preconditioner type": "Diagonal",
-      "do matrix free": "true"
-    }
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "0.0001",
@@ -92,22 +82,6 @@
       }
     }
   },
-  "curvature": {
-    "curv damping scale factor": "2",
-    "curv do narrow band": "false",
-    "curv implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true",
-      "abs tolerance": "1e-14"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "2",
-    "linear solver": {
-      "do matrix free": "true",
-      "abs tolerance": "1e-14"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
@@ -119,6 +93,37 @@
     },
     "recoil pressure": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "preconditioner type": "Diagonal",
+        "do matrix free": "true"
+      },
+      "n initial steps": "0",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "5e-06"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true",
+        "abs tolerance": "1e-14"
+      },
+      "filter parameter": "2",
+      "implementation": "meltpooldg",
+      "narrow band": {
+        "enable": "false"
+      }
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true",
+        "abs tolerance": "1e-14"
+      },
+      "filter parameter": "2"
     }
   }
 }

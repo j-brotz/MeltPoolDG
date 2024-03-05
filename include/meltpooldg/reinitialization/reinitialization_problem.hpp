@@ -40,7 +40,7 @@
 #include <memory>
 namespace MeltPoolDG
 {
-  namespace Reinitialization
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -107,5 +107,5 @@ namespace MeltPoolDG
 
       std::shared_ptr<Postprocessor<dim>> post_processor;
     };
-  } // namespace Reinitialization
+  } // namespace LevelSet
 } // namespace MeltPoolDG

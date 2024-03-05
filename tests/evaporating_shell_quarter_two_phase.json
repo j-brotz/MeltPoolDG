@@ -28,10 +28,6 @@
     },
     "two phase fluid properties transition type": "consistent_with_evaporation"
   },
-  "reinitialization": {
-    "reinit constant epsilon": "0.02",
-    "reinit max n steps": "5"
-  },
   "evaporation": {
     "analytical": {
       "function": "0.01"
@@ -43,9 +39,6 @@
     "evaporative dilation rate": {
       "enable": "true"
     }
-  },
-  "levelset": {
-    "ls n subdivisions": "1"
   },
   "simulation specific": {
     "velocity": "1.998e-5",
@@ -90,5 +83,15 @@
     "paraview": {
       "enable": "false"
     }
+  },
+  "level set": {
+    "reinitialization": {
+      "max n steps": "5",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.02"
+      }
+    },
+    "n subdivisions": "1"
   }
 }

@@ -4,7 +4,7 @@
 #  include <meltpooldg/utilities/journal.hpp>
 #  include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::AdvectionDiffusion
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   AdvectionDiffusionOperationAdaflo<dim>::AdvectionDiffusionOperationAdaflo(
@@ -232,13 +232,13 @@ namespace MeltPoolDG::AdvectionDiffusion
     adaflo_params.time.time_step_size_start = parameters.time_stepping.time_step_size;
     adaflo_params.time.time_step_size_min   = parameters.time_stepping.time_step_size;
     adaflo_params.time.time_step_size_max   = parameters.time_stepping.time_step_size;
-    if (parameters.advec_diff.time_integration_scheme == "implicit_euler")
+    if (parameters.ls.advec_diff.time_integration_scheme == "implicit_euler")
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::implicit_euler;
-    else if (parameters.advec_diff.time_integration_scheme == "explicit_euler")
+    else if (parameters.ls.advec_diff.time_integration_scheme == "explicit_euler")
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::explicit_euler;
-    else if (parameters.advec_diff.time_integration_scheme == "crank_nicolson")
+    else if (parameters.ls.advec_diff.time_integration_scheme == "crank_nicolson")
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::crank_nicolson;
-    else if (parameters.advec_diff.time_integration_scheme == "bdf_2")
+    else if (parameters.ls.advec_diff.time_integration_scheme == "bdf_2")
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::bdf_2;
     else
       AssertThrow(false, ExcMessage("Requested time stepping scheme not supported."));
@@ -306,6 +306,6 @@ namespace MeltPoolDG::AdvectionDiffusion
   template class AdvectionDiffusionOperationAdaflo<1>;
   template class AdvectionDiffusionOperationAdaflo<2>;
   template class AdvectionDiffusionOperationAdaflo<3>;
-} // namespace MeltPoolDG::AdvectionDiffusion
+} // namespace MeltPoolDG::LevelSet
 
 #endif

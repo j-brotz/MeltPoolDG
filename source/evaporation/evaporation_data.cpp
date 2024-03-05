@@ -32,8 +32,8 @@ namespace MeltPoolDG::Evaporation
                           "means of the line integral.");
         prm.add_parameter("subdivisions MCA",
                           thickness_integral.subdivisions_MCA,
-                          "Number of subdivisions for the marching cube algorithm within the "
-                          "evaporative mass flux evaluation by means of the line integral.");
+                          "Number of subdivisions for the Marching Cube Algorithm within the "
+                          "evaporative mass flux evaluation by means of the thickness integral.");
       }
       prm.leave_subsection();
 

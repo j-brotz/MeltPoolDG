@@ -62,32 +62,6 @@
     "domain y min": "-0.0001",
     "domain y max": "0.0002"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "1e-6",
-    "linear solver": {
-      "preconditioner type": "AMG",
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv damping scale factor": "4",
-    "curv implementation": "adaflo",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-12",
@@ -137,11 +111,6 @@
     "do heat transfer": "true",
     "do solidification": "true"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "directory": "output_recoil_pressure_fixed_solid_domain_eps1e-6_refine8_variable_props",
     "write frequency": "1",
@@ -155,6 +124,39 @@
       "temperature constant": "10000.",
       "pressure coefficient": "0.0987166831194472",
       "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "preconditioner type": "AMG",
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "1e-6"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4",
+      "implementation": "adaflo"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.5"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

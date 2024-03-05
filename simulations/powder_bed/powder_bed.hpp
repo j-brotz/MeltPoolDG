@@ -184,12 +184,14 @@ namespace MeltPoolDG::Simulation::PowderBed
           this->attach_initial_condition(
             std::make_shared<Functions::ConstantFunction<dim>>(T_initial), "heat_transfer");
           // attach prescribed heaviside
-          this->attach_initial_condition(std::make_shared<MeltPool::PowderBedLevelSet<dim>>(
-                                           powder_bed_data,
-                                           MeltPool::LevelSetType::heaviside,
-                                           UtilityFunctions::compute_initial_epsilon<dim>(
-                                             this->parameters, *this->triangulation)),
-                                         "prescribed_heaviside");
+          this->attach_initial_condition(
+            std::make_shared<MeltPool::PowderBedLevelSet<dim>>(
+              powder_bed_data,
+              MeltPool::LevelSetType::heaviside,
+              this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+                GridTools::minimal_cell_diameter(*this->triangulation) /
+                this->parameters.ls.n_subdivisions / std::sqrt(dim))),
+            "prescribed_heaviside");
         }
     }
   };

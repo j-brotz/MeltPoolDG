@@ -11,23 +11,22 @@
     "end time": "1.",
     "time step size": "0.01"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit constant epsilon": "-1",
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "2"
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "0.5"
-  },
   "output": {
     "directory": "output",
     "paraview": {
       "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "reinit constant epsilon": "-1",
+      "reinit scale factor epsilon": "2",
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007"
+    },
+    "normal vector": {
+      "filter parameter": "0.5"
     }
   }
 }

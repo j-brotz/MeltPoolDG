@@ -6,7 +6,7 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::NormalVector
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   NormalVectorOperation<dim>::NormalVectorOperation(
@@ -118,7 +118,7 @@ namespace MeltPoolDG::NormalVector
 
     if (normal_vector_data.linear_solver.do_matrix_free)
       {
-        AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
+        Assert(preconditioner_matrixfree, ExcNotImplemented());
 
         normal_vector_operator->create_rhs(rhs, solution_level_set);
 
@@ -139,11 +139,6 @@ namespace MeltPoolDG::NormalVector
       }
     else
       {
-        AssertThrow(
-          !normal_vector_data.do_narrow_band,
-          ExcMessage(
-            "The computation of the normal vector in a narrow band is only implemented matrix-free."));
-
         normal_vector_operator->assemble_matrixbased(solution_level_set,
                                                      normal_vector_operator->get_system_matrix(),
                                                      rhs);
@@ -221,14 +216,12 @@ namespace MeltPoolDG::NormalVector
   void
   NormalVectorOperation<dim>::create_operator()
   {
-    normal_vector_operator =
-      std::make_unique<NormalVectorOperator<dim>>(scratch_data,
-                                                  normal_vector_data,
-                                                  normal_dof_idx,
-                                                  normal_quad_idx,
-                                                  ls_dof_idx,
-                                                  normal_vector_data.do_narrow_band,
-                                                  &solution_level_set);
+    normal_vector_operator = std::make_unique<NormalVectorOperator<dim>>(scratch_data,
+                                                                         normal_vector_data,
+                                                                         normal_dof_idx,
+                                                                         normal_quad_idx,
+                                                                         ls_dof_idx,
+                                                                         &solution_level_set);
     /*
      * initialize preconditioner matrix-free
      */
@@ -247,4 +240,4 @@ namespace MeltPoolDG::NormalVector
   template class NormalVectorOperation<1>;
   template class NormalVectorOperation<2>;
   template class NormalVectorOperation<3>;
-} // namespace MeltPoolDG::NormalVector
+} // namespace MeltPoolDG::LevelSet

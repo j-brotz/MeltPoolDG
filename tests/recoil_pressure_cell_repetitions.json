@@ -34,9 +34,6 @@
     "problem name": "melt_pool",
     "verbosity level": "0"
   },
-  "curvature": {
-    "curv damping scale factor": "4"
-  },
   "time stepping": {
     "max n steps": "0",
     "end time": "0.1",
@@ -46,11 +43,6 @@
   "material": {
     "material template": "stainless_steel",
     "two phase fluid properties transition type": "smooth"
-  },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls n initial reinit steps": "0"
   },
   "laser": {
     "absorptivity liquid": "0.5",
@@ -70,22 +62,10 @@
     "domain y max": "0.0002",
     "cell repetitions": "1,2"
   },
-  "normal vector": {
-    "normal vec damping scale factor": "2."
-  },
-  "reinitialization": {
-    "reinit max n steps": "0",
-    "reinit scale factor epsilon": "2"
-  },
   "problem specific": {
     "do heat transfer": "false",
     "do advect level set": "false",
     "do solidification": "false"
-  },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
   },
   "output": {
     "paraview": {
@@ -95,6 +75,28 @@
   "evaporation": {
     "recoil pressure": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "n initial steps": "0",
+      "max n steps": "0",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "2"
+      }
+    },
+    "curvature": {
+      "filter parameter": "4"
+    },
+    "normal vector": {
+      "filter parameter": "2."
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

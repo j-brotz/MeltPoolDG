@@ -10,32 +10,6 @@
         "n initial refinement cycles": "0",
         "upper perc to refine": "0"
     },
-    "advection diffusion":
-    {
-        "advec diff diffusivity": "0",
-        "advec diff implementation": "meltpooldg",
-        "advec diff time integration scheme": "crank_nicolson",
-        "convection stabilization":
-        {
-            "coefficient": "-1",
-            "type": "none"
-        },
-        "linear solver":
-        {
-            "abs tolerance": "1e-20",
-            "do matrix free": "true",
-            "max iterations": "10000",
-            "monitor type": "none",
-            "preconditioner type": "Diagonal",
-            "rel tolerance": "1e-12",
-            "solver type": "GMRES"
-        },
-        "predictor":
-        {
-            "n old solutions": "2",
-            "type": "none"
-        }
-    },
     "base":
     {
         "application name": "not_initialized",
@@ -48,30 +22,6 @@
         "n q points 1d": "-1",
         "problem name": "advection_diffusion",
         "verbosity level": "0"
-    },
-    "curvature":
-    {
-        "curv damping scale factor": "0",
-        "curv do narrow band": "false",
-        "curv implementation": "meltpooldg",
-        "curv verbosity level": "0",
-        "enable": "true",
-        "narrow band threshold": "1",
-        "linear solver":
-        {
-            "abs tolerance": "1e-20",
-            "do matrix free": "true",
-            "max iterations": "10000",
-            "monitor type": "none",
-            "preconditioner type": "Diagonal",
-            "rel tolerance": "1e-12",
-            "solver type": "CG"
-        },
-        "predictor":
-        {
-            "n old solutions": "2",
-            "type": "none"
-        }
     },
     "darcy damping":
     {
@@ -222,17 +172,64 @@
             "reflectivity": "0"
         }
     },
-    "levelset":
+    "level set":
     {
-        "ls do curvature correction": "false",
-        "ls do localized heaviside": "true",
-        "ls do reinitialization": "true",
-        "ls implementation": "meltpooldg",
-        "ls n initial reinit steps": "-1",
-        "ls n subdivisions": "1",
-        "ls reinit time step size": "-1",
-        "ls time integration scheme": "crank_nicolson",
-        "tol reinit": "2.22507e-308",
+        "do localized heaviside": "true",
+        "n subdivisions": "1",
+        "advection diffusion":
+        {
+            "diffusivity": "0",
+            "implementation": "meltpooldg",
+            "time integration scheme": "crank_nicolson",
+            "convection stabilization":
+            {
+                "coefficient": "-1",
+                "type": "none"
+            },
+            "linear solver":
+            {
+                "abs tolerance": "1e-20",
+                "do matrix free": "true",
+                "max iterations": "10000",
+                "monitor type": "none",
+                "preconditioner type": "Diagonal",
+                "rel tolerance": "1e-12",
+                "solver type": "GMRES"
+            },
+            "predictor":
+            {
+                "n old solutions": "2",
+                "type": "none"
+            }
+        },
+        "curvature":
+        {
+            "do curvature correction": "false",
+            "enable": "true",
+            "filter parameter": "0",
+            "implementation": "meltpooldg",
+            "verbosity level": "0",
+            "linear solver":
+            {
+                "abs tolerance": "1e-20",
+                "do matrix free": "true",
+                "max iterations": "10000",
+                "monitor type": "none",
+                "preconditioner type": "Diagonal",
+                "rel tolerance": "1e-12",
+                "solver type": "CG"
+            },
+            "narrow band":
+            {
+                "enable": "false",
+                "level set threshold": "1"
+            },
+            "predictor":
+            {
+                "n old solutions": "2",
+                "type": "none"
+            }
+        },
         "nearest point":
         {
             "max iter": "20",
@@ -240,6 +237,61 @@
             "rel tol": "1e-06",
             "type": "closest_point_normal",
             "verbosity level": "0"
+        },
+        "normal vector":
+        {
+            "filter parameter": "0.5",
+            "implementation": "meltpooldg",
+            "verbosity level": "0",
+            "linear solver":
+            {
+                "abs tolerance": "1e-20",
+                "do matrix free": "true",
+                "max iterations": "10000",
+                "monitor type": "none",
+                "preconditioner type": "Diagonal",
+                "rel tolerance": "1e-12",
+                "solver type": "CG"
+            },
+            "narrow band":
+            {
+                "enable": "false",
+                "level set threshold": "1"
+            },
+            "predictor":
+            {
+                "n old solutions": "2",
+                "type": "none"
+            }
+        },
+        "reinitialization":
+        {
+            "enable": "true",
+            "implementation": "meltpooldg",
+            "max n steps": "5",
+            "n initial steps": "-1",
+            "tolerance": "2.22507e-308",
+            "type": "olsson2007",
+            "interface thickness parameter":
+            {
+                "type": "proportional_to_cell_size",
+                "val": "0.5"
+            },
+            "linear solver":
+            {
+                "abs tolerance": "1e-20",
+                "do matrix free": "true",
+                "max iterations": "10000",
+                "monitor type": "none",
+                "preconditioner type": "Diagonal",
+                "rel tolerance": "1e-12",
+                "solver type": "CG"
+            },
+            "predictor":
+            {
+                "n old solutions": "2",
+                "type": "none"
+            }
         }
     },
     "material":
@@ -282,29 +334,6 @@
         "mp set velocity to zero in solid": "false",
         "mp solid fraction lower limit": "1"
     },
-    "normal vector":
-    {
-        "narrow band threshold": "1",
-        "normal vec damping scale factor": "0.5",
-        "normal vec do narrow band": "false",
-        "normal vec implementation": "meltpooldg",
-        "normal vec verbosity level": "0",
-        "linear solver":
-        {
-            "abs tolerance": "1e-20",
-            "do matrix free": "true",
-            "max iterations": "10000",
-            "monitor type": "none",
-            "preconditioner type": "Diagonal",
-            "rel tolerance": "1e-12",
-            "solver type": "CG"
-        },
-        "predictor":
-        {
-            "n old solutions": "2",
-            "type": "none"
-        }
-    },
     "output":
     {
         "directory": ".\/",
@@ -330,29 +359,6 @@
         "enable": "false",
         "time type": "real",
         "write time step size": "10"
-    },
-    "reinitialization":
-    {
-        "reinit constant epsilon": "-1",
-        "reinit implementation": "meltpooldg",
-        "reinit max n steps": "5",
-        "reinit modeltype": "olsson2007",
-        "reinit scale factor epsilon": "0.5",
-        "linear solver":
-        {
-            "abs tolerance": "1e-20",
-            "do matrix free": "true",
-            "max iterations": "10000",
-            "monitor type": "none",
-            "preconditioner type": "Diagonal",
-            "rel tolerance": "1e-12",
-            "solver type": "CG"
-        },
-        "predictor":
-        {
-            "n old solutions": "2",
-            "type": "none"
-        }
     },
     "restart":
     {

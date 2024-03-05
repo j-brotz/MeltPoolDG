@@ -19,31 +19,28 @@ namespace MeltPoolDG::Evaporation
 
   template <int dim>
   EvaporationMassFluxOperatorThicknessIntegration<dim>::
-    EvaporationMassFluxOperatorThicknessIntegration(const ScratchData<dim>     &scratch_data,
-                                                    const EvaporationModelBase &evaporation_model,
-                                                    const VectorType      &level_set_as_heaviside,
-                                                    const BlockVectorType &normal_vector,
-                                                    const double           constant_epsilon,
-                                                    const double           eps_scale_factor,
-                                                    const unsigned int     ls_hanging_nodes_dof_idx,
-                                                    const unsigned int     normal_dof_idx,
-                                                    const unsigned int temp_hanging_nodes_dof_idx,
-                                                    const unsigned int evapor_mass_flux_dof_idx,
-                                                    const unsigned int n_subdivisions_per_side,
-                                                    const unsigned int n_subdivisions_MCA)
+    EvaporationMassFluxOperatorThicknessIntegration(
+      const ScratchData<dim>                                  &scratch_data,
+      const EvaporationModelBase                              &evaporation_model,
+      const EvaporationData<double>::ThicknessIntegrationData &thickness_integration_data,
+      const LevelSet::ReinitializationData<double>            &reinit_data,
+      const VectorType                                        &level_set_as_heaviside,
+      const BlockVectorType                                   &normal_vector,
+      const unsigned int                                       ls_hanging_nodes_dof_idx,
+      const unsigned int                                       normal_dof_idx,
+      const unsigned int                                       temp_hanging_nodes_dof_idx,
+      const unsigned int                                       evapor_mass_flux_dof_idx)
     : scratch_data(scratch_data)
     , evaporation_model(evaporation_model)
+    , thickness_integration_data(thickness_integration_data)
+    , reinit_data(reinit_data)
     , level_set_as_heaviside(level_set_as_heaviside)
     , normal_vector(normal_vector)
-    , constant_epsilon(constant_epsilon)
-    , eps_scale_factor(eps_scale_factor)
     , ls_hanging_nodes_dof_idx(ls_hanging_nodes_dof_idx)
     , normal_dof_idx(normal_dof_idx)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx)
     , evapor_mass_flux_dof_idx(evapor_mass_flux_dof_idx)
     , fe_dim(FE_Q<dim>(scratch_data.get_degree(normal_dof_idx)), dim)
-    , n_subdivisions_per_side(n_subdivisions_per_side)
-    , n_subdivisions_MCA(n_subdivisions_MCA)
   {}
 
   template <int dim>
@@ -64,8 +61,8 @@ namespace MeltPoolDG::Evaporation
         std::vector<unsigned int> global_points_normal_to_interface_pointer;
 
         const auto thickness_integration_band =
-          constant_epsilon > 0.0 ? 5 * constant_epsilon :
-                                   5 * scratch_data.get_min_cell_size() * eps_scale_factor;
+          5 * reinit_data.compute_interface_thickness_parameter_epsilon(
+                scratch_data.get_min_cell_size());
 
         Assert(thickness_integration_band > 0.0,
                ExcMessage("Thickness for interface integration not set."));
@@ -79,10 +76,10 @@ namespace MeltPoolDG::Evaporation
           level_set_as_heaviside,
           normal_vector,
           thickness_integration_band,
-          n_subdivisions_per_side,
+          thickness_integration_data.subdivisions_per_side,
           /* bidirectional */ true,
           /* contour_value */ 0.5,
-          n_subdivisions_MCA);
+          thickness_integration_data.subdivisions_MCA);
 
         const bool update_ghosts = !level_set_as_heaviside.has_ghost_elements();
         if (update_ghosts)

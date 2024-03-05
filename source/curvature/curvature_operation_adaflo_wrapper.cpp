@@ -2,7 +2,7 @@
 #  include <meltpooldg/curvature/curvature_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 
-namespace MeltPoolDG::Curvature
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   CurvatureOperationAdaflo<dim>::CurvatureOperationAdaflo(const ScratchData<dim> &scratch_data,
@@ -14,7 +14,7 @@ namespace MeltPoolDG::Curvature
                                                           const Parameters<double> &data_in)
     : scratch_data(scratch_data)
     , advected_field(advected_field)
-    , normal_vector_data(data_in.normal_vec)
+    , normal_vector_data(data_in.ls.normal_vec)
   {
     (void)normal_vec_dof_idx;
 
@@ -56,15 +56,14 @@ namespace MeltPoolDG::Curvature
   void
   CurvatureOperationAdaflo<dim>::create_normal_vector_operator()
   {
-    normal_vector_operation_adaflo =
-      std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-        scratch_data,
-        curv_adaflo_params.dof_index_ls,
-        curv_adaflo_params.dof_index_normal,
-        curv_adaflo_params.quad_index,
-        advected_field,
-        normal_vector_data,
-        curv_adaflo_params.epsilon);
+    normal_vector_operation_adaflo = std::make_shared<LevelSet::NormalVectorOperationAdaflo<dim>>(
+      scratch_data,
+      curv_adaflo_params.dof_index_ls,
+      curv_adaflo_params.dof_index_normal,
+      curv_adaflo_params.quad_index,
+      advected_field,
+      normal_vector_data,
+      curv_adaflo_params.epsilon);
   }
 
   template <int dim>
@@ -196,11 +195,11 @@ namespace MeltPoolDG::Curvature
     curv_adaflo_params.dof_index_normal    = curv_dof_idx;
     curv_adaflo_params.quad_index          = curv_quad_idx;
     curv_adaflo_params.epsilon =
-      parameters.reinit.scale_factor_epsilon / parameters.ls.n_subdivisions;
+      parameters.ls.reinit.interface_thickness_parameter.value / parameters.ls.n_subdivisions;
     curv_adaflo_params.approximate_projections = false; //@ todo
-    curv_adaflo_params.curvature_correction    = parameters.ls.do_curvature_correction;
-    verbosity_level                            = parameters.curv.verbosity_level;
-    // curv_adaflo_params.damping_scale_factor = parameters.normal_vec.damping_scale_factor; //@
+    curv_adaflo_params.curvature_correction    = parameters.ls.curv.do_curvature_correction;
+    verbosity_level                            = parameters.ls.curv.verbosity_level;
+    // curv_adaflo_params.filter_parameter = parameters.ls.normal_vec.filter_parameter; //@
     // todo
   }
 
@@ -222,5 +221,5 @@ namespace MeltPoolDG::Curvature
   template class CurvatureOperationAdaflo<1>;
   template class CurvatureOperationAdaflo<2>;
   template class CurvatureOperationAdaflo<3>;
-} // namespace MeltPoolDG::Curvature
+} // namespace MeltPoolDG::LevelSet
 #endif

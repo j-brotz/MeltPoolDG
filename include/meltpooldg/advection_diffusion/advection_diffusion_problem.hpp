@@ -21,7 +21,7 @@
 #include <meltpooldg/utilities/profiling_monitor.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
-namespace MeltPoolDG::AdvectionDiffusion
+namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
@@ -94,4 +94,4 @@ namespace MeltPoolDG::AdvectionDiffusion
     std::shared_ptr<Postprocessor<dim>> post_processor;
   };
 
-} // namespace MeltPoolDG::AdvectionDiffusion
+} // namespace MeltPoolDG::LevelSet

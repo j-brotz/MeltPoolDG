@@ -25,7 +25,7 @@
 
 namespace MeltPoolDG
 {
-  namespace NormalVector
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -117,6 +117,6 @@ namespace MeltPoolDG
       double                                 cell_diameter_max;
       double                                 epsilon_used;
     };
-  } // namespace NormalVector
+  } // namespace LevelSet
 } // namespace MeltPoolDG
 #endif

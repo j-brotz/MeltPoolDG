@@ -18,42 +18,44 @@
     "lower perc to coarsen": "    0.00",
     "max grid refinement level": "8"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.01",
-    "linear solver": {
-      "solver type": "CG",
-      "preconditioner type": "Identity",
-      "do matrix free": "false"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "false"
-    }
-  },
-  "curvature": {
-    "curv damping scale factor": "4",
-    "linear solver": {
-      "do matrix free": "false"
-    }
-  },
-  "advection diffusion": {
-    "linear solver": {
-      "preconditioner type": "ILU",
-      "do matrix free": "false"
-    }
-  },
   "output": {
     "paraview": {
       "filename": "solution_rotaitng_bubble",
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "solver type": "CG",
+        "preconditioner type": "Identity",
+        "do matrix free": "false"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.01"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "false"
+      },
+      "filter parameter": "4"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "false"
+      },
+      "filter parameter": "0.5"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "preconditioner type": "ILU",
+        "do matrix free": "false"
+      }
     }
   }
 }

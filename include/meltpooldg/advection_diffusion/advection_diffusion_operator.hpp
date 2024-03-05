@@ -13,7 +13,7 @@
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 
-namespace MeltPoolDG::AdvectionDiffusion
+namespace MeltPoolDG::LevelSet
 {
   static std::map<std::string, double> get_generalized_theta = {
     {"explicit_euler", 0.0},
@@ -98,4 +98,4 @@ namespace MeltPoolDG::AdvectionDiffusion
     mutable AlignedVector<VectorizedArray<double>> stab_param;
     mutable bool                                   do_update_stab_param = true;
   };
-} // namespace MeltPoolDG::AdvectionDiffusion
+} // namespace MeltPoolDG::LevelSet

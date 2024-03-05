@@ -3,7 +3,7 @@
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
-namespace MeltPoolDG::Curvature
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   CurvatureOperation<dim>::CurvatureOperation(const ScratchData<dim>         &scratch_data_in,
@@ -88,7 +88,7 @@ namespace MeltPoolDG::Curvature
 
     if (curvature_data.linear_solver.do_matrix_free)
       {
-        AssertThrow(preconditioner_matrixfree, ExcNotImplemented());
+        Assert(preconditioner_matrixfree, ExcNotImplemented());
 
         curvature_operator->create_rhs(rhs, normal_vector_operation.get_solution_normal_vector());
 
@@ -111,10 +111,6 @@ namespace MeltPoolDG::Curvature
       }
     else
       {
-        AssertThrow(
-          !curvature_data.do_narrow_band,
-          ExcMessage(
-            "The computation of the curvature in a narrow band is only implemented matrix-free."));
         curvature_operator->assemble_matrixbased(
           normal_vector_operation.get_solution_normal_vector(),
           curvature_operator->get_system_matrix(),
@@ -247,7 +243,6 @@ namespace MeltPoolDG::Curvature
                                                                   curv_quad_idx,
                                                                   normal_dof_idx,
                                                                   ls_dof_idx,
-                                                                  curvature_data.do_narrow_band,
                                                                   &solution_levelset);
     /*
      * initialize preconditioner matrix-free
@@ -264,4 +259,4 @@ namespace MeltPoolDG::Curvature
   template class CurvatureOperation<1>;
   template class CurvatureOperation<2>;
   template class CurvatureOperation<3>;
-} // namespace MeltPoolDG::Curvature
+} // namespace MeltPoolDG::LevelSet

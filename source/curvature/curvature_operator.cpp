@@ -3,7 +3,7 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::Curvature
+namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
   CurvatureOperator<dim, number>::CurvatureOperator(const ScratchData<dim>      &scratch_data_in,
@@ -12,7 +12,6 @@ namespace MeltPoolDG::Curvature
                                                     const unsigned int           curv_quad_idx_in,
                                                     const unsigned int           normal_dof_idx_in,
                                                     const unsigned int           ls_dof_idx_in,
-                                                    const bool                   do_narrow_band_in,
                                                     const VectorType *solution_level_set_in)
     : scratch_data(scratch_data_in)
     , curvature_data(curvature_data_in)
@@ -22,19 +21,15 @@ namespace MeltPoolDG::Curvature
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
-    , do_narrow_band(do_narrow_band_in)
     , ls_dof_idx(ls_dof_idx_in)
     , solution_level_set(solution_level_set_in)
 
   {
     this->reset_dof_index(curv_dof_idx_in);
 
-    AssertThrow(!do_narrow_band || solution_level_set,
+    AssertThrow(!curvature_data.narrow_band.enable || solution_level_set,
                 ExcMessage(
                   "Level set solution vector must not be nullptr for a narrow band computation."));
-    AssertThrow(!do_narrow_band || curvature_data.narrow_band_threshold > 0.0,
-                ExcMessage(
-                  "The level set threshold for narrow band width must be positive! Abort..."));
   }
 
   template <int dim, typename number>
@@ -77,8 +72,8 @@ namespace MeltPoolDG::Curvature
           curvature_cell_matrix = 0.0;
           curvature_cell_rhs    = 0.0;
 
-          const double damping = NormalVector::compute_cell_size_dependent_filter_parameter<dim>(
-            scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
+          const double damping = compute_cell_size_dependent_filter_parameter<dim>(
+            scratch_data, curv_dof_idx, cell, curvature_data.filter_parameter);
 
           // set unit normal vector at DoFs to compute the RHS of the curvature operator
           //
@@ -203,7 +198,7 @@ namespace MeltPoolDG::Curvature
             normal_vector.read_dof_values_plain(src);
             normal_vector.evaluate(EvaluationFlags::values);
 
-            if (do_narrow_band)
+            if (curvature_data.narrow_band.enable)
               {
                 level_set.reinit(cell);
                 level_set.read_dof_values_plain(*solution_level_set);
@@ -237,9 +232,10 @@ namespace MeltPoolDG::Curvature
             for (unsigned int q_index = 0; q_index < curvature.n_q_points; ++q_index)
               {
                 const VectorizedArray<number> narrow_band_mask =
-                  (do_narrow_band) ?
+                  (curvature_data.narrow_band.enable) ?
                     VectorTools::compute_mask_narrow_band<dim>(
-                      level_set.get_value(q_index), curvature_data.narrow_band_threshold) :
+                      level_set.get_value(q_index),
+                      curvature_data.narrow_band.level_set_threshold) :
                     1.0;
                 curvature.submit_value(-narrow_band_mask * normal_vector.get_divergence(q_index),
                                        q_index);
@@ -340,7 +336,7 @@ namespace MeltPoolDG::Curvature
 
     if (do_reinit_cells)
       {
-        if (do_narrow_band)
+        if (curvature_data.narrow_band.enable)
           {
             level_set_vals.reinit(curv_vals.get_current_cell_index());
             level_set_vals.read_dof_values_plain(*solution_level_set);
@@ -351,9 +347,9 @@ namespace MeltPoolDG::Curvature
     for (unsigned int q_index = 0; q_index < curv_vals.n_q_points; ++q_index)
       {
         const VectorizedArray<number> narrow_band_mask =
-          (do_narrow_band) ?
-            VectorTools::compute_mask_narrow_band<dim>(level_set_vals.get_value(q_index),
-                                                       curvature_data.narrow_band_threshold) :
+          (curvature_data.narrow_band.enable) ?
+            VectorTools::compute_mask_narrow_band<dim>(
+              level_set_vals.get_value(q_index), curvature_data.narrow_band.level_set_threshold) :
             1.0;
 
         curv_vals.submit_value(narrow_band_mask * curv_vals.get_value(q_index), q_index);
@@ -375,8 +371,8 @@ namespace MeltPoolDG::Curvature
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
-            damping[cell] = NormalVector::compute_cell_size_dependent_filter_parameter_mf<dim>(
-              scratch_data, curv_dof_idx, cell, curvature_data.damping_scale_factor);
+            damping[cell] = compute_cell_size_dependent_filter_parameter_mf<dim>(
+              scratch_data, curv_dof_idx, cell, curvature_data.filter_parameter);
           }
       }
   }
@@ -385,4 +381,4 @@ namespace MeltPoolDG::Curvature
   template class CurvatureOperator<1, double>;
   template class CurvatureOperator<2, double>;
   template class CurvatureOperator<3, double>;
-} // namespace MeltPoolDG::Curvature
+} // namespace MeltPoolDG::LevelSet

@@ -2,7 +2,7 @@
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
-namespace MeltPoolDG::Reinitialization
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   void
@@ -42,10 +42,10 @@ namespace MeltPoolDG::Reinitialization
      *  setup scratch data
      */
     {
-      scratch_data =
-        std::make_shared<ScratchData<dim>>(base_in->mpi_communicator,
-                                           base_in->parameters.base.verbosity_level,
-                                           base_in->parameters.reinit.linear_solver.do_matrix_free);
+      scratch_data = std::make_shared<ScratchData<dim>>(
+        base_in->mpi_communicator,
+        base_in->parameters.base.verbosity_level,
+        base_in->parameters.ls.reinit.linear_solver.do_matrix_free);
       /*
        *  setup mapping
        */
@@ -96,12 +96,12 @@ namespace MeltPoolDG::Reinitialization
      *    initialize the reinitialization operation class
      */
 
-    if (base_in->parameters.reinit.implementation == "meltpooldg")
+    if (base_in->parameters.ls.reinit.implementation == "meltpooldg")
       {
         reinit_operation =
           std::make_shared<ReinitializationOperation<dim>>(*scratch_data,
-                                                           base_in->parameters.reinit,
-                                                           base_in->parameters.normal_vec,
+                                                           base_in->parameters.ls.reinit,
+                                                           base_in->parameters.ls.normal_vec,
                                                            base_in->parameters.ls.n_subdivisions,
                                                            *time_iterator,
                                                            reinit_dof_idx,
@@ -111,10 +111,8 @@ namespace MeltPoolDG::Reinitialization
         reinit_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    else if (base_in->parameters.reinit.implementation == "adaflo")
+    else if (base_in->parameters.ls.reinit.implementation == "adaflo")
       {
-        AssertThrow(base_in->parameters.reinit.linear_solver.do_matrix_free, ExcNotImplemented());
-
         reinit_operation =
           std::make_shared<ReinitializationOperationAdaflo<dim>>(*scratch_data,
                                                                  *time_iterator,
@@ -257,4 +255,4 @@ namespace MeltPoolDG::Reinitialization
   template class ReinitializationProblem<1>;
   template class ReinitializationProblem<2>;
   template class ReinitializationProblem<3>;
-} // namespace MeltPoolDG::Reinitialization
+} // namespace MeltPoolDG::LevelSet

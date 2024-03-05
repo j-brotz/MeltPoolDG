@@ -33,25 +33,6 @@
   "surface tension": {
     "surface tension coefficient": "1.8"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls do curvature correction": "true",
-    "nearest point": {
-      "narrow band threshold": "2e-5"
-    }
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit scale factor epsilon": "1.5"
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "4"
-  },
-  "curvature": {
-    "curv damping scale factor": "8",
-    "curv verbosity level": "0"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -92,6 +73,27 @@
   "evaporation": {
     "recoil pressure": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "nearest point": {
+      "narrow band threshold": "2e-5"
+    },
+    "reinitialization": {
+      "enable": "true",
+      "max n steps": "5",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
+      }
+    },
+    "curvature": {
+      "filter parameter": "8",
+      "verbosity level": "0",
+      "do curvature correction": "true"
+    },
+    "normal vector": {
+      "filter parameter": "4"
     }
   }
 }

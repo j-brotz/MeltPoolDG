@@ -8,7 +8,7 @@
 
 namespace MeltPoolDG
 {
-  namespace NormalVector
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -32,5 +32,5 @@ namespace MeltPoolDG
       attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
     };
 
-  } // namespace NormalVector
+  } // namespace LevelSet
 } // namespace MeltPoolDG

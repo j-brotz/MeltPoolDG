@@ -50,7 +50,12 @@
     "end time": "1.0",
     "time step size": "0.1"
   },
-  "reinitialization": {
-    "reinit scale factor epsilon": "6.0"
+  "level set": {
+    "reinitialization": {
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "6.0"
+      }
+    }
   }
 }

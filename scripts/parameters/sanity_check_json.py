@@ -108,6 +108,34 @@ old_parameter_names = [
     ["problem specific", "do evaporative velocity jump"],
     ["heat", "dirac delta function approximation"],
     ["evaporation", "recoil pressure", "model type"],
+    # 24-03-06
+    ["levelset"],
+    ["reinitialization"],
+    ["curvature"],
+    ["normal vector"],
+    ["advection diffusion"],
+    ["level set", "advection diffusion", "advec diff diffusivity"],
+    ["level set", "advection diffusion", "advec diff time integration scheme"],
+    ["level set", "advection diffusion", "advec diff implementation"],
+    ["level set", "normal vector", "normal vec damping scale factor"],
+    ["level set", "normal vector", "normal vec implementation"],
+    ["level set", "normal vector", "normal vec verbosity level"],
+    ["level set", "normal vector", "normal vec do narrow band"],
+    ["level set", "normal vector", "narrow band threshold"],
+    ["level set", "curvature", "curv damping scale factor"],
+    ["level set", "curvature", "curv implementation"],
+    ["level set", "curvature", "curv verbosity level"],
+    ["level set", "curvature", "curv do narrow band"],
+    ["level set", "curvature", "narrow band threshold"],
+    ["level set", "ls do curvature correction"],
+    ["level set", "ls do reinitialization"],
+    ["level set", "ls n initial reinit steps"],
+    ["level set", "ls n subdivisions"],
+    ["level set", "ls do localized heaviside"],
+    ["level set", "tol reinit"],
+    ["level set", "reinitialization", "reinit max n steps"],
+    ["level set", "reinitialization", "reinit modeltype"],
+    ["level set", "reinitialization", "reinit implementation"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -199,6 +227,34 @@ new_parameter_names = [
     ["evaporation", "evaporative dilation rate", "enable"],
     ["evaporation", "evaporative cooling", "dirac delta function approximation"],
     ["evaporation", "recoil pressure", "type"],
+    # 24-03-06
+    ["level set"],
+    ["level set", "reinitialization"],
+    ["level set", "curvature"],
+    ["level set", "normal vector"],
+    ["level set", "advection diffusion"],
+    ["level set", "advection diffusion", "diffusivity"],
+    ["level set", "advection diffusion", "time integration scheme"],
+    ["level set", "advection diffusion", "implementation"],
+    ["level set", "normal vector", "filter parameter"],
+    ["level set", "normal vector", "implementation"],
+    ["level set", "normal vector", "verbosity level"],
+    ["level set", "normal vector", "narrow band", "enable"],
+    ["level set", "normal vector", "narrow band", "level set threshold"],
+    ["level set", "curvature", "filter parameter"],
+    ["level set", "curvature", "implementation"],
+    ["level set", "curvature", "verbosity level"],
+    ["level set", "curvature", "narrow band", "enable"],
+    ["level set", "curvature", "narrow band", "level set threshold"],
+    ["level set", "curvature", "do curvature correction"],
+    ["level set", "reinitialization", "enable"],
+    ["level set", "reinitialization", "n initial steps"],
+    ["level set", "n subdivisions"],
+    ["level set", "do localized heaviside"],
+    ["level set", "reinitialization", "tolerance"],
+    ["level set", "reinitialization", "max n steps"],
+    ["level set", "reinitialization", "type"],
+    ["level set", "reinitialization", "implementation"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]
@@ -243,7 +299,46 @@ delete_parameter_names = [
     ["evaporation", "evapor ls value gas"],
     ["problem specific", "do evaporation"],
     ["problem specific", "do evaporative mass flux"],
+    # 24-03-06
+    ["level set", "ls time integration scheme"],
+    ["level set", "ls reinit time step size"],
+    ["level set", "ls implementation"],
 ]
+
+# extend this function to process special parameter changes
+
+
+def process_special_parameters(dataDict, nErrors):
+    try:
+        val = get_nested_value(
+            dataDict, ["level set", "reinitialization", "reinit constant epsilon"])
+        if float(val) > 0:
+            delete_nested_item(
+                dataDict, ["level set", "reinitialization", "reinit constant epsilon"])
+            set_nested_item(dataDict, ["level set", "reinitialization",
+                            "interface thickness parameter", "type"], "absolute_value")
+            set_nested_item(dataDict, [
+                            "level set", "reinitialization", "interface thickness parameter", "val"], val)
+            print_success(
+                f"RENAME: 'reinit constant epsilon'")
+            nErrors += 1
+    except:
+        try:
+            val = get_nested_value(
+                dataDict, ["level set", "reinitialization", "reinit scale factor epsilon"])
+            if float(val) > 0:
+                delete_nested_item(
+                    dataDict, ["level set", "reinitialization", "reinit scale factor epsilon"])
+                set_nested_item(dataDict, ["level set", "reinitialization",
+                                "interface thickness parameter", "type"], "proportional_to_cell_size")
+                set_nested_item(dataDict, [
+                                "level set", "reinitialization", "interface thickness parameter", "val"], val)
+                print_success(
+                    f"RENAME: 'reinit scale factor epsilon'")
+                nErrors += 1
+        except:
+            return (dataDict, nErrors)
+    return (dataDict, nErrors)
 
 ##############################################################################
 #         END OF USER INPUT
@@ -286,11 +381,19 @@ def get_nested_value(dataDict, mapList):
 
 def set_nested_item(dataDict, mapList, val):
     """Set item in nested dictionary"""
+    # check if tree of new parameter exists
+    try:
+        get_nested_value(dataDict, mapList)
+    # if it does not exist, introduce new tree
+    except:
+        print_error("Category does not exist yet")
+        tree_dict = create_dict_from_tree_list(mapList)
+        update(dataDict, tree_dict)
     reduce(getitem, mapList[:-1], dataDict)[mapList[-1]] = val
     return dataDict
 
 
-def delete_nested_item(dataDict, mapList, val):
+def delete_nested_item(dataDict, mapList):
     """Delete item in nested dictionary"""
     del reduce(getitem, mapList[:-1], dataDict)[mapList[-1]]
 
@@ -345,16 +448,6 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                 errors += 1
                 if write_json:
                     if always_yes or click.confirm('Do you want me to replace the old parameter by the new one?'):
-                        # check if tree of new parameter exists
-                        try:
-                            get_nested_value(new_parameter_names[i])
-                        # if it does not exist, introduce new tree
-                        except:
-                            print_error("Category does not exist yet")
-                            tree_dict = create_dict_from_tree_list(
-                                new_parameter_names[i])
-                            update(datastore, tree_dict)
-
                         # apply lambda function if it exists
                         for key, lambda_fun in new_parameter_names_lambda:
                             if key == new_parameter_names[i]:
@@ -369,7 +462,7 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                             datastore, new_parameter_names[i], val)
 
                         # delete the outdated parameter pair
-                        delete_nested_item(datastore, o, val)
+                        delete_nested_item(datastore, o)
                         print_success(
                             f"RENAME: {o} to {new_parameter_names[i]}")
 
@@ -384,7 +477,7 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                 errors += 1
                 if write_json:
                     if always_yes or click.confirm('Do you want me to delete the outdated parameter?'):
-                        delete_nested_item(datastore, o, val)
+                        delete_nested_item(datastore, o)
                         print_success("DELETE: parameter '{:}'".format(o))
             except:
                 continue
@@ -404,6 +497,8 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                             print(f"    RENAME: {name} {val} to {new_val}")
             except:
                 continue
+        # process special parmaeters
+        datastore, errors = process_special_parameters(datastore, errors)
 
         # delete potentially empty items
         datastore = remove_empty_nested_items(datastore)

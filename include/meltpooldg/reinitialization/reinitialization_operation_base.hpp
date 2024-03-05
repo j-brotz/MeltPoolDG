@@ -10,7 +10,7 @@
 
 namespace MeltPoolDG
 {
-  namespace Reinitialization
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -53,5 +53,5 @@ namespace MeltPoolDG
       attach_output_vectors(GenericDataOut<dim> &data_out) const = 0;
     };
 
-  } // namespace Reinitialization
+  } // namespace LevelSet
 } // namespace MeltPoolDG

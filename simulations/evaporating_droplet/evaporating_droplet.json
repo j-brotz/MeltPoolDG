@@ -26,29 +26,6 @@
     },
     "two phase fluid properties transition type": "consistent_with_evaporation"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "10",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.707",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec implementation": "adaflo",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "evaporation": {
     "analytical": {
       "function": "1.0e-3"
@@ -90,14 +67,39 @@
   "problem specific": {
     "do heat transfer": "true"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "10",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.707"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "implementation": "adaflo"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

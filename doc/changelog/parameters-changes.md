@@ -1,6 +1,103 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-03-07
+- Refactor level set data; moved curvature, normal vector, reinitialization,
+    advection diffusion inside level set struct
+```diff
+-    "advection diffusion":
+-    {
+-        "advec diff diffusivity": "0",
+-        "advec diff implementation": "meltpooldg",
+-        "advec diff time integration scheme": "crank_nicolson",
+-    },
+-    "curvature":
+-    {
+-        "curv damping scale factor": "0",
+-        "curv do narrow band": "false",
+-        "curv implementation": "meltpooldg",
+-        "curv verbosity level": "0",
+-        "enable": "true",
+-        "narrow band threshold": "1",
+-    },
+-    "normal vector":
+-    {
+-        "narrow band threshold": "1",
+-        "normal vec damping scale factor": "0.5",
+-        "normal vec do narrow band": "false",
+-        "normal vec implementation": "meltpooldg",
+-        "normal vec verbosity level": "0",
+-    },
+-    "reinitialization":
+-    {
+-        "reinit constant epsilon": "-1",
+-        "reinit implementation": "meltpooldg",
+-        "reinit max n steps": "5",
+-        "reinit modeltype": "olsson2007",
+-        "reinit scale factor epsilon": "0.5",
+-    }
+-    "levelset":
++    "level set":
+     {
+-        "ls do curvature correction": "false",
+-        "ls do localized heaviside": "true",
+-        "ls do reinitialization": "true",
+-        "ls implementation": "meltpooldg",
+-        "ls n initial reinit steps": "-1",
+-        "ls n subdivisions": "1",
+-        "ls reinit time step size": "-1",
+-        "ls time integration scheme": "crank_nicolson",
+-        "tol reinit": "2.22507e-308",
++        "do localized heaviside": "true",
++        "n subdivisions": "1",
++        "advection diffusion":
++        {
++            "diffusivity": "0",
++            "implementation": "meltpooldg",
++            "time integration scheme": "crank_nicolson",
++        },
++        "curvature":
++        {
++            "do curvature correction": "false",
++            "enable": "true",
++            "filter parameter": "0",
++            "implementation": "meltpooldg",
++            "verbosity level": "0",
++            "narrow band":
++            {
++                "enable": "false",
++                "level set threshold": "1"
++            },
++        },
++        "normal vector":
++        {
++            "filter parameter": "0.5",
++            "implementation": "meltpooldg",
++            "verbosity level": "0",
++            "narrow band":
++            {
++                "enable": "false",
++                "level set threshold": "1"
++            },
++        },
++        "reinitialization":
++        {
++            "enable": "true",
++            "implementation": "meltpooldg",
++            "max n steps": "5",
++            "n initial steps": "-1",
++            "tolerance": "2.22507e-308",
++            "type": "olsson2007",
++            "interface thickness parameter":
++            {
++                "type": "proportional_to_cell_size",
++                "val": "0.5"
++            },
+     },
+```
+   
+
+
 ## 2024-03-01
 - Refactor evaporation data; moved recoil pressure to evaporation struct
 ```diff

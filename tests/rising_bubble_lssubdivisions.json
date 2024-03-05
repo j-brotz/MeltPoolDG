@@ -28,23 +28,6 @@
     },
     "two phase fluid properties transition type": "sharp"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls n subdivisions": "4",
-    "ls n initial reinit steps": "0"
-  },
-  "reinitialization": {
-    "reinit max n steps": "2",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.5"
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "4"
-  },
-  "curvature": {
-    "curv damping scale factor": "4"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Time stepping": {
@@ -75,5 +58,24 @@
     "paraview": {
       "enable": "false"
     }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "n initial steps": "0",
+      "max n steps": "2",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
+      }
+    },
+    "curvature": {
+      "filter parameter": "4"
+    },
+    "normal vector": {
+      "filter parameter": "4"
+    },
+    "n subdivisions": "4"
   }
 }

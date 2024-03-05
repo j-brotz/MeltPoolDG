@@ -8,7 +8,7 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::AdvectionDiffusion
+namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
   AdvectionDiffusionOperator<dim, number>::AdvectionDiffusionOperator(
@@ -45,9 +45,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     VectorType                                   &rhs) const
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
-
-    AssertThrow(data.diffusivity >= 0.0,
-                ExcMessage("Advection diffusion operator: diffusivity is smaller than zero!"));
 
     const FEValuesExtractors::Vector velocities(0);
 
@@ -428,4 +425,4 @@ namespace MeltPoolDG::AdvectionDiffusion
   template class AdvectionDiffusionOperator<1, double>;
   template class AdvectionDiffusionOperator<2, double>;
   template class AdvectionDiffusionOperator<3, double>;
-} // namespace MeltPoolDG::AdvectionDiffusion
+} // namespace MeltPoolDG::LevelSet

@@ -32,12 +32,6 @@ namespace MeltPoolDG
 {
   using namespace dealii;
 
-  BETTER_ENUM(ConvectionStabilizationType,
-              char,
-              none,
-              // streamline upwind Petrov-Galerkin stabilization
-              SUPG)
-
   struct AdaptiveMeshingData
   {
     bool         do_amr                       = false;
@@ -48,84 +42,6 @@ namespace MeltPoolDG
     int          every_n_step                 = 1;
     unsigned int max_grid_refinement_level    = 12;
     int          min_grid_refinement_level    = 1;
-  };
-
-  template <typename number = double>
-  struct AdvectionDiffusionData
-  {
-    AdvectionDiffusionData()
-    {
-      linear_solver.solver_type         = LinearSolverType::GMRES;
-      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
-    }
-
-    number      diffusivity             = 0.0;
-    std::string time_integration_scheme = "crank_nicolson";
-    std::string implementation          = "meltpooldg";
-
-    struct ConvectionStabilizationData
-    {
-      ConvectionStabilizationType type        = ConvectionStabilizationType::none;
-      double                      coefficient = -1.0;
-    } conv_stab;
-
-    PredictorData<number>    predictor;
-    LinearSolverData<number> linear_solver;
-
-    void
-    post()
-    {
-      predictor.post();
-    }
-  };
-
-  template <typename number = double>
-  struct NormalVectorData
-  {
-    NormalVectorData()
-    {
-      linear_solver.solver_type         = LinearSolverType::CG;
-      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
-    }
-
-    number                   damping_scale_factor = 0.5;
-    std::string              implementation       = "meltpooldg";
-    unsigned int             verbosity_level      = 0;
-    bool                     do_narrow_band       = false;
-    PredictorData<number>    predictor;
-    LinearSolverData<number> linear_solver;
-    number                   narrow_band_threshold = 0.9999999;
-
-    void
-    post()
-    {
-      predictor.post();
-    }
-  };
-
-  template <typename number = double>
-  struct CurvatureData
-  {
-    CurvatureData()
-    {
-      linear_solver.solver_type         = LinearSolverType::CG;
-      linear_solver.preconditioner_type = PreconditionerType::Diagonal;
-    }
-
-    bool                     enable               = true;
-    number                   damping_scale_factor = 0.0;
-    std::string              implementation       = "meltpooldg";
-    unsigned int             verbosity_level      = 0;
-    bool                     do_narrow_band       = false;
-    PredictorData<number>    predictor;
-    LinearSolverData<number> linear_solver;
-    number                   narrow_band_threshold = 0.9999999;
-
-    void
-    post()
-    {
-      predictor.post();
-    }
   };
 
   template <typename number = double>
@@ -187,10 +103,6 @@ namespace MeltPoolDG
     TimeSteppingData<number>                           time_stepping;
     AdaptiveMeshingData                                amr;
     LevelSet::LevelSetData<number>                     ls;
-    Reinitialization::ReinitializationData<number>     reinit;
-    AdvectionDiffusionData<number>                     advec_diff;
-    NormalVectorData<number>                           normal_vec;
-    CurvatureData<number>                              curv;
     Heat::HeatData<number>                             heat;
     Heat::LaserData<number>                            laser;
     RadiativeTransport::RadiativeTransportData<number> rte;

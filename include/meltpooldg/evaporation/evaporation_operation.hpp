@@ -110,13 +110,12 @@ namespace MeltPoolDG::Evaporation
      * Configure the evaporation operation with temperature dependence.
      */
     void
-    reinit(const VectorType                         *temperature_in,
-           const VectorType                         &distance,
-           const RecoilPressureData<double>         &recoil_data,
-           const LevelSet::NearestPointData<double> &nearest_point_data,
-           const double                              constant_epsilon,
-           const double                              scale_factor_epsilon,
-           const unsigned int                        temp_dof_idx_in);
+    reinit(const VectorType                             *temperature_in,
+           const VectorType                             &distance,
+           const RecoilPressureData<double>             &recoil_data,
+           const LevelSet::NearestPointData<double>     &nearest_point_data,
+           const LevelSet::ReinitializationData<double> &reinit_data,
+           const unsigned int                            temp_dof_idx_in);
 
     /*
      * Compute DoF vector holding evaporative mass flux depending on the given evaporation model

@@ -27,7 +27,7 @@
 
 namespace MeltPoolDG
 {
-  namespace Reinitialization
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -130,7 +130,7 @@ namespace MeltPoolDG
       /*
        *   Computation of the normal vectors
        */
-      std::shared_ptr<NormalVector::NormalVectorOperationBase<dim>> normal_vector_operation;
+      std::shared_ptr<NormalVectorOperationBase<dim>> normal_vector_operation;
       /*
        *    This is the primary solution variable of this module, which will be also publically
        *    accessible for output_results.
@@ -162,5 +162,5 @@ namespace MeltPoolDG
       // maximum change of the level set due to the current reinitialization step
       double max_change_level_set = std::numeric_limits<double>::max();
     };
-  } // namespace Reinitialization
+  } // namespace LevelSet
 } // namespace MeltPoolDG

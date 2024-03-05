@@ -74,25 +74,6 @@
     },
     "two phase fluid properties transition type": "sharp"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "0.7107",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "normal vec verbosity level": "1"
-  },
-  "curvature": {
-    "enable": "false"
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-12",
@@ -109,6 +90,27 @@
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "0.7107"
+      }
+    },
+    "curvature": {
+      "enable": "false"
+    },
+    "normal vector": {
+      "filter parameter": "0.5",
+      "verbosity level": "1"
     }
   }
 }
