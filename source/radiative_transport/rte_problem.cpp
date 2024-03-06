@@ -138,17 +138,6 @@ namespace MeltPoolDG::RadiativeTransport
     else
       rte_quad_idx =
         scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
-    setup_dof_system(base_in, false);
-
-    /*
-     *  initialize the time stepping scheme
-     */
-    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
-
-    /*
-     *  set initial conditions of the heaviside field
-     */
-    compute_heaviside(*base_in->get_initial_condition("prescribed_heaviside"));
 
     /*
      * initialize the RTE operation
@@ -161,7 +150,20 @@ namespace MeltPoolDG::RadiativeTransport
                                                                        rte_hanging_nodes_dof_idx,
                                                                        rte_quad_idx,
                                                                        hs_dof_idx);
+
+    setup_dof_system(base_in, false);
+
     rte_operation->reinit();
+
+    /*
+     *  initialize the time stepping scheme
+     */
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
+
+    /*
+     *  set initial conditions of the heaviside field
+     */
+    compute_heaviside(*base_in->get_initial_condition("prescribed_heaviside"));
 
     /*
      *  initialize postprocessor
@@ -227,9 +229,7 @@ namespace MeltPoolDG::RadiativeTransport
      */
     rte_operation->setup_constraints(*scratch_data,
                                      base_in->get_dirichlet_bc("intensity"),
-                                     base_in->get_periodic_bc(),
-                                     rte_dof_idx,
-                                     rte_hanging_nodes_dof_idx);
+                                     base_in->get_periodic_bc());
     /*
      *  create the matrix-free object
      */

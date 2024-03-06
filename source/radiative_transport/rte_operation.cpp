@@ -93,61 +93,11 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportOperation<dim>::setup_constraints(
     ScratchData<dim>                       &scratch_data_in,
     const DirichletBoundaryConditions<dim> &bc_data,
-    const PeriodicBoundaryConditions<dim>  &pbc,
-    const unsigned int                      rte_dof_idx_in,
-    const unsigned int                      rte_hanging_nodes_idx)
+    const PeriodicBoundaryConditions<dim>  &pbc)
   {
-    // setup hanging constraints
-    scratch_data_in.get_constraint(rte_hanging_nodes_idx).clear();
-    scratch_data_in.get_constraint(rte_hanging_nodes_idx)
-      .reinit(scratch_data_in.get_locally_relevant_dofs(rte_hanging_nodes_idx));
-    DoFTools::make_hanging_node_constraints(scratch_data_in.get_dof_handler(rte_hanging_nodes_idx),
-                                            scratch_data_in.get_constraint(rte_hanging_nodes_idx));
-
-    for (const auto &bc : pbc.get_data())
-      {
-        const auto [id_in, id_out, direction] = bc;
-        DoFTools::make_periodicity_constraints(
-          scratch_data_in.get_dof_handler(rte_hanging_nodes_idx),
-          id_in,
-          id_out,
-          direction,
-          scratch_data_in.get_constraint(rte_hanging_nodes_idx));
-      }
-
-    scratch_data_in.get_constraint(rte_hanging_nodes_idx).close();
-
-    UtilityFunctions::check_constraints(scratch_data_in.get_dof_handler(rte_hanging_nodes_idx),
-                                        scratch_data_in.get_constraint(rte_hanging_nodes_idx));
-
-    // setup Dirichlet constraints and merge
-    scratch_data_in.get_constraint(rte_dof_idx_in).clear();
-    scratch_data_in.get_constraint(rte_dof_idx_in)
-      .reinit(scratch_data_in.get_locally_relevant_dofs(rte_dof_idx_in));
-
-    if (!bc_data.get_data().empty())
-      {
-        for (const auto &bc : bc_data.get_data())
-          {
-            dealii::VectorTools::interpolate_boundary_values(
-              scratch_data_in.get_mapping(),
-              scratch_data_in.get_dof_handler(rte_dof_idx_in),
-              bc.first,
-              *bc.second,
-              scratch_data_in.get_constraint(rte_dof_idx_in));
-          }
-      }
-
-    scratch_data_in.get_constraint(rte_dof_idx_in).close();
-    UtilityFunctions::check_constraints(scratch_data_in.get_dof_handler(rte_dof_idx_in),
-                                        scratch_data_in.get_constraint(rte_dof_idx_in));
-
-    scratch_data_in.get_constraint(rte_dof_idx_in)
-      .merge(scratch_data_in.get_constraint(rte_hanging_nodes_idx),
-             AffineConstraints<double>::MergeConflictBehavior::right_object_wins);
-    scratch_data_in.get_constraint(rte_dof_idx_in).close();
-    UtilityFunctions::check_constraints(scratch_data_in.get_dof_handler(rte_dof_idx_in),
-                                        scratch_data_in.get_constraint(rte_dof_idx_in));
+    UtilityFunctions::
+      reinit_and_merge_dirichlet_and_hanging_nodes_constraints_with_periodic_boundary(
+        scratch_data_in, bc_data, pbc, rte_dof_idx, rte_hanging_nodes_dof_idx, true);
   }
 
   template <int dim>
