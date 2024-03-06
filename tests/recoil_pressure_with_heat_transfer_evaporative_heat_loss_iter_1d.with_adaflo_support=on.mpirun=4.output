@@ -15,32 +15,32 @@
 | Newton Raphson solver converged: ||solution|| = 1.76833e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 1.76813e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 1.76813e+01                newton_raphson_solver |
-| || velocity ||L2 = 1.339322807325516e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 5.596129050815382e+00                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.339563937108323e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 5.594511229281625e+00                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-06 to 2.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6905187167e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.162238082030174e-06                                       reinitialization |
+| || delta phi ||L2 = 1.162237854878204e-06                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.927776226366609e-07                                       reinitialization |
+| || delta phi ||L2 = 9.927778497452929e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.16427e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 2.16340e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 2.16340e+01                newton_raphson_solver |
-| || velocity ||L2 = 6.173252131702611e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 3.468008529622985e+01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 6.173006568133133e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 3.467251517202902e+01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-06 to 3.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6905775649e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.310801346296901e-07                                       reinitialization |
+| || delta phi ||L2 = 9.310739457839173e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
 | || delta phi ||L2 = 8.544698924500900e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
@@ -49,25 +49,25 @@
 | Newton Raphson solver converged: ||solution|| = 2.43657e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 2.43547e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 2.43548e+01                newton_raphson_solver |
-| || velocity ||L2 = 8.927794624469243e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 7.844338940089389e+01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.929002433433197e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 7.844652433302215e+01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-06 to 4.0000e-06 ( dt = 1.0000e-06 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.6906318237e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 1e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.526262753210786e-07                                       reinitialization |
+| || delta phi ||L2 = 8.526884570053906e-07                                       reinitialization |
 |  τ = 2e-06                                                                      reinitialization |
-| || delta phi ||L2 = 7.760808012738581e-07                                       reinitialization |
+| || delta phi ||L2 = 7.760838109120830e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | current laser position: 0                                                                  laser |
 | current laser intensity: 1                                                                 laser |
 | Newton Raphson solver converged: ||solution|| = 2.65075e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 2.64957e+01                newton_raphson_solver |
 | Newton Raphson solver converged: ||solution|| = 2.64958e+01                newton_raphson_solver |
-| || velocity ||L2 = 1.088821227313020e-05                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.297900370523540e+02                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.088845237973146e-05                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.297912534413772e+02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
