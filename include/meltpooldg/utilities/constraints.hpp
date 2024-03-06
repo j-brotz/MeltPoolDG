@@ -19,8 +19,8 @@ namespace MeltPoolDG::UtilityFunctions
    */
   template <int dim, int spacedim, typename number>
   void
-  check_constraints(const DoFHandler<dim, spacedim> &dof_handler,
-                    const AffineConstraints<number> &constraints)
+  check_constraints([[maybe_unused]] const DoFHandler<dim, spacedim> &dof_handler,
+                    [[maybe_unused]] const AffineConstraints<number> &constraints)
   {
 #ifndef DEBUG
     return;
