@@ -5,17 +5,12 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
-    "gravity": "0.981",
     "problem name": "melt_pool"
   },
   "time stepping": {
     "end time": "0.000002",
     "start time": "0.0",
     "time step size": "0.000001"
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.8",
-    "reference temperature": "1700"
   },
   "material": {
     "gas": {
@@ -125,6 +120,11 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.981",
+    "surface tension": {
+      "surface tension coefficient": "1.8",
+      "reference temperature": "1700"
     }
   }
 }

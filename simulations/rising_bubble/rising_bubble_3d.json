@@ -4,11 +4,7 @@
     "application name": "rising_bubble",
     "global refinements": "2",
     "dimension": "3",
-    "degree": "2",
-    "gravity": "0.98"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.0245"
+    "degree": "2"
   },
   "time stepping": {
     "start time": "0.0",
@@ -88,6 +84,10 @@
         "output verbosity": "2",
         "output walltimes": "0"
       }
+    },
+    "gravity": "0.98",
+    "surface tension": {
+      "surface tension coefficient": "0.0245"
     }
   }
 }

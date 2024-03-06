@@ -6,7 +6,6 @@
     "do print parameters": "false",
     "global refinements": "4",
     "problem name": "melt_pool",
-    "gravity": "0.0",
     "verbosity level": "3"
   },
   "time stepping": {
@@ -42,15 +41,6 @@
       "specific heat capacity": "5e-5",
       "density": "250",
       "dynamic viscosity": "0.012"
-    }
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.01",
-    "temperature dependent surface tension coefficient": "0.002",
-    "reference temperature": "290",
-    "time step limit": {
-      "enable": "true",
-      "scale factor": "1.0"
     }
   },
   "output": {
@@ -102,6 +92,16 @@
       "Output options": {
         "output verbosity": "2",
         "output walltimes": "0"
+      }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "0.01",
+      "temperature dependent surface tension coefficient": "0.002",
+      "reference temperature": "290",
+      "time step limit": {
+        "enable": "true",
+        "scale factor": "1.0"
       }
     }
   }

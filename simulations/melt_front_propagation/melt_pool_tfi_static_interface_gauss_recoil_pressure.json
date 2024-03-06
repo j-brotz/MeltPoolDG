@@ -6,11 +6,7 @@
     "do print parameters": "false",
     "global refinements": "5",
     "problem name": "melt_pool",
-    "verbosity level": "2",
-    "gravity": "0.0"
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.8"
+    "verbosity level": "2"
   },
   "time stepping": {
     "start time": "0.0",
@@ -146,6 +142,10 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "1.8"
     }
   }
 }

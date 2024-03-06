@@ -5,7 +5,6 @@
     "dimension": "1",
     "do print parameters": "false",
     "global refinements": "0",
-    "gravity": "0.0",
     "problem name": "melt_pool",
     "verbosity level": "0"
   },
@@ -124,6 +123,7 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
-    }
+    },
+    "gravity": "0.0"
   }
 }

@@ -18,16 +18,9 @@
         "do print parameters": "true",
         "do simplex": "false",
         "global refinements": "1",
-        "gravity": "0",
         "n q points 1d": "-1",
         "problem name": "advection_diffusion",
         "verbosity level": "0"
-    },
-    "darcy damping":
-    {
-        "avoid div zero constant": "0.001",
-        "formulation": "implicit_formulation",
-        "mushy zone morphology": "0"
     },
     "evaporation":
     {
@@ -86,6 +79,38 @@
         {
             "subdivisions MCA": "1",
             "subdivisions per side": "10"
+        }
+    },
+    "flow":
+    {
+        "gravity": "0",
+        "darcy damping":
+        {
+            "avoid div zero constant": "0.001",
+            "formulation": "implicit_formulation",
+            "mushy zone morphology": "0"
+        },
+        "surface tension":
+        {
+            "coefficient residual fraction": "0",
+            "reference temperature": "-1e+100",
+            "surface tension coefficient": "0",
+            "temperature dependent surface tension coefficient": "0",
+            "zero surface tension in solid": "false",
+            "dirac delta function approximation":
+            {
+                "auto weights": "false",
+                "gas phase weight": "1",
+                "gas phase weight 2": "1",
+                "heavy phase weight": "1",
+                "heavy phase weight 2": "1",
+                "type": "norm_of_indicator_gradient"
+            },
+            "time step limit":
+            {
+                "enable": "false",
+                "scale factor": "1"
+            }
         }
     },
     "heat":
@@ -415,28 +440,6 @@
                 "time step size": "0",
                 "time step size function": "0.0*t"
             }
-        }
-    },
-    "surface tension":
-    {
-        "coefficient residual fraction": "0",
-        "reference temperature": "-1e+100",
-        "surface tension coefficient": "0",
-        "temperature dependent surface tension coefficient": "0",
-        "zero surface tension in solid": "false",
-        "dirac delta function approximation":
-        {
-            "auto weights": "false",
-            "gas phase weight": "1",
-            "gas phase weight 2": "1",
-            "heavy phase weight": "1",
-            "heavy phase weight 2": "1",
-            "type": "norm_of_indicator_gradient"
-        },
-        "time step limit":
-        {
-            "enable": "false",
-            "scale factor": "1"
         }
     },
     "time stepping":

@@ -6,8 +6,7 @@
     "dimension": "2",
     "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "4",
-    "gravity": "0.0"
+    "global refinements": "4"
   },
   "time stepping": {
     "start time": "0.0",
@@ -95,6 +94,7 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
-    }
+    },
+    "gravity": "0.0"
   }
 }

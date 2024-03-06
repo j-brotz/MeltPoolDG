@@ -6,17 +6,12 @@
     "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "5",
-    "gravity": "0.981",
     "problem name": "melt_pool"
   },
   "time stepping": {
     "end time": "0.000005",
     "start time": "0.0",
     "time step size": "5.e-7"
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.8",
-    "reference temperature": "1700"
   },
   "material": {
     "gas": {
@@ -63,11 +58,6 @@
   "melt pool": {
     "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "true"
-  },
-  "darcy damping": {
-    "mushy zone morphology": "1e8",
-    "avoid div zero constant": "1e-3",
-    "formulation": "implicit_formulation"
   },
   "simulation specific domain": {
     "domain x max": "0.000100",
@@ -146,6 +136,16 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.981",
+    "darcy damping": {
+      "mushy zone morphology": "1e8",
+      "avoid div zero constant": "1e-3",
+      "formulation": "implicit_formulation"
+    },
+    "surface tension": {
+      "surface tension coefficient": "1.8",
+      "reference temperature": "1700"
     }
   }
 }

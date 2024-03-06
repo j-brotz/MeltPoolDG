@@ -564,14 +564,14 @@ namespace MeltPoolDG::MeltPool
 
                 // ... a) gravity force
                 compute_gravity_force(vel_force_rhs,
-                                      base_in->parameters.base.gravity,
+                                      base_in->parameters.flow.gravity,
                                       true /* true means force vector is zeroed out before */);
 
                 // ... b) (temperature-dependent) surface tension
                 surface_tension_operation->compute_surface_tension(vel_force_rhs,
                                                                    false /*do not zero out*/);
 
-                if (base_in->parameters.surface_tension.time_step_limit.enable)
+                if (base_in->parameters.flow.surface_tension.time_step_limit.enable)
                   {
                     const auto dt_lim = surface_tension_operation->compute_time_step_limit(
                       base_in->parameters.material.gas.density,
@@ -629,7 +629,7 @@ namespace MeltPoolDG::MeltPool
                   }
 
                 // ... f) explicit Darcy damping force
-                if (darcy_operation && base_in->parameters.darcy.formulation ==
+                if (darcy_operation && base_in->parameters.flow.darcy_damping.formulation ==
                                          DarcyDampingFormulation::explicit_formulation)
                   darcy_operation->compute_darcy_damping(vel_force_rhs,
                                                          flow_operation->get_velocity(),
@@ -1074,7 +1074,7 @@ namespace MeltPoolDG::MeltPool
      *    initialize the surface tension operation class
      */
     surface_tension_operation = std::make_shared<Flow::SurfaceTensionOperation<dim>>(
-      base_in->parameters.surface_tension,
+      base_in->parameters.flow.surface_tension,
       *scratch_data,
       level_set_operation->get_level_set_as_heaviside(),
       level_set_operation->get_curvature(),
@@ -1086,9 +1086,8 @@ namespace MeltPoolDG::MeltPool
     /*
      * Register temperature and normal vector in case of temperature dependent surface tension
      */
-    if (heat_operation &&
-        base_in->parameters.surface_tension.temperature_dependent_surface_tension_coefficient !=
-          0.0)
+    if (heat_operation && base_in->parameters.flow.surface_tension
+                              .temperature_dependent_surface_tension_coefficient != 0.0)
       surface_tension_operation->register_temperature_and_normal_vector(
         temp_dof_idx,
         normal_dof_idx,
@@ -1230,19 +1229,19 @@ namespace MeltPoolDG::MeltPool
         /*
          * Register solid fraction in surface tension
          */
-        if (base_in->parameters.surface_tension.zero_surface_tension_in_solid)
+        if (base_in->parameters.flow.surface_tension.zero_surface_tension_in_solid)
           surface_tension_operation->register_solid_fraction(temp_hanging_nodes_dof_idx,
                                                              &melt_front_propagation->get_solid());
         /*
          *    initialize the darcy damping operation class
          */
-        if (base_in->parameters.darcy.mushy_zone_morphology > 0.0)
+        if (base_in->parameters.flow.darcy_damping.mushy_zone_morphology > 0.0)
           {
             AssertThrow(heat_operation,
                         ExcMessage("Heat operation needs to be set up "
                                    "for solidification via Darcy damping."));
             darcy_operation = std::make_shared<Flow::DarcyDampingOperation<dim>>(
-              base_in->parameters.darcy,
+              base_in->parameters.flow.darcy_damping,
               *scratch_data,
               flow_operation->get_dof_handler_idx_velocity(),
               flow_operation->get_quad_idx_velocity(),
@@ -1634,8 +1633,8 @@ namespace MeltPoolDG::MeltPool
                 flow_operation->get_viscosity(cell, q) = material_values.dynamic_viscosity;
 
                 // set damping coefficient of the fluid solver
-                if (darcy_operation &&
-                    (parameters.darcy.formulation == DarcyDampingFormulation::implicit_formulation))
+                if (darcy_operation && (parameters.flow.darcy_damping.formulation ==
+                                        DarcyDampingFormulation::implicit_formulation))
                   flow_operation->get_damping(cell, q) = darcy_operation->get_damping(cell, q);
               }
           }

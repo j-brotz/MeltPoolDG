@@ -6,8 +6,7 @@
     "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "6",
-    "problem name": "melt_pool",
-    "gravity": "0.0"
+    "problem name": "melt_pool"
   },
   "material": {
     "gas": {
@@ -31,16 +30,6 @@
     "start time": "0.0",
     "end time": "0.002",
     "time step size": "0.0005"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.01",
-    "temperature dependent surface tension coefficient": "0.002",
-    "reference temperature": "290",
-    "dirac delta function approximation": {
-      "type": "heaviside_phase_weighted",
-      "gas phase weight": "1",
-      "heavy phase weight": "100"
-    }
   },
   "output": {
     "paraview": {
@@ -104,6 +93,17 @@
       "Output options": {
         "output verbosity": "0",
         "output walltimes": "0"
+      }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "0.01",
+      "temperature dependent surface tension coefficient": "0.002",
+      "reference temperature": "290",
+      "dirac delta function approximation": {
+        "type": "heaviside_phase_weighted",
+        "gas phase weight": "1",
+        "heavy phase weight": "100"
       }
     }
   }

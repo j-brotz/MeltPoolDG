@@ -5,14 +5,8 @@
     "dimension": "1",
     "do print parameters": "false",
     "global refinements": "6",
-    "gravity": "0.0",
     "problem name": "melt_pool",
     "verbosity level": "0"
-  },
-  "darcy damping": {
-    "avoid div zero constant": "1.",
-    "formulation": "implicit_formulation",
-    "mushy zone morphology": "1e11"
   },
   "evaporation": {
     "interface temperature evaluation type": "local_value",
@@ -133,6 +127,12 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.0",
+    "darcy damping": {
+      "avoid div zero constant": "1.",
+      "formulation": "implicit_formulation",
+      "mushy zone morphology": "1e11"
     }
   }
 }

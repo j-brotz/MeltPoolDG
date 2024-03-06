@@ -4,7 +4,6 @@
     "application name": "stefans_problem1_with_flow_and_heat",
     "dimension": "2",
     "global refinements": "10",
-    "gravity": "0.",
     "degree": "1",
     "do print parameters": "false",
     "verbosity level": "1"
@@ -128,6 +127,7 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
-    }
+    },
+    "gravity": "0."
   }
 }

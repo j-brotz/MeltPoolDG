@@ -6,8 +6,7 @@
     "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "4",
-    "problem name": "melt_pool",
-    "gravity": "0.0"
+    "problem name": "melt_pool"
   },
   "heat": {
     "linear solver": {
@@ -36,10 +35,6 @@
     "start time": "0.0",
     "end time": "1.0",
     "time step size": "0.05"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.01",
-    "temperature dependent surface tension coefficient": "0.002"
   },
   "adaptive meshing": {
     "do amr": "true",
@@ -118,6 +113,11 @@
         "output verbosity": "2",
         "output walltimes": "0"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "0.01",
+      "temperature dependent surface tension coefficient": "0.002"
     }
   }
 }

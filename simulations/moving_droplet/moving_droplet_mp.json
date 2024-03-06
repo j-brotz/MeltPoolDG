@@ -7,7 +7,6 @@
     "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "6",
-    "gravity": "0.0",
     "verbosity level": "3"
   },
   "time stepping": {
@@ -110,6 +109,7 @@
         "output verbosity": "2",
         "output walltimes": "0"
       }
-    }
+    },
+    "gravity": "0.0"
   }
 }

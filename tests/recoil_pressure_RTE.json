@@ -5,7 +5,6 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
-    "gravity": "0.0",
     "problem name": "melt_pool",
     "verbosity level": "0"
   },
@@ -58,11 +57,6 @@
     "laser direction": "0.0,-1.0",
     "absorptivity type": "gradient_based"
   },
-  "darcy damping": {
-    "avoid div zero constant": "1",
-    "mushy zone morphology": "1e11",
-    "formulation": "implicit_formulation"
-  },
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",
     "recoil pressure": {
@@ -76,9 +70,6 @@
     "evaporative dilation rate": {
       "enable": "false"
     }
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.493"
   },
   "output": {
     "paraview": {
@@ -132,6 +123,15 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "1.493"
+    },
+    "darcy damping": {
+      "avoid div zero constant": "1",
+      "mushy zone morphology": "1e11",
+      "formulation": "implicit_formulation"
     }
   }
 }

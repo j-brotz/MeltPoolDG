@@ -5,8 +5,7 @@
     "do print parameters": "false",
     "global refinements": "3",
     "dimension": "2",
-    "degree": "1",
-    "gravity": "0.98"
+    "degree": "1"
   },
   "time stepping": {
     "start time": "0.0",
@@ -19,9 +18,6 @@
     "lower perc to coarsen": "0.0",
     "max grid refinement level": "5",
     "n initial refinement cycles": "0"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.0245"
   },
   "material": {
     "gas": {
@@ -95,6 +91,10 @@
         "output verbosity": "0",
         "output wall times": "0"
       }
+    },
+    "gravity": "0.98",
+    "surface tension": {
+      "surface tension coefficient": "0.0245"
     }
   }
 }

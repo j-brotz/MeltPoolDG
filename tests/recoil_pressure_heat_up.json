@@ -5,7 +5,6 @@
     "global refinements": "5",
     "dimension": "2",
     "degree": "1",
-    "gravity": "0.0",
     "do print parameters": "false"
   },
   "time stepping": {
@@ -13,9 +12,6 @@
     "end time": "0.0006",
     "time step size": "1e-7",
     "max n steps": "10"
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.8"
   },
   "material": {
     "gas": {
@@ -165,6 +161,10 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "1.8"
     }
   }
 }

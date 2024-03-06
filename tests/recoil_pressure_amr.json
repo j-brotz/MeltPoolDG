@@ -10,7 +10,6 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
-    "gravity": "0.981",
     "problem name": "melt_pool"
   },
   "adaptive meshing": {
@@ -20,10 +19,6 @@
     "max grid refinement level": "8",
     "n initial refinement cycles": "2",
     "do not modify boundary cells": "true"
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.8",
-    "reference temperature": "1700"
   },
   "material": {
     "material template": "stainless_steel",
@@ -133,6 +128,11 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.981",
+    "surface tension": {
+      "surface tension coefficient": "1.8",
+      "reference temperature": "1700"
     }
   }
 }

@@ -5,7 +5,6 @@
     "global refinements": "7",
     "dimension": "2",
     "degree": "1",
-    "gravity": "0.00",
     "do print parameters": "false",
     "verbosity level": "3"
   },
@@ -68,6 +67,7 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
-    }
+    },
+    "gravity": "0.00"
   }
 }

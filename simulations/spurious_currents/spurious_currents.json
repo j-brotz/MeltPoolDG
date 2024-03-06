@@ -4,14 +4,10 @@
     "application name": "spurious_currents",
     "dimension": "2",
     "degree": "1",
-    "global refinements": "7",
-    "gravity": "0.00"
+    "global refinements": "7"
   },
   "simulation specific parameters": {
     "droplet shape": "circle"
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.0"
   },
   "time stepping": {
     "start time": "0.0",
@@ -93,6 +89,10 @@
         "output verbosity": "2",
         "output walltimes": "0"
       }
+    },
+    "gravity": "0.00",
+    "surface tension": {
+      "surface tension coefficient": "1.0"
     }
   }
 }

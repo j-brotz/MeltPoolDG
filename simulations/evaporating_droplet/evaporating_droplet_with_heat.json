@@ -5,7 +5,6 @@
     "global refinements": "3",
     "dimension": "2",
     "degree": "1",
-    "gravity": "0.0",
     "verbosity level": "1",
     "do print parameters": "false"
   },
@@ -13,9 +12,6 @@
     "start time": "0.0",
     "end time": "2.0",
     "time step size": "0.001"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.1"
   },
   "material": {
     "gas": {
@@ -125,6 +121,10 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "0.1"
     }
   }
 }

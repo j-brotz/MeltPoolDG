@@ -4,7 +4,6 @@
     "application name": "stefans_problem_with_flow",
     "dimension": "3",
     "global refinements": "4",
-    "gravity": "0.",
     "degree": "1",
     "do print parameters": "false"
   },
@@ -103,6 +102,7 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
-    }
+    },
+    "gravity": "0."
   }
 }

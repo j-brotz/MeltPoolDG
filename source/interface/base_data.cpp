@@ -25,7 +25,6 @@ namespace MeltPoolDG
                         do_print_parameters,
                         "Set this parameter to true to list parameters in output");
       prm.add_parameter("do simplex", do_simplex, "Use simplices");
-      prm.add_parameter("gravity", gravity, "Set the value for the gravity");
       prm.add_parameter(
         "verbosity level",
         verbosity_level,

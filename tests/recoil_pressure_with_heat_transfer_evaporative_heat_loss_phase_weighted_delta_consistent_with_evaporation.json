@@ -5,7 +5,6 @@
     "global refinements": "5",
     "dimension": "2",
     "degree": "1",
-    "gravity": "0.0",
     "do print parameters": "false",
     "verbosity level": "0"
   },
@@ -14,14 +13,6 @@
     "end time": "0.0006",
     "time step size": "0.000001",
     "max n steps": "30"
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.8",
-    "dirac delta function approximation": {
-      "type": "reciprocal_phase_weighted",
-      "gas phase weight": "44.1",
-      "heavy phase weight": "4087"
-    }
   },
   "material": {
     "material template": "Ti64",
@@ -156,6 +147,15 @@
       "Output options": {
         "output verbosity": "0",
         "output walltimes": "0"
+      }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "1.8",
+      "dirac delta function approximation": {
+        "type": "reciprocal_phase_weighted",
+        "gas phase weight": "44.1",
+        "heavy phase weight": "4087"
       }
     }
   }

@@ -4,13 +4,9 @@
     "application name": "film_boiling",
     "dimension": "2",
     "global refinements": "3",
-    "gravity": "9.81",
     "degree": "1",
     "do print parameters": "false",
     "verbosity level": "0"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.1"
   },
   "time stepping": {
     "start time": "0.0",
@@ -134,6 +130,10 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
+    },
+    "gravity": "9.81",
+    "surface tension": {
+      "surface tension coefficient": "0.1"
     }
   }
 }

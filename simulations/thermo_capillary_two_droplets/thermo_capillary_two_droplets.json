@@ -7,7 +7,6 @@
     "do print parameters": "false",
     "global refinements": "9",
     "problem name": "melt_pool",
-    "gravity": "0.0",
     "verbosity level": "1"
   },
   "heat": {
@@ -33,10 +32,6 @@
     "start time": "0.0",
     "end time": "115.2",
     "time step size": "0.05"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.023040369",
-    "temperature dependent surface tension coefficient": "0.002"
   },
   "problem specific": {
     "do heat transfer": "true"
@@ -105,6 +100,11 @@
         "output verbosity": "2",
         "output walltimes": "0"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "0.023040369",
+      "temperature dependent surface tension coefficient": "0.002"
     }
   }
 }

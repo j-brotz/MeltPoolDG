@@ -5,12 +5,8 @@
     "global refinements": "3",
     "dimension": "2",
     "degree": "1",
-    "gravity": "0.0",
     "verbosity level": "0",
     "do print parameters": "false"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.1"
   },
   "time stepping": {
     "start time": "0.0",
@@ -125,6 +121,10 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "0.1"
     }
   }
 }

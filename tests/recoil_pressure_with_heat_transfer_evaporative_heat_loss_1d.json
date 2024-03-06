@@ -5,7 +5,6 @@
     "global refinements": "7",
     "dimension": "1",
     "degree": "1",
-    "gravity": "0.0",
     "do print parameters": "false",
     "verbosity level": "0"
   },
@@ -14,9 +13,6 @@
     "end time": "0.0006",
     "time step size": "0.000001",
     "max n steps": "4"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.0"
   },
   "material": {
     "gas": {
@@ -71,11 +67,6 @@
     "do move": "false",
     "scan speed": "0.003",
     "radius": "70.e-6"
-  },
-  "darcy damping": {
-    "avoid div zero constant": "1.",
-    "formulation": "implicit_formulation",
-    "mushy zone morphology": "1e11"
   },
   "simulation specific domain": {
     "domain x min": "-0.0002",
@@ -148,6 +139,15 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
+    },
+    "gravity": "0.0",
+    "darcy damping": {
+      "avoid div zero constant": "1.",
+      "formulation": "implicit_formulation",
+      "mushy zone morphology": "1e11"
+    },
+    "surface tension": {
+      "surface tension coefficient": "0.0"
     }
   }
 }

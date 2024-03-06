@@ -5,7 +5,6 @@
     "global refinements": "6",
     "dimension": "2",
     "degree": "1",
-    "gravity": "0.0",
     "do print parameters": "false"
   },
   "time stepping": {
@@ -136,6 +135,7 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
-    }
+    },
+    "gravity": "0.0"
   }
 }

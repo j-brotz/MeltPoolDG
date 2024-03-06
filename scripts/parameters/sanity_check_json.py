@@ -137,6 +137,9 @@ old_parameter_names = [
     ["level set", "reinitialization", "reinit modeltype"],
     ["level set", "reinitialization", "reinit implementation"],
     ["Navier-Stokes"],
+    ["base", "gravity"],
+    ["surface tension"],
+    ["darcy damping"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -257,6 +260,9 @@ new_parameter_names = [
     ["level set", "reinitialization", "type"],
     ["level set", "reinitialization", "implementation"],
     ["flow"],
+    ["flow", "gravity"],
+    ["flow", "surface tension"],
+    ["flow", "darcy damping"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]

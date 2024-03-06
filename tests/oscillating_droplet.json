@@ -5,8 +5,7 @@
     "degree": "1",
     "dimension": "2",
     "do print parameters": "false",
-    "global refinements": "6",
-    "gravity": "0.0"
+    "global refinements": "6"
   },
   "simulation specific parameters": {
     "side length": "400e-6",
@@ -29,9 +28,6 @@
       "dynamic viscosity": "6e-3"
     },
     "two phase fluid properties transition type": "smooth"
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.8"
   },
   "problem specific": {
     "do heat transfer": "false",
@@ -85,6 +81,10 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "1.8"
     }
   }
 }

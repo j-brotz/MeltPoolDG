@@ -55,7 +55,7 @@ namespace MeltPoolDG
                material);
     ls.post();
     evapor.post(material, heat.use_volume_specific_thermal_capacity_for_phase_interpolation);
-    surface_tension.post(material);
+    flow.post(material);
     output.post(time_stepping.time_step_size, parameter_filename);
     profiling.post(base.verbosity_level);
     restart.post(output.directory);
@@ -77,7 +77,7 @@ namespace MeltPoolDG
     laser.check_input_parameters();
     ls.check_input_parameters(base.degree);
     evapor.check_input_parameters(ls.n_subdivisions, material);
-    surface_tension.check_input_parameters(ls.curv.enable);
+    flow.check_input_parameters(ls.curv.enable);
     profiling.check_input_parameters(time_stepping.time_step_size);
     restart.check_input_parameters(time_stepping.time_step_size);
   }
@@ -185,13 +185,9 @@ namespace MeltPoolDG
     }
     prm.leave_subsection();
     /*
-     * surface tension
+     * flow
      */
-    surface_tension.add_parameters(prm);
-    /*
-     * Darcy Damping
-     */
-    darcy.add_parameters(prm);
+    flow.add_parameters(prm);
     /*
      *  evaporation
      */

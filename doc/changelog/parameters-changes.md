@@ -6,7 +6,21 @@ All notable changes of the input parameters will be documented in this file.
 ```diff
 {
 -  "Navier-Stokes": {
+-  }
+  "base": {
+-    "gravity": ""
+  }
+-  "surface tension": {
+-  }
+-  "darcy damping": {
+-  }
 +  "flow": {
++    "gravity": "",
++    "surface tension": {
++    },
++    "darcy damping": {
++    }
++  }
 }
 ```
 

@@ -130,8 +130,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       : SimulationBase<dim>(parameter_file, mpi_communicator)
       , lambda0(
           2. * numbers::PI *
-          std::sqrt(3. * this->parameters.surface_tension.surface_tension_coefficient /
-                    (this->parameters.base.gravity * (this->parameters.material.liquid.density -
+          std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /
+                    (this->parameters.flow.gravity * (this->parameters.material.liquid.density -
                                                       this->parameters.material.gas.density))))
       , x_max(lambda0 / 2.)
       , y_max(lambda0)

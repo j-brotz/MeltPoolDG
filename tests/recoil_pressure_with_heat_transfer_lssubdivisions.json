@@ -5,14 +5,8 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
-    "gravity": "0.0",
     "problem name": "melt_pool",
     "verbosity level": "0"
-  },
-  "darcy damping": {
-    "avoid div zero constant": "1e-3",
-    "mushy zone morphology": "1e9",
-    "formulation": "implicit_formulation"
   },
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",
@@ -27,10 +21,6 @@
     "evaporative dilation rate": {
       "enable": "false"
     }
-  },
-  "surface tension": {
-    "surface tension coefficient": "1.8",
-    "do level set pressure gradient interpolation": "true"
   },
   "heat": {
     "linear solver": {
@@ -179,6 +169,16 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "1.8",
+      "do level set pressure gradient interpolation": "true"
+    },
+    "darcy damping": {
+      "avoid div zero constant": "1e-3",
+      "mushy zone morphology": "1e9",
+      "formulation": "implicit_formulation"
     }
   }
 }

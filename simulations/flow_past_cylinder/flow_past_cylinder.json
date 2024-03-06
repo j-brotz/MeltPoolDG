@@ -5,9 +5,6 @@
     "dimension": "2",
     "degree": "2"
   },
-  "surface tension": {
-    "surface tension coefficient": "0.01"
-  },
   "time stepping": {
     "start time": "0.0",
     "end time": "2.0",
@@ -57,6 +54,9 @@
       "lin velocity preconditioner": "ilu scalar",
       "lin pressure mass preconditioner": "ilu",
       "lin its before inner solvers": "30"
+    },
+    "surface tension": {
+      "surface tension coefficient": "0.01"
     }
   }
 }

@@ -5,16 +5,12 @@
     "global refinements": "5",
     "dimension": "2",
     "degree": "1",
-    "gravity": "0.00",
     "do print parameters": "false"
   },
   "simulation specific": {
     "domain length": "100e-6",
     "droplet radius": "20e-6",
     "domain type": "ball"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.00"
   },
   "time stepping": {
     "start time": "0.0",
@@ -100,6 +96,10 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.00",
+    "surface tension": {
+      "surface tension coefficient": "0.00"
     }
   }
 }

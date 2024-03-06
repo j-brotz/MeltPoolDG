@@ -4,16 +4,12 @@
     "application name": "rising_bubble",
     "global refinements": "4",
     "dimension": "2",
-    "degree": "1",
-    "gravity": "0.98"
+    "degree": "1"
   },
   "time stepping": {
     "start time": "0.0",
     "end time": "1.0",
     "time step size": "0.02"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.0245"
   },
   "material": {
     "gas": {
@@ -84,6 +80,10 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.98",
+    "surface tension": {
+      "surface tension coefficient": "0.0245"
     }
   }
 }

@@ -124,7 +124,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
                   this->parameters.output.paraview.filename +
                   "_droplet_velocity_over_time_normalized.csv");
       velocity_reference =
-        this->parameters.surface_tension.temperature_dependent_surface_tension_coefficient *
+        this->parameters.flow.surface_tension.temperature_dependent_surface_tension_coefficient *
         grad_T * a / this->parameters.material.gas.dynamic_viscosity;
       time_reference = a / velocity_reference;
 
@@ -133,7 +133,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
       reynolds_number  = characteristic_numbers.Reynolds(velocity_reference, a);
       mach_number      = characteristic_numbers.Mach(velocity_reference, a);
       capillary_number = characteristic_numbers.capillary(
-        velocity_reference, this->parameters.surface_tension.surface_tension_coefficient);
+        velocity_reference, this->parameters.flow.surface_tension.surface_tension_coefficient);
     }
 
     void

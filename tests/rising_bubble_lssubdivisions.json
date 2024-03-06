@@ -5,17 +5,12 @@
     "do print parameters": "false",
     "global refinements": "1",
     "dimension": "2",
-    "degree": "1",
-    "gravity": "0.98"
+    "degree": "1"
   },
   "time stepping": {
     "start time": "0.0",
     "end time": "0.1",
     "time step size": "0.05"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.0245",
-    "do level set pressure gradient interpolation": "true"
   },
   "material": {
     "gas": {
@@ -76,6 +71,11 @@
         "output verbosity": "0",
         "output wall times": "0"
       }
+    },
+    "gravity": "0.98",
+    "surface tension": {
+      "surface tension coefficient": "0.0245",
+      "do level set pressure gradient interpolation": "true"
     }
   }
 }

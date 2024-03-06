@@ -4,11 +4,7 @@
     "application name": "evaporating_droplet",
     "global refinements": "4",
     "dimension": "2",
-    "degree": "1",
-    "gravity": "0.00"
-  },
-  "surface tension": {
-    "surface tension coefficient": "0.00"
+    "degree": "1"
   },
   "time stepping": {
     "start time": "0.0",
@@ -100,6 +96,10 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
+    },
+    "gravity": "0.00",
+    "surface tension": {
+      "surface tension coefficient": "0.00"
     }
   }
 }
