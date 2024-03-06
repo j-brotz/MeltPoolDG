@@ -41,6 +41,9 @@ namespace MeltPoolDG::RadiativeTransport
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time(),
                        base_in);
+
+        if (base_in->parameters.amr.do_amr)
+          refine_mesh(base_in);
       }
 
     //... print timing statistics
@@ -230,6 +233,8 @@ namespace MeltPoolDG::RadiativeTransport
     rte_operation->setup_constraints(*scratch_data,
                                      base_in->get_dirichlet_bc("intensity"),
                                      base_in->get_periodic_bc());
+    MeltPoolDG::UtilityFunctions::reinit_hanging_nodes_constraints_with_periodic_boundary<dim>(
+      *scratch_data, base_in->get_periodic_bc(), hs_dof_idx);
     /*
      *  create the matrix-free object
      */
@@ -265,8 +270,8 @@ namespace MeltPoolDG::RadiativeTransport
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
-      scratch_data->initialize_dof_vector(heat_source, rte_dof_idx);
-      rte_operation->compute_heat_source(heat_source, rte_dof_idx, true);
+      scratch_data->initialize_dof_vector(heat_source, rte_hanging_nodes_dof_idx);
+      rte_operation->compute_heat_source(heat_source, rte_hanging_nodes_dof_idx, true);
       rte_operation->attach_output_vectors(data_out);
       data_out.add_data_vector(dof_handler_heaviside, heaviside, "prescribed_heaviside");
       data_out.add_data_vector(dof_handler, heat_source, "heat_source");
@@ -320,7 +325,10 @@ namespace MeltPoolDG::RadiativeTransport
       rte_operation->attach_vectors(vectors);
     };
 
-    const auto post = [&]() { rte_operation->distribute_constraints(); };
+    const auto post = [&]() {
+      rte_operation->distribute_constraints();
+      compute_heaviside(*base_in->get_initial_condition("prescribed_heaviside"));
+    };
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in, true); };
 

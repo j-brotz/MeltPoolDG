@@ -170,6 +170,8 @@ namespace MeltPoolDG::Simulation::PowderBed
             this->parameters.laser.template get_starting_position<dim>(),
             this->parameters.laser.template get_direction<dim>()),
           "intensity");
+      else
+        this->parameters.laser.rte_boundary_id = upper_bc;
     }
 
     void

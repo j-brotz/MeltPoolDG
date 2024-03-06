@@ -260,6 +260,8 @@ namespace MeltPoolDG::RadiativeTransport
         heat_source.local_element(source_mult_local_index) /=
           heat_source_multiplicity.local_element(source_mult_local_index);
 
+    scratch_data.get_constraint(heat_source_dof_idx).distribute(heat_source);
+
     if (update_ghosts)
       intensity.zero_out_ghost_values();
   }

@@ -92,6 +92,11 @@ namespace MeltPoolDG::Heat
         output_results(base_in, true);
         AssertThrow(false, e);
       }
+    catch (const SolverControl::NoConvergence &e)
+      {
+        output_results(base_in, false);
+        AssertThrow(false, e);
+      }
     Journal::print_end(scratch_data->get_pcout());
   }
 
