@@ -136,6 +136,7 @@ old_parameter_names = [
     ["level set", "reinitialization", "reinit max n steps"],
     ["level set", "reinitialization", "reinit modeltype"],
     ["level set", "reinitialization", "reinit implementation"],
+    ["Navier-Stokes"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -255,6 +256,7 @@ new_parameter_names = [
     ["level set", "reinitialization", "max n steps"],
     ["level set", "reinitialization", "type"],
     ["level set", "reinitialization", "implementation"],
+    ["flow"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]

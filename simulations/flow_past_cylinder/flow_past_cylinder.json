@@ -25,7 +25,23 @@
   "output": {
     "do ouput": "false"
   },
-  "Navier-Stokes": {
+  "level set": {
+    "reinitialization": {
+      "reinit eps scale factor": "0.5",
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
+    }
+  },
+  "flow": {
     "physical type": "incompressible",
     "dimension": "2",
     "global refinements": "0",
@@ -41,22 +57,6 @@
       "lin velocity preconditioner": "ilu scalar",
       "lin pressure mass preconditioner": "ilu",
       "lin its before inner solvers": "30"
-    }
-  },
-  "level set": {
-    "reinitialization": {
-      "reinit eps scale factor": "0.5",
-      "linear solver": {
-        "do matrix free": "true"
-      },
-      "enable": "true",
-      "max n steps": "5",
-      "type": "olsson2007"
-    },
-    "advection diffusion": {
-      "linear solver": {
-        "do matrix free": "true"
-      }
     }
   }
 }

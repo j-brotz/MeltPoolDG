@@ -10,7 +10,7 @@ namespace MeltPoolDG::Flow
 
     // declare parameters
     {
-      prm_adaflo.enter_subsection("Navier-Stokes");
+      prm_adaflo.enter_subsection("flow");
       prm_adaflo.enter_subsection("adaflo");
       params.declare_parameters(prm_adaflo);
       prm_adaflo.leave_subsection();
@@ -32,7 +32,7 @@ namespace MeltPoolDG::Flow
 
     // read parsed parameters
     {
-      prm_adaflo.enter_subsection("Navier-Stokes");
+      prm_adaflo.enter_subsection("flow");
       prm_adaflo.enter_subsection("adaflo");
       params.parse_parameters(parameter_filename, prm_adaflo);
       prm_adaflo.leave_subsection();

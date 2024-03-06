@@ -24,7 +24,25 @@
   "simulation specific": {
     "velocity": "1e-3"
   },
-  "Navier-Stokes": {
+  "problem specific": {
+    "do heat transfer": "false"
+  },
+  "output": {
+    "directory": "evaporating_shell_3d",
+    "paraview": {
+      "print boundary id": "true",
+      "enable": "true"
+    }
+  },
+  "evaporation": {
+    "evaporative cooling": {
+      "enable": "false"
+    },
+    "evaporative dilation rate": {
+      "enable": "false"
+    }
+  },
+  "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "physical type": "incompressible",
@@ -50,24 +68,6 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
-    }
-  },
-  "problem specific": {
-    "do heat transfer": "false"
-  },
-  "output": {
-    "directory": "evaporating_shell_3d",
-    "paraview": {
-      "print boundary id": "true",
-      "enable": "true"
-    }
-  },
-  "evaporation": {
-    "evaporative cooling": {
-      "enable": "false"
-    },
-    "evaporative dilation rate": {
-      "enable": "false"
     }
   }
 }

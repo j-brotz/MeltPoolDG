@@ -80,7 +80,32 @@
   "surface tension": {
     "surface tension coefficient": "1.493"
   },
-  "Navier-Stokes": {
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "n initial steps": "1",
+      "max n steps": "1",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "2e-5"
+      }
+    },
+    "curvature": {
+      "filter parameter": "2",
+      "do curvature correction": "false"
+    },
+    "normal vector": {
+      "filter parameter": "2"
+    },
+    "n subdivisions": "1"
+  },
+  "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
@@ -108,30 +133,5 @@
         "scheme": "bdf_2"
       }
     }
-  },
-  "output": {
-    "paraview": {
-      "enable": "false"
-    }
-  },
-  "level set": {
-    "reinitialization": {
-      "enable": "true",
-      "n initial steps": "1",
-      "max n steps": "1",
-      "type": "olsson2007",
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": "2e-5"
-      }
-    },
-    "curvature": {
-      "filter parameter": "2",
-      "do curvature correction": "false"
-    },
-    "normal vector": {
-      "filter parameter": "2"
-    },
-    "n subdivisions": "1"
   }
 }

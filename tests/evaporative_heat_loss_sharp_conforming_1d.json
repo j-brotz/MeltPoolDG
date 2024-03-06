@@ -95,7 +95,32 @@
       "residual tolerance": "1.0"
     }
   },
-  "Navier-Stokes": {
+  "problem specific": {
+    "do heat transfer": "true",
+    "do solidification": "true",
+    "do advect level set": "true"
+  },
+  "output": {
+    "paraview": {
+      "output material id": "true",
+      "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "max n steps": "0"
+    },
+    "curvature": {
+      "filter parameter": "0.5",
+      "verbosity level": "1"
+    },
+    "normal vector": {
+      "filter parameter": "0.5",
+      "verbosity level": "1"
+    }
+  },
+  "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "physical type": "incompressible",
@@ -122,31 +147,6 @@
         "output verbosity": "0",
         "output walltimes": "0"
       }
-    }
-  },
-  "problem specific": {
-    "do heat transfer": "true",
-    "do solidification": "true",
-    "do advect level set": "true"
-  },
-  "output": {
-    "paraview": {
-      "output material id": "true",
-      "enable": "false"
-    }
-  },
-  "level set": {
-    "reinitialization": {
-      "enable": "true",
-      "max n steps": "0"
-    },
-    "curvature": {
-      "filter parameter": "0.5",
-      "verbosity level": "1"
-    },
-    "normal vector": {
-      "filter parameter": "0.5",
-      "verbosity level": "1"
     }
   }
 }
