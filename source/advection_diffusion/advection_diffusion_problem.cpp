@@ -85,7 +85,7 @@ namespace MeltPoolDG::LevelSet
      *  dirichlet constraints are supported)
      */
     base_in->attach_boundary_condition("advection_diffusion"); //@todo move to a more central place
-    MeltPoolDG::Constraints::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_BC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("advection_diffusion"),
       base_in->get_periodic_bc(),
@@ -97,7 +97,7 @@ namespace MeltPoolDG::LevelSet
       advec_diff_adaflo_dof_idx,
       advec_diff_hanging_nodes_dof_idx,
       false /*set inhomogeneities to zero*/);
-    MeltPoolDG::Constraints::make_HNC_with_PBC<dim>(*scratch_data,
+    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
                                                     base_in->get_periodic_bc(),
                                                     velocity_dof_idx);
     /*

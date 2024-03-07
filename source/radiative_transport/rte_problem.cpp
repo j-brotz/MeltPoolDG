@@ -233,7 +233,7 @@ namespace MeltPoolDG::RadiativeTransport
     rte_operation->setup_constraints(*scratch_data,
                                      base_in->get_dirichlet_bc("intensity"),
                                      base_in->get_periodic_bc());
-    MeltPoolDG::Constraints::make_HNC_with_PBC<dim>(*scratch_data,
+    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
                                                     base_in->get_periodic_bc(),
                                                     hs_dof_idx);
     /*
