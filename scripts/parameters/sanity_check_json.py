@@ -261,7 +261,7 @@ new_parameter_names = [
 
 # Optional: attach lambda function to modify value of new parameter name
 new_parameter_names_lambda = [
-    (["recoil pressure", "pressure coefficient"], lambda x: x * 1.e-5/1.013)
+    (["recoil pressure", "pressure coefficient"], lambda x: x * 1.e-5 / 1.013)
 ]
 
 rename_parameter_values = [
@@ -318,11 +318,12 @@ def process_special_parameters(dataDict, nErrors):
             set_nested_item(dataDict, ["level set", "reinitialization",
                             "interface thickness parameter", "type"], "absolute_value")
             set_nested_item(dataDict, [
-                            "level set", "reinitialization", "interface thickness parameter", "val"], val)
+                            "level set", "reinitialization",
+                            "interface thickness parameter", "val"], val)
             print_success(
                 f"RENAME: 'reinit constant epsilon'")
             nErrors += 1
-    except:
+    except BaseException:
         try:
             val = get_nested_value(
                 dataDict, ["level set", "reinitialization", "reinit scale factor epsilon"])
@@ -330,13 +331,16 @@ def process_special_parameters(dataDict, nErrors):
                 delete_nested_item(
                     dataDict, ["level set", "reinitialization", "reinit scale factor epsilon"])
                 set_nested_item(dataDict, ["level set", "reinitialization",
-                                "interface thickness parameter", "type"], "proportional_to_cell_size")
+                                "interface thickness parameter",
+                                           "type"],
+                                "proportional_to_cell_size")
                 set_nested_item(dataDict, [
-                                "level set", "reinitialization", "interface thickness parameter", "val"], val)
+                                "level set", "reinitialization",
+                                "interface thickness parameter", "val"], val)
                 print_success(
                     f"RENAME: 'reinit scale factor epsilon'")
                 nErrors += 1
-        except:
+        except BaseException:
             return (dataDict, nErrors)
     return (dataDict, nErrors)
 
@@ -385,7 +389,7 @@ def set_nested_item(dataDict, mapList, val):
     try:
         get_nested_value(dataDict, mapList)
     # if it does not exist, introduce new tree
-    except:
+    except BaseException:
         print_error("Category does not exist yet")
         tree_dict = create_dict_from_tree_list(mapList)
         update(dataDict, tree_dict)
@@ -426,13 +430,15 @@ def create_dict_from_tree_list(tree_list):
     return tree_dict
 
 
-def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter_names_lambda, delete_parameter_names, rename_parameter_values, always_yes, write_json, appendix=""):
+def sanity_check_json(j, old_parameter_names, new_parameter_names,
+                      new_parameter_names_lambda,
+                      delete_parameter_names, rename_parameter_values, always_yes, write_json, appendix=""):
     assert len(old_parameter_names) == len(new_parameter_names)
 
     errors = 0
 
     with open(j, 'r') as f:
-        print(70*"-")
+        print(70 * "-")
         print("Process file: {:}".format(j))
         datastore = json.load(f, object_pairs_hook=collections.OrderedDict)
 
@@ -447,7 +453,8 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                     f"outdated parameter detected {o}; use new definition {new_parameter_names[i]}")
                 errors += 1
                 if write_json:
-                    if always_yes or click.confirm('Do you want me to replace the old parameter by the new one?'):
+                    if always_yes or click.confirm(
+                            'Do you want me to replace the old parameter by the new one?'):
                         # apply lambda function if it exists
                         for key, lambda_fun in new_parameter_names_lambda:
                             if key == new_parameter_names[i]:
@@ -457,7 +464,8 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                                     f"from {val} to {new_val}")
                                 val = str(new_val)
 
-                        # replace parameter name and set value from the old parameter
+                        # replace parameter name and set value from the old
+                        # parameter
                         set_nested_item(
                             datastore, new_parameter_names[i], val)
 
@@ -466,7 +474,7 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                         print_success(
                             f"RENAME: {o} to {new_parameter_names[i]}")
 
-            except:
+            except BaseException:
                 continue
 
         # process deleted parameters
@@ -476,10 +484,11 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                 print_error(f"non-existing parameter found {o}")
                 errors += 1
                 if write_json:
-                    if always_yes or click.confirm('Do you want me to delete the outdated parameter?'):
+                    if always_yes or click.confirm(
+                            'Do you want me to delete the outdated parameter?'):
                         delete_nested_item(datastore, o)
                         print_success("DELETE: parameter '{:}'".format(o))
-            except:
+            except BaseException:
                 continue
 
         # process renamed parameter value
@@ -491,11 +500,13 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
                         f"outdated parameter value for {name} detected '{val}'; Use new value '{new_val}'")
                     errors += 1
                     if write_json:
-                        if always_yes or click.confirm('Do you want me to replace the old parameter value by the new one?'):
-                            # introduce new parameter name and set value from the old parameter
+                        if always_yes or click.confirm(
+                                'Do you want me to replace the old parameter value by the new one?'):
+                            # introduce new parameter name and set value from
+                            # the old parameter
                             set_nested_item(datastore, name, new_val)
                             print(f"    RENAME: {name} {val} to {new_val}")
-            except:
+            except BaseException:
                 continue
         # process special parmaeters
         datastore, errors = process_special_parameters(datastore, errors)
@@ -507,7 +518,9 @@ def sanity_check_json(j, old_parameter_names, new_parameter_names, new_parameter
         new_file = j
         if appendix:
             base = os.path.basename(j).split(".json")[0]
-            new_file = os.path.join(os.path.dirname(j), base+appendix+".json")
+            new_file = os.path.join(
+                os.path.dirname(j),
+                base + appendix + ".json")
 
         with open(new_file, 'w') as f:
             print(f"Write file: updated parameters written to {new_file}")
