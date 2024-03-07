@@ -233,8 +233,9 @@ namespace MeltPoolDG::RadiativeTransport
     rte_operation->setup_constraints(*scratch_data,
                                      base_in->get_dirichlet_bc("intensity"),
                                      base_in->get_periodic_bc());
-    MeltPoolDG::UtilityFunctions::reinit_hanging_nodes_constraints_with_periodic_boundary<dim>(
-      *scratch_data, base_in->get_periodic_bc(), hs_dof_idx);
+    MeltPoolDG::UtilityFunctions::make_HNC_with_PBC<dim>(*scratch_data,
+                                                         base_in->get_periodic_bc(),
+                                                         hs_dof_idx);
     /*
      *  create the matrix-free object
      */

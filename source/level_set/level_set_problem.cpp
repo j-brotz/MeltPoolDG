@@ -309,23 +309,23 @@ namespace MeltPoolDG::LevelSet
      *  create AffineConstraints
      */
     base_in->attach_boundary_condition("level_set"); //@todo move to a more central place
-    MeltPoolDG::UtilityFunctions::
-      reinit_and_merge_dirichlet_and_hanging_nodes_constraints_with_periodic_boundary<dim>(
-        *scratch_data,
-        base_in->get_dirichlet_bc("level_set"),
-        base_in->get_periodic_bc(),
-        ls_dof_idx,
-        ls_hanging_nodes_dof_idx);
+    MeltPoolDG::UtilityFunctions::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
+      *scratch_data,
+      base_in->get_dirichlet_bc("level_set"),
+      base_in->get_periodic_bc(),
+      ls_dof_idx,
+      ls_hanging_nodes_dof_idx);
 
-    MeltPoolDG::UtilityFunctions::reinit_and_merge_dirichlet_and_hanging_nodes_constraints<dim>(
+    MeltPoolDG::UtilityFunctions::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("level_set"),
       ls_zero_bc_idx,
       ls_hanging_nodes_dof_idx,
       false /*set inhomogeneities to zero*/);
 
-    MeltPoolDG::UtilityFunctions::reinit_hanging_nodes_constraints_with_periodic_boundary<dim>(
-      *scratch_data, base_in->get_periodic_bc(), vel_dof_idx);
+    MeltPoolDG::UtilityFunctions::make_HNC_with_PBC<dim>(*scratch_data,
+                                                         base_in->get_periodic_bc(),
+                                                         vel_dof_idx);
     /*
      *  create the matrix-free object
      */

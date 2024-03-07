@@ -151,8 +151,9 @@ namespace MeltPoolDG::LevelSet
     /*
      *  make hanging nodes constraints
      */
-    MeltPoolDG::UtilityFunctions::reinit_hanging_nodes_constraints_with_periodic_boundary<dim>(
-      *scratch_data, base_in->get_periodic_bc(), reinit_dof_idx);
+    MeltPoolDG::UtilityFunctions::make_HNC_with_PBC<dim>(*scratch_data,
+                                                         base_in->get_periodic_bc(),
+                                                         reinit_dof_idx);
     /*
      *  create the matrix-free object
      */

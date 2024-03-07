@@ -95,9 +95,8 @@ namespace MeltPoolDG::RadiativeTransport
     const DirichletBoundaryConditions<dim> &bc_data,
     const PeriodicBoundaryConditions<dim>  &pbc)
   {
-    UtilityFunctions::
-      reinit_and_merge_dirichlet_and_hanging_nodes_constraints_with_periodic_boundary(
-        scratch_data_in, bc_data, pbc, rte_dof_idx, rte_hanging_nodes_dof_idx, true);
+    UtilityFunctions::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC(
+      scratch_data_in, bc_data, pbc, rte_dof_idx, rte_hanging_nodes_dof_idx, true);
   }
 
   template <int dim>

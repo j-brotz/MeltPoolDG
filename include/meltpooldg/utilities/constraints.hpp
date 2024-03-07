@@ -14,8 +14,8 @@
 namespace MeltPoolDG::UtilityFunctions
 {
   /**
-   * Check whether @p constraints are consistent in parallel with the
-   * @p dof_handler.
+   * Check whether @param constraints are consistent in parallel with the
+   * @param dof_handler.
    */
   template <int dim, int spacedim, typename number>
   void
@@ -38,18 +38,25 @@ namespace MeltPoolDG::UtilityFunctions
   }
 
   /**
-   * Setup AffineConstraints according to given Dirichlet boundary conditions
-   * @p bc_data and assign it to a given @p dof_idx inside @p scratch_data.
-   * If @p set_inhomogeneities is true, inhomogeneities are considered else
+   * Fill AffineConstraints according to given Dirichlet boundary conditions
+   * @param bc_data and assign it to a given @param dof_idx inside @param scratch_data.
+   *
+   * Note that the AffineConstraints object must be reinited with the locally relevant dof
+   * index set before calling this function.
+   *
+   * If @param set_inhomogeneities is true, inhomogeneities are considered else
    * homogeneous DBC are assumed.
+   *
+   * If @param close is true, the AffineConstraints object is closed after filling it.
+   * In Debug, the constraints are also checked with check_constraints().
    */
   template <int dim>
   void
-  setup_dirichlet_constraints(ScratchData<dim>                       &scratch_data,
-                              const DirichletBoundaryConditions<dim> &bc_data,
-                              const unsigned int                      dof_idx,
-                              const bool                              set_inhomogeneities = true,
-                              const bool                              close_and_check     = true)
+  fill_DBC(ScratchData<dim>                       &scratch_data,
+           const DirichletBoundaryConditions<dim> &bc_data,
+           const unsigned int                      dof_idx,
+           const bool                              set_inhomogeneities = true,
+           const bool                              close               = true)
   {
     if (!bc_data.get_data().empty())
       {
@@ -70,7 +77,7 @@ namespace MeltPoolDG::UtilityFunctions
           }
       }
 
-    if (close_and_check)
+    if (close)
       {
         scratch_data.get_constraint(dof_idx).close();
         check_constraints(scratch_data.get_dof_handler(dof_idx),
@@ -79,43 +86,47 @@ namespace MeltPoolDG::UtilityFunctions
   }
 
   /**
-   * Reinit AffineConstraints according to given Dirichlet boundary conditions
-   * @p bc_data and assign it to a given @p dof_idx inside @p scratch_data.
-   * If @p set_inhomogeneities is true, inhomogeneities are considered else
+   * Reinit and fill AffineConstraints according to given Dirichlet boundary conditions
+   * @param bc_data and assign it to a given @param dof_idx inside @param scratch_data.
+   *
+   * If @param set_inhomogeneities is true, inhomogeneities are considered else
    * homogeneous DBC are assumed.
+   *
+   * If @param close is true, the AffineConstraints object is closed after filling it.
+   * In Debug, the constraints are also checked with check_constraints().
    */
   template <int dim>
   void
-  reinit_dirichlet_constraints(ScratchData<dim>                       &scratch_data,
-                               const DirichletBoundaryConditions<dim> &bc_data,
-                               const unsigned int                      dof_idx,
-                               const bool                              set_inhomogeneities = true,
-                               const bool                              close_and_check     = true)
+  make_DBC(ScratchData<dim>                       &scratch_data,
+           const DirichletBoundaryConditions<dim> &bc_data,
+           const unsigned int                      dof_idx,
+           const bool                              set_inhomogeneities = true,
+           const bool                              close               = true)
   {
-    scratch_data.get_constraint(dof_idx).clear();
     scratch_data.get_constraint(dof_idx).reinit(scratch_data.get_locally_relevant_dofs(dof_idx));
 
-    setup_dirichlet_constraints(
-      scratch_data, bc_data, dof_idx, set_inhomogeneities, close_and_check);
+    fill_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, close);
   }
 
   /**
-   * Reinit AffineConstraints corresponding to a given @p dof_hanging_nodes_idx
-   * inside @p scratch_data, considering hanging nodes.
+   * Reinit and fill AffineConstraints corresponding to a given @param dof_hanging_nodes_idx
+   * inside @param scratch_data, considering hanging nodes.
+   *
+   * If @param close is true, the AffineConstraints object is closed after filling it.
+   * In Debug, the constraints are also checked with check_constraints().
    */
   template <int dim>
   void
-  reinit_hanging_nodes_constraints(ScratchData<dim>  &scratch_data,
-                                   const unsigned int dof_hanging_nodes_idx,
-                                   const bool         close_and_check = true)
+  make_HNC(ScratchData<dim>  &scratch_data,
+           const unsigned int dof_hanging_nodes_idx,
+           const bool         close = true)
   {
-    scratch_data.get_constraint(dof_hanging_nodes_idx).clear();
     scratch_data.get_constraint(dof_hanging_nodes_idx)
       .reinit(scratch_data.get_locally_relevant_dofs(dof_hanging_nodes_idx));
     DoFTools::make_hanging_node_constraints(scratch_data.get_dof_handler(dof_hanging_nodes_idx),
                                             scratch_data.get_constraint(dof_hanging_nodes_idx));
 
-    if (close_and_check)
+    if (close)
       {
         scratch_data.get_constraint(dof_hanging_nodes_idx).close();
         check_constraints(scratch_data.get_dof_handler(dof_hanging_nodes_idx),
@@ -123,11 +134,15 @@ namespace MeltPoolDG::UtilityFunctions
       }
   }
 
+  /**
+   * Merge the constraints of the AffineConstraints corresponding to a given @param dof_hanging_nodes_idx
+   * into the AffineConstraints corresponding to a given @param dof_idx.
+   */
   template <int dim>
   void
-  merge_dirichlet_and_hanging_nodes_constraints(ScratchData<dim>  &scratch_data,
-                                                const unsigned int dof_idx,
-                                                const unsigned int dof_hanging_nodes_idx)
+  merge_HNC_into_DBC(ScratchData<dim>  &scratch_data,
+                     const unsigned int dof_idx,
+                     const unsigned int dof_hanging_nodes_idx)
   {
     scratch_data.get_constraint(dof_idx).merge(
       scratch_data.get_constraint(dof_hanging_nodes_idx),
@@ -135,40 +150,48 @@ namespace MeltPoolDG::UtilityFunctions
   }
 
   /**
-   * Reinit AffineConstraints according to given Dirichlet boundary conditions
-   * @p bc_data and assign it to a given @p dof_idx inside @p scratch_data.
-   * It will be automatically merged with the AffineConstraints corresponding
-   * to @p dof_hanging_nodes_idx. If @p set_inhomogeneities is true,
-   * inhomogeneities are considered else homogeneous DBC are assumed.
+   * Reinit and fill AffineConstraints according to given Dirichlet boundary conditions
+   * @param bc_data and assign it to a given @param dof_idx inside @param scratch_data.
+   *
+   * If @param set_inhomogeneities is true, inhomogeneities are considered else
+   * homogeneous DBC are assumed.
+   *
+   * Reinit and fill AffineConstraints corresponding to a given @param dof_hanging_nodes_idx
+   * inside @param scratch_data, considering hanging nodes.
+   *
+   * Merge the constraints of the AffineConstraints corresponding to a given @param dof_hanging_nodes_idx
+   * into the AffineConstraints corresponding to a given @param dof_idx.
+   *
+   * The AffineConstraints objects are closed after filling them.
+   * In Debug, the constraints are also checked with check_constraints().
    */
   template <int dim>
   void
-  reinit_and_merge_dirichlet_and_hanging_nodes_constraints(
-    ScratchData<dim>                       &scratch_data,
-    const DirichletBoundaryConditions<dim> &bc_data,
-    const unsigned int                      dof_idx,
-    const unsigned int                      dof_hanging_nodes_idx,
-    const bool                              set_inhomogeneities = true)
+  make_DBC_and_HNC_and_merge_HNC_into_DBC(ScratchData<dim>                       &scratch_data,
+                                          const DirichletBoundaryConditions<dim> &bc_data,
+                                          const unsigned int                      dof_idx,
+                                          const unsigned int dof_hanging_nodes_idx,
+                                          const bool         set_inhomogeneities = true)
   {
-    reinit_dirichlet_constraints(scratch_data, bc_data, dof_idx, set_inhomogeneities);
-    reinit_hanging_nodes_constraints(scratch_data, dof_hanging_nodes_idx);
+    make_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, true /* close */);
+    make_HNC(scratch_data, dof_hanging_nodes_idx, true /* close */);
 
-    merge_dirichlet_and_hanging_nodes_constraints(scratch_data, dof_idx, dof_hanging_nodes_idx);
+    merge_HNC_into_DBC(scratch_data, dof_idx, dof_hanging_nodes_idx);
 
-    scratch_data.get_constraint(dof_idx).close();
     check_constraints(scratch_data.get_dof_handler(dof_idx), scratch_data.get_constraint(dof_idx));
   }
 
   /**
-   * Setup AffineConstraints corresponding to a given @p dof_idx
-   * inside @p scratch_data, considering periodic boundary conditions @p
-   * pbc and hanging nodes. The AffineConstraints object may not be closed
+   * Insert algebraic periodicity constraints according to @param pbc into the
+   * AffineConstraints corresponding to a given @param dof_idx inside @param scratch_data.
+   *
+   * Note that the AffineConstraints object must not be closed.
    */
   template <int dim>
   void
-  setup_constraints_with_periodic_boundary(ScratchData<dim>                      &scratch_data,
-                                           const PeriodicBoundaryConditions<dim> &pbc,
-                                           const unsigned int                     dof_idx)
+  insert_PBC(ScratchData<dim>                      &scratch_data,
+             const PeriodicBoundaryConditions<dim> &pbc,
+             const unsigned int                     dof_idx)
   {
     for (const auto &bc : pbc.get_data())
       {
@@ -182,22 +205,24 @@ namespace MeltPoolDG::UtilityFunctions
   }
 
   /**
-   * Reinit AffineConstraints corresponding to a given @p dof_hanging_nodes_idx
-   * inside @p scratch_data, considering periodic boundary conditions @p
-   * pbc and hanging nodes.
+   * Reinit and fill AffineConstraints corresponding to a given @param dof_hanging_nodes_idx
+   * inside @param scratch_data, considering hanging nodes.
+   *
+   * Insert algebraic periodicity constraints according to @param pbc into the
+   * AffineConstraints corresponding to a given @param dof_idx inside @param scratch_data.
+   *
+   * The AffineConstraints objects are closed after filling them.
+   * In Debug, the constraints are also checked with check_constraints().
    */
   template <int dim>
   void
-  reinit_hanging_nodes_constraints_with_periodic_boundary(
-    ScratchData<dim>                      &scratch_data,
-    const PeriodicBoundaryConditions<dim> &pbc,
-    const unsigned int                     dof_hanging_nodes_idx)
+  make_HNC_with_PBC(ScratchData<dim>                      &scratch_data,
+                    const PeriodicBoundaryConditions<dim> &pbc,
+                    const unsigned int                     dof_hanging_nodes_idx)
   {
-    reinit_hanging_nodes_constraints(scratch_data,
-                                     dof_hanging_nodes_idx,
-                                     false /* close_and_check */);
+    make_HNC(scratch_data, dof_hanging_nodes_idx, false /* close */);
 
-    setup_constraints_with_periodic_boundary(scratch_data, pbc, dof_hanging_nodes_idx);
+    insert_PBC(scratch_data, pbc, dof_hanging_nodes_idx);
 
     scratch_data.get_constraint(dof_hanging_nodes_idx).close();
     check_constraints(scratch_data.get_dof_handler(dof_hanging_nodes_idx),
@@ -205,29 +230,38 @@ namespace MeltPoolDG::UtilityFunctions
   }
 
   /**
-   * Reinit AffineConstraints according to given Dirichlet boundary conditions
-   * @p bc_data, periodic boundary conditions @p pbc and hanging nodes @p dof_hanging_nodes_idx,
-   * and assign it to a given @p dof_idx inside @p scratch_data.
-   * If @p set_inhomogeneities is true, inhomogeneities are considered else
+   * Reinit and fill AffineConstraints according to given Dirichlet boundary conditions
+   * @param bc_data and assign it to a given @param dof_idx inside @param scratch_data.
+   *
+   * If @param set_inhomogeneities is true, inhomogeneities are considered else
    * homogeneous DBC are assumed.
+   *
+   * Reinit and fill AffineConstraints corresponding to a given @param dof_hanging_nodes_idx
+   * inside @param scratch_data, considering hanging nodes.
+   *
+   * Insert algebraic periodicity constraints according to @param pbc into the
+   * AffineConstraints corresponding to a given @param dof_idx and @param dof_hanging_nodes_idx
+   * inside @param scratch_data.
+   *
+   * Merge the constraints of the AffineConstraints corresponding to a given @param dof_hanging_nodes_idx
+   * into the AffineConstraints corresponding to a given @param dof_idx.
+   *
+   * The AffineConstraints objects are closed after filling them.
+   * In Debug, the constraints are also checked with check_constraints().
    */
   template <int dim>
   void
-  reinit_and_merge_dirichlet_and_hanging_nodes_constraints_with_periodic_boundary(
-    ScratchData<dim>                       &scratch_data,
-    const DirichletBoundaryConditions<dim> &bc_data,
-    const PeriodicBoundaryConditions<dim>  &pbc,
-    const unsigned int                      dof_idx,
-    const unsigned int                      dof_hanging_nodes_idx,
-    const bool                              set_inhomogeneities = true)
+  make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC(ScratchData<dim> &scratch_data,
+                                                   const DirichletBoundaryConditions<dim> &bc_data,
+                                                   const PeriodicBoundaryConditions<dim>  &pbc,
+                                                   const unsigned int                      dof_idx,
+                                                   const unsigned int dof_hanging_nodes_idx,
+                                                   const bool         set_inhomogeneities = true)
   {
-    reinit_hanging_nodes_constraints_with_periodic_boundary(scratch_data,
-                                                            pbc,
-                                                            dof_hanging_nodes_idx);
-    reinit_dirichlet_constraints(scratch_data, bc_data, dof_idx, set_inhomogeneities);
-    merge_dirichlet_and_hanging_nodes_constraints(scratch_data, dof_idx, dof_hanging_nodes_idx);
+    make_HNC_with_PBC(scratch_data, pbc, dof_hanging_nodes_idx);
+    make_DBC(scratch_data, bc_data, dof_idx, set_inhomogeneities, true /* close */);
+    merge_HNC_into_DBC(scratch_data, dof_idx, dof_hanging_nodes_idx);
 
-    scratch_data.get_constraint(dof_idx).close();
     check_constraints(scratch_data.get_dof_handler(dof_idx), scratch_data.get_constraint(dof_idx));
   }
 } // namespace MeltPoolDG::UtilityFunctions
