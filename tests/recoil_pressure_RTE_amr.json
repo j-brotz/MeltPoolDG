@@ -5,7 +5,6 @@
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "4",
-    "gravity": "0.0",
     "problem name": "melt_pool",
     "verbosity level": "0"
   },
@@ -25,11 +24,6 @@
     "end time": "5e-5",
     "start time": "0.0",
     "time step size": "1e-5"
-  },
-  "reinitialization": {
-    "reinit max n steps": "1",
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "2e-5"
   },
   "material": {
     "material template": "Ti64",
@@ -66,14 +60,6 @@
       "preconditioner type": "AMG"
     }
   },
-  "curvature": {
-    "curv damping scale factor": "2"
-  },
-  "darcy damping": {
-    "avoid div zero constant": "1",
-    "mushy zone morphology": "1e11",
-    "formulation": "implicit_formulation"
-  },
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",
     "recoil pressure": {
@@ -88,19 +74,6 @@
       "enable": "false"
     }
   },
-  "surface tension": {
-    "surface tension coefficient": "1.493"
-  },
-  "levelset": {
-    "ls do curvature correction": "false",
-    "ls do reinitialization": "true",
-    "ls n initial reinit steps": "1",
-    "ls time integration scheme": "crank_nicolson",
-    "ls n subdivisions": "1"
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "2"
-  },
   "adaptive meshing": {
     "do amr": "true",
     "upper perc to refine": "0.2",
@@ -108,7 +81,32 @@
     "max grid refinement level": "5",
     "n initial refinement cycles": "1"
   },
-  "Navier-Stokes": {
+  "output": {
+    "paraview": {
+      "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "n initial steps": "1",
+      "max n steps": "1",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "2e-5"
+      }
+    },
+    "curvature": {
+      "filter parameter": "2",
+      "do curvature correction": "false"
+    },
+    "normal vector": {
+      "filter parameter": "2"
+    },
+    "n subdivisions": "1"
+  },
+  "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
@@ -135,11 +133,15 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
-    }
-  },
-  "output": {
-    "paraview": {
-      "enable": "true"
+    },
+    "gravity": "0.0",
+    "surface tension": {
+      "surface tension coefficient": "1.493"
+    },
+    "darcy damping": {
+      "avoid div zero constant": "1",
+      "mushy zone morphology": "1e11",
+      "formulation": "implicit_formulation"
     }
   }
 }
