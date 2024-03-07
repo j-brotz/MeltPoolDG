@@ -315,8 +315,9 @@ def process_special_parameters(dataDict, nErrors):
         if float(val) > 0:
             delete_nested_item(
                 dataDict, ["level set", "reinitialization", "reinit constant epsilon"])
-            set_nested_item(dataDict, ["level set", "reinitialization",
-                            "interface thickness parameter", "type"], "absolute_value")
+            set_nested_item(
+                dataDict, ["level set", "reinitialization",
+                           "interface thickness parameter", "type"], "absolute_value")
             set_nested_item(dataDict, [
                             "level set", "reinitialization",
                             "interface thickness parameter", "val"], val)
@@ -330,10 +331,11 @@ def process_special_parameters(dataDict, nErrors):
             if float(val) > 0:
                 delete_nested_item(
                     dataDict, ["level set", "reinitialization", "reinit scale factor epsilon"])
-                set_nested_item(dataDict, ["level set", "reinitialization",
-                                "interface thickness parameter",
-                                           "type"],
-                                "proportional_to_cell_size")
+                set_nested_item(
+                    dataDict, ["level set", "reinitialization",
+                               "interface thickness parameter",
+                               "type"],
+                    "proportional_to_cell_size")
                 set_nested_item(dataDict, [
                                 "level set", "reinitialization",
                                 "interface thickness parameter", "val"], val)
