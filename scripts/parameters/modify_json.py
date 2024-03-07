@@ -101,7 +101,7 @@ def modify_json(json_f, appendix=""):
 
     for j in json_f:
         with open(j, 'r') as f:
-            print(70*"-")
+            print(70 * "-")
             print("Process file: {:}".format(j))
             datastore = json.load(f, object_pairs_hook=collections.OrderedDict)
 
@@ -139,7 +139,7 @@ def modify_json(json_f, appendix=""):
             # delete potentially empty items
             datastore = remove_empty_nested_items(datastore)
 
-        with open(j.split(".json")[0]+appendix+".json", 'w') as f:
+        with open(j.split(".json")[0] + appendix + ".json", 'w') as f:
             json.dump(datastore, f, indent=2, separators=(',', ': '))
 
 

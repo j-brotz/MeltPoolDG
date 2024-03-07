@@ -7,9 +7,9 @@ import pandas as pd
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Plot the droplet velocity over time!')
-    parser.add_argument('--folder',             type=str,
+    parser.add_argument('--folder', type=str,
                         help='define the folder, where the existing pvd-file is located')
-    parser.add_argument('--file',        type=str, required=True,
+    parser.add_argument('--file', type=str, required=True,
                         help='define the name of the text file, where the data is stored')
     args = parser.parse_args()
     plt.close('all')
@@ -96,10 +96,10 @@ if __name__ == "__main__":
     ax.plot([time_normalized[-100], time_normalized[-1], time_normalized[-1]],
             [center_position[-100], center_position[-100], center_position[-1]], "k")
     vel = (center_position[-1] - center_position[-500]) / \
-        (time[-1] - time[-500])/0.024
+        (time[-1] - time[-500]) / 0.024
     ax.annotate("u/ur={:}".format(float(vel)),
                 (time_normalized[-500], center_position[-500]))
 
     fig.tight_layout()
-    fig.savefig(data_file[:-4]+".png")
+    fig.savefig(data_file[:-4] + ".png")
     fig.show()

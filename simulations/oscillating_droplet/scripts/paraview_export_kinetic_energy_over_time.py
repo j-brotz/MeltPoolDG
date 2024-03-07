@@ -217,7 +217,7 @@ def process_pvd(folder, pvd_file):
     animationScene1.GoToFirst()
 
     # save data
-    SaveData(os.path.join(folder, pvd_file.split(".")[0]+'_kinetic_energy.csv'), proxy=integrateVariables1, WriteTimeSteps=1,
+    SaveData(os.path.join(folder, pvd_file.split(".")[0] + '_kinetic_energy.csv'), proxy=integrateVariables1, WriteTimeSteps=1,
              ChooseArraysToWrite=1,
              PointDataArrays=['KineticEnergy'],
              AddMetaData=0,
@@ -253,11 +253,11 @@ def process_pvd(folder, pvd_file):
 # -------------------------------------------------------
 def collect_files_and_write_into_one(folder, pvdfile, suffix=".csv"):
 
-    if (os.path.isfile(os.path.join(folder, pvdfile.split(".")[0]+"_kinetic_energy.csv"))):
+    if (os.path.isfile(os.path.join(folder, pvdfile.split(".")[0] + "_kinetic_energy.csv"))):
         os.remove(os.path.join(folder, pvdfile.split(
-            ".")[0]+"_kinetic_energy.csv"))
+            ".")[0] + "_kinetic_energy.csv"))
     csvs = find_filenames(folder, suffix, pvdfile.split(".")[
-                          0]+"_kinetic_energy")
+                          0] + "_kinetic_energy")
     csvs.sort(key=lambda f: int(re.sub('\D', '', f)))
 
     kinetic_energy = []
@@ -276,15 +276,15 @@ def collect_files_and_write_into_one(folder, pvdfile, suffix=".csv"):
     np.savetxt(os.path.join(folder, pvdfile.split(".")[0] + "_kinetic_energy.csv"), np.column_stack((np.asarray(
         time_list), np.asarray(kinetic_energy))), delimiter=",", header="time, kinetic energy")
     print(" file written: {:}".format(
-        os.path.join(folder, pvdfile.split(".")[0]+"_kinetic_energy.csv")))
+        os.path.join(folder, pvdfile.split(".")[0] + "_kinetic_energy.csv")))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Export the level set contour to a file. Execute with pvpython!')
-    parser.add_argument('--folder',             type=str,
+    parser.add_argument('--folder', type=str,
                         help='define the folder, where the existing pvd-file is located')
-    parser.add_argument('--pvdfile',        type=str, required=False,
+    parser.add_argument('--pvdfile', type=str, required=False,
                         help='define the name of the processed pvd-file, e.g. solution.pvd')
     args = parser.parse_args()
     print(args)
@@ -298,13 +298,13 @@ if __name__ == "__main__":
         assert len(pvdfile) == 1
         pvdfile = pvdfile[0]
 
-    print(70*"-")
+    print(70 * "-")
     print(
         " Start processing pvd-file: {:}".format(os.path.join(folder, pvdfile)))
     process_pvd(folder, pvdfile)
     collect_files_and_write_into_one(folder, pvdfile)
     print(" The end")
-    print(70*"-")
+    print(70 * "-")
 # -------------------------------------------------------
 # [MS] modifications end
 # -------------------------------------------------------

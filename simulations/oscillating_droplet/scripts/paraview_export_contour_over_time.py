@@ -167,7 +167,7 @@ def process_pvd(folder, pvd_file, isosurface_level=0.0):
                              'SpreadSheetRepresentation')
 
     # save data
-    SaveData(os.path.join(folder, pvd_file.split(".")[0]+'_contour.csv'), proxy=contour1, WriteTimeSteps=1,
+    SaveData(os.path.join(folder, pvd_file.split(".")[0] + '_contour.csv'), proxy=contour1, WriteTimeSteps=1,
              PointDataArrays=['curvature', 'density', 'distance', 'force_rhs_pressure', 'force_rhs_velocity',
                               'heaviside', 'level_set', 'normal_0', 'normal_1', 'pressure', 'velocity', 'viscosity'],
              AddTime=1)
@@ -204,7 +204,7 @@ def process_pvd(folder, pvd_file, isosurface_level=0.0):
 def export_amplitude_over_time(folder, pvd_file, filename_suffix=".csv"):
 
     csvs = find_filenames(folder, filename_suffix,
-                          pvd_file.split(".")[0]+"_contour")
+                          pvd_file.split(".")[0] + "_contour")
     csvs.sort(key=lambda f: int(re.sub('\D', '', f)))
 
     x_max = []
@@ -224,18 +224,18 @@ def export_amplitude_over_time(folder, pvd_file, filename_suffix=".csv"):
         y_max.append(float(max(y[indices_zero])))
         time_list.append(time[0])
 
-    np.savetxt(os.path.join(folder, pvd_file.split(".")[0]+"_amplitude_over_time.csv"), np.column_stack((np.asarray(
+    np.savetxt(os.path.join(folder, pvd_file.split(".")[0] + "_amplitude_over_time.csv"), np.column_stack((np.asarray(
         time_list), np.asarray(x_max), np.asarray(y_max))), delimiter=",", header="time, x_semi_axis, y_semi_axis")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Export the level set contour to a file. Execute with pvpython!')
-    parser.add_argument('--folder',             type=str,
+    parser.add_argument('--folder', type=str,
                         help='define the folder, where the existing pvd-file is located')
-    parser.add_argument('--pvdfile',        type=str, required=False,
+    parser.add_argument('--pvdfile', type=str, required=False,
                         help='define the name of the processed pvd-file, e.g. solution.pvd')
-    parser.add_argument('--contourlevel',        type=float, required=False, default=0.0,
+    parser.add_argument('--contourlevel', type=float, required=False, default=0.0,
                         help='define the contour level of the level set function within [-1, 1]')
     args = parser.parse_args()
     print(args)
@@ -251,13 +251,13 @@ if __name__ == "__main__":
         assert len(pvdfile) == 1
         pvdfile = pvdfile[0]
 
-    print(70*"-")
+    print(70 * "-")
     print(
         " Start processing pvd-file: {:}".format(os.path.join(folder, pvdfile)))
     process_pvd(folder, pvdfile, contourlevel)
     export_amplitude_over_time(folder, pvdfile)
     print(" The end")
-    print(70*"-")
+    print(70 * "-")
 # -------------------------------------------------------
 # [MS] modifications end
 # -------------------------------------------------------
