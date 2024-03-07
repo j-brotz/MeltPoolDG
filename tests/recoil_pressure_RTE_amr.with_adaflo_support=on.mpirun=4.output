@@ -22,7 +22,7 @@
 | || curvature ||L2 = 0.00000000000e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| || intensity ||L2 = 1.17212057795e+06                                                        RTE |
+| || intensity ||L2 = 1.17212049000e+06                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 3.57281e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -36,7 +36,7 @@
 | || curvature ||L2 = 0.00000000000e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| || intensity ||L2 = 1.17212057795e+06                                                        RTE |
+| || intensity ||L2 = 1.17212049000e+06                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 3.71972e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -50,7 +50,7 @@
 | || curvature ||L2 = 0.00000000000e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| || intensity ||L2 = 1.17212057795e+06                                                        RTE |
+| || intensity ||L2 = 1.17212049000e+06                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 3.89650e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -64,7 +64,7 @@
 | || curvature ||L2 = 0.00000000000e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| || intensity ||L2 = 1.17212057795e+06                                                        RTE |
+| || intensity ||L2 = 1.17212049000e+06                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 4.09604e-01                newton_raphson_solver |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
 | || pressure ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -78,7 +78,7 @@
 | || curvature ||L2 = 0.00000000000e+00                                                  curvature |
 | current laser position: 0 0                                                                laser |
 | current laser intensity: 1                                                                 laser |
-| || intensity ||L2 = 1.17212057795e+06                                                        RTE |
+| || intensity ||L2 = 1.17212049000e+06                                                        RTE |
 | Newton Raphson solver converged: ||solution|| = 4.31255e-01                newton_raphson_solver |
 | || velocity ||L2 = 2.447008894994850e-05                                    navier_stokes_adaflo |
 | || pressure ||L2 = 5.529506826252147e-02                                    navier_stokes_adaflo |
