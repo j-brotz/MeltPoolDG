@@ -44,14 +44,6 @@
     "do heat transfer": "true",
     "do solidification": "true"
   },
-  "Navier-Stokes": {
-    "adaflo": {
-      "Output options": {
-        "output verbosity": "0",
-        "output wall times": "0"
-      }
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
@@ -63,6 +55,14 @@
     },
     "reinitialization": {
       "n initial steps": "0"
+    }
+  },
+  "flow": {
+    "adaflo": {
+      "Output options": {
+        "output verbosity": "0",
+        "output wall times": "0"
+      }
     }
   }
 }

@@ -5,7 +5,6 @@
     "global refinements": "5",
     "dimension": "2",
     "degree": "2",
-    "gravity": "0.00",
     "do print parameters": "false",
     "verbosity level": "0"
   },
@@ -47,7 +46,26 @@
     "inner radius": "0.125",
     "outer radius": "0.375"
   },
-  "Navier-Stokes": {
+  "problem specific": {
+    "do heat transfer": "true"
+  },
+  "output": {
+    "directory": "evaporating_shell_2d",
+    "paraview": {
+      "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "max n steps": "5",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.02"
+      }
+    },
+    "n subdivisions": "1"
+  },
+  "flow": {
     "adaflo": {
       "Navier-Stokes": {
         "physical type": "incompressible",
@@ -73,25 +91,7 @@
       "Time stepping": {
         "scheme": "bdf_2"
       }
-    }
-  },
-  "problem specific": {
-    "do heat transfer": "true"
-  },
-  "output": {
-    "directory": "evaporating_shell_2d",
-    "paraview": {
-      "enable": "false"
-    }
-  },
-  "level set": {
-    "reinitialization": {
-      "max n steps": "5",
-      "interface thickness parameter": {
-        "type": "absolute_value",
-        "val": "0.02"
-      }
     },
-    "n subdivisions": "1"
+    "gravity": "0.00"
   }
 }

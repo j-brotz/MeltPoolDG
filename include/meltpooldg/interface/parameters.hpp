@@ -4,8 +4,7 @@
 
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
-#include <meltpooldg/flow/darcy_damping_data.hpp>
-#include <meltpooldg/flow/surface_tension_data.hpp>
+#include <meltpooldg/flow/flow_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/interface/base_data.hpp>
@@ -107,8 +106,7 @@ namespace MeltPoolDG
     Heat::LaserData<number>                            laser;
     RadiativeTransport::RadiativeTransportData<number> rte;
     MeltPoolData<number>                               mp;
-    Flow::SurfaceTensionData<number>                   surface_tension;
-    Flow::DarcyDampingData<number>                     darcy;
+    Flow::FlowData<number>                             flow;
     Evaporation::EvaporationData<number>               evapor;
     MaterialData<number>                               material;
     OutputData<number>                                 output;

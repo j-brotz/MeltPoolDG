@@ -4,7 +4,6 @@
     "application name": "stefans_problem1_with_flow_and_heat",
     "dimension": "2",
     "global refinements": "10",
-    "gravity": "0.",
     "degree": "1",
     "do print parameters": "false",
     "verbosity level": "0"
@@ -32,33 +31,6 @@
     "latent heat of evaporation": "1.e1",
     "molar mass": "0.01801528",
     "two phase fluid properties transition type": "consistent_with_evaporation"
-  },
-  "Navier-Stokes": {
-    "adaflo": {
-      "Navier-Stokes": {
-        "physical type": "incompressible",
-        "dimension": "2",
-        "global refinements": "0",
-        "velocity degree": "2",
-        "formulation convective term momentum balance": "convective",
-        "Solver": {
-          "linearization scheme": "coupled implicit Newton",
-          "NL max iterations": "10",
-          "NL tolerance": "1.e-9",
-          "lin max iterations": "30",
-          "lin tolerance": "1.e-4",
-          "lin velocity preconditioner": "ilu",
-          "lin its before inner solvers": "50"
-        }
-      },
-      "Time stepping": {
-        "scheme": "bdf_2"
-      },
-      "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
-      }
-    }
   },
   "adaptive meshing": {
     "do amr": "false",
@@ -131,5 +103,33 @@
         "do matrix free": "true"
       }
     }
+  },
+  "flow": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "physical type": "incompressible",
+        "dimension": "2",
+        "global refinements": "0",
+        "velocity degree": "2",
+        "formulation convective term momentum balance": "convective",
+        "Solver": {
+          "linearization scheme": "coupled implicit Newton",
+          "NL max iterations": "10",
+          "NL tolerance": "1.e-9",
+          "lin max iterations": "30",
+          "lin tolerance": "1.e-4",
+          "lin velocity preconditioner": "ilu",
+          "lin its before inner solvers": "50"
+        }
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      },
+      "Output options": {
+        "output verbosity": "0",
+        "output walltimes": "0"
+      }
+    },
+    "gravity": "0."
   }
 }

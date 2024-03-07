@@ -5,7 +5,6 @@
     "dimension": "1",
     "do print parameters": "false",
     "global refinements": "0",
-    "gravity": "0.0",
     "problem name": "melt_pool",
     "verbosity level": "0"
   },
@@ -53,35 +52,6 @@
     "do advect level set": "false",
     "do solidification": "true"
   },
-  "Navier-Stokes": {
-    "adaflo": {
-      "Navier-Stokes": {
-        "Solver": {
-          "NL max iterations": "15",
-          "NL tolerance": "1e8",
-          "lin its before inner solvers": "50",
-          "lin max iterations": "30",
-          "lin pressure mass preconditioner": "ilu",
-          "lin relative tolerance": "1",
-          "lin tolerance": "1e8",
-          "lin velocity preconditioner": "ilu scalar",
-          "linearization scheme": "coupled implicit Newton"
-        },
-        "dimension": "2",
-        "formulation convective term momentum balance": "convective",
-        "global refinements": "0",
-        "physical type": "incompressible",
-        "velocity degree": "2"
-      },
-      "Output options": {
-        "output verbosity": "0",
-        "output walltimes": "0"
-      },
-      "Time stepping": {
-        "scheme": "bdf_2"
-      }
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
@@ -125,5 +95,35 @@
       },
       "filter parameter": "2"
     }
+  },
+  "flow": {
+    "adaflo": {
+      "Navier-Stokes": {
+        "Solver": {
+          "NL max iterations": "15",
+          "NL tolerance": "1e8",
+          "lin its before inner solvers": "50",
+          "lin max iterations": "30",
+          "lin pressure mass preconditioner": "ilu",
+          "lin relative tolerance": "1",
+          "lin tolerance": "1e8",
+          "lin velocity preconditioner": "ilu scalar",
+          "linearization scheme": "coupled implicit Newton"
+        },
+        "dimension": "2",
+        "formulation convective term momentum balance": "convective",
+        "global refinements": "0",
+        "physical type": "incompressible",
+        "velocity degree": "2"
+      },
+      "Output options": {
+        "output verbosity": "0",
+        "output walltimes": "0"
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      }
+    },
+    "gravity": "0.0"
   }
 }

@@ -60,7 +60,6 @@ namespace MeltPoolDG
     int             n_q_points_1d       = -1;
     bool            do_print_parameters = true;
     bool            do_simplex          = false;
-    number          gravity             = 0.0;
     unsigned int    verbosity_level     = 0;
 
     void

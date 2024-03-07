@@ -1,6 +1,29 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-03-06
+- Rename flow section
+```diff
+{
+-  "Navier-Stokes": {
+-  }
+  "base": {
+-    "gravity": ""
+  }
+-  "surface tension": {
+-  }
+-  "darcy damping": {
+-  }
++  "flow": {
++    "gravity": "",
++    "surface tension": {
++    },
++    "darcy damping": {
++    }
++  }
+}
+```
+
 ## 2024-03-07
 - Refactor level set data; moved curvature, normal vector, reinitialization,
     advection diffusion inside level set struct
@@ -95,8 +118,6 @@ All notable changes of the input parameters will be documented in this file.
 +            },
      },
 ```
-   
-
 
 ## 2024-03-01
 - Refactor evaporation data; moved recoil pressure to evaporation struct
