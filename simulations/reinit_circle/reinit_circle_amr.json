@@ -17,22 +17,27 @@
     "time step size": "0.005",
     "max n steps": "30"
   },
-  "reinitialization": {
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.05",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "filename": "solution_reinitialization",
       "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.05"
+      }
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

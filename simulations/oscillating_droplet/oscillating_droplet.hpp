@@ -4,6 +4,7 @@
 #include <deal.II/base/function_signed_distance.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_tools_geometry.h>
 
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
@@ -97,8 +98,9 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
     void
     set_field_conditions() final
     {
-      const double eps =
-        UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+      const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+        GridTools::minimal_cell_diameter(*this->triangulation) /
+        this->parameters.ls.n_subdivisions / std::sqrt(dim));
 
       AssertThrow(eps > 0, ExcNotImplemented());
 

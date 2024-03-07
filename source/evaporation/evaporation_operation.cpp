@@ -2,6 +2,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
+#include "meltpooldg/reinitialization/reinitialization_data.hpp"
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_continuous.hpp>
 #include <meltpooldg/evaporation/evaporation_mass_flux_operator_interface_value.hpp>
@@ -112,9 +113,8 @@ namespace MeltPoolDG::Evaporation
                                     const VectorType                         &distance,
                                     const RecoilPressureData<double>         &recoil_data,
                                     const LevelSet::NearestPointData<double> &nearest_point_data,
-                                    const double                              constant_epsilon,
-                                    const double                              scale_factor_epsilon,
-                                    const unsigned int                        temp_dof_idx_in)
+                                    const LevelSet::ReinitializationData<double> &reinit_data,
+                                    const unsigned int                            temp_dof_idx_in)
   {
     temperature  = temperature_in;
     temp_dof_idx = temp_dof_idx_in;
@@ -170,16 +170,14 @@ namespace MeltPoolDG::Evaporation
         std::make_shared<EvaporationMassFluxOperatorThicknessIntegration<dim>>(
           scratch_data,
           *evapor_model,
+          evaporation_data.thickness_integral,
+          reinit_data,
           level_set_as_heaviside,
           normal_vector,
-          constant_epsilon,
-          scale_factor_epsilon,
           ls_hanging_nodes_dof_idx,
           normal_dof_idx,
           temp_dof_idx,
-          evapor_mass_flux_dof_idx,
-          evaporation_data.thickness_integral.subdivisions_per_side,
-          evaporation_data.thickness_integral.subdivisions_MCA);
+          evapor_mass_flux_dof_idx);
   }
 
   template <int dim>

@@ -17,7 +17,7 @@
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
-namespace MeltPoolDG::AdvectionDiffusion
+namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
@@ -122,4 +122,4 @@ namespace MeltPoolDG::AdvectionDiffusion
     VectorType rhs;
     VectorType user_rhs;
   };
-} // namespace MeltPoolDG::AdvectionDiffusion
+} // namespace MeltPoolDG::LevelSet

@@ -11,7 +11,7 @@
 
 namespace MeltPoolDG
 {
-  namespace AdvectionDiffusion
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -68,5 +68,5 @@ namespace MeltPoolDG
       attach_output_vectors(GenericDataOut<dim> &data_out) const = 0;
     };
 
-  } // namespace AdvectionDiffusion
+  } // namespace LevelSet
 } // namespace MeltPoolDG

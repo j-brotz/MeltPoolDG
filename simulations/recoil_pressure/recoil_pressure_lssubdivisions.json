@@ -38,14 +38,6 @@
     "problem name": "melt_pool",
     "verbosity level": "3"
   },
-  "curvature": {
-    "curv damping scale factor": "16",
-    "curv do narrow band": "false",
-    "curv implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "darcy damping": {
     "avoid div zero constant": "1e-3",
     "mushy zone morphology": "1e9",
@@ -91,13 +83,6 @@
     "scan speed": "0.003",
     "radius": "70.e-6"
   },
-  "levelset": {
-    "ls do curvature correction": "false",
-    "ls do reinitialization": "true",
-    "ls n initial reinit steps": "1",
-    "ls time integration scheme": "crank_nicolson",
-    "ls n subdivisions": "2"
-  },
   "material": {
     "gas": {
       "thermal conductivity": "0.026",
@@ -128,22 +113,6 @@
     "mp do not reinitialize in solid": "false",
     "mp set velocity to zero in solid": "false"
   },
-  "normal vector": {
-    "normal vec damping scale factor": "4",
-    "normal vec do narrow band": "false",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "reinitialization": {
-    "reinit max n steps": "2",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "2",
-    "linear solver": {
-      "preconditioner type": "AMG",
-      "do matrix free": "true"
-    }
-  },
   "simulation specific domain": {
     "domain x max": "400e-6",
     "domain x min": "-400e-6",
@@ -160,11 +129,6 @@
     "do heat transfer": "true",
     "do solidification": "true"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "directory": "recoil_pressure_lssubdivisions",
     "write time step size": "2e-8",
@@ -172,5 +136,47 @@
       "filename": "solution_recoil_pressure",
       "enable": "true"
     }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "preconditioner type": "AMG",
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "n initial steps": "1",
+      "max n steps": "2",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "2"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "16",
+      "implementation": "meltpooldg",
+      "narrow band": {
+        "enable": "false"
+      },
+      "do curvature correction": "false"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4",
+      "narrow band": {
+        "enable": "false"
+      }
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
+    },
+    "n subdivisions": "2"
   }
 }

@@ -4,7 +4,7 @@
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
-namespace MeltPoolDG::Reinitialization
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   ReinitializationOperation<dim>::ReinitializationOperation(
@@ -27,38 +27,26 @@ namespace MeltPoolDG::Reinitialization
     , normal_dof_idx(normal_dof_idx_in)
     , solution_history(reinit_data.predictor.n_old_solution_vectors)
   {
-    /*
-     *    initialize normal_vector_field
-     */
-    AssertThrow(normal_vec_data.linear_solver.do_matrix_free ==
-                  reinit_data.linear_solver.do_matrix_free,
-                ExcMessage("For the reinitialization problem both the "
-                           " normal vector and the reinitialization operation have to be "
-                           " computed either matrix-based or matrix-free."));
-
     if (normal_vec_data.implementation == "meltpooldg")
       {
-        normal_vector_operation =
-          std::make_shared<NormalVector::NormalVectorOperation<dim>>(scratch_data_in,
-                                                                     normal_vec_data,
-                                                                     solution_level_set,
-                                                                     normal_dof_idx,
-                                                                     reinit_quad_idx,
-                                                                     ls_dof_idx);
+        normal_vector_operation = std::make_shared<NormalVectorOperation<dim>>(scratch_data_in,
+                                                                               normal_vec_data,
+                                                                               solution_level_set,
+                                                                               normal_dof_idx,
+                                                                               reinit_quad_idx,
+                                                                               ls_dof_idx);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (normal_vec_data.implementation == "adaflo")
       {
-        AssertThrow(normal_vec_data.linear_solver.do_matrix_free, ExcNotImplemented());
-
-        normal_vector_operation = std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
+        normal_vector_operation = std::make_shared<NormalVectorOperationAdaflo<dim>>(
           scratch_data_in,
           ls_dof_idx_in,
           normal_dof_idx,
           reinit_quad_idx,
           solution_level_set,
           normal_vec_data,
-          reinit_data.scale_factor_epsilon / ls_n_subdivisions);
+          reinit_data.interface_thickness_parameter.value / ls_n_subdivisions);
       }
 #endif
     else
@@ -405,4 +393,4 @@ namespace MeltPoolDG::Reinitialization
   template class ReinitializationOperation<1>;
   template class ReinitializationOperation<2>;
   template class ReinitializationOperation<3>;
-} // namespace MeltPoolDG::Reinitialization
+} // namespace MeltPoolDG::LevelSet

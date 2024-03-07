@@ -101,7 +101,7 @@ def modify_json(json_f, appendix=""):
 
     for j in json_f:
         with open(j, 'r') as f:
-            print(70*"-")
+            print(70 * "-")
             print("Process file: {:}".format(j))
             datastore = json.load(f, object_pairs_hook=collections.OrderedDict)
 
@@ -112,7 +112,7 @@ def modify_json(json_f, appendix=""):
                 # get value of old parameter
                 try:
                     val = get_nested_value(datastore, o)
-                except:
+                except BaseException:
                     print("    Old value {:} not found. Abort...".format(o))
                     continue
                 # introduce new parameter category
@@ -130,7 +130,7 @@ def modify_json(json_f, appendix=""):
             for i, o in enumerate(delete_parameter_names):
                 try:
                     val = get_nested_value(datastore, o)
-                except:
+                except BaseException:
                     print("Value {:} not found.".format(o))
                     continue
                 delete_nested_item(datastore, o, val)
@@ -139,7 +139,7 @@ def modify_json(json_f, appendix=""):
             # delete potentially empty items
             datastore = remove_empty_nested_items(datastore)
 
-        with open(j.split(".json")[0]+appendix+".json", 'w') as f:
+        with open(j.split(".json")[0] + appendix + ".json", 'w') as f:
             json.dump(datastore, f, indent=2, separators=(',', ': '))
 
 

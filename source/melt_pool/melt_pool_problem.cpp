@@ -1150,8 +1150,7 @@ namespace MeltPoolDG::MeltPool
                                       level_set_operation->get_distance_to_level_set(),
                                       base_in->parameters.evapor.recoil,
                                       base_in->parameters.ls.nearest_point,
-                                      base_in->parameters.reinit.constant_epsilon,
-                                      base_in->parameters.reinit.scale_factor_epsilon,
+                                      base_in->parameters.ls.reinit,
                                       temp_dof_idx);
 
         if (base_in->parameters.evapor.evaporative_dilation_rate.enable &&
@@ -1838,11 +1837,9 @@ namespace MeltPoolDG::MeltPool
 
         // solution variables
         std::vector<std::vector<double>> ls_gradients(dim, std::vector<double>(quadrature.size()));
-        const double diffusion_length = (base_in->parameters.reinit.constant_epsilon > 0) ?
-                                          base_in->parameters.reinit.constant_epsilon :
-                                          scratch_data->get_min_cell_size() *
-                                            base_in->parameters.reinit.scale_factor_epsilon /
-                                            scratch_data->get_degree(ls_dof_idx);
+        const double                     diffusion_length =
+          base_in->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+            scratch_data->get_min_cell_size() / base_in->parameters.ls.n_subdivisions);
 
         std::vector<double> ls_vals(quadrature.size());
 
@@ -2056,11 +2053,9 @@ namespace MeltPoolDG::MeltPool
             // solution variables
             std::vector<std::vector<double>> ls_gradients(dim,
                                                           std::vector<double>(quadrature.size()));
-            const double diffusion_length = (base_in->parameters.reinit.constant_epsilon > 0) ?
-                                              base_in->parameters.reinit.constant_epsilon :
-                                              scratch_data->get_min_cell_size() *
-                                                base_in->parameters.reinit.scale_factor_epsilon /
-                                                scratch_data->get_degree(ls_dof_idx);
+            const double                     diffusion_length =
+              base_in->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+                scratch_data->get_min_cell_size() / base_in->parameters.ls.n_subdivisions);
 
             std::vector<double> ls_vals(quadrature.size());
 

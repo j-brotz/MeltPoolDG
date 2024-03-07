@@ -19,7 +19,7 @@
 #  include <adaflo/level_set_okz_advance_concentration.h>
 #  include <adaflo/level_set_okz_preconditioner.h>
 
-namespace MeltPoolDG::AdvectionDiffusion
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   class AdvectionDiffusionOperationAdaflo : public AdvectionDiffusionOperationBase<dim>
@@ -150,6 +150,6 @@ namespace MeltPoolDG::AdvectionDiffusion
     unsigned int dirichlet_dof_idx;
   };
 
-} // namespace MeltPoolDG::AdvectionDiffusion
+} // namespace MeltPoolDG::LevelSet
 
 #endif

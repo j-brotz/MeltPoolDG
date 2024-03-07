@@ -58,30 +58,6 @@
     "domain y min": "-0.0001",
     "domain y max": "0.0002"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "1",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "4",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv damping scale factor": "2",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-4",
@@ -126,14 +102,40 @@
     "do heat transfer": "true",
     "do solidification": "false"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "1",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "2"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

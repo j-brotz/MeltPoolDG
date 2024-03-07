@@ -2,7 +2,9 @@
 #include <meltpooldg/reinitialization/olsson_operator.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
-namespace MeltPoolDG::Reinitialization
+#include <cmath>
+
+namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename number>
   OlssonOperator<dim, number>::OlssonOperator(const ScratchData<dim>             &scratch_data_in,
@@ -15,11 +17,11 @@ namespace MeltPoolDG::Reinitialization
                                               const unsigned int normal_dof_idx_in)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data_in)
+    , ls_n_subdivisions(ls_n_subdivisions)
     , normal_vec(n_in)
     , reinit_quad_idx(reinit_quad_idx_in)
     , normal_dof_idx(normal_dof_idx_in)
     , ls_dof_idx(ls_dof_idx_in)
-    , thickness_scale_factor(reinit_data_in.scale_factor_epsilon / ls_n_subdivisions)
     , tolerance_normal_vector(
         UtilityFunctions::compute_numerical_zero_of_norm<dim>(scratch_data.get_triangulation(),
                                                               scratch_data.get_mapping()))
@@ -63,11 +65,8 @@ namespace MeltPoolDG::Reinitialization
           cell_rhs    = 0.0;
           fe_values.reinit(cell);
 
-          const double epsilon_cell =
-            reinit_data.constant_epsilon > 0.0 ?
-              reinit_data.constant_epsilon :
-              UtilityFunctions::compute_cell_size_dependent_interface_thickness<dim>(
-                cell, thickness_scale_factor);
+          const double epsilon_cell = reinit_data.compute_interface_thickness_parameter_epsilon(
+            cell->diameter() / std::sqrt(dim) / ls_n_subdivisions);
 
           Assert(
             epsilon_cell > 0.0,
@@ -78,8 +77,10 @@ namespace MeltPoolDG::Reinitialization
                                         psi_at_q); // compute values of old solution at tau_n
           fe_values.get_function_gradients(
             levelset_old, grad_psi_at_q); // compute gradients of old solution at tau_n
-          NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
-            fe_values, this->normal_vec, normal_at_q, tolerance_normal_vector);
+          NormalVectorOperator<dim>::get_unit_normals_at_quadrature(fe_values,
+                                                                    this->normal_vec,
+                                                                    normal_at_q,
+                                                                    tolerance_normal_vector);
 
           for (const unsigned int q_index : fe_values.quadrature_point_indices())
             {
@@ -300,9 +301,8 @@ namespace MeltPoolDG::Reinitialization
 
         for (unsigned int cell = 0; cell < scratch_data.get_matrix_free().n_cell_batches(); ++cell)
           {
-            diffusion_length[cell] = reinit_data.constant_epsilon > 0 ?
-                                       reinit_data.constant_epsilon :
-                                       scratch_data.get_cell_sizes()[cell] * thickness_scale_factor;
+            diffusion_length[cell] = reinit_data.compute_interface_thickness_parameter_epsilon(
+              scratch_data.get_cell_sizes()[cell] / ls_n_subdivisions);
           }
       }
   }
@@ -312,4 +312,4 @@ namespace MeltPoolDG::Reinitialization
   template class OlssonOperator<1, double>;
   template class OlssonOperator<2, double>;
   template class OlssonOperator<3, double>;
-} // namespace MeltPoolDG::Reinitialization
+} // namespace MeltPoolDG::LevelSet

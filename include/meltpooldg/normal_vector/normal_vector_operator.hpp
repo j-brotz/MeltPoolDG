@@ -20,7 +20,7 @@ using namespace dealii;
 
 namespace MeltPoolDG
 {
-  namespace NormalVector
+  namespace LevelSet
   {
     template <int dim, typename number = double>
     class NormalVectorOperator : public OperatorBase<dim, number>
@@ -42,7 +42,6 @@ namespace MeltPoolDG
                            const unsigned int              normal_dof_idx_in,
                            const unsigned int              normal_quad_idx_in,
                            const unsigned int              ls_dof_idx_in,
-                           const bool                      do_narrow_band        = false,
                            const VectorType               *solution_level_set_in = nullptr);
 
       void
@@ -92,7 +91,6 @@ namespace MeltPoolDG
       const unsigned int ls_dof_idx;
 
       // optional parameters for narrow band
-      const bool        do_narrow_band;
       const VectorType *solution_level_set;
 
       AlignedVector<VectorizedArray<double>> damping;
@@ -148,5 +146,5 @@ namespace MeltPoolDG
                         cell->diameter() / (std::sqrt(dim) * n_subdivisions))) *
              scale_factor;
     }
-  } // namespace NormalVector
+  } // namespace LevelSet
 } // namespace MeltPoolDG

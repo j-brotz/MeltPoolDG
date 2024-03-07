@@ -1,0 +1,40 @@
+#pragma once
+
+#include <deal.II/base/parameter_handler.h>
+
+#include <meltpooldg/linear_algebra/linear_solver_data.hpp>
+#include <meltpooldg/linear_algebra/predictor_data.hpp>
+#include <meltpooldg/reinitialization/reinitialization_data.hpp>
+
+#include <string>
+
+namespace MeltPoolDG::LevelSet
+{
+  template <typename number = double>
+  struct NormalVectorData
+  {
+    NormalVectorData();
+
+    number       filter_parameter = 0.5;
+    std::string  implementation   = "meltpooldg";
+    unsigned int verbosity_level  = 0;
+
+    struct NarrowBand
+    {
+      bool   enable              = false;
+      number level_set_threshold = 0.9999999;
+    } narrow_band;
+
+    PredictorData<number>    predictor;
+    LinearSolverData<number> linear_solver;
+
+    void
+    add_parameters(dealii::ParameterHandler &prm);
+
+    void
+    check_input_parameters(const InterfaceThicknessParameterType &type) const;
+
+    void
+    post();
+  };
+} // namespace MeltPoolDG::LevelSet

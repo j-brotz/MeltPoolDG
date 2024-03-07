@@ -15,13 +15,6 @@
     "end time": "2e-05",
     "max n steps": "120"
   },
-  "levelset": {
-    "ls n subdivisions": "1",
-    "ls n initial reinit steps": "0"
-  },
-  "reinitialization": {
-    "reinit scale factor epsilon": "1.5"
-  },
   "heat": {
     "nlsolve": {
       "max nonlinear iterations": "15",
@@ -96,15 +89,25 @@
       }
     }
   },
-  "curvature": {
-    "enable": "false"
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "2"
-  },
   "output": {
     "paraview": {
       "enable": "false"
     }
+  },
+  "level set": {
+    "reinitialization": {
+      "n initial steps": "0",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
+      }
+    },
+    "curvature": {
+      "enable": "false"
+    },
+    "normal vector": {
+      "filter parameter": "2"
+    },
+    "n subdivisions": "1"
   }
 }

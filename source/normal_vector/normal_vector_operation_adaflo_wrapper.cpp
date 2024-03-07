@@ -2,7 +2,7 @@
 #  include <meltpooldg/normal_vector/normal_vector_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/utilities/journal.hpp>
 
-namespace MeltPoolDG::NormalVector
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   NormalVectorOperationAdaflo<dim>::NormalVectorOperationAdaflo(
@@ -163,7 +163,7 @@ namespace MeltPoolDG::NormalVector
     normal_vec_adaflo_params.dof_index_ls            = advec_diff_dof_idx;
     normal_vec_adaflo_params.dof_index_normal        = normal_vec_dof_idx;
     normal_vec_adaflo_params.quad_index              = normal_vec_quad_idx;
-    normal_vec_adaflo_params.damping_scale_factor    = normal_vec_data.damping_scale_factor;
+    normal_vec_adaflo_params.damping_scale_factor    = normal_vec_data.filter_parameter;
     normal_vec_adaflo_params.epsilon                 = epsilon;
     normal_vec_adaflo_params.approximate_projections = false; // not used in adaflo
   }
@@ -187,5 +187,5 @@ namespace MeltPoolDG::NormalVector
   template class NormalVectorOperationAdaflo<1>;
   template class NormalVectorOperationAdaflo<2>;
   template class NormalVectorOperationAdaflo<3>;
-} // namespace MeltPoolDG::NormalVector
+} // namespace MeltPoolDG::LevelSet
 #endif

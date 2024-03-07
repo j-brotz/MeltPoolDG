@@ -4,7 +4,7 @@
 
 #  include <adaflo/util.h>
 
-namespace MeltPoolDG::Reinitialization
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   ReinitializationOperationAdaflo<dim>::ReinitializationOperationAdaflo(
@@ -17,8 +17,9 @@ namespace MeltPoolDG::Reinitialization
     : scratch_data(scratch_data)
     , time_iterator(time_iterator)
     , pcout(scratch_data.get_pcout(1))
-    , normal_vector_data(parameters.normal_vec)
-    , eps_cell_factor(parameters.reinit.scale_factor_epsilon / parameters.ls.n_subdivisions)
+    , normal_vector_data(parameters.ls.normal_vec)
+    , eps_cell_factor(parameters.ls.reinit.interface_thickness_parameter.value /
+                      parameters.ls.n_subdivisions)
   {
     /**
      * set parameters of adaflo
@@ -60,15 +61,14 @@ namespace MeltPoolDG::Reinitialization
   void
   ReinitializationOperationAdaflo<dim>::create_normal_vector_operator()
   {
-    normal_vector_operation_adaflo =
-      std::make_shared<NormalVector::NormalVectorOperationAdaflo<dim>>(
-        scratch_data,
-        reinit_params_adaflo.dof_index_ls,
-        reinit_params_adaflo.dof_index_normal,
-        reinit_params_adaflo.quad_index,
-        level_set,
-        normal_vector_data,
-        eps_cell_factor);
+    normal_vector_operation_adaflo = std::make_shared<LevelSet::NormalVectorOperationAdaflo<dim>>(
+      scratch_data,
+      reinit_params_adaflo.dof_index_ls,
+      reinit_params_adaflo.dof_index_normal,
+      reinit_params_adaflo.quad_index,
+      level_set,
+      normal_vector_data,
+      eps_cell_factor);
   }
 
   template <int dim>
@@ -234,7 +234,7 @@ namespace MeltPoolDG::Reinitialization
     reinit_params_adaflo.time.time_step_size_max   = parameters.time_stepping.time_step_size;
 
     //@todo?
-    // if (parameters.reinit.time_integration_scheme == "implicit_euler")
+    // if (parameters.ls.reinit.time_integration_scheme == "implicit_euler")
     // reinit_params_adaflo.time.time_step_scheme =
     // TimeSteppingParameters::Scheme::implicit_euler;
     //
@@ -266,5 +266,5 @@ namespace MeltPoolDG::Reinitialization
   template class ReinitializationOperationAdaflo<1>;
   template class ReinitializationOperationAdaflo<2>;
   template class ReinitializationOperationAdaflo<3>;
-} // namespace MeltPoolDG::Reinitialization
+} // namespace MeltPoolDG::LevelSet
 #endif

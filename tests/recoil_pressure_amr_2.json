@@ -47,13 +47,6 @@
     "n initial refinement cycles": "2",
     "do not modify boundary cells": "true"
   },
-  "curvature": {
-    "curv implementation": "adaflo",
-    "curv damping scale factor": "0.1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "surface tension": {
     "surface tension coefficient": "1.8",
     "reference temperature": "1700"
@@ -73,10 +66,6 @@
       "dynamic viscosity": "0.006"
     },
     "boiling temperature": "3000."
-  },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
   },
   "laser": {
     "starting position": "0.0,0.00004",
@@ -101,31 +90,12 @@
     "domain y min": "-0.0001",
     "domain y max": "0.0002"
   },
-  "normal vector": {
-    "normal vec damping scale factor": "4.",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.000005",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "problem specific": {
     "do heat transfer": "true",
     "amr": {
       "fraction of melting point refined in solid": "0.8"
     },
     "do solidification": "true"
-  },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
   },
   "output": {
     "paraview": {
@@ -137,6 +107,38 @@
       "temperature constant": "10000.",
       "pressure coefficient": "0.0987166831194472",
       "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.1",
+      "implementation": "adaflo"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4."
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

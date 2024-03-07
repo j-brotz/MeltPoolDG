@@ -12,7 +12,7 @@
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
-namespace MeltPoolDG::AdvectionDiffusion
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   AdvectionDiffusionOperation<dim>::AdvectionDiffusionOperation(
@@ -111,12 +111,6 @@ namespace MeltPoolDG::AdvectionDiffusion
 
     // pass time increment to operator TODO: pass time iterator directly to operator
     advec_diff_operator->reset_time_increment(time_iterator.get_current_time_increment());
-
-    AssertThrow(
-      this->advec_diff_data.predictor.type != PredictorType::least_squares_projection ||
-        this->advec_diff_data.linear_solver.do_matrix_free,
-      ExcMessage(
-        "For matrix-based advection-diffusion solver least squares projection is not supported."));
 
     // compute RHS
     // TODO: also include it for matrix-based to this place (?)
@@ -417,4 +411,4 @@ namespace MeltPoolDG::AdvectionDiffusion
   template class AdvectionDiffusionOperation<1>;
   template class AdvectionDiffusionOperation<2>;
   template class AdvectionDiffusionOperation<3>;
-} // namespace MeltPoolDG::AdvectionDiffusion
+} // namespace MeltPoolDG::LevelSet

@@ -13,7 +13,7 @@
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
-namespace MeltPoolDG::AdvectionDiffusion
+namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   void
@@ -150,7 +150,7 @@ namespace MeltPoolDG::AdvectionDiffusion
       scratch_data = std::make_shared<ScratchData<dim>>(
         base_in->mpi_communicator,
         base_in->parameters.base.verbosity_level,
-        base_in->parameters.advec_diff.linear_solver.do_matrix_free);
+        base_in->parameters.ls.advec_diff.linear_solver.do_matrix_free);
       /*
        *  setup mapping
        */
@@ -187,11 +187,11 @@ namespace MeltPoolDG::AdvectionDiffusion
      */
     time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
 
-    if (base_in->parameters.advec_diff.implementation == "meltpooldg")
+    if (base_in->parameters.ls.advec_diff.implementation == "meltpooldg")
       {
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperation<dim>>(*scratch_data,
-                                                             base_in->parameters.advec_diff,
+                                                             base_in->parameters.ls.advec_diff,
                                                              *time_iterator,
                                                              advection_velocity,
                                                              advec_diff_dof_idx,
@@ -201,10 +201,8 @@ namespace MeltPoolDG::AdvectionDiffusion
         advec_diff_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
-    else if (base_in->parameters.advec_diff.implementation == "adaflo")
+    else if (base_in->parameters.ls.advec_diff.implementation == "adaflo")
       {
-        AssertThrow(base_in->parameters.advec_diff.linear_solver.do_matrix_free,
-                    ExcNotImplemented());
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperationAdaflo<dim>>(*scratch_data,
                                                                    *time_iterator,
@@ -350,4 +348,4 @@ namespace MeltPoolDG::AdvectionDiffusion
   template class AdvectionDiffusionProblem<1>;
   template class AdvectionDiffusionProblem<2>;
   template class AdvectionDiffusionProblem<3>;
-} // namespace MeltPoolDG::AdvectionDiffusion
+} // namespace MeltPoolDG::LevelSet

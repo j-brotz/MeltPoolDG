@@ -27,9 +27,9 @@ def get_arguments():
 
 
 def run_tests(build_dir, regex_flags, skip_overwrite):
-    print(70*"-")
+    print(70 * "-")
     print("Run all tests")
-    print(70*"-")
+    print(70 * "-")
     cwd = os.getcwd()
     os.chdir(build_dir)
 
@@ -54,7 +54,7 @@ def run_tests(build_dir, regex_flags, skip_overwrite):
 def create_output_path(name):
     folder = name.split("/")[0]
     output_file = name.split(
-        "/")[-1].replace(".debug", "").replace(".release", "")+".output"
+        "/")[-1].replace(".debug", "").replace(".release", "") + ".output"
     output_file = output_file.replace(".", ".*", 1)
     output_file = output_file.replace(".output", "*.output", 1)
     return os.path.join(folder, output_file)
@@ -65,9 +65,9 @@ def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
     failed_tests = []
     failed_tests_path = []
 
-    print(70*"-")
+    print(70 * "-")
     print("Read log file: {:}".format(os.path.abspath(log_file)))
-    print(70*"-")
+    print(70 * "-")
 
     # Collect current test output
     for line in open(log_file, "r").readlines():
@@ -95,13 +95,13 @@ def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
                 failed_tests_path.append(output_found)
 
     # copy new test output to test_root_dir
-    print(70*"-")
+    print(70 * "-")
     print("Update test output")
-    print(70*"-")
+    print(70 * "-")
     for f, o in zip(failed_tests, failed_tests_path):
         n = create_output_path(f)
         test_found = glob.glob(os.path.join(
-            test_root_dir, "**")+"/"+n, recursive=True)
+            test_root_dir, "**") + "/" + n, recursive=True)
 
         if not test_found:
             print(
@@ -133,7 +133,7 @@ def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
                 else:
                     copy_command = "cp {:} {:}".format(
                         o[o_idx[i]], test_found[i])
-                print(5*" "+copy_command)
+                print(5 * " " + copy_command)
                 os.system(copy_command)
 
             print("")
@@ -147,9 +147,9 @@ def copy_test_output(log_file, test_root_dir, build_dir, do_overwrite):
             os.system(copy_command)
             print("")
 
-    print(70*"-")
+    print(70 * "-")
     print("{:} test outputs copied!".format(len(failed_tests)))
-    print(70*"-")
+    print(70 * "-")
 
 
 if __name__ == '__main__':

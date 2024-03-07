@@ -19,18 +19,6 @@
       "dynamic viscosity": "0.001"
     }
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit eps scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "Time stepping": {
     "scheme": "bdf_2"
   },
@@ -55,9 +43,20 @@
       "lin its before inner solvers": "30"
     }
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
+  "level set": {
+    "reinitialization": {
+      "reinit eps scale factor": "0.5",
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

@@ -13,17 +13,19 @@
     "end time": "1.5707963267948966",
     "time step size": "0.01"
   },
-  "advection diffusion": {
-    "advec diff implementation": "adaflo",
-    "advec diff diffusivity": "0.000000",
-    "advec diff time integration scheme": "crank_nicolson",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "true"
+    }
+  },
+  "level set": {
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "diffusivity": "0.000000",
+      "time integration scheme": "crank_nicolson",
+      "implementation": "adaflo"
     }
   }
 }

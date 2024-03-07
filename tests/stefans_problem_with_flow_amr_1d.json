@@ -54,17 +54,6 @@
       }
     }
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "3",
-    "reinit constant epsilon": "0.01"
-  },
-  "curvature": {
-    "curv verbosity level": "1"
-  },
   "evaporation": {
     "analytical": {
       "function": "1.e-2"
@@ -96,6 +85,19 @@
     "do user defined postprocessing": "true",
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "max n steps": "3",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.01"
+      }
+    },
+    "curvature": {
+      "verbosity level": "1"
     }
   }
 }

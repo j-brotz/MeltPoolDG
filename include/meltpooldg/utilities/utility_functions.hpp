@@ -267,45 +267,6 @@ namespace MeltPoolDG
 
     } // namespace CharacteristicFunctions
 
-    /**
-     * For a given CellAccessor @param cell, compute the interface thickness parameter
-     * epsilon from the characteristic cell length and a given @param thickness_scale_factor.
-     */
-    template <int dim, typename cell_type>
-    inline double
-    compute_cell_size_dependent_interface_thickness(const cell_type cell,
-                                                    const double    thickness_scale_factor)
-    {
-      return cell->diameter() / std::sqrt(dim) * thickness_scale_factor;
-    }
-
-    /**
-     * For a given @param cell_diameter, compute the interface thickness parameter
-     * epsilon using a given @param thickness_scale_factor.
-     */
-    template <int dim>
-    inline double
-    compute_cell_size_dependent_interface_thickness(const double cell_diameter,
-                                                    const double thickness_scale_factor)
-    {
-      return cell_diameter / std::sqrt(dim) * thickness_scale_factor;
-    }
-
-    template <int dim>
-    inline double
-    compute_initial_epsilon(const Parameters<double> &param, const Triangulation<dim> &tria)
-    {
-      double eps = param.reinit.constant_epsilon > 0.0 ?
-                     param.reinit.constant_epsilon :
-                     compute_cell_size_dependent_interface_thickness<dim>(
-                       GridTools::minimal_cell_diameter(tria), param.reinit.scale_factor_epsilon);
-
-      // divide by the number of subdivisions if a mesh-dependent interface thickness is computed
-      if (param.reinit.constant_epsilon <= 0.0)
-        eps /= param.ls.n_subdivisions;
-      return eps;
-    }
-
     template <typename number>
     inline VectorizedArray<number>
     limit_to_bounds(const VectorizedArray<number> &in,

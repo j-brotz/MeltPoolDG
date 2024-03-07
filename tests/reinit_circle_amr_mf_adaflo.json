@@ -18,17 +18,22 @@
     "lower perc to coarsen": "    0.00",
     "max grid refinement level": "8"
   },
-  "reinitialization": {
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.05",
-    "reinit implementation": "adaflo",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "type": "olsson2007",
+      "implementation": "adaflo",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
+      }
     }
   }
 }

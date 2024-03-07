@@ -27,12 +27,6 @@
       "residual tolerance": "1e-5"
     }
   },
-  "levelset": {
-    "ls n initial reinit steps": "0"
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "4"
-  },
   "laser": {
     "starting position": "3e-4",
     "model": "interface_projection_sharp",
@@ -61,6 +55,14 @@
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "normal vector": {
+      "filter parameter": "4"
+    },
+    "reinitialization": {
+      "n initial steps": "0"
     }
   }
 }

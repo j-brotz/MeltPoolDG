@@ -12,17 +12,19 @@
     "end time": "0.05",
     "time step size": "0.01"
   },
-  "advection diffusion": {
-    "advec diff diffusivity": "0.000000",
-    "advec diff implementation": "meltpooldg",
-    "advec diff integration scheme": "crank_nicolson",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "advection diffusion": {
+      "advec diff integration scheme": "crank_nicolson",
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "diffusivity": "0.000000",
+      "implementation": "meltpooldg"
     }
   }
 }

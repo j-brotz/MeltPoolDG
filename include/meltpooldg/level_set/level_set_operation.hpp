@@ -18,8 +18,6 @@
 namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
-  using namespace Reinitialization;
-  using namespace AdvectionDiffusion;
 
   /*
    *     Level set model including advection, reinitialization and curvature computation
@@ -40,14 +38,13 @@ namespace MeltPoolDG::LevelSet
      *  The following objects are the operations, which are performed for solving the
      *  level set equation.
      */
-    std::shared_ptr<AdvectionDiffusion::AdvectionDiffusionOperationBase<dim>> advec_diff_operation;
-    std::shared_ptr<Reinitialization::ReinitializationOperationBase<dim>>     reinit_operation;
-    std::shared_ptr<Curvature::CurvatureOperationBase<dim>>                   curvature_operation;
+    std::shared_ptr<AdvectionDiffusionOperationBase<dim>> advec_diff_operation;
+    std::shared_ptr<ReinitializationOperationBase<dim>>   reinit_operation;
+    std::shared_ptr<CurvatureOperationBase<dim>>          curvature_operation;
     /*
      *  necessary parameters
      */
-    const LevelSetData<double>         level_set_data;
-    const ReinitializationData<double> reinit_data;
+    const LevelSetData<double> level_set_data;
     /*
      * select the relevant DoFHandler
      */
@@ -82,7 +79,7 @@ namespace MeltPoolDG::LevelSet
                              >>;
     SurfaceMeshInfo surface_mesh_info;
 
-    std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
+    std::unique_ptr<Tools::NearestPoint<dim>> nearest_point_search;
 
   public:
     LevelSetOperation(const ScratchData<dim>              &scratch_data_in,

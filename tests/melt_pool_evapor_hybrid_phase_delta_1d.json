@@ -39,10 +39,6 @@
     "problem name": "melt_pool",
     "verbosity level": "0"
   },
-  "curvature": {
-    "curv damping scale factor": "8",
-    "curv verbosity level": "1"
-  },
   "darcy damping": {
     "avoid div zero constant": "1.",
     "formulation": "implicit_formulation",
@@ -84,12 +80,6 @@
     "power": "0",
     "radius": "70.e-6"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls n initial reinit steps": "0",
-    "ls n subdivisions": "2",
-    "ls time integration scheme": "crank_nicolson"
-  },
   "material": {
     "material template": "Ti64",
     "gas": {
@@ -97,17 +87,10 @@
     },
     "two phase fluid properties transition type": "consistent_with_evaporation"
   },
-  "normal vector": {
-    "normal vec damping scale factor": "0.1"
-  },
   "problem specific": {
     "do advect level set": "true",
     "do heat transfer": "true",
     "do solidification": "true"
-  },
-  "reinitialization": {
-    "reinit max n steps": "3",
-    "reinit scale factor epsilon": "2"
   },
   "simulation specific domain": {
     "domain x max": "400e-6",
@@ -132,5 +115,24 @@
     "paraview": {
       "enable": "false"
     }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "n initial steps": "0",
+      "max n steps": "3",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "2"
+      }
+    },
+    "curvature": {
+      "filter parameter": "8",
+      "verbosity level": "1"
+    },
+    "normal vector": {
+      "filter parameter": "0.1"
+    },
+    "n subdivisions": "2"
   }
 }

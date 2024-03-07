@@ -12,36 +12,6 @@
     "end time": "0.01",
     "time step size": "0.002"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls n initial reinit steps": "10",
-    "ls time integration scheme": "crank_nicolson",
-    "ls implementation": "meltpooldg"
-  },
-  "reinitialization": {
-    "reinit max n steps": "2",
-    "reinit modeltype": "olsson2007",
-    "reinit implementation": "meltpooldg",
-    "reinit constant epsilon": "0.03",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "4.0",
-    "normal vec implementation": "meltpooldg",
-    "normal vec verbosity level": "1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv damping scale factor": "32",
-    "curv implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "evaporation": {
     "analytical": {
       "function": "1.0e-4"
@@ -56,14 +26,45 @@
     },
     "two phase fluid properties transition type": "sharp"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "n initial steps": "10",
+      "max n steps": "2",
+      "type": "olsson2007",
+      "implementation": "meltpooldg",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.03"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "32",
+      "implementation": "meltpooldg"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4.0",
+      "implementation": "meltpooldg",
+      "verbosity level": "1"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

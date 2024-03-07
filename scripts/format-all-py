@@ -2,5 +2,5 @@
 
 # format python files
 for i in $(find . -type f -name "*.py"); do 
-  autopep8 -i $i &
+  autopep8 --aggressive --exit-code --ignore E501 -i $i &
 done

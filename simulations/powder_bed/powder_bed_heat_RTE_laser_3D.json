@@ -39,9 +39,6 @@
     },
     "two phase fluid properties transition type": "smooth"
   },
-  "reinitialization": {
-    "reinit scale factor epsilon": "1.5"
-  },
   "simulation specific parameters": {
     "domain x min": "-100e-6",
     "domain x max": "100e-6",
@@ -72,5 +69,13 @@
       "enable": "true"
     },
     "output variables": "temperature,heat_source,heaviside"
+  },
+  "level set": {
+    "reinitialization": {
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
+      }
+    }
   }
 }

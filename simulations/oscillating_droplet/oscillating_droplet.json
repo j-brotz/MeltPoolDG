@@ -34,41 +34,6 @@
   "surface tension": {
     "surface tension coefficient": "1.8"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls implementation": "meltpooldg"
-  },
-  "advection diffusion": {
-    "advec diff implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "reinitialization": {
-    "reinit max n steps": "2",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.5",
-    "reinit implementation": "meltpooldg",
-    "linear solver": {
-      "preconditioner type": "AMG",
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "1",
-    "normal vec implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv damping scale factor": "4",
-    "curv implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "adaptive meshing": {
     "do amr": "false",
     "do not modify boundary cells": "false",
@@ -120,6 +85,42 @@
   "evaporation": {
     "recoil pressure": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "preconditioner type": "AMG",
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "2",
+      "type": "olsson2007",
+      "implementation": "meltpooldg",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.5"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4",
+      "implementation": "meltpooldg"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "1",
+      "implementation": "meltpooldg"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "implementation": "meltpooldg"
     }
   }
 }

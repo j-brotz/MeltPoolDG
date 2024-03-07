@@ -14,7 +14,7 @@
 #include <meltpooldg/normal_vector/normal_vector_operation.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 
-namespace MeltPoolDG::Curvature
+namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
@@ -90,7 +90,7 @@ namespace MeltPoolDG::Curvature
     const unsigned int normal_dof_idx;
     const unsigned int ls_dof_idx;
 
-    NormalVector::NormalVectorOperation<dim> normal_vector_operation;
+    LevelSet::NormalVectorOperation<dim> normal_vector_operation;
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
@@ -120,4 +120,4 @@ namespace MeltPoolDG::Curvature
      */
     std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
   };
-} // namespace MeltPoolDG::Curvature
+} // namespace MeltPoolDG::LevelSet

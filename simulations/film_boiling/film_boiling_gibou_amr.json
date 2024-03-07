@@ -44,12 +44,6 @@
       }
     }
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls n subdivisions": "2",
-    "ls n initial reinit steps": "0"
-  },
   "adaptive meshing": {
     "do amr": "true",
     "do not modify boundary cells": "false",
@@ -58,28 +52,6 @@
     "n initial refinement cycles": "5",
     "max grid refinement level": "6",
     "every n step": "1"
-  },
-  "reinitialization": {
-    "reinit max n steps": "3",
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.00025",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    },
-    "normal vec damping scale factor": "0.5"
-  },
-  "curvature": {
-    "curv implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    },
-    "curv damping scale factor": "2"
   },
   "evaporation": {
     "evaporative mass flux model": "hardt_wondra",
@@ -132,16 +104,46 @@
       "automatic grid refinement type": "fixed_fraction"
     }
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "directory": "output_film_boiling",
     "write time step size": "0.01",
     "paraview": {
       "enable": "true"
     }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "n initial steps": "0",
+      "max n steps": "3",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.00025"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "2",
+      "implementation": "meltpooldg"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.5",
+      "implementation": "meltpooldg"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
+    },
+    "n subdivisions": "2"
   }
 }

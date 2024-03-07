@@ -53,31 +53,6 @@
       }
     }
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.02",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv implementation": "meltpooldg",
-    "curv verbosity level": "1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "evaporation": {
     "analytical": {
       "function": "1.e-2"
@@ -93,15 +68,42 @@
   "problem specific": {
     "do heat transfer": "true"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "do user defined postprocessing": "true",
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.02"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "implementation": "meltpooldg",
+      "verbosity level": "1"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "implementation": "meltpooldg"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

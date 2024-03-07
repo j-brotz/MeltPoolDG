@@ -133,8 +133,9 @@ namespace MeltPoolDG::Simulation::MovingDroplet
     {
       // Here, the initial velocity field depends on the level set function. Thus, the diffuse
       // level set is given in the initial state on purpose.
-      const double eps =
-        UtilityFunctions::compute_initial_epsilon<dim>(this->parameters, *this->triangulation);
+      const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+        GridTools::minimal_cell_diameter(*this->triangulation) /
+        this->parameters.ls.n_subdivisions / std::sqrt(dim));
 
       AssertThrow(eps > 0, ExcNotImplemented());
 

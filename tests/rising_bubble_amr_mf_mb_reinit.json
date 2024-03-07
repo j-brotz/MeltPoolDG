@@ -34,36 +34,6 @@
     },
     "two phase fluid properties transition type": "sharp"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "2",
-    "reinit modeltype": "olsson2007",
-    "reinit constant epsilon": "0.03",
-    "linear solver": {
-      "do matrix free": "false",
-      "preconditioner type": "AMG"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "4",
-    "linear solver": {
-      "do matrix free": "false"
-    }
-  },
-  "curvature": {
-    "linear solver": {
-      "do matrix free": "true"
-    },
-    "curv damping scale factor": "4"
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Time stepping": {
@@ -93,6 +63,38 @@
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "false",
+        "preconditioner type": "AMG"
+      },
+      "enable": "true",
+      "max n steps": "2",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.03"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "false"
+      },
+      "filter parameter": "4"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

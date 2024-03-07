@@ -18,7 +18,7 @@
 
 #  include <adaflo/level_set_okz_compute_curvature.h>
 
-namespace MeltPoolDG::Curvature
+namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
 
@@ -100,8 +100,8 @@ namespace MeltPoolDG::Curvature
     /**
      * Reference to the actual curvature solver from adaflo
      */
-    std::shared_ptr<LevelSetOKZSolverComputeCurvature<dim>>         curvature_operation;
-    std::shared_ptr<NormalVector::NormalVectorOperationAdaflo<dim>> normal_vector_operation_adaflo;
+    std::shared_ptr<LevelSetOKZSolverComputeCurvature<dim>>     curvature_operation;
+    std::shared_ptr<LevelSet::NormalVectorOperationAdaflo<dim>> normal_vector_operation_adaflo;
 
     /**
      *  Diagonal preconditioner
@@ -123,6 +123,6 @@ namespace MeltPoolDG::Curvature
 
     const NormalVectorData<double> &normal_vector_data;
   };
-} // namespace MeltPoolDG::Curvature
+} // namespace MeltPoolDG::LevelSet
 
 #endif

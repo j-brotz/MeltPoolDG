@@ -258,7 +258,7 @@ namespace MeltPoolDG::Heat
 
             // use filtered normal vector computation ..
             if (normal_vector)
-              NormalVector::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
+              LevelSet::NormalVectorOperator<dim>::get_unit_normals_at_quadrature(
                 normal_eval, *normal_vector, normal_at_q, tolerance_normal_vector);
 
             Vector<double> heat_source_vector_local(dofs_per_cell);

@@ -25,11 +25,10 @@
 
 namespace MeltPoolDG
 {
-  namespace Reinitialization
+  namespace LevelSet
   {
     template <int dim>
-    class ReinitializationOperationAdaflo
-      : public MeltPoolDG::Reinitialization::ReinitializationOperationBase<dim>
+    class ReinitializationOperationAdaflo : public ReinitializationOperationBase<dim>
     {
     private:
       using VectorType      = LinearAlgebra::distributed::Vector<double>;
@@ -120,8 +119,7 @@ namespace MeltPoolDG
       /**
        * Reference to the actual advection diffusion solver from adaflo
        */
-      std::shared_ptr<NormalVector::NormalVectorOperationAdaflo<dim>>
-                                                              normal_vector_operation_adaflo;
+      std::shared_ptr<NormalVectorOperationAdaflo<dim>>       normal_vector_operation_adaflo;
       std::shared_ptr<LevelSetOKZSolverReinitialization<dim>> reinit_operation_adaflo;
 
       /**
@@ -145,7 +143,7 @@ namespace MeltPoolDG
       // maximum change of the level set due to the current reinitialization step
       double max_change_level_set = std::numeric_limits<double>::max();
     };
-  } // namespace Reinitialization
+  } // namespace LevelSet
 } // namespace MeltPoolDG
 
 #endif

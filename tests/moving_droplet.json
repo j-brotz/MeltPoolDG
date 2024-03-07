@@ -26,22 +26,6 @@
     },
     "two phase fluid properties transition type": "smooth"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls n subdivisions": "2",
-    "tol reinit": "1e-2"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit constant epsilon": "0.02"
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "4"
-  },
-  "curvature": {
-    "curv verbosity level": "1"
-  },
   "adaptive meshing": {
     "do amr": "false",
     "do not modify boundary cells": "false",
@@ -94,5 +78,23 @@
     "paraview": {
       "enable": "false"
     }
+  },
+  "level set": {
+    "reinitialization": {
+      "enable": "true",
+      "tolerance": "1e-2",
+      "max n steps": "5",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.02"
+      }
+    },
+    "curvature": {
+      "verbosity level": "1"
+    },
+    "normal vector": {
+      "filter parameter": "4"
+    },
+    "n subdivisions": "2"
   }
 }

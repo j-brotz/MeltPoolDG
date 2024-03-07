@@ -28,40 +28,6 @@
       "dynamic viscosity": "0.2"
     }
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls implementation": "meltpooldg"
-  },
-  "advection diffusion": {
-    "advec diff implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "reinitialization": {
-    "reinit max n steps": "2",
-    "reinit modeltype": "olsson2007",
-    "reinit eps scale factor": "0.5",
-    "reinit implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "4",
-    "normal vec implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv damping scale factor": "1.5",
-    "curv implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "Navier-Stokes": {
     "adaflo": {
       "Navier-Stokes": {
@@ -95,6 +61,38 @@
     "paraview": {
       "filename": "sol_spurious_currents",
       "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "reinit eps scale factor": "0.5",
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "2",
+      "type": "olsson2007",
+      "implementation": "meltpooldg"
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "1.5",
+      "implementation": "meltpooldg"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4",
+      "implementation": "meltpooldg"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "implementation": "meltpooldg"
     }
   }
 }

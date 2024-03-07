@@ -12,23 +12,25 @@
     "time step size": "0.005",
     "max n steps": "5"
   },
-  "reinitialization": {
-    "reinit modeltype": "olsson2007",
-    "linear solver": {
-      "do matrix free": "true",
-      "preconditioner type": "Diagonal"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "normal vec implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true",
+        "preconditioner type": "Diagonal"
+      },
+      "type": "olsson2007"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.5",
+      "implementation": "meltpooldg"
     }
   }
 }

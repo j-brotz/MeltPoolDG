@@ -62,47 +62,48 @@
       }
     }
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls implementation": "meltpooldg",
-    "ls n subdivisions": "2"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit implementation": "meltpooldg",
-    "reinit scale factor epsilon": "2",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec implementation": "meltpooldg",
-    "normal vec damping scale factor": "4",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv implementation": "meltpooldg",
-    "curv damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "problem specific": {
     "do heat transfer": "true"
-  },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
   },
   "output": {
     "directory": "output_thermo_capillary/",
     "paraview": {
       "enable": "true"
     }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "implementation": "meltpooldg",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "2"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.5",
+      "implementation": "meltpooldg"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "4",
+      "implementation": "meltpooldg"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
+    },
+    "n subdivisions": "2"
   }
 }

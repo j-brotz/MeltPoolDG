@@ -59,10 +59,6 @@
       }
     }
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
   "adaptive meshing": {
     "do amr": "false",
     "do not modify boundary cells": "false",
@@ -71,29 +67,6 @@
     "n initial refinement cycles": "5",
     "max grid refinement level": "7",
     "every n step": "1"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.0",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec implementation": "meltpooldg",
-    "normal vec verbosity level": "1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv damping scale factor": "0.1",
-    "curv implementation": "meltpooldg",
-    "curv verbosity level": "1",
-    "linear solver": {
-      "do matrix free": "true"
-    }
   },
   "evaporation": {
     "analytical": {
@@ -119,14 +92,43 @@
   "problem specific": {
     "do heat transfer": "true"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.0"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.1",
+      "implementation": "meltpooldg",
+      "verbosity level": "1"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "implementation": "meltpooldg",
+      "verbosity level": "1"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

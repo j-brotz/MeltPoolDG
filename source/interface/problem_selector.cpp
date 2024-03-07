@@ -19,10 +19,10 @@ namespace MeltPoolDG
       return std::make_shared<LevelSet::LevelSetProblem<dim>>();
 
     else if (problem_name == ProblemType::reinitialization)
-      return std::make_shared<Reinitialization::ReinitializationProblem<dim>>();
+      return std::make_shared<LevelSet::ReinitializationProblem<dim>>();
 
     else if (problem_name == ProblemType::advection_diffusion)
-      return std::make_shared<AdvectionDiffusion::AdvectionDiffusionProblem<dim>>();
+      return std::make_shared<LevelSet::AdvectionDiffusionProblem<dim>>();
 
     else if (problem_name == ProblemType::melt_pool)
       return std::make_shared<MeltPool::MeltPoolProblem<dim>>();

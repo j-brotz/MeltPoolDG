@@ -90,30 +90,6 @@
     "boiling temperature": "3000.",
     "two phase fluid properties transition type": "smooth"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit scale factor epsilon": "1.0",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv damping scale factor": "0.5",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-12",
@@ -127,11 +103,6 @@
     "do heat transfer": "true",
     "do solidification": "true"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "directory": "output_recoil_pressure",
     "paraview": {
@@ -144,6 +115,37 @@
       "temperature constant": "10000.",
       "pressure coefficient": "0.0987166831194472",
       "enable": "true"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "interface thickness parameter": {
+        "type": "proportional_to_cell_size",
+        "val": "1.0"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.5"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "0.5"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

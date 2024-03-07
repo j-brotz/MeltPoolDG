@@ -20,7 +20,7 @@
 
 namespace MeltPoolDG
 {
-  namespace NormalVector
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -121,5 +121,5 @@ namespace MeltPoolDG
        */
       std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner_matrixfree;
     };
-  } // namespace NormalVector
+  } // namespace LevelSet
 } // namespace MeltPoolDG

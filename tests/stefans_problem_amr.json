@@ -12,11 +12,6 @@
     "end time": "0.05",
     "time step size": "0.01"
   },
-  "levelset": {
-    "ls do reinitialization": "true",
-    "ls time integration scheme": "crank_nicolson",
-    "ls implementation": "meltpooldg"
-  },
   "adaptive meshing": {
     "do amr": "true",
     "do not modify boundary cells": "false",
@@ -25,28 +20,6 @@
     "n initial refinement cycles": "3",
     "max grid refinement level": "7",
     "every n step": "1"
-  },
-  "reinitialization": {
-    "reinit max n steps": "5",
-    "reinit modeltype": "olsson2007",
-    "reinit implementation": "meltpooldg",
-    "reinit constant epsilon": "0.01",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "normal vector": {
-    "normal vec damping scale factor": "8",
-    "normal vec implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
-  "curvature": {
-    "curv implementation": "meltpooldg",
-    "linear solver": {
-      "do matrix free": "true"
-    }
   },
   "evaporation": {
     "analytical": {
@@ -62,14 +35,42 @@
     },
     "two phase fluid properties transition type": "sharp"
   },
-  "advection diffusion": {
-    "linear solver": {
-      "do matrix free": "true"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "enable": "true",
+      "max n steps": "5",
+      "type": "olsson2007",
+      "implementation": "meltpooldg",
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": "0.01"
+      }
+    },
+    "curvature": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "implementation": "meltpooldg"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "true"
+      },
+      "filter parameter": "8",
+      "implementation": "meltpooldg"
+    },
+    "advection diffusion": {
+      "linear solver": {
+        "do matrix free": "true"
+      }
     }
   }
 }

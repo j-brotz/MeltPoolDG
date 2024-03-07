@@ -2,32 +2,33 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/advection_diffusion/advection_diffusion_data.hpp>
+#include <meltpooldg/curvature/curvature_data.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
-
-#include <limits>
-#include <string>
+#include <meltpooldg/normal_vector/normal_vector_data.hpp>
+#include <meltpooldg/reinitialization/reinitialization_data.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
+
   template <typename number = double>
   struct LevelSetData
   {
-    bool                     do_reinitialization     = true;
-    int                      n_initial_reinit_steps  = -1.0;
-    std::string              time_integration_scheme = "crank_nicolson";
-    bool                     do_curvature_correction = false;
-    int                      n_subdivisions          = 1;
-    bool                     do_localized_heaviside  = true;
-    std::string              implementation          = "meltpooldg";
-    number                   reinit_time_step_size   = -1.;
-    number                   tol_reinit              = std::numeric_limits<number>::min();
+    int  n_subdivisions         = 1;
+    bool do_localized_heaviside = true;
+
     NearestPointData<number> nearest_point;
+
+    AdvectionDiffusionData<number> advec_diff;
+    NormalVectorData<number>       normal_vec;
+    CurvatureData<number>          curv;
+    ReinitializationData<number>   reinit;
 
     void
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    post(const unsigned int reinit_max_n_steps);
+    post();
 
     void
     check_input_parameters(const unsigned int base_degree) const;

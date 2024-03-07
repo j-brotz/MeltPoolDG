@@ -13,22 +13,24 @@
     "time step size": "0.005",
     "max n steps": "30"
   },
-  "reinitialization": {
-    "reinit modeltype": "olsson2007",
-    "linear solver": {
-      "solver type": "CG",
-      "preconditioner type": "Identity",
-      "do matrix free": "false"
-    }
-  },
-  "normal vector": {
-    "linear solver": {
-      "do matrix free": "false"
-    }
-  },
   "output": {
     "paraview": {
       "enable": "false"
+    }
+  },
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "solver type": "CG",
+        "preconditioner type": "Identity",
+        "do matrix free": "false"
+      },
+      "type": "olsson2007"
+    },
+    "normal vector": {
+      "linear solver": {
+        "do matrix free": "false"
+      }
     }
   }
 }

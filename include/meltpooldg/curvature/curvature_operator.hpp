@@ -13,7 +13,7 @@
 
 using namespace dealii;
 
-namespace MeltPoolDG::Curvature
+namespace MeltPoolDG::LevelSet
 {
   /**
    *  This function calculates the curvature of the current level set function being
@@ -52,10 +52,10 @@ namespace MeltPoolDG::Curvature
     const unsigned int normal_dof_idx;
     const double       tolerance_normal_vector;
 
-    // optional parameters for narrow band
-    const bool         do_narrow_band;
     const unsigned int ls_dof_idx;
-    const VectorType  *solution_level_set;
+
+    // optional parameters for narrow band
+    const VectorType *solution_level_set;
 
     AlignedVector<VectorizedArray<double>> damping;
 
@@ -66,7 +66,6 @@ namespace MeltPoolDG::Curvature
                       const unsigned int           curv_quad_idx_in,
                       const unsigned int           normal_dof_idx_in,
                       const unsigned int           ls_dof_idx_in,
-                      const bool                   do_narrow_band        = false,
                       const VectorType            *solution_level_set_in = nullptr);
 
     void
@@ -100,4 +99,4 @@ namespace MeltPoolDG::Curvature
                                  FECellIntegrator<dim, 1, number> &level_set_vals,
                                  const bool                        do_reinit_cells) const;
   };
-} // namespace MeltPoolDG::Curvature
+} // namespace MeltPoolDG::LevelSet

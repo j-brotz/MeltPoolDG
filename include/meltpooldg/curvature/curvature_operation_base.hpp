@@ -8,7 +8,7 @@
 
 namespace MeltPoolDG
 {
-  namespace Curvature
+  namespace LevelSet
   {
     using namespace dealii;
 
@@ -46,5 +46,5 @@ namespace MeltPoolDG
       attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) = 0;
     };
 
-  } // namespace Curvature
+  } // namespace LevelSet
 } // namespace MeltPoolDG
