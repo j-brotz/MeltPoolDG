@@ -205,7 +205,7 @@ def export_amplitude_over_time(folder, pvd_file, filename_suffix=".csv"):
 
     csvs = find_filenames(folder, filename_suffix,
                           pvd_file.split(".")[0] + "_contour")
-    csvs.sort(key=lambda f: int(re.sub('\D', '', f)))
+    csvs.sort(key=lambda f: int(re.sub('\\D', '', f)))
 
     x_max = []
     y_max = []

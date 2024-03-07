@@ -112,7 +112,7 @@ def modify_json(json_f, appendix=""):
                 # get value of old parameter
                 try:
                     val = get_nested_value(datastore, o)
-                except:
+                except BaseException:
                     print("    Old value {:} not found. Abort...".format(o))
                     continue
                 # introduce new parameter category
@@ -130,7 +130,7 @@ def modify_json(json_f, appendix=""):
             for i, o in enumerate(delete_parameter_names):
                 try:
                     val = get_nested_value(datastore, o)
-                except:
+                except BaseException:
                     print("Value {:} not found.".format(o))
                     continue
                 delete_nested_item(datastore, o, val)

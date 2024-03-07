@@ -258,7 +258,7 @@ def collect_files_and_write_into_one(folder, pvdfile, suffix=".csv"):
             ".")[0] + "_kinetic_energy.csv"))
     csvs = find_filenames(folder, suffix, pvdfile.split(".")[
                           0] + "_kinetic_energy")
-    csvs.sort(key=lambda f: int(re.sub('\D', '', f)))
+    csvs.sort(key=lambda f: int(re.sub('\\D', '', f)))
 
     kinetic_energy = []
     time_list = []
