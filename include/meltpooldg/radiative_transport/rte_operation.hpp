@@ -69,9 +69,7 @@ namespace MeltPoolDG::RadiativeTransport
     void
     setup_constraints(ScratchData<dim>                       &scratch_data,
                       const DirichletBoundaryConditions<dim> &bc_data,
-                      const PeriodicBoundaryConditions<dim>  &pbc,
-                      const unsigned int                      rte_dof_idx_in,
-                      const unsigned int                      rte_dof_hanging_nodes_dof_idx_in);
+                      const PeriodicBoundaryConditions<dim>  &pbc);
 
     void
     solve();

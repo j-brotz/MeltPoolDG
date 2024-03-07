@@ -1,0 +1,59 @@
+{
+  "base": {
+    "application name": "radiative_transport",
+    "problem name": "heat_transfer",
+    "degree": "1",
+    "dimension": "2",
+    "do print parameters": "false",
+    "global refinements": "4",
+    "verbosity level": "0"
+  },
+  "laser": {
+    "model": "RTE",
+    "intensity profile": "Gauss",
+    "power": "0.1",
+    "radius": "0.5"
+  },
+  "rte": {
+    "rte verbosity level": "1",
+    "predictor type": "none",
+    "linear solver": {
+      "preconditioner type": "AMG"
+    }
+  },
+  "simulation specific parameters": {
+    "power": "0.1",
+    "source radius": "0.5",
+    "interface case": "straight"
+  },
+  "material": {
+    "gas": {
+      "thermal conductivity": "1.0",
+      "specific heat capacity": "1.0",
+      "density": "1.0"
+    },
+    "liquid": {
+      "thermal conductivity": "1.0",
+      "specific heat capacity": "1.0",
+      "density": "1.0"
+    }
+  },
+  "time stepping": {
+    "max n steps": "4"
+  },
+  "adaptive meshing": {
+    "do amr": "true",
+    "upper perc to refine": "0.1",
+    "lower perc to coarsen": "0.1",
+    "max grid refinement level": "6",
+    "n initial refinement cycles": "2"
+  },
+  "problem specific": {
+    "amr strategy": "generic"
+  },
+  "output": {
+    "paraview": {
+      "enable": "true"
+    }
+  }
+}

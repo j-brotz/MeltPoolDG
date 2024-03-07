@@ -226,7 +226,7 @@ namespace MeltPoolDG::Flow
     constraints_parameters.reinit(locally_relevant_dofs_temp);
     DoFTools::make_hanging_node_constraints(dof_handler_parameters, constraints_parameters);
     constraints_parameters.close();
-    UtilityFunctions::check_constraints(dof_handler_parameters, constraints_parameters);
+    Constraints::check_constraints(dof_handler_parameters, constraints_parameters);
 
     {
       ScopedName sc("ns::n_dofs_u");

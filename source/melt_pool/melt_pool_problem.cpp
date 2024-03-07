@@ -1458,42 +1458,33 @@ namespace MeltPoolDG::MeltPool
     if (problem_specific_parameters.do_heat_transfer)
       base_in->attach_boundary_condition("heat_transfer");
 
-    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
-                                                         base_in->get_dirichlet_bc("level_set"),
-                                                         base_in->get_periodic_bc(),
-                                                         ls_dof_idx,
-                                                         ls_hanging_nodes_dof_idx);
-    MeltPoolDG::UtilityFunctions::setup_and_merge_constraints<dim>(
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_BC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("level_set"),
+      base_in->get_periodic_bc(),
+      ls_dof_idx,
+      ls_hanging_nodes_dof_idx);
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_BC_into_DBC<dim>(
+      *scratch_data,
+      base_in->get_dirichlet_bc("level_set"),
+      base_in->get_periodic_bc(),
       reinit_dof_idx,
       ls_hanging_nodes_dof_idx,
       false /*set inhomogeneities to zero*/);
 
     // additional reinitialization dirichlet bc
-    if (base_in->get_bc("reinitialization") &&
-        !base_in->get_dirichlet_bc("reinitialization").get_data().empty())
-      {
-        for (const auto &bc : base_in->get_dirichlet_bc("reinitialization")
-                                .get_data()) // @todo: add name of bc at a more central place
-          {
-            dealii::VectorTools::interpolate_boundary_values(scratch_data->get_mapping(),
-                                                             dof_handler_ls,
-                                                             bc.first,
-                                                             *bc.second,
-                                                             reinit_constraints_dirichlet);
-          }
-      }
-    reinit_constraints_dirichlet.close();
+    if (base_in->get_bc("reinitialization"))
+      MeltPoolDG::Constraints::fill_DBC<dim>(
+        *scratch_data, base_in->get_dirichlet_bc("reinitialization"), reinit_dof_idx, true, true);
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
     if (problem_specific_parameters.do_heat_transfer)
-      MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
-                                                           base_in->get_dirichlet_bc(
-                                                             "heat_transfer"),
-                                                           base_in->get_periodic_bc(),
-                                                           temp_dof_idx,
-                                                           temp_hanging_nodes_dof_idx);
+      MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_BC_into_DBC<dim>(
+        *scratch_data,
+        base_in->get_dirichlet_bc("heat_transfer"),
+        base_in->get_periodic_bc(),
+        temp_dof_idx,
+        temp_hanging_nodes_dof_idx);
 
     if (laser_operation)
       laser_operation->setup_constraints();

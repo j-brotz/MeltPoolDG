@@ -41,6 +41,9 @@ namespace MeltPoolDG::RadiativeTransport
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time(),
                        base_in);
+
+        if (base_in->parameters.amr.do_amr)
+          refine_mesh(base_in);
       }
 
     //... print timing statistics
@@ -138,17 +141,6 @@ namespace MeltPoolDG::RadiativeTransport
     else
       rte_quad_idx =
         scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
-    setup_dof_system(base_in, false);
-
-    /*
-     *  initialize the time stepping scheme
-     */
-    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
-
-    /*
-     *  set initial conditions of the heaviside field
-     */
-    compute_heaviside(*base_in->get_initial_condition("prescribed_heaviside"));
 
     /*
      * initialize the RTE operation
@@ -161,7 +153,20 @@ namespace MeltPoolDG::RadiativeTransport
                                                                        rte_hanging_nodes_dof_idx,
                                                                        rte_quad_idx,
                                                                        hs_dof_idx);
+
+    setup_dof_system(base_in, false);
+
     rte_operation->reinit();
+
+    /*
+     *  initialize the time stepping scheme
+     */
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
+
+    /*
+     *  set initial conditions of the heaviside field
+     */
+    compute_heaviside(*base_in->get_initial_condition("prescribed_heaviside"));
 
     /*
      *  initialize postprocessor
@@ -227,9 +232,10 @@ namespace MeltPoolDG::RadiativeTransport
      */
     rte_operation->setup_constraints(*scratch_data,
                                      base_in->get_dirichlet_bc("intensity"),
-                                     base_in->get_periodic_bc(),
-                                     rte_dof_idx,
-                                     rte_hanging_nodes_dof_idx);
+                                     base_in->get_periodic_bc());
+    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
+                                                    base_in->get_periodic_bc(),
+                                                    hs_dof_idx);
     /*
      *  create the matrix-free object
      */
@@ -265,8 +271,8 @@ namespace MeltPoolDG::RadiativeTransport
       return;
 
     const auto attach_output_vectors = [&](GenericDataOut<dim> &data_out) {
-      scratch_data->initialize_dof_vector(heat_source, rte_dof_idx);
-      rte_operation->compute_heat_source(heat_source, rte_dof_idx, true);
+      scratch_data->initialize_dof_vector(heat_source, rte_hanging_nodes_dof_idx);
+      rte_operation->compute_heat_source(heat_source, rte_hanging_nodes_dof_idx, true);
       rte_operation->attach_output_vectors(data_out);
       data_out.add_data_vector(dof_handler_heaviside, heaviside, "prescribed_heaviside");
       data_out.add_data_vector(dof_handler, heat_source, "heat_source");
@@ -320,7 +326,10 @@ namespace MeltPoolDG::RadiativeTransport
       rte_operation->attach_vectors(vectors);
     };
 
-    const auto post = [&]() { rte_operation->distribute_constraints(); };
+    const auto post = [&]() {
+      rte_operation->distribute_constraints();
+      compute_heaviside(*base_in->get_initial_condition("prescribed_heaviside"));
+    };
 
     const auto setup_dof_system = [&]() { this->setup_dof_system(base_in, true); };
 

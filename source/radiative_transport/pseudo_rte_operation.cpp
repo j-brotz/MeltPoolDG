@@ -52,7 +52,7 @@ namespace MeltPoolDG::RadiativeTransport
     solution_history.apply(
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, rte_dof_idx); });
 
-    scratch_data.initialize_dof_vector(rhs, rte_dof_idx);
+    scratch_data.initialize_dof_vector(rhs, rte_hanging_nodes_dof_idx);
 
     preconditioner_matrixfree->reinit();
 

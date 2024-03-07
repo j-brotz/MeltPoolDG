@@ -92,6 +92,11 @@ namespace MeltPoolDG::Heat
         output_results(base_in, true);
         AssertThrow(false, e);
       }
+    catch (const SolverControl::NoConvergence &e)
+      {
+        output_results(base_in, false);
+        AssertThrow(false, e);
+      }
     Journal::print_end(scratch_data->get_pcout());
   }
 
@@ -333,19 +338,20 @@ namespace MeltPoolDG::Heat
     /*
      *  create AffineConstraints
      */
-    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
-                                                         base_in->get_periodic_bc(),
-                                                         velocity_dof_idx);
-    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
-                                                         base_in->get_periodic_bc(),
-                                                         level_set_dof_idx);
+    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
+                                                    base_in->get_periodic_bc(),
+                                                    velocity_dof_idx);
+    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
+                                                    base_in->get_periodic_bc(),
+                                                    level_set_dof_idx);
 
     base_in->attach_boundary_condition("heat_transfer"); //@todo move to a more central place
-    MeltPoolDG::UtilityFunctions::setup_constraints<dim>(*scratch_data,
-                                                         base_in->get_dirichlet_bc("heat_transfer"),
-                                                         base_in->get_periodic_bc(),
-                                                         temp_dof_idx,
-                                                         temp_hanging_nodes_dof_idx);
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_BC_into_DBC<dim>(
+      *scratch_data,
+      base_in->get_dirichlet_bc("heat_transfer"),
+      base_in->get_periodic_bc(),
+      temp_dof_idx,
+      temp_hanging_nodes_dof_idx);
 
     if (laser_operation)
       laser_operation->setup_constraints();

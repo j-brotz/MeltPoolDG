@@ -165,9 +165,7 @@ namespace MeltPoolDG::Heat
         auto mutable_scratch_data = const_cast<ScratchData<dim> &>(scratch_data);
         rte_operation->setup_constraints(mutable_scratch_data,
                                          *rte_dirichlet_boundary_condition,
-                                         periodic_bc,
-                                         rte_dof_idx,
-                                         rte_hanging_nodes_dof_idx);
+                                         periodic_bc);
       }
   }
 

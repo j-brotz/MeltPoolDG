@@ -155,11 +155,11 @@ namespace MeltPoolDG::Heat
                                      solution_history.get_current_solution());
 
     if (heat_data.enable_time_dependent_bc)
-      MeltPoolDG::UtilityFunctions::setup_and_merge_constraints<dim>(const_cast<ScratchData<dim> &>(
-                                                                       scratch_data),
-                                                                     bc_data->dirichlet_bc,
-                                                                     temp_dof_idx,
-                                                                     temp_hanging_nodes_dof_idx);
+      MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+        const_cast<ScratchData<dim> &>(scratch_data),
+        bc_data->dirichlet_bc,
+        temp_dof_idx,
+        temp_hanging_nodes_dof_idx);
 
     scratch_data.get_constraint(temp_dof_idx).distribute(solution_history.get_current_solution());
     solution_history.get_current_solution().update_ghost_values();
@@ -203,7 +203,7 @@ namespace MeltPoolDG::Heat
     if (heat_data.enable_time_dependent_bc)
       {
         bc_data->set_time(time_iterator.get_current_time());
-        MeltPoolDG::UtilityFunctions::setup_and_merge_constraints<dim>(
+        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
           const_cast<ScratchData<dim> &>(scratch_data),
           bc_data->dirichlet_bc,
           temp_dof_idx,
