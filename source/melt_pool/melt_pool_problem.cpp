@@ -1458,13 +1458,13 @@ namespace MeltPoolDG::MeltPool
     if (problem_specific_parameters.do_heat_transfer)
       base_in->attach_boundary_condition("heat_transfer");
 
-    MeltPoolDG::UtilityFunctions::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
+    MeltPoolDG::Constraints::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("level_set"),
       base_in->get_periodic_bc(),
       ls_dof_idx,
       ls_hanging_nodes_dof_idx);
-    MeltPoolDG::UtilityFunctions::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
+    MeltPoolDG::Constraints::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("level_set"),
       base_in->get_periodic_bc(),
@@ -1474,12 +1474,12 @@ namespace MeltPoolDG::MeltPool
 
     // additional reinitialization dirichlet bc
     if (base_in->get_bc("reinitialization"))
-      MeltPoolDG::UtilityFunctions::fill_DBC<dim>(
+      MeltPoolDG::Constraints::fill_DBC<dim>(
         *scratch_data, base_in->get_dirichlet_bc("reinitialization"), reinit_dof_idx, true, true);
     reinit_no_solid_constraints_dirichlet.copy_from(reinit_constraints_dirichlet);
 
     if (problem_specific_parameters.do_heat_transfer)
-      MeltPoolDG::UtilityFunctions::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
+      MeltPoolDG::Constraints::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
         *scratch_data,
         base_in->get_dirichlet_bc("heat_transfer"),
         base_in->get_periodic_bc(),

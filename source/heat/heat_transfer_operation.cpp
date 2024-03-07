@@ -155,7 +155,7 @@ namespace MeltPoolDG::Heat
                                      solution_history.get_current_solution());
 
     if (heat_data.enable_time_dependent_bc)
-      MeltPoolDG::UtilityFunctions::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+      MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
         const_cast<ScratchData<dim> &>(scratch_data),
         bc_data->dirichlet_bc,
         temp_dof_idx,
@@ -203,7 +203,7 @@ namespace MeltPoolDG::Heat
     if (heat_data.enable_time_dependent_bc)
       {
         bc_data->set_time(time_iterator.get_current_time());
-        MeltPoolDG::UtilityFunctions::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
           const_cast<ScratchData<dim> &>(scratch_data),
           bc_data->dirichlet_bc,
           temp_dof_idx,

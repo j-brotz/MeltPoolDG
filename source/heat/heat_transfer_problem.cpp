@@ -338,15 +338,15 @@ namespace MeltPoolDG::Heat
     /*
      *  create AffineConstraints
      */
-    MeltPoolDG::UtilityFunctions::make_HNC_with_PBC<dim>(*scratch_data,
-                                                         base_in->get_periodic_bc(),
-                                                         velocity_dof_idx);
-    MeltPoolDG::UtilityFunctions::make_HNC_with_PBC<dim>(*scratch_data,
-                                                         base_in->get_periodic_bc(),
-                                                         level_set_dof_idx);
+    MeltPoolDG::Constraints::make_HNC_with_PBC<dim>(*scratch_data,
+                                                    base_in->get_periodic_bc(),
+                                                    velocity_dof_idx);
+    MeltPoolDG::Constraints::make_HNC_with_PBC<dim>(*scratch_data,
+                                                    base_in->get_periodic_bc(),
+                                                    level_set_dof_idx);
 
     base_in->attach_boundary_condition("heat_transfer"); //@todo move to a more central place
-    MeltPoolDG::UtilityFunctions::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
+    MeltPoolDG::Constraints::make_DBC_and_HNC_with_PBC_and_merge_HNC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("heat_transfer"),
       base_in->get_periodic_bc(),

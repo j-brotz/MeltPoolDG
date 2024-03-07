@@ -297,13 +297,13 @@ namespace MeltPoolDG::MeltPool
                                                   scratch_data.get_mpi_comm());
     solid_constraints.close();
 
-    UtilityFunctions::check_constraints(flow_dof_handler, solid_constraints);
+    Constraints::check_constraints(flow_dof_handler, solid_constraints);
 
     flow_constraints.merge(solid_constraints,
                            AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
     flow_constraints.close();
 
-    UtilityFunctions::check_constraints(flow_dof_handler, flow_constraints);
+    Constraints::check_constraints(flow_dof_handler, flow_constraints);
 
     if (update_ghosts)
       solid.zero_out_ghost_values();
@@ -370,13 +370,13 @@ namespace MeltPoolDG::MeltPool
                                                   scratch_data.get_mpi_comm());
     solid_constraints.close();
 
-    UtilityFunctions::check_constraints(level_set_dof_handler, solid_constraints);
+    Constraints::check_constraints(level_set_dof_handler, solid_constraints);
 
     reinit_dirichlet_constraints.merge(
       solid_constraints, AffineConstraints<double>::MergeConflictBehavior::left_object_wins);
     reinit_dirichlet_constraints.close();
 
-    UtilityFunctions::check_constraints(level_set_dof_handler, reinit_dirichlet_constraints);
+    Constraints::check_constraints(level_set_dof_handler, reinit_dirichlet_constraints);
 
     if (update_ghosts)
       solid.zero_out_ghost_values();

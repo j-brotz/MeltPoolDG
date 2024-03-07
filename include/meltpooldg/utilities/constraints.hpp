@@ -11,7 +11,7 @@
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
-namespace MeltPoolDG::UtilityFunctions
+namespace MeltPoolDG::Constraints
 {
   /**
    * Check whether @param constraints are consistent in parallel with the
@@ -264,4 +264,4 @@ namespace MeltPoolDG::UtilityFunctions
 
     check_constraints(scratch_data.get_dof_handler(dof_idx), scratch_data.get_constraint(dof_idx));
   }
-} // namespace MeltPoolDG::UtilityFunctions
+} // namespace MeltPoolDG::Constraints
