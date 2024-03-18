@@ -295,6 +295,9 @@ rename_parameter_values = [
      "interface_velocity", "interface_velocity_local"),
     (["evaporation", "formulation source term heat"], "diffuse", "regularized"),
     (["evaporation", "formulation source term continuity"], "diffuse", "regularized"),
+    (["evaporation", "evaporative cooling", "model"], "diffuse", "regularized"),
+    (["evaporation", "evaporative dilation rate", "model"], "diffuse", "regularized"),
+    (["evaporation", "recoil pressure", "interface distributed flux type"], "continuous", "local_value"),
 ]
 
 delete_parameter_names = [

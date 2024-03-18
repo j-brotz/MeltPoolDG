@@ -1,7 +1,6 @@
 #pragma once
 // deal-specific libraries
 #include <deal.II/base/function.h>
-#include <deal.II/base/function_signed_distance.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/mpi.templates.h>
 #include <deal.II/base/point.h>
@@ -18,10 +17,15 @@
 // c++
 #include <cmath>
 #include <iostream>
+#include <string>
 // MeltPoolDG
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
+#include <meltpooldg/utilities/boundary_ids_colorized.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <boost/math/tools/roots.hpp>
 
 /**
  *
@@ -36,40 +40,31 @@
  *
  * domain size [0.0, 0.001] discretized in 1d by 1000 cells
  *
- * Initial interface location: 1e-6 m (we modified it to 2.e-5, otherwise the level set would range
- * into the wall)
+ * Initial interface location: 1e-6 m
  *
  * boiling temperature:             373.15 K
- * temperature of the heating wall: 383.15 K
+ * temperature at the hot wall: 383.15 K
  *
  * gas (vapor) phase:
  *    -- density:      1 kg/m^3
  *    -- viscosity:    0.0001 Pa/s
- *    -- conductivity: 1e-2 W/(mK)
- *    -- capacity:     1000 J/(kgK)
+ *    -- thermal_conductivity: 1e-2 W/(mK)
+ *    -- specific_heat_capacity:     1000 J/(kgK)
  *
  * liquid phase:
  *    -- density:      1 kg/m^3
  *    -- viscosity:    0.01 Pa/s
- *    -- conductivity: 1 W/(mK) (Note: thermal diffusivity of the liquid phase was increased by
- * order of magnitudes)
- *    -- capacity:     1000 J/(kgK)
+ *    -- thermal_conductivity: 1 W/(mK) (Note: thermal diffusivity of the liquid phase was increased
+ * by order of magnitudes)
+ *    -- specific_heat_capacity:     1000 J/(kgK)
  *
  * Enthalpy of evaporation: 10^6 J/kg
- * Surface tension coefficient: 0.01 N/m
  *
  * NOTE: Due to the equal densities in the two phases, no flow velocities will be induced.
  *
- * NOTE: We assumed the conductivity to be the same in the gas and the fluid phase.
- *
  * NOTE: In the publication, they did not use the evaporative mass flux calculated according to
- * Schrage's theory. At the moment, it is unclear how the mass flux is calculated. Thus, at the
- * moment a comparison with the presented analytical solution is not possible.
- *
- * We had to specify the enthalpy of evaporation as 10^2 and the evaporation coefficient of 1.
- * Otherwise, the evaporative mass flux would have been unrealistically high.
- *
- * @todo: Find a way to compare with the analytical solution.
+ * Schrage's theory. We used the model by Hardt and Wondra and calibrated the evaporation
+ * coefficient.
  */
 
 namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
@@ -77,49 +72,93 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-  static constexpr double x_min       = 0.0;
-  static constexpr double y_min       = 0.0;
-  static constexpr double y_max       = 1.e-3;
-  static constexpr double y_interface = 2.e-5;
-  static constexpr double T_bottom    = 383.15;
-  static constexpr double T_sat       = 373.15;
+  static constexpr double x_min = 0.0;
+  static constexpr double y_min = 0.0;
+  static constexpr double y_max = 1.e-3;
 
-  template <int dim>
-  class InitialValuesLS : public Function<dim>
+
+  namespace AnalyticalSolution
   {
-  public:
-    InitialValuesLS(const double eps)
-      : Function<dim>()
-      , signed_distance_plane(Point<dim>::unit_vector(dim - 1) * y_interface,
-                              Point<dim>::unit_vector(dim - 1))
-      , eps(eps)
-    {}
 
+    template <typename number>
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    compute_beta(const Parameters<number> &parameters, const double T_wall)
     {
-      return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-        signed_distance_plane.value(p), eps);
+      const auto beta_func = [&](double beta) -> double {
+        return beta * std::exp(beta * beta) * erf(beta) -
+               parameters.material.gas.specific_heat_capacity *
+                 (T_wall - parameters.material.boiling_temperature) /
+                 (parameters.material.latent_heat_of_evaporation * std::sqrt(numbers::PI));
+      };
+
+      std::pair<double, double> result =
+        boost::math::tools::bisect(beta_func, 1e-6, 100., [&](double min, double max) -> bool {
+          return std::abs(max - min) <= 1e-10;
+        });
+
+      return (result.first + result.second) / 2;
     }
 
-  private:
-    const Functions::SignedDistance::Plane<dim> signed_distance_plane;
-    const double                                eps;
-  };
+    template <typename number>
+    double
+    analytical_interface_location(const Parameters<number> &parameters,
+                                  const double              T_wall,
+                                  const double              time,
+                                  const double              beta = -1.0)
+    {
+      if (beta == -1.0)
+        compute_beta(parameters, T_wall);
+
+      return 2. * beta *
+             std::sqrt(
+               parameters.material.gas.thermal_conductivity /
+               (parameters.material.gas.density * parameters.material.gas.specific_heat_capacity) *
+               time);
+    }
+
+    template <typename number>
+    double
+    analytical_temperature(const Parameters<number> &parameters,
+                           const double              T_wall,
+                           const double              time,
+                           const double              x,
+                           const double              beta = -1.0)
+    {
+      if (beta == -1.0)
+        compute_beta(parameters, T_wall);
+
+      const double diffusivity =
+        parameters.material.gas.thermal_conductivity /
+        (parameters.material.gas.density * parameters.material.gas.specific_heat_capacity);
+
+      if (time == 0)
+        return parameters.material.boiling_temperature;
+      else
+        return std::max(T_wall + (parameters.material.boiling_temperature - T_wall) *
+                                   erf(x / (2. * std::sqrt(diffusivity * time))) / erf(beta),
+                        parameters.material.boiling_temperature);
+    }
+  } // namespace AnalyticalSolution
 
   template <int dim>
   class InitialValuesTemperature : public Function<dim>
   {
   public:
-    InitialValuesTemperature()
+    InitialValuesTemperature(const double T_sat, const double T_wall, const double y_interface)
       : Function<dim>()
+      , T_sat(T_sat)
+      , T_wall(T_wall)
+      , y_interface(y_interface)
+
     {}
 
     double
-    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    value(const Point<dim> &p, const unsigned int /*component*/) const final
     {
-      return T_bottom - (T_bottom - T_sat) / y_interface * p[dim - 1];
+      return std::max(T_wall - (T_wall - T_sat) * p[dim - 1] / y_interface, T_sat);
     }
+
+    const double T_sat, T_wall, y_interface;
   };
   /*
    *      This class collects all relevant input data for the level set simulation
@@ -133,12 +172,26 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                                              const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
       , x_max(y_max / std::pow(dim, this->parameters.base.global_refinements))
-
+      , remote_point_evaluation(1e-6, true)
     {
-      if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-        file_level_set_contour.open(this->parameters.output.directory + "/" +
+      AssertThrow(y_interface >= y_min && y_interface <= y_max,
+                  ExcMessage(
+                    "The location of the initial interface must be between y_min and y_max."));
+
+      file_name_level_set_contour = this->parameters.output.directory + "/" +
                                     this->parameters.output.paraview.filename +
-                                    "_level_set_contour_over_time");
+                                    "_level_set_contour_over_time.txt";
+    }
+
+    void
+    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    {
+      prm.enter_subsection("simulation specific");
+      {
+        prm.add_parameter("y interface", y_interface, "initial interface location");
+        prm.add_parameter("T wall", T_wall, "heated temperature of the wall");
+      }
+      prm.leave_subsection();
     }
 
     void
@@ -167,13 +220,11 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
         }
 
       const unsigned int n_elements_per_edge =
-        std::pow(dim, this->parameters.base.global_refinements);
-      std::vector<unsigned int> refinements(dim, 1);
+        dim > 1 ? std::pow(dim, this->parameters.base.global_refinements) :
+                  this->parameters.base.global_refinements;
 
-      if (dim > 1)
-        refinements[dim - 1] = n_elements_per_edge;
-      else
-        refinements[0] = this->parameters.base.global_refinements;
+      std::vector<unsigned int> refinements(dim, 1);
+      refinements[dim - 1] = n_elements_per_edge;
 
       // create mesh
       const Point<dim> bottom_left = dim == 1   ? Point<dim>(y_min) :
@@ -190,196 +241,245 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
             dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
           subdivisions[dim - 1] *= 2;
 
-          GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
-                                                                   subdivisions,
-                                                                   bottom_left,
-                                                                   top_right);
+          GridGenerator::subdivided_hyper_rectangle_with_simplices(
+            *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
         }
       else
         {
-          GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
-                                                    refinements,
-                                                    bottom_left,
-                                                    top_right);
+          GridGenerator::subdivided_hyper_rectangle(
+            *this->triangulation, refinements, bottom_left, top_right, true /*colorize*/);
+        }
+
+
+      // get vertices along the vertical axis on rank 0
+      if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+        {
+          const unsigned int n_elements = std::min<double>(200, n_elements_per_edge);
+          for (unsigned int i = 0; i <= n_elements; ++i)
+            {
+              auto p     = Point<dim>();
+              p[dim - 1] = y_min + (y_max - y_min) / n_elements * i;
+              vertices_along_vertical_axis.emplace_back(p);
+            }
         }
     }
 
     void
     set_boundary_conditions() final
     {
-      /*
-       *  create a pair of (boundary_id, dirichlet_function)
-       */
-
-      const types::boundary_id lower_bc = 1;
-      const types::boundary_id upper_bc = 2;
-      const types::boundary_id left_bc  = 3;
-      const types::boundary_id right_bc = 4;
+      // faces in dim-1 direction
+      const types::boundary_id bottom_bc = 2 * (dim - 1);
+      const types::boundary_id top_bc    = bottom_bc + 1;
 
       // lower part = gas; upper part = liquid
       this->attach_dirichlet_boundary_condition(
-        upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(1.0), "level_set");
+        bottom_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
       this->attach_dirichlet_boundary_condition(
-        lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1.0), "level_set");
-      this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      // no volume expansion in case of equal densities
-      this->attach_no_slip_boundary_condition(upper_bc, "navier_stokes_u");
-      // this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
-
-      // no volume expansion in case of equal densities
-      this->attach_fix_pressure_constant_condition(lower_bc, "navier_stokes_p");
-      this->attach_fix_pressure_constant_condition(upper_bc, "navier_stokes_p");
-
-      if (dim >= 2)
-        {
-          this->attach_fix_pressure_constant_condition(left_bc, "navier_stokes_p");
-          this->attach_fix_pressure_constant_condition(right_bc, "navier_stokes_p");
-          this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
-          this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
-        }
-
-      this->attach_dirichlet_boundary_condition(lower_bc,
-                                                std::make_shared<InitialValuesTemperature<dim>>(),
+        bottom_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_wall), "heat_transfer");
+      this->attach_dirichlet_boundary_condition(top_bc,
+                                                std::make_shared<Functions::ConstantFunction<dim>>(
+                                                  this->parameters.material.boiling_temperature),
                                                 "heat_transfer");
 
-      /*
-       *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
-       *  due to the hyperbolic nature of the analyzed problem)
-       *
-                    fix/open
-       (0,1)  +---------------+ (1,1)
-              |    ls=-1      |
-              |               |
-       sym    |               |  sym
-              |               |
-              |               |
-              |    ls=1       |
-              +---------------+
-       * (0,1)      fix/open   (1,0)
-       */
-      if constexpr (dim == 1)
-        {
-          for (auto &cell : this->triangulation->cell_iterators())
-            for (auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (face->center()[0] == y_min)
-                    face->set_boundary_id(lower_bc);
-                  else if (face->center()[0] == y_max)
-                    face->set_boundary_id(upper_bc);
-                }
-        }
-      else if constexpr (dim == 2)
-        {
-          for (const auto &cell : this->triangulation->cell_iterators())
-            for (const auto &face : cell->face_iterators())
-              if ((face->at_boundary()))
-                {
-                  if (face->center()[1] == y_min)
-                    face->set_boundary_id(lower_bc);
-                  else if (face->center()[1] == y_max)
-                    face->set_boundary_id(upper_bc);
-                  else if (face->center()[0] == x_min)
-                    face->set_boundary_id(left_bc);
-                  else if (face->center()[0] == x_max)
-                    face->set_boundary_id(right_bc);
-                }
-        }
-      else
-        {
-          AssertThrow(false, ExcNotImplemented());
-        }
+      // dummy BC for Navier-Stokes
+      this->attach_no_slip_boundary_condition(bottom_bc, "navier_stokes_u");
+      this->attach_fix_pressure_constant_condition(top_bc, "navier_stokes_p");
+
+      // collect boundary ids of side walls
+      std::vector<types::boundary_id> side_walls;
+
+      if (dim > 1)
+        for (unsigned int i = 0; i < 2 * (dim - 1); ++i)
+          side_walls.push_back(i);
+
+      // set PBC on side walls
+      if (dim >= 2)
+        this->attach_periodic_boundary_condition(side_walls[0], side_walls[1], 0);
+      if (dim == 3)
+        this->attach_periodic_boundary_condition(side_walls[2], side_walls[3], 1);
     }
 
     void
     set_field_conditions() final
     {
-      const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-        GridTools::minimal_cell_diameter(*this->triangulation) /
-        this->parameters.ls.n_subdivisions / std::sqrt(dim));
-
-      AssertThrow(eps > 0, ExcNotImplemented());
-
-      this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
       this->attach_initial_condition(
         std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
-      // this->attach_initial_condition(std::make_shared<Functions::ConstantFunction<dim>>(T_sat),
-      //"heat_transfer");
-      this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(),
+      this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
+                                       Point<dim>::unit_vector(dim - 1) * y_interface,
+                                       Point<dim>::unit_vector(dim - 1)),
+                                     "signed_distance");
+
+      this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(
+                                       this->parameters.material.boiling_temperature,
+                                       T_wall,
+                                       y_interface),
                                      "heat_transfer");
     }
 
     void
-    do_postprocessing([[maybe_unused]] const GenericDataOut<dim> &generic_data_out) const final
+    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
     {
-      if (this->parameters.output.do_user_defined_postprocessing)
+      // first time postprocessing
+      if (beta == -1.0)
         {
-          if constexpr (dim > 1)
+          beta = AnalyticalSolution::compute_beta(this->parameters, T_wall);
+          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
             {
-              FEPointEvaluation<1, dim> temperature_eval(
-                generic_data_out.get_mapping(),
-                generic_data_out.get_dof_handler("temperature").get_fe(),
-                update_values);
-
-              std::vector<std::pair<Point<dim>, double>> vertices_and_temperatures;
-
-              std::vector<double>                  buffer;
-              std::vector<types::global_dof_index> local_dof_indices;
-
-              LevelSet::Tools::evaluate_at_interface<dim>(
-                generic_data_out.get_dof_handler("level_set"),
-                generic_data_out.get_mapping(),
-                generic_data_out.get_vector("level_set"),
-                [&](const auto                  &cell,
-                    const auto                  &points_real,
-                    const auto                  &points,
-                    [[maybe_unused]] const auto &weights) {
-                  local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
-                  buffer.resize(cell->get_fe().n_dofs_per_cell());
-                  cell->get_dof_indices(local_dof_indices);
-
-                  const unsigned int n_points = points.size();
-
-                  const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
-                  temperature_eval.reinit(cell, unit_points);
-
-                  cell->get_dof_values(generic_data_out.get_vector("temperature"),
-                                       buffer.begin(),
-                                       buffer.end());
-
-                  // evaluate temperature and level set points
-                  temperature_eval.evaluate(buffer, EvaluationFlags::values);
-                  for (unsigned int q = 0; q < n_points; ++q)
-                    {
-                      vertices_and_temperatures.emplace_back(points_real[q],
-                                                             temperature_eval.get_value(q));
-                    }
-                },
-                0.0, /*contour value*/
-                3 /*n_subdivisions*/);
-
-              // collect result on rank 0 to write them to file
-              const auto vertices_and_temperatures_all =
-                Utilities::MPI::reduce<std::vector<std::pair<Point<dim>, double>>>(
-                  vertices_and_temperatures,
-                  this->mpi_communicator,
-                  [](const auto &a, const auto &b) {
-                    auto result = a;
-                    result.insert(result.end(), b.begin(), b.end());
-                    return result;
-                  });
-
-              // write values to file
-              if (file_level_set_contour.is_open())
-                file_level_set_contour << generic_data_out.get_time() << " "
-                                       << vertices_and_temperatures_all[0].first[dim - 1] << " "
-                                       << vertices_and_temperatures_all[0].second << std::endl;
+              file_level_set_contour.open(file_name_level_set_contour);
+              file_level_set_contour
+                << "time interface_location interface_temperature analytical_interface_location(beta=" +
+                     std::to_string(beta) + ")"
+                << std::endl;
+              file_level_set_contour.close();
             }
         }
+
+      if (((this->parameters.output.paraview.enable) &&
+           !(n_time_step % this->parameters.output.write_frequency)) ||
+          generic_data_out.get_time() == this->parameters.time_stepping.end_time)
+        {
+          generic_data_out.get_vector("level_set").update_ghost_values();
+          generic_data_out.get_vector("temperature").update_ghost_values();
+
+          /*
+           * evaluate temperature profile
+           */
+          if (!remote_point_is_initialized)
+            {
+              remote_point_evaluation.reinit(vertices_along_vertical_axis,
+                                             *this->triangulation,
+                                             generic_data_out.get_mapping());
+              remote_point_is_initialized = true;
+            }
+
+          const auto temperature_evaluation_values =
+            dealii::VectorTools::point_values<1>(remote_point_evaluation,
+                                                 generic_data_out.get_dof_handler("temperature"),
+                                                 generic_data_out.get_vector("temperature"));
+
+          // write values to file
+          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+            {
+              const auto file_name = this->parameters.output.directory + "/" +
+                                     this->parameters.output.paraview.filename +
+                                     "_temperature_profile_" +
+                                     std::to_string(generic_data_out.get_time()) + ".txt";
+              file_temperature_profile.open(file_name);
+              file_temperature_profile
+                << "coordinate temperature analytical_temperature(beta=" + std::to_string(beta) +
+                     ")"
+                << std::endl;
+
+              for (unsigned int i = 0; i < temperature_evaluation_values.size(); ++i)
+                {
+                  file_temperature_profile << vertices_along_vertical_axis[i][dim - 1] << " "
+                                           << temperature_evaluation_values[i] << " "
+                                           << AnalyticalSolution::analytical_temperature(
+                                                this->parameters,
+                                                T_wall,
+                                                generic_data_out.get_time(),
+                                                vertices_along_vertical_axis[i][dim - 1],
+                                                beta)
+                                           << std::endl;
+                }
+              file_temperature_profile.close();
+            }
+
+          /*
+           * evaluate location of and temperature at level set == 0
+           */
+          FEPointEvaluation<1, dim> temperature_eval(
+            generic_data_out.get_mapping(),
+            generic_data_out.get_dof_handler("temperature").get_fe(),
+            update_values);
+
+          std::vector<std::pair<Point<dim>, double>> vertices_and_temperatures;
+
+          std::vector<double>                  buffer;
+          std::vector<types::global_dof_index> local_dof_indices;
+
+          LevelSet::Tools::evaluate_at_interface<dim>(
+            generic_data_out.get_dof_handler("level_set"),
+            generic_data_out.get_mapping(),
+            generic_data_out.get_vector("level_set"),
+            [&](const auto                  &cell,
+                const auto                  &points_real,
+                const auto                  &points,
+                [[maybe_unused]] const auto &weights) {
+              local_dof_indices.resize(cell->get_fe().n_dofs_per_cell());
+              buffer.resize(cell->get_fe().n_dofs_per_cell());
+              cell->get_dof_indices(local_dof_indices);
+
+              const unsigned int n_points = points.size();
+
+              const ArrayView<const Point<dim>> unit_points(points.data(), n_points);
+              temperature_eval.reinit(cell, unit_points);
+
+              cell->get_dof_values(generic_data_out.get_vector("temperature"),
+                                   buffer.begin(),
+                                   buffer.end());
+
+              // evaluate temperature and level set points
+              temperature_eval.evaluate(buffer, EvaluationFlags::values);
+              for (unsigned int q = 0; q < n_points; ++q)
+                {
+                  vertices_and_temperatures.emplace_back(points_real[q],
+                                                         temperature_eval.get_value(q));
+                }
+            },
+            0.0, /*contour value*/
+            3 /*n_subdivisions*/);
+
+          // collect result on rank 0 to write them to file
+          const auto vertices_and_temperatures_all =
+            Utilities::MPI::reduce<std::vector<std::pair<Point<dim>, double>>>(
+              vertices_and_temperatures, this->mpi_communicator, [](const auto &a, const auto &b) {
+                auto result = a;
+                result.insert(result.end(), b.begin(), b.end());
+                return result;
+              });
+
+          // compute analytical solution
+          const double interface_analytical = AnalyticalSolution::analytical_interface_location(
+            this->parameters, T_wall, generic_data_out.get_time(), beta);
+          // write values to file
+          if (Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0)
+            {
+              file_level_set_contour.open(file_name_level_set_contour, std::fstream::app);
+              file_level_set_contour
+                << generic_data_out.get_time() << " "
+                << vertices_and_temperatures_all[0].first[dim - 1] - y_interface << " "
+                << vertices_and_temperatures_all[0].second << " " << interface_analytical
+                << std::endl;
+              file_level_set_contour.close();
+            }
+
+          dealii::ConditionalOStream pcout(
+            std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
+          pcout << "interface_numerical " << vertices_and_temperatures_all[0].first[dim - 1]
+                << " interface_analytical " << interface_analytical << " absolute error: "
+                << std::abs(interface_analytical - vertices_and_temperatures_all[0].first[dim - 1])
+                << std::endl;
+          generic_data_out.get_vector("level_set").zero_out_ghost_values();
+          generic_data_out.get_vector("temperature").zero_out_ghost_values();
+        }
+      n_time_step += 1;
     }
 
+
   private:
-    const double          x_max;
-    mutable std::ofstream file_level_set_contour;
+    const double x_max;
+    double       y_interface = 5.e-5;
+    double       T_wall      = 383.15;
+
+    // post-processing
+    std::vector<Point<dim>>                                 vertices_along_vertical_axis;
+    mutable std::ofstream                                   file_level_set_contour;
+    std::string                                             file_name_level_set_contour;
+    mutable std::ofstream                                   file_temperature_profile;
+    mutable int                                             n_time_step = 0.0;
+    mutable double                                          beta        = -1.0;
+    mutable Utilities::MPI::RemotePointEvaluation<dim, dim> remote_point_evaluation;
+    mutable bool                                            remote_point_is_initialized = false;
   };
 } // namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
