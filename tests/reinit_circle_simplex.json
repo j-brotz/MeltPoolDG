@@ -4,9 +4,11 @@
     "problem name": "reinitialization",
     "dimension": "2",
     "global refinements": "5",
-    "degree": "1",
     "do print parameters": "false",
-    "do simplex": "true"
+    "fe": {
+      "type": "FE_SimplexP",
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

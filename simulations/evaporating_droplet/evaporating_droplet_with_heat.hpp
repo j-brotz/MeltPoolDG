@@ -64,7 +64,7 @@ namespace MeltPoolDG
       void
       create_spatial_discretization() override
       {
-        if (this->parameters.base.do_simplex)
+        if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
           {
             this->triangulation =
               std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
@@ -80,7 +80,7 @@ namespace MeltPoolDG
             // create mesh
             std::vector<unsigned int> subdivisions(
               dim,
-              5 * (this->parameters.base.do_simplex ?
+              5 * (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP ?
                      Utilities::pow(2, this->parameters.base.global_refinements) :
                      1));
 
@@ -91,7 +91,7 @@ namespace MeltPoolDG
                                              Point<dim>(-lambda / 2., -lambda / 2.) :
                                              Point<dim>(-lambda / 2., -lambda / 2., -lambda / 2.);
 
-            if (this->parameters.base.do_simplex)
+            if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
               {
                 GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
                                                                          subdivisions,
@@ -104,10 +104,8 @@ namespace MeltPoolDG
                                                           subdivisions,
                                                           bottom_left,
                                                           top_right);
+                this->triangulation->refine_global(this->parameters.base.global_refinements);
               }
-
-            if (this->parameters.base.do_simplex == false)
-              this->triangulation->refine_global(this->parameters.base.global_refinements);
           }
         else
           {
@@ -129,7 +127,7 @@ namespace MeltPoolDG
       {
         const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
           GridTools::minimal_cell_diameter(*this->triangulation) /
-          this->parameters.ls.n_subdivisions / std::sqrt(dim));
+          this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
         AssertThrow(eps > 0, ExcNotImplemented());
 

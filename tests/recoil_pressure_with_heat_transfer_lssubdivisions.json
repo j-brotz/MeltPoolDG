@@ -1,12 +1,14 @@
 {
   "base": {
     "application name": "recoil_pressure",
-    "degree": "1",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
     "problem name": "melt_pool",
-    "verbosity level": "0"
+    "verbosity level": "0",
+    "fe": {
+      "degree": "1"
+    }
   },
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",
@@ -140,7 +142,10 @@
         "do matrix free": "true"
       }
     },
-    "n subdivisions": "2"
+    "fe": {
+      "type": "FE_Q_iso_Q1",
+      "degree": "2"
+    }
   },
   "flow": {
     "adaflo": {

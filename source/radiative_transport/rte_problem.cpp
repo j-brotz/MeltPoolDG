@@ -2,11 +2,6 @@
 
 #include <deal.II/distributed/grid_refinement.h>
 
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/mapping.h>
-#include <deal.II/fe/mapping_fe.h>
-
 #include <deal.II/numerics/error_estimator.h>
 
 #include <meltpooldg/radiative_transport/rte_problem.hpp>
@@ -110,10 +105,7 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  setup mapping
      */
-    if (base_in->parameters.base.do_simplex)
-      scratch_data->set_mapping(MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
-    else
-      scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
+    scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.base.fe));
 
     /*
      *  setup DoFHandler
@@ -135,12 +127,8 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  create quadrature rule
      */
-    if (base_in->parameters.base.do_simplex)
-      rte_quad_idx =
-        scratch_data->attach_quadrature(QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
-    else
-      rte_quad_idx =
-        scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+    rte_quad_idx = scratch_data->attach_quadrature(
+      UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.fe));
 
     /*
      * initialize the RTE operation
@@ -209,18 +197,8 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                                    const bool                           do_reinit)
   {
-    if (base_in->parameters.base.do_simplex)
-      {
-        dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
-        dof_handler_heaviside.distribute_dofs(
-          FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
-      }
-    else
-      {
-        dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
-        dof_handler_heaviside.distribute_dofs(
-          FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree)));
-      }
+    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
+    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler_heaviside, 1);
 
     /*
      *  create partitioning

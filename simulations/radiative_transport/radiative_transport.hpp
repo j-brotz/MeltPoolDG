@@ -166,7 +166,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex || dim == 1)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -196,7 +196,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
         (dim == 1) ? Point<dim>(domain_y_max) :
         (dim == 2) ? Point<dim>(domain_x_max, domain_y_max) :
                      Point<dim>(domain_x_max, domain_x_max, domain_y_max);
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           std::vector<unsigned int> subdivisions(
             dim, 5 * Utilities::pow(2, this->parameters.base.global_refinements));
@@ -230,7 +230,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
       else
         this->parameters.laser.rte_boundary_id = upper_bc;
 
-      if (!this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 

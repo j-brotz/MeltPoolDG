@@ -4,7 +4,9 @@
     "application name": "rotating_bubble",
     "dimension": "2",
     "global refinements": "6",
-    "degree": "1"
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",
@@ -38,7 +40,6 @@
       "linear solver": {
         "do matrix free": "true"
       }
-    },
-    "n subdivisions": "1"
+    }
   }
 }

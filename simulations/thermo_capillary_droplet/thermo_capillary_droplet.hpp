@@ -139,7 +139,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
 #ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -169,7 +169,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
           const Point<dim> top_right =
             (dim == 2) ? Point<dim>(x_max, x_max) : Point<dim>(x_max, x_max, x_max);
 
-          if (this->parameters.base.do_simplex)
+          if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               // create mesh
               std::vector<unsigned int> subdivisions(
@@ -268,7 +268,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     {
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
         GridTools::minimal_cell_diameter(*this->triangulation) /
-        this->parameters.ls.n_subdivisions / std::sqrt(dim));
+        this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
       this->attach_initial_condition(std::make_shared<InitialValuesLS<dim>>(eps), "level_set");
       this->attach_initial_condition(

@@ -135,7 +135,7 @@ namespace MeltPoolDG::Simulation::MovingDroplet
       // level set is given in the initial state on purpose.
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
         GridTools::minimal_cell_diameter(*this->triangulation) /
-        this->parameters.ls.n_subdivisions / std::sqrt(dim));
+        this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
       AssertThrow(eps > 0, ExcNotImplemented());
 

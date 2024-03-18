@@ -4,9 +4,11 @@
     "application name": "evaporating_shell",
     "global refinements": "4",
     "dimension": "2",
-    "degree": "1",
     "do print parameters": "false",
-    "verbosity level": "0"
+    "verbosity level": "0",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

@@ -5,7 +5,9 @@
     "do print parameters": "false",
     "global refinements": "1",
     "dimension": "2",
-    "degree": "1"
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",
@@ -45,7 +47,10 @@
     "normal vector": {
       "filter parameter": "4"
     },
-    "n subdivisions": "4"
+    "fe": {
+      "type": "FE_Q_iso_Q1",
+      "degree": "4"
+    }
   },
   "flow": {
     "adaflo": {

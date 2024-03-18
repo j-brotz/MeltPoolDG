@@ -85,7 +85,7 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex || dim == 1)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -115,7 +115,7 @@ namespace MeltPoolDG::Simulation::StefansProblem2WithFlowAndHeat
                                      (dim == 2) ? Point<dim>(x_max, y_max) :
                                                   Point<dim>(x_max, x_max, y_max);
 
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           // create mesh
           std::vector<unsigned int> subdivisions(

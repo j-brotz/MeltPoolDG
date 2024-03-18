@@ -7,12 +7,14 @@
   },
   "base": {
     "application name": "solidification_slab",
-    "degree": "1",
     "dimension": "1",
     "do print parameters": "false",
     "global refinements": "10",
     "problem name": "heat_transfer",
-    "verbosity level": "2"
+    "verbosity level": "2",
+    "fe": {
+      "degree": "1"
+    }
   },
   "heat": {
     "linear solver": {

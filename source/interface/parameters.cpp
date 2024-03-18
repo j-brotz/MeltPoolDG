@@ -36,8 +36,6 @@ namespace MeltPoolDG
     /************************************************************************************
      * set input-file-dependent default parameters
      ************************************************************************************/
-    base.post();
-
     /*
      *  set the min grid refinement level if not user-specified
      */
@@ -49,11 +47,11 @@ namespace MeltPoolDG
     if (restart.load >= 0)
       amr.n_initial_refinement_cycles = 0;
 
-    heat.post(base.degree, base.verbosity_level);
+    heat.post(base.fe, base.verbosity_level);
     laser.post(base.dimension,
                heat.use_volume_specific_thermal_capacity_for_phase_interpolation,
                material);
-    ls.post();
+    ls.post(base.fe);
     evapor.post(material, heat.use_volume_specific_thermal_capacity_for_phase_interpolation);
     flow.post(material);
     output.post(time_stepping.time_step_size, parameter_filename);
@@ -72,11 +70,11 @@ namespace MeltPoolDG
   void
   Parameters<number>::check_input_parameters() const
   {
-    base.check_input_parameters(ls.n_subdivisions);
-    heat.check_input_parameters(base.do_simplex, ls.n_subdivisions);
+    base.check_input_parameters(ls.get_n_subdivisions());
+    heat.check_input_parameters(base.fe);
     laser.check_input_parameters();
-    ls.check_input_parameters(base.degree);
-    evapor.check_input_parameters(ls.n_subdivisions, material);
+    ls.check_input_parameters(base.fe);
+    evapor.check_input_parameters(material);
     flow.check_input_parameters(ls.curv.enable);
     profiling.check_input_parameters(time_stepping.time_step_size);
     restart.check_input_parameters(time_stepping.time_step_size);

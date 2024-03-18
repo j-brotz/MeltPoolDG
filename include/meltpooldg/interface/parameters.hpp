@@ -98,7 +98,7 @@ namespace MeltPoolDG
     bool parameters_read = false;
 
   public:
-    BaseData<number>                                   base;
+    BaseData                                           base;
     TimeSteppingData<number>                           time_stepping;
     AdaptiveMeshingData                                amr;
     LevelSet::LevelSetData<number>                     ls;

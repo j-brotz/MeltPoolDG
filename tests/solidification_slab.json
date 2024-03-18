@@ -1,11 +1,13 @@
 {
   "base": {
     "application name": "solidification_slab",
-    "degree": "1",
     "dimension": "1",
     "global refinements": "7",
     "problem name": "heat_transfer",
-    "do print parameters": "false"
+    "do print parameters": "false",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

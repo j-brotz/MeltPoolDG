@@ -1,13 +1,14 @@
 {
   "base": {
     "application name": "thermo_capillary_two_droplets",
-    "degree": "1",
     "dimension": "2",
-    "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "9",
     "problem name": "melt_pool",
-    "verbosity level": "1"
+    "verbosity level": "1",
+    "fe": {
+      "degree": "1"
+    }
   },
   "heat": {
     "linear solver": {

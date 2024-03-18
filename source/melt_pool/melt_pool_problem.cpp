@@ -936,10 +936,7 @@ namespace MeltPoolDG::MeltPool
     /*
      *  setup mapping
      */
-    if (base_in->parameters.base.do_simplex)
-      scratch_data->set_mapping(MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
-    else
-      scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
+    scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.base.fe));
 
     scratch_data->attach_dof_handler(dof_handler_ls);
     scratch_data->attach_dof_handler(dof_handler_ls);
@@ -965,16 +962,10 @@ namespace MeltPoolDG::MeltPool
      *  create quadrature rule
      */
     ls_quad_idx = scratch_data->attach_quadrature(
-      UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.do_simplex,
-                                               base_in->parameters.base.n_q_points_1d,
-                                               base_in->parameters.ls.n_subdivisions));
+      UtilityFunctions::create_quadrature<dim>(base_in->parameters.ls.fe));
     if (problem_specific_parameters.do_heat_transfer)
-      {
-        temp_quad_idx = scratch_data->attach_quadrature(
-          UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.do_simplex,
-                                                   base_in->parameters.heat.n_q_points_1d,
-                                                   base_in->parameters.heat.n_subdivisions));
-      }
+      temp_quad_idx = scratch_data->attach_quadrature(
+        UtilityFunctions::create_quadrature<dim>(base_in->parameters.heat.fe));
 
     // initialize the time stepping scheme
     time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
@@ -1420,21 +1411,13 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                          const bool                           do_reinit)
   {
-    UtilityFunctions::distribute_dofs<dim>(base_in->parameters.base.do_simplex,
-                                           base_in->parameters.base.degree,
-                                           base_in->parameters.ls.n_subdivisions,
-                                           dof_handler_ls);
+    UtilityFunctions::distribute_dofs<dim>(base_in->parameters.ls.fe, dof_handler_ls, 1);
 
     if (problem_specific_parameters.do_heat_transfer)
-      {
-        UtilityFunctions::distribute_dofs<dim>(base_in->parameters.base.do_simplex,
-                                               base_in->parameters.heat.degree,
-                                               base_in->parameters.heat.n_subdivisions,
-                                               dof_handler_heat);
-      }
+      UtilityFunctions::distribute_dofs<dim>(base_in->parameters.heat.fe, dof_handler_heat, 1);
 
     if (laser_operation)
-      laser_operation->distribute_dofs(base_in->parameters.base);
+      laser_operation->distribute_dofs(base_in->parameters.base.fe);
 
       /*
        *    initialize the flow operation class
@@ -1829,7 +1812,7 @@ namespace MeltPoolDG::MeltPool
         std::vector<std::vector<double>> ls_gradients(dim, std::vector<double>(quadrature.size()));
         const double                     diffusion_length =
           base_in->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-            scratch_data->get_min_cell_size() / base_in->parameters.ls.n_subdivisions);
+            scratch_data->get_min_cell_size() / base_in->parameters.ls.get_n_subdivisions());
 
         std::vector<double> ls_vals(quadrature.size());
 
@@ -1933,7 +1916,7 @@ namespace MeltPoolDG::MeltPool
             break;
           }
           case AMRStrategy::KellyErrorEstimator: {
-            AssertThrow(base_in->parameters.ls.n_subdivisions <= 1,
+            AssertThrow(base_in->parameters.ls.get_n_subdivisions() <= 1,
                         ExcMessage(
                           "For the KellyErrorEstimator n_subdivisions must not be larger than 1."));
 
@@ -2045,7 +2028,7 @@ namespace MeltPoolDG::MeltPool
                                                           std::vector<double>(quadrature.size()));
             const double                     diffusion_length =
               base_in->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
-                scratch_data->get_min_cell_size() / base_in->parameters.ls.n_subdivisions);
+                scratch_data->get_min_cell_size() / base_in->parameters.ls.get_n_subdivisions());
 
             std::vector<double> ls_vals(quadrature.size());
 

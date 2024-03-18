@@ -137,16 +137,16 @@ namespace MeltPoolDG::Evaporation
 
   template <typename number>
   void
-  EvaporationData<number>::check_input_parameters(const unsigned int          ls_n_subdivisions,
-                                                  const MaterialData<number> &material) const
+  EvaporationData<number>::check_input_parameters(const MaterialData<number> &material) const
   {
-    AssertThrow((ls_n_subdivisions == 1 ||
-                 interface_temperature_evaluation_type !=
-                   EvaporativeMassFluxTemperatureEvaluationType::thickness_integral),
-                ExcMessage(
-                  "If you use the formulation of the evaporative mass flux over the interface "
-                  "using the value at the interface or a line integral, n_subdivisions for the "
-                  "level set must be 1."));
+    // TODO move
+    //    AssertThrow((ls_n_subdivisions == 1 ||
+    //                 interface_temperature_evaluation_type !=
+    //                   EvaporativeMassFluxTemperatureEvaluationType::thickness_integral),
+    //                ExcMessage(
+    //                  "If you use the formulation of the evaporative mass flux over the interface
+    //                  " "using the value at the interface or a line integral, n_subdivisions for
+    //                  the " "level set must be 1."));
 
     AssertThrow(!recoil.enable ||
                   (evaporative_dilation_rate.enable ||

@@ -49,20 +49,12 @@ namespace MeltPoolDG::LevelSet
       /*
        *  setup mapping
        */
-      if (base_in->parameters.base.do_simplex)
-        scratch_data->set_mapping(
-          MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
-      else
-        scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
+      scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.base.fe));
       /*
        *  create quadrature rule
        */
-
-      if (base_in->parameters.base.do_simplex)
-        scratch_data->attach_quadrature(QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
-      else
-        reinit_quad_idx =
-          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+      scratch_data->attach_quadrature(
+        UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.fe));
 
       scratch_data->attach_dof_handler(dof_handler);
       reinit_dof_idx = scratch_data->attach_constraint_matrix(constraints);
@@ -98,16 +90,16 @@ namespace MeltPoolDG::LevelSet
 
     if (base_in->parameters.ls.reinit.implementation == "meltpooldg")
       {
-        reinit_operation =
-          std::make_shared<ReinitializationOperation<dim>>(*scratch_data,
-                                                           base_in->parameters.ls.reinit,
-                                                           base_in->parameters.ls.normal_vec,
-                                                           base_in->parameters.ls.n_subdivisions,
-                                                           *time_iterator,
-                                                           reinit_dof_idx,
-                                                           reinit_quad_idx,
-                                                           reinit_dof_idx,
-                                                           normal_dof_idx);
+        reinit_operation = std::make_shared<ReinitializationOperation<dim>>(
+          *scratch_data,
+          base_in->parameters.ls.reinit,
+          base_in->parameters.ls.normal_vec,
+          base_in->parameters.ls.get_n_subdivisions(),
+          *time_iterator,
+          reinit_dof_idx,
+          reinit_quad_idx,
+          reinit_dof_idx,
+          normal_dof_idx);
         reinit_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -139,10 +131,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup DoFHandler
      */
-    if (base_in->parameters.base.do_simplex)
-      dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
-    else
-      dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
+    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
 
     /*
      *  re-create partitioning

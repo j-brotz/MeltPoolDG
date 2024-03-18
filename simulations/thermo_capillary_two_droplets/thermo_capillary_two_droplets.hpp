@@ -167,7 +167,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
 #ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -197,7 +197,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
             (dim == 2) ? Point<dim>(x_outer, z_outer) : Point<dim>(x_outer, 0, z_outer);
 
           // create mesh
-          if (this->parameters.base.do_simplex)
+          if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               std::vector<unsigned int> subdivisions(
                 dim, 4 * Utilities::pow(2, this->parameters.base.global_refinements));
@@ -269,7 +269,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
                                                 "heat_transfer");
 
 
-      if (!this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
@@ -278,7 +278,7 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryTwoDroplets
     {
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
         GridTools::minimal_cell_diameter(*this->triangulation) /
-        this->parameters.ls.n_subdivisions / std::sqrt(dim));
+        this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
       AssertThrow(eps > 0, ExcNotImplemented());
 

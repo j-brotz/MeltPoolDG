@@ -80,7 +80,7 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
     {
       const double eps = this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
         GridTools::minimal_cell_diameter(*this->triangulation) /
-        this->parameters.ls.n_subdivisions / std::sqrt(dim));
+        this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
       AssertThrow(eps > 0, ExcNotImplemented());
 

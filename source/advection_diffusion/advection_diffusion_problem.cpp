@@ -73,8 +73,8 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup DoFHandler
      */
-    dof_handler.distribute_dofs(*fe);
-    dof_handler_velocity.distribute_dofs(*fe_velocity);
+    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
+    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler_velocity, dim);
 
     /*
      *  create the partititioning
@@ -130,19 +130,6 @@ namespace MeltPoolDG::LevelSet
     dof_handler.reinit(*base_in->triangulation);
     dof_handler_velocity.reinit(*base_in->triangulation);
 
-    if (base_in->parameters.base.do_simplex)
-      {
-        fe = std::make_unique<FE_SimplexP<dim>>(base_in->parameters.base.degree);
-        fe_velocity =
-          std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim);
-      }
-    else
-      {
-        fe = std::make_unique<FE_Q<dim>>(base_in->parameters.base.degree);
-        fe_velocity =
-          std::make_unique<FESystem<dim>>(FE_Q<dim>(base_in->parameters.base.degree), dim);
-      }
-
     /*
      *  setup scratch data
      */
@@ -154,20 +141,12 @@ namespace MeltPoolDG::LevelSet
       /*
        *  setup mapping
        */
-      if (base_in->parameters.base.do_simplex)
-        scratch_data->set_mapping(
-          MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
-      else
-        scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
+      scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.base.fe));
       /*
        *  create quadrature rule
        */
-      if (base_in->parameters.base.do_simplex)
-        advec_diff_quad_idx = scratch_data->attach_quadrature(
-          QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
-      else
-        advec_diff_quad_idx =
-          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+      advec_diff_quad_idx = scratch_data->attach_quadrature(
+        UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.fe));
 
       advec_diff_dof_idx               = scratch_data->attach_dof_handler(dof_handler);
       advec_diff_hanging_nodes_dof_idx = scratch_data->attach_dof_handler(dof_handler);

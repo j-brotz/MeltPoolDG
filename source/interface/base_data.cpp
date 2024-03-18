@@ -2,9 +2,14 @@
 
 namespace MeltPoolDG
 {
-  template <typename number>
+  BaseData::BaseData()
+  {
+    fe.type   = FiniteElementType::FE_Q;
+    fe.degree = 1;
+  }
+
   void
-  BaseData<number>::add_parameters(dealii::ParameterHandler &prm)
+  BaseData::add_parameters(dealii::ParameterHandler &prm)
   {
     prm.enter_subsection("base");
     {
@@ -19,33 +24,21 @@ namespace MeltPoolDG
       prm.add_parameter("global refinements",
                         global_refinements,
                         "Defines the number of initial global refinements");
-      prm.add_parameter("degree", degree, "Defines the interpolation degree");
-      prm.add_parameter("n q points 1d", n_q_points_1d, "Defines the number of quadrature points");
       prm.add_parameter("do print parameters",
                         do_print_parameters,
                         "Set this parameter to true to list parameters in output");
-      prm.add_parameter("do simplex", do_simplex, "Use simplices");
       prm.add_parameter(
         "verbosity level",
         verbosity_level,
         "Sets the maximum verbosity level of the console output. Set this parameter to 0 in case of test files.");
+
+      fe.add_parameters(prm);
     }
     prm.leave_subsection();
   }
 
-  template <typename number>
   void
-  BaseData<number>::post()
-  {
-    /*
-     *  set the number of quadrature points in 1d
-     */
-    n_q_points_1d = (n_q_points_1d < 1) ? degree + 1 : n_q_points_1d;
-  }
-
-  template <typename number>
-  void
-  BaseData<number>::check_input_parameters(const unsigned int ls_n_subdivisions) const
+  BaseData::check_input_parameters(const unsigned int ls_n_subdivisions) const
   {
     AssertThrow(problem_name != ProblemType::not_initialized,
                 ExcMessage("The problem name must be specified!"));
@@ -66,6 +59,4 @@ namespace MeltPoolDG
           break;
       }
   }
-
-  template struct BaseData<double>;
 } // namespace MeltPoolDG

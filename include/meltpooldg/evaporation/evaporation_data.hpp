@@ -136,8 +136,7 @@ namespace MeltPoolDG::Evaporation
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    check_input_parameters(const unsigned int          ls_n_subdivisions,
-                           const MaterialData<number> &material) const;
+    check_input_parameters(const MaterialData<number> &material) const;
 
     /**
      * Post operation

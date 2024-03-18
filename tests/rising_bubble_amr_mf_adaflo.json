@@ -5,7 +5,9 @@
     "do print parameters": "false",
     "global refinements": "3",
     "dimension": "2",
-    "degree": "1"
+    "fe": {
+      "degree": "1"
+    }
   },
   "adaptive meshing": {
     "do amr": "true",

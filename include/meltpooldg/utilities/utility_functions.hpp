@@ -1,5 +1,5 @@
 #pragma once
-// dealii
+
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/mpi.templates.h>
 #include <deal.II/base/mpi_remote_point_evaluation.h>
@@ -18,6 +18,8 @@
 #include <deal.II/fe/fe_simplex_p.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_tools.h>
+#include <deal.II/fe/mapping.h>
+#include <deal.II/fe/mapping_fe.h>
 
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/tria.h>
@@ -35,9 +37,10 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/interface/parameters.hpp>
+#include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
+#include <memory>
 #include <sstream>
 
 namespace dealii
@@ -151,43 +154,101 @@ namespace MeltPoolDG
   {
     template <int dim>
     void
-    distribute_dofs(const bool         do_simplex,
-                    const unsigned int degree,
-                    const unsigned int n_subdivisions,
-                    DoFHandler<dim>   &dof_handler)
+    distribute_dofs(const FiniteElementData &fe_data,
+                    DoFHandler<dim>         &dof_handler,
+                    const unsigned int       n_components = 1)
     {
-      if (do_simplex)
+      if (n_components == 1)
         {
-          dof_handler.distribute_dofs(FE_SimplexP<dim>(degree));
+          switch (fe_data.type)
+            {
+                case FiniteElementType::FE_Q: {
+                  dof_handler.distribute_dofs(FE_Q<dim>(fe_data.degree));
+                  break;
+                }
+                case FiniteElementType::FE_SimplexP: {
+                  dof_handler.distribute_dofs(FE_SimplexP<dim>(fe_data.degree));
+                  break;
+                }
+                case FiniteElementType::FE_Q_iso_Q1: {
+                  dof_handler.distribute_dofs(FE_Q_iso_Q1<dim>(fe_data.degree));
+                  break;
+                }
+              case FiniteElementType::not_initialized:
+                DEAL_II_ASSERT_UNREACHABLE();
+              case FiniteElementType::FE_DGQ:
+              default:
+                DEAL_II_NOT_IMPLEMENTED();
+            }
         }
-      // hex mesh
       else
         {
-          if (n_subdivisions > 1)
-            dof_handler.distribute_dofs(FE_Q_iso_Q1<dim>(n_subdivisions));
-          else
-            dof_handler.distribute_dofs(FE_Q<dim>(degree));
+          switch (fe_data.type)
+            {
+                case FiniteElementType::FE_Q: {
+                  dof_handler.distribute_dofs(
+                    FESystem<dim>(FE_Q<dim>(fe_data.degree), n_components));
+                  break;
+                }
+                case FiniteElementType::FE_SimplexP: {
+                  dof_handler.distribute_dofs(
+                    FESystem<dim>(FE_SimplexP<dim>(fe_data.degree), n_components));
+                  break;
+                }
+                case FiniteElementType::FE_Q_iso_Q1: {
+                  dof_handler.distribute_dofs(
+                    FESystem<dim>(FE_Q_iso_Q1<dim>(fe_data.degree), n_components));
+                  break;
+                }
+              case FiniteElementType::not_initialized:
+                DEAL_II_ASSERT_UNREACHABLE();
+              case FiniteElementType::FE_DGQ:
+              default:
+                DEAL_II_NOT_IMPLEMENTED();
+            }
         }
     }
 
     template <int dim>
-    Quadrature<dim>
-    create_quadrature(const bool         do_simplex,
-                      const unsigned int n_q_points_1d,
-                      const unsigned int n_subdivisions)
+    std::shared_ptr<Mapping<dim>>
+    create_mapping(const FiniteElementData &fe_data)
     {
-      if (do_simplex)
+      switch (fe_data.type)
         {
-          return QGaussSimplex<dim>(n_q_points_1d);
+          case FiniteElementType::FE_Q:
+            return std::make_shared<MappingQGeneric<dim>>(fe_data.degree);
+          case FiniteElementType::FE_Q_iso_Q1:
+            return std::make_shared<MappingQGeneric<dim>>(1);
+          case FiniteElementType::FE_SimplexP:
+            return std::make_shared<MappingFE<dim>>(FE_SimplexP<dim>(fe_data.degree));
+          case FiniteElementType::not_initialized:
+            DEAL_II_ASSERT_UNREACHABLE();
+          case FiniteElementType::FE_DGQ:
+          default:
+            DEAL_II_NOT_IMPLEMENTED();
         }
-      else if (n_subdivisions > 1)
+      return nullptr;
+    }
+
+    template <int dim>
+    Quadrature<dim>
+    create_quadrature(const FiniteElementData &fe_data)
+    {
+      switch (fe_data.type)
         {
-          return QIterated<dim>(QGauss<1>(2), n_subdivisions);
+          case FiniteElementType::FE_Q:
+            return QGauss<dim>(fe_data.get_n_q_points());
+          case FiniteElementType::FE_SimplexP:
+            return QGaussSimplex<dim>(fe_data.get_n_q_points());
+          case FiniteElementType::FE_Q_iso_Q1:
+            return QIterated<dim>(QGauss<1>(2), fe_data.degree);
+          case FiniteElementType::not_initialized:
+            DEAL_II_ASSERT_UNREACHABLE();
+          case FiniteElementType::FE_DGQ:
+          default:
+            DEAL_II_NOT_IMPLEMENTED();
         }
-      else
-        {
-          return QGauss<dim>(n_q_points_1d);
-        }
+      return Quadrature<dim>();
     }
 
     template <typename T>

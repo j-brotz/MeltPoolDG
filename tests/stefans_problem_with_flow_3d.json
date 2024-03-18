@@ -4,8 +4,10 @@
     "application name": "stefans_problem_with_flow",
     "dimension": "3",
     "global refinements": "4",
-    "degree": "1",
-    "do print parameters": "false"
+    "do print parameters": "false",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

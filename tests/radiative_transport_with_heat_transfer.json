@@ -2,11 +2,13 @@
   "base": {
     "application name": "radiative_transport",
     "problem name": "heat_transfer",
-    "degree": "1",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "6",
-    "verbosity level": "0"
+    "verbosity level": "0",
+    "fe": {
+      "degree": "1"
+    }
   },
   "laser": {
     "model": "RTE",

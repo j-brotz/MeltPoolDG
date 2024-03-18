@@ -125,10 +125,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup mapping
      */
-    if (base_in->parameters.base.do_simplex)
-      scratch_data->set_mapping(MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
-    else
-      scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
+    scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.ls.fe));
     /*
      *  setup DoFHandler
      */
@@ -148,16 +145,8 @@ namespace MeltPoolDG::LevelSet
     /*
      *  create quadrature rule
      */
-
-    if (base_in->parameters.base.do_simplex)
-      ls_quad_idx =
-        scratch_data->attach_quadrature(QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
-    else if (base_in->parameters.ls.n_subdivisions > 1)
-      ls_quad_idx = scratch_data->attach_quadrature(
-        QIterated<dim>(QGauss<1>(2), base_in->parameters.ls.n_subdivisions));
-    else
-      ls_quad_idx =
-        scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+    ls_quad_idx = scratch_data->attach_quadrature(
+      UtilityFunctions::create_quadrature<dim>(base_in->parameters.ls.fe));
     /*
      *  initialize the time iterator
      */
@@ -285,22 +274,8 @@ namespace MeltPoolDG::LevelSet
   LevelSetProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                          const bool                           do_reinit)
   {
-    if (base_in->parameters.base.do_simplex)
-      {
-        dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
-        dof_handler_velocity.distribute_dofs(
-          FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim));
-      }
-    else
-      {
-        if (base_in->parameters.ls.n_subdivisions > 1)
-          dof_handler.distribute_dofs(FE_Q_iso_Q1<dim>(base_in->parameters.ls.n_subdivisions));
-        else
-          dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
-
-        dof_handler_velocity.distribute_dofs(
-          FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree), dim));
-      }
+    UtilityFunctions::distribute_dofs(base_in->parameters.ls.fe, dof_handler, 1);
+    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler_velocity, dim);
     /*
      *  create partitioning
      */

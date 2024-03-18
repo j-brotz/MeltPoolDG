@@ -92,7 +92,7 @@ namespace MeltPoolDG
         void
         create_spatial_discretization() override
         {
-          if (dim == 1 || this->parameters.base.do_simplex)
+          if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
               this->triangulation = std::make_shared<Triangulation<dim>>();
@@ -103,7 +103,7 @@ namespace MeltPoolDG
                 std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
             }
 
-          if (this->parameters.base.do_simplex)
+          if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               GridGenerator::subdivided_hyper_cube_with_simplices(
                 *this->triangulation,

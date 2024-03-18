@@ -69,9 +69,6 @@ namespace MeltPoolDG::LevelSet
     void
     refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
 
-    std::unique_ptr<FiniteElement<dim>> fe;
-    std::unique_ptr<FiniteElement<dim>> fe_velocity;
-
     DoFHandler<dim>                       dof_handler;
     AffineConstraints<double>             constraints;
     AffineConstraints<double>             hanging_node_constraints;
