@@ -17,11 +17,8 @@
 
 #include <deal.II/dofs/dof_accessor.h>
 
-#include <deal.II/fe/fe_simplex_p.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
-#include <deal.II/fe/mapping_fe.h>
-#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/grid/tria_iterator.h>
 
@@ -50,6 +47,7 @@
 #include <meltpooldg/utilities/cell_monitor.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/restart.templates.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
@@ -936,7 +934,7 @@ namespace MeltPoolDG::MeltPool
     /*
      *  setup mapping
      */
-    scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.base.fe));
+    scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.base.fe));
 
     scratch_data->attach_dof_handler(dof_handler_ls);
     scratch_data->attach_dof_handler(dof_handler_ls);
@@ -961,11 +959,11 @@ namespace MeltPoolDG::MeltPool
     /*
      *  create quadrature rule
      */
-    ls_quad_idx = scratch_data->attach_quadrature(
-      UtilityFunctions::create_quadrature<dim>(base_in->parameters.ls.fe));
+    ls_quad_idx =
+      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.ls.fe));
     if (problem_specific_parameters.do_heat_transfer)
-      temp_quad_idx = scratch_data->attach_quadrature(
-        UtilityFunctions::create_quadrature<dim>(base_in->parameters.heat.fe));
+      temp_quad_idx =
+        scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.heat.fe));
 
     // initialize the time stepping scheme
     time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
@@ -1411,10 +1409,10 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                          const bool                           do_reinit)
   {
-    UtilityFunctions::distribute_dofs<dim>(base_in->parameters.ls.fe, dof_handler_ls, 1);
+    distribute_dofs<dim>(base_in->parameters.ls.fe, dof_handler_ls, 1);
 
     if (problem_specific_parameters.do_heat_transfer)
-      UtilityFunctions::distribute_dofs<dim>(base_in->parameters.heat.fe, dof_handler_heat, 1);
+      distribute_dofs<dim>(base_in->parameters.heat.fe, dof_handler_heat, 1);
 
     if (laser_operation)
       laser_operation->distribute_dofs(base_in->parameters.base.fe);

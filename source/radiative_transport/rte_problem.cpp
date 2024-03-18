@@ -7,6 +7,7 @@
 #include <meltpooldg/radiative_transport/rte_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -105,7 +106,7 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  setup mapping
      */
-    scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.base.fe));
+    scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.base.fe));
 
     /*
      *  setup DoFHandler
@@ -127,8 +128,8 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  create quadrature rule
      */
-    rte_quad_idx = scratch_data->attach_quadrature(
-      UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.fe));
+    rte_quad_idx =
+      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.base.fe));
 
     /*
      * initialize the RTE operation
@@ -197,8 +198,8 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                                    const bool                           do_reinit)
   {
-    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
-    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler_heaviside, 1);
+    distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
+    distribute_dofs(base_in->parameters.base.fe, dof_handler_heaviside, 1);
 
     /*
      *  create partitioning

@@ -1,18 +1,49 @@
 #pragma once
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/mpi_remote_point_evaluation.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/quadrature.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/timer.h>
+#include <deal.II/base/types.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/fe/fe_update_flags.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/mapping.h>
+
+#include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/grid_tools_geometry.h>
+
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/numerics/rtree.h>
+#include <deal.II/numerics/vector_tools_evaluate.h>
 
 #include <meltpooldg/level_set/nearest_point_data.hpp>
+#include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <boost/geometry/index/rtree.hpp>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <numeric>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace MeltPoolDG::LevelSet::Tools
 {
@@ -461,7 +492,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                                                             signed_distance);
 
           // shift isocontour
-          if (std::abs(additional_data.isocontour >= 0))
+          if (std::abs(additional_data.isocontour >= 0)) // TODO what is the std::abs for?
             {
               for (auto &e : evaluation_values_distance)
                 e -= additional_data.isocontour;

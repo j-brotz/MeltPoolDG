@@ -1,10 +1,5 @@
 #include <deal.II/distributed/grid_refinement.h>
 
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/mapping.h>
-#include <deal.II/fe/mapping_fe.h>
-
 #include <deal.II/numerics/error_estimator.h>
 
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
@@ -12,6 +7,7 @@
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <functional>
@@ -148,7 +144,7 @@ namespace MeltPoolDG::Heat
     /*
      *  setup mapping
      */
-    scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.heat.fe));
+    scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.heat.fe));
 
     scratch_data->attach_dof_handler(dof_handler);
     scratch_data->attach_dof_handler(dof_handler);
@@ -167,8 +163,8 @@ namespace MeltPoolDG::Heat
     /*
      *  create quadrature rule
      */
-    temp_quad_idx = scratch_data->attach_quadrature(
-      UtilityFunctions::create_quadrature<dim>(base_in->parameters.heat.fe));
+    temp_quad_idx =
+      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.heat.fe));
 
     /*
      * laser operation
@@ -303,9 +299,9 @@ namespace MeltPoolDG::Heat
   HeatTransferProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                              const bool                           do_reinit)
   {
-    UtilityFunctions::distribute_dofs(base_in->parameters.heat.fe, dof_handler, 1);
-    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler_velocity, dim);
-    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler_level_set, 1);
+    distribute_dofs(base_in->parameters.heat.fe, dof_handler, 1);
+    distribute_dofs(base_in->parameters.base.fe, dof_handler_velocity, dim);
+    distribute_dofs(base_in->parameters.base.fe, dof_handler_level_set, 1);
     if (laser_operation)
       laser_operation->distribute_dofs(base_in->parameters.heat.fe);
 

@@ -1,11 +1,9 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/types.h>
 
-#include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_simplex_p.h>
-
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
@@ -149,7 +147,7 @@ namespace MeltPoolDG::Heat
   LaserOperation<dim>::distribute_dofs(const FiniteElementData &fe_data)
   {
     if (laser_data.model == LaserModelType::RTE)
-      UtilityFunctions::distribute_dofs<dim>(fe_data, *rte_dof_handler, 1);
+      MeltPoolDG::distribute_dofs<dim>(fe_data, *rte_dof_handler, 1);
   }
 
   template <int dim>

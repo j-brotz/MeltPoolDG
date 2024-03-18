@@ -6,12 +6,7 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_q_iso_q1.h>
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/mapping.h>
-#include <deal.II/fe/mapping_fe.h>
+#include <deal.II/fe/fe_values.h>
 
 #include <deal.II/grid/grid_out.h>
 
@@ -27,6 +22,7 @@
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -125,7 +121,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup mapping
      */
-    scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.ls.fe));
+    scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.ls.fe));
     /*
      *  setup DoFHandler
      */
@@ -145,8 +141,8 @@ namespace MeltPoolDG::LevelSet
     /*
      *  create quadrature rule
      */
-    ls_quad_idx = scratch_data->attach_quadrature(
-      UtilityFunctions::create_quadrature<dim>(base_in->parameters.ls.fe));
+    ls_quad_idx =
+      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.ls.fe));
     /*
      *  initialize the time iterator
      */
@@ -274,8 +270,8 @@ namespace MeltPoolDG::LevelSet
   LevelSetProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                          const bool                           do_reinit)
   {
-    UtilityFunctions::distribute_dofs(base_in->parameters.ls.fe, dof_handler, 1);
-    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler_velocity, dim);
+    distribute_dofs(base_in->parameters.ls.fe, dof_handler, 1);
+    distribute_dofs(base_in->parameters.base.fe, dof_handler_velocity, dim);
     /*
      *  create partitioning
      */

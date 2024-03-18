@@ -1,5 +1,20 @@
+#include <deal.II/base/exceptions.h>
+
+#include <deal.II/distributed/grid_refinement.h>
+
+#include <deal.II/grid/tria.h>
+
+#include <deal.II/lac/vector.h>
+
+#include <deal.II/numerics/error_estimator.h>
+#include <deal.II/numerics/vector_tools_interpolate.h>
+
+#include <meltpooldg/reinitialization/reinitialization_operation.hpp>
+#include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/reinitialization_problem.hpp>
+#include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 namespace MeltPoolDG::LevelSet
@@ -49,12 +64,11 @@ namespace MeltPoolDG::LevelSet
       /*
        *  setup mapping
        */
-      scratch_data->set_mapping(UtilityFunctions::create_mapping<dim>(base_in->parameters.base.fe));
+      scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.base.fe));
       /*
        *  create quadrature rule
        */
-      scratch_data->attach_quadrature(
-        UtilityFunctions::create_quadrature<dim>(base_in->parameters.base.fe));
+      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.base.fe));
 
       scratch_data->attach_dof_handler(dof_handler);
       reinit_dof_idx = scratch_data->attach_constraint_matrix(constraints);
@@ -131,7 +145,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup DoFHandler
      */
-    UtilityFunctions::distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
+    distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
 
     /*
      *  re-create partitioning

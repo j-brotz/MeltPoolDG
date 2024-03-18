@@ -1,47 +1,42 @@
 #pragma once
 
-#include <deal.II/base/mpi.h>
-#include <deal.II/base/mpi.templates.h>
-#include <deal.II/base/mpi_remote_point_evaluation.h>
+#include <deal.II/base/config.h>
+
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
-#include <deal.II/base/utilities.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/distributed/fully_distributed_tria.h>
+#include <deal.II/distributed/shared_tria.h>
+#include <deal.II/distributed/tria.h>
 
-#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_q_dg0.h>
 #include <deal.II/fe/fe_q_iso_q1.h>
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/mapping.h>
-#include <deal.II/fe/mapping_fe.h>
 
-#include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/grid_tools_geometry.h>
 #include <deal.II/grid/tria.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/block_vector_base.h>
+#include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
-#include <deal.II/matrix_free/fe_evaluation.h>
-#include <deal.II/matrix_free/fe_point_evaluation.h>
-#include <deal.II/matrix_free/matrix_free.h>
-#include <deal.II/matrix_free/operators.h>
+#include <deal.II/matrix_free/evaluation_flags.h>
 
-#include <deal.II/non_matching/fe_values.h>
-#include <deal.II/non_matching/mesh_classifier.h>
-
-#include <deal.II/numerics/vector_tools.h>
-
-#include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
-#include <memory>
+#include <algorithm>
+#include <cmath>
+#include <ios>
 #include <sstream>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 namespace dealii
 {
@@ -152,105 +147,6 @@ namespace MeltPoolDG
 
   namespace UtilityFunctions
   {
-    template <int dim>
-    void
-    distribute_dofs(const FiniteElementData &fe_data,
-                    DoFHandler<dim>         &dof_handler,
-                    const unsigned int       n_components = 1)
-    {
-      if (n_components == 1)
-        {
-          switch (fe_data.type)
-            {
-                case FiniteElementType::FE_Q: {
-                  dof_handler.distribute_dofs(FE_Q<dim>(fe_data.degree));
-                  break;
-                }
-                case FiniteElementType::FE_SimplexP: {
-                  dof_handler.distribute_dofs(FE_SimplexP<dim>(fe_data.degree));
-                  break;
-                }
-                case FiniteElementType::FE_Q_iso_Q1: {
-                  dof_handler.distribute_dofs(FE_Q_iso_Q1<dim>(fe_data.degree));
-                  break;
-                }
-              case FiniteElementType::not_initialized:
-                DEAL_II_ASSERT_UNREACHABLE();
-              case FiniteElementType::FE_DGQ:
-              default:
-                DEAL_II_NOT_IMPLEMENTED();
-            }
-        }
-      else
-        {
-          switch (fe_data.type)
-            {
-                case FiniteElementType::FE_Q: {
-                  dof_handler.distribute_dofs(
-                    FESystem<dim>(FE_Q<dim>(fe_data.degree), n_components));
-                  break;
-                }
-                case FiniteElementType::FE_SimplexP: {
-                  dof_handler.distribute_dofs(
-                    FESystem<dim>(FE_SimplexP<dim>(fe_data.degree), n_components));
-                  break;
-                }
-                case FiniteElementType::FE_Q_iso_Q1: {
-                  dof_handler.distribute_dofs(
-                    FESystem<dim>(FE_Q_iso_Q1<dim>(fe_data.degree), n_components));
-                  break;
-                }
-              case FiniteElementType::not_initialized:
-                DEAL_II_ASSERT_UNREACHABLE();
-              case FiniteElementType::FE_DGQ:
-              default:
-                DEAL_II_NOT_IMPLEMENTED();
-            }
-        }
-    }
-
-    template <int dim>
-    std::shared_ptr<Mapping<dim>>
-    create_mapping(const FiniteElementData &fe_data)
-    {
-      switch (fe_data.type)
-        {
-          case FiniteElementType::FE_Q:
-            return std::make_shared<MappingQGeneric<dim>>(fe_data.degree);
-          case FiniteElementType::FE_Q_iso_Q1:
-            return std::make_shared<MappingQGeneric<dim>>(1);
-          case FiniteElementType::FE_SimplexP:
-            return std::make_shared<MappingFE<dim>>(FE_SimplexP<dim>(fe_data.degree));
-          case FiniteElementType::not_initialized:
-            DEAL_II_ASSERT_UNREACHABLE();
-          case FiniteElementType::FE_DGQ:
-          default:
-            DEAL_II_NOT_IMPLEMENTED();
-        }
-      return nullptr;
-    }
-
-    template <int dim>
-    Quadrature<dim>
-    create_quadrature(const FiniteElementData &fe_data)
-    {
-      switch (fe_data.type)
-        {
-          case FiniteElementType::FE_Q:
-            return QGauss<dim>(fe_data.get_n_q_points());
-          case FiniteElementType::FE_SimplexP:
-            return QGaussSimplex<dim>(fe_data.get_n_q_points());
-          case FiniteElementType::FE_Q_iso_Q1:
-            return QIterated<dim>(QGauss<1>(2), fe_data.degree);
-          case FiniteElementType::not_initialized:
-            DEAL_II_ASSERT_UNREACHABLE();
-          case FiniteElementType::FE_DGQ:
-          default:
-            DEAL_II_NOT_IMPLEMENTED();
-        }
-      return Quadrature<dim>();
-    }
-
     template <typename T>
     std::string
     to_string_with_precision(const T a_value, const int n = 6)
@@ -371,9 +267,9 @@ namespace MeltPoolDG
     get_exponent_power_ten(const double x)
     {
       if (x >= 1e-16) // positive number
-        return floor(log10(x));
+        return std::floor(std::log10(x));
       else if (x <= 1e-16) // negative number
-        return floor(log10(abs(x)));
+        return std::floor(std::log10(std::abs(x)));
       else // number close to 0
         return 0;
     }
