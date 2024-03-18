@@ -48,8 +48,8 @@
       "coefficient": "1.0"
     },
     "thickness integral": {
-      "n subdivisions per side": "10",
-      "n subdivisions MCA": "1"
+      "subdivisions per side": "10",
+      "subdivisions MCA": "1"
     },
     "evaporative cooling": {
       "enable": "true"

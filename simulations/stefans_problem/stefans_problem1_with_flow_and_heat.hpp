@@ -14,18 +14,14 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-// c++
+#include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/level_set/level_set_tools.hpp>
+
+#include <boost/math/tools/roots.hpp>
+
 #include <cmath>
 #include <iostream>
 #include <string>
-// MeltPoolDG
-#include <meltpooldg/interface/simulation_base.hpp>
-#include <meltpooldg/level_set/level_set_tools.hpp>
-#include <meltpooldg/utilities/boundary_ids_colorized.hpp>
-#include <meltpooldg/utilities/journal.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
-
-#include <boost/math/tools/roots.hpp>
 
 /**
  *
