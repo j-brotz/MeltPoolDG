@@ -46,17 +46,17 @@
  * temperature at the hot wall: 383.15 K
  *
  * gas (vapor) phase:
- *    -- density:      1 kg/m^3
- *    -- viscosity:    0.0001 Pa/s
- *    -- thermal_conductivity: 1e-2 W/(mK)
- *    -- specific_heat_capacity:     1000 J/(kgK)
+ *    -- density:                1 kg/m^3
+ *    -- viscosity:              0.0001 Pa/s
+ *    -- thermal_conductivity:   1e-2 W/(mK)
+ *    -- specific_heat_capacity: 1000 J/(kgK)
  *
  * liquid phase:
- *    -- density:      1 kg/m^3
- *    -- viscosity:    0.01 Pa/s
- *    -- thermal_conductivity: 1 W/(mK) (Note: thermal diffusivity of the liquid phase was increased
- * by order of magnitudes)
- *    -- specific_heat_capacity:     1000 J/(kgK)
+ *    -- density:                1 kg/m^3
+ *    -- viscosity:              0.01 Pa/s
+ *    -- thermal_conductivity:   1 W/(mK) (Note: thermal diffusivity of the liquid phase was
+ * increased by order of magnitudes to obtain a constant temperature in the liquid phase)
+ *    -- specific_heat_capacity: 1000 J/(kgK)
  *
  * Enthalpy of evaporation: 10^6 J/kg
  *
