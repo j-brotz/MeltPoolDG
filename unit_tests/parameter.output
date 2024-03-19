@@ -16,7 +16,7 @@
         "dimension": "2",
         "do print parameters": "true",
         "global refinements": "1",
-        "problem name": "advection_diffusion",
+        "problem name": "not_initialized",
         "verbosity level": "0",
         "fe":
         {
