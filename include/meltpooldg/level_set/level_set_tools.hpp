@@ -542,8 +542,12 @@ namespace MeltPoolDG::LevelSet::Tools
                 buffer_dim[fe_normal.component_to_system_index(i, c)]);
 
             norm = std::sqrt(norm);
-            for (int i = 0; i < dim; ++i)
-              buffer_dim[fe_normal.component_to_system_index(i, c)] /= norm;
+
+            if (norm > 1e-16)
+              {
+                for (int i = 0; i < dim; ++i)
+                  buffer_dim[fe_normal.component_to_system_index(i, c)] /= norm;
+              }
           }
 
         phi_normal.evaluate(make_array_view(buffer_dim), EvaluationFlags::values);
@@ -577,6 +581,7 @@ namespace MeltPoolDG::LevelSet::Tools
                                                               max_distance_per_side,
                                                               n_inc_per_side,
                                                               bidirectional);
+
           // check if point is outside domain and if so then project it back to
           // the domain
           //
