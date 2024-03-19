@@ -17,6 +17,8 @@
 #include <meltpooldg/heat/laser_heat_source_projection_based.hpp>
 #include <meltpooldg/heat/laser_heat_source_volumetric.hpp>
 #include <meltpooldg/interface/boundary_conditions.hpp>
+#include <meltpooldg/interface/finite_element_data.hpp>
+#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -77,7 +79,7 @@ namespace MeltPoolDG::Heat
                    const unsigned int                     hs_dof_idx_in = 0);
 
     void
-    distribute_dofs(const BaseData<double> &base_data);
+    distribute_dofs(const FiniteElementData &fe_data);
 
     void
     setup_constraints();

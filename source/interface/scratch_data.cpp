@@ -65,6 +65,14 @@ namespace MeltPoolDG
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  void
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::set_mapping(
+    const std::shared_ptr<Mapping<dim, spacedim>> mapping)
+  {
+    this->mapping = mapping;
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
   unsigned int
   ScratchData<dim, spacedim, number, VectorizedArrayType>::attach_dof_handler(
     const DoFHandler<dim, spacedim> &dof_handler)

@@ -3,10 +3,12 @@
     "problem name": "melt_pool",
     "application name": "rising_bubble",
     "do print parameters": "false",
-    "do simplex": "true",
     "global refinements": "3",
     "dimension": "2",
-    "degree": "1"
+    "fe": {
+      "type": "FE_SimplexP",
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

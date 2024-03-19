@@ -1,12 +1,13 @@
 {
   "base": {
     "application name": "unidirectional_heat_transfer",
-    "degree": "1",
     "dimension": "2",
-    "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "5",
-    "problem name": "heat_transfer"
+    "problem name": "heat_transfer",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

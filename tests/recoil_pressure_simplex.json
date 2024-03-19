@@ -1,12 +1,14 @@
 {
   "base": {
     "application name": "recoil_pressure",
-    "degree": "1",
     "dimension": "2",
     "do print parameters": "false",
-    "do simplex": "true",
     "global refinements": "3",
-    "problem name": "melt_pool"
+    "problem name": "melt_pool",
+    "fe": {
+      "type": "FE_SimplexP",
+      "degree": "1"
+    }
   },
   "time stepping": {
     "end time": "0.000005",

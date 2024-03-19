@@ -1,10 +1,5 @@
 #include <deal.II/distributed/grid_refinement.h>
 
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/mapping.h>
-#include <deal.II/fe/mapping_fe.h>
-
 #include <deal.II/numerics/error_estimator.h>
 
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
@@ -12,6 +7,7 @@
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
 #include <functional>
@@ -148,10 +144,7 @@ namespace MeltPoolDG::Heat
     /*
      *  setup mapping
      */
-    if (base_in->parameters.base.do_simplex)
-      scratch_data->set_mapping(MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
-    else
-      scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
+    scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(base_in->parameters.heat.fe));
 
     scratch_data->attach_dof_handler(dof_handler);
     scratch_data->attach_dof_handler(dof_handler);
@@ -170,16 +163,8 @@ namespace MeltPoolDG::Heat
     /*
      *  create quadrature rule
      */
-    if (base_in->parameters.base.do_simplex)
-      {
-        temp_quad_idx = scratch_data->attach_quadrature(
-          QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
-      }
-    else
-      {
-        temp_quad_idx =
-          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
-      }
+    temp_quad_idx = scratch_data->attach_quadrature(
+      FiniteElementUtils::create_quadrature<dim>(base_in->parameters.heat.fe));
 
     /*
      * laser operation
@@ -314,22 +299,12 @@ namespace MeltPoolDG::Heat
   HeatTransferProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                              const bool                           do_reinit)
   {
-    if (base_in->parameters.base.do_simplex)
-      {
-        dof_handler.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
-        dof_handler_velocity.distribute_dofs(
-          FESystem<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim));
-        dof_handler_level_set.distribute_dofs(FE_SimplexP<dim>(base_in->parameters.base.degree));
-      }
-    else
-      {
-        dof_handler.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
-        dof_handler_velocity.distribute_dofs(
-          FESystem<dim>(FE_Q<dim>(base_in->parameters.base.degree), dim));
-        dof_handler_level_set.distribute_dofs(FE_Q<dim>(base_in->parameters.base.degree));
-      }
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.heat.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, dim>(base_in->parameters.base.fe,
+                                                  dof_handler_velocity);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler_level_set);
     if (laser_operation)
-      laser_operation->distribute_dofs(base_in->parameters.base);
+      laser_operation->distribute_dofs(base_in->parameters.heat.fe);
 
     /*
      *  create partitioning

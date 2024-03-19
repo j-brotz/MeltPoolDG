@@ -4,40 +4,24 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-// for parallelization
-#include <deal.II/lac/generic_linear_algebra.h>
-// for index set
-#include <deal.II/base/index_set.h>
-// for distributed triangulation
-#include <deal.II/distributed/grid_refinement.h>
-#include <deal.II/distributed/solution_transfer.h>
-#include <deal.II/distributed/tria_base.h>
-// for dof_handler type
+
 #include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/numerics/error_estimator.h>
-// for FE_Q<dim> type
-#include <deal.II/fe/fe_q.h>
-// for mapping
-#include <deal.II/fe/mapping.h>
-// for simplex
-#include <deal.II/base/quadrature_lib.h>
+#include <deal.II/lac/affine_constraints.h>
+#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/mapping_fe.h>
-// MeltPoolDG
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
-#include <meltpooldg/reinitialization/reinitialization_operation.hpp>
-#include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
-#include <meltpooldg/utilities/amr.hpp>
-#include <meltpooldg/utilities/conditional_ostream.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
-// C++
+
 #include <memory>
+#include <string>
+
+
 namespace MeltPoolDG
 {
   namespace LevelSet

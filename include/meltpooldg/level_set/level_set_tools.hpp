@@ -4,15 +4,54 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-// for parallelization
-#include <deal.II/base/mpi_remote_point_evaluation.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/index_set.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/types.h>
+#include <deal.II/base/utilities.h>
 
-#include <deal.II/numerics/vector_tools_evaluate.h>
+#include <deal.II/distributed/shared_tria.h>
 
-#include "meltpooldg/interface/scratch_data.hpp"
-#include "meltpooldg/utilities/utility_functions.hpp"
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/fe/fe_nothing.h>
+#include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_update_flags.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/mapping.h>
+
+#include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/grid_tools_geometry.h>
+#include <deal.II/grid/tria.h>
+#include <deal.II/grid/tria_description.h>
+
+#include <deal.II/hp/fe_collection.h>
+#include <deal.II/hp/mapping_collection.h>
+#include <deal.II/hp/q_collection.h>
+
+#include <deal.II/lac/vector_operation.h>
+
+#include <deal.II/matrix_free/evaluation_flags.h>
+#include <deal.II/matrix_free/fe_point_evaluation.h>
+
+#include <deal.II/non_matching/fe_immersed_values.h>
+#include <deal.II/non_matching/fe_values.h>
+#include <deal.II/non_matching/mesh_classifier.h>
+
+#include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
+
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <map>
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <vector>
 
 namespace dealii::GridGenerator
 {

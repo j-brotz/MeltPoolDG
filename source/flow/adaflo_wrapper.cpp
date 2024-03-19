@@ -177,7 +177,9 @@ namespace MeltPoolDG::Flow
     parameters.adaflo_params.params.time_step_size_start = parameters.time_stepping.time_step_size;
     parameters.adaflo_params.params.time_step_size_min   = 1e-16;
     parameters.adaflo_params.params.time_step_size_max   = 1e10;
-    parameters.adaflo_params.params.use_simplex_mesh     = parameters.base.do_simplex;
+
+    parameters.adaflo_params.params.use_simplex_mesh =
+      parameters.base.fe.type == FiniteElementType::FE_SimplexP;
   }
 
   template <int dim>

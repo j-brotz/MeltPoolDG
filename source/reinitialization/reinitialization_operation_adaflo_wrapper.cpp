@@ -19,7 +19,7 @@ namespace MeltPoolDG::LevelSet
     , pcout(scratch_data.get_pcout(1))
     , normal_vector_data(parameters.ls.normal_vec)
     , eps_cell_factor(parameters.ls.reinit.interface_thickness_parameter.value /
-                      parameters.ls.n_subdivisions)
+                      parameters.ls.get_n_subdivisions())
   {
     /**
      * set parameters of adaflo

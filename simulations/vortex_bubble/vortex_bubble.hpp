@@ -161,7 +161,7 @@ namespace MeltPoolDG
         void
         create_spatial_discretization() override
         {
-          if (dim == 1 || this->parameters.base.do_simplex)
+          if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
               this->triangulation = std::make_shared<Triangulation<dim>>();
@@ -172,7 +172,7 @@ namespace MeltPoolDG
                 std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
             }
 
-          if (this->parameters.base.do_simplex)
+          if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               GridGenerator::subdivided_hyper_cube_with_simplices(
                 *this->triangulation,
@@ -211,8 +211,8 @@ namespace MeltPoolDG
               dealii::ConditionalOStream pcout(
                 std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
               // compute area
-              const auto n_q_points = this->parameters.base.degree + 3;
-              FE_Q<dim>  fe(this->parameters.base.degree);
+              const auto n_q_points = this->parameters.base.fe.degree + 3;
+              FE_Q<dim>  fe(this->parameters.base.fe.degree);
 
               QGauss<dim>   quadrature(n_q_points);
               FEValues<dim> fe_values(fe,
@@ -310,7 +310,7 @@ namespace MeltPoolDG
                   const double eps =
                     this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
                       GridTools::minimal_cell_diameter(*this->triangulation) /
-                      this->parameters.ls.n_subdivisions / std::sqrt(dim));
+                      this->parameters.ls.get_n_subdivisions() / std::sqrt(dim));
 
                   // compute L2Norm of level_set
                   Vector<float> difference_per_cell(this->triangulation->n_active_cells());

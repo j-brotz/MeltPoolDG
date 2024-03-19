@@ -11,10 +11,8 @@ namespace MeltPoolDG::LevelSet
   {
     prm.enter_subsection("level set");
     {
-      prm.add_parameter(
-        "n subdivisions",
-        n_subdivisions,
-        "Set the number of subdivisions for the finite element of the level set operation.");
+      fe.add_parameters(prm);
+
       prm.add_parameter("do localized heaviside",
                         do_localized_heaviside,
                         "Determine if the heaviside representation of the level set should be "
@@ -32,8 +30,9 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
-  LevelSetData<number>::post()
+  LevelSetData<number>::post(const FiniteElementData &base_fe_data)
   {
+    fe.post(base_fe_data);
     advec_diff.post();
     normal_vec.post();
     curv.post();
@@ -42,12 +41,14 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
-  LevelSetData<number>::check_input_parameters(const unsigned int base_degree) const
+  LevelSetData<number>::check_input_parameters(const FiniteElementData &base_fe_data) const
   {
-    // The level set problem for simplices can only be solved when no subdivision of the
-    // finite element is undertaken.
-    AssertThrow((n_subdivisions == 1 || base_degree == 1),
-                ExcMessage("If you use n_subdivisions for the level set, degree must be 1."));
+    fe.check_input_parameters(base_fe_data);
+
+    if (base_fe_data.type == FiniteElementType::FE_SimplexP)
+      AssertThrow(get_n_subdivisions() == 1,
+                  ExcMessage(
+                    "If you use a simplex mesh, n_subdivisions for the level set must be 1."));
 
     advec_diff.check_input_parameters();
     normal_vec.check_input_parameters(reinit.interface_thickness_parameter.type);
@@ -55,6 +56,15 @@ namespace MeltPoolDG::LevelSet
     reinit.check_input_parameters(normal_vec.linear_solver.do_matrix_free);
   }
 
+  template <typename number>
+  unsigned int
+  LevelSetData<number>::get_n_subdivisions() const
+  {
+    if (fe.type == FiniteElementType::FE_Q_iso_Q1)
+      return fe.degree;
+    else
+      return 1;
+  }
 
   template struct LevelSetData<double>;
 } // namespace MeltPoolDG::LevelSet

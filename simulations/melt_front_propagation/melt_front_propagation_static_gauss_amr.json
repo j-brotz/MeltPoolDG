@@ -7,12 +7,14 @@
   },
   "base": {
     "application name": "melt_front_propagation",
-    "degree": "1",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "4",
     "problem name": "heat_transfer",
-    "verbosity level": "2"
+    "verbosity level": "2",
+    "fe": {
+      "degree": "1"
+    }
   },
   "simulation specific parameters": {
     "domain x min": "0.0",

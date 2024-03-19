@@ -4,7 +4,9 @@
     "application name": "rising_bubble",
     "global refinements": "2",
     "dimension": "3",
-    "degree": "2"
+    "fe": {
+      "degree": "2"
+    }
   },
   "time stepping": {
     "start time": "0.0",

@@ -2,6 +2,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
 namespace MeltPoolDG
@@ -49,24 +50,20 @@ namespace MeltPoolDG
               radiative_transport,
               powder_bed)
 
-  template <typename number = double>
   struct BaseData
   {
-    ApplicationName application_name    = ApplicationName::not_initialized;
-    ProblemType     problem_name        = ProblemType::advection_diffusion;
-    unsigned int    dimension           = 2;
-    unsigned int    global_refinements  = 1;
-    unsigned int    degree              = 1;
-    int             n_q_points_1d       = -1;
-    bool            do_print_parameters = true;
-    bool            do_simplex          = false;
-    unsigned int    verbosity_level     = 0;
+    ApplicationName   application_name    = ApplicationName::not_initialized;
+    ProblemType       problem_name        = ProblemType::advection_diffusion;
+    unsigned int      dimension           = 2;
+    unsigned int      global_refinements  = 1;
+    bool              do_print_parameters = true;
+    unsigned int      verbosity_level     = 0;
+    FiniteElementData fe;
+
+    BaseData();
 
     void
     add_parameters(dealii::ParameterHandler &prm);
-
-    void
-    post();
 
     void
     check_input_parameters(const unsigned int ls_n_subdivisions) const;

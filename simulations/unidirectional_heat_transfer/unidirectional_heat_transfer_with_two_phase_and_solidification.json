@@ -7,13 +7,14 @@
   },
   "base": {
     "application name": "unidirectional_heat_transfer",
-    "degree": "1",
     "dimension": "2",
-    "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "5",
     "problem name": "heat_transfer",
-    "verbosity level": "2"
+    "verbosity level": "2",
+    "fe": {
+      "degree": "1"
+    }
   },
   "heat": {
     "linear solver": {

@@ -1,12 +1,14 @@
 {
   "base": {
     "application name": "powder_bed",
-    "degree": "1",
     "dimension": "3",
     "do print parameters": "false",
     "global refinements": "4",
     "problem name": "heat_transfer",
-    "verbosity level": "0"
+    "verbosity level": "0",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "max n steps": "1",

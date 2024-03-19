@@ -4,9 +4,11 @@
     "application name": "stefans_problem1_with_flow_and_heat",
     "dimension": "1",
     "global refinements": "1001",
-    "degree": "1",
     "do print parameters": "true",
-    "verbosity level": "3"
+    "verbosity level": "3",
+    "fe": {
+      "degree": "1"
+    }
   },
   "profiling": {
     "enable": "false"

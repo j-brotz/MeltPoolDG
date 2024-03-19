@@ -3,7 +3,9 @@
     "problem name": "melt_pool",
     "application name": "flow_past_cylinder",
     "dimension": "2",
-    "degree": "2"
+    "fe": {
+      "degree": "2"
+    }
   },
   "time stepping": {
     "start time": "0.0",

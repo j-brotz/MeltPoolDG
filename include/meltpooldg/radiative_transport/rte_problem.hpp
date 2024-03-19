@@ -36,7 +36,7 @@ namespace MeltPoolDG::RadiativeTransport
     VectorType heat_source;
 
     DoFHandler<dim> dof_handler;
-    DoFHandler<dim> dof_handler_heaviside;
+    DoFHandler<dim> dof_handler_heaviside; // TODO remove and use above
 
     AffineConstraints<double> constraints_dirichlet;
     AffineConstraints<double> hanging_node_constraints;

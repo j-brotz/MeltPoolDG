@@ -1,12 +1,13 @@
 {
   "base": {
     "application name": "thermo_capillary_droplet",
-    "degree": "1",
     "dimension": "3",
-    "do simplex": "false",
     "do print parameters": "false",
     "global refinements": "4",
-    "problem name": "melt_pool"
+    "problem name": "melt_pool",
+    "fe": {
+      "degree": "1"
+    }
   },
   "heat": {
     "linear solver": {

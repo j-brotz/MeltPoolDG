@@ -95,7 +95,7 @@ namespace MeltPoolDG::LevelSet
               scratch_data,
               base_in->parameters.ls.reinit,
               base_in->parameters.ls.normal_vec,
-              base_in->parameters.ls.n_subdivisions,
+              base_in->parameters.ls.get_n_subdivisions(),
               reinit_time_iterator,
               reinit_dof_idx_in,
               ls_quad_idx_in,
@@ -460,7 +460,7 @@ namespace MeltPoolDG::LevelSet
         // Compute time increment for reinitialization from min(epsilon, dt)
         reinit_time_iterator.set_current_time_increment(
           std::min(level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
-                     scratch_data.get_min_cell_size() / level_set_data.n_subdivisions),
+                     scratch_data.get_min_cell_size() / level_set_data.get_n_subdivisions()),
                    time_stepping.get_current_time_increment()));
 
         reinit_operation->set_initial_condition(get_level_set());
@@ -556,7 +556,7 @@ namespace MeltPoolDG::LevelSet
 
             const double epsilon_cell =
               level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
-                cell->diameter() / std::sqrt(dim) / level_set_data.n_subdivisions);
+                cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
 
             Vector<double> level_set_local(dofs_per_cell);
             Vector<double> multiplicity_local(dofs_per_cell);
@@ -609,7 +609,7 @@ namespace MeltPoolDG::LevelSet
 
           const double epsilon_cell =
             level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
-              cell->diameter() / std::sqrt(dim) / level_set_data.n_subdivisions);
+              cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {

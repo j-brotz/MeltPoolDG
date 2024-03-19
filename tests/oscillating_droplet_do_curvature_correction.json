@@ -2,10 +2,12 @@
   "base": {
     "application name": "oscillating_droplet",
     "problem name": "melt_pool",
-    "degree": "1",
     "dimension": "2",
     "do print parameters": "false",
-    "global refinements": "6"
+    "global refinements": "6",
+    "fe": {
+      "degree": "1"
+    }
   },
   "simulation specific parameters": {
     "side length": "400e-6",

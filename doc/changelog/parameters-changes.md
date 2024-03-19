@@ -1,6 +1,38 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-03-088
+-  Introduce fe data
+```diff
+{
+  "base": {
+-    "degree": "",
+-    "n q points 1d": "",
+-    "do simplex"; "",
++    "fe": {
++      "type": "FE_Q|FE_SimplexP|FE_Q_iso_Q1|FE_DGQ",
++      "degree": ""
++    }
+  }
+  "heat": {
+-    "degree": "",
+-    "n q points 1d": "",
+-    "n subdivisions": "",
++    "fe": {
++      "type": "FE_Q|FE_SimplexP|FE_Q_iso_Q1|FE_DGQ",
++      "degree": ""
++    }
+  }
+  "level set": {
+-    "n subdivisions": "",
++    "fe": {
++      "type": "FE_Q|FE_SimplexP|FE_Q_iso_Q1|FE_DGQ",
++      "degree": ""
++    }
+  }
+}
+```
+
 ## 2024-03-06
 - Rename flow section
 ```diff

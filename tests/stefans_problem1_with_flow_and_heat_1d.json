@@ -4,9 +4,11 @@
     "application name": "stefans_problem1_with_flow_and_heat",
     "dimension": "1",
     "global refinements": "1000",
-    "degree": "1",
     "do print parameters": "false",
-    "verbosity level": "0"
+    "verbosity level": "0",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

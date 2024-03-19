@@ -1,12 +1,11 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/types.h>
 
-#include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_simplex_p.h>
-
 #include <meltpooldg/heat/laser_intensity_profiles.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 namespace MeltPoolDG::Heat
 {
@@ -117,12 +116,12 @@ namespace MeltPoolDG::Heat
                                   "laser");
             rte_dirichlet_boundary_condition->attach(laser_data.rte_boundary_id, intensity_profile);
 
-            if (data_in.base.do_simplex)
-              rte_quad_idx =
-                scratch_data_in.attach_quadrature(QGaussSimplex<dim>(data_in.base.n_q_points_1d));
+            if (data_in.base.fe.type == FiniteElementType::FE_SimplexP)
+              rte_quad_idx = scratch_data_in.attach_quadrature(
+                QGaussSimplex<dim>(data_in.base.fe.get_n_q_points()));
             else
               rte_quad_idx =
-                scratch_data_in.attach_quadrature(QGauss<dim>(data_in.base.n_q_points_1d));
+                scratch_data_in.attach_quadrature(QGauss<dim>(data_in.base.fe.get_n_q_points()));
 
             rte_operation = std::make_unique<RadiativeTransport::RadiativeTransportOperation<dim>>(
               scratch_data,
@@ -145,15 +144,10 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  LaserOperation<dim>::distribute_dofs(const BaseData<double> &base_data)
+  LaserOperation<dim>::distribute_dofs(const FiniteElementData &fe_data)
   {
     if (laser_data.model == LaserModelType::RTE)
-      {
-        if (base_data.do_simplex)
-          rte_dof_handler->distribute_dofs(FE_SimplexP<dim>(base_data.degree));
-        else
-          rte_dof_handler->distribute_dofs(FE_Q<dim>(base_data.degree));
-      }
+      FiniteElementUtils::distribute_dofs<dim, 1>(fe_data, *rte_dof_handler);
   }
 
   template <int dim>

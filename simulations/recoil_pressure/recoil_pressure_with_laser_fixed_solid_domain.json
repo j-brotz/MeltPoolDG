@@ -4,9 +4,11 @@
     "application name": "recoil_pressure",
     "global refinements": "8",
     "dimension": "2",
-    "degree": "1",
     "do print parameters": "true",
-    "verbosity level": "3"
+    "verbosity level": "3",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

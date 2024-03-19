@@ -18,12 +18,8 @@ namespace MeltPoolDG::Heat
   {
     prm.enter_subsection("heat");
     {
-      prm.add_parameter("degree", degree, "Defines the interpolation degree");
-      prm.add_parameter("n q points 1d", n_q_points_1d, "Defines the number of quadrature points");
-      prm.add_parameter(
-        "n subdivisions",
-        n_subdivisions,
-        "Set the number of subdivisions for the finite element of the level set operation.");
+      fe.add_parameters(prm);
+
       prm.add_parameter("enable time dependent bc",
                         enable_time_dependent_bc,
                         "Set this parameter to true to enable time-dependent bc.");
@@ -67,14 +63,10 @@ namespace MeltPoolDG::Heat
 
   template <typename number>
   void
-  HeatData<number>::post(const unsigned int base_degree, const unsigned int base_verbosity_level)
+  HeatData<number>::post(const FiniteElementData &base_fe_data,
+                         const unsigned int       base_verbosity_level)
   {
-    // set heat degree equal to base degree if it is not set
-    if (degree < 1)
-      degree = base_degree;
-
-    if (n_q_points_1d < 1)
-      n_q_points_1d = degree + 1;
+    fe.post(base_fe_data);
 
     // sync verbosity level with base verbosity if not set
     if (nlsolve.verbosity_level == -1)
@@ -85,15 +77,9 @@ namespace MeltPoolDG::Heat
 
   template <typename number>
   void
-  HeatData<number>::check_input_parameters(const bool base_do_simplex,
-                                           const int  ls_n_subdivisions) const
+  HeatData<number>::check_input_parameters(const FiniteElementData &base_fe_data) const
   {
-    AssertThrow(
-      (!base_do_simplex || (ls_n_subdivisions == 1 && n_subdivisions == 1)),
-      ExcMessage(
-        "If you use a simplex mesh, n_subdivisions for the level set and the heat equation must be 1."));
-    AssertThrow((n_subdivisions == 1 || degree == 1),
-                ExcMessage("If you use n_subdivisions for the heat equation, degree must be 1."));
+    fe.check_input_parameters(base_fe_data);
   }
 
   template struct HeatData<double>;

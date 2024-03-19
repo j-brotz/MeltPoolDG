@@ -2,6 +2,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
@@ -13,9 +14,6 @@ namespace MeltPoolDG::Heat
   {
     HeatData();
 
-    int  degree                                                       = -1;
-    int  n_subdivisions                                               = 1;
-    int  n_q_points_1d                                                = -1;
     bool enable_time_dependent_bc                                     = false;
     bool use_volume_specific_thermal_capacity_for_phase_interpolation = false;
 
@@ -35,13 +33,15 @@ namespace MeltPoolDG::Heat
     LinearSolverData<number>    linear_solver;
     PredictorData<number>       predictor;
 
+    FiniteElementData fe;
+
     void
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    post(const unsigned int base_degree, const unsigned int base_verbosity_level);
+    post(const FiniteElementData &base_fe_data, const unsigned int base_verbosity_level);
 
     void
-    check_input_parameters(const bool base_do_simplex, const int ls_n_subdivisions) const;
+    check_input_parameters(const FiniteElementData &base_fe_data) const;
   };
 } // namespace MeltPoolDG::Heat

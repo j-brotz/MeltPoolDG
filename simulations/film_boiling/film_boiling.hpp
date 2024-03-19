@@ -159,7 +159,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     {
       y_max *= factor_height;
 
-      if (this->parameters.base.do_simplex || dim == 1)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -192,14 +192,14 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       // create mesh
       std::vector<unsigned int> subdivisions(
         dim,
-        5 * (this->parameters.base.do_simplex ?
+        5 * (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP ?
                Utilities::pow(2, this->parameters.base.global_refinements) :
                1));
       // Create elements with a width to height ratio of 3. This leads to a higher resolution
       // in the dim-1 direction, which is the predominant direction of this example.
       subdivisions[dim - 1] *= 3;
 
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         GridGenerator::subdivided_hyper_rectangle_with_simplices(
           *this->triangulation, subdivisions, bottom_left, top_right, true /*colorize*/);
       else
@@ -245,7 +245,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       if (dim > 2)
         this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
 
-      if (!this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 

@@ -137,8 +137,8 @@ namespace MeltPoolDG::Evaporation
 
   template <typename number>
   void
-  EvaporationData<number>::check_input_parameters(const unsigned int          ls_n_subdivisions,
-                                                  const MaterialData<number> &material) const
+  EvaporationData<number>::check_input_parameters(const MaterialData<number> &material,
+                                                  const unsigned int ls_n_subdivisions) const
   {
     AssertThrow((ls_n_subdivisions == 1 ||
                  interface_temperature_evaluation_type !=

@@ -4,9 +4,11 @@
     "application name": "evaporating_droplet_with_heat",
     "global refinements": "3",
     "dimension": "2",
-    "degree": "1",
     "verbosity level": "0",
-    "do print parameters": "false"
+    "do print parameters": "false",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

@@ -83,7 +83,7 @@ namespace MeltPoolDG::Simulation::PowderBed
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex || dim == 1)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -114,7 +114,7 @@ namespace MeltPoolDG::Simulation::PowderBed
         (dim == 2) ? Point<dim>(domain_x_max, domain_y_max) :
                      Point<dim>(domain_x_max, domain_y_max, domain_z_max);
 
-      if (not this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         {
           GridGenerator::subdivided_hyper_rectangle(*this->triangulation,
                                                     cell_repetitions,
@@ -156,7 +156,7 @@ namespace MeltPoolDG::Simulation::PowderBed
       this->attach_dirichlet_boundary_condition(
         lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(T_initial), "heat_transfer");
 
-      if (!this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
       /*
        * BC for RTE
@@ -192,7 +192,7 @@ namespace MeltPoolDG::Simulation::PowderBed
               MeltPool::LevelSetType::heaviside,
               this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
                 GridTools::minimal_cell_diameter(*this->triangulation) /
-                this->parameters.ls.n_subdivisions / std::sqrt(dim))),
+                this->parameters.ls.get_n_subdivisions() / std::sqrt(dim))),
             "prescribed_heaviside");
         }
     }

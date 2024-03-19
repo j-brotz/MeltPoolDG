@@ -1,12 +1,14 @@
 {
   "base": {
     "application name": "recoil_pressure",
-    "degree": "1",
     "dimension": "2",
     "do print parameters": "false",
     "global refinements": "4",
     "problem name": "melt_pool",
-    "verbosity level": "0"
+    "verbosity level": "0",
+    "fe": {
+      "degree": "1"
+    }
   },
   "simulation specific domain": {
     "domain x max": "400e-6",
@@ -83,7 +85,7 @@
   },
   "output": {
     "paraview": {
-      "enable": "true"
+      "enable": "false"
     }
   },
   "level set": {
@@ -103,8 +105,7 @@
     },
     "normal vector": {
       "filter parameter": "2"
-    },
-    "n subdivisions": "1"
+    }
   },
   "flow": {
     "adaflo": {

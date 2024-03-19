@@ -4,8 +4,10 @@
     "application name": "evaporating_droplet",
     "global refinements": "5",
     "dimension": "2",
-    "degree": "1",
-    "do print parameters": "false"
+    "do print parameters": "false",
+    "fe": {
+      "degree": "1"
+    }
   },
   "simulation specific": {
     "domain length": "100e-6",

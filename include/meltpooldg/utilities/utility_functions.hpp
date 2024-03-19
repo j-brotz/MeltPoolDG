@@ -1,44 +1,42 @@
 #pragma once
-// dealii
-#include <deal.II/base/mpi.h>
-#include <deal.II/base/mpi.templates.h>
-#include <deal.II/base/mpi_remote_point_evaluation.h>
+
+#include <deal.II/base/config.h>
+
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
-#include <deal.II/base/utilities.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/distributed/fully_distributed_tria.h>
+#include <deal.II/distributed/shared_tria.h>
+#include <deal.II/distributed/tria.h>
 
-#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_q_dg0.h>
 #include <deal.II/fe/fe_q_iso_q1.h>
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/fe_tools.h>
+#include <deal.II/fe/mapping.h>
 
-#include <deal.II/grid/grid_tools.h>
+#include <deal.II/grid/grid_tools_geometry.h>
 #include <deal.II/grid/tria.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/block_vector_base.h>
+#include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
-#include <deal.II/matrix_free/fe_evaluation.h>
-#include <deal.II/matrix_free/fe_point_evaluation.h>
-#include <deal.II/matrix_free/matrix_free.h>
-#include <deal.II/matrix_free/operators.h>
+#include <deal.II/matrix_free/evaluation_flags.h>
 
-#include <deal.II/non_matching/fe_values.h>
-#include <deal.II/non_matching/mesh_classifier.h>
-
-#include <deal.II/numerics/vector_tools.h>
-
-#include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
+#include <algorithm>
+#include <cmath>
+#include <ios>
 #include <sstream>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 namespace dealii
 {
@@ -149,47 +147,6 @@ namespace MeltPoolDG
 
   namespace UtilityFunctions
   {
-    template <int dim>
-    void
-    distribute_dofs(const bool         do_simplex,
-                    const unsigned int degree,
-                    const unsigned int n_subdivisions,
-                    DoFHandler<dim>   &dof_handler)
-    {
-      if (do_simplex)
-        {
-          dof_handler.distribute_dofs(FE_SimplexP<dim>(degree));
-        }
-      // hex mesh
-      else
-        {
-          if (n_subdivisions > 1)
-            dof_handler.distribute_dofs(FE_Q_iso_Q1<dim>(n_subdivisions));
-          else
-            dof_handler.distribute_dofs(FE_Q<dim>(degree));
-        }
-    }
-
-    template <int dim>
-    Quadrature<dim>
-    create_quadrature(const bool         do_simplex,
-                      const unsigned int n_q_points_1d,
-                      const unsigned int n_subdivisions)
-    {
-      if (do_simplex)
-        {
-          return QGaussSimplex<dim>(n_q_points_1d);
-        }
-      else if (n_subdivisions > 1)
-        {
-          return QIterated<dim>(QGauss<1>(2), n_subdivisions);
-        }
-      else
-        {
-          return QGauss<dim>(n_q_points_1d);
-        }
-    }
-
     template <typename T>
     std::string
     to_string_with_precision(const T a_value, const int n = 6)
@@ -310,9 +267,9 @@ namespace MeltPoolDG
     get_exponent_power_ten(const double x)
     {
       if (x >= 1e-16) // positive number
-        return floor(log10(x));
+        return std::floor(std::log10(x));
       else if (x <= 1e-16) // negative number
-        return floor(log10(abs(x)));
+        return std::floor(std::log10(std::abs(x)));
       else // number close to 0
         return 0;
     }

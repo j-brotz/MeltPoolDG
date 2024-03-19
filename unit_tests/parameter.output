@@ -13,14 +13,16 @@
     "base":
     {
         "application name": "not_initialized",
-        "degree": "1",
         "dimension": "2",
         "do print parameters": "true",
-        "do simplex": "false",
         "global refinements": "1",
-        "n q points 1d": "-1",
         "problem name": "advection_diffusion",
-        "verbosity level": "0"
+        "verbosity level": "0",
+        "fe":
+        {
+            "degree": "1",
+            "type": "FE_Q"
+        }
     },
     "evaporation":
     {
@@ -115,20 +117,22 @@
     },
     "heat":
     {
-        "degree": "-1",
         "enable time dependent bc": "false",
         "interpolate rho times cp":
         {
             "alias": "use volume-specific thermal capacity for phase interpolation",
             "deprecation_status": "true"
         },
-        "n q points 1d": "-1",
-        "n subdivisions": "1",
         "use volume-specific thermal capacity for phase interpolation": "false",
         "convective boundary condition":
         {
             "convection coefficient": "0",
             "temperature infinity": "0"
+        },
+        "fe":
+        {
+            "degree": "-1",
+            "type": "not_initialized"
         },
         "linear solver":
         {
@@ -200,7 +204,6 @@
     "level set":
     {
         "do localized heaviside": "true",
-        "n subdivisions": "1",
         "advection diffusion":
         {
             "diffusivity": "0",
@@ -254,6 +257,11 @@
                 "n old solutions": "2",
                 "type": "none"
             }
+        },
+        "fe":
+        {
+            "degree": "-1",
+            "type": "not_initialized"
         },
         "nearest point":
         {

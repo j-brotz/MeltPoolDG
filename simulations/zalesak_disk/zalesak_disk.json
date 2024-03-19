@@ -4,7 +4,9 @@
     "problem name": "level_set",
     "dimension": "2",
     "global refinements": "8",
-    "degree": "1"
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

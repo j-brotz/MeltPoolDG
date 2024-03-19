@@ -3,8 +3,10 @@
     "problem name": "melt_pool",
     "application name": "spurious_currents",
     "dimension": "2",
-    "degree": "1",
-    "global refinements": "7"
+    "global refinements": "7",
+    "fe": {
+      "degree": "1"
+    }
   },
   "simulation specific parameters": {
     "droplet shape": "ellipse"

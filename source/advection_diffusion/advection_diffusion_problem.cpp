@@ -1,8 +1,5 @@
 #include <deal.II/distributed/grid_refinement.h>
 
-#include <deal.II/fe/mapping.h>
-#include <deal.II/fe/mapping_fe.h>
-
 #include <deal.II/numerics/error_estimator.h>
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
@@ -10,6 +7,7 @@
 #include <meltpooldg/advection_diffusion/advection_diffusion_problem.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
@@ -73,8 +71,9 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup DoFHandler
      */
-    dof_handler.distribute_dofs(*fe);
-    dof_handler_velocity.distribute_dofs(*fe_velocity);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, dim>(base_in->parameters.base.fe,
+                                                  dof_handler_velocity);
 
     /*
      *  create the partititioning
@@ -130,19 +129,6 @@ namespace MeltPoolDG::LevelSet
     dof_handler.reinit(*base_in->triangulation);
     dof_handler_velocity.reinit(*base_in->triangulation);
 
-    if (base_in->parameters.base.do_simplex)
-      {
-        fe = std::make_unique<FE_SimplexP<dim>>(base_in->parameters.base.degree);
-        fe_velocity =
-          std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(base_in->parameters.base.degree), dim);
-      }
-    else
-      {
-        fe = std::make_unique<FE_Q<dim>>(base_in->parameters.base.degree);
-        fe_velocity =
-          std::make_unique<FESystem<dim>>(FE_Q<dim>(base_in->parameters.base.degree), dim);
-      }
-
     /*
      *  setup scratch data
      */
@@ -154,20 +140,13 @@ namespace MeltPoolDG::LevelSet
       /*
        *  setup mapping
        */
-      if (base_in->parameters.base.do_simplex)
-        scratch_data->set_mapping(
-          MappingFE<dim>(FE_SimplexP<dim>(base_in->parameters.base.degree)));
-      else
-        scratch_data->set_mapping(MappingQGeneric<dim>(base_in->parameters.base.degree));
+      scratch_data->set_mapping(
+        FiniteElementUtils::create_mapping<dim>(base_in->parameters.base.fe));
       /*
        *  create quadrature rule
        */
-      if (base_in->parameters.base.do_simplex)
-        advec_diff_quad_idx = scratch_data->attach_quadrature(
-          QGaussSimplex<dim>(base_in->parameters.base.n_q_points_1d));
-      else
-        advec_diff_quad_idx =
-          scratch_data->attach_quadrature(QGauss<dim>(base_in->parameters.base.n_q_points_1d));
+      advec_diff_quad_idx = scratch_data->attach_quadrature(
+        FiniteElementUtils::create_quadrature<dim>(base_in->parameters.base.fe));
 
       advec_diff_dof_idx               = scratch_data->attach_dof_handler(dof_handler);
       advec_diff_hanging_nodes_dof_idx = scratch_data->attach_dof_handler(dof_handler);

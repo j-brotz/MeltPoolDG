@@ -4,9 +4,11 @@
     "application name": "evaporating_shell",
     "global refinements": "5",
     "dimension": "2",
-    "degree": "2",
     "do print parameters": "false",
-    "verbosity level": "0"
+    "verbosity level": "0",
+    "fe": {
+      "degree": "2"
+    }
   },
   "time stepping": {
     "start time": "0.0",
@@ -62,8 +64,7 @@
         "type": "absolute_value",
         "val": "0.02"
       }
-    },
-    "n subdivisions": "1"
+    }
   },
   "flow": {
     "adaflo": {

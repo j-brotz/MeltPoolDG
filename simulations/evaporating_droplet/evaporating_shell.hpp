@@ -147,7 +147,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           this->triangulation =
             std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
@@ -176,7 +176,7 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
       else
         AssertThrow(false, ExcNotImplemented());
 
-      if (this->parameters.base.do_simplex == false)
+      if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 

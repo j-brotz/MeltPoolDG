@@ -1,30 +1,47 @@
+#include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/data_out_base.h>
+#include <deal.II/base/function.h>
 #include <deal.II/base/function_signed_distance.h>
+#include <deal.II/base/index_set.h>
 #include <deal.II/base/mpi.h>
+#include <deal.II/base/mpi_remote_point_evaluation.h>
+#include <deal.II/base/point.h>
+#include <deal.II/base/quadrature.h>
 #include <deal.II/base/timer.h>
-#include <deal.II/base/vectorization.h>
+#include <deal.II/base/types.h>
+
+#include <deal.II/distributed/tria.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_tools.h>
+#include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/mapping_q_generic.h>
 
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/grid_tools.h>
 
-#include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
+#include <deal.II/numerics/data_component_interpretation.h>
 #include <deal.II/numerics/data_out.h>
-#include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/vector_tools_evaluate.h>
+#include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
-#include <meltpooldg/utilities/utility_functions.hpp>
 
+#include <algorithm>
+#include <cmath>
+#include <fstream>
 #include <iostream>
+#include <map>
+#include <string>
+#include <vector>
 
 using namespace dealii;
 using namespace MeltPoolDG;
@@ -222,7 +239,7 @@ run_test(const LevelSet::NearestPointType type = LevelSet::NearestPointType::clo
     Vector<double> local_signed_distance;
     local_signed_distance.reinit(dof_handler.get_fe().n_dofs_per_cell());
 
-    LinearAlgebra::distributed::Vector<double> mark_cells;
+    VectorType mark_cells;
     mark_cells.reinit(triangulation.global_active_cell_index_partitioner().lock());
     mark_cells = 0.0;
 

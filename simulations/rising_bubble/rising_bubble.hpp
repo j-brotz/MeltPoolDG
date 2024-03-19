@@ -61,7 +61,7 @@ namespace MeltPoolDG
         void
         create_spatial_discretization() override
         {
-          if (this->parameters.base.do_simplex)
+          if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
             {
               this->triangulation =
                 std::make_shared<parallel::shared::Triangulation<dim>>(this->mpi_communicator);
@@ -77,7 +77,7 @@ namespace MeltPoolDG
               // create mesh
               std::vector<unsigned int> subdivisions(
                 dim,
-                5 * (this->parameters.base.do_simplex ?
+                5 * (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP ?
                        Utilities::pow(2, this->parameters.base.global_refinements) :
                        1));
               subdivisions[dim - 1] *= 2;
@@ -85,7 +85,7 @@ namespace MeltPoolDG
               const Point<dim> bottom_left;
               const Point<dim> top_right = (dim == 2 ? Point<dim>(1, 2) : Point<dim>(1, 1, 2));
 
-              if (this->parameters.base.do_simplex)
+              if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
                 {
                   GridGenerator::subdivided_hyper_rectangle_with_simplices(*this->triangulation,
                                                                            subdivisions,
@@ -108,7 +108,7 @@ namespace MeltPoolDG
                        std::fabs(cell->face(face)->center()[0]) < 1e-14))
                     cell->face(face)->set_boundary_id(2);
 
-              if (this->parameters.base.do_simplex == false)
+              if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
                 this->triangulation->refine_global(this->parameters.base.global_refinements);
             }
           else

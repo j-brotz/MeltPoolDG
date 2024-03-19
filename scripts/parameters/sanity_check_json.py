@@ -140,6 +140,10 @@ old_parameter_names = [
     ["base", "gravity"],
     ["surface tension"],
     ["darcy damping"],
+    ["base", "degree"],
+    ["base", "do simplex"],
+    ["heat", "degree"],
+    ["level set", "n subdivisions"],
     # ... add old parameter names
     # ["old", "my age"],
 ]
@@ -263,13 +267,19 @@ new_parameter_names = [
     ["flow", "gravity"],
     ["flow", "surface tension"],
     ["flow", "darcy damping"],
+    ["base", "fe", "degree"],
+    ["base", "fe", "type"],
+    ["heat", "fe", "degree"],
+    ["level set", "fe", "type"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
 ]
 
 # Optional: attach lambda function to modify value of new parameter name
 new_parameter_names_lambda = [
-    (["recoil pressure", "pressure coefficient"], lambda x: x * 1.e-5 / 1.013)
+    (["recoil pressure", "pressure coefficient"], lambda x: x * 1.e-5 / 1.013),
+    (["base", "fe", "type"], lambda x: "FE_SimplexP" if x == "true" else "FE_Q" if x == "false" else x),
+    (["level set", "fe", "type"], lambda x: "FE_Q_iso_Q1" if str(x) > 1 else "FE_Q"),
 ]
 
 rename_parameter_values = [
@@ -314,6 +324,9 @@ delete_parameter_names = [
     ["level set", "ls time integration scheme"],
     ["level set", "ls reinit time step size"],
     ["level set", "ls implementation"],
+    ["base", "n q points 1d"],
+    ["heat", "n q points 1d"],
+    ["heat", "n subdivisions"],
 ]
 
 # extend this function to process special parameter changes

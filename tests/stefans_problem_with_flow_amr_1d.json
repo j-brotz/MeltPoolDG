@@ -4,9 +4,11 @@
     "application name": "stefans_problem_with_flow",
     "dimension": "1",
     "global refinements": "6",
-    "degree": "1",
     "do print parameters": "false",
-    "verbosity level": "0"
+    "verbosity level": "0",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",

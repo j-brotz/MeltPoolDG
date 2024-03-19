@@ -2,11 +2,12 @@
   "base": {
     "application name": "moving_droplet",
     "problem name": "melt_pool",
-    "degree": "1",
     "dimension": "2",
-    "do simplex": "false",
     "do print parameters": "false",
-    "global refinements": "4"
+    "global refinements": "4",
+    "fe": {
+      "degree": "1"
+    }
   },
   "time stepping": {
     "start time": "0.0",
@@ -67,7 +68,10 @@
     "normal vector": {
       "filter parameter": "4"
     },
-    "n subdivisions": "2"
+    "fe": {
+      "type": "FE_Q_iso_Q1",
+      "degree": "2"
+    }
   },
   "flow": {
     "adaflo": {

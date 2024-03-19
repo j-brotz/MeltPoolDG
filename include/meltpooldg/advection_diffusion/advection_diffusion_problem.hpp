@@ -7,10 +7,6 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
-#include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/fe_simplex_p.h>
-#include <deal.II/fe/fe_system.h>
-
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
@@ -68,9 +64,6 @@ namespace MeltPoolDG::LevelSet
      */
     void
     refine_mesh(std::shared_ptr<SimulationBase<dim>> base_in);
-
-    std::unique_ptr<FiniteElement<dim>> fe;
-    std::unique_ptr<FiniteElement<dim>> fe_velocity;
 
     DoFHandler<dim>                       dof_handler;
     AffineConstraints<double>             constraints;

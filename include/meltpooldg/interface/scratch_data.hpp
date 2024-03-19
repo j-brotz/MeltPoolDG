@@ -67,6 +67,9 @@ namespace MeltPoolDG
     void
     set_mapping(const Mapping<dim, spacedim> &mapping);
 
+    void
+    set_mapping(const std::shared_ptr<Mapping<dim, spacedim>> mapping);
+
     unsigned int
     attach_dof_handler(const DoFHandler<dim, spacedim> &dof_handler);
 

@@ -193,7 +193,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     void
     create_spatial_discretization() override
     {
-      if (this->parameters.base.do_simplex || dim == 1)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP || dim == 1)
         {
 #ifdef DEAL_II_WITH_METIS
           this->triangulation = std::make_shared<parallel::shared::Triangulation<dim>>(
@@ -230,7 +230,7 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
                                      (dim == 2) ? Point<dim>(x_max, y_max) :
                                                   Point<dim>(x_max, x_max, y_max);
 
-      if (this->parameters.base.do_simplex)
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         {
           // create mesh
           std::vector<unsigned int> subdivisions(
@@ -298,8 +298,8 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     void
     set_field_conditions() final
     {
-      this->attach_initial_condition(
-        std::shared_ptr<Function<dim>>(new Functions::ZeroFunction<dim>(dim)), "navier_stokes_u");
+      this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+                                     "navier_stokes_u");
       this->attach_initial_condition(std::make_shared<Functions::SignedDistance::Plane<dim>>(
                                        Point<dim>::unit_vector(dim - 1) * y_interface,
                                        Point<dim>::unit_vector(dim - 1)),
