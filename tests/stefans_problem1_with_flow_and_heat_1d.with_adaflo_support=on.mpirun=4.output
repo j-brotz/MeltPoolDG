@@ -1,32 +1,20 @@
 +--------------------------------------------------------------------------------------------------+
-|  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.834165595937520e-05                                       reinitialization |
-|  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.347771558357636e-05                                       reinitialization |
-|  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 1.189802060252987e-05                                       reinitialization |
-|  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 1.120211709348951e-05                                       reinitialization |
-|  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 1.087143209588248e-05                                       reinitialization |
-+--------------------------------------------------------------------------------------------------+
-+--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 5.0000e-04 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1375932738e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368369101e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.074045121640665e-05                                       reinitialization |
+| || delta phi ||L2 = 7.099246204234078e-07                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.058401358022820e-05                                       reinitialization |
+| || delta phi ||L2 = 4.639345263512951e-07                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 1.045222688844660e-05                                       reinitialization |
+| || delta phi ||L2 = 3.888149819886166e-07                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 1.033860553434351e-05                                       reinitialization |
+| || delta phi ||L2 = 3.307390556983592e-07                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 1.024083667289233e-05                                       reinitialization |
+| || delta phi ||L2 = 2.674835570815048e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.18053e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18241e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -34,20 +22,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-04 to 1.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1376719352e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368714255e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.028411134029739e-05                                       reinitialization |
+| || delta phi ||L2 = 1.557135220764394e-07                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 1.014404278976144e-05                                       reinitialization |
+| || delta phi ||L2 = 1.147681700786052e-07                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 1.004046680463944e-05                                       reinitialization |
+| || delta phi ||L2 = 8.265963913345331e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 9.956368558050599e-06                                       reinitialization |
+| || delta phi ||L2 = 5.872360375747121e-08                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 9.884077371680178e-06                                       reinitialization |
+| || delta phi ||L2 = 4.144472143252642e-08                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.16229e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18347e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -55,20 +43,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-03 to 1.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1376625975e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368795550e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.951689207809977e-06                                       reinitialization |
+| || delta phi ||L2 = 1.340232813618059e-08                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.824591870710719e-06                                       reinitialization |
+| || delta phi ||L2 = 1.186832587762865e-08                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 9.730947567732073e-06                                       reinitialization |
+| || delta phi ||L2 = 1.024094142820786e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 9.654577297624201e-06                                       reinitialization |
+| || delta phi ||L2 = 8.730824063718501e-09                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 9.588490684109274e-06                                       reinitialization |
+| || delta phi ||L2 = 7.551811620487570e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.15193e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18429e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -76,20 +64,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-03 to 2.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1376451978e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368805542e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.661274816608056e-06                                       reinitialization |
+| || delta phi ||L2 = 3.668110082344356e-08                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.538952326693106e-06                                       reinitialization |
+| || delta phi ||L2 = 2.827656153669977e-08                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 9.449418939766474e-06                                       reinitialization |
+| || delta phi ||L2 = 2.138423305098058e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 9.376750313094817e-06                                       reinitialization |
+| || delta phi ||L2 = 1.605233812540519e-08                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 9.314088856626768e-06                                       reinitialization |
+| || delta phi ||L2 = 1.215560896383749e-08                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.14806e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18498e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -97,20 +85,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 2.0000e-03 to 2.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1376277984e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368804633e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.389634215040132e-06                                       reinitialization |
+| || delta phi ||L2 = 3.591190989027382e-08                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.270946065953467e-06                                       reinitialization |
+| || delta phi ||L2 = 2.737421667120543e-08                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 9.184667760564480e-06                                       reinitialization |
+| || delta phi ||L2 = 2.054585124255937e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 9.115047760133166e-06                                       reinitialization |
+| || delta phi ||L2 = 1.536310634264737e-08                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 9.055296686710790e-06                                       reinitialization |
+| || delta phi ||L2 = 1.163748120092123e-08                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.14981e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18559e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -118,20 +106,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 6      t = 2.5000e-03 to 3.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1376111736e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368802363e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.133074854617007e-06                                       reinitialization |
+| || delta phi ||L2 = 3.243052404400260e-08                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 9.017714546644129e-06                                       reinitialization |
+| || delta phi ||L2 = 2.473688454074363e-08                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.934395737014711e-06                                       reinitialization |
+| || delta phi ||L2 = 1.861955567505902e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.867552423907910e-06                                       reinitialization |
+| || delta phi ||L2 = 1.401030580439055e-08                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 8.810458894004114e-06                                       reinitialization |
+| || delta phi ||L2 = 1.073162714249065e-08                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.15657e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18613e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -139,20 +127,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 7      t = 3.0000e-03 to 3.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1375952323e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368801000e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.890162462193985e-06                                       reinitialization |
+| || delta phi ||L2 = 2.948301514038576e-08                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.777932634984609e-06                                       reinitialization |
+| || delta phi ||L2 = 2.254505382381922e-08                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.697357770870440e-06                                       reinitialization |
+| || delta phi ||L2 = 1.704405860891711e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.633081051812042e-06                                       reinitialization |
+| || delta phi ||L2 = 1.292106865946607e-08                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 8.578440429118928e-06                                       reinitialization |
+| || delta phi ||L2 = 1.001461935601355e-08                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.16784e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18663e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -160,20 +148,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 8      t = 3.5000e-03 to 4.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1375801111e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368800092e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.659812010591850e-06                                       reinitialization |
+| || delta phi ||L2 = 2.718813263413722e-08                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.550539860152639e-06                                       reinitialization |
+| || delta phi ||L2 = 2.084452610517928e-08                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.472521585645154e-06                                       reinitialization |
+| || delta phi ||L2 = 1.582740516425929e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.410624104726594e-06                                       reinitialization |
+| || delta phi ||L2 = 1.208561517529461e-08                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 8.358253580809105e-06                                       reinitialization |
+| || delta phi ||L2 = 9.469791173444264e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.18321e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18709e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -181,20 +169,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 9      t = 4.0000e-03 to 4.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1375656732e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368799183e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.441072168352548e-06                                       reinitialization |
+| || delta phi ||L2 = 2.536855170376384e-08                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.334593985637184e-06                                       reinitialization |
+| || delta phi ||L2 = 1.949803696277286e-08                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.258962225227151e-06                                       reinitialization |
+| || delta phi ||L2 = 1.486682243978521e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.199278454412706e-06                                       reinitialization |
+| || delta phi ||L2 = 1.142928329755932e-08                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 8.149016139213927e-06                                       reinitialization |
+| || delta phi ||L2 = 9.044740068020474e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.20231e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18753e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |
@@ -202,20 +190,20 @@
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 10     t = 4.5000e-03 to 5.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 3.1375518277e-02                                    advection_diffusion |
+| || advected field ||L2 = 3.1368798275e-02                                    advection_diffusion |
 +--------------------------------------------------------------------------------------------------+
 |  τ = 4e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.233090738940518e-06                                       reinitialization |
+| || delta phi ||L2 = 2.388599007474568e-08                                       reinitialization |
 |  τ = 8e-06                                                                      reinitialization |
-| || delta phi ||L2 = 8.129250090860296e-06                                       reinitialization |
+| || delta phi ||L2 = 1.840214025605746e-08                                       reinitialization |
 |  τ = 1.2e-05                                                                    reinitialization |
-| || delta phi ||L2 = 8.055850230448414e-06                                       reinitialization |
+| || delta phi ||L2 = 1.408695737836752e-08                                       reinitialization |
 |  τ = 1.6e-05                                                                    reinitialization |
-| || delta phi ||L2 = 7.998229193617590e-06                                       reinitialization |
+| || delta phi ||L2 = 1.089869350323625e-08                                       reinitialization |
 |  τ = 2e-05                                                                      reinitialization |
-| || delta phi ||L2 = 7.949927748995833e-06                                       reinitialization |
+| || delta phi ||L2 = 8.702999210186135e-09                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| Newton Raphson solver converged: ||solution|| = 6.22480e+00                newton_raphson_solver |
+| Newton Raphson solver converged: ||solution|| = 1.18793e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = 0                  evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 0.0000000000e+00            evaporation_source_terms_continuous |
 | || velocity ||L2 = 0.000000000000000e+00                                    navier_stokes_adaflo |

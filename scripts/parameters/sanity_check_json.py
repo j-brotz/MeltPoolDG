@@ -219,8 +219,8 @@ new_parameter_names = [
     ["evaporation", "interface temperature evaluation type"],
     ["evaporation", "evaporative mass flux model"],
     ["evaporation", "hardt wondra", "coefficient"],
-    ["evaporation", "thickness integral", "n subdivisions per side"],
-    ["evaporation", "thickness integral", "n subdivisions MCA"],
+    ["evaporation", "thickness integral", "subdivisions per side"],
+    ["evaporation", "thickness integral", "subdivisions MCA"],
     ["evaporation", "formulation source term level set"],
     ["evaporation", "evaporative cooling", "model"],
     ["evaporation", "evaporative dilation rate", "model"],
@@ -295,6 +295,9 @@ rename_parameter_values = [
      "interface_velocity", "interface_velocity_local"),
     (["evaporation", "formulation source term heat"], "diffuse", "regularized"),
     (["evaporation", "formulation source term continuity"], "diffuse", "regularized"),
+    (["evaporation", "evaporative cooling", "model"], "diffuse", "regularized"),
+    (["evaporation", "evaporative dilation rate", "model"], "diffuse", "regularized"),
+    (["evaporation", "recoil pressure", "interface distributed flux type"], "continuous", "local_value"),
 ]
 
 delete_parameter_names = [
