@@ -147,7 +147,7 @@ namespace MeltPoolDG::Heat
   LaserOperation<dim>::distribute_dofs(const FiniteElementData &fe_data)
   {
     if (laser_data.model == LaserModelType::RTE)
-      MeltPoolDG::distribute_dofs<dim>(fe_data, *rte_dof_handler, 1);
+      FiniteElementUtils::distribute_dofs<dim, 1>(fe_data, *rte_dof_handler);
   }
 
   template <int dim>

@@ -10,16 +10,13 @@
 
 #include <meltpooldg/utilities/fe_util.hpp>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::FiniteElementUtils
 {
-
-  template <int dim>
+  template <int dim, unsigned int n_components>
   void
-  distribute_dofs(const FiniteElementData &fe_data,
-                  DoFHandler<dim>         &dof_handler,
-                  const unsigned int       n_components)
+  distribute_dofs(const FiniteElementData &fe_data, DoFHandler<dim> &dof_handler)
   {
-    if (n_components == 1)
+    if constexpr (n_components == 1)
       {
         switch (fe_data.type)
           {
@@ -112,11 +109,15 @@ namespace MeltPoolDG
   }
 
   template void
-  distribute_dofs(const FiniteElementData &, DoFHandler<1> &, const unsigned int);
+  distribute_dofs<1, 1>(const FiniteElementData &, DoFHandler<1> &);
   template void
-  distribute_dofs(const FiniteElementData &, DoFHandler<2> &, const unsigned int);
+  distribute_dofs<2, 1>(const FiniteElementData &, DoFHandler<2> &);
   template void
-  distribute_dofs(const FiniteElementData &, DoFHandler<3> &, const unsigned int);
+  distribute_dofs<2, 2>(const FiniteElementData &, DoFHandler<2> &);
+  template void
+  distribute_dofs<3, 1>(const FiniteElementData &, DoFHandler<3> &);
+  template void
+  distribute_dofs<3, 3>(const FiniteElementData &, DoFHandler<3> &);
 
   template std::shared_ptr<Mapping<1>>
   create_mapping(const FiniteElementData &);
@@ -131,4 +132,4 @@ namespace MeltPoolDG
   create_quadrature(const FiniteElementData &);
   template Quadrature<3>
   create_quadrature(const FiniteElementData &);
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::FiniteElementUtils

@@ -106,7 +106,7 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  setup mapping
      */
-    scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.base.fe));
+    scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(base_in->parameters.base.fe));
 
     /*
      *  setup DoFHandler
@@ -128,8 +128,8 @@ namespace MeltPoolDG::RadiativeTransport
     /*
      *  create quadrature rule
      */
-    rte_quad_idx =
-      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.base.fe));
+    rte_quad_idx = scratch_data->attach_quadrature(
+      FiniteElementUtils::create_quadrature<dim>(base_in->parameters.base.fe));
 
     /*
      * initialize the RTE operation
@@ -198,8 +198,8 @@ namespace MeltPoolDG::RadiativeTransport
   RadiativeTransportProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                                    const bool                           do_reinit)
   {
-    distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
-    distribute_dofs(base_in->parameters.base.fe, dof_handler_heaviside, 1);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler_heaviside);
 
     /*
      *  create partitioning

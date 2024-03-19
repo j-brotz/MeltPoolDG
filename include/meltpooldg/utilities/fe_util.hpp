@@ -10,15 +10,13 @@
 
 #include <memory>
 
-namespace MeltPoolDG
+namespace MeltPoolDG::FiniteElementUtils
 {
   using namespace dealii;
 
-  template <int dim>
+  template <int dim, unsigned int n_components = 1>
   void
-  distribute_dofs(const FiniteElementData &fe_data,
-                  DoFHandler<dim>         &dof_handler,
-                  const unsigned int       n_components = 1);
+  distribute_dofs(const FiniteElementData &fe_data, DoFHandler<dim> &dof_handler);
 
   template <int dim>
   std::shared_ptr<Mapping<dim>>
@@ -27,4 +25,4 @@ namespace MeltPoolDG
   template <int dim>
   Quadrature<dim>
   create_quadrature(const FiniteElementData &fe_data);
-} // namespace MeltPoolDG
+} // namespace MeltPoolDG::FiniteElementUtils

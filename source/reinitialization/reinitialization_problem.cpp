@@ -64,11 +64,13 @@ namespace MeltPoolDG::LevelSet
       /*
        *  setup mapping
        */
-      scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.base.fe));
+      scratch_data->set_mapping(
+        FiniteElementUtils::create_mapping<dim>(base_in->parameters.base.fe));
       /*
        *  create quadrature rule
        */
-      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.base.fe));
+      scratch_data->attach_quadrature(
+        FiniteElementUtils::create_quadrature<dim>(base_in->parameters.base.fe));
 
       scratch_data->attach_dof_handler(dof_handler);
       reinit_dof_idx = scratch_data->attach_constraint_matrix(constraints);
@@ -145,7 +147,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup DoFHandler
      */
-    distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler);
 
     /*
      *  re-create partitioning

@@ -121,7 +121,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup mapping
      */
-    scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.ls.fe));
+    scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(base_in->parameters.ls.fe));
     /*
      *  setup DoFHandler
      */
@@ -141,8 +141,8 @@ namespace MeltPoolDG::LevelSet
     /*
      *  create quadrature rule
      */
-    ls_quad_idx =
-      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.ls.fe));
+    ls_quad_idx = scratch_data->attach_quadrature(
+      FiniteElementUtils::create_quadrature<dim>(base_in->parameters.ls.fe));
     /*
      *  initialize the time iterator
      */
@@ -270,8 +270,9 @@ namespace MeltPoolDG::LevelSet
   LevelSetProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                          const bool                           do_reinit)
   {
-    distribute_dofs(base_in->parameters.ls.fe, dof_handler, 1);
-    distribute_dofs(base_in->parameters.base.fe, dof_handler_velocity, dim);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.ls.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, dim>(base_in->parameters.base.fe,
+                                                  dof_handler_velocity);
     /*
      *  create partitioning
      */

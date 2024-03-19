@@ -71,8 +71,9 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup DoFHandler
      */
-    distribute_dofs(base_in->parameters.base.fe, dof_handler, 1);
-    distribute_dofs(base_in->parameters.base.fe, dof_handler_velocity, dim);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, dim>(base_in->parameters.base.fe,
+                                                  dof_handler_velocity);
 
     /*
      *  create the partititioning
@@ -139,12 +140,13 @@ namespace MeltPoolDG::LevelSet
       /*
        *  setup mapping
        */
-      scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.base.fe));
+      scratch_data->set_mapping(
+        FiniteElementUtils::create_mapping<dim>(base_in->parameters.base.fe));
       /*
        *  create quadrature rule
        */
-      advec_diff_quad_idx =
-        scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.base.fe));
+      advec_diff_quad_idx = scratch_data->attach_quadrature(
+        FiniteElementUtils::create_quadrature<dim>(base_in->parameters.base.fe));
 
       advec_diff_dof_idx               = scratch_data->attach_dof_handler(dof_handler);
       advec_diff_hanging_nodes_dof_idx = scratch_data->attach_dof_handler(dof_handler);

@@ -934,7 +934,7 @@ namespace MeltPoolDG::MeltPool
     /*
      *  setup mapping
      */
-    scratch_data->set_mapping(create_mapping<dim>(base_in->parameters.base.fe));
+    scratch_data->set_mapping(FiniteElementUtils::create_mapping<dim>(base_in->parameters.base.fe));
 
     scratch_data->attach_dof_handler(dof_handler_ls);
     scratch_data->attach_dof_handler(dof_handler_ls);
@@ -959,11 +959,11 @@ namespace MeltPoolDG::MeltPool
     /*
      *  create quadrature rule
      */
-    ls_quad_idx =
-      scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.ls.fe));
+    ls_quad_idx = scratch_data->attach_quadrature(
+      FiniteElementUtils::create_quadrature<dim>(base_in->parameters.ls.fe));
     if (problem_specific_parameters.do_heat_transfer)
-      temp_quad_idx =
-        scratch_data->attach_quadrature(create_quadrature<dim>(base_in->parameters.heat.fe));
+      temp_quad_idx = scratch_data->attach_quadrature(
+        FiniteElementUtils::create_quadrature<dim>(base_in->parameters.heat.fe));
 
     // initialize the time stepping scheme
     time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
@@ -1409,10 +1409,10 @@ namespace MeltPoolDG::MeltPool
   MeltPoolProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                          const bool                           do_reinit)
   {
-    distribute_dofs<dim>(base_in->parameters.ls.fe, dof_handler_ls, 1);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.ls.fe, dof_handler_ls);
 
     if (problem_specific_parameters.do_heat_transfer)
-      distribute_dofs<dim>(base_in->parameters.heat.fe, dof_handler_heat, 1);
+      FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.heat.fe, dof_handler_heat);
 
     if (laser_operation)
       laser_operation->distribute_dofs(base_in->parameters.base.fe);
