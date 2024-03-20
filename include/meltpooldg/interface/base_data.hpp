@@ -53,7 +53,7 @@ namespace MeltPoolDG
   struct BaseData
   {
     ApplicationName   application_name    = ApplicationName::not_initialized;
-    ProblemType       problem_name        = ProblemType::advection_diffusion;
+    ProblemType       problem_name        = ProblemType::not_initialized;
     unsigned int      dimension           = 2;
     unsigned int      global_refinements  = 1;
     bool              do_print_parameters = true;
