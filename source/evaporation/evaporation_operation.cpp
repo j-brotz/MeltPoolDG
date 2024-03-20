@@ -124,7 +124,6 @@ namespace MeltPoolDG::Evaporation
       evapor_model =
         std::make_shared<EvaporationModelRecoilPressure>(recoil_data,
                                                          material.boiling_temperature,
-                                                         material.sticking_constant,
                                                          material.molar_mass,
                                                          material.latent_heat_of_evaporation);
     else if (evaporation_data.evaporative_mass_flux_model ==
@@ -132,7 +131,6 @@ namespace MeltPoolDG::Evaporation
       evapor_model = std::make_shared<EvaporationModelSaturatedVaporPressure>(
         recoil_data,
         material.boiling_temperature,
-        material.sticking_constant,
         material.molar_mass,
         material.latent_heat_of_evaporation);
     else if (evaporation_data.evaporative_mass_flux_model == EvaporationModelType::hardt_wondra)

@@ -40,7 +40,6 @@
     "boiling temperature": "1200.",
     "latent heat of evaporation": "1.e6",
     "molar mass": "0.05224130936",
-    "sticking constant": "1",
     "two phase fluid properties transition type": "smooth",
     "solid liquid properties transition type": "mushy_zone"
   },
@@ -50,7 +49,8 @@
       "activation temperature": "800",
       "temperature constant": "10000.",
       "pressure coefficient": "0.0987166831194472",
-      "enable": "true"
+      "enable": "true",
+      "sticking constant": "1"
     },
     "evaporative cooling": {
       "enable": "true"

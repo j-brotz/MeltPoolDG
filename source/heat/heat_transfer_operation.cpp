@@ -1,5 +1,7 @@
 #include <deal.II/base/exceptions.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
 #include <meltpooldg/heat/heat_transfer_operation.hpp>

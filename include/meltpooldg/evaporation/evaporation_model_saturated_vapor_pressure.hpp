@@ -35,7 +35,6 @@ namespace MeltPoolDG::Evaporation
   public:
     EvaporationModelSaturatedVaporPressure(const RecoilPressureData<double> &recoil_data,
                                            const double                      boiling_temperature,
-                                           const double                      sticking_constant,
                                            const double                      molar_mass,
                                            const double latent_heat_evaporation);
 

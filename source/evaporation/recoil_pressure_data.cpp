@@ -31,6 +31,10 @@ namespace MeltPoolDG::Evaporation
                         "If this parameter is not set, the value is computed by "
                         "latent_heat_evaporation * molar_mass / "
                         "universal_gas_constant;");
+      prm.add_parameter("sticking constant",
+                        sticking_constant,
+                        "Sticking constant.",
+                        Patterns::Double(0.0, 1.0));
       prm.add_parameter("interface distributed flux type",
                         interface_distributed_flux_type,
                         "Type that determines how the recoil pressure force is computed in the "

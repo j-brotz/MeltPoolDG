@@ -70,7 +70,6 @@ namespace MeltPoolDG
                         latent_heat_of_evaporation,
                         "Latent heat of evaporation (J/kg).");
       prm.add_parameter("molar mass", molar_mass, "Molar mass (mol/kg).");
-      prm.add_parameter("sticking constant", sticking_constant, "Sticking constant.");
       prm.add_parameter("specific enthalpy reference temperature",
                         specific_enthalpy_reference_temperature,
                         "Reference temperature of the specific enthalpy");
@@ -117,7 +116,6 @@ namespace MeltPoolDG
     data.boiling_temperature                     = 3000.0;  //  K
     data.latent_heat_of_evaporation              = 6.0e6;   //  J / kg
     data.molar_mass                              = 5.22e-2; //  kg / mol
-    data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 663.731; //  K
     return data;
   }
@@ -147,7 +145,6 @@ namespace MeltPoolDG
     data.boiling_temperature                     = 3133.0;  //  K
     data.latent_heat_of_evaporation              = 8.84e6;  //  J / kg
     data.molar_mass                              = 4.78e-2; //  kg / mol
-    data.sticking_constant                       = 1.0;     //  dimensionless
     data.specific_enthalpy_reference_temperature = 538.0;   //  K
     return data;
   }
