@@ -1,7 +1,25 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
-## 2024-03-088
+## 2024-03-20
+- move sticking constant from material
+```diff
+{
+  "material":
+  {
+-    "sticking constant": "1"
+  }
+  "evaporation":
+  {
+      "recoil pressure":
+      {
++    "sticking constant": "1"
+      }
+  }
+}
+```
+
+## 2024-03-08
 -  Introduce fe data
 ```diff
 {

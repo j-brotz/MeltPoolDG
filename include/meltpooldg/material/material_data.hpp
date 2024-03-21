@@ -78,7 +78,6 @@ namespace MeltPoolDG
     number boiling_temperature        = 0.0;
     number latent_heat_of_evaporation = 0.0;
     number molar_mass                 = 0.0;
-    number sticking_constant          = 1.0;
 
     number specific_enthalpy_reference_temperature = numbers::invalid_double;
 
@@ -110,7 +109,6 @@ namespace MeltPoolDG
      * boiling temperature           = 3000  K
      * latent heat of evaporation    = 6.0e6  J / kg
      * molar mass                    = 5.22e-2  kg / mol
-     * sticking constant             = 1
      * specific enthalpy reference temperature = 663.731  K
      */
     static MaterialData<number>
@@ -136,7 +134,6 @@ namespace MeltPoolDG
      * boiling temperature           = 3133  K
      * latent heat of evaporation    = 8.84e6  J / kg
      * molar mass                    = 4.78e-2  kg / mol
-     * sticking constant             = 1
      * specific enthalpy reference temperature = 538  K
      */
     static MaterialData<number>

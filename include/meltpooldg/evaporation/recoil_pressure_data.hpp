@@ -50,6 +50,9 @@ namespace MeltPoolDG::Evaporation
     // and the universal gas constant R.
     number temperature_constant = -1;
 
+    // sticking constant
+    number sticking_constant = 1.0;
+
     // activation temperature of the recoil pressure; must be smaller than or equal to the boiling
     // temperature; this parameter enables a smooth activation of the recoil pressure
     number activation_temperature =

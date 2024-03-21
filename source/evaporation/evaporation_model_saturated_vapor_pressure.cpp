@@ -11,12 +11,11 @@ namespace MeltPoolDG::Evaporation
   EvaporationModelSaturatedVaporPressure::EvaporationModelSaturatedVaporPressure(
     const RecoilPressureData<double> &recoil_data,
     const double                      boiling_temperature,
-    const double                      sticking_constant,
     const double                      molar_mass,
     const double                      latent_heat_evaporation)
     : recoil_data(recoil_data)
     , boiling_temperature(boiling_temperature)
-    , sticking_constant(sticking_constant)
+    , sticking_constant(recoil_data.sticking_constant)
     , molar_mass(molar_mass)
     , latent_heat_evaporation(latent_heat_evaporation)
     , Cm(molar_mass / (2. * numbers::PI * PhysicalConstants::universal_gas_constant))
