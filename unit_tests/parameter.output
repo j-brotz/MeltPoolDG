@@ -119,11 +119,6 @@
     "heat":
     {
         "enable time dependent bc": "false",
-        "interpolate rho times cp":
-        {
-            "alias": "use volume-specific thermal capacity for phase interpolation",
-            "deprecation_status": "true"
-        },
         "use volume-specific thermal capacity for phase interpolation": "false",
         "convective boundary condition":
         {

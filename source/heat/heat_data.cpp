@@ -49,11 +49,6 @@ namespace MeltPoolDG::Heat
       }
       prm.leave_subsection();
 
-      // add deprecated status
-      prm.declare_alias("use volume-specific thermal capacity for phase interpolation",
-                        "interpolate rho times cp",
-                        true);
-
       nlsolve.add_parameters(prm);
       linear_solver.add_parameters(prm);
       predictor.add_parameters(prm);
