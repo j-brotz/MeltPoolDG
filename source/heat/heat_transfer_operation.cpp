@@ -88,11 +88,19 @@ namespace MeltPoolDG::Heat
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
       if (diag_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-          *heat_operator, solution_update, rhs, heat_data.linear_solver, *diag_preconditioner);
+        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
+                                                                          solution_update,
+                                                                          rhs,
+                                                                          heat_data.linear_solver,
+                                                                          *diag_preconditioner,
+                                                                          "heat_operation");
       else if (trilinos_preconditioner)
-        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-          *heat_operator, solution_update, rhs, heat_data.linear_solver, *trilinos_preconditioner);
+        return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
+                                                                          solution_update,
+                                                                          rhs,
+                                                                          heat_data.linear_solver,
+                                                                          *trilinos_preconditioner,
+                                                                          "heat_operation");
       else
         AssertThrow(false, ExcNotImplemented());
     };

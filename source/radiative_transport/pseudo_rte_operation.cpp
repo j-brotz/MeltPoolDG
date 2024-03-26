@@ -160,7 +160,8 @@ namespace MeltPoolDG::RadiativeTransport
                                         solution_history.get_current_solution(),
                                         rhs,
                                         this->rte_data.pseudo_time_stepping.linear_solver,
-                                        *diag_preconditioner_matrixfree);
+                                        *diag_preconditioner_matrixfree,
+                                        "pseudo_rte");
       }
     else
       {
@@ -171,7 +172,8 @@ namespace MeltPoolDG::RadiativeTransport
                                         solution_history.get_current_solution(),
                                         rhs,
                                         this->rte_data.pseudo_time_stepping.linear_solver,
-                                        *trilinos_preconditioner_matrixfree);
+                                        *trilinos_preconditioner_matrixfree,
+                                        "pseudo_rte");
       }
 
     if (sol_update_ghosts)

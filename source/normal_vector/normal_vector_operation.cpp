@@ -127,7 +127,8 @@ namespace MeltPoolDG::LevelSet
                                                       solution_history.get_current_solution(),
                                                       rhs,
                                                       normal_vector_data.linear_solver,
-                                                      *diag_preconditioner_matrixfree);
+                                                      *diag_preconditioner_matrixfree,
+                                                      "normal_vector_operation");
         else
           iter = LinearSolver::solve<BlockVectorType>(
             *normal_vector_operator,
@@ -135,7 +136,8 @@ namespace MeltPoolDG::LevelSet
             rhs,
             normal_vector_data.linear_solver,
             BlockPreconditionerWrapper<TrilinosWrappers::PreconditionBase>(
-              *trilinos_preconditioner_matrixfree));
+              *trilinos_preconditioner_matrixfree),
+            "normal_vector_operation");
       }
     else
       {
@@ -147,7 +149,9 @@ namespace MeltPoolDG::LevelSet
           iter = LinearSolver::solve<VectorType>(normal_vector_operator->get_system_matrix(),
                                                  solution_history.get_current_solution().block(d),
                                                  rhs.block(d),
-                                                 normal_vector_data.linear_solver);
+                                                 normal_vector_data.linear_solver,
+                                                 PreconditionIdentity(),
+                                                 "normal_vector_operation");
       }
 
     if (update_ghosts)
