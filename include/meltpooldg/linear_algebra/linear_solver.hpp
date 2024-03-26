@@ -41,7 +41,7 @@ namespace MeltPoolDG
       if (monitor_history)
         solver_control.enable_history_data();
 
-      const auto finalize = [&]() {
+      const auto finalize = [&](const bool failed_step = false) {
         // TODO: introduce get_mpi_communicator() in BlockVector in deal.II
         std::unique_ptr<dealii::ConditionalOStream> pcout;
         if constexpr (internal::is_block_vector<VectorType>)
@@ -90,7 +90,7 @@ namespace MeltPoolDG
             Journal::print_decoration_line(*pcout);
           }
 
-        if (!identifier.empty())
+        if (!identifier.empty() && failed_step)
           Journal::print_line(*pcout,
                               "Exception with ID >> " + identifier + " << occured.",
                               "linear solver");
@@ -121,7 +121,7 @@ namespace MeltPoolDG
         }
       catch (const SolverControl::NoConvergence &e)
         {
-          finalize(/*force_output*/);
+          finalize(true /*failed_step*/);
 
           AssertThrow(false, e);
         }
