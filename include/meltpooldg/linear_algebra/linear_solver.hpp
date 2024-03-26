@@ -31,7 +31,8 @@ namespace MeltPoolDG
           VectorType                     &solution,
           const VectorType               &rhs,
           const LinearSolverData<double> &data,
-          const PreconditionerType       &preconditioner = PreconditionIdentity())
+          const PreconditionerType       &preconditioner = PreconditionIdentity(),
+          const std::string               identifier     = "")
     {
       const bool monitor_history = data.monitor_type != LinearSolverMonitorType::none;
 
@@ -41,19 +42,19 @@ namespace MeltPoolDG
         solver_control.enable_history_data();
 
       const auto finalize = [&]() {
+        // TODO: introduce get_mpi_communicator() in BlockVector in deal.II
+        std::unique_ptr<dealii::ConditionalOStream> pcout;
+        if constexpr (internal::is_block_vector<VectorType>)
+          pcout = std::make_unique<dealii::ConditionalOStream>(
+            std::cout,
+            Utilities::MPI::this_mpi_process(solution.block(0).get_mpi_communicator()) == 0);
+        else
+          pcout = std::make_unique<dealii::ConditionalOStream>(
+            std::cout, Utilities::MPI::this_mpi_process(solution.get_mpi_communicator()) == 0);
+
         if (monitor_history)
           {
             const auto &history_data = solver_control.get_history_data();
-
-            // TODO: introduce get_mpi_communicator() in BlockVector in deal.II
-            std::unique_ptr<dealii::ConditionalOStream> pcout;
-            if constexpr (internal::is_block_vector<VectorType>)
-              pcout = std::make_unique<dealii::ConditionalOStream>(
-                std::cout,
-                Utilities::MPI::this_mpi_process(solution.block(0).get_mpi_communicator()) == 0);
-            else
-              pcout = std::make_unique<dealii::ConditionalOStream>(
-                std::cout, Utilities::MPI::this_mpi_process(solution.get_mpi_communicator()) == 0);
 
             Journal::print_decoration_line(*pcout);
             {
@@ -88,6 +89,11 @@ namespace MeltPoolDG
               }
             Journal::print_decoration_line(*pcout);
           }
+
+        if (!identifier.empty())
+          Journal::print_line(*pcout,
+                              "Exception with ID >> " + identifier + " << occured.",
+                              "linear solver");
       };
 
 

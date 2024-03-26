@@ -98,7 +98,8 @@ namespace MeltPoolDG::LevelSet
                                                    solution_history.get_current_solution(),
                                                    rhs,
                                                    curvature_data.linear_solver,
-                                                   *diag_preconditioner_matrixfree);
+                                                   *diag_preconditioner_matrixfree,
+                                                   "curvature_operation");
           }
         else
           {
@@ -106,7 +107,8 @@ namespace MeltPoolDG::LevelSet
                                                    solution_history.get_current_solution(),
                                                    rhs,
                                                    curvature_data.linear_solver,
-                                                   *trilinos_preconditioner_matrixfree);
+                                                   *trilinos_preconditioner_matrixfree,
+                                                   "curvature_operation");
           }
       }
     else
@@ -119,7 +121,9 @@ namespace MeltPoolDG::LevelSet
         iter = LinearSolver::solve<VectorType>(curvature_operator->get_system_matrix(),
                                                solution_history.get_current_solution(),
                                                rhs,
-                                               curvature_data.linear_solver);
+                                               curvature_data.linear_solver,
+                                               PreconditionIdentity(),
+                                               "curvature_operation");
       }
 
     if (update_ghosts)

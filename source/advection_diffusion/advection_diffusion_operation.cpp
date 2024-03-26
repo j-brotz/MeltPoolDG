@@ -216,7 +216,8 @@ namespace MeltPoolDG::LevelSet
                                                    solution_history.get_current_solution(),
                                                    rhs,
                                                    this->advec_diff_data.linear_solver,
-                                                   *diag_preconditioner_matrixfree);
+                                                   *diag_preconditioner_matrixfree,
+                                                   "advection_diffusion_operation");
           }
         else
           {
@@ -227,7 +228,8 @@ namespace MeltPoolDG::LevelSet
                                                    solution_history.get_current_solution(),
                                                    rhs,
                                                    this->advec_diff_data.linear_solver,
-                                                   *trilinos_preconditioner_matrixfree);
+                                                   *trilinos_preconditioner_matrixfree,
+                                                   "advection_diffusion_operation");
           }
       }
     else
@@ -249,7 +251,8 @@ namespace MeltPoolDG::LevelSet
                                                solution_history.get_current_solution(),
                                                rhs,
                                                this->advec_diff_data.linear_solver,
-                                               *preconditioner);
+                                               *preconditioner,
+                                               "advection_diffusion_operation");
       }
 
     scratch_data.get_constraint(advec_diff_dof_idx)

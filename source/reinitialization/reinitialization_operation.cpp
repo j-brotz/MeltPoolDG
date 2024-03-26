@@ -179,7 +179,8 @@ namespace MeltPoolDG::LevelSet
                                                    solution_history.get_current_solution(),
                                                    rhs,
                                                    reinit_data.linear_solver,
-                                                   *diag_preconditioner_matrixfree);
+                                                   *diag_preconditioner_matrixfree,
+                                                   "reinitialization_operation");
           }
         else
           {
@@ -194,7 +195,8 @@ namespace MeltPoolDG::LevelSet
                                                    solution_history.get_current_solution(),
                                                    rhs,
                                                    reinit_data.linear_solver,
-                                                   *trilinos_preconditioner_matrixfree);
+                                                   *trilinos_preconditioner_matrixfree,
+                                                   "reinitialization_operation");
           }
       }
     else
@@ -210,7 +212,8 @@ namespace MeltPoolDG::LevelSet
                                                solution_history.get_current_solution(),
                                                rhs,
                                                reinit_data.linear_solver,
-                                               *preconditioner);
+                                               *preconditioner,
+                                               "reinitialization_operation");
 
         Journal::print_formatted_norm(
           scratch_data.get_pcout(0),

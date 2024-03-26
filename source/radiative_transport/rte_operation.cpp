@@ -133,8 +133,12 @@ namespace MeltPoolDG::RadiativeTransport
       {
         diag_preconditioner_matrixfree =
           preconditioner_matrixfree->compute_diagonal_preconditioner();
-        iter = LinearSolver::solve<VectorType>(
-          *rte_operator, intensity, rhs, rte_data.linear_solver, *diag_preconditioner_matrixfree);
+        iter = LinearSolver::solve<VectorType>(*rte_operator,
+                                               intensity,
+                                               rhs,
+                                               rte_data.linear_solver,
+                                               *diag_preconditioner_matrixfree,
+                                               "rte");
       }
     else
       {
@@ -144,7 +148,8 @@ namespace MeltPoolDG::RadiativeTransport
                                                intensity,
                                                rhs,
                                                rte_data.linear_solver,
-                                               *trilinos_preconditioner_matrixfree);
+                                               *trilinos_preconditioner_matrixfree,
+                                               "rte");
       }
 
     if (update_ghosts)
