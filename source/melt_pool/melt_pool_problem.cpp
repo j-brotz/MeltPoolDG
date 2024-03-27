@@ -1344,6 +1344,10 @@ namespace MeltPoolDG::MeltPool
         false,
         ExcMessage("For the level set operation either a function for the initial level set or the "
                    "signed distance field must be provided. Abort ..."));
+
+    // set inflow outflow BC
+    level_set_operation->set_inflow_outflow_bc(base_in->get_bc("level_set")->inflow_outflow_bc);
+
     // set initial conditions of the temperature field
     if (heat_operation)
       {

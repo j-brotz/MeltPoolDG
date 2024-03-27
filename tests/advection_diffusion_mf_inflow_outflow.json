@@ -15,7 +15,6 @@
     "time step size": "0.01"
   },
   "output": {
-    "do user defined postprocessing": "true",
     "paraview": {
       "enable": "false"
     }
@@ -24,11 +23,11 @@
     "advection diffusion": {
       "advec diff integration scheme": "crank_nicolson",
       "linear solver": {
-        "preconditioner type": "ILU",
-        "do matrix free": "false"
-      },
-      "diffusivity": "0.000000",
-      "implementation": "meltpooldg"
+        "do matrix free": "true"
+      }
     }
+  },
+  "simulation specific": {
+    "inflow outflow bc": "true"
   }
 }

@@ -58,6 +58,9 @@ namespace MeltPoolDG::LevelSet
     void
     solve(const bool do_finish_time_step = true) override;
 
+    void
+    create_inflow_outflow_constraints();
+
     const LinearAlgebra::distributed::Vector<double> &
     get_advected_field() const override;
 
@@ -81,6 +84,10 @@ namespace MeltPoolDG::LevelSet
 
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const override;
+
+    void
+    set_inflow_outflow_bc(
+      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc_);
 
   private:
     void
@@ -121,5 +128,9 @@ namespace MeltPoolDG::LevelSet
 
     VectorType rhs;
     VectorType user_rhs;
+
+    std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc;
+
+    std::pair<std::vector<unsigned int>, std::vector<double>> inflow_constraints_indices_and_values;
   };
 } // namespace MeltPoolDG::LevelSet

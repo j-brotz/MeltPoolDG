@@ -7,6 +7,7 @@
 // for parallelization
 #include <deal.II/lac/generic_linear_algebra.h>
 
+#include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/curvature/curvature_operation_base.hpp>
 #include <meltpooldg/level_set/level_set_data.hpp>
@@ -101,6 +102,10 @@ namespace MeltPoolDG::LevelSet
     void
     set_initial_condition(const Function<dim> &initial_field_function_level_set,
                           const bool           is_signed_distance_initial_field_function = false);
+
+    void
+    set_inflow_outflow_bc(
+      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc);
 
     void
     reinit();

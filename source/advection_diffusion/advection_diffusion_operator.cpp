@@ -181,6 +181,9 @@ namespace MeltPoolDG::LevelSet
   void
   AdvectionDiffusionOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
+    if (do_pre_post)
+      do_pre_vmult(dst, src);
+
     scratch_data.get_matrix_free().template cell_loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
         FECellIntegrator<dim, 1, number>   advected_field_vals(matrix_free,
@@ -203,6 +206,9 @@ namespace MeltPoolDG::LevelSet
       dst,
       src,
       true);
+
+    if (do_pre_post)
+      do_post_vmult(dst, src);
   }
 
   template <int dim, typename number>
@@ -308,6 +314,9 @@ namespace MeltPoolDG::LevelSet
       },
       this->dof_idx,
       advec_diff_quad_idx);
+
+    if (do_pre_post)
+      post_system_matrix_compute(system_matrix);
   }
 
   template <int dim, typename number>
@@ -345,6 +354,12 @@ namespace MeltPoolDG::LevelSet
     const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
     for (auto &i : diagonal)
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
+
+    if (do_pre_post)
+      {
+        for (const auto &i : inflow_outflow_bc_local_indices)
+          diagonal.local_element(i) = 1.0;
+      }
   }
 
   template <int dim, typename number>
@@ -418,6 +433,80 @@ namespace MeltPoolDG::LevelSet
             stab_param[cell] = data.conv_stab.coefficient;
           }
         stab_param[cell] *= scratch_data.get_cell_sizes()[velocity_vals.get_current_cell_index()];
+      }
+  }
+
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::set_inflow_outflow_bc(
+    std::vector<unsigned int> inflow_outflow_bc_local_indices_)
+  {
+    inflow_outflow_bc_local_indices = inflow_outflow_bc_local_indices_;
+  }
+
+
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::enable_pre_post()
+  {
+    do_pre_post = true;
+  }
+
+
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::disable_pre_post()
+  {
+    do_pre_post = false;
+  }
+
+
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::do_pre_vmult([[maybe_unused]] VectorType &dst,
+                                                        const VectorType            &src_in) const
+  {
+    VectorType &src = const_cast<VectorType &>(src_in);
+
+    inflow_outflow_constraints_values_temp.resize(inflow_outflow_bc_local_indices.size());
+
+    for (unsigned int i = 0; i < inflow_outflow_bc_local_indices.size(); ++i)
+      {
+        const unsigned int index                  = inflow_outflow_bc_local_indices[i];
+        inflow_outflow_constraints_values_temp[i] = src.local_element(index);
+        src.local_element(index)                  = 0.0;
+      }
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::do_post_vmult(
+    VectorType                        &dst,
+    [[maybe_unused]] const VectorType &src_in) const
+  {
+    for (unsigned int i = 0; i < inflow_outflow_bc_local_indices.size(); ++i)
+      {
+        const auto &index        = inflow_outflow_bc_local_indices[i];
+        const auto &value        = inflow_outflow_constraints_values_temp[i];
+        dst.local_element(index) = value;
+      }
+  }
+
+  template <int dim, typename number>
+  void
+  AdvectionDiffusionOperator<dim, number>::post_system_matrix_compute(
+    TrilinosWrappers::SparseMatrix &system_matrix) const
+  {
+    const auto &partitioner = scratch_data.get_matrix_free().get_vector_partitioner(this->dof_idx);
+
+    for (const auto &i : inflow_outflow_bc_local_indices)
+      {
+        const auto global_index = partitioner->local_to_global(i);
+        system_matrix.clear_row(global_index, 1.0);
       }
   }
 

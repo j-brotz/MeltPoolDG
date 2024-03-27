@@ -57,7 +57,6 @@ namespace MeltPoolDG::LevelSet
     assemble_matrixbased(const VectorType &advected_field_old,
                          SparseMatrixType &matrix,
                          VectorType       &rhs) const final;
-
     /*
      *    matrix-free implementation
      */
@@ -80,6 +79,28 @@ namespace MeltPoolDG::LevelSet
     void
     prepare() final;
 
+    /**
+     * additional functions for inflow/outflow boundary conditions
+     */
+    void
+    set_inflow_outflow_bc(std::vector<unsigned int> inflow_outflow_bc_local_indices_);
+
+    void
+    enable_pre_post();
+
+    void
+    disable_pre_post();
+
+    void
+    do_pre_vmult([[maybe_unused]] VectorType &dst, const VectorType &src_in) const;
+
+    void
+    do_post_vmult(VectorType &dst, [[maybe_unused]] const VectorType &src_in) const;
+
+    void
+    post_system_matrix_compute(TrilinosWrappers::SparseMatrix &system_matrix) const;
+
+
   private:
     void
     tangent_local_cell_operation(FECellIntegrator<dim, 1, number>   &advected_field,
@@ -97,5 +118,10 @@ namespace MeltPoolDG::LevelSet
     double                                         theta;
     mutable AlignedVector<VectorizedArray<double>> stab_param;
     mutable bool                                   do_update_stab_param = true;
+
+    mutable bool do_pre_post = false;
+
+    std::vector<unsigned int>   inflow_outflow_bc_local_indices;
+    mutable std::vector<double> inflow_outflow_constraints_values_temp;
   };
 } // namespace MeltPoolDG::LevelSet

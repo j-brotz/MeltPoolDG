@@ -27,6 +27,8 @@ namespace MeltPoolDG
       return BoundaryTypes::radiation_bc;
     else if (std::find(convection_bc.begin(), convection_bc.end(), id) != convection_bc.end())
       return BoundaryTypes::convection_bc;
+    else if (inflow_outflow_bc.find(id) != inflow_outflow_bc.end())
+      return BoundaryTypes::inflow_outflow;
     else
       {
         AssertThrow(false, ExcMessage("for specified boundary_id: " + std::to_string(id)));
@@ -41,6 +43,9 @@ namespace MeltPoolDG
     dirichlet_bc.set_time(time);
 
     for (auto &n : neumann_bc)
+      n.second->set_time(time);
+
+    for (auto &n : inflow_outflow_bc)
       n.second->set_time(time);
   }
 

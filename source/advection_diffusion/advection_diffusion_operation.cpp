@@ -1,3 +1,6 @@
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/types.h>
+
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/numerics/vector_tools.h>
@@ -112,6 +115,9 @@ namespace MeltPoolDG::LevelSet
     // pass time increment to operator TODO: pass time iterator directly to operator
     advec_diff_operator->reset_time_increment(time_iterator.get_current_time_increment());
 
+    // create inflow/outflow constraints if requested
+    this->create_inflow_outflow_constraints();
+
     // compute RHS
     // TODO: also include it for matrix-based to this place (?)
     if (this->advec_diff_data.linear_solver.do_matrix_free &&
@@ -136,7 +142,8 @@ namespace MeltPoolDG::LevelSet
           scratch_data,
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx,
-          false /*don't zero out rhs*/);
+          false /*don't zero out rhs*/,
+          inflow_constraints_indices_and_values);
 
         if (solution_update_ghosts)
           solution_history.get_current_solution().zero_out_ghost_values();
@@ -158,6 +165,8 @@ namespace MeltPoolDG::LevelSet
 
     this->ready_for_time_advance = true;
   }
+
+
 
   template <int dim>
   void
@@ -193,6 +202,7 @@ namespace MeltPoolDG::LevelSet
 
     advec_diff_operator->prepare();
 
+
     if (this->advec_diff_data.linear_solver.do_matrix_free)
       {
         rhs = user_rhs;
@@ -205,10 +215,13 @@ namespace MeltPoolDG::LevelSet
           scratch_data,
           advec_diff_dof_idx,
           advec_diff_hanging_nodes_dof_idx,
-          false /*don't zero out rhs*/);
+          false /*don't zero out rhs*/,
+          inflow_constraints_indices_and_values);
 
         if (this->advec_diff_data.linear_solver.preconditioner_type == PreconditionerType::Diagonal)
           {
+            dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
+              ->enable_pre_post();
             auto diag_preconditioner_matrixfree =
               preconditioner_matrixfree->compute_diagonal_preconditioner();
 
@@ -218,9 +231,14 @@ namespace MeltPoolDG::LevelSet
                                                    this->advec_diff_data.linear_solver,
                                                    *diag_preconditioner_matrixfree,
                                                    "advection_diffusion_operation");
+
+            dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
+              ->disable_pre_post();
           }
         else
           {
+            dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
+              ->enable_pre_post();
             auto trilinos_preconditioner_matrixfree =
               preconditioner_matrixfree->compute_trilinos_preconditioner();
 
@@ -230,6 +248,8 @@ namespace MeltPoolDG::LevelSet
                                                    this->advec_diff_data.linear_solver,
                                                    *trilinos_preconditioner_matrixfree,
                                                    "advection_diffusion_operation");
+            dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
+              ->disable_pre_post();
           }
       }
     else
@@ -254,9 +274,18 @@ namespace MeltPoolDG::LevelSet
                                                *preconditioner,
                                                "advection_diffusion_operation");
       }
+    // inflow/outflow
+    if (!inflow_outflow_bc.empty())
+      {
+        for (unsigned int i = 0; i < inflow_constraints_indices_and_values.first.size(); ++i)
+          solution_history.get_current_solution().local_element(
+            inflow_constraints_indices_and_values.first[i]) =
+            inflow_constraints_indices_and_values.second[i];
+      }
 
     scratch_data.get_constraint(advec_diff_dof_idx)
       .distribute(solution_history.get_current_solution());
+
 
     Journal::print_formatted_norm(
       scratch_data.get_pcout(2),
@@ -314,6 +343,116 @@ namespace MeltPoolDG::LevelSet
     // update ghost values of solution
     solution_history.get_current_solution().update_ghost_values();
   }
+
+
+
+  template <int dim>
+  void
+  AdvectionDiffusionOperation<dim>::create_inflow_outflow_constraints()
+  {
+    if (!inflow_outflow_bc.empty())
+      {
+        AssertThrow(
+          this->advec_diff_data.linear_solver.do_matrix_free == true,
+          ExcMessage(
+            "Inflow/outflow boundary conditions are only available for the matrix-free computation."));
+
+        // 1) collect relevant indices and values subject to inflow
+        inflow_constraints_indices_and_values.first.clear();
+        inflow_constraints_indices_and_values.second.clear();
+
+        const auto &partitioner =
+          scratch_data.get_matrix_free().get_vector_partitioner(advec_diff_dof_idx);
+
+        FEFaceValues<dim> vel_eval(
+          scratch_data.get_mapping(),
+          scratch_data.get_fe(velocity_dof_idx),
+          Quadrature<dim - 1>(
+            scratch_data.get_fe(advec_diff_dof_idx).get_unit_face_support_points()),
+          update_quadrature_points | update_values | update_normal_vectors);
+        const FEValuesExtractors::Vector velocities(0);
+
+        advection_velocity.update_ghost_values();
+
+        VectorType advection_velocity_compatible;
+        advection_velocity_compatible.reinit(
+          scratch_data.get_dof_handler(velocity_dof_idx).locally_owned_dofs(),
+          DoFTools::extract_locally_relevant_dofs(scratch_data.get_dof_handler(velocity_dof_idx)),
+          scratch_data.get_mpi_comm());
+        advection_velocity_compatible.copy_locally_owned_data_from(advection_velocity);
+        advection_velocity_compatible.update_ghost_values();
+
+        for (const auto &cell : scratch_data.get_triangulation()
+                                  .active_cell_iterators()) //|
+                                                            // IteratorFilters::LocallyOwnedCell())
+          {
+            if (cell->is_locally_owned() || cell->is_ghost())
+              {
+                TriaIterator<DoFCellAccessor<dim, dim, false>> vel_dof_cell(
+                  &scratch_data.get_triangulation(),
+                  cell->level(),
+                  cell->index(),
+                  &scratch_data.get_dof_handler(velocity_dof_idx));
+
+                TriaIterator<DoFCellAccessor<dim, dim, false>> advec_diff_dof_cell(
+                  &scratch_data.get_triangulation(),
+                  cell->level(),
+                  cell->index(),
+                  &scratch_data.get_dof_handler(advec_diff_dof_idx));
+
+                unsigned int face_index = 0;
+                for (const auto &face : cell->face_iterators())
+                  {
+                    if (face->at_boundary() && inflow_outflow_bc.contains(face->boundary_id()))
+                      {
+                        std::vector<Tensor<1, dim>> local_velocity(vel_eval.n_quadrature_points,
+                                                                   Tensor<1, dim>());
+
+                        std::vector<types::global_dof_index> face_dof_indices(
+                          vel_eval.n_quadrature_points);
+
+                        vel_eval.reinit(vel_dof_cell, face_index);
+                        vel_eval[velocities].get_function_values(advection_velocity_compatible,
+                                                                 local_velocity);
+
+                        advec_diff_dof_cell->face(face_index)->get_dof_indices(face_dof_indices);
+
+                        for (const auto q : vel_eval.quadrature_point_indices())
+                          {
+                            // inflow
+                            if (scalar_product(vel_eval.normal_vector(q), local_velocity[q]) <= 0)
+                              {
+                                if (partitioner->in_local_range(face_dof_indices[q]) or
+                                    partitioner->is_ghost_entry(face_dof_indices[q]))
+                                  {
+                                    const auto local_index =
+                                      partitioner->global_to_local(face_dof_indices[q]);
+
+                                    inflow_constraints_indices_and_values.first.emplace_back(
+                                      local_index);
+                                    inflow_constraints_indices_and_values.second.emplace_back(
+                                      inflow_outflow_bc[face->boundary_id()]->value(
+                                        vel_eval.quadrature_point(q)));
+                                  }
+                              }
+                          }
+                      }
+                    ++face_index;
+                  }
+              }
+          }
+
+        // delete duplicated entries
+        UtilityFunctions::remove_duplicates(inflow_constraints_indices_and_values.first,
+                                            inflow_constraints_indices_and_values.second);
+
+        // set indices in operator
+        dynamic_cast<AdvectionDiffusionOperator<dim> *>(advec_diff_operator.get())
+          ->set_inflow_outflow_bc(inflow_constraints_indices_and_values.first);
+      }
+  }
+
+
 
   template <int dim>
   const LinearAlgebra::distributed::Vector<double> &
@@ -376,6 +515,17 @@ namespace MeltPoolDG::LevelSet
                              user_rhs,
                              "advec_diff_user_rhs");
   }
+
+
+  template <int dim>
+  void
+  AdvectionDiffusionOperation<dim>::set_inflow_outflow_bc(
+    const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc_)
+  {
+    inflow_outflow_bc = inflow_outflow_bc_;
+  }
+
+
 
   template <int dim>
   void

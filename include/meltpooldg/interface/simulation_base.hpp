@@ -219,6 +219,21 @@ namespace MeltPoolDG
       boundary_conditions_map[operation_name]->neumann_bc[id] = boundary_function;
     }
 
+    template <typename FunctionType>
+    void
+    attach_inflow_outflow_boundary_condition(dealii::types::boundary_id    id,
+                                             std::shared_ptr<FunctionType> boundary_function,
+                                             const std::string            &operation_name)
+    {
+      if (!boundary_conditions_map[operation_name])
+        boundary_conditions_map[operation_name] = std::make_shared<BoundaryConditions<dim>>();
+
+      AssertThrow(boundary_conditions_map[operation_name]->inflow_outflow_bc.count(id) == 0,
+                  ExcBCAlreadyAssigned("Inflow outflow"));
+
+      boundary_conditions_map[operation_name]->inflow_outflow_bc[id] = boundary_function;
+    }
+
     void
     attach_no_slip_boundary_condition(dealii::types::boundary_id id,
                                       const std::string         &operation_name)
@@ -493,6 +508,18 @@ namespace MeltPoolDG
           "not found. "
           "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
       return boundary_conditions_map[operation_name]->neumann_bc;
+    }
+
+    const auto &
+    get_inflow_outflow_bc(const std::string &operation_name)
+    {
+      AssertThrow(
+        boundary_conditions_map[operation_name],
+        dealii::ExcMessage(
+          "BC for " + operation_name +
+          "not found. "
+          "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
+      return boundary_conditions_map[operation_name]->inflow_outflow_bc;
     }
 
     const auto &

@@ -32,17 +32,22 @@ namespace MeltPoolDG
     namespace AdvectionDiffusion
     {
       using namespace dealii;
+
+      static bool inflow_outflow_bc = false;
+
       /*
        * this function specifies the initial field of the level set equation
        */
-
       template <int dim>
       class InitializePhi : public Function<dim>
       {
       public:
         InitializePhi()
           : Function<dim>()
-          , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5), 0.25)
+          , distance_sphere(dim == 1   ? Point<dim>(0.0) :
+                            (dim == 2) ? Point<dim>(0.0, 0.5) :
+                                         Point<dim>(0, 0, 0.5),
+                            0.25)
         {}
 
         double
@@ -77,39 +82,13 @@ namespace MeltPoolDG
         {
           Tensor<1, dim> value_;
 
-          if constexpr (dim == 2)
-            {
-              const double x = p[0];
-              const double y = p[1];
+          const double x = p[0];
+          const double y = p[dim - 1];
 
-              value_[0] = 4 * y;
-              value_[1] = -4 * x;
-            }
-          else
-            AssertThrow(false, ExcMessage("Advection field for dim!=2 not implemented"));
+          value_[0]       = 4 * y;
+          value_[dim - 1] = -4 * x;
 
           return value_[component];
-        }
-      };
-
-      /* for constant Dirichlet conditions we could also use the ConstantFunction
-       * utility from dealii
-       */
-      template <int dim>
-      class DirichletCondition : public Function<dim>
-      {
-      public:
-        DirichletCondition()
-          : Function<dim>()
-        {}
-
-        double
-        value(const Point<dim> &p, const unsigned int component = 0) const override
-        {
-          (void)p;
-          (void)component;
-
-          return -1.0;
         }
       };
 
@@ -166,9 +145,19 @@ namespace MeltPoolDG
           constexpr types::boundary_id inflow_bc  = 42;
           constexpr types::boundary_id do_nothing = 0;
 
-          auto dirichlet = std::make_shared<DirichletCondition<dim>>();
+          auto dirichlet = std::make_shared<Functions::ConstantFunction<dim>>(-1);
 
-          this->attach_dirichlet_boundary_condition(inflow_bc, dirichlet, "advection_diffusion");
+          if (inflow_outflow_bc)
+            {
+              this->attach_inflow_outflow_boundary_condition(inflow_bc,
+                                                             dirichlet,
+                                                             "advection_diffusion");
+              this->attach_inflow_outflow_boundary_condition(do_nothing,
+                                                             dirichlet,
+                                                             "advection_diffusion");
+            }
+          else
+            this->attach_dirichlet_boundary_condition(inflow_bc, dirichlet, "advection_diffusion");
 
           /*
            *  mark inflow edges with boundary label (no boundary on outflow edges must be prescribed
@@ -185,7 +174,7 @@ namespace MeltPoolDG
                   +---------------+
            * (-1,-1)  in     out   (1,-1)
            */
-          if constexpr (dim == 2)
+          if constexpr (dim >= 2)
             {
               for (const auto &cell : this->triangulation->cell_iterators())
                 for (const auto &face : cell->face_iterators())
@@ -193,13 +182,16 @@ namespace MeltPoolDG
                     {
                       const double half_line = (right_domain + left_domain) / 2;
 
-                      if (face->center()[0] == left_domain && face->center()[1] > half_line)
+                      if (face->center()[0] == left_domain && face->center()[dim - 1] >= half_line)
                         face->set_boundary_id(inflow_bc);
-                      else if (face->center()[0] == right_domain && face->center()[1] < half_line)
+                      else if (face->center()[0] == right_domain &&
+                               face->center()[dim - 1] <= half_line)
                         face->set_boundary_id(inflow_bc);
-                      else if (face->center()[1] == right_domain && face->center()[0] > half_line)
+                      else if (face->center()[dim - 1] == right_domain &&
+                               face->center()[0] >= half_line)
                         face->set_boundary_id(inflow_bc);
-                      else if (face->center()[1] == left_domain && face->center()[0] < half_line)
+                      else if (face->center()[dim - 1] == left_domain &&
+                               face->center()[0] <= half_line)
                         face->set_boundary_id(inflow_bc);
                       else
                         face->set_boundary_id(do_nothing);
@@ -218,6 +210,41 @@ namespace MeltPoolDG
                                          "advection_diffusion");
           this->attach_advection_field(std::make_shared<AdvectionField<dim>>(),
                                        "advection_diffusion");
+        }
+
+        void
+        add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+        {
+          prm.enter_subsection("simulation specific");
+          {
+            prm.add_parameter("inflow outflow bc",
+                              inflow_outflow_bc,
+                              "Set if the inflow/outflow boundary condition should be enabled.");
+          }
+          prm.leave_subsection();
+        }
+        void
+        do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
+        {
+          dealii::ConditionalOStream pcout(
+            std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
+
+          pcout << "---------------------------------------------" << std::endl;
+          pcout << "    Starting user defined postprocessing" << std::endl;
+          pcout << "---------------------------------------------" << std::endl;
+          pcout << "Accessible vectors:" << std::endl;
+          for (const auto &entry : generic_data_out.entries)
+            for (const auto &name : std::get<2>(entry))
+              {
+                pcout << " * " << std::setw(20) << name << " Max-norm: " << std::setprecision(5)
+                      << std::setw(10) << generic_data_out.get_vector(name).linfty_norm()
+                      << " number of dofs: " << generic_data_out.get_dof_handler(name).n_dofs()
+                      << std::endl;
+                break;
+              }
+          pcout << "---------------------------------------------" << std::endl;
+          pcout << "    End of user defined postprocessing" << std::endl;
+          pcout << "---------------------------------------------" << std::endl;
         }
 
       private:
