@@ -27,6 +27,7 @@ namespace MeltPoolDG::LevelSet
          * compute the advection velocity for the current time
          */
         compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
+
         advec_diff_operation->solve();
         /*
          *  do output if requested
@@ -178,10 +179,18 @@ namespace MeltPoolDG::LevelSet
                                                              advec_diff_quad_idx,
                                                              velocity_dof_idx);
         advec_diff_operation->reinit();
+
+        dynamic_cast<AdvectionDiffusionOperation<dim> *>(advec_diff_operation.get())
+          ->set_inflow_outflow_bc(base_in->get_bc("advection_diffusion")->inflow_outflow_bc);
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.ls.advec_diff.implementation == "adaflo")
       {
+        AssertThrow(
+          base_in->get_bc("advection_diffusion")->inflow_outflow_bc.empty(),
+          ExcMessage(
+            "Inflow/outflow boundary condition not supported from the adaflo implementation."));
+
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperationAdaflo<dim>>(*scratch_data,
                                                                    *time_iterator,
@@ -192,6 +201,8 @@ namespace MeltPoolDG::LevelSet
                                                                    velocity_dof_idx,
                                                                    base_in);
         advec_diff_operation->reinit();
+
+        // TODO: add assert for inflow/outflow BC that this is not supported
       }
 #endif
     else

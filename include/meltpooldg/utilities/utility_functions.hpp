@@ -36,6 +36,7 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 namespace dealii
@@ -147,6 +148,32 @@ namespace MeltPoolDG
 
   namespace UtilityFunctions
   {
+    template <typename number1, typename number2>
+    void
+    remove_duplicates(std::vector<number1> &a, std::vector<number2> &b)
+    {
+      std::unordered_set<int> seen;
+      auto                    it_a = a.begin();
+      auto                    it_b = b.begin();
+
+      while (it_a != a.end())
+        {
+          if (seen.find(*it_a) != seen.end())
+            {
+              // If element is duplicate, remove it from both vectors
+              it_a = a.erase(it_a);
+              it_b = b.erase(it_b);
+            }
+          else
+            {
+              // If element is not duplicate, mark it as seen and move iterators forward
+              seen.insert(*it_a);
+              ++it_a;
+              ++it_b;
+            }
+        }
+    }
+
     template <typename T>
     std::string
     to_string_with_precision(const T a_value, const int n = 6)

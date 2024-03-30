@@ -33,13 +33,16 @@ namespace MeltPoolDG::Utilities::MatrixFree
             typename DoFVectorType    = VectorType,
             typename SrcRhsVectorType = VectorType>
   inline void
-  create_rhs_and_apply_dirichlet_matrixfree(OperatorBase<dim, number> &operator_base,
-                                            DoFVectorType             &rhs,
-                                            const SrcRhsVectorType    &src,
-                                            const ScratchData<dim>    &scratch_data,
-                                            const unsigned int         dof_idx,
-                                            const unsigned int         dof_no_bc_idx,
-                                            const bool                 zero_out)
+  create_rhs_and_apply_dirichlet_matrixfree(
+    OperatorBase<dim, number> &operator_base,
+    DoFVectorType             &rhs,
+    const SrcRhsVectorType    &src,
+    const ScratchData<dim>    &scratch_data,
+    const unsigned int         dof_idx,
+    const unsigned int         dof_no_bc_idx,
+    const bool                 zero_out,
+    const std::optional<std::pair<std::vector<unsigned int>, std::vector<double>>>
+      &additional_inhomogeneous_constraints = std::nullopt)
   {
     // The dof index that is used for the DoF Vector from the matrix-vector
     // product must be switched to the one without Dirichlet boundary
@@ -58,7 +61,17 @@ namespace MeltPoolDG::Utilities::MatrixFree
 
     DoFVectorType bc_values;
     scratch_data.initialize_dof_vector(bc_values, dof_no_bc_idx);
+
+    // set inhomogeneity
+    if (additional_inhomogeneous_constraints)
+      {
+        const auto &bc = *additional_inhomogeneous_constraints;
+        for (unsigned int i = 0; i < bc.first.size(); ++i)
+          bc_values.local_element(bc.first[i]) = bc.second[i];
+      }
+
     scratch_data.get_constraint(dof_idx).distribute(bc_values);
+
     /*
      * perform matrix-vector multiplication (with unconstrained system and constrained set in
      * Vector)
@@ -77,7 +90,18 @@ namespace MeltPoolDG::Utilities::MatrixFree
     else
       rhs += temp_rhs;
 
+    // zero-out values of additional inhomogeneity
+    if (additional_inhomogeneous_constraints)
+      {
+        const auto &bc = *additional_inhomogeneous_constraints;
+        for (const auto &i : bc.first)
+          {
+            rhs.local_element(i) = 0;
+          }
+      }
+
     scratch_data.get_constraint(dof_idx).set_zero(rhs);
+
     operator_base.reset_dof_index(dof_idx);
   }
 } // namespace MeltPoolDG::Utilities::MatrixFree

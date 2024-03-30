@@ -22,6 +22,7 @@ namespace MeltPoolDG
     dirichlet_bc,
     neumann_bc,
     outflow,
+    inflow_outflow,
     no_slip_bc,
     fix_pressure_constant,
     symmetry_bc,
@@ -68,6 +69,7 @@ namespace MeltPoolDG
     DirichletBoundaryConditions<dim>                             dirichlet_bc;
     std::map<types::boundary_id, std::shared_ptr<Function<dim>>> neumann_bc;
     std::vector<types::boundary_id>                              outflow;
+    std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc;
     std::vector<types::boundary_id>                              no_slip_bc;
     std::vector<types::boundary_id>                              fix_pressure_constant;
     std::vector<types::boundary_id>                              symmetry_bc;

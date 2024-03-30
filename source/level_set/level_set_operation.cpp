@@ -200,6 +200,14 @@ namespace MeltPoolDG::LevelSet
      */
     correct_curvature_values();
   }
+  template <int dim>
+  void
+  LevelSetOperation<dim>::set_inflow_outflow_bc(
+    const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc)
+  {
+    dynamic_cast<AdvectionDiffusionOperation<dim> *>(advec_diff_operation.get())
+      ->set_inflow_outflow_bc(inflow_outflow_bc);
+  }
 
   template <int dim>
   void
