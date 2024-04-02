@@ -401,6 +401,7 @@ namespace MeltPoolDG::LevelSet
 
     // needed for evaporation
     vectors.push_back(&level_set_as_heaviside);
+    vectors.push_back(&distance_to_level_set);
 
     reinit_operation->attach_vectors(vectors);
     curvature_operation->attach_vectors(vectors);
