@@ -99,11 +99,11 @@
       "Navier-Stokes": {
         "Solver": {
           "NL max iterations": "50",
-          "NL tolerance": "1.e-9",
+          "NL tolerance": "1.e-10",
           "lin its before inner solvers": "50",
           "lin max iterations": "50",
           "lin relative tolerance": "1",
-          "lin tolerance": "1.e-5",
+          "lin tolerance": "1.e-6",
           "lin pressure preconditioner": "ilu scalar",
           "lin velocity preconditioner": "ilu",
           "linearization scheme": "coupled implicit Newton"
