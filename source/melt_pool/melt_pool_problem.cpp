@@ -255,15 +255,25 @@ namespace MeltPoolDG::MeltPool
                                     LevelSet::NearestPointData<double> nearest_point_data =
                                       base_in->parameters.ls.nearest_point;
 
-                                    nearest_point_data.isocontour =
-                                      (base_in->parameters.evapor
-                                         .formulation_source_term_level_set !=
-                                       Evaporation::EvaporationLevelSetSourceTermType::
-                                         interface_velocity_sharp_heavy) ?
-                                        0 : /*distance at heaviside==1*/
-                                        level_set_operation->get_distance_to_level_set()
-                                            .linfty_norm() *
-                                          std::tanh(1.5) / std::tanh(4);
+                                    // compute isocontour from which the velocity should be
+                                    // extrapolated
+                                    //
+                                    // in the default case, the velocity is extended from the
+                                    // zero-isosurface of the signed distance function.
+                                    nearest_point_data.isocontour = 0;
+                                    // in case the velocity should be extended from the liquid
+                                    // end of the interface region, use the isocontour of the signed
+                                    // distance function d=3ε where the smoothed heaviside function
+                                    // attains 1.
+                                    if (base_in->parameters.evapor
+                                          .formulation_source_term_level_set ==
+                                        Evaporation::EvaporationLevelSetSourceTermType::
+                                          interface_velocity_sharp_heavy)
+                                      nearest_point_data.isocontour =
+                                        base_in->parameters.ls.reinit
+                                          .compute_interface_thickness_parameter_epsilon(
+                                            scratch_data->get_min_cell_size(ls_dof_idx)) *
+                                        3.;
 
                                     LevelSet::Tools::NearestPoint<dim> nearest_point(
                                       scratch_data->get_mapping(),
@@ -316,13 +326,25 @@ namespace MeltPoolDG::MeltPool
                             LevelSet::NearestPointData<double> nearest_point_data =
                               base_in->parameters.ls.nearest_point;
 
-                            nearest_point_data.isocontour =
-                              (base_in->parameters.evapor.formulation_source_term_level_set !=
-                               Evaporation::EvaporationLevelSetSourceTermType::
-                                 interface_velocity_sharp_heavy) ?
-                                0 :
-                                level_set_operation->get_distance_to_level_set().linfty_norm() *
-                                  std::tanh(1.5) / std::tanh(4);
+                            // compute isocontour from which the velocity should be
+                            // extrapolated
+                            //
+                            // in the default case, the velocity is extended from the
+                            // zero-isosurface of the signed distance function.
+                            nearest_point_data.isocontour = 0;
+
+                            // in case the velocity should be extended from the liquid
+                            // end of the interface region, use the isocontour of the signed
+                            // distance function d=3ε where the smoothed heaviside function
+                            // attains 1.
+                            if (base_in->parameters.evapor.formulation_source_term_level_set ==
+                                Evaporation::EvaporationLevelSetSourceTermType::
+                                  interface_velocity_sharp_heavy)
+                              nearest_point_data.isocontour =
+                                base_in->parameters.ls.reinit
+                                  .compute_interface_thickness_parameter_epsilon(
+                                    scratch_data->get_min_cell_size(ls_dof_idx)) *
+                                3.;
 
                             LevelSet::Tools::NearestPoint<dim> nearest_point(
                               scratch_data->get_mapping(),
