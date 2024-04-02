@@ -47,8 +47,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   using namespace dealii;
   using namespace MeltPoolDG::Simulation;
 
-  static double factor_height = 1.0;
-  static double delta_T       = 5;
+  // simulation specific parameters
+  static double      factor_height     = 1.0;
+  static double      delta_T           = 5;
+  static bool        do_symmetry       = false;
+  static std::string bc_vertical_faces = "periodic";
 
   /**
    *  Create a signed distance function, which is used to compute the initial
@@ -133,9 +136,9 @@ namespace MeltPoolDG::Simulation::FilmBoiling
           std::sqrt(3. * this->parameters.flow.surface_tension.surface_tension_coefficient /
                     (this->parameters.flow.gravity * (this->parameters.material.liquid.density -
                                                       this->parameters.material.gas.density))))
-      , x_max(lambda0 / 2.)
+      , x_max((do_symmetry) ? 0 : lambda0 / 2.)
       , y_max(lambda0)
-      , x_min(-x_max)
+      , x_min(-lambda0 / 2.)
       , tria_slice(mpi_communicator)
     {}
 
@@ -150,6 +153,13 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         prm.add_parameter("delta T",
                           delta_T,
                           "Set the delta of the wall temperature to the boiling temperature.");
+        prm.add_parameter("do symmetry",
+                          do_symmetry,
+                          "Exploit symmetry conditions along the center plane.");
+        prm.add_parameter("bc vertical faces",
+                          bc_vertical_faces,
+                          "Set the boundary condition along vertical faces.",
+                          Patterns::Selection("symmetry|periodic"));
       }
       prm.leave_subsection();
     }
@@ -195,9 +205,13 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         5 * (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP ?
                Utilities::pow(2, this->parameters.base.global_refinements) :
                1));
+
       // Create elements with a width to height ratio of 3. This leads to a higher resolution
       // in the dim-1 direction, which is the predominant direction of this example.
-      subdivisions[dim - 1] *= 3;
+      subdivisions[dim - 1] *= factor_height;
+
+      if (do_symmetry)
+        subdivisions[dim - 1] *= 2;
 
       if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
         GridGenerator::subdivided_hyper_rectangle_with_simplices(
@@ -228,22 +242,43 @@ namespace MeltPoolDG::Simulation::FilmBoiling
         get_colorized_rectangle_boundary_ids<dim>();
 
       this->attach_no_slip_boundary_condition(lower_bc, "navier_stokes_u");
-      this->attach_open_boundary_condition(upper_bc, "navier_stokes_u");
+      this->attach_open_boundary_condition(upper_bc,
+                                           std::make_shared<Functions::ZeroFunction<dim>>(),
+                                           "navier_stokes_u");
+
       this->attach_dirichlet_boundary_condition(lower_bc,
                                                 std::make_shared<Functions::ConstantFunction<dim>>(
                                                   this->parameters.material.boiling_temperature +
-                                                  5.),
+                                                  delta_T),
                                                 "heat_transfer");
 
       // @note: this BC is necessary
       this->attach_dirichlet_boundary_condition(
         lower_bc, std::make_shared<Functions::ConstantFunction<dim>>(-1), "level_set");
+      this->attach_inflow_outflow_boundary_condition(
+        upper_bc, std::make_shared<Functions::ConstantFunction<dim>>(1), "level_set");
 
       if (dim > 1)
-        this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+        {
+          if (bc_vertical_faces == "periodic")
+            this->attach_periodic_boundary_condition(left_bc, right_bc, 0);
+          else // if (bc_vertical_faces == "symmetry")
+            {
+              this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
+              this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
+            }
+        }
 
       if (dim > 2)
-        this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
+        {
+          if (bc_vertical_faces == "periodic")
+            this->attach_periodic_boundary_condition(front_bc, back_bc, 1);
+          else // if (bc_vertical_faces == "symmetry")
+            {
+              this->attach_symmetry_boundary_condition(front_bc, "navier_stokes_u");
+              this->attach_symmetry_boundary_condition(back_bc, "navier_stokes_u");
+            }
+        }
 
       if (this->parameters.base.fe.type != FiniteElementType::FE_SimplexP)
         this->triangulation->refine_global(this->parameters.base.global_refinements);
