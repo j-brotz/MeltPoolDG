@@ -13,7 +13,7 @@
   "evaporation": {
     "interface temperature evaluation type": "local_value",
     "evaporative mass flux model": "recoil_pressure",
-    "formulation source term level set": "rhs",
+    "formulation source term level set": "interface_velocity_local",
     "recoil pressure": {
       "interface distributed flux type": "local_value",
       "activation temperature": "500",
@@ -87,12 +87,8 @@
         "val": "6"
       }
     },
-    "curvature": {
-      "filter parameter": "8",
-      "verbosity level": "1"
-    },
     "normal vector": {
-      "filter parameter": "0.1"
+      "filter parameter": "2"
     },
     "fe": {
       "type": "FE_Q_iso_Q1",
@@ -104,12 +100,11 @@
       "Navier-Stokes": {
         "Solver": {
           "NL max iterations": "50",
-          "NL tolerance": "1.e-10",
+          "NL tolerance": "1.e-11",
           "lin its before inner solvers": "50",
           "lin max iterations": "50",
           "lin relative tolerance": "1",
-          "lin tolerance": "1.e-6",
-          "lin pressure preconditioner": "ilu scalar",
+          "lin tolerance": "1.e-8",
           "lin velocity preconditioner": "ilu",
           "linearization scheme": "coupled implicit Newton"
         },

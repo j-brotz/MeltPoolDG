@@ -30,8 +30,8 @@
 | Newton Raphson solver converged: ||solution|| = 8.08332e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = -0.000105544       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 3.0351044752e-05            evaporation_source_terms_continuous |
-| || velocity ||L2 = 1.774041868723044e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.509884778947098e+01                                    navier_stokes_adaflo |
+| || velocity ||L2 = 1.774042027420051e-06                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.509884342853198e+01                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 2.0000e-10 to 3.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -48,7 +48,7 @@
 | evaporation: jump in the velocity field = -0.000105544       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 3.0351044701e-05            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.774042027420051e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.680941935752809e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.680537997538480e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 3.0000e-10 to 4.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -59,13 +59,13 @@
 |  τ = 2e-10                                                                      reinitialization |
 | || delta phi ||L2 = 7.788892709190959e-12                                       reinitialization |
 |  τ = 3e-10                                                                      reinitialization |
-| || delta phi ||L2 = 7.788820714605009e-12                                       reinitialization |
+| || delta phi ||L2 = 7.788820713233672e-12                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 8.08332e+01                newton_raphson_solver |
 | evaporation: jump in the velocity field = -0.000105544       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 3.0351044651e-05            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.774042027420051e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.680438059207084e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.680537997538480e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 5      t = 4.0000e-10 to 5.0000e-10 ( dt = 1.0000e-10 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
@@ -82,7 +82,7 @@
 | evaporation: jump in the velocity field = -0.000105544       evaporation_source_terms_continuous |
 | || evapartive_mass_source ||L2 = 3.0351044600e-05            evaporation_source_terms_continuous |
 | || velocity ||L2 = 1.774042027420051e-06                                    navier_stokes_adaflo |
-| || pressure ||L2 = 1.680536857627303e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 1.680538138439159e-02                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
