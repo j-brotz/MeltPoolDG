@@ -48,10 +48,32 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   using namespace MeltPoolDG::Simulation;
 
   // simulation specific parameters
-  static double      factor_height     = 1.0;
-  static double      delta_T           = 5;
-  static bool        do_symmetry       = false;
-  static std::string bc_vertical_faces = "periodic";
+  static double                    factor_height       = 1.0;
+  static double                    delta_T             = 5;
+  static bool                      do_symmetry         = false;
+  static std::string               bc_vertical_faces   = "periodic";
+  static std::pair<double, double> disturbance_factors = {9. / 128, 1. / 160};
+
+  /**
+   * Compute the disturbed interface location from
+   * z_Γ  = z_0 + Δz * cos(2*π r/λ_0)
+   * with z_0 = factor_z0 * lambda_0 and Δz =  factor_delta_z * lambda_0
+   */
+  template <int dim>
+  double
+  compute_disturbed_interface(const double      lambda0,
+                              const Point<dim> &p,
+                              const double      factor_z0,
+                              const double      factor_dz)
+  {
+    const double projected_radius = dim == 1 ? 0 :
+                                    dim == 2 ? p[0] :
+                                               std::sqrt(p[0] * p[0] + p[1] * p[1]);
+
+    return lambda0 *
+           (factor_z0 + factor_dz * std::cos(2 * numbers::PI * projected_radius /
+                                             lambda0)); // according to Hardt & Wondra (2007)
+  }
 
   /**
    *  Create a signed distance function, which is used to compute the initial
@@ -61,34 +83,26 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   class InitialSignedDistance : public Function<dim>
   {
   public:
-    InitialSignedDistance(const double y_interface, const double lambda0)
+    InitialSignedDistance(const double lambda0, const std::pair<double, double> factors)
       : Function<dim>()
-      , y_interface(y_interface)
       , lambda0(lambda0)
+      , factors(factors)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
-      // compute the projected distance from the symmetry plane characterized by dim-1=0.0
-      const double projected_radius = dim == 1 ? 0 :
-                                      dim == 2 ? p[0] :
-                                                 std::sqrt(p[0] * p[0] + p[1] * p[1]);
-
-      const double y_interface_disturbed =
-        y_interface + lambda0 / 160. *
-                        std::cos(2 * numbers::PI * projected_radius /
-                                 lambda0); // according to Hardt & Wondra (2007)
-
       Point<dim> at_interface;
-      at_interface[dim - 1] = y_interface_disturbed;
+      at_interface[dim - 1] =
+        compute_disturbed_interface(lambda0, p, factors.first, factors.second);
 
       const auto plane =
         Functions::SignedDistance::Plane<dim>(at_interface, Point<dim>::unit_vector(dim - 1));
 
       return plane.value(p);
     }
-    double y_interface, lambda0;
+    const double                    lambda0;
+    const std::pair<double, double> factors;
   };
   /**
    *  Initial temperature field
@@ -97,29 +111,30 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   class InitialValuesTemperature : public Function<dim>
   {
   public:
-    InitialValuesTemperature(const double T_max,
-                             const double T_min,
-                             const double y_interface,
-                             const double lambda0)
+    InitialValuesTemperature(const double                    T_max,
+                             const double                    T_min,
+                             const double                    lambda0,
+                             const std::pair<double, double> factors)
+
       : Function<dim>()
       , T_max(T_max)
       , T_min(T_min)
-      , y_interface(y_interface)
       , lambda0(lambda0)
+      , factors(factors)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
-      double y_interface_disturbed =
-        y_interface + lambda0 / 160. * std::cos(2 * numbers::PI * p[0] / lambda0);
-
+      const double y_interface_disturbed =
+        compute_disturbed_interface(lambda0, p, factors.first, factors.second);
       if (p[dim - 1] > y_interface_disturbed)
         return T_min;
       else
         return T_max - (T_max - T_min) / y_interface_disturbed * p[dim - 1];
     }
-    const double T_max, T_min, y_interface, lambda0;
+    const double                    T_max, T_min, lambda0;
+    const std::pair<double, double> factors;
   };
 
   /**
@@ -160,6 +175,11 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                           bc_vertical_faces,
                           "Set the boundary condition along vertical faces.",
                           Patterns::Selection("symmetry|periodic"));
+        prm.add_parameter("disturbance factors",
+                          disturbance_factors,
+                          "Set the factors controlling the initial interface function"
+                          " z_Γ  = z_0 + Δz * cos(2*π r/λ_0) with z_0 = factor_z0 * lambda_0 "
+                          "and Δz =  factor_delta_z * lambda_0");
       }
       prm.leave_subsection();
     }
@@ -288,7 +308,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     set_field_conditions() final
     {
       this->attach_initial_condition(
-        std::make_shared<InitialSignedDistance<dim>>(9. * lambda0 / 128., lambda0),
+        std::make_shared<InitialSignedDistance<dim>>(lambda0, disturbance_factors),
         "signed_distance");
 
       this->attach_initial_condition(std::make_shared<Functions::ZeroFunction<dim>>(dim),
@@ -298,8 +318,8 @@ namespace MeltPoolDG::Simulation::FilmBoiling
       this->attach_initial_condition(std::make_shared<InitialValuesTemperature<dim>>(
                                        this->parameters.material.boiling_temperature + delta_T,
                                        this->parameters.material.boiling_temperature,
-                                       9. * lambda0 / 128.,
-                                       lambda0),
+                                       lambda0,
+                                       disturbance_factors),
                                      "heat_transfer");
     }
 
