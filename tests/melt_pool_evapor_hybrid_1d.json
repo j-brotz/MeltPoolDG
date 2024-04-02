@@ -35,12 +35,6 @@
       "residual tolerance": "1e-5"
     }
   },
-  "laser": {
-    "model": "interface_projection_regularized",
-    "intensity profile": "Gauss",
-    "power": "0",
-    "radius": "70.e-6"
-  },
   "material": {
     "material template": "Ti64",
     "gas": {
@@ -83,12 +77,8 @@
       "max n steps": "3",
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
-        "val": "2"
+        "val": "6"
       }
-    },
-    "curvature": {
-      "filter parameter": "8",
-      "verbosity level": "1"
     },
     "normal vector": {
       "filter parameter": "0.1"
@@ -103,7 +93,7 @@
       "Navier-Stokes": {
         "Solver": {
           "NL max iterations": "50",
-          "NL tolerance": "1.e-6",
+          "NL tolerance": "1.e-9",
           "lin its before inner solvers": "50",
           "lin max iterations": "50",
           "lin relative tolerance": "1",
@@ -127,11 +117,6 @@
         "scheme": "bdf_2"
       }
     },
-    "gravity": "0.0",
-    "darcy damping": {
-      "avoid div zero constant": "1.",
-      "formulation": "implicit_formulation",
-      "mushy zone morphology": "1e11"
-    }
+    "gravity": "0.0"
   }
 }
