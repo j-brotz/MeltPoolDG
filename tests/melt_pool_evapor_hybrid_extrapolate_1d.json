@@ -73,6 +73,11 @@
     }
   },
   "level set": {
+    "advection diffusion": {
+      "predictor": {
+        "type": "linear_extrapolation"
+      }
+    },
     "reinitialization": {
       "enable": "true",
       "n initial steps": "0",
