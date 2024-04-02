@@ -109,9 +109,19 @@ namespace MeltPoolDG::LevelSet::Tools
               Utilities::MPI::this_mpi_process(dof_handler_signed_distance.get_communicator()) == 0)
       , timer_output(timer_output)
     {
+      if (additional_data.verbosity_level > 0)
+        {
+          Journal::print_line(pcout,
+                              "narrow band threshold " + std::to_string(narrow_band_threshold) +
+                                "    isocontour = " + std::to_string(additional_data.isocontour),
+                              "nearest_point");
+        }
       AssertThrow(dim <= 2 ||
                     additional_data.type != NearestPointType::closest_point_normal_collinear,
                   ExcNotImplemented());
+
+      AssertThrow(narrow_band_threshold > 0,
+                  ExcMessage("Narrow band threshold must be larger than zero."));
     }
 
     /**
@@ -136,9 +146,9 @@ namespace MeltPoolDG::LevelSet::Tools
       const unsigned int n_components = dof_handler_req.get_fe().n_components();
 
       const bool signed_distance_update_ghosts = !signed_distance.has_ghost_elements();
-
       if (signed_distance_update_ghosts)
         signed_distance.update_ghost_values();
+
       const bool normal_vector_update_ghosts = !normal_vector.has_ghost_elements();
       if (normal_vector_update_ghosts)
         normal_vector.update_ghost_values();
@@ -200,8 +210,7 @@ namespace MeltPoolDG::LevelSet::Tools
 
                   if (lowest_rank != Utilities::MPI::this_mpi_process(mpi_comm))
                     continue;
-                  // end of copy
-
+                  // end of copy from dealii::GridTools
 
                   // early return if point was already collected in stencil
                   if (std::find(stencil.begin(), stencil.end(), req_values.quadrature_point(q)) !=
@@ -230,6 +239,9 @@ namespace MeltPoolDG::LevelSet::Tools
 
       // set initial guess for closest point projection
       projected_points_at_interface = stencil;
+
+      Assert(Utilities::MPI::sum(stencil.size(), mpi_comm) > 0,
+             ExcMessage("Number of points in narrow band equal to zero."));
 
       if (timer_scope_local)
         timer_scope_local->stop();
