@@ -210,66 +210,8 @@ namespace MeltPoolDG::MeltPool
                         Journal::print_decoration_line(scratch_data->get_pcout(1));
                       }
 
-                    // TODO: remove; could not be removed since during
-                    // flow_operation->init_time_advance() an inconsistency in the DoF vectors is
-                    // introduced
-                    scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
-                    interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
-
-                    if (evaporation_operation &&
-                        base_in->parameters.evapor.evaporative_dilation_rate.enable)
-                      {
-                        ScopedName         sc("evaporation::level_set_source_term");
-                        TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-
-                        switch (base_in->parameters.evapor.formulation_source_term_level_set)
-                          {
-                            default:
-                            case Evaporation::EvaporationLevelSetSourceTermType::
-                              interface_velocity_sharp:
-                              case Evaporation::EvaporationLevelSetSourceTermType::
-                                interface_velocity_sharp_heavy: {
-                                this->compute_interface_velocity_sharp(
-                                  base_in->parameters.ls,
-                                  base_in->parameters.evapor.formulation_source_term_level_set);
-                                break;
-                              }
-                              case Evaporation::EvaporationLevelSetSourceTermType::
-                                interface_velocity_local: {
-                                // Option 1: compute modified advection velocity due to evaporation
-                                if (problem_specific_parameters.do_extrapolate_coupling_terms)
-                                  {
-                                    level_set_operation->update_normal_vector();
-                                  }
-
-                                evaporation_operation->compute_evaporation_velocity();
-                                interface_velocity += evaporation_operation->get_velocity();
-                                break;
-                              }
-                            case Evaporation::EvaporationLevelSetSourceTermType::rhs:
-                              // Option 2: use source term as rhs in the level set equation
-                              scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
-                              evaporation_operation->compute_level_set_source_term(
-                                level_set_rhs,
-                                ls_dof_idx,
-                                level_set_operation->get_level_set(),
-                                pressure_dof_idx);
-                              level_set_operation->set_level_set_user_rhs(level_set_rhs);
-                              break;
-                          }
-                      }
-                    else // evaporative_dilation_rate.enable = false
-                      {
-                        if (base_in->parameters.evapor.formulation_source_term_level_set ==
-                              Evaporation::EvaporationLevelSetSourceTermType::
-                                interface_velocity_sharp ||
-                            base_in->parameters.evapor.formulation_source_term_level_set ==
-                              Evaporation::EvaporationLevelSetSourceTermType::
-                                interface_velocity_sharp_heavy)
-                          this->compute_interface_velocity_sharp(
-                            base_in->parameters.ls,
-                            base_in->parameters.evapor.formulation_source_term_level_set);
-                      }
+                    this->compute_interface_velocity(base_in->parameters.ls,
+                                                     base_in->parameters.evapor);
 
                     // ... solve level-set problem with the given advection field
                     scratch_data->get_constraint(vel_dof_idx).distribute(interface_velocity);
@@ -1595,9 +1537,69 @@ namespace MeltPoolDG::MeltPool
 
   template <int dim>
   void
+  MeltPoolProblem<dim>::compute_interface_velocity(
+    const LevelSet::LevelSetData<double>       &ls_data,
+    const Evaporation::EvaporationData<double> &evapor_data)
+  {
+    // TODO: remove; could not be removed since during
+    // flow_operation->init_time_advance() an inconsistency in the DoF vectors is
+    // introduced
+    scratch_data->initialize_dof_vector(interface_velocity, vel_dof_idx);
+    interface_velocity.copy_locally_owned_data_from(flow_operation->get_velocity());
+
+    const bool do_sharp_velocity =
+      (evapor_data.formulation_source_term_level_set ==
+         Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp ||
+       evapor_data.formulation_source_term_level_set ==
+         Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy);
+
+    if (evaporation_operation && evapor_data.evaporative_dilation_rate.enable)
+      {
+        ScopedName         sc("evaporation::level_set_source_term");
+        TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+        switch (evapor_data.formulation_source_term_level_set)
+          {
+            default:
+            case Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp:
+            case Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy:
+              case Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_local: {
+                // Option 1: compute modified advection velocity due to evaporation
+                if (problem_specific_parameters.do_extrapolate_coupling_terms)
+                  {
+                    level_set_operation->update_normal_vector();
+                  }
+
+                evaporation_operation->compute_evaporation_velocity();
+                interface_velocity += evaporation_operation->get_velocity();
+
+                if (do_sharp_velocity)
+                  this->compute_interface_velocity_sharp(ls_data, evapor_data);
+
+                break;
+              }
+            case Evaporation::EvaporationLevelSetSourceTermType::rhs:
+              // Option 2: use source term as rhs in the level set equation
+              scratch_data->initialize_dof_vector(level_set_rhs, ls_dof_idx);
+              evaporation_operation->compute_level_set_source_term(
+                level_set_rhs, ls_dof_idx, level_set_operation->get_level_set(), pressure_dof_idx);
+              level_set_operation->set_level_set_user_rhs(level_set_rhs);
+              break;
+          }
+      }
+    else // evaporative_dilation_rate.enable = false
+      {
+        if (do_sharp_velocity)
+          this->compute_interface_velocity_sharp(ls_data, evapor_data);
+      }
+  }
+
+
+
+  template <int dim>
+  void
   MeltPoolProblem<dim>::compute_interface_velocity_sharp(
-    const LevelSet::LevelSetData<double>                 &ls_data,
-    const Evaporation::EvaporationLevelSetSourceTermType &formulation_source_term_level_set)
+    const LevelSet::LevelSetData<double>       &ls_data,
+    const Evaporation::EvaporationData<double> &evapor_data)
   {
     VectorType interface_velocity_interface;
     scratch_data->initialize_dof_vector(interface_velocity_interface, vel_dof_idx);
@@ -1605,7 +1607,7 @@ namespace MeltPoolDG::MeltPool
     LevelSet::NearestPointData<double> nearest_point_data = ls_data.nearest_point;
 
     // compute isocontour from which the velocity should be extrapolated
-    switch (formulation_source_term_level_set)
+    switch (evapor_data.formulation_source_term_level_set)
       {
           case Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp: {
             // in the default case, the velocity is extended from the zero-isosurface of the signed

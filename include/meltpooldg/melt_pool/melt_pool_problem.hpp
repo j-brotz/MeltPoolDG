@@ -149,9 +149,12 @@ namespace MeltPoolDG::MeltPool
     compute_gravity_force(VectorType &vec, const double gravity, const bool zero_out = true) const;
 
     void
-    compute_interface_velocity_sharp(
-      const LevelSet::LevelSetData<double>                 &ls_data,
-      const Evaporation::EvaporationLevelSetSourceTermType &formulation_source_term_level_set);
+    compute_interface_velocity(const LevelSet::LevelSetData<double>       &ls_data,
+                               const Evaporation::EvaporationData<double> &evapor_data);
+
+    void
+    compute_interface_velocity_sharp(const LevelSet::LevelSetData<double>       &ls_data,
+                                     const Evaporation::EvaporationData<double> &evapor_data);
 
     /*
      *  perform output of results
