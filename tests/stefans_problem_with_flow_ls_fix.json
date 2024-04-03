@@ -62,6 +62,7 @@
       }
     },
     "curvature": {
+      "filter parameter": "0.0",
       "linear solver": {
         "do matrix free": "true"
       },

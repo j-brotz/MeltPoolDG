@@ -44,15 +44,16 @@
       }
     },
     "curvature": {
+      "filter parameter": "0.0",
       "linear solver": {
         "do matrix free": "true"
       }
     },
     "normal vector": {
+      "filter parameter": "0.025",
       "linear solver": {
         "do matrix free": "true"
-      },
-      "filter parameter": "0.025"
+      }
     },
     "advection diffusion": {
       "linear solver": {

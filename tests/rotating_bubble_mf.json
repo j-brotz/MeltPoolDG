@@ -29,15 +29,16 @@
       "type": "olsson2007"
     },
     "curvature": {
+      "filter parameter": "0.0",
       "linear solver": {
         "do matrix free": "true"
       }
     },
     "normal vector": {
+      "filter parameter": "0.5",
       "linear solver": {
         "do matrix free": "true"
-      },
-      "filter parameter": "0.5"
+      }
     },
     "advection diffusion": {
       "linear solver": {

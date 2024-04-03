@@ -17,7 +17,7 @@ namespace MeltPoolDG::LevelSet
     CurvatureData();
 
     bool         enable                  = true;
-    number       filter_parameter        = 0.0;
+    number       filter_parameter        = 2.0;
     std::string  implementation          = "meltpooldg";
     unsigned int verbosity_level         = 0;
     bool         do_curvature_correction = false;
