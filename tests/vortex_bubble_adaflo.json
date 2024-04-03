@@ -30,6 +30,9 @@
       "type": "olsson2007",
       "implementation": "adaflo"
     },
+    "curvature": {
+      "filter parameter": "0.0"
+    },
     "normal vector": {
       "linear solver": {
         "do matrix free": "true"

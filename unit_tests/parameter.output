@@ -230,7 +230,7 @@
         {
             "do curvature correction": "false",
             "enable": "true",
-            "filter parameter": "0",
+            "filter parameter": "2",
             "implementation": "meltpooldg",
             "verbosity level": "0",
             "linear solver":
@@ -269,7 +269,7 @@
         },
         "normal vector":
         {
-            "filter parameter": "0.5",
+            "filter parameter": "2",
             "implementation": "meltpooldg",
             "verbosity level": "0",
             "linear solver":

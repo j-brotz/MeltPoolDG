@@ -28,6 +28,9 @@
         "val": "1"
       }
     },
+    "curvature": {
+      "filter parameter": "0.0"
+    },
     "normal vector": {
       "filter parameter": "2"
     }
