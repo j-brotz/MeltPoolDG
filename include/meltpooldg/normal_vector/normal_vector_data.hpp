@@ -15,7 +15,7 @@ namespace MeltPoolDG::LevelSet
   {
     NormalVectorData();
 
-    number       filter_parameter = 0.5;
+    number       filter_parameter = 2.0;
     std::string  implementation   = "meltpooldg";
     unsigned int verbosity_level  = 0;
 

@@ -58,6 +58,9 @@
     }
   },
   "level set": {
+    "normal vector": {
+      "filter parameter": "0.5"
+    },
     "reinitialization": {
       "max n steps": "5",
       "interface thickness parameter": {
