@@ -52,6 +52,7 @@ namespace MeltPoolDG::Simulation::FilmBoiling
   static double                    delta_T             = 5;
   static bool                      do_symmetry         = false;
   static std::string               bc_vertical_faces   = "periodic";
+  static std::string               bc_temperature_top  = "adiabatic";
   static std::pair<double, double> disturbance_factors = {9. / 128, 1. / 160};
 
   /**
@@ -175,6 +176,10 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                           bc_vertical_faces,
                           "Set the boundary condition along vertical faces.",
                           Patterns::Selection("symmetry|periodic"));
+        prm.add_parameter("bc temperature top",
+                          bc_temperature_top,
+                          "Set the boundary condition at the top.",
+                          Patterns::Selection("adiabatic|dirichlet"));
         prm.add_parameter("disturbance factors",
                           disturbance_factors,
                           "Set the factors controlling the initial interface function"
@@ -271,6 +276,12 @@ namespace MeltPoolDG::Simulation::FilmBoiling
                                                   this->parameters.material.boiling_temperature +
                                                   delta_T),
                                                 "heat_transfer");
+      if (bc_temperature_top == "dirichlet")
+        this->attach_dirichlet_boundary_condition(
+          upper_bc,
+          std::make_shared<Functions::ConstantFunction<dim>>(
+            this->parameters.material.boiling_temperature),
+          "heat_transfer");
 
       // @note: this BC is necessary
       this->attach_dirichlet_boundary_condition(
