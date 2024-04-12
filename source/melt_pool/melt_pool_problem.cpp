@@ -705,6 +705,9 @@ namespace MeltPoolDG::MeltPool
           "do refine all interface cells",
           problem_specific_parameters.amr.do_refine_all_interface_cells,
           "Enforce all cells with level set values between -0.975 and 0.975 to be refined.");
+        prm.add_parameter("refine gas domain",
+                          problem_specific_parameters.amr.refine_gas_domain,
+                          "Refine the gas domain.");
         prm.add_parameter(
           "fraction of melting point refined in solid",
           problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid,
@@ -2123,8 +2126,7 @@ namespace MeltPoolDG::MeltPool
                   break;
                 }
               // ensure that solid regions at high temperatures are refined
-              else if ((solid_vals[i] > 0.0 ||
-                        base_in->parameters.evapor.evaporative_dilation_rate.enable) &&
+              else if ((solid_vals[i] > 0.0 || problem_specific_parameters.amr.refine_gas_domain) &&
                        temp_vals[i] >= problem_specific_parameters.amr
                                            .fraction_of_melting_point_refined_in_solid *
                                          base_in->parameters.material.solidus_temperature)
