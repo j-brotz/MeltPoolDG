@@ -1556,6 +1556,9 @@ namespace MeltPoolDG::MeltPool
        evapor_data.formulation_source_term_level_set ==
          Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy);
 
+    if (not do_sharp_velocity && not evapor_data.evaporative_dilation_rate.enable)
+      return;
+
     if (evaporation_operation && evapor_data.evaporative_dilation_rate.enable)
       {
         ScopedName         sc("evaporation::level_set_source_term");
@@ -1594,6 +1597,9 @@ namespace MeltPoolDG::MeltPool
         if (do_sharp_velocity)
           this->compute_interface_velocity_sharp(ls_data, evapor_data);
       }
+
+    // distribute hanging node constraints
+    flow_operation->get_hanging_node_constraints_velocity().distribute(interface_velocity);
   }
 
 
@@ -1648,7 +1654,6 @@ namespace MeltPoolDG::MeltPool
 
     nearest_point.template fill_dof_vector_with_point_values<dim>(
       interface_velocity_interface, scratch_data->get_dof_handler(vel_dof_idx), interface_velocity);
-
     interface_velocity.swap(interface_velocity_interface);
   }
 
