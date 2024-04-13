@@ -705,6 +705,9 @@ namespace MeltPoolDG::MeltPool
           "do refine all interface cells",
           problem_specific_parameters.amr.do_refine_all_interface_cells,
           "Enforce all cells with level set values between -0.975 and 0.975 to be refined.");
+        prm.add_parameter("refine gas domain",
+                          problem_specific_parameters.amr.refine_gas_domain,
+                          "Refine the gas domain.");
         prm.add_parameter(
           "fraction of melting point refined in solid",
           problem_specific_parameters.amr.fraction_of_melting_point_refined_in_solid,
@@ -1553,6 +1556,9 @@ namespace MeltPoolDG::MeltPool
        evapor_data.formulation_source_term_level_set ==
          Evaporation::EvaporationLevelSetSourceTermType::interface_velocity_sharp_heavy);
 
+    if (not do_sharp_velocity && not evapor_data.evaporative_dilation_rate.enable)
+      return;
+
     if (evaporation_operation && evapor_data.evaporative_dilation_rate.enable)
       {
         ScopedName         sc("evaporation::level_set_source_term");
@@ -1591,6 +1597,9 @@ namespace MeltPoolDG::MeltPool
         if (do_sharp_velocity)
           this->compute_interface_velocity_sharp(ls_data, evapor_data);
       }
+
+    // distribute hanging node constraints
+    flow_operation->get_hanging_node_constraints_velocity().distribute(interface_velocity);
   }
 
 
@@ -1645,7 +1654,6 @@ namespace MeltPoolDG::MeltPool
 
     nearest_point.template fill_dof_vector_with_point_values<dim>(
       interface_velocity_interface, scratch_data->get_dof_handler(vel_dof_idx), interface_velocity);
-
     interface_velocity.swap(interface_velocity_interface);
   }
 
@@ -2123,8 +2131,7 @@ namespace MeltPoolDG::MeltPool
                   break;
                 }
               // ensure that solid regions at high temperatures are refined
-              else if ((solid_vals[i] > 0.0 ||
-                        base_in->parameters.evapor.evaporative_dilation_rate.enable) &&
+              else if ((solid_vals[i] > 0.0 || problem_specific_parameters.amr.refine_gas_domain) &&
                        temp_vals[i] >= problem_specific_parameters.amr
                                            .fraction_of_melting_point_refined_in_solid *
                                          base_in->parameters.material.solidus_temperature)

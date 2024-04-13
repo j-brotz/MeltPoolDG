@@ -110,6 +110,7 @@ namespace MeltPoolDG::MeltPool
         bool   do_auto_detect_frequency                   = false;
         bool   do_refine_all_interface_cells              = false;
         double fraction_of_melting_point_refined_in_solid = 1.0;
+        bool   refine_gas_domain                          = false;
       } amr;
 
       struct
