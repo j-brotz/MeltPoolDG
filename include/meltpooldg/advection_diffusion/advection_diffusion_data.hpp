@@ -2,6 +2,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/utilities/enum.hpp>
@@ -21,9 +22,12 @@ namespace MeltPoolDG::LevelSet
   {
     AdvectionDiffusionData();
 
-    number      diffusivity             = 0.0;
-    std::string time_integration_scheme = "crank_nicolson";
-    std::string implementation          = "meltpooldg";
+    number            diffusivity             = 0.0;
+    std::string       time_integration_scheme = "crank_nicolson";
+    std::string       implementation          = "meltpooldg";
+    FiniteElementData fe;
+
+    bool enable_time_dependent_bc = false;
 
     bool enable_time_dependent_bc = false;
 
@@ -40,7 +44,7 @@ namespace MeltPoolDG::LevelSet
     add_parameters(dealii::ParameterHandler &prm);
 
     void
-    post();
+    post(const FiniteElementData &base_fe_data);
 
     void
     check_input_parameters() const;
