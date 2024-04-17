@@ -143,7 +143,6 @@ old_parameter_names = [
     ["base", "degree"],
     ["base", "do simplex"],
     ["heat", "degree"],
-    ["level set", "n subdivisions"],
     ["material", "sticking constant"],
     # ... add old parameter names
     # ["old", "my age"],
@@ -271,7 +270,6 @@ new_parameter_names = [
     ["base", "fe", "degree"],
     ["base", "fe", "type"],
     ["heat", "fe", "degree"],
-    ["level set", "fe", "type"],
     ["evaporation", "recoil pressure", "sticking constant"],
     # ... add new parameter names
     # ["new", "new", "my new age"],
@@ -281,7 +279,6 @@ new_parameter_names = [
 new_parameter_names_lambda = [
     (["recoil pressure", "pressure coefficient"], lambda x: x * 1.e-5 / 1.013),
     (["base", "fe", "type"], lambda x: "FE_SimplexP" if x == "true" else "FE_Q" if x == "false" else x),
-    (["level set", "fe", "type"], lambda x: "FE_Q_iso_Q1" if str(x) > 1 else "FE_Q"),
 ]
 
 rename_parameter_values = [
@@ -369,7 +366,25 @@ def process_special_parameters(dataDict, nErrors):
                     f"RENAME: 'reinit scale factor epsilon'")
                 nErrors += 1
         except BaseException:
-            return (dataDict, nErrors)
+            pass
+    # rename n subdivisisons
+    try:
+        val = get_nested_value(
+            dataDict, ["level set", "n subdivisions"])
+        if float(val) > 1:
+            delete_nested_item(
+                dataDict, ["level set", "n subdivisions"])
+            set_nested_item(
+                dataDict, ["level set", "fe", "type"],
+                "FE_Q_iso_Q1")
+            set_nested_item(
+                dataDict, ["level set", "fe", "degree"],
+                val)
+            print_success(
+                f"RENAME: 'level set n subdivisions'")
+            nErrors += 1
+    except BaseException:
+        pass
     return (dataDict, nErrors)
 
 ##############################################################################
