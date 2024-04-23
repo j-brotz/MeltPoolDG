@@ -11,6 +11,7 @@
 #include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_tools_geometry.h>
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/vector.h>
@@ -18,6 +19,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
@@ -33,6 +35,8 @@ namespace MeltPoolDG
     {
       using namespace dealii;
 
+      BETTER_ENUM(LevelSetType, char, level_set, smooth_heaviside, heaviside, signed_distance)
+
       static bool inflow_outflow_bc = false;
 
       /*
@@ -42,31 +46,44 @@ namespace MeltPoolDG
       class InitializePhi : public Function<dim>
       {
       public:
-        InitializePhi()
+        InitializePhi(const LevelSetType level_set_type = LevelSetType::level_set,
+                      const double       eps            = 0.0)
           : Function<dim>()
           , distance_sphere(dim == 1   ? Point<dim>(0.0) :
                             (dim == 2) ? Point<dim>(0.0, 0.5) :
                                          Point<dim>(0, 0, 0.5),
                             0.25)
+          , level_set_type(level_set_type)
+          , eps(eps)
         {}
 
         double
         value(const Point<dim> &p, const unsigned int /*component*/) const override
         {
-          return UtilityFunctions::CharacteristicFunctions::sgn(-distance_sphere.value(p));
+          const auto signed_distance = -distance_sphere.value(p);
 
-          /*
-           *  Alternatively, a tanh function could be used, corresponding to the
-           *  analytic solution of the reinitialization problem
-           */
-          // return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
-          // -distance_sphere.value(p),
-          // this->epsInterface
-          //);
+          switch (level_set_type)
+            {
+              case LevelSetType::level_set:
+                return UtilityFunctions::CharacteristicFunctions::tanh_characteristic_function(
+                  signed_distance, eps);
+              case LevelSetType::smooth_heaviside:
+                return UtilityFunctions::CharacteristicFunctions::heaviside(signed_distance, eps);
+              case LevelSetType::heaviside:
+                return UtilityFunctions::CharacteristicFunctions::sgn(signed_distance);
+              case LevelSetType::signed_distance:
+                return signed_distance;
+              default:
+                DEAL_II_NOT_IMPLEMENTED();
+            }
+          // unreachable dummy return
+          return 0.0;
         }
 
       private:
         const Functions::SignedDistance::Sphere<dim> distance_sphere;
+        const LevelSetType                           level_set_type;
+        const double                                 eps;
       };
 
       template <int dim>
@@ -206,8 +223,13 @@ namespace MeltPoolDG
         void
         set_field_conditions() final
         {
-          this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(),
-                                         "advection_diffusion");
+          this->attach_initial_condition(
+            std::make_shared<InitializePhi<dim>>(
+              level_set_type,
+              this->parameters.ls.reinit.compute_interface_thickness_parameter_epsilon(
+                dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
+                this->parameters.ls.get_n_subdivisions() / std::sqrt(dim))),
+            "advection_diffusion");
           this->attach_advection_field(std::make_shared<AdvectionField<dim>>(),
                                        "advection_diffusion");
         }
@@ -220,6 +242,14 @@ namespace MeltPoolDG
             prm.add_parameter("inflow outflow bc",
                               inflow_outflow_bc,
                               "Set if the inflow/outflow boundary condition should be enabled.");
+            prm.add_parameter(
+              "level set type",
+              level_set_type,
+              "Choose which level set type should be initialized. "
+              "level_set: smooth tanh function, eps is controlled by reinit data; "
+              "smooth_heaviside: smooth heaviside function, eps is controlled by reinit data"
+              "heaviside: jump from 0 to 1 at the interface; "
+              "signed_distance: signed distance level set.");
           }
           prm.leave_subsection();
         }
@@ -248,8 +278,9 @@ namespace MeltPoolDG
         }
 
       private:
-        const double left_domain  = -1.0;
-        const double right_domain = 1.0;
+        const double left_domain    = -1.0;
+        const double right_domain   = 1.0;
+        LevelSetType level_set_type = LevelSetType::level_set;
       };
 
     } // namespace AdvectionDiffusion

@@ -1,6 +1,19 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-04-23
+- add parameter to control the level set type for the advection diffusion simulation
+```diff
+{
+  "base": {
+    "application name": "advection_diffusion"
+  },
+  "simulation specific": {
++    "level set type": "level_set|smooth_heaviside|heaviside|signed_distance"
+  }
+}
+```
+
 ## 2024-03-20
 - move sticking constant from material
 ```diff
