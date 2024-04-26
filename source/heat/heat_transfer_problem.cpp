@@ -321,7 +321,7 @@ namespace MeltPoolDG::Heat
                                                     level_set_dof_idx);
 
     base_in->attach_boundary_condition("heat_transfer"); //@todo move to a more central place
-    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_BC_into_DBC<dim>(
+    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("heat_transfer"),
       base_in->get_periodic_bc(),
