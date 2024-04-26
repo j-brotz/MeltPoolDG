@@ -872,6 +872,14 @@ namespace MeltPoolDG::MeltPool
     vel_dof_idx = flow_operation->get_dof_handler_idx_velocity();
 
     pressure_dof_idx = flow_operation->get_dof_handler_idx_pressure();
+
+    //@todo move to a more central place
+    base_in->attach_boundary_condition("level_set");
+    base_in->attach_boundary_condition("reinitialization");
+    if (problem_specific_parameters.do_heat_transfer)
+      base_in->attach_boundary_condition("heat_transfer");
+
+
     /*
      *    initialize the levelset operation class
      *    and setup initial conditions
@@ -1307,12 +1315,6 @@ namespace MeltPoolDG::MeltPool
     /*
      * make constraints
      */
-    //@todo move to a more central place
-    base_in->attach_boundary_condition("level_set");
-    base_in->attach_boundary_condition("reinitialization");
-    if (problem_specific_parameters.do_heat_transfer)
-      base_in->attach_boundary_condition("heat_transfer");
-
     MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("level_set"),

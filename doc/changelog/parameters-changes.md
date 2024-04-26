@@ -1,6 +1,16 @@
 # Parameters changelog
 All notable changes of the input parameters will be documented in this file.
 
+## 2024-04-25
+- add parameter to enable time dependent boundary conditions for advection diffusion
+```diff
+{
+  "advection diffusion": {
++    "enable time dependent bc": "true|false"
+  }
+}
+```
+
 ## 2024-04-23
 - add parameter to control the level set type for the advection diffusion simulation
 ```diff

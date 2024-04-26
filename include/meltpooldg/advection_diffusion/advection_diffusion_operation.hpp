@@ -9,6 +9,7 @@
 
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation_base.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operator.hpp>
+#include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
@@ -34,11 +35,12 @@ namespace MeltPoolDG::LevelSet
      *  All the necessary parameters are stored in this struct.
      */
 
-    AdvectionDiffusionOperation(const ScratchData<dim>               &scratch_data_in,
-                                const AdvectionDiffusionData<double> &advec_diff_data_in,
-                                const TimeIterator<double>           &time_iterator,
-                                const VectorType                     &advection_velocity,
-                                const unsigned int                    advec_diff_dof_idx_in,
+    AdvectionDiffusionOperation(const ScratchData<dim>                  &scratch_data_in,
+                                std::shared_ptr<BoundaryConditions<dim>> bc_data_in,
+                                const AdvectionDiffusionData<double>    &advec_diff_data_in,
+                                const TimeIterator<double>              &time_iterator,
+                                const VectorType                        &advection_velocity,
+                                const unsigned int                       advec_diff_dof_idx_in,
                                 const unsigned int advec_diff_hanging_nodes_dof_idx_in,
                                 const unsigned int advec_diff_quad_idx_in,
                                 const unsigned int velocity_dof_idx_in);
@@ -93,7 +95,8 @@ namespace MeltPoolDG::LevelSet
     void
     create_operator(const VectorType &advection_velocity);
 
-    const ScratchData<dim> &scratch_data;
+    const ScratchData<dim>                  &scratch_data;
+    std::shared_ptr<BoundaryConditions<dim>> bc_data;
     /*
      *  This pointer will point to your user-defined advection_diffusion operator.
      */

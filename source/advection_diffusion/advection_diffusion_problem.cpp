@@ -84,19 +84,20 @@ namespace MeltPoolDG::LevelSet
      *  make hanging nodes and dirichlet constraints (Note: at the moment no time-dependent
      *  dirichlet constraints are supported)
      */
-    base_in->attach_boundary_condition("advection_diffusion"); //@todo move to a more central place
+    base_in->get_bc("advection_diffusion")->set_time(base_in->parameters.time_stepping.start_time);
     MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("advection_diffusion"),
       base_in->get_periodic_bc(),
       advec_diff_dof_idx,
       advec_diff_hanging_nodes_dof_idx);
-    MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
-      *scratch_data,
-      base_in->get_dirichlet_bc("advection_diffusion"),
-      advec_diff_adaflo_dof_idx,
-      advec_diff_hanging_nodes_dof_idx,
-      false /*set inhomogeneities to zero*/);
+    if (base_in->parameters.ls.advec_diff.implementation == "adaflo")
+      MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+        *scratch_data,
+        base_in->get_dirichlet_bc("advection_diffusion"),
+        advec_diff_adaflo_dof_idx,
+        advec_diff_hanging_nodes_dof_idx,
+        false /*set inhomogeneities to zero*/);
     MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
                                                     base_in->get_periodic_bc(),
                                                     velocity_dof_idx);
@@ -160,6 +161,9 @@ namespace MeltPoolDG::LevelSet
       scratch_data->attach_constraint_matrix(hanging_node_constraints_velocity);
     }
 
+    //@todo move to a more central place
+    base_in->attach_boundary_condition("advection_diffusion");
+
     setup_dof_system(base_in);
 
     /*
@@ -171,6 +175,7 @@ namespace MeltPoolDG::LevelSet
       {
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperation<dim>>(*scratch_data,
+                                                             base_in->get_bc("advection_diffusion"),
                                                              base_in->parameters.ls.advec_diff,
                                                              *time_iterator,
                                                              advection_velocity,

@@ -479,7 +479,7 @@ namespace MeltPoolDG
         boundary_conditions_map[operation_name],
         dealii::ExcMessage(
           "BC for " + operation_name +
-          "not found. "
+          " not found. "
           "Did you forget to register the operation via attach_boundary_condition(operation_name)?"));
 
       return boundary_conditions_map[operation_name];
