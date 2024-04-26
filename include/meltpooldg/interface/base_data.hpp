@@ -23,6 +23,7 @@ namespace MeltPoolDG
               char,
               not_initialized,
               reinit_circle,
+              reinit_circle_DG,
               advection_diffusion,
               advection_diffusion_DG,
               advection_diffusion_user_output,

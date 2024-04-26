@@ -307,6 +307,22 @@
             "n initial steps": "-1",
             "tolerance": "2.22507e-308",
             "type": "olsson2007",
+            "Discontinous Galerkin":
+            {
+                "CFL": "1",
+                "IMEX integration scheme": "implicit_euler",
+                "IP diffusion": "100",
+                "do CFL based time stepping": "false",
+                "factor diffusivity": "0.25",
+                "time integration scheme": "RK_stage_5_order_4",
+                "use IMEX": "true",
+                "use const gradient in RI": "false"
+            },
+            "fe":
+            {
+                "degree": "-1",
+                "type": "not_initialized"
+            },
             "interface thickness parameter":
             {
                 "type": "proportional_to_cell_size",

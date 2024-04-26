@@ -1,3 +1,4 @@
+#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q_iso_q1.h>
 
 #include <deal.II/matrix_free/util.h>
@@ -535,6 +536,14 @@ namespace MeltPoolDG
     const unsigned int dof_idx) const
   {
     return dynamic_cast<const FE_Q_iso_Q1<dim> *>(&this->get_fe(dof_idx)) != nullptr;
+  }
+
+  template <int dim, int spacedim, typename number, typename VectorizedArrayType>
+  bool
+  ScratchData<dim, spacedim, number, VectorizedArrayType>::is_FE_DGQ(
+    const unsigned int dof_idx) const
+  {
+    return dynamic_cast<const FE_DGQ<dim> *>(&this->get_fe(dof_idx)) != nullptr;
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>

@@ -58,7 +58,7 @@ namespace MeltPoolDG
       [[maybe_unused]] VectorType                                   &rhs) const override;
 
     /**
-     *  performs a matrxi vector multiplication in matrix free implementation.
+     *  performs a matrix vector multiplication in matrix free implementation.
      * @param src source vector of the matrix multiplication
      * @param dst result of the matrix multiplication
      * */
@@ -122,6 +122,7 @@ namespace MeltPoolDG
     , dof_idx(dof_idx_in)
     , quad_idx(quad_idx_in)
   {
+    AssertThrow(scratch_data_.is_FE_DGQ(dof_idx), ExcMessage("This works only for DG elements."));
     switch (scheme)
       {
           case explicit_Euler: {
@@ -138,9 +139,6 @@ namespace MeltPoolDG
             Theta_ = 0.5;
             break;
           }
-
-          // AssertThrow(scratch_data_.is_FE_DGQ(dof_idx),
-          //             ExcMessage("This works only for DG elements."));
       }
 
     linear_solver_data = linear_solver_data_in;
@@ -229,10 +227,10 @@ namespace MeltPoolDG
 
     rhs = right_hand_side_;
 
-    pde_operator_.set_velocity_operator(old_time_ + time_step);
+    pde_operator_.set_field_functions(old_time_ + time_step);
 
     // The velocity field needs only to be updated once and not in every call to vmult
-    pde_operator_.update_velocity_ = false;
+    pde_operator_.update_field_functions = false;
 
     /* TODO: add preconditioner*/
     LinearSolver::solve<VectorType>(*this,
@@ -240,7 +238,7 @@ namespace MeltPoolDG
                                     right_hand_side_,
                                     linear_solver_data);
 
-    pde_operator_.update_velocity_ = true;
+    pde_operator_.update_field_functions = true;
   }
 
 

@@ -19,6 +19,7 @@
 #include "radiative_transport/radiative_transport.hpp"
 #include "recoil_pressure/recoil_pressure.hpp"
 #include "reinit_circle/reinit_circle.hpp"
+#include "reinit_circle/reinit_circle_DG.hpp"
 #include "rising_bubble/rising_bubble.hpp"
 #include "rotating_bubble/rotating_bubble.hpp"
 #include "simulation_selector.hpp"
@@ -47,6 +48,9 @@ namespace MeltPoolDG::Simulation
         case ApplicationName::reinit_circle:
           return std::make_shared<ReinitCircle::SimulationReinit<dim>>(parameter_file,
                                                                        mpi_communicator);
+        case ApplicationName::reinit_circle_DG:
+          return std::make_shared<ReinitCircleDG::SimulationReinitDG<dim>>(parameter_file,
+                                                                           mpi_communicator);
         case ApplicationName::advection_diffusion:
           return std::make_shared<AdvectionDiffusion::SimulationAdvec<dim>>(parameter_file,
                                                                             mpi_communicator);

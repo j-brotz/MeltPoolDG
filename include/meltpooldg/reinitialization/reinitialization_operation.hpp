@@ -64,8 +64,18 @@ namespace MeltPoolDG
        *  is updated. This is commonly the first stage before performing the pseudo-time-dependent
        *  solution procedure.
        */
+
+      /**
+       *        Copies a solution field to solution_level_set
+       */
       void
       set_initial_condition(const VectorType &solution_level_set_in) override;
+
+      /**
+       * Interpolates the initial conditions from a function to the level set field
+       */
+      void
+      set_initial_condition(const Function<dim> &initial_field_function) override;
 
       void
       update_dof_idx(const unsigned int &reinit_dof_idx_in) override;
@@ -96,6 +106,20 @@ namespace MeltPoolDG
 
       void
       attach_output_vectors(GenericDataOut<dim> &data_out) const override;
+
+      /**
+       * prepares the reinilization process. Needed for the DG case
+       */
+      void
+      prepare_reinitilization() override
+      {}
+
+      double
+      compute_CFL_based_timestep() const override
+      {
+        AssertThrow(
+          false, ExcMessage("CFL based time stepping is not implemented for continous elements!"));
+      }
 
 
     private:

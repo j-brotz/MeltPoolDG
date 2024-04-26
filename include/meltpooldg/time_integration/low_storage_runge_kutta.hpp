@@ -41,6 +41,7 @@ namespace MeltPoolDG
       , dof_idx(dof_idx_in)
       , quad_idx(quad_idx_in)
     {
+      AssertThrow(scratch_data_.is_FE_DGQ(dof_idx), ExcMessage("This works only for DG elements."));
       switch (scheme)
         {
             case stage_1_order_1: /*Forward Euler*/
@@ -133,6 +134,7 @@ namespace MeltPoolDG
      * @param solution_history object holding the advection field at different time instances.
      * @param rhs right hand side vector for implicit time integration schemes
      */
+
     void
     perform_time_step(
       [[maybe_unused]] const double                                  old_time,
@@ -154,6 +156,7 @@ namespace MeltPoolDG
                     bi[0] * time_step,
                     ai[0] * time_step,
                     solution_history.get_current_solution());
+
 
 
       Number sum_previous_bi = 0;

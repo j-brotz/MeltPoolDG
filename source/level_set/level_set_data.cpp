@@ -36,7 +36,7 @@ namespace MeltPoolDG::LevelSet
     advec_diff.post(base_fe_data);
     normal_vec.post();
     curv.post();
-    reinit.post();
+    reinit.post(base_fe_data);
   }
 
   template <typename number>

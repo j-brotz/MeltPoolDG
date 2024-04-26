@@ -1,0 +1,53 @@
+{
+  "base": {
+    "application name": "reinit_circle_DG",
+    "problem name": "reinitialization",
+    "dimension": "2",
+    "global refinements": "4",
+    "do print parameters": "false"
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "0.01",
+    "end time": "0.04"
+  },
+
+  "output": {
+    "paraview": {
+      "filename": "solution_reinitialization",
+      "enable": "false"
+    },
+    "do user defined postprocessing": "true"
+
+  },
+
+  "level set": {
+    "reinitialization": {
+      "linear solver": {
+        "do matrix free": "true",
+        "solver type": "GMRES"
+
+      },
+      "fe": {
+        "degree": "1",
+        "type": "FE_DGQ"
+      },
+      "Discontinous Galerkin":{
+      "IP diffusion": "100",
+      "do CFL based time stepping": "true",
+      "CFL": "0.05",
+      "factor diffusivity": "0.1",
+      "time integration scheme": "RK_stage_5_order_4",
+      "use IMEX": "true",
+      "use const gradient in RI": "false"
+      },
+      "tolerance": "2.22507e-308",
+      "type": "olsson2007",
+      "implementation": "meltpooldg",
+      "max n steps": "5",
+      "enable": "true"
+
+    }
+  }
+
+} 

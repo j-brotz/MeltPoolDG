@@ -57,7 +57,7 @@ namespace MeltPoolDG::LevelSet
      * @param time current time
      */
     void
-    set_velocity_operator(const Number time) const;
+    set_field_functions(const Number time) const;
 
 
     /**
@@ -87,7 +87,7 @@ namespace MeltPoolDG::LevelSet
     /**
      *Flag if old velocity needs to be updated
      */
-    bool update_velocity_;
+    bool update_field_functions;
 
 
   private:
