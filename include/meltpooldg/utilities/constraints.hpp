@@ -251,7 +251,7 @@ namespace MeltPoolDG::Constraints
    */
   template <int dim>
   void
-  make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_BC_into_DBC(
+  make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC(
     ScratchData<dim>                       &scratch_data,
     const DirichletBoundaryConditions<dim> &bc_data,
     const PeriodicBoundaryConditions<dim>  &pbc,
