@@ -203,6 +203,7 @@
         "advection diffusion":
         {
             "diffusivity": "0",
+            "enable time dependent bc": "false",
             "implementation": "meltpooldg",
             "time integration scheme": "crank_nicolson",
             "convection stabilization":

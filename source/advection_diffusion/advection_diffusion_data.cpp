@@ -39,6 +39,9 @@ namespace MeltPoolDG::LevelSet
         implementation,
         "Choose the corresponding implementation of the advection diffusion operation.",
         Patterns::Selection("meltpooldg|adaflo"));
+      prm.add_parameter("enable time dependent bc",
+                        enable_time_dependent_bc,
+                        "Set this parameter to true to enable time-dependent bc.");
       predictor.add_parameters(prm);
       linear_solver.add_parameters(prm);
     }
@@ -58,6 +61,8 @@ namespace MeltPoolDG::LevelSet
   {
     AssertThrow(linear_solver.do_matrix_free || implementation == "meltpooldg",
                 ExcNotImplemented());
+
+    AssertThrow(!enable_time_dependent_bc || implementation == "meltpooldg", ExcNotImplemented());
 
     AssertThrow((conv_stab.type == ConvectionStabilizationType::SUPG &&
                  linear_solver.do_matrix_free && implementation == "meltpooldg") ||

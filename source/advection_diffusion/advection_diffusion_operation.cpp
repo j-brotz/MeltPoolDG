@@ -9,6 +9,7 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
+#include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
@@ -19,15 +20,17 @@ namespace MeltPoolDG::LevelSet
 {
   template <int dim>
   AdvectionDiffusionOperation<dim>::AdvectionDiffusionOperation(
-    const ScratchData<dim>               &scratch_data_in,
-    const AdvectionDiffusionData<double> &advec_diff_data_in,
-    const TimeIterator<double>           &time_iterator,
-    const VectorType                     &advection_velocity,
-    const unsigned int                    advec_diff_dof_idx_in,
-    const unsigned int                    advec_diff_hanging_nodes_dof_idx_in,
-    const unsigned int                    advec_diff_quad_idx_in,
-    const unsigned int                    velocity_dof_idx_in)
+    const ScratchData<dim>                  &scratch_data_in,
+    std::shared_ptr<BoundaryConditions<dim>> bc_data_in,
+    const AdvectionDiffusionData<double>    &advec_diff_data_in,
+    const TimeIterator<double>              &time_iterator,
+    const VectorType                        &advection_velocity,
+    const unsigned int                       advec_diff_dof_idx_in,
+    const unsigned int                       advec_diff_hanging_nodes_dof_idx_in,
+    const unsigned int                       advec_diff_quad_idx_in,
+    const unsigned int                       velocity_dof_idx_in)
     : scratch_data(scratch_data_in)
+    , bc_data(bc_data_in)
     , time_iterator(time_iterator)
     , advection_velocity(advection_velocity)
     , advec_diff_dof_idx(advec_diff_dof_idx_in)
@@ -114,6 +117,16 @@ namespace MeltPoolDG::LevelSet
 
     // pass time increment to operator TODO: pass time iterator directly to operator
     advec_diff_operator->reset_time_increment(time_iterator.get_current_time_increment());
+
+    if (this->advec_diff_data.enable_time_dependent_bc)
+      {
+        bc_data->set_time(time_iterator.get_current_time());
+        MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+          const_cast<ScratchData<dim> &>(scratch_data),
+          bc_data->dirichlet_bc,
+          advec_diff_dof_idx,
+          advec_diff_hanging_nodes_dof_idx);
+      }
 
     // create inflow/outflow constraints if requested
     this->create_inflow_outflow_constraints();

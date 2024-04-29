@@ -58,6 +58,7 @@ namespace MeltPoolDG::LevelSet
         (void)ls_zero_bc_idx;
         advec_diff_operation =
           std::make_shared<AdvectionDiffusionOperation<dim>>(scratch_data,
+                                                             base_in->get_bc("level_set"),
                                                              base_in->parameters.ls.advec_diff,
                                                              time_stepping,
                                                              advection_velocity,

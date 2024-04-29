@@ -25,6 +25,8 @@ namespace MeltPoolDG::LevelSet
     std::string time_integration_scheme = "crank_nicolson";
     std::string implementation          = "meltpooldg";
 
+    bool enable_time_dependent_bc = false;
+
     struct ConvectionStabilizationData
     {
       ConvectionStabilizationType type        = ConvectionStabilizationType::none;
