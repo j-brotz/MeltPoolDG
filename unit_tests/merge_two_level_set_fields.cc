@@ -174,8 +174,7 @@ main(int argc, char *argv[])
                             const auto  &level_set_2,
                             const double level_set_interior_value = 1.0,
                             const double level_set_exterior_value = -1.0,
-                            std::string  pv_name                  = "test") -> auto
-  {
+                            std::string  pv_name                  = "test") -> auto {
     level_set_1.update_ghost_values();
     level_set_2.update_ghost_values();
 
