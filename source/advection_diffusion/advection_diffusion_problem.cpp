@@ -186,7 +186,6 @@ namespace MeltPoolDG::LevelSet
 
     if (base_in->parameters.ls.advec_diff.implementation == "meltpooldg")
       {
-
         if (base_in->parameters.ls.advec_diff.fe.type != FiniteElementType::FE_DGQ)
           {
             advec_diff_operation =

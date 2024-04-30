@@ -28,7 +28,7 @@ namespace MeltPoolDG::LevelSet
     FiniteElementData fe;
 
     bool enable_time_dependent_bc = false;
-    
+
     struct ConvectionStabilizationData
     {
       ConvectionStabilizationType type        = ConvectionStabilizationType::none;
