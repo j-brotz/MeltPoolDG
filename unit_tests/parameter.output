@@ -211,6 +211,11 @@
                 "coefficient": "-1",
                 "type": "none"
             },
+            "fe":
+            {
+                "degree": "-1",
+                "type": "not_initialized"
+            },
             "linear solver":
             {
                 "abs tolerance": "1e-20",
