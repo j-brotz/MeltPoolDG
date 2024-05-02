@@ -203,6 +203,9 @@ namespace MeltPoolDG
     bool
     is_FE_Q_iso_Q_1(const unsigned int dof_idx) const;
 
+    bool
+    is_FE_DGQ(const unsigned int dof_idx) const;
+
     TimerOutput &
     get_timer() const;
 

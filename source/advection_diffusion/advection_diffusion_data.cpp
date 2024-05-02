@@ -17,6 +17,8 @@ namespace MeltPoolDG::LevelSet
   {
     prm.enter_subsection("advection diffusion");
     {
+      fe.add_parameters(prm);
+
       prm.enter_subsection("convection stabilization");
       {
         prm.add_parameter("type", conv_stab.type, "Defines the type for convection stabilization.");
@@ -30,10 +32,12 @@ namespace MeltPoolDG::LevelSet
       prm.add_parameter("diffusivity",
                         diffusivity,
                         "Defines the diffusivity for the advection diffusion equation ");
-      prm.add_parameter("time integration scheme",
-                        time_integration_scheme,
-                        "Determines the time integration scheme.",
-                        Patterns::Selection("explicit_euler|implicit_euler|crank_nicolson|bdf_2"));
+      prm.add_parameter(
+        "time integration scheme",
+        time_integration_scheme,
+        "Determines the time integration scheme.",
+        Patterns::Selection(
+          "explicit_euler|implicit_euler|crank_nicolson|bdf_2|RK_stage_1_order_1|RK_stage_2_order_2|RK_stage_3_order_3|RK_stage_5_order_4|RK_stage_7_order_4|RK_stage_9_order_5"));
       prm.add_parameter(
         "implementation",
         implementation,
@@ -50,9 +54,10 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
-  AdvectionDiffusionData<number>::post()
+  AdvectionDiffusionData<number>::post(const FiniteElementData &base_fe_data)
   {
     predictor.post();
+    fe.post(base_fe_data);
   }
 
   template <typename number>
@@ -75,6 +80,12 @@ namespace MeltPoolDG::LevelSet
 
     AssertThrow(diffusivity >= 0.0,
                 ExcMessage("Advection diffusion operator: diffusivity is smaller than zero!"));
+
+    // Cross check for DG since for DG only matrix free is supported
+    if ((fe.type == FiniteElementType::FE_DGQ) && (!linear_solver.do_matrix_free))
+      {
+        AssertThrow(false, ExcMessage("For the DG element only matrix free is implemented."));
+      }
   }
 
   template struct AdvectionDiffusionData<double>;

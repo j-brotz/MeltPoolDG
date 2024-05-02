@@ -6,6 +6,7 @@
 
 // simulations
 #include "advection_diffusion/advection_diffusion.hpp"
+#include "advection_diffusion/advection_diffusion_DG.hpp"
 #include "evaporating_droplet/evaporating_droplet.hpp"
 #include "evaporating_droplet/evaporating_droplet_with_heat.hpp"
 #include "evaporating_droplet/evaporating_shell.hpp"
@@ -49,6 +50,9 @@ namespace MeltPoolDG::Simulation
         case ApplicationName::advection_diffusion:
           return std::make_shared<AdvectionDiffusion::SimulationAdvec<dim>>(parameter_file,
                                                                             mpi_communicator);
+        case ApplicationName::advection_diffusion_DG:
+          return std::make_shared<AdvectionDiffusionDG::SimulationAdvecDG<dim>>(parameter_file,
+                                                                                mpi_communicator);
         case ApplicationName::rotating_bubble:
           return std::make_shared<RotatingBubble::SimulationRotatingBubble<dim>>(parameter_file,
                                                                                  mpi_communicator);

@@ -1,6 +1,7 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/quadrature_lib.h>
 
+#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_q_iso_q1.h>
 #include <deal.II/fe/fe_simplex_p.h>
@@ -32,9 +33,12 @@ namespace MeltPoolDG::FiniteElementUtils
                 dof_handler.distribute_dofs(FE_Q_iso_Q1<dim>(fe_data.degree));
                 break;
               }
+              case FiniteElementType::FE_DGQ: {
+                dof_handler.distribute_dofs(FE_DGQ<dim>(fe_data.degree));
+                break;
+              }
             case FiniteElementType::not_initialized:
               DEAL_II_ASSERT_UNREACHABLE();
-            case FiniteElementType::FE_DGQ:
             default:
               DEAL_II_NOT_IMPLEMENTED();
           }
@@ -57,9 +61,13 @@ namespace MeltPoolDG::FiniteElementUtils
                   FESystem<dim>(FE_Q_iso_Q1<dim>(fe_data.degree), n_components));
                 break;
               }
+              case FiniteElementType::FE_DGQ: {
+                dof_handler.distribute_dofs(
+                  FESystem<dim>(FE_DGQ<dim>(fe_data.degree), n_components));
+                break;
+              }
             case FiniteElementType::not_initialized:
               DEAL_II_ASSERT_UNREACHABLE();
-            case FiniteElementType::FE_DGQ:
             default:
               DEAL_II_NOT_IMPLEMENTED();
           }
@@ -78,9 +86,10 @@ namespace MeltPoolDG::FiniteElementUtils
           return std::make_shared<MappingQGeneric<dim>>(1);
         case FiniteElementType::FE_SimplexP:
           return std::make_shared<MappingFE<dim>>(FE_SimplexP<dim>(fe_data.degree));
+        case FiniteElementType::FE_DGQ:
+          return std::make_shared<MappingQGeneric<dim>>(fe_data.degree);
         case FiniteElementType::not_initialized:
           DEAL_II_ASSERT_UNREACHABLE();
-        case FiniteElementType::FE_DGQ:
         default:
           DEAL_II_NOT_IMPLEMENTED();
       }
@@ -99,9 +108,10 @@ namespace MeltPoolDG::FiniteElementUtils
           return QGaussSimplex<dim>(fe_data.get_n_q_points());
         case FiniteElementType::FE_Q_iso_Q1:
           return QIterated<dim>(QGauss<1>(2), fe_data.degree);
+        case FiniteElementType::FE_DGQ:
+          return QGauss<dim>(fe_data.get_n_q_points());
         case FiniteElementType::not_initialized:
           DEAL_II_ASSERT_UNREACHABLE();
-        case FiniteElementType::FE_DGQ:
         default:
           DEAL_II_NOT_IMPLEMENTED();
       }

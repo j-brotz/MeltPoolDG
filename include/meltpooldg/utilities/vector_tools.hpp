@@ -257,6 +257,23 @@ namespace MeltPoolDG
       return vec;
     }
 
+    template <int dim, typename number = double>
+    VectorizedArray<number>
+    evaluate_function_at_vectorized_points(const Function<dim>                       &function,
+                                           const Point<dim, VectorizedArray<number>> &p_vectorized,
+                                           const unsigned int                         component)
+    {
+      VectorizedArray<number> result;
+      for (unsigned int v = 0; v < VectorizedArray<number>::size(); ++v)
+        {
+          Point<dim> p;
+          for (unsigned int d = 0; d < dim; ++d)
+            p[d] = p_vectorized[d][v];
+          result[v] = function.value(p, component);
+        }
+      return result;
+    }
+
     template <int dim, typename VectorType>
     double
     compute_norm(const VectorType                   &solution,

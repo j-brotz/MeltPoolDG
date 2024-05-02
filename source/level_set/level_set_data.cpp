@@ -33,7 +33,7 @@ namespace MeltPoolDG::LevelSet
   LevelSetData<number>::post(const FiniteElementData &base_fe_data)
   {
     fe.post(base_fe_data);
-    advec_diff.post();
+    advec_diff.post(base_fe_data);
     normal_vec.post();
     curv.post();
     reinit.post();

@@ -2,6 +2,7 @@
 
 #include <deal.II/numerics/error_estimator.h>
 
+#include <meltpooldg/advection_diffusion/advection_DG_operation.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_operation.hpp>
 #include <meltpooldg/advection_diffusion/advection_diffusion_problem.hpp>
@@ -72,8 +73,8 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup DoFHandler
      */
-    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler);
-    FiniteElementUtils::distribute_dofs<dim, dim>(base_in->parameters.base.fe,
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.ls.advec_diff.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, dim>(base_in->parameters.ls.advec_diff.fe,
                                                   dof_handler_velocity);
 
     /*
@@ -85,26 +86,38 @@ namespace MeltPoolDG::LevelSet
      *  dirichlet constraints are supported)
      */
     base_in->get_bc("advection_diffusion")->set_time(base_in->parameters.time_stepping.start_time);
-    MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
-      *scratch_data,
-      base_in->get_dirichlet_bc("advection_diffusion"),
-      base_in->get_periodic_bc(),
-      advec_diff_dof_idx,
-      advec_diff_hanging_nodes_dof_idx);
-    if (base_in->parameters.ls.advec_diff.implementation == "adaflo")
-      MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
-        *scratch_data,
-        base_in->get_dirichlet_bc("advection_diffusion"),
-        advec_diff_adaflo_dof_idx,
-        advec_diff_hanging_nodes_dof_idx,
-        false /*set inhomogeneities to zero*/);
-    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
-                                                    base_in->get_periodic_bc(),
-                                                    velocity_dof_idx);
+
+    if (base_in->parameters.ls.advec_diff.fe.type != FiniteElementType::FE_DGQ)
+      { // In a DG simulation no hanging node constraints are present and the boundray condtions are
+        // enforced in weak form by changing the fluxes at the boundary
+        MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
+          *scratch_data,
+          base_in->get_dirichlet_bc("advection_diffusion"),
+          base_in->get_periodic_bc(),
+          advec_diff_dof_idx,
+          advec_diff_hanging_nodes_dof_idx);
+        if (base_in->parameters.ls.advec_diff.implementation == "adaflo")
+          MeltPoolDG::Constraints::make_DBC_and_HNC_and_merge_HNC_into_DBC<dim>(
+            *scratch_data,
+            base_in->get_dirichlet_bc("advection_diffusion"),
+            advec_diff_adaflo_dof_idx,
+            advec_diff_hanging_nodes_dof_idx,
+            false /*set inhomogeneities to zero*/);
+        MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
+                                                        base_in->get_periodic_bc(),
+                                                        velocity_dof_idx);
+      }
     /*
      *  create the matrix-free object
      */
-    scratch_data->build(false, false);
+    if (base_in->parameters.ls.advec_diff.fe.type != FiniteElementType::FE_DGQ)
+      {
+        scratch_data->build(false, false);
+      }
+    else
+      {
+        scratch_data->build(true, true);
+      }
 
     if (advec_diff_operation) // TODO: better place
       advec_diff_operation->reinit();
@@ -143,12 +156,12 @@ namespace MeltPoolDG::LevelSet
        *  setup mapping
        */
       scratch_data->set_mapping(
-        FiniteElementUtils::create_mapping<dim>(base_in->parameters.base.fe));
+        FiniteElementUtils::create_mapping<dim>(base_in->parameters.ls.advec_diff.fe));
       /*
        *  create quadrature rule
        */
       advec_diff_quad_idx = scratch_data->attach_quadrature(
-        FiniteElementUtils::create_quadrature<dim>(base_in->parameters.base.fe));
+        FiniteElementUtils::create_quadrature<dim>(base_in->parameters.ls.advec_diff.fe));
 
       advec_diff_dof_idx               = scratch_data->attach_dof_handler(dof_handler);
       advec_diff_hanging_nodes_dof_idx = scratch_data->attach_dof_handler(dof_handler);
@@ -173,20 +186,41 @@ namespace MeltPoolDG::LevelSet
 
     if (base_in->parameters.ls.advec_diff.implementation == "meltpooldg")
       {
-        advec_diff_operation =
-          std::make_shared<AdvectionDiffusionOperation<dim>>(*scratch_data,
-                                                             base_in->get_bc("advection_diffusion"),
-                                                             base_in->parameters.ls.advec_diff,
-                                                             *time_iterator,
-                                                             advection_velocity,
-                                                             advec_diff_dof_idx,
-                                                             advec_diff_hanging_nodes_dof_idx,
-                                                             advec_diff_quad_idx,
-                                                             velocity_dof_idx);
-        advec_diff_operation->reinit();
+        if (base_in->parameters.ls.advec_diff.fe.type != FiniteElementType::FE_DGQ)
+          {
+            advec_diff_operation =
+              std::make_shared<AdvectionDiffusionOperation<dim>>(*scratch_data,
+                                                                 base_in->get_bc(
+                                                                   "advection_diffusion"),
+                                                                 base_in->parameters.ls.advec_diff,
+                                                                 *time_iterator,
+                                                                 advection_velocity,
+                                                                 advec_diff_dof_idx,
+                                                                 advec_diff_hanging_nodes_dof_idx,
+                                                                 advec_diff_quad_idx,
+                                                                 velocity_dof_idx);
 
-        dynamic_cast<AdvectionDiffusionOperation<dim> *>(advec_diff_operation.get())
-          ->set_inflow_outflow_bc(base_in->get_bc("advection_diffusion")->inflow_outflow_bc);
+            dynamic_cast<AdvectionDiffusionOperation<dim> *>(advec_diff_operation.get())
+              ->set_inflow_outflow_bc(base_in->get_bc("advection_diffusion")->inflow_outflow_bc);
+          }
+        else
+          {
+            advec_diff_operation =
+              std::make_shared<AdvectionDGOperation<dim>>(*scratch_data,
+                                                          base_in->parameters.ls.advec_diff,
+                                                          *time_iterator,
+                                                          advection_velocity,
+                                                          advec_diff_dof_idx,
+                                                          advec_diff_quad_idx,
+                                                          velocity_dof_idx,
+                                                          base_in->get_bc("advection_diffusion"),
+                                                          base_in->get_advection_field(
+                                                            "advection_diffusion"),
+                                                          true);
+
+            /*In the DG case the boundary conditions are applied weakly inside the operator*/
+          }
+        advec_diff_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
     else if (base_in->parameters.ls.advec_diff.implementation == "adaflo")

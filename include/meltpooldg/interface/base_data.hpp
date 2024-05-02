@@ -24,6 +24,7 @@ namespace MeltPoolDG
               not_initialized,
               reinit_circle,
               advection_diffusion,
+              advection_diffusion_DG,
               advection_diffusion_user_output,
               rotating_bubble,
               flow_past_cylinder,
