@@ -5,7 +5,7 @@ namespace MeltPoolDG::LevelSet
 {
 
   template <int dim, typename Number>
-  RIDGDiffusionOperator<dim, Number>::RIDGDiffusionOperator(
+  ReinitializationDGDiffusionOperator<dim, Number>::ReinitializationDGDiffusionOperator(
     const MeltPoolDG::ScratchData<dim> &scratch_datain,
     const ReinitializationData<Number> &reinit_data_in,
     const unsigned int                  reinit_dof_idx_in,
@@ -18,7 +18,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  RIDGDiffusionOperator<dim, Number>::compute_viscosity_value()
+  ReinitializationDGDiffusionOperator<dim, Number>::compute_viscosity_value()
   {
     // The value for the artificial viscosity is determined by the smallest enabled element size.
     viscosity = reinit_data.factor_diffusivity * scratch_data.get_min_cell_size() /
@@ -27,19 +27,19 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  RIDGDiffusionOperator<dim, Number>::compute_penalty_parameter()
+  ReinitializationDGDiffusionOperator<dim, Number>::compute_penalty_parameter()
   {
     const Number fe_degree = (Number)scratch_data.get_degree(reinit_dof_idx);
     // Resize
     const unsigned int n_macro_cells = scratch_data.get_matrix_free().n_cell_batches() +
                                        scratch_data.get_matrix_free().n_ghost_cell_batches();
     array_penalty_parameter.resize(n_macro_cells);
-    for (uint macro_cells = 0; macro_cells < n_macro_cells; ++macro_cells)
+    for (unsigned int macro_cells = 0; macro_cells < n_macro_cells; ++macro_cells)
       {
         // Depending on the cell number, there might be empty lanes
         const unsigned int n_lanes_filled =
           scratch_data.get_matrix_free().n_active_entries_per_cell_batch(macro_cells);
-        for (uint lane = 0; lane < n_lanes_filled; ++lane)
+        for (unsigned int lane = 0; lane < n_lanes_filled; ++lane)
           {
             auto cell = scratch_data.get_matrix_free().get_cell_iterator(macro_cells, lane);
             array_penalty_parameter[macro_cells][lane] = 1. / cell->minimum_vertex_distance() *
@@ -51,7 +51,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  RIDGDiffusionOperator<dim, Number>::local_apply_domain_RI_diffusion(
+  ReinitializationDGDiffusionOperator<dim, Number>::local_apply_domain(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -77,7 +77,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  RIDGDiffusionOperator<dim, Number>::local_apply_inner_face_RI_diffusion(
+  ReinitializationDGDiffusionOperator<dim, Number>::local_apply_inner_face(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -127,7 +127,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  RIDGDiffusionOperator<dim, Number>::local_apply_boundary_face_RI_diffusion(
+  ReinitializationDGDiffusionOperator<dim, Number>::local_apply_boundary_face(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -171,21 +171,21 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   double
-  RIDGDiffusionOperator<dim, Number>::get_viscosity() const
+  ReinitializationDGDiffusionOperator<dim, Number>::get_viscosity() const
   {
     return viscosity;
   }
 
   template <int dim, typename Number>
   void
-  RIDGDiffusionOperator<dim, Number>::apply_operator([[maybe_unused]] const Number time,
+  ReinitializationDGDiffusionOperator<dim, Number>::apply_operator([[maybe_unused]] const Number time,
                                                      VectorType                   &dst,
                                                      const VectorType             &src) const
   {
     scratch_data.get_matrix_free().loop(
-      &RIDGDiffusionOperator<dim, Number>::local_apply_domain_RI_diffusion,
-      &RIDGDiffusionOperator<dim, Number>::local_apply_inner_face_RI_diffusion,
-      &RIDGDiffusionOperator<dim, Number>::local_apply_boundary_face_RI_diffusion,
+      &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_domain,
+      &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_inner_face,
+      &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_boundary_face,
       this,
       dst,
       src,
@@ -194,7 +194,7 @@ namespace MeltPoolDG::LevelSet
       MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
   }
 
-  template class RIDGDiffusionOperator<1>;
-  template class RIDGDiffusionOperator<2>;
-  template class RIDGDiffusionOperator<3>;
+  template class ReinitializationDGDiffusionOperator<1>;
+  template class ReinitializationDGDiffusionOperator<2>;
+  template class ReinitializationDGDiffusionOperator<3>;
 } // namespace MeltPoolDG::LevelSet

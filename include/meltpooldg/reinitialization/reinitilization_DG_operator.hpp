@@ -26,14 +26,14 @@ namespace MeltPoolDG::LevelSet
      * @param solution is the distorted level set field before the reinilization.
      */
     void
-    prepare_operator(VectorType &solution);
+    prepare_operator(const VectorType &solution);
 
     /**
      * Applies the DG reinilization operator to the src vector and stores the result in the dst
      * vector. The time needs to be passed for a consistent interface of the time integration scheme
      * @param time current time
      * @param dst result of the operator applied to @param src
-     * @param scr source vector for the operator
+     * @param src source vector for the operator
      */
     void
     apply_operator(Number const time, VectorType &dst, VectorType const &src);
@@ -43,7 +43,7 @@ namespace MeltPoolDG::LevelSet
      * empty.
      * @param time current time
      * @param dst result of the operator applied to @param src
-     * @param scr source vector for the operator
+     * @param src source vector for the operator
      */
     void
     apply_dirichlet_boundary_operator([[maybe_unused]] Number const      time,
@@ -96,18 +96,6 @@ namespace MeltPoolDG::LevelSet
     double
     get_viscosity() const;
 
-
-    mutable VectorType num_Hamiltonian;
-    mutable VectorType Signum_smoothed;
-    mutable VectorType God_grad;
-
-    mutable VectorType grad_x_l;
-    mutable VectorType grad_x_r;
-    mutable VectorType grad_y_l;
-    mutable VectorType grad_y_r;
-    mutable VectorType grad_z_l;
-    mutable VectorType grad_z_r;
-
   private:
     const MeltPoolDG::ScratchData<dim> &scratch_data;
 
@@ -115,13 +103,23 @@ namespace MeltPoolDG::LevelSet
     const unsigned int reinit_quad_idx;
 
     const ReinitializationData<Number> &reinit_data;
+    
+    mutable VectorType num_Hamiltonian;
+    mutable VectorType signum_smoothed;
+    mutable VectorType God_grad;
 
     // auxiliary vectors for Godunov's scheme
+    mutable VectorType grad_x_l;
+    mutable VectorType grad_x_r;
+    mutable VectorType grad_y_l;
+    mutable VectorType grad_y_r;
+    mutable VectorType grad_z_l;
+    mutable VectorType grad_z_r;
 
     /**
      *operators
      */
-    RIDGDiffusionOperator<dim> RI_DG_diffusion_operator;
+    ReinitializationDGDiffusionOperator<dim> RI_DG_diffusion_operator;
     RIGradOperator<dim>        RI_grad_operator;
 
 
@@ -136,22 +134,22 @@ namespace MeltPoolDG::LevelSet
      * @param solution leveset field
      */
     void
-    Godunov_Hamiltonian(const VectorType &solution);
+    compute_godunov_hamiltonian(const VectorType &solution);
 
     /**
      * Calculates the Godunov gradient
      * @param solution leveset field
      */
     void
-    Godunov_gradient(const VectorType &solution);
+    compute_godunov_gradient(const VectorType &solution);
 
     /**
-     * Calcualates the smoothed signum function and safes thw result in the member Signum_smoothed
+     * Calculates the smoothed signum function and stores the result in the member @p signum_smoothed
      * @param solution the distorted levelset field before reinilization
      * @param min_vertex_distance smallest vertex distance of the mesh
      */
     void
-    Smoothed_signum(const VectorType &solution, const Number min_vertex_distance) const;
+    compute_smoothed_signum(const VectorType &solution, const Number min_vertex_distance) const;
 
 
 
@@ -164,11 +162,5 @@ namespace MeltPoolDG::LevelSet
       VectorType                                  &dst,
       const VectorType                            &src,
       const std::pair<unsigned int, unsigned int> &cell_range) const;
-
-    void
-    initialize_dof_vector(VectorType &vec, const unsigned int dof_handler_index)
-    {
-      scratch_data.get_matrix_free().initialize_dof_vector(vec, dof_handler_index);
-    }
   };
 } // namespace MeltPoolDG::LevelSet

@@ -32,11 +32,11 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  ReinitilizationDGOperator<dim, Number>::prepare_operator(VectorType &solution)
+  ReinitilizationDGOperator<dim, Number>::prepare_operator(const VectorType &solution)
   {
     Number const min_vertex_distance = scratch_data.get_min_cell_size();
-    Godunov_gradient(solution);
-    Smoothed_signum(solution, min_vertex_distance);
+    compute_godunov_gradient(solution);
+    compute_smoothed_signum(solution, min_vertex_distance);
   }
 
   template <int dim, typename Number>
@@ -56,7 +56,7 @@ namespace MeltPoolDG::LevelSet
                                                          VectorType       &dst,
                                                          VectorType const &src)
   {
-    Godunov_Hamiltonian(src);
+    compute_godunov_hamiltonian(src);
 
     scratch_data.get_matrix_free().cell_loop(
       &ReinitilizationDGOperator<dim, Number>::local_apply_domain_num_Hamiltonian,
@@ -80,18 +80,18 @@ namespace MeltPoolDG::LevelSet
   void
   ReinitilizationDGOperator<dim, Number>::reinit()
   {
-    initialize_dof_vector(num_Hamiltonian, reinit_dof_idx);
-    initialize_dof_vector(Signum_smoothed, reinit_dof_idx);
-    initialize_dof_vector(God_grad, reinit_dof_idx);
-    initialize_dof_vector(grad_x_l, reinit_dof_idx);
-    initialize_dof_vector(grad_x_r, reinit_dof_idx);
-    initialize_dof_vector(grad_y_l, reinit_dof_idx);
-    initialize_dof_vector(grad_y_r, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(num_Hamiltonian, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(signum_smoothed, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(God_grad, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(grad_x_l, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(grad_x_r, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(grad_y_l, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(grad_y_r, reinit_dof_idx);
 
     if constexpr (dim == 3)
       {
-        initialize_dof_vector(grad_z_l, reinit_dof_idx);
-        initialize_dof_vector(grad_z_r, reinit_dof_idx);
+        scratch_data.initialize_dof_vector(grad_z_l, reinit_dof_idx);
+        scratch_data.initialize_dof_vector(grad_z_r, reinit_dof_idx);
       }
     IMEX_integration->reinit();
   }
@@ -115,18 +115,18 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  ReinitilizationDGOperator<dim, Number>::Godunov_Hamiltonian(const VectorType &solution)
+  ReinitilizationDGOperator<dim, Number>::compute_godunov_hamiltonian(const VectorType &solution)
   {
     Number const gradient_goal = 1.;
 
     if (reinit_data.use_const_gradient_in_RI == false)
       {
-        Godunov_gradient(solution);
+        compute_godunov_gradient(solution);
       }
 
     num_Hamiltonian = God_grad;
     num_Hamiltonian.add(-gradient_goal);
-    num_Hamiltonian.scale(Signum_smoothed);
+    num_Hamiltonian.scale(signum_smoothed);
   }
 
   template <int dim, typename Number>
@@ -159,31 +159,32 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  ReinitilizationDGOperator<dim, Number>::Godunov_gradient(const VectorType &solution)
+  ReinitilizationDGOperator<dim, Number>::compute_godunov_gradient(const VectorType &solution)
   {
     const auto &data = scratch_data.get_matrix_free();
 
     {
       // compute local upwind and downwind gradients
       //  x-direction
-      RI_grad_operator.template apply_RI_grad<false, 0>(solution, grad_x_l);
-      RI_grad_operator.template apply_RI_grad<true, 0>(solution, grad_x_r);
+      RI_grad_operator.template apply<false, 0>(solution, grad_x_l);
+      RI_grad_operator.template apply<true, 0>(solution, grad_x_r);
       // y-direction
-      RI_grad_operator.template apply_RI_grad<false, 1>(solution, grad_y_l);
-      RI_grad_operator.template apply_RI_grad<true, 1>(solution, grad_y_r);
+      if constexpr (dim != 1)
+        {
+          RI_grad_operator.template apply<false, 1>(solution, grad_y_l);
+          RI_grad_operator.template apply<true, 1>(solution, grad_y_r);
+        }
 
       if constexpr (dim == 3)
         {
           // z-direction
-          RI_grad_operator.template apply_RI_grad<false, 2>(solution, grad_z_l);
-          RI_grad_operator.template apply_RI_grad<true, 2>(solution, grad_z_r);
+          RI_grad_operator.template apply<false, 2>(solution, grad_z_l);
+          RI_grad_operator.template apply<true, 2>(solution, grad_z_r);
         }
     }
 
     {
       const dealii::VectorizedArray<Number> zero_vector = 0;
-
-
 
       FECellIntegrator<dim, 1, Number> phi_grad_x_l(data, reinit_dof_idx, reinit_quad_idx);
       FECellIntegrator<dim, 1, Number> phi_grad_x_r(data, reinit_dof_idx, reinit_quad_idx);
@@ -272,8 +273,9 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  ReinitilizationDGOperator<dim, Number>::Smoothed_signum(const VectorType &solution,
-                                                          const Number min_vertex_distance) const
+  ReinitilizationDGOperator<dim, Number>::compute_smoothed_signum(
+    const VectorType &solution,
+    const Number      min_vertex_distance) const
   {
     const auto  &data      = scratch_data.get_matrix_free();
     const Number fe_degree = (Number)scratch_data.get_degree(reinit_dof_idx);
@@ -305,7 +307,7 @@ namespace MeltPoolDG::LevelSet
               source.submit_dof_value(u, q);
             }
 
-          source.set_dof_values(Signum_smoothed);
+          source.set_dof_values(signum_smoothed);
         }
     }
   }

@@ -14,13 +14,13 @@
 namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename Number = double>
-  class RIDGDiffusionOperator
+  class ReinitializationDGDiffusionOperator
   {
   public:
     using VectorType      = LinearAlgebra::distributed::Vector<Number>;
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<Number>;
 
-    RIDGDiffusionOperator(const MeltPoolDG::ScratchData<dim> &scratch_datain,
+    ReinitializationDGDiffusionOperator(const MeltPoolDG::ScratchData<dim> &scratch_datain,
                           const ReinitializationData<Number> &reinit_data_in,
                           const unsigned int                  reinit_dof_idx_in,
                           const unsigned int                  reinit_quad_idx_in);
@@ -36,7 +36,7 @@ namespace MeltPoolDG::LevelSet
      */
     void
     compute_penalty_parameter();
-    
+
     /**
      * If an analytical function for a field is provided and an analytical update is
      * enabled, this function sets the field according to the anylytical function. This function
@@ -46,7 +46,8 @@ namespace MeltPoolDG::LevelSet
     void
     set_field_functions([[maybe_unused]] const Number time) const {};
 
-    /** Applies the DG diffusion operator to the src vector and stores the result in the dst vector.
+    /** 
+     * Applies the DG diffusion operator to the src vector and stores the result in the dst vector.
      * The dst vector is zeroed out before the operation.
      * @param time
      * @param dst destination vecor where the diffusive part is stored
@@ -95,20 +96,20 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_domain_RI_diffusion(const MatrixFree<dim, Number>               &data,
+    local_apply_domain(const MatrixFree<dim, Number>               &data,
                                     VectorType                                  &dst,
                                     const VectorType                            &src,
                                     const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
      * Applies the inner face integral
-     * * @param data the matrix free object
+     * @param data the matrix free object
      * @param dst destination where the result is stored
      * @param src source vector
      * @param cell_range
      */
     void
-    local_apply_inner_face_RI_diffusion(
+    local_apply_inner_face(
       const MatrixFree<dim, Number>               &data,
       VectorType                                  &dst,
       const VectorType                            &src,
@@ -122,7 +123,7 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_boundary_face_RI_diffusion(
+    local_apply_boundary_face(
       const MatrixFree<dim, Number>               &data,
       VectorType                                  &dst,
       const VectorType                            &src,

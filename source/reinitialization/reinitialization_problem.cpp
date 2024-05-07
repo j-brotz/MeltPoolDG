@@ -26,8 +26,6 @@ namespace MeltPoolDG::LevelSet
   {
     initialize(base_in);
 
-    reinit_operation->prepare_reinitilization();
-
     while (!time_iterator->is_finished())
       {
         if (base_in->parameters.ls.reinit.do_CFL_based_time_stepping)
@@ -90,7 +88,7 @@ namespace MeltPoolDG::LevelSet
       reinit_dof_idx = scratch_data->attach_constraint_matrix(constraints);
       normal_dof_idx = reinit_dof_idx;
       /*
-       *  setup DoFHandler
+       *  setup DoFHandlerReinitializationDGOperation<dim>
        */
       dof_handler.reinit(*base_in->triangulation);
     }
@@ -150,6 +148,13 @@ namespace MeltPoolDG::LevelSet
       AssertThrow(false, ExcNotImplemented());
 
     reinit_operation->set_initial_condition(*base_in->get_initial_condition("level_set"));
+
+    /*
+     *  DG elements need to set the smoothed signum when initialized
+     */
+    if (base_in->parameters.ls.reinit.fe.type == FiniteElementType::FE_DGQ)
+      reinit_operation->prepare_reinitilization();
+
   }
 
   template <int dim>

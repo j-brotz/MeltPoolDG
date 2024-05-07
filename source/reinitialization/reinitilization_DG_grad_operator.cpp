@@ -17,12 +17,12 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename Number>
   template <bool is_right, uint component>
   void
-  RIGradOperator<dim, Number>::apply_RI_grad(const VectorType &src, VectorType &dst)
+  RIGradOperator<dim, Number>::apply(const VectorType &src, VectorType &dst)
   {
     scratch_data.get_matrix_free().loop(
-      &RIGradOperator<dim, Number>::local_apply_domain_RI_grad<component>,
-      &RIGradOperator<dim, Number>::local_apply_inner_face_RI_grad<is_right, component>,
-      &RIGradOperator<dim, Number>::local_apply_boundary_face_RI_grad<is_right, component>,
+      &RIGradOperator<dim, Number>::local_apply_domain<component>,
+      &RIGradOperator<dim, Number>::local_apply_inner_face<is_right, component>,
+      &RIGradOperator<dim, Number>::local_apply_boundary_face<is_right, component>,
       this,
       dst,
       src,
@@ -35,43 +35,6 @@ namespace MeltPoolDG::LevelSet
                                              dst,
                                              dst);
   }
-
-  //@todo: Is there a more elegant way??
-  template void
-  RIGradOperator<1, double>::apply_RI_grad<true, 1>(const VectorType &, VectorType &);
-  template void
-  RIGradOperator<1, double>::apply_RI_grad<false, 1>(const VectorType &, VectorType &);
-
-  template void
-  RIGradOperator<1, double>::apply_RI_grad<true, 0>(const VectorType &, VectorType &);
-  template void
-  RIGradOperator<1, double>::apply_RI_grad<false, 0>(const VectorType &, VectorType &);
-
-  template void
-  RIGradOperator<2, double>::apply_RI_grad<true, 1>(const VectorType &, VectorType &);
-  template void
-  RIGradOperator<2, double>::apply_RI_grad<false, 1>(const VectorType &, VectorType &);
-
-  template void
-  RIGradOperator<2, double>::apply_RI_grad<true, 0>(const VectorType &, VectorType &);
-  template void
-  RIGradOperator<2, double>::apply_RI_grad<false, 0>(const VectorType &, VectorType &);
-
-  template void
-  RIGradOperator<3, double>::apply_RI_grad<true, 2>(const VectorType &, VectorType &);
-  template void
-  RIGradOperator<3, double>::apply_RI_grad<false, 2>(const VectorType &, VectorType &);
-
-  template void
-  RIGradOperator<3, double>::apply_RI_grad<true, 1>(const VectorType &, VectorType &);
-  template void
-  RIGradOperator<3, double>::apply_RI_grad<false, 1>(const VectorType &, VectorType &);
-
-  template void
-  RIGradOperator<3, double>::apply_RI_grad<true, 0>(const VectorType &, VectorType &);
-  template void
-  RIGradOperator<3, double>::apply_RI_grad<false, 0>(const VectorType &, VectorType &);
-
 
   template <int dim, typename Number>
   void
@@ -101,7 +64,7 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename Number>
   template <uint component>
   void
-  RIGradOperator<dim, Number>::local_apply_domain_RI_grad(
+  RIGradOperator<dim, Number>::local_apply_domain(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -131,7 +94,7 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename Number>
   template <bool is_right, uint component>
   void
-  RIGradOperator<dim, Number>::local_apply_inner_face_RI_grad(
+  RIGradOperator<dim, Number>::local_apply_inner_face(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -154,28 +117,11 @@ namespace MeltPoolDG::LevelSet
             const auto u_plus              = eval_plus.get_value(q);
             const auto normal_vector_minus = eval_minus.get_normal_vector(q);
 
-            if constexpr (is_right)
-              {
-                const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
-                  normal_vector_minus[component],
-                  0.,
-                  normal_vector_minus[component] * u_plus,
-                  normal_vector_minus[component] * u_minus);
-
-                eval_minus.submit_value(flux, q);
-                eval_plus.submit_value(-flux, q);
-              }
-            else
-              {
-                const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
-                  normal_vector_minus[component],
-                  0.,
-                  normal_vector_minus[component] * u_minus,
-                  normal_vector_minus[component] * u_plus);
-
-                eval_minus.submit_value(flux, q);
-                eval_plus.submit_value(-flux, q);
-              }
+            const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+              normal_vector_minus[component],
+              0.,
+              normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus),
+              normal_vector_minus[component] * ((is_right == true) ? u_minus : u_plus));
           }
 
         eval_minus.integrate_scatter(EvaluationFlags::values, dst);
@@ -187,7 +133,7 @@ namespace MeltPoolDG::LevelSet
   template <int dim, typename Number>
   template <bool is_right, uint component>
   void
-  RIGradOperator<dim, Number>::local_apply_boundary_face_RI_grad(
+  RIGradOperator<dim, Number>::local_apply_boundary_face(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -239,4 +185,35 @@ namespace MeltPoolDG::LevelSet
   template class RIGradOperator<1>;
   template class RIGradOperator<2>;
   template class RIGradOperator<3>;
+
+  //@todo: Is there a more elegant way??
+  template void
+  RIGradOperator<1, double>::apply<true, 0>(const VectorType &, VectorType &);
+  template void
+  RIGradOperator<1, double>::apply<false, 0>(const VectorType &, VectorType &);
+
+  template void
+  RIGradOperator<2, double>::apply<true, 1>(const VectorType &, VectorType &);
+  template void
+  RIGradOperator<2, double>::apply<false, 1>(const VectorType &, VectorType &);
+
+  template void
+  RIGradOperator<2, double>::apply<true, 0>(const VectorType &, VectorType &);
+  template void
+  RIGradOperator<2, double>::apply<false, 0>(const VectorType &, VectorType &);
+
+  template void
+  RIGradOperator<3, double>::apply<true, 2>(const VectorType &, VectorType &);
+  template void
+  RIGradOperator<3, double>::apply<false, 2>(const VectorType &, VectorType &);
+
+  template void
+  RIGradOperator<3, double>::apply<true, 1>(const VectorType &, VectorType &);
+  template void
+  RIGradOperator<3, double>::apply<false, 1>(const VectorType &, VectorType &);
+
+  template void
+  RIGradOperator<3, double>::apply<true, 0>(const VectorType &, VectorType &);
+  template void
+  RIGradOperator<3, double>::apply<false, 0>(const VectorType &, VectorType &);
 } // namespace MeltPoolDG::LevelSet

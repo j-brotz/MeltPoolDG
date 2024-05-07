@@ -106,22 +106,7 @@ namespace MeltPoolDG
 
       void
       attach_output_vectors(GenericDataOut<dim> &data_out) const override;
-
-      /**
-       * prepares the reinilization process. Needed for the DG case
-       */
-      void
-      prepare_reinitilization() override
-      {}
-
-      double
-      compute_CFL_based_timestep() const override
-      {
-        AssertThrow(
-          false, ExcMessage("CFL based time stepping is not implemented for continous elements!"));
-      }
-
-
+      
     private:
       void
       create_operator();

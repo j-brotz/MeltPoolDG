@@ -14,18 +14,14 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
-// c++
 #include <cmath>
+
 #include <iostream>
-// MeltPoolDG
+
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
-namespace MeltPoolDG
-{
-  namespace Simulation
-  {
-    namespace ReinitCircleDG
+namespace MeltPoolDG::Simulation::ReinitCircleDG
     {
       using namespace dealii;
       /*
@@ -133,33 +129,11 @@ namespace MeltPoolDG
         }
 
         void
-        set_boundary_conditions() override
-        { /*
-           *  create a pair of (boundary_id, dirichlet_function)
-           */
-
-          constexpr types::boundary_id symmetry = 0;
-
-
-          this->attach_symmetry_boundary_condition(symmetry, "levelset");
-
-
-
-          if constexpr (dim >= 2)
-            {
-              for (const auto &cell : this->triangulation->cell_iterators())
-                for (const auto &face : cell->face_iterators())
-                  if ((face->at_boundary()))
-                    {
-                      face->set_boundary_id(symmetry);
-                    }
-            }
-          else
-            {
-              (void)symmetry; // suppress unused variable for 1D
-            }
+        set_boundary_conditions() override {
+          /**
+           * For the DG case no boundary conditions are implemented
+          */
         }
-
 
         void
         set_field_conditions() override
@@ -259,5 +233,3 @@ namespace MeltPoolDG
       };
 
     } // namespace ReinitCircleDG
-  }   // namespace Simulation
-} // namespace MeltPoolDG
