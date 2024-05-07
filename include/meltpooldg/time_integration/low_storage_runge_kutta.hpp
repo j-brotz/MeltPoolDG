@@ -182,7 +182,6 @@ namespace MeltPoolDG
     void
     reinit() override
     {
-      this->pde_operator_.reinit();
       this->scratch_data_.get_matrix_free().initialize_dof_vector(this->ri, dof_idx);
       this->scratch_data_.get_matrix_free().initialize_dof_vector(this->ki, dof_idx);
     }

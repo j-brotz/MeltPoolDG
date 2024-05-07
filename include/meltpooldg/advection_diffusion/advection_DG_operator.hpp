@@ -44,13 +44,6 @@ namespace MeltPoolDG::LevelSet
       bool const                                            enable_analytical_velocity_update_in);
 
     /**
-     * Allocates memory for the vectors based on the degrees of freedom of the DoFHandler. In this
-     * case the function is empty.
-     */
-    void
-    reinit(){};
-
-    /**
      * If an analytical function for the velocity field is provided and an analytical update is
      * enabled, this function sets the velocity according to the anylytical function. Otherwise the
      * provided velocity reference is used.

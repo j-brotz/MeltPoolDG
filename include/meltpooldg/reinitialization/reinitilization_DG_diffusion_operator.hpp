@@ -36,16 +36,7 @@ namespace MeltPoolDG::LevelSet
      */
     void
     compute_penalty_parameter();
-
-
-
-    /**
-     *  Allocates memory for the vectors based on the degrees of freedom of the DoFHandler. In this
-     * case the function is empty
-     */
-    void
-    reinit(){};
-
+    
     /**
      * If an analytical function for a field is provided and an analytical update is
      * enabled, this function sets the field according to the anylytical function. This function
