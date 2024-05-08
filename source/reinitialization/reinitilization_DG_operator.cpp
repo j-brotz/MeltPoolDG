@@ -162,8 +162,6 @@ namespace MeltPoolDG::LevelSet
   void
   ReinitilizationDGOperator<dim, Number>::compute_godunov_gradient(const VectorType &solution)
   {
-    const auto &data = scratch_data.get_matrix_free();
-
     {
       // compute local upwind and downwind gradients
       //  x-direction
