@@ -37,16 +37,18 @@ namespace MeltPoolDG::LevelSet
     FiniteElementData fe;
 
 
-    // DG specific
-    number      factor_diffusivity         = 0.25;
-    number      IP_diffusion               = 100.0;
-    bool        use_IMEX                   = true;
-    bool        use_const_gradient_in_RI   = false;
-    bool        do_CFL_based_time_stepping = false;
-    std::string time_integration_scheme    = "RK_stage_5_order_4";
-    std::string IMEX_integration_scheme    = "implicit_euler";
+    struct ReinitilizationDGSpecificData
+    {
+      number      factor_diffusivity         = 0.25;
+      number      IP_diffusion               = 100.0;
+      bool        use_IMEX                   = true;
+      bool        use_const_gradient_in_RI   = false;
+      bool        do_CFL_based_time_stepping = false;
+      std::string time_integration_scheme    = "RK_stage_5_order_4";
+      std::string IMEX_integration_scheme    = "implicit_euler";
 
-    number CFL = 1.0;
+      number CFL = 1.0;
+    } reinitilization_DG_specific_data;
 
 
     struct InterfaceThickness

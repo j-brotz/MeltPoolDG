@@ -1,4 +1,5 @@
 #include <meltpooldg/reinitialization/reinitilization_DG_operator.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -20,13 +21,13 @@ namespace MeltPoolDG::LevelSet
 
     , RI_grad_operator(scratch_data_in, reinit_dof_idx_in, reinit_quad_idx_in)
   {
-    IMEX_integration =
-      TimeIntegratorConcretization::concretize(reinit_data_in.IMEX_integration_scheme,
-                                               RI_DG_diffusion_operator,
-                                               scratch_data_in,
-                                               reinit_dof_idx_in,
-                                               reinit_quad_idx_in,
-                                               reinit_data_in.linear_solver);
+    IMEX_integration = TimeIntegratorConcretization::concretize(
+      reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_scheme,
+      RI_DG_diffusion_operator,
+      scratch_data_in,
+      reinit_dof_idx_in,
+      reinit_quad_idx_in,
+      reinit_data_in.linear_solver);
   }
 
 
@@ -66,7 +67,7 @@ namespace MeltPoolDG::LevelSet
       true);
 
 
-    if (reinit_data.use_IMEX == false)
+    if (reinit_data.reinitilization_DG_specific_data.use_IMEX == false)
       {
         RI_DG_diffusion_operator.apply_operator(time, num_Hamiltonian, src);
         RI_DG_diffusion_operator.apply_dirichlet_boundary_operator(time, num_Hamiltonian, src);
@@ -119,7 +120,7 @@ namespace MeltPoolDG::LevelSet
   {
     Number const gradient_goal = 1.;
 
-    if (reinit_data.use_const_gradient_in_RI == false)
+    if (reinit_data.reinitilization_DG_specific_data.use_const_gradient_in_RI == false)
       {
         compute_godunov_gradient(solution);
       }
@@ -168,9 +169,9 @@ namespace MeltPoolDG::LevelSet
       //  x-direction
       RI_grad_operator.template apply<false, 0>(solution, grad_x_l);
       RI_grad_operator.template apply<true, 0>(solution, grad_x_r);
-      // y-direction
       if constexpr (dim != 1)
         {
+          // y-direction
           RI_grad_operator.template apply<false, 1>(solution, grad_y_l);
           RI_grad_operator.template apply<true, 1>(solution, grad_y_r);
         }
@@ -183,91 +184,59 @@ namespace MeltPoolDG::LevelSet
         }
     }
 
-    {
-      const dealii::VectorizedArray<Number> zero_vector = 0;
+    DEAL_II_OPENMP_SIMD_PRAGMA
+    for (unsigned int i = 0; i < grad_x_l.locally_owned_size(); ++i)
+      {
+        double argument_one = std::max(std::min(grad_x_l.local_element(i), 0.0) *
+                                         std::min(grad_x_l.local_element(i), 0.0),
+                                       std::max(grad_x_r.local_element(i), 0.0) *
+                                         std::max(grad_x_r.local_element(i), 0.0));
 
-      FECellIntegrator<dim, 1, Number> phi_grad_x_l(data, reinit_dof_idx, reinit_quad_idx);
-      FECellIntegrator<dim, 1, Number> phi_grad_x_r(data, reinit_dof_idx, reinit_quad_idx);
-      FECellIntegrator<dim, 1, Number> phi_grad_y_l(data, reinit_dof_idx, reinit_quad_idx);
-      FECellIntegrator<dim, 1, Number> phi_grad_y_r(data, reinit_dof_idx, reinit_quad_idx);
+        if constexpr (dim != 1)
+          {
+            argument_one += std::max(std::min(grad_y_l.local_element(i), 0.0) *
+                                       std::min(grad_y_l.local_element(i), 0.0),
+                                     std::max(grad_y_r.local_element(i), 0.0) *
+                                       std::max(grad_y_r.local_element(i), 0.0));
+          }
 
-      FECellIntegrator<dim, 1, Number> phi_grad_z_l(data, reinit_dof_idx, reinit_quad_idx);
-      FECellIntegrator<dim, 1, Number> phi_grad_z_r(data, reinit_dof_idx, reinit_quad_idx);
-
-      FECellIntegrator<dim, 1, Number> phi_sol(data, reinit_dof_idx, reinit_quad_idx);
-
-      for (unsigned int cell = 0; cell < data.n_cell_batches(); ++cell)
-        {
-          phi_grad_x_l.reinit(cell);
-          phi_grad_x_l.read_dof_values(grad_x_l);
-          phi_grad_x_r.reinit(cell);
-          phi_grad_x_r.read_dof_values(grad_x_r);
-          phi_grad_y_l.reinit(cell);
-          phi_grad_y_l.read_dof_values(grad_y_l);
-          phi_grad_y_r.reinit(cell);
-          phi_grad_y_r.read_dof_values(grad_y_r);
-
-          if constexpr (dim == 3)
-            {
-              phi_grad_z_l.reinit(cell);
-              phi_grad_z_l.read_dof_values(grad_z_l);
-              phi_grad_z_r.reinit(cell);
-              phi_grad_z_r.read_dof_values(grad_z_r);
-            }
-
-          phi_sol.reinit(cell);
-          phi_sol.read_dof_values(solution);
-
-          for (unsigned int q = 0; q < phi_grad_x_l.dofs_per_cell; ++q)
-            {
-              auto argument_one =
-                std::max((std::min(phi_grad_x_l.get_dof_value(q), zero_vector)) *
-                           (std::min(phi_grad_x_l.get_dof_value(q), zero_vector)),
-                         (std::max(phi_grad_x_r.get_dof_value(q), zero_vector)) *
-                           (std::max(phi_grad_x_r.get_dof_value(q), zero_vector)))
-
-                + std::max((std::min(phi_grad_y_l.get_dof_value(q), zero_vector)) *
-                             (std::min(phi_grad_y_l.get_dof_value(q), zero_vector)),
-                           (std::max(phi_grad_y_r.get_dof_value(q), zero_vector)) *
-                             (std::max(phi_grad_y_r.get_dof_value(q), zero_vector)));
-
-              auto argument_two =
-                std::max((std::max(phi_grad_x_l.get_dof_value(q), zero_vector)) *
-                           (std::max(phi_grad_x_l.get_dof_value(q), zero_vector)),
-                         (std::min(phi_grad_x_r.get_dof_value(q), zero_vector)) *
-                           (std::min(phi_grad_x_r.get_dof_value(q), zero_vector)))
-
-                + std::max((std::max(phi_grad_y_l.get_dof_value(q), zero_vector)) *
-                             (std::max(phi_grad_y_l.get_dof_value(q), zero_vector)),
-                           (std::min(phi_grad_y_r.get_dof_value(q), zero_vector)) *
-                             (std::min(phi_grad_y_r.get_dof_value(q), zero_vector)));
-              if constexpr (dim == 3)
-                {
-                  argument_one +=
-                    std::max((std::min(phi_grad_z_l.get_dof_value(q), zero_vector)) *
-                               (std::min(phi_grad_z_l.get_dof_value(q), zero_vector)),
-                             (std::max(phi_grad_z_r.get_dof_value(q), zero_vector)) *
-                               (std::max(phi_grad_z_r.get_dof_value(q), zero_vector)));
-
-                  argument_two +=
-                    +std::max((std::max(phi_grad_z_l.get_dof_value(q), zero_vector)) *
-                                (std::max(phi_grad_z_l.get_dof_value(q), zero_vector)),
-                              (std::min(phi_grad_z_r.get_dof_value(q), zero_vector)) *
-                                (std::min(phi_grad_z_r.get_dof_value(q), zero_vector)));
-                }
+        if constexpr (dim == 3)
+          {
+            argument_one += std::max(std::min(grad_z_l.local_element(i), 0.0) *
+                                       std::min(grad_z_l.local_element(i), 0.0),
+                                     std::max(grad_z_r.local_element(i), 0.0) *
+                                       std::max(grad_z_r.local_element(i), 0.0));
+          }
 
 
+        double argument_two = std::max(std::max(grad_x_l.local_element(i), 0.0) *
+                                         std::max(grad_x_l.local_element(i), 0.0),
+                                       std::min(grad_x_r.local_element(i), 0.0) *
+                                         std::min(grad_x_r.local_element(i), 0.0));
 
-              const auto u = compare_and_apply_mask<SIMDComparison::greater_than>(
-                phi_sol.get_dof_value(q), 0., std::sqrt(argument_one), std::sqrt(argument_two)
+        if constexpr (dim != 1)
+          {
+            argument_two += std::max(std::max(grad_y_l.local_element(i), 0.0) *
+                                       std::max(grad_y_l.local_element(i), 0.0),
+                                     std::min(grad_y_r.local_element(i), 0.0) *
+                                       std::min(grad_y_r.local_element(i), 0.0));
+          }
 
-              );
-              phi_grad_x_l.submit_dof_value(u, q);
-            }
+        if constexpr (dim == 3)
+          {
+            argument_two += std::max(std::max(grad_z_l.local_element(i), 0.0) *
+                                       std::max(grad_z_l.local_element(i), 0.0),
+                                     std::min(grad_z_r.local_element(i), 0.0) *
+                                       std::min(grad_z_r.local_element(i), 0.0));
+          }
 
-          phi_grad_x_l.set_dof_values(God_grad);
-        }
-    }
+        if (solution.local_element(i) > 0.0)
+          God_grad.local_element(i) = std::sqrt(argument_one);
+        else
+          {
+            God_grad.local_element(i) = std::sqrt(argument_two);
+          }
+      }
   }
 
 
@@ -301,8 +270,7 @@ namespace MeltPoolDG::LevelSet
               const auto arg = numbers::PI * source.get_dof_value(q) /
                                (eta_vector * std::abs(God_grad_p.get_dof_value(q)));
 
-              // tanh(x)=(e^x-e^(-x))/(e^x+e^(-x)), tanh(x) is not supported for VectorizedArray
-              const auto u = (std::exp(arg) - std::exp(-arg)) / (std::exp(arg) + std::exp(-arg));
+              const auto u = MeltPoolDG::VectorTools::tanh<dim>(arg);
 
               source.submit_dof_value(u, q);
             }

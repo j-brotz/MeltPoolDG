@@ -121,7 +121,10 @@ namespace MeltPoolDG::LevelSet
               normal_vector_minus[component],
               0.,
               normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus),
-              normal_vector_minus[component] * ((is_right == true) ? u_minus : u_plus));
+              normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus));
+
+            eval_minus.submit_value(flux, q);
+            eval_plus.submit_value(-flux, q);
           }
 
         eval_minus.integrate_scatter(EvaluationFlags::values, dst);

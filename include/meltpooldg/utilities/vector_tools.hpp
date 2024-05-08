@@ -471,5 +471,14 @@ namespace MeltPoolDG
       return dealii::Utilities::MPI::min(min, mpi_comm);
     }
 
+    /**
+     * Calculate the tanh for a vectorized arry @p arg.
+     */
+    template <int dim, typename number = double>
+    VectorizedArray<number>
+    tanh(VectorizedArray<number> const &arg)
+    {
+      return (std::exp(arg) - std::exp(-arg)) / (std::exp(arg) + std::exp(-arg));
+    }
   } // namespace VectorTools
 } // namespace MeltPoolDG

@@ -21,7 +21,8 @@ namespace MeltPoolDG::LevelSet
   ReinitializationDGDiffusionOperator<dim, Number>::compute_viscosity_value()
   {
     // The value for the artificial viscosity is determined by the smallest enabled element size.
-    viscosity = reinit_data.factor_diffusivity * scratch_data.get_min_cell_size() /
+    viscosity = reinit_data.reinitilization_DG_specific_data.factor_diffusivity *
+                scratch_data.get_min_cell_size() /
                 ((Number)scratch_data.get_degree(reinit_dof_idx));
   }
 
@@ -42,9 +43,9 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int lane = 0; lane < n_lanes_filled; ++lane)
           {
             auto cell = scratch_data.get_matrix_free().get_cell_iterator(macro_cells, lane);
-            array_penalty_parameter[macro_cells][lane] = 1. / cell->minimum_vertex_distance() *
-                                                         (fe_degree + 1.0) * (fe_degree + 1.0) *
-                                                         reinit_data.IP_diffusion;
+            array_penalty_parameter[macro_cells][lane] =
+              1. / cell->minimum_vertex_distance() * (fe_degree + 1.0) * (fe_degree + 1.0) *
+              reinit_data.reinitilization_DG_specific_data.IP_diffusion;
           }
       }
   }
@@ -178,9 +179,10 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  ReinitializationDGDiffusionOperator<dim, Number>::apply_operator([[maybe_unused]] const Number time,
-                                                     VectorType                   &dst,
-                                                     const VectorType             &src) const
+  ReinitializationDGDiffusionOperator<dim, Number>::apply_operator(
+    [[maybe_unused]] const Number time,
+    VectorType                   &dst,
+    const VectorType             &src) const
   {
     scratch_data.get_matrix_free().loop(
       &ReinitializationDGDiffusionOperator<dim, Number>::local_apply_domain,

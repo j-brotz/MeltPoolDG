@@ -5,6 +5,21 @@
 #include <meltpooldg/time_integration/time_integration_concretization.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
+
+/**
+ * For implementation details see
+ *
+ * A. Karakus, N. Chalmers, and T. Warburton. A local discontinuous galerkin
+ * level set reinitialization with subcell stabilization on unstructured meshes. Com-
+ * puters & Mathematics with Applications, 123:160–170, 2022.
+ *
+ * and
+ *
+ * A. Ritthaler. “High-Performance Matrix-Free High-Order Discontinuous Galerkin Level-Set Ad-
+ * vection and Reinitialization”. Technical University of Munich, 2023.
+ */
+
+
 namespace MeltPoolDG::LevelSet
 {
 
@@ -96,6 +111,12 @@ namespace MeltPoolDG::LevelSet
     double
     get_viscosity() const;
 
+    VectorType &
+    get_signum_smoothed() const
+    {
+      return signum_smoothed;
+    }
+
   private:
     const MeltPoolDG::ScratchData<dim> &scratch_data;
 
@@ -103,7 +124,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int reinit_quad_idx;
 
     const ReinitializationData<Number> &reinit_data;
-    
+
     mutable VectorType num_Hamiltonian;
     mutable VectorType signum_smoothed;
     mutable VectorType God_grad;
@@ -120,7 +141,7 @@ namespace MeltPoolDG::LevelSet
      *operators
      */
     ReinitializationDGDiffusionOperator<dim> RI_DG_diffusion_operator;
-    RIGradOperator<dim>        RI_grad_operator;
+    RIGradOperator<dim>                      RI_grad_operator;
 
 
     /**

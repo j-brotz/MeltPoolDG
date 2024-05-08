@@ -66,9 +66,9 @@ namespace MeltPoolDG::LevelSet
     template <uint component>
     void
     local_apply_domain(const MatrixFree<dim, Number>               &data,
-                               VectorType                                  &dst,
-                               const VectorType                            &src,
-                               const std::pair<unsigned int, unsigned int> &cell_range) const;
+                       VectorType                                  &dst,
+                       const VectorType                            &src,
+                       const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
      * Applies the inner face integral
@@ -80,9 +80,9 @@ namespace MeltPoolDG::LevelSet
     template <bool is_right, uint component>
     void
     local_apply_inner_face(const MatrixFree<dim, Number>               &data,
-                                   VectorType                                  &dst,
-                                   const VectorType                            &src,
-                                   const std::pair<unsigned int, unsigned int> &face_range) const;
+                           VectorType                                  &dst,
+                           const VectorType                            &src,
+                           const std::pair<unsigned int, unsigned int> &face_range) const;
 
     /**
      * Applies the boundary face integral
@@ -93,10 +93,9 @@ namespace MeltPoolDG::LevelSet
      */
     template <bool is_right, uint component>
     void
-    local_apply_boundary_face(
-      const MatrixFree<dim, Number>               &data,
-      VectorType                                  &dst,
-      const VectorType                            &src,
-      const std::pair<unsigned int, unsigned int> &face_range) const;
+    local_apply_boundary_face(const MatrixFree<dim, Number>               &data,
+                              VectorType                                  &dst,
+                              const VectorType                            &src,
+                              const std::pair<unsigned int, unsigned int> &face_range) const;
   };
 } // namespace MeltPoolDG::LevelSet

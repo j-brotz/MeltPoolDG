@@ -106,7 +106,7 @@ namespace MeltPoolDG
 
       void
       attach_output_vectors(GenericDataOut<dim> &data_out) const override;
-      
+
     private:
       void
       create_operator();

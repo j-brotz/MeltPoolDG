@@ -28,7 +28,8 @@ namespace MeltPoolDG::LevelSet
 
     while (!time_iterator->is_finished())
       {
-        if (base_in->parameters.ls.reinit.do_CFL_based_time_stepping)
+        if (base_in->parameters.ls.reinit.reinitilization_DG_specific_data
+              .do_CFL_based_time_stepping)
           {
             double const time_step = reinit_operation->compute_CFL_based_timestep();
 
@@ -48,7 +49,6 @@ namespace MeltPoolDG::LevelSet
         if (base_in->parameters.amr.do_amr)
           {
             refine_mesh(base_in);
-            reinit_operation->prepare_reinitilization();
           }
       }
     Journal::print_end(scratch_data->get_pcout());
@@ -154,7 +154,6 @@ namespace MeltPoolDG::LevelSet
      */
     if (base_in->parameters.ls.reinit.fe.type == FiniteElementType::FE_DGQ)
       reinit_operation->prepare_reinitilization();
-
   }
 
   template <int dim>

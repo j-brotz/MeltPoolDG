@@ -46,41 +46,43 @@ namespace MeltPoolDG::LevelSet
       prm.enter_subsection("Discontinous Galerkin");
       {
         prm.add_parameter("factor diffusivity",
-                          factor_diffusivity,
+                          reinitilization_DG_specific_data.factor_diffusivity,
                           "Set the factor for diffusivity ");
 
         prm.add_parameter("IP diffusion",
-                          IP_diffusion,
+                          reinitilization_DG_specific_data.IP_diffusion,
                           "Set the internal penalty for diffusivity ");
 
-        prm.add_parameter("use IMEX", use_IMEX, "Set the flag if IMEX integration should be used ");
+        prm.add_parameter("use IMEX",
+                          reinitilization_DG_specific_data.use_IMEX,
+                          "Set the flag if IMEX integration should be used ");
 
         prm.add_parameter(
           "use const gradient in RI",
-          use_const_gradient_in_RI,
+          reinitilization_DG_specific_data.use_const_gradient_in_RI,
           "Set if the Godunov gradient should be updated every reinitilization step");
 
 
         prm.add_parameter("do CFL based time stepping",
-                          do_CFL_based_time_stepping,
+                          reinitilization_DG_specific_data.do_CFL_based_time_stepping,
                           "Sets a flag if the time stepping should be based on the CFL condition");
 
         prm.add_parameter(
           "time integration scheme",
-          time_integration_scheme,
+          reinitilization_DG_specific_data.time_integration_scheme,
           "Determines the time integration scheme.",
           Patterns::Selection(
             "explicit_euler|implicit_euler|crank_nicolson|bdf_2|RK_stage_1_order_1|RK_stage_2_order_2|RK_stage_3_order_3|RK_stage_5_order_4|RK_stage_7_order_4|RK_stage_9_order_5"));
 
         prm.add_parameter(
           "IMEX integration scheme",
-          IMEX_integration_scheme,
+          reinitilization_DG_specific_data.IMEX_integration_scheme,
           "Determines the time integration scheme.",
           Patterns::Selection(
             "explicit_euler|implicit_euler|crank_nicolson|bdf_2|RK_stage_1_order_1|RK_stage_2_order_2|RK_stage_3_order_3|RK_stage_5_order_4|RK_stage_7_order_4|RK_stage_9_order_5"));
 
         prm.add_parameter("CFL",
-                          CFL,
+                          reinitilization_DG_specific_data.CFL,
                           "Set a CFL number for the pseudo time stepping in reinitilization. ");
       }
       prm.leave_subsection();

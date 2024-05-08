@@ -26,13 +26,13 @@ namespace MeltPoolDG::LevelSet
                                 2U /*TODO: include time integration scheme*/))
     , reinit_DG_operator(scratch_data_in, reinit_data, reinit_dof_idx_in, reinit_quad_idx_in)
   {
-    reinitilization_integration =
-      TimeIntegratorConcretization::concretize(reinit_data.time_integration_scheme,
-                                               reinit_DG_operator,
-                                               scratch_data_in,
-                                               reinit_dof_idx_in,
-                                               reinit_quad_idx_in,
-                                               reinit_data.linear_solver);
+    reinitilization_integration = TimeIntegratorConcretization::concretize(
+      reinit_data.reinitilization_DG_specific_data.time_integration_scheme,
+      reinit_DG_operator,
+      scratch_data_in,
+      reinit_dof_idx_in,
+      reinit_quad_idx_in,
+      reinit_data.linear_solver);
   }
 
   template <int dim>
@@ -46,6 +46,13 @@ namespace MeltPoolDG::LevelSet
 
     reinit_DG_operator.reinit();
     reinitilization_integration->reinit();
+
+    /**
+     * When the mesh is refined the mesh dependend viscosity and penalty parameter need to be
+     * updated.
+     */
+    reinit_DG_operator.compute_penalty_parameter();
+    reinit_DG_operator.compute_viscosity_value();
   }
 
 
@@ -136,7 +143,7 @@ namespace MeltPoolDG::LevelSet
 
     if (reinit_data.linear_solver.do_matrix_free)
       {
-        if (reinit_data.use_IMEX)
+        if (reinit_data.reinitilization_DG_specific_data.use_IMEX)
           {
             reinit_DG_operator.apply_IMEX(time_iterator.get_old_time(),
                                           time_iterator.get_current_time_increment(),
@@ -188,6 +195,11 @@ namespace MeltPoolDG::LevelSet
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
+
+    /**
+     * When the mesh is refined the smoothed signum also needs to be refined.
+     */
+    vectors.push_back(&reinit_DG_operator.get_signum_smoothed());
   }
 
   template <int dim>
@@ -218,13 +230,15 @@ namespace MeltPoolDG::LevelSet
     const double minimal_vertex_distance = scratch_data.get_min_cell_size();
     const double fe_degree               = (double)reinit_data.fe.degree;
 
-    if (reinit_data.use_IMEX)
+    if (reinit_data.reinitilization_DG_specific_data.use_IMEX)
       {
-        return reinit_data.CFL * minimal_vertex_distance / (fe_degree * fe_degree);
+        return reinit_data.reinitilization_DG_specific_data.CFL * minimal_vertex_distance /
+               (fe_degree * fe_degree);
       }
     else
       {
-        return reinit_data.CFL / reinit_data.IP_diffusion /
+        return reinit_data.reinitilization_DG_specific_data.CFL /
+               reinit_data.reinitilization_DG_specific_data.IP_diffusion /
                (std::pow(fe_degree, 2.0) / minimal_vertex_distance +
                 reinit_DG_operator.get_viscosity() * std::pow(fe_degree, 4.0) /
                   (minimal_vertex_distance * minimal_vertex_distance));

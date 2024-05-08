@@ -21,9 +21,9 @@ namespace MeltPoolDG::LevelSet
     using BlockVectorType = LinearAlgebra::distributed::BlockVector<Number>;
 
     ReinitializationDGDiffusionOperator(const MeltPoolDG::ScratchData<dim> &scratch_datain,
-                          const ReinitializationData<Number> &reinit_data_in,
-                          const unsigned int                  reinit_dof_idx_in,
-                          const unsigned int                  reinit_quad_idx_in);
+                                        const ReinitializationData<Number> &reinit_data_in,
+                                        const unsigned int                  reinit_dof_idx_in,
+                                        const unsigned int                  reinit_quad_idx_in);
 
     /**
      * Computes the necessary amount of diffusion
@@ -46,7 +46,7 @@ namespace MeltPoolDG::LevelSet
     void
     set_field_functions([[maybe_unused]] const Number time) const {};
 
-    /** 
+    /**
      * Applies the DG diffusion operator to the src vector and stores the result in the dst vector.
      * The dst vector is zeroed out before the operation.
      * @param time
@@ -97,9 +97,9 @@ namespace MeltPoolDG::LevelSet
      */
     void
     local_apply_domain(const MatrixFree<dim, Number>               &data,
-                                    VectorType                                  &dst,
-                                    const VectorType                            &src,
-                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
+                       VectorType                                  &dst,
+                       const VectorType                            &src,
+                       const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
      * Applies the inner face integral
@@ -109,11 +109,10 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_inner_face(
-      const MatrixFree<dim, Number>               &data,
-      VectorType                                  &dst,
-      const VectorType                            &src,
-      const std::pair<unsigned int, unsigned int> &cell_range) const;
+    local_apply_inner_face(const MatrixFree<dim, Number>               &data,
+                           VectorType                                  &dst,
+                           const VectorType                            &src,
+                           const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
      * Applies the boundary face integral
@@ -123,10 +122,9 @@ namespace MeltPoolDG::LevelSet
      * @param cell_range
      */
     void
-    local_apply_boundary_face(
-      const MatrixFree<dim, Number>               &data,
-      VectorType                                  &dst,
-      const VectorType                            &src,
-      const std::pair<unsigned int, unsigned int> &cell_range) const;
+    local_apply_boundary_face(const MatrixFree<dim, Number>               &data,
+                              VectorType                                  &dst,
+                              const VectorType                            &src,
+                              const std::pair<unsigned int, unsigned int> &cell_range) const;
   };
 } // namespace MeltPoolDG::LevelSet

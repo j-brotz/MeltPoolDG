@@ -14,222 +14,221 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <cmath>
-
-#include <iostream>
-
 #include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 
+#include <cmath>
+#include <iostream>
+
 namespace MeltPoolDG::Simulation::ReinitCircleDG
+{
+  using namespace dealii;
+  /*
+   * this function specifies the initial field of the level set equation
+   */
+
+  template <int dim>
+  class InitializePhi : public Function<dim>
+  {
+  public:
+    InitializePhi()
+      : Function<dim>()
+      , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5), 0.25)
+    {}
+
+    double
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
     {
-      using namespace dealii;
-      /*
-       * this function specifies the initial field of the level set equation
+      double value;
+      if (dim != 3)
+        {
+          value = 2.0 * (std::sqrt(p[0] * p[0] + p[1] * p[1]) - 0.15);
+        }
+      else
+        {
+          value = 2.0 * (std::sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]) - 0.15);
+        }
+
+      return value;
+    }
+
+  private:
+    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+  };
+
+  template <int dim>
+  class ExactSolution : public Function<dim>
+  {
+  public:
+    ExactSolution(const double eps)
+      : Function<dim>()
+      , distance_sphere(Point<dim>(0.0, 0.5), 0.25)
+      , eps_interface(eps)
+    {}
+
+    double
+    value(const Point<dim> &p, const unsigned int /*component*/) const override
+    {
+      double value;
+      if (dim != 3)
+        {
+          value = (std::sqrt(p[0] * p[0] + p[1] * p[1]) - 0.15);
+        }
+      else
+        {
+          value = (std::sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]) - 0.15);
+        }
+
+      return value;
+    }
+
+  private:
+    const Functions::SignedDistance::Sphere<dim> distance_sphere;
+    const double                                 eps_interface;
+  };
+  /*
+   *      This class collects all relevant input data for the level set simulation
+   */
+
+  template <int dim>
+  class SimulationReinitDG : public SimulationBase<dim>
+  {
+  public:
+    SimulationReinitDG(std::string parameter_file, const MPI_Comm mpi_communicator)
+      : SimulationBase<dim>(parameter_file, mpi_communicator)
+    {}
+
+    void
+    create_spatial_discretization() override
+    {
+      if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
+        {
+          AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
+          this->triangulation = std::make_shared<Triangulation<dim>>();
+        }
+      else
+        {
+          this->triangulation =
+            std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
+        }
+
+      if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
+        {
+          GridGenerator::subdivided_hyper_cube_with_simplices(
+            *this->triangulation,
+            Utilities::pow(2, this->parameters.base.global_refinements),
+            left_domain,
+            right_domain);
+        }
+      else
+        {
+          GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
+          this->triangulation->refine_global(this->parameters.base.global_refinements);
+        }
+    }
+
+    void
+    set_boundary_conditions() override
+    {
+      /**
+       * For the DG case no boundary conditions are implemented
        */
+    }
 
-      template <int dim>
-      class InitializePhi : public Function<dim>
-      {
-      public:
-        InitializePhi()
-          : Function<dim>()
-          , distance_sphere(dim == 1 ? Point<dim>(0.0) : Point<dim>(0.0, 0.5), 0.25)
-        {}
+    void
+    set_field_conditions() override
+    {
+      this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
+      this->attach_exact_solution(std::make_shared<ExactSolution<dim>>(0.01), "level_set");
+    }
 
-        double
-        value(const Point<dim> &p, const unsigned int /*component*/) const override
-        {
-          double value;
-          if (dim != 3)
-            {
-              value = 2.0 * (std::sqrt(p[0] * p[0] + p[1] * p[1]) - 0.15);
-            }
-          else
-            {
-              value = 2.0 * (std::sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]) - 0.15);
-            }
+    void
+    do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
+    {
+      dealii::ConditionalOStream pcout(std::cout,
+                                       Utilities::MPI::this_mpi_process(this->mpi_communicator) ==
+                                         0);
 
-          return value;
-        }
+      pcout << "---------------------------------------------" << std::endl;
+      pcout << "    Starting user defined postprocessing" << std::endl;
+      pcout << "---------------------------------------------" << std::endl;
+      pcout << "Accessible vectors:" << std::endl;
+      for (const auto &entry : generic_data_out.entries)
+        for (const auto &name : std::get<2>(entry))
+          {
+            pcout << " * " << std::setw(20) << name << " Max-norm: " << std::setprecision(5)
+                  << std::setw(10) << generic_data_out.get_vector(name).linfty_norm()
+                  << " number of dofs: " << generic_data_out.get_dof_handler(name).n_dofs()
+                  << std::endl;
+            break;
+          }
 
-      private:
-        const Functions::SignedDistance::Sphere<dim> distance_sphere;
-      };
+      /*Error Calculation*/
+      ExactSolution<dim> exact_solution(0.1);
+      exact_solution.set_time(generic_data_out.get_time());
 
-      template <int dim>
-      class ExactSolution : public Function<dim>
-      {
-      public:
-        ExactSolution(const double eps)
-          : Function<dim>()
-          , distance_sphere(Point<dim>(0.0, 0.5), 0.25)
-          , eps_interface(eps)
-        {}
+      const auto  n_q_points = this->parameters.ls.reinit.fe.degree + 20;
+      FE_DGQ<dim> fe(this->parameters.ls.reinit.fe.degree);
 
-        double
-        value(const Point<dim> &p, const unsigned int /*component*/) const override
-        {
-          double value;
-          if (dim != 3)
-            {
-              value = (std::sqrt(p[0] * p[0] + p[1] * p[1]) - 0.15);
-            }
-          else
-            {
-              value = (std::sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]) - 0.15);
-            }
+      QGauss<dim>   quadrature(n_q_points);
+      FEValues<dim> fe_values(fe,
+                              quadrature,
+                              update_values | update_JxW_values | update_quadrature_points);
 
-          return value;
-        }
+      std::vector<double> phi_at_q(QGauss<dim>(n_q_points).size());
 
-      private:
-        const Functions::SignedDistance::Sphere<dim> distance_sphere;
-        const double                                 eps_interface;
-      };
-      /*
-       *      This class collects all relevant input data for the level set simulation
-       */
 
-      template <int dim>
-      class SimulationReinitDG : public SimulationBase<dim>
-      {
-      public:
-        SimulationReinitDG(std::string parameter_file, const MPI_Comm mpi_communicator)
-          : SimulationBase<dim>(parameter_file, mpi_communicator)
-        {}
 
-        void
-        create_spatial_discretization() override
-        {
-          if (dim == 1 || this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
-            {
-              AssertDimension(Utilities::MPI::n_mpi_processes(this->mpi_communicator), 1);
-              this->triangulation = std::make_shared<Triangulation<dim>>();
-            }
-          else
-            {
-              this->triangulation =
-                std::make_shared<parallel::distributed::Triangulation<dim>>(this->mpi_communicator);
-            }
+      generic_data_out.get_vector("psi").update_ghost_values();
 
-          if (this->parameters.base.fe.type == FiniteElementType::FE_SimplexP)
-            {
-              GridGenerator::subdivided_hyper_cube_with_simplices(
-                *this->triangulation,
-                Utilities::pow(2, this->parameters.base.global_refinements),
-                left_domain,
-                right_domain);
-            }
-          else
-            {
-              GridGenerator::hyper_cube(*this->triangulation, left_domain, right_domain);
-              this->triangulation->refine_global(this->parameters.base.global_refinements);
-            }
-        }
+      double error      = 0.0;
+      double norm_exact = 0.0;
+      double mass       = 0.0;
 
-        void
-        set_boundary_conditions() override {
-          /**
-           * For the DG case no boundary conditions are implemented
-          */
-        }
+      for (const auto &cell : generic_data_out.get_dof_handler("psi").active_cell_iterators())
+        if (cell->is_locally_owned())
+          {
+            fe_values.reinit(cell);
+            fe_values.get_function_values(generic_data_out.get_vector("psi"),
+                                          phi_at_q); // compute values of old solution
 
-        void
-        set_field_conditions() override
-        {
-          this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
-          this->attach_exact_solution(std::make_shared<ExactSolution<dim>>(0.01), "level_set");
-        }
-
-        void
-        do_postprocessing(const GenericDataOut<dim> &generic_data_out) const final
-        {
-          dealii::ConditionalOStream pcout(
-            std::cout, Utilities::MPI::this_mpi_process(this->mpi_communicator) == 0);
-
-          pcout << "---------------------------------------------" << std::endl;
-          pcout << "    Starting user defined postprocessing" << std::endl;
-          pcout << "---------------------------------------------" << std::endl;
-          pcout << "Accessible vectors:" << std::endl;
-          for (const auto &entry : generic_data_out.entries)
-            for (const auto &name : std::get<2>(entry))
+            for (const unsigned int q_index : fe_values.quadrature_point_indices())
               {
-                pcout << " * " << std::setw(20) << name << " Max-norm: " << std::setprecision(5)
-                      << std::setw(10) << generic_data_out.get_vector(name).linfty_norm()
-                      << " number of dofs: " << generic_data_out.get_dof_handler(name).n_dofs()
-                      << std::endl;
-                break;
-              }
-
-          /*Error Calculation*/
-          ExactSolution<dim> exact_solution(0.1);
-          exact_solution.set_time(generic_data_out.get_time());
-
-          const auto  n_q_points = this->parameters.ls.reinit.fe.degree + 20;
-          FE_DGQ<dim> fe(this->parameters.ls.reinit.fe.degree);
-
-          QGauss<dim>   quadrature(n_q_points);
-          FEValues<dim> fe_values(fe,
-                                  quadrature,
-                                  update_values | update_JxW_values | update_quadrature_points);
-
-          std::vector<double> phi_at_q(QGauss<dim>(n_q_points).size());
-
-
-
-          generic_data_out.get_vector("psi").update_ghost_values();
-
-          double error      = 0.0;
-          double norm_exact = 0.0;
-          double mass       = 0.0;
-
-          for (const auto &cell : generic_data_out.get_dof_handler("psi").active_cell_iterators())
-            if (cell->is_locally_owned())
-              {
-                fe_values.reinit(cell);
-                fe_values.get_function_values(generic_data_out.get_vector("psi"),
-                                              phi_at_q); // compute values of old solution
-
-                for (const unsigned int q_index : fe_values.quadrature_point_indices())
+                auto sol_difference = std::abs(
+                  exact_solution.value(fe_values.quadrature_point(q_index), 0) - phi_at_q[q_index]);
+                if (fe_values.quadrature_point(q_index).norm() < (0.15 + 0.02))
                   {
-                    auto sol_difference =
-                      std::abs(exact_solution.value(fe_values.quadrature_point(q_index), 0) -
-                               phi_at_q[q_index]);
-                    if (fe_values.quadrature_point(q_index).norm() < (0.15 + 0.02))
+                    if (fe_values.quadrature_point(q_index).norm() > (0.15 - 0.02))
                       {
-                        if (fe_values.quadrature_point(q_index).norm() > (0.15 - 0.02))
-                          {
-                            error += sol_difference * sol_difference * fe_values.JxW(q_index);
-                            norm_exact +=
-                              exact_solution.value(fe_values.quadrature_point(q_index), 0) *
-                              exact_solution.value(fe_values.quadrature_point(q_index), 0) *
-                              fe_values.JxW(q_index);
-                          }
-                      }
-                    if (phi_at_q[q_index] < 0.0)
-                      {
-                        mass += fe_values.JxW(q_index);
+                        error += sol_difference * sol_difference * fe_values.JxW(q_index);
+                        norm_exact += exact_solution.value(fe_values.quadrature_point(q_index), 0) *
+                                      exact_solution.value(fe_values.quadrature_point(q_index), 0) *
+                                      fe_values.JxW(q_index);
                       }
                   }
+                if (phi_at_q[q_index] < 0.0)
+                  {
+                    mass += fe_values.JxW(q_index);
+                  }
               }
+          }
 
-          error      = dealii::Utilities::MPI::sum(error, this->mpi_communicator);
-          norm_exact = dealii::Utilities::MPI::sum(norm_exact, this->mpi_communicator);
-          mass       = dealii::Utilities::MPI::sum(mass, this->mpi_communicator);
+      error      = dealii::Utilities::MPI::sum(error, this->mpi_communicator);
+      norm_exact = dealii::Utilities::MPI::sum(norm_exact, this->mpi_communicator);
+      mass       = dealii::Utilities::MPI::sum(mass, this->mpi_communicator);
 
-          pcout << "Relative error to exact solution " << std::sqrt(error) / std::sqrt(norm_exact)
-                << std::endl;
+      pcout << "Relative error to exact solution " << std::sqrt(error) / std::sqrt(norm_exact)
+            << std::endl;
 
-          pcout << "Mass of bubble " << mass << std::endl;
-          pcout << "---------------------------------------------" << std::endl;
-          pcout << "    End of user defined postprocessing" << std::endl;
-          pcout << "---------------------------------------------" << std::endl;
-        }
+      pcout << "Mass of bubble " << mass << std::endl;
+      pcout << "---------------------------------------------" << std::endl;
+      pcout << "    End of user defined postprocessing" << std::endl;
+      pcout << "---------------------------------------------" << std::endl;
+    }
 
-      private:
-        double left_domain  = -0.5;
-        double right_domain = 0.5;
-      };
+  private:
+    double left_domain  = -0.5;
+    double right_domain = 0.5;
+  };
 
-    } // namespace ReinitCircleDG
+} // namespace MeltPoolDG::Simulation::ReinitCircleDG
