@@ -46,7 +46,7 @@ namespace MeltPoolDG::Heat
     , solution_history(std::max(heat_data.predictor.n_old_solution_vectors,
                                 2U /*TODO: include time integration scheme*/))
   {
-    heat_operator = std::make_shared<HeatDiffuseMultiPhaseOperation<dim>>(
+    heat_operator = std::make_unique<HeatDiffuseMultiPhaseOperator<dim>>(
       bc_data,
       scratch_data,
       heat_data,
@@ -67,8 +67,9 @@ namespace MeltPoolDG::Heat
     /*
      * setup preconditioner for matrix-free computation
      */
-    heat_transfer_preconditioner = std::make_shared<HeatTransferPreconditionerMatrixFree<dim>>(
-      scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, heat_operator);
+    heat_transfer_preconditioner = std::make_unique<
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+      scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, *heat_operator);
 
     setup_newton();
   }
@@ -269,16 +270,13 @@ namespace MeltPoolDG::Heat
     heat_operator->update_ghost_values();
     switch (heat_data.linear_solver.preconditioner_type)
       {
-        case PreconditionerType::Diagonal:
-          case PreconditionerType::DiagonalReduced: {
+          case PreconditionerType::Diagonal: {
             diag_preconditioner = heat_transfer_preconditioner->compute_diagonal_preconditioner();
             break;
           }
         case PreconditionerType::Identity:
         case PreconditionerType::AMG:
-        case PreconditionerType::AMGReduced:
-        case PreconditionerType::ILU:
-          case PreconditionerType::ILUReduced: {
+          case PreconditionerType::ILU: {
             trilinos_preconditioner =
               heat_transfer_preconditioner->compute_trilinos_preconditioner();
             break;

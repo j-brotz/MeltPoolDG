@@ -21,13 +21,13 @@
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operator.hpp>
-#include <meltpooldg/heat/heat_diffuse_preconditioner_matrixfree.hpp>
 #include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
 #include <meltpooldg/level_set/nearest_point_data.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/linear_algebra/predictor.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -89,11 +89,12 @@ namespace MeltPoolDG::Heat
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    std::shared_ptr<HeatDiffuseMultiPhaseOperation<dim>> heat_operator;
+    std::unique_ptr<HeatDiffuseMultiPhaseOperator<dim>> heat_operator;
 
-    std::shared_ptr<HeatTransferPreconditionerMatrixFree<dim>> heat_transfer_preconditioner;
-    std::shared_ptr<DiagonalMatrix<VectorType>>                diag_preconditioner;
-    std::shared_ptr<TrilinosWrappers::PreconditionBase>        trilinos_preconditioner;
+    std::unique_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+                                                        heat_transfer_preconditioner;
+    std::shared_ptr<DiagonalMatrix<VectorType>>         diag_preconditioner;
+    std::shared_ptr<TrilinosWrappers::PreconditionBase> trilinos_preconditioner;
 
     // determine whether solution vectors are prepared for time advance
     bool ready_for_time_advance = false;

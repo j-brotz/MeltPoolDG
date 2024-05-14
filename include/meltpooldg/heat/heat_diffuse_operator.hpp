@@ -97,7 +97,7 @@ namespace MeltPoolDG::Heat
    */
 
   template <int dim, typename number = double>
-  class HeatDiffuseMultiPhaseOperation : public OperatorBase<dim, number>
+  class HeatDiffuseMultiPhaseOperator : public OperatorBase<dim, number>
   {
     //@todo: to avoid compiler warnings regarding hidden overriden functions
     using OperatorBase<dim, number>::vmult;
@@ -168,21 +168,21 @@ namespace MeltPoolDG::Heat
     mutable std::vector<bool> do_update_ghosts;
 
   public:
-    HeatDiffuseMultiPhaseOperation(const std::shared_ptr<BoundaryConditions<dim>> &bc,
-                                   const ScratchData<dim>                         &scratch_data_in,
-                                   const HeatData<number>                         &data_in,
-                                   const Material<number>                         &material,
-                                   const unsigned int                              temp_dof_idx_in,
-                                   const unsigned int                              temp_quad_idx_in,
-                                   const unsigned int temp_hanging_nodes_dof_idx,
-                                   const VectorType  &temperature_in,
-                                   const VectorType  &temperature_old_in,
-                                   const VectorType  &heat_source_in,
-                                   const unsigned int vel_dof_idx_in            = 0,
-                                   const VectorType  *velocity_in               = nullptr,
-                                   const unsigned int ls_dof_idx_in             = 0,
-                                   const VectorType  *level_set_as_heaviside_in = nullptr,
-                                   const bool         do_solidifiaction_in      = false);
+    HeatDiffuseMultiPhaseOperator(const std::shared_ptr<BoundaryConditions<dim>> &bc,
+                                  const ScratchData<dim>                         &scratch_data_in,
+                                  const HeatData<number>                         &data_in,
+                                  const Material<number>                         &material,
+                                  const unsigned int                              temp_dof_idx_in,
+                                  const unsigned int                              temp_quad_idx_in,
+                                  const unsigned int temp_hanging_nodes_dof_idx,
+                                  const VectorType  &temperature_in,
+                                  const VectorType  &temperature_old_in,
+                                  const VectorType  &heat_source_in,
+                                  const unsigned int vel_dof_idx_in            = 0,
+                                  const VectorType  *velocity_in               = nullptr,
+                                  const unsigned int ls_dof_idx_in             = 0,
+                                  const VectorType  *level_set_as_heaviside_in = nullptr,
+                                  const bool         do_solidifiaction_in      = false);
 
     void
     register_evaporative_mass_flux(
@@ -231,10 +231,6 @@ namespace MeltPoolDG::Heat
 
     void
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
-
-    void
-    compute_system_matrix_from_matrixfree_reduced(
-      TrilinosWrappers::SparseMatrix &system_matrix) const;
 
     void
     compute_system_matrix_from_matrixfree(
@@ -314,6 +310,17 @@ namespace MeltPoolDG::Heat
     tangent_local_boundary_operation(FEFaceIntegrator<dim, 1, number> &dQ_dT,
                                      FEFaceIntegrator<dim, 1, number> &temp_vals,
                                      bool                              do_reinit_face) const;
+    /**
+     * The setup for dealii::MatrixFreeTools::internal::compute_diagonal and
+     * dealii::MatrixFreeTools::internal::compute_matrix is identical. To avoid duplicate code this
+     * internal function can handle both operations. Choose which operation to perform using
+     * @param do_diagonal: `true` for compute_diagonal and `false` for compute_matrix.
+     */
+    void
+    internal_compute_diagonal_or_system_matrix(
+      [[maybe_unused]] VectorType                             &diagonal,
+      [[maybe_unused]] dealii::TrilinosWrappers::SparseMatrix &system_matrix,
+      const bool                                               do_diagonal) const;
 
     /**
      * Determine the material parameters. This function takes two-phase flow and solidification
