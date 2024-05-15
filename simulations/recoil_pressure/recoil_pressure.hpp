@@ -450,7 +450,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
                 "navier_stokes_u");
               if (!periodic_boundary)
                 {
-                  if (dim == 2)
+                  if (dim >= 2)
                     {
                       this->attach_symmetry_boundary_condition(left_bc, "navier_stokes_u");
                       this->attach_symmetry_boundary_condition(right_bc, "navier_stokes_u");
@@ -470,7 +470,7 @@ namespace MeltPoolDG::Simulation::RecoilPressure
               add_slip_or_no_slip_boundary(upper_bc);
               if (!periodic_boundary)
                 {
-                  if (dim == 2)
+                  if (dim >= 2)
                     {
                       add_slip_or_no_slip_boundary(left_bc);
                       add_slip_or_no_slip_boundary(right_bc);
