@@ -23,14 +23,14 @@ namespace MeltPoolDG::LevelSet
     // The value for the artificial viscosity is determined by the smallest enabled element size.
     viscosity = reinit_data.reinitilization_DG_specific_data.factor_diffusivity *
                 scratch_data.get_min_cell_size() /
-                ((Number)scratch_data.get_degree(reinit_dof_idx));
+                ((static_cast<Number>(scratch_data.get_degree(reinit_dof_idx))));
   }
 
   template <int dim, typename Number>
   void
   ReinitializationDGDiffusionOperator<dim, Number>::compute_penalty_parameter()
   {
-    const Number fe_degree = (Number)scratch_data.get_degree(reinit_dof_idx);
+    const Number fe_degree = (static_cast<Number>(scratch_data.get_degree(reinit_dof_idx)));
     // Resize
     const unsigned int n_macro_cells = scratch_data.get_matrix_free().n_cell_batches() +
                                        scratch_data.get_matrix_free().n_ghost_cell_batches();
@@ -105,17 +105,16 @@ namespace MeltPoolDG::LevelSet
             const auto u_minus = eval_minus.get_value(q);
             const auto u_plus  = eval_plus.get_value(q);
 
-            const auto flux_1 = 0.5 * (u_minus - u_plus) * viscosity;
-
-            eval_minus.submit_normal_derivative(flux_1, q);
-            eval_plus.submit_normal_derivative(flux_1, q);
-
-            // 2nd and 3rd (=penalty) face integral
             const auto u_minus_normal_grad = eval_minus.get_normal_derivative(q);
             const auto u_plus_normal_grad  = eval_plus.get_normal_derivative(q);
 
+            const auto flux_1 = 0.5 * (u_minus - u_plus) * viscosity;
+
             const auto flux_2 = 0.5 * (u_minus_normal_grad + u_plus_normal_grad) * viscosity -
                                 (u_minus - u_plus) * viscosity * sigmaF;
+
+            eval_minus.submit_normal_derivative(flux_1, q);
+            eval_plus.submit_normal_derivative(flux_1, q);
 
             eval_minus.submit_value(flux_2, q);
             eval_plus.submit_value(-flux_2, q);
@@ -139,6 +138,7 @@ namespace MeltPoolDG::LevelSet
     for (unsigned int face = face_range.first; face < face_range.second; face++)
       {
         eval_minus.reinit(face);
+
         eval_minus.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
         const auto sigmaF = eval_minus.read_cell_data(array_penalty_parameter);
@@ -147,20 +147,17 @@ namespace MeltPoolDG::LevelSet
           {
             // 1st face integral
             const auto u_minus = eval_minus.get_value(q);
+            const auto u_plus  = u_minus;
 
-            const auto u_plus = u_minus;
-            const auto flux_1 = 0.5 * (u_minus - u_plus) * viscosity;
-
-            eval_minus.submit_normal_derivative(flux_1, q);
-
-            // 2nd and 3rd (=penalty) face integral
             const auto u_minus_normal_grad = eval_minus.get_normal_derivative(q);
+            const auto u_plus_normal_grad  = u_minus_normal_grad;
 
-            // Assume same gradients.
-            const auto u_plus_normal_grad = -u_minus_normal_grad;
+            const auto flux_1 = 0.5 * (u_minus - u_plus) * viscosity;
 
             const auto flux_2 = 0.5 * (u_minus_normal_grad + u_plus_normal_grad) * viscosity -
                                 (u_minus - u_plus) * viscosity * sigmaF;
+
+            eval_minus.submit_normal_derivative(flux_1, q);
 
             eval_minus.submit_value(flux_2, q);
           }
@@ -168,7 +165,6 @@ namespace MeltPoolDG::LevelSet
         eval_minus.integrate_scatter(EvaluationFlags::values | EvaluationFlags::gradients, dst);
       }
   }
-
 
   template <int dim, typename Number>
   double

@@ -91,10 +91,11 @@ namespace MeltPoolDG::LevelSet
      * @param rhs vector for the right hand side resulting linear System of equations
      */
     void
-    apply_IMEX(Number const                                                   time,
-               Number const                                                   time_step,
-               [[maybe_unused]] TimeIntegration::SolutionHistory<VectorType> &solution_history,
-               VectorType                                                    &rhs) const;
+    apply_diffusion_implicit(
+      Number const                                                   time,
+      Number const                                                   time_step,
+      [[maybe_unused]] TimeIntegration::SolutionHistory<VectorType> &solution_history,
+      VectorType                                                    &rhs) const;
 
     /**
      * flag for the time integration scheme if field functions should be updated in every step.

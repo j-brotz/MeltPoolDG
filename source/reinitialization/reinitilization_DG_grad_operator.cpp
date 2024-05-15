@@ -159,26 +159,13 @@ namespace MeltPoolDG::LevelSet
             const auto u_plus = u_minus;
 
             // Compute the flux
-            if constexpr (is_right)
-              {
-                const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
-                  normal_vector_minus[component],
-                  0.,
-                  normal_vector_minus[component] * u_plus,
-                  normal_vector_minus[component] * u_minus);
+            const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
+              normal_vector_minus[component],
+              0.,
+              normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus),
+              normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus));
 
-                eval_minus.submit_value(flux, q);
-              }
-            else
-              {
-                const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
-                  normal_vector_minus[component],
-                  0.,
-                  normal_vector_minus[component] * u_minus,
-                  normal_vector_minus[component] * u_plus);
-
-                eval_minus.submit_value(flux, q);
-              }
+            eval_minus.submit_value(flux, q);
           }
 
         eval_minus.integrate_scatter(EvaluationFlags::values, dst);

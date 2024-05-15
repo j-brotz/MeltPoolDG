@@ -145,10 +145,10 @@ namespace MeltPoolDG::LevelSet
       {
         if (reinit_data.reinitilization_DG_specific_data.use_IMEX)
           {
-            reinit_DG_operator.apply_IMEX(time_iterator.get_old_time(),
-                                          time_iterator.get_current_time_increment(),
-                                          solution_history,
-                                          rhs);
+            reinit_DG_operator.apply_diffusion_implicit(time_iterator.get_old_time(),
+                                                        time_iterator.get_current_time_increment(),
+                                                        solution_history,
+                                                        rhs);
             solution_history.set_recent_old_solution(solution_history.get_current_solution());
           }
 
@@ -228,7 +228,8 @@ namespace MeltPoolDG::LevelSet
   ReinitializationDGOperation<dim>::compute_CFL_based_timestep() const
   {
     const double minimal_vertex_distance = scratch_data.get_min_cell_size();
-    const double fe_degree               = (double)reinit_data.fe.degree;
+    const double fe_degree = ((static_cast<double>(scratch_data.get_degree(reinit_dof_idx))));
+
 
     if (reinit_data.reinitilization_DG_specific_data.use_IMEX)
       {

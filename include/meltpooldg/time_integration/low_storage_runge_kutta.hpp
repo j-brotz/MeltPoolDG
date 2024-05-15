@@ -44,26 +44,26 @@ namespace MeltPoolDG
       AssertThrow(scratch_data_.is_FE_DGQ(dof_idx), ExcMessage("This works only for DG elements."));
       switch (scheme)
         {
-            case stage_1_order_1: /*Forward Euler*/
+            case TimeIntegrators::RK_stage_1_order_1: /*Forward Euler*/
             {
               bi = {{1.0}};
               ai = {{}};
               break;
             }
 
-            case stage_2_order_2: /*Heuns Method*/
+            case TimeIntegrators::RK_stage_2_order_2: /*Heuns Method*/
             {
               bi = {{0.5, 0.5}};
               ai = {{1.0}};
               break;
             }
 
-            case stage_3_order_3: {
+            case TimeIntegrators::RK_stage_3_order_3: {
               bi = {{0.245170287303492, 0.184896052186740, 0.569933660509768}};
               ai = {{0.755726351946097, 0.386954477304099}};
               break;
             }
-            case stage_5_order_4: {
+            case TimeIntegrators::RK_stage_5_order_4: {
               bi = {{1153189308089. / 22510343858157.,
                      1772645290293. / 4653164025191.,
                      -1672844663538. / 4480602732383.,
@@ -77,7 +77,7 @@ namespace MeltPoolDG
               break;
             }
 
-            case stage_7_order_4: {
+            case TimeIntegrators::RK_stage_7_order_4: {
               bi = {{0.0941840925477795334,
                      0.149683694803496998,
                      0.285204742060440058,
@@ -93,7 +93,7 @@ namespace MeltPoolDG
                      0.0978694102142697230 + bi[5]}};
               break;
             }
-            case stage_9_order_5: {
+            case TimeIntegrators::RK_stage_9_order_5: {
               bi = {{2274579626619. / 23610510767302.,
                      693987741272. / 12394497460941.,
                      -347131529483. / 15096185902911.,

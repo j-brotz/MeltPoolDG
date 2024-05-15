@@ -28,8 +28,9 @@ namespace MeltPoolDG::LevelSet
     /*
      *  convert the user input to the generalized theta parameter
      */
-    if (get_generalized_theta.find(data.time_integration_scheme) != get_generalized_theta.end())
-      theta = get_generalized_theta[data.time_integration_scheme];
+    if (get_generalized_theta.find((+data.time_integration_scheme)._to_string()) !=
+        get_generalized_theta.end())
+      theta = get_generalized_theta[(+data.time_integration_scheme)._to_string()];
     else
       AssertThrow(
         false,

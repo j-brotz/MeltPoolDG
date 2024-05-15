@@ -5,10 +5,10 @@
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.1074 number of dofs: 1024
+ *                  psi Max-norm:     1.1103 number of dofs: 1024
  *                  rhs Max-norm:     1.1132 number of dofs: 1024
-Relative error to exact solution 0.95123
-Mass of bubble 0.070317
+Relative error to exact solution 0.95252
+Mass of bubble 0.070359
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -19,9 +19,9 @@ Mass of bubble 0.070317
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.1019 number of dofs: 1024
- *                  rhs Max-norm:     1.1074 number of dofs: 1024
-Relative error to exact solution 0.9002
+ *                  psi Max-norm:     1.1072 number of dofs: 1024
+ *                  rhs Max-norm:     1.1103 number of dofs: 1024
+Relative error to exact solution 0.90156
 Mass of bubble 0.070082
 ---------------------------------------------
     End of user defined postprocessing
@@ -33,10 +33,10 @@ Mass of bubble 0.070082
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.0965 number of dofs: 1024
- *                  rhs Max-norm:     1.1019 number of dofs: 1024
-Relative error to exact solution 0.85447
-Mass of bubble 0.070044
+ *                  psi Max-norm:     1.1042 number of dofs: 1024
+ *                  rhs Max-norm:     1.1072 number of dofs: 1024
+Relative error to exact solution 0.85564
+Mass of bubble 0.070082
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -47,10 +47,10 @@ Mass of bubble 0.070044
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.0914 number of dofs: 1024
- *                  rhs Max-norm:     1.0965 number of dofs: 1024
-Relative error to exact solution 0.81399
-Mass of bubble 0.069811
+ *                  psi Max-norm:     1.1011 number of dofs: 1024
+ *                  rhs Max-norm:     1.1042 number of dofs: 1024
+Relative error to exact solution 0.8148
+Mass of bubble 0.069955
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -61,9 +61,9 @@ Mass of bubble 0.069811
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.0864 number of dofs: 1024
- *                  rhs Max-norm:     1.0914 number of dofs: 1024
-Relative error to exact solution 0.77883
+ *                  psi Max-norm:      1.098 number of dofs: 1024
+ *                  rhs Max-norm:     1.1011 number of dofs: 1024
+Relative error to exact solution 0.7791
 Mass of bubble 0.0692
 ---------------------------------------------
     End of user defined postprocessing
@@ -75,10 +75,10 @@ Mass of bubble 0.0692
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.0817 number of dofs: 1024
- *                  rhs Max-norm:     1.0864 number of dofs: 1024
-Relative error to exact solution 0.74901
-Mass of bubble 0.069025
+ *                  psi Max-norm:      1.095 number of dofs: 1024
+ *                  rhs Max-norm:      1.098 number of dofs: 1024
+Relative error to exact solution 0.74856
+Mass of bubble 0.068956
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -89,9 +89,9 @@ Mass of bubble 0.069025
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:      1.077 number of dofs: 1024
- *                  rhs Max-norm:     1.0817 number of dofs: 1024
-Relative error to exact solution 0.72453
+ *                  psi Max-norm:     1.0919 number of dofs: 1024
+ *                  rhs Max-norm:      1.095 number of dofs: 1024
+Relative error to exact solution 0.72315
 Mass of bubble 0.068656
 ---------------------------------------------
     End of user defined postprocessing
@@ -103,10 +103,10 @@ Mass of bubble 0.068656
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.0726 number of dofs: 1024
- *                  rhs Max-norm:      1.077 number of dofs: 1024
-Relative error to exact solution 0.70528
-Mass of bubble 0.068269
+ *                  psi Max-norm:     1.0888 number of dofs: 1024
+ *                  rhs Max-norm:     1.0919 number of dofs: 1024
+Relative error to exact solution 0.70278
+Mass of bubble 0.068434
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -117,10 +117,10 @@ Mass of bubble 0.068269
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.0682 number of dofs: 1024
- *                  rhs Max-norm:     1.0726 number of dofs: 1024
-Relative error to exact solution 0.69111
-Mass of bubble 0.068186
+ *                  psi Max-norm:     1.0858 number of dofs: 1024
+ *                  rhs Max-norm:     1.0888 number of dofs: 1024
+Relative error to exact solution 0.68732
+Mass of bubble 0.068218
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -131,10 +131,10 @@ Mass of bubble 0.068186
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.0641 number of dofs: 1024
- *                  rhs Max-norm:     1.0682 number of dofs: 1024
-Relative error to exact solution 0.68179
-Mass of bubble 0.067845
+ *                  psi Max-norm:     1.0827 number of dofs: 1024
+ *                  rhs Max-norm:     1.0858 number of dofs: 1024
+Relative error to exact solution 0.67656
+Mass of bubble 0.067929
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -145,9 +145,9 @@ Mass of bubble 0.067845
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:       1.06 number of dofs: 1024
- *                  rhs Max-norm:     1.0641 number of dofs: 1024
-Relative error to exact solution 0.67703
+ *                  psi Max-norm:     1.0796 number of dofs: 1024
+ *                  rhs Max-norm:     1.0827 number of dofs: 1024
+Relative error to exact solution 0.67022
 Mass of bubble 0.06757
 ---------------------------------------------
     End of user defined postprocessing
@@ -159,10 +159,10 @@ Mass of bubble 0.06757
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:      1.056 number of dofs: 1024
- *                  rhs Max-norm:       1.06 number of dofs: 1024
-Relative error to exact solution 0.67647
-Mass of bubble 0.067224
+ *                  psi Max-norm:     1.0766 number of dofs: 1024
+ *                  rhs Max-norm:     1.0796 number of dofs: 1024
+Relative error to exact solution 0.66798
+Mass of bubble 0.067403
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -173,10 +173,10 @@ Mass of bubble 0.067224
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *                  psi Max-norm:     1.0529 number of dofs: 1024
- *                  rhs Max-norm:      1.056 number of dofs: 1024
-Relative error to exact solution 0.67929
-Mass of bubble 0.066887
+ *                  psi Max-norm:     1.0741 number of dofs: 1024
+ *                  rhs Max-norm:     1.0766 number of dofs: 1024
+Relative error to exact solution 0.6694
+Mass of bubble 0.067224
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------

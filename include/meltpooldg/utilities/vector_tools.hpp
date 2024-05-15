@@ -480,5 +480,22 @@ namespace MeltPoolDG
     {
       return (std::exp(arg) - std::exp(-arg)) / (std::exp(arg) + std::exp(-arg));
     }
+
+    /**
+     * Compute the hyperbolic tangent of a vectorized data field. The result is returned
+     * as vectorized array in the form <tt>{tanh(x[0]), tanh(x[1]), ...,
+     * tanh(x[size()-1])}</tt>.
+     */
+    template <typename number, std::size_t width>
+    VectorizedArray<number>
+    tanh(const ::dealii::VectorizedArray<number, width> &x)
+    {
+      number values[::dealii::VectorizedArray<number, width>::size()];
+      for (unsigned int i = 0; i < dealii::VectorizedArray<number, width>::size(); ++i)
+        values[i] = std::tanh(x[i]);
+      ::dealii::VectorizedArray<number, width> out;
+      out.load(&values[0]);
+      return out;
+    }
   } // namespace VectorTools
 } // namespace MeltPoolDG

@@ -67,19 +67,13 @@ namespace MeltPoolDG::LevelSet
                           reinitilization_DG_specific_data.do_CFL_based_time_stepping,
                           "Sets a flag if the time stepping should be based on the CFL condition");
 
-        prm.add_parameter(
-          "time integration scheme",
-          reinitilization_DG_specific_data.time_integration_scheme,
-          "Determines the time integration scheme.",
-          Patterns::Selection(
-            "explicit_euler|implicit_euler|crank_nicolson|bdf_2|RK_stage_1_order_1|RK_stage_2_order_2|RK_stage_3_order_3|RK_stage_5_order_4|RK_stage_7_order_4|RK_stage_9_order_5"));
+        prm.add_parameter("time integration scheme",
+                          reinitilization_DG_specific_data.time_integration_scheme,
+                          "Determines the time integration scheme.");
 
-        prm.add_parameter(
-          "IMEX integration scheme",
-          reinitilization_DG_specific_data.IMEX_integration_scheme,
-          "Determines the time integration scheme.",
-          Patterns::Selection(
-            "explicit_euler|implicit_euler|crank_nicolson|bdf_2|RK_stage_1_order_1|RK_stage_2_order_2|RK_stage_3_order_3|RK_stage_5_order_4|RK_stage_7_order_4|RK_stage_9_order_5"));
+        prm.add_parameter("IMEX integration scheme",
+                          reinitilization_DG_specific_data.IMEX_integration_scheme,
+                          "Determines the time integration scheme.");
 
         prm.add_parameter("CFL",
                           reinitilization_DG_specific_data.CFL,
@@ -136,10 +130,8 @@ namespace MeltPoolDG::LevelSet
                            "is mandatory."));
 
     // Cross check for DG since for DG only matrix free is supported
-    if ((fe.type == FiniteElementType::FE_DGQ) && (!linear_solver.do_matrix_free))
-      {
-        AssertThrow(false, ExcMessage("For the DG element only matrix free is implemented."));
-      }
+    AssertThrow(fe.type != FiniteElementType::FE_DGQ || linear_solver.do_matrix_free,
+                ExcMessage("For the DG element only matrix free is implemented."));
   }
 
   template struct ReinitializationData<double>;

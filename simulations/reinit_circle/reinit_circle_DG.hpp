@@ -96,7 +96,10 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
   public:
     SimulationReinitDG(std::string parameter_file, const MPI_Comm mpi_communicator)
       : SimulationBase<dim>(parameter_file, mpi_communicator)
-    {}
+    {
+      if (dim == 1)
+        AssertThrow(false, ExcMessage("Dimension 1 is not supported for this simulation"));
+    }
 
     void
     create_spatial_discretization() override

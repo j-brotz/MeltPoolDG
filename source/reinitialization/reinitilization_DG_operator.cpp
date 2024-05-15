@@ -42,9 +42,9 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  ReinitilizationDGOperator<dim, Number>::apply_IMEX(
-    Number const                                  time,
-    Number const                                  time_step,
+  ReinitilizationDGOperator<dim, Number>::apply_diffusion_implicit(
+    const Number                                  time,
+    const Number                                  time_step,
     TimeIntegration::SolutionHistory<VectorType> &solution_history,
     VectorType                                   &rhs) const
   {
@@ -245,7 +245,7 @@ namespace MeltPoolDG::LevelSet
     const Number      min_vertex_distance) const
   {
     const auto  &data      = scratch_data.get_matrix_free();
-    const Number fe_degree = (Number)scratch_data.get_degree(reinit_dof_idx);
+    const Number fe_degree = ((static_cast<Number>(scratch_data.get_degree(reinit_dof_idx))));
 
     {
       // Use maximum element size for the calculation of the argument of tanh
