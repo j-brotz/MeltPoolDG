@@ -232,7 +232,7 @@ namespace MeltPoolDG::LevelSet
     adaflo_params.time.time_step_size_start = parameters.time_stepping.time_step_size;
     adaflo_params.time.time_step_size_min   = parameters.time_stepping.time_step_size;
     adaflo_params.time.time_step_size_max   = parameters.time_stepping.time_step_size;
-    std::string time_step_scheme       = (+parameters.ls.advec_diff.time_integration_scheme)._to_string();
+    std::string time_step_scheme = (+parameters.ls.advec_diff.time_integration_scheme)._to_string();
     if (time_step_scheme == "implicit_euler")
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::implicit_euler;
     else if (time_step_scheme == "explicit_euler")

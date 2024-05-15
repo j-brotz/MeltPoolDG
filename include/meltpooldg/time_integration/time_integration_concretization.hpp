@@ -82,9 +82,8 @@ namespace MeltPoolDG::TimeIntegratorConcretization
 
     // Done here additionally to the check in advection diffusion data. Since BDF2 is implemented
     // for the CG case
-    AssertThrow(
-      false,
-      ExcMessage("The chosen time integration scheme bdf2 is not implemented for DG"));
+    AssertThrow(false,
+                ExcMessage("The chosen time integration scheme bdf2 is not implemented for DG"));
   }
 
 } // namespace MeltPoolDG::TimeIntegratorConcretization
