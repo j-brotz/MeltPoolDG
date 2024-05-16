@@ -12,115 +12,115 @@ POSTPROCESSOR: min pressure: 0 (analytical: 0)
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
 | || normal_1 ||L2 = 4.86185073853e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 9.386360943608457e-05                                       reinitialization |
-|  τ = 0.001                                                                      reinitialization |
-| || delta phi ||L2 = 8.916923979995772e-05                                       reinitialization |
-|  τ = 0.0015                                                                     reinitialization |
-| || delta phi ||L2 = 8.480323049298027e-05                                       reinitialization |
-|  τ = 0.002                                                                      reinitialization |
-| || delta phi ||L2 = 8.074304969341035e-05                                       reinitialization |
-|  τ = 0.0025                                                                     reinitialization |
-| || delta phi ||L2 = 7.696786451560918e-05                                       reinitialization |
+|  τ = 0.02                                                                       reinitialization |
+| || delta phi ||L2 = 1.665708143264055e-03                                       reinitialization |
+|  τ = 0.04                                                                       reinitialization |
+| || delta phi ||L2 = 1.233474118635058e-03                                       reinitialization |
+|  τ = 0.06                                                                       reinitialization |
+| || delta phi ||L2 = 1.073604449629784e-03                                       reinitialization |
+|  τ = 0.08                                                                       reinitialization |
+| || delta phi ||L2 = 9.170062839984894e-04                                       reinitialization |
+|  τ = 0.1                                                                        reinitialization |
+| || delta phi ||L2 = 7.466293754987419e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 0.00000000000e+00                                               normal_vector |
-| || normal_1 ||L2 = 4.86321401596e+00                                               normal_vector |
+| || normal_1 ||L2 = 4.91732835770e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
 | evaporation: jump in the velocity field = -0.0495            evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 4.7908017898e-03            evaporation_source_terms_continuous |
-| || velocity ||L2 = 3.449702902333556e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.355427537379829e-01                                    navier_stokes_adaflo |
+| || evapartive_mass_source ||L2 = 4.8094604548e-03            evaporation_source_terms_continuous |
+| || velocity ||L2 = 3.450205259618552e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 4.354199874953924e-01                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0.0495 (analytical: 0.0495)
-POSTPROCESSOR: max pressure: 0.549 (analytical: 2.47e-05)
-POSTPROCESSOR: min pressure: -3.22e-10 (analytical: 0)
+POSTPROCESSOR: max pressure: 0.548 (analytical: 2.47e-05)
+POSTPROCESSOR: min pressure: -3.25e-10 (analytical: 0)
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 5.0000e-04 to 1.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.5650768280e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 2.07945288920e-12                                               normal_vector |
-| || normal_1 ||L2 = 4.86321377757e+00                                               normal_vector |
+| || advected field ||L2 = 9.5852765441e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 2.15609830130e-12                                               normal_vector |
+| || normal_1 ||L2 = 4.91732811930e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 7.345583799418065e-05                                       reinitialization |
-|  τ = 0.001                                                                      reinitialization |
-| || delta phi ||L2 = 7.019445547711284e-05                                       reinitialization |
-|  τ = 0.0015                                                                     reinitialization |
-| || delta phi ||L2 = 6.716434291081248e-05                                       reinitialization |
-|  τ = 0.002                                                                      reinitialization |
-| || delta phi ||L2 = 6.435009163602802e-05                                       reinitialization |
-|  τ = 0.0025                                                                     reinitialization |
-| || delta phi ||L2 = 6.173736801625989e-05                                       reinitialization |
+|  τ = 0.02                                                                       reinitialization |
+| || delta phi ||L2 = 5.830100272276251e-04                                       reinitialization |
+|  τ = 0.04                                                                       reinitialization |
+| || delta phi ||L2 = 4.402933409549733e-04                                       reinitialization |
+|  τ = 0.06                                                                       reinitialization |
+| || delta phi ||L2 = 3.237563942119892e-04                                       reinitialization |
+|  τ = 0.08                                                                       reinitialization |
+| || delta phi ||L2 = 2.329428098170067e-04                                       reinitialization |
+|  τ = 0.1                                                                        reinitialization |
+| || delta phi ||L2 = 1.646136588534414e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 1.74585415148e-12                                               normal_vector |
-| || normal_1 ||L2 = 4.86471724513e+00                                               normal_vector |
+| || normal_0 ||L2 = 1.40320698772e-12                                               normal_vector |
+| || normal_1 ||L2 = 4.93616580965e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
 | evaporation: jump in the velocity field = -0.099             evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 9.5749928942e-03            evaporation_source_terms_continuous |
-| || velocity ||L2 = 6.899232839924085e-02                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.358276949447093e-01                                    navier_stokes_adaflo |
+| || evapartive_mass_source ||L2 = 9.6606122781e-03            evaporation_source_terms_continuous |
+| || velocity ||L2 = 6.901506282181895e-02                                    navier_stokes_adaflo |
+| || pressure ||L2 = 4.338673355397065e-01                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0.099 (analytical: 0.099)
-POSTPROCESSOR: max pressure: 0.549 (analytical: 9.9e-05)
-POSTPROCESSOR: min pressure: -6.49e-10 (analytical: 0)
+POSTPROCESSOR: max pressure: 0.546 (analytical: 9.9e-05)
+POSTPROCESSOR: min pressure: -6.35e-10 (analytical: 0)
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 3      t = 1.0000e-03 to 1.5000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.5657785237e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 3.57036680322e-12                                               normal_vector |
-| || normal_1 ||L2 = 4.86471700691e+00                                               normal_vector |
+| || advected field ||L2 = 9.5906943083e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 3.64463662580e-12                                               normal_vector |
+| || normal_1 ||L2 = 4.93616557145e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 5.930777482261267e-05                                       reinitialization |
-|  τ = 0.001                                                                      reinitialization |
-| || delta phi ||L2 = 5.705931474257434e-05                                       reinitialization |
-|  τ = 0.0015                                                                     reinitialization |
-| || delta phi ||L2 = 5.497480472520883e-05                                       reinitialization |
-|  τ = 0.002                                                                      reinitialization |
-| || delta phi ||L2 = 5.304330082068413e-05                                       reinitialization |
-|  τ = 0.0025                                                                     reinitialization |
-| || delta phi ||L2 = 5.125453392446338e-05                                       reinitialization |
+|  τ = 0.02                                                                       reinitialization |
+| || delta phi ||L2 = 1.146099961555513e-04                                       reinitialization |
+|  τ = 0.04                                                                       reinitialization |
+| || delta phi ||L2 = 7.877851808328716e-05                                       reinitialization |
+|  τ = 0.06                                                                       reinitialization |
+| || delta phi ||L2 = 5.358745886879265e-05                                       reinitialization |
+|  τ = 0.08                                                                       reinitialization |
+| || delta phi ||L2 = 3.613845003775259e-05                                       reinitialization |
+|  τ = 0.1                                                                        reinitialization |
+| || delta phi ||L2 = 2.420078454207959e-05                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 3.02340920317e-12                                               normal_vector |
-| || normal_1 ||L2 = 4.86632108711e+00                                               normal_vector |
+| || normal_0 ||L2 = 2.68817236542e-12                                               normal_vector |
+| || normal_1 ||L2 = 4.93928384803e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
 | evaporation: jump in the velocity field = -0.1485            evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.4355797227e-02            evaporation_source_terms_continuous |
-| || velocity ||L2 = 1.034867592028357e-01                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.359034073014877e-01                                    navier_stokes_adaflo |
+| || evapartive_mass_source ||L2 = 1.4503006291e-02            evaporation_source_terms_continuous |
+| || velocity ||L2 = 1.035258970183127e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 4.352427915941627e-01                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0.149 (analytical: 0.148)
-POSTPROCESSOR: max pressure: 0.549 (analytical: 0.000223)
-POSTPROCESSOR: min pressure: -1.09e-09 (analytical: 0)
+POSTPROCESSOR: max pressure: 0.548 (analytical: 0.000223)
+POSTPROCESSOR: min pressure: -8.7e-10 (analytical: 0)
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 4      t = 1.5000e-03 to 2.0000e-03 ( dt = 5.0000e-04 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
-| || advected field ||L2 = 9.5664833486e-01                                    advection_diffusion |
-| || normal_0 ||L2 = 7.11904884655e-12                                               normal_vector |
-| || normal_1 ||L2 = 4.86632061094e+00                                               normal_vector |
+| || advected field ||L2 = 9.5915374160e-01                                    advection_diffusion |
+| || normal_0 ||L2 = 7.69983624201e-12                                               normal_vector |
+| || normal_1 ||L2 = 4.93928384873e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-|  τ = 0.0005                                                                     reinitialization |
-| || delta phi ||L2 = 4.959201229554639e-05                                       reinitialization |
-|  τ = 0.001                                                                      reinitialization |
-| || delta phi ||L2 = 4.806101164786340e-05                                       reinitialization |
-|  τ = 0.0015                                                                     reinitialization |
-| || delta phi ||L2 = 4.664543679332329e-05                                       reinitialization |
-|  τ = 0.002                                                                      reinitialization |
-| || delta phi ||L2 = 4.533725325516851e-05                                       reinitialization |
-|  τ = 0.0025                                                                     reinitialization |
-| || delta phi ||L2 = 4.412887130054394e-05                                       reinitialization |
+|  τ = 0.02                                                                       reinitialization |
+| || delta phi ||L2 = 1.614616167132328e-05                                       reinitialization |
+|  τ = 0.04                                                                       reinitialization |
+| || delta phi ||L2 = 1.069404947746861e-05                                       reinitialization |
+|  τ = 0.06                                                                       reinitialization |
+| || delta phi ||L2 = 7.066363929936650e-06                                       reinitialization |
+|  τ = 0.08                                                                       reinitialization |
+| || delta phi ||L2 = 4.661703723130072e-06                                       reinitialization |
+|  τ = 0.1                                                                        reinitialization |
+| || delta phi ||L2 = 3.072545018301027e-06                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 6.48212132148e-12                                               normal_vector |
-| || normal_1 ||L2 = 4.86799538225e+00                                               normal_vector |
+| || normal_0 ||L2 = 5.53820593891e-12                                               normal_vector |
+| || normal_1 ||L2 = 4.93969559757e+00                                               normal_vector |
 | || curvature ||L2 = 6.36980199814e+00                                                  curvature |
 | evaporation: jump in the velocity field = -0.198             evaporation_source_terms_continuous |
-| || evapartive_mass_source ||L2 = 1.9135381231e-02            evaporation_source_terms_continuous |
-| || velocity ||L2 = 1.379809270073509e-01                                    navier_stokes_adaflo |
-| || pressure ||L2 = 4.359779554667783e-01                                    navier_stokes_adaflo |
+| || evapartive_mass_source ||L2 = 1.9339586538e-02            evaporation_source_terms_continuous |
+| || velocity ||L2 = 1.380353368346978e-01                                    navier_stokes_adaflo |
+| || pressure ||L2 = 4.355164958830077e-01                                    navier_stokes_adaflo |
 POSTPROCESSOR: min velocity: 0 (analytical: 0)
 POSTPROCESSOR: max velocity: 0.198 (analytical: 0.198)
 POSTPROCESSOR: max pressure: 0.549 (analytical: 0.000396)
-POSTPROCESSOR: min pressure: -8.29e-11 (analytical: 0)
+POSTPROCESSOR: min pressure: -2.22e-10 (analytical: 0)
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+

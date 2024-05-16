@@ -1,8 +1,8 @@
 | || normal_0 ||L2 = 3.09956324100e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.09956318140e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-|  τ = 1e-05                                                                      reinitialization |
-| || delta phi ||L2 = 6.091080280157263e-07                                       reinitialization |
+|  τ = 0.02                                                                       reinitialization |
+| || delta phi ||L2 = 6.640652864007284e-04                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
 | || normal_0 ||L2 = 3.09956324100e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.09956318140e+00                                               normal_vector |
@@ -10,16 +10,16 @@
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.9677976370e+00                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 4.78223e-06 < level_set_data.reinit_tol       reinitialization |
-| || normal_0 ||L2 = 3.09956324101e+00                                               normal_vector |
-| || normal_1 ||L2 = 3.09956330061e+00                                               normal_vector |
+|  skipped reinit since max(|ΔΦ|) = 2.66181e-03 < level_set_data.reinit_tol       reinitialization |
+| || normal_0 ||L2 = 3.09956330061e+00                                               normal_vector |
+| || normal_1 ||L2 = 3.09956336021e+00                                               normal_vector |
 | || velocity ||L2 = 8.118673544883690e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 4.571954433349321e+03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 2      t = 1.0000e-05 to 2.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.9677976370e+00                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 7.00422e-06 < level_set_data.reinit_tol       reinitialization |
+|  skipped reinit since max(|ΔΦ|) = 2.66319e-03 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 3.09956336021e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.09956330061e+00                                               normal_vector |
 | || velocity ||L2 = 8.118673292362232e-03                                    navier_stokes_adaflo |
@@ -28,10 +28,10 @@
 |  Time increment # 3      t = 2.0000e-05 to 3.0000e-05 ( dt = 1.0000e-05 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 1.9677976370e+00                                    advection_diffusion |
-|  skipped reinit since max(|ΔΦ|) = 9.40445e-06 < level_set_data.reinit_tol       reinitialization |
+|  skipped reinit since max(|ΔΦ|) = 2.66458e-03 < level_set_data.reinit_tol       reinitialization |
 | || normal_0 ||L2 = 3.09956336021e+00                                               normal_vector |
 | || normal_1 ||L2 = 3.09956330061e+00                                               normal_vector |
-| || velocity ||L2 = 8.118673544884091e-03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 8.118673292362391e-03                                    navier_stokes_adaflo |
 | || pressure ||L2 = 2.566258324240275e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |

@@ -1,20 +1,20 @@
-| || normal_0 ||L2 = 4.72760051020e-16                                               normal_vector |
-| || normal_1 ||L2 = 3.33543081666e+00                                               normal_vector |
+| || normal_0 ||L2 = 4.72760055266e-16                                               normal_vector |
+| || normal_1 ||L2 = 3.33543098227e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
 |  Time increment # 1      t = 0.0000e+00 to 1.0000e-08 ( dt = 1.0000e-08 )          time_iterator |
 +--------------------------------------------------------------------------------------------------+
 | || advected field ||L2 = 3.0547381785e-04                                    advection_diffusion |
-| || normal_0 ||L2 = 4.72760051020e-16                                               normal_vector |
-| || normal_1 ||L2 = 3.33543081666e+00                                               normal_vector |
+| || normal_0 ||L2 = 4.72760055266e-16                                               normal_vector |
+| || normal_1 ||L2 = 3.33543098227e+00                                               normal_vector |
 +--------------------------------------------------------------------------------------------------+
-|  τ = 1e-08                                                                      reinitialization |
-| || delta phi ||L2 = 2.378211083497685e-10                                       reinitialization |
+|  τ = 1.65728e-05                                                                reinitialization |
+| || delta phi ||L2 = 1.515749406084237e-07                                       reinitialization |
 +--------------------------------------------------------------------------------------------------+
-| || normal_0 ||L2 = 4.39040002891e-16                                               normal_vector |
-| || normal_1 ||L2 = 3.33543157381e+00                                               normal_vector |
+| || normal_0 ||L2 = 5.42690127236e-16                                               normal_vector |
+| || normal_1 ||L2 = 3.33653606936e+00                                               normal_vector |
 | Newton Raphson solver converged: ||solution|| = 1.73378e-01                newton_raphson_solver |
-| || velocity ||L2 = 2.509024025032586e-12                                    navier_stokes_adaflo |
-| || pressure ||L2 = 2.607535746230400e-03                                    navier_stokes_adaflo |
+| || velocity ||L2 = 3.138178116912388e-12                                    navier_stokes_adaflo |
+| || pressure ||L2 = 2.571035903485378e-03                                    navier_stokes_adaflo |
 +--------------------------------------------------------------------------------------------------+
 |  end of simulation                                                                               |
 +--------------------------------------------------------------------------------------------------+
