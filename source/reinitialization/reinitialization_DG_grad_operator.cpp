@@ -1,4 +1,4 @@
-#include <meltpooldg/reinitialization/reinitilization_DG_grad_operator.hpp>
+#include <meltpooldg/reinitialization/reinitialization_DG_grad_operator.hpp>
 
 
 

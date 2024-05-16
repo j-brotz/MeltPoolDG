@@ -88,7 +88,7 @@ namespace MeltPoolDG::LevelSet
       reinit_dof_idx = scratch_data->attach_constraint_matrix(constraints);
       normal_dof_idx = reinit_dof_idx;
       /*
-       *  setup DoFHandlerReinitializationDGOperation<dim>
+       *  setup DoFHandler
        */
       dof_handler.reinit(*base_in->triangulation);
     }
@@ -148,12 +148,6 @@ namespace MeltPoolDG::LevelSet
       AssertThrow(false, ExcNotImplemented());
 
     reinit_operation->set_initial_condition(*base_in->get_initial_condition("level_set"));
-
-    /*
-     *  DG elements need to set the smoothed signum when initialized
-     */
-    if (base_in->parameters.ls.reinit.fe.type == FiniteElementType::FE_DGQ)
-      reinit_operation->prepare_reinitilization();
   }
 
   template <int dim>
@@ -172,9 +166,11 @@ namespace MeltPoolDG::LevelSet
     /*
      *  make hanging nodes constraints
      */
+
+    // Strong enforcement of hanging node constraints and periodic boundary conditions for
+    // continuous Galerkin finite elements
     if (base_in->parameters.ls.reinit.fe.type != FiniteElementType::FE_DGQ)
-      { // In a DG simulation no hanging node constraints are present and the boundray condtions are
-        // enforced in weak form by changing the fluxes at the boundary
+      {
         MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
                                                         base_in->get_periodic_bc(),
                                                         reinit_dof_idx);

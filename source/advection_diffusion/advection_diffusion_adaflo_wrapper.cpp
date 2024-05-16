@@ -233,13 +233,13 @@ namespace MeltPoolDG::LevelSet
     adaflo_params.time.time_step_size_min   = parameters.time_stepping.time_step_size;
     adaflo_params.time.time_step_size_max   = parameters.time_stepping.time_step_size;
     std::string time_step_scheme = (+parameters.ls.advec_diff.time_integration_scheme)._to_string();
-    if (time_step_scheme == "implicit_euler")
+    if (parameters.ls.advec_diff.time_integration_scheme == TimeIntegrators::implicit_euler)
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::implicit_euler;
-    else if (time_step_scheme == "explicit_euler")
+    else if (parameters.ls.advec_diff.time_integration_scheme == TimeIntegrators::explicit_euler)
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::explicit_euler;
-    else if (time_step_scheme == "crank_nicolson")
+    else if (parameters.ls.advec_diff.time_integration_scheme == TimeIntegrators::crank_nicolson)
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::crank_nicolson;
-    else if (time_step_scheme == "bdf_2")
+    else if (parameters.ls.advec_diff.time_integration_scheme == TimeIntegrators::bdf_2)
       adaflo_params.time.time_step_scheme = TimeSteppingParameters::Scheme::bdf_2;
     else
       AssertThrow(false, ExcMessage("Requested time stepping scheme not supported."));

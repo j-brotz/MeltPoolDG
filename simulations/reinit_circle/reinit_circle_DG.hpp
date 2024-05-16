@@ -182,17 +182,18 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
 
 
 
-      generic_data_out.get_vector("psi").update_ghost_values();
+      generic_data_out.get_vector("reinit_DG_psi").update_ghost_values();
 
       double error      = 0.0;
       double norm_exact = 0.0;
       double mass       = 0.0;
 
-      for (const auto &cell : generic_data_out.get_dof_handler("psi").active_cell_iterators())
+      for (const auto &cell :
+           generic_data_out.get_dof_handler("reinit_DG_psi").active_cell_iterators())
         if (cell->is_locally_owned())
           {
             fe_values.reinit(cell);
-            fe_values.get_function_values(generic_data_out.get_vector("psi"),
+            fe_values.get_function_values(generic_data_out.get_vector("reinit_DG_psi"),
                                           phi_at_q); // compute values of old solution
 
             for (const unsigned int q_index : fe_values.quadrature_point_indices())

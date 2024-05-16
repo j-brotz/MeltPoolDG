@@ -53,10 +53,6 @@ namespace MeltPoolDG::LevelSet
                           reinitilization_DG_specific_data.IP_diffusion,
                           "Set the internal penalty for diffusivity ");
 
-        prm.add_parameter("use IMEX",
-                          reinitilization_DG_specific_data.use_IMEX,
-                          "Set the flag if IMEX integration should be used ");
-
         prm.add_parameter(
           "use const gradient in RI",
           reinitilization_DG_specific_data.use_const_gradient_in_RI,
@@ -67,13 +63,19 @@ namespace MeltPoolDG::LevelSet
                           reinitilization_DG_specific_data.do_CFL_based_time_stepping,
                           "Sets a flag if the time stepping should be based on the CFL condition");
 
-        prm.add_parameter("time integration scheme",
-                          reinitilization_DG_specific_data.time_integration_scheme,
-                          "Determines the time integration scheme.");
+        prm.add_parameter(
+          "time integration scheme",
+          reinitilization_DG_specific_data.time_integration_scheme,
+          "Determines the general time integration scheme for the pseudo time integration of the reinilization equation.");
 
-        prm.add_parameter("IMEX integration scheme",
-                          reinitilization_DG_specific_data.IMEX_integration_scheme,
-                          "Determines the time integration scheme.");
+        prm.add_parameter(
+          "IMEX integration scheme",
+          reinitilization_DG_specific_data.IMEX_integration_scheme,
+          "If a IMEX integration scheme is specifiead, the integration in pseudo time of the reinilization is done with an Implict-Explicit (IMEX) scheme."
+          "this means that the diffusion part is treated with the IMEX integration scheme and the hamiltonian is treated with the general time integration scheme."
+          "When choosing an implicit scheme with A-stability larger time steps can be chosen only limited by the stability of the hamiltonian part."
+          "This is done, since the diffusion part is the most restrictive part for explicit time integration scheme."
+          "If a scheme is set, the time step calculation based on a CFL number assumes an A-stable scheme and only calculates the time step based on the hamiltonian.");
 
         prm.add_parameter("CFL",
                           reinitilization_DG_specific_data.CFL,

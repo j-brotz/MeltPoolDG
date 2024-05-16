@@ -8,7 +8,7 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 /**
- * Compute the Levelset gradient using Godunovs scheme
+ * Compute the gradient of the level set function using Godunov's scheme
  */
 
 namespace MeltPoolDG::LevelSet
@@ -27,7 +27,7 @@ namespace MeltPoolDG::LevelSet
 
 
     /**
-     * Applies the gradient operator to the levelset field
+     * Applies the gradient operator to the level set field
      * @param src source vector of the operator
      * @param dst destination vector where the result is stored
      * @tparam is_right flag if left or right upwind gradient should be calculated
@@ -37,19 +37,6 @@ namespace MeltPoolDG::LevelSet
     void
     apply(const VectorType &src, VectorType &dst);
 
-    /**
-     * Applies the local inverse of the mass matrix
-     * @param data the matrix free object
-     * @param dst destination where the result is stored
-     * @param src source vector
-     * @param cell_range
-     */
-    void
-    local_apply_inverse_mass_matrix(const MatrixFree<dim, Number>               &data,
-                                    VectorType                                  &dst,
-                                    const VectorType                            &src,
-                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
-
   private:
     const MeltPoolDG::ScratchData<dim> &scratch_data;
 
@@ -58,7 +45,7 @@ namespace MeltPoolDG::LevelSet
 
     /**
      * Applies the domain integral
-     * * @param data the matrix free object
+     * @param data the matrix free object
      * @param dst destination where the result is stored
      * @param src source vector
      * @param cell_range
@@ -72,7 +59,7 @@ namespace MeltPoolDG::LevelSet
 
     /**
      * Applies the inner face integral
-     * * @param data the matrix free object
+     * @param data the matrix free object
      * @param dst destination where the result is stored
      * @param src source vector
      * @param cell_range
@@ -86,7 +73,7 @@ namespace MeltPoolDG::LevelSet
 
     /**
      * Applies the boundary face integral
-     * * @param data the matrix free object
+     * @param data the matrix free object
      * @param dst destination where the result is stored
      * @param src source vector
      * @param cell_range
@@ -97,5 +84,18 @@ namespace MeltPoolDG::LevelSet
                               VectorType                                  &dst,
                               const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
+
+    /**
+     * Applies the local inverse of the mass matrix
+     * @param data the matrix free object
+     * @param dst destination where the result is stored
+     * @param src source vector
+     * @param cell_range
+     */
+    void
+    local_apply_inverse_mass_matrix(const MatrixFree<dim, Number>               &data,
+                                    VectorType                                  &dst,
+                                    const VectorType                            &src,
+                                    const std::pair<unsigned int, unsigned int> &cell_range) const;
   };
 } // namespace MeltPoolDG::LevelSet

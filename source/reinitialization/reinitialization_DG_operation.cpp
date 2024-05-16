@@ -3,9 +3,6 @@
 #include <meltpooldg/utilities/iteration_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
-
-#include "../simulations/reinit_circle/reinit_circle_DG.hpp"
-
 namespace MeltPoolDG::LevelSet
 {
   template <int dim>
@@ -46,13 +43,6 @@ namespace MeltPoolDG::LevelSet
 
     reinit_DG_operator.reinit();
     reinitilization_integration->reinit();
-
-    /**
-     * When the mesh is refined the mesh dependend viscosity and penalty parameter need to be
-     * updated.
-     */
-    reinit_DG_operator.compute_penalty_parameter();
-    reinit_DG_operator.compute_viscosity_value();
   }
 
 
@@ -110,6 +100,8 @@ namespace MeltPoolDG::LevelSet
       solution_history.get_current_solution().update_ghost_values();
 
     solution_history.commit_old_solutions();
+
+    reinit_DG_operator.prepare_operator(solution_history.get_current_solution());
   }
 
   template <int dim>
@@ -134,16 +126,12 @@ namespace MeltPoolDG::LevelSet
     ScopedName         sc("reinitialization::solve");
     TimerOutput::Scope scope(scratch_data.get_timer(), sc);
 
-    const bool ls_update_ghosts = !solution_history.get_current_solution().has_ghost_elements();
-    if (ls_update_ghosts)
-      solution_history.get_current_solution().update_ghost_values();
-
     init_time_advance();
-
 
     if (reinit_data.linear_solver.do_matrix_free)
       {
-        if (reinit_data.reinitilization_DG_specific_data.use_IMEX)
+        if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme !=
+            TimeIntegrators::not_initialized)
           {
             reinit_DG_operator.apply_diffusion_implicit(time_iterator.get_old_time(),
                                                         time_iterator.get_current_time_increment(),
@@ -156,9 +144,6 @@ namespace MeltPoolDG::LevelSet
                                                        time_iterator.get_current_time_increment(),
                                                        solution_history,
                                                        rhs);
-        // update ghost values of solution
-        if (ls_update_ghosts)
-          solution_history.update_ghost_values();
 
         solution_history.get_recent_old_solution().add(-1.0,
                                                        solution_history.get_current_solution());
@@ -208,19 +193,7 @@ namespace MeltPoolDG::LevelSet
   {
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
                              solution_history.get_current_solution(),
-                             "psi");
-
-    data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx), rhs, "rhs");
-  }
-
-
-  template <int dim>
-  void
-  ReinitializationDGOperation<dim>::prepare_reinitilization()
-  {
-    reinit_DG_operator.compute_penalty_parameter();
-    reinit_DG_operator.compute_viscosity_value();
-    reinit_DG_operator.prepare_operator(solution_history.get_current_solution());
+                             "reinit_DG_psi");
   }
 
   template <int dim>
@@ -231,7 +204,8 @@ namespace MeltPoolDG::LevelSet
     const double fe_degree = ((static_cast<double>(scratch_data.get_degree(reinit_dof_idx))));
 
 
-    if (reinit_data.reinitilization_DG_specific_data.use_IMEX)
+    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme !=
+        TimeIntegrators::not_initialized)
       {
         return reinit_data.reinitilization_DG_specific_data.CFL * minimal_vertex_distance /
                (fe_degree * fe_degree);

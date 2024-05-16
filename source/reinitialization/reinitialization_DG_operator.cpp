@@ -1,4 +1,4 @@
-#include <meltpooldg/reinitialization/reinitilization_DG_operator.hpp>
+#include <meltpooldg/reinitialization/reinitialization_DG_operator.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::LevelSet
@@ -21,13 +21,15 @@ namespace MeltPoolDG::LevelSet
 
     , RI_grad_operator(scratch_data_in, reinit_dof_idx_in, reinit_quad_idx_in)
   {
-    IMEX_integration = TimeIntegratorConcretization::concretize(
-      reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_scheme,
-      RI_DG_diffusion_operator,
-      scratch_data_in,
-      reinit_dof_idx_in,
-      reinit_quad_idx_in,
-      reinit_data_in.linear_solver);
+    if (reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_scheme !=
+        TimeIntegrators::not_initialized)
+      IMEX_integration = TimeIntegratorConcretization::concretize(
+        reinit_data_in.reinitilization_DG_specific_data.IMEX_integration_scheme,
+        RI_DG_diffusion_operator,
+        scratch_data_in,
+        reinit_dof_idx_in,
+        reinit_quad_idx_in,
+        reinit_data_in.linear_solver);
   }
 
 
@@ -67,7 +69,8 @@ namespace MeltPoolDG::LevelSet
       true);
 
 
-    if (reinit_data.reinitilization_DG_specific_data.use_IMEX == false)
+    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme ==
+        TimeIntegrators::not_initialized)
       {
         RI_DG_diffusion_operator.apply_operator(time, num_Hamiltonian, src);
         RI_DG_diffusion_operator.apply_dirichlet_boundary_operator(time, num_Hamiltonian, src);
@@ -94,23 +97,11 @@ namespace MeltPoolDG::LevelSet
         scratch_data.initialize_dof_vector(grad_z_l, reinit_dof_idx);
         scratch_data.initialize_dof_vector(grad_z_r, reinit_dof_idx);
       }
-    IMEX_integration->reinit();
-  }
+    if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme !=
+        TimeIntegrators::not_initialized)
+      IMEX_integration->reinit();
 
-
-
-  template <int dim, typename Number>
-  void
-  ReinitilizationDGOperator<dim, Number>::compute_viscosity_value()
-  {
     RI_DG_diffusion_operator.compute_viscosity_value();
-  }
-
-
-  template <int dim, typename Number>
-  void
-  ReinitilizationDGOperator<dim, Number>::compute_penalty_parameter()
-  {
     RI_DG_diffusion_operator.compute_penalty_parameter();
   }
 

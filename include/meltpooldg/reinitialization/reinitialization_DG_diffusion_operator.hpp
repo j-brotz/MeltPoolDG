@@ -9,7 +9,7 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 /**
- * Class for the diffusive stabilization of the levelset reinizilization
+ * Class for the diffusive stabilization of the level set reinitialization
  */
 namespace MeltPoolDG::LevelSet
 {
@@ -39,7 +39,7 @@ namespace MeltPoolDG::LevelSet
 
     /**
      * If an analytical function for a field is provided and an analytical update is
-     * enabled, this function sets the field according to the anylytical function. This function
+     * enabled, this function sets the field according to the analytical function. This function
      * implementation is needed for a time integrator. This function is currently unused
      * @param time
      */
@@ -59,11 +59,11 @@ namespace MeltPoolDG::LevelSet
                    const VectorType             &src) const;
 
     /**
-     *  Applies the dirichlet contribution of the DG diffusion operator to the src vector and stores
+     * Applies the dirichlet contribution of the DG diffusion operator to the src vector and stores
      * the result in the dst vector. The dst vector is NOT zeroed out before the operation.
-     * Is not implemented since for a levelset reinilization, dirichlet boundaries don't make much
-     * sense.
-     * */
+     * Is not implemented since for a levelset reinitialization, dirichlet boundaries don't make
+     * much sense.
+     */
     void
     apply_dirichlet_boundary_operator([[maybe_unused]] const Number      time,
                                       [[maybe_unused]] VectorType       &dst,
@@ -90,7 +90,7 @@ namespace MeltPoolDG::LevelSet
 
     /**
      * Applies the domain integral
-     * * @param data the matrix free object
+     * @param data the matrix free object
      * @param dst destination where the result is stored
      * @param src source vector
      * @param cell_range
@@ -116,7 +116,7 @@ namespace MeltPoolDG::LevelSet
 
     /**
      * Applies the boundary face integral
-     * * @param data the matrix free object
+     * @param data the matrix free object
      * @param dst destination where the result is stored
      * @param src source vector
      * @param cell_range

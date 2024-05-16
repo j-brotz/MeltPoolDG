@@ -6,6 +6,7 @@ namespace MeltPoolDG
   //// time integration schemes
   BETTER_ENUM(TimeIntegrators,
               int,
+              not_initialized,
               RK_stage_1_order_1,
               RK_stage_2_order_2,
               RK_stage_3_order_3, /* Kennedy, Carpenter, Lewis, 2000 */

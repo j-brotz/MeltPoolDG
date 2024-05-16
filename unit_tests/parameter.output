@@ -310,12 +310,11 @@
             "Discontinous Galerkin":
             {
                 "CFL": "1",
-                "IMEX integration scheme": "implicit_euler",
+                "IMEX integration scheme": "not_initialized",
                 "IP diffusion": "100",
                 "do CFL based time stepping": "false",
                 "factor diffusivity": "0.25",
                 "time integration scheme": "RK_stage_5_order_4",
-                "use IMEX": "true",
                 "use const gradient in RI": "false"
             },
             "fe":

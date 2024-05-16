@@ -41,11 +41,10 @@ namespace MeltPoolDG::LevelSet
     {
       number          factor_diffusivity         = 0.25;
       number          IP_diffusion               = 100.0;
-      bool            use_IMEX                   = true;
       bool            use_const_gradient_in_RI   = false;
       bool            do_CFL_based_time_stepping = false;
       TimeIntegrators time_integration_scheme    = TimeIntegrators::RK_stage_5_order_4;
-      TimeIntegrators IMEX_integration_scheme    = TimeIntegrators::implicit_euler;
+      TimeIntegrators IMEX_integration_scheme    = TimeIntegrators::not_initialized;
 
       number CFL = 1.0;
     } reinitilization_DG_specific_data;

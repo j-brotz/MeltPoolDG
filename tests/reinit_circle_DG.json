@@ -34,7 +34,7 @@
         "CFL": "0.05",
         "factor diffusivity": "0.1",
         "time integration scheme": "RK_stage_5_order_4",
-        "use IMEX": "true",
+        "IMEX integration scheme": "implicit_euler",
         "use const gradient in RI": "false"
       },
       "tolerance": "2.22507e-308",

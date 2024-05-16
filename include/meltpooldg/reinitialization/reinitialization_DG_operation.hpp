@@ -9,8 +9,8 @@
 
 // MeltPoolDG
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/reinitialization/reinitialization_DG_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
-#include <meltpooldg/reinitialization/reinitilization_DG_operator.hpp>
 #include <meltpooldg/time_integration/time_integration_concretization.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
@@ -20,14 +20,12 @@
 namespace MeltPoolDG::LevelSet
 {
   using namespace dealii;
-
+  using VectorType      = LinearAlgebra::distributed::Vector<double>;
+  using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
   template <int dim>
   class ReinitializationDGOperation : public ReinitializationOperationBase<dim>
   {
   private:
-    using VectorType      = LinearAlgebra::distributed::Vector<double>;
-    using BlockVectorType = LinearAlgebra::distributed::BlockVector<double>;
-
   public:
     ReinitializationDGOperation(const ScratchData<dim>             &scratch_data_in,
                                 const ReinitializationData<double> &reinit_data,
@@ -48,8 +46,8 @@ namespace MeltPoolDG::LevelSet
     set_initial_condition([[maybe_unused]] const VectorType &solution_level_set_in) override{};
 
     /**
-     * Sets the initial conditions of the advection field based on the analytical function
-     * initial_field_function. The initial conditions are applied using a L_2 projection for each
+     * Sets the initial conditions of the level set field based on the analytical function
+     * @param initial_field_function. The initial conditions are applied using a L_2 projection for each
      * element. This reduces oscillations for higher order elements.
      */
     void
@@ -100,9 +98,6 @@ namespace MeltPoolDG::LevelSet
 
     void
     attach_output_vectors(GenericDataOut<dim> &data_out) const override;
-
-    void
-    prepare_reinitilization() override;
 
     /**
      * Computes the timestep size fullfilling the CFL condition

@@ -55,12 +55,6 @@ namespace MeltPoolDG
       virtual void
       attach_output_vectors(GenericDataOut<dim> &data_out) const = 0;
 
-      virtual void
-      prepare_reinitilization()
-      {
-        AssertThrow(false, dealii::ExcNotImplemented());
-      }
-
       virtual double
       compute_CFL_based_timestep() const
       {

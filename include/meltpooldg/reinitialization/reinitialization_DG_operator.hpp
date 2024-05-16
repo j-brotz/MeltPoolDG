@@ -1,7 +1,7 @@
 #pragma once
 
-#include <meltpooldg/reinitialization/reinitilization_DG_diffusion_operator.hpp>
-#include <meltpooldg/reinitialization/reinitilization_DG_grad_operator.hpp>
+#include <meltpooldg/reinitialization/reinitialization_DG_diffusion_operator.hpp>
+#include <meltpooldg/reinitialization/reinitialization_DG_grad_operator.hpp>
 #include <meltpooldg/time_integration/time_integration_concretization.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
@@ -71,24 +71,12 @@ namespace MeltPoolDG::LevelSet
     reinit();
 
     /**
-     * Computes the necessary viscosity value for the Diffusion stabilization
-     */
-    void
-    compute_viscosity_value();
-
-    /**
-     * Computes the necessary penalty parameter for the Diffusion stabilization
-     */
-    void
-    compute_penalty_parameter();
-
-    /**
-     * Applies the diffusion term with an implicit time integration, in order to keep the time step
+     * Applies the diffusion term with an implicit time integration in order to keep the time step
      * size of the integration scheme not limited by the diffusion term.
      * @param time current time
      * @param time_step size of the time
-     * @param solution_history keeps different time instances of the levevelset field
-     * @param rhs vector for the right hand side resulting linear System of equations
+     * @param solution_history keeps different time instances of the level set field
+     * @param rhs vector for the right hand side resulting linear system of equations
      */
     void
     apply_diffusion_implicit(
@@ -153,21 +141,21 @@ namespace MeltPoolDG::LevelSet
 
     /**
      * Calculates the numerical Hamiltonian of the Hamilton-Jacobi equation
-     * @param solution leveset field
+     * @param solution level set field
      */
     void
     compute_godunov_hamiltonian(const VectorType &solution);
 
     /**
      * Calculates the Godunov gradient
-     * @param solution leveset field
+     * @param solution level set field
      */
     void
     compute_godunov_gradient(const VectorType &solution);
 
     /**
      * Calculates the smoothed signum function and stores the result in the member @p signum_smoothed
-     * @param solution the distorted levelset field before reinilization
+     * @param solution the distorted level set field before reinitialization
      * @param min_vertex_distance smallest vertex distance of the mesh
      */
     void
