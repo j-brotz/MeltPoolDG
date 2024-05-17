@@ -62,6 +62,6 @@ namespace MeltPoolDG
     AssertThrow(
       (fe.type != FiniteElementType::FE_DGQ),
       ExcMessage(
-        "Discontinous Galerkin finite elements are only supported specifically for the levelset advection"));
+        "Discontinous Galerkin finite elements are only supported specifically for the levelset advection and reinitilization"));
   }
 } // namespace MeltPoolDG

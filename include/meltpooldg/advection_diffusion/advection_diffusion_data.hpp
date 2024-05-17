@@ -5,6 +5,7 @@
 #include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
+#include <meltpooldg/time_integration/time_integration_setup.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
 #include <string>
@@ -23,7 +24,7 @@ namespace MeltPoolDG::LevelSet
     AdvectionDiffusionData();
 
     number            diffusivity             = 0.0;
-    std::string       time_integration_scheme = "crank_nicolson";
+    TimeIntegrators   time_integration_scheme = TimeIntegrators::crank_nicolson;
     std::string       implementation          = "meltpooldg";
     FiniteElementData fe;
 

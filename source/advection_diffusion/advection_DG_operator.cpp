@@ -13,7 +13,7 @@ namespace MeltPoolDG::LevelSet
     std::shared_ptr<MeltPoolDG::BoundaryConditions<dim>> &boundary_conditions_in,
     std::shared_ptr<dealii::Function<dim>>               &advection_field_in,
     bool const                                            enable_analytical_velocity_update_in)
-    : update_velocity_(true)
+    : update_field_functions(true)
     , scratch_data_(scratch_data_in)
     , advection_velocity_(advection_velocity_in)
     , advec_diff_dof_idx(advec_diff_dof_idx_in)
@@ -26,7 +26,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  AdvectionDGOperator<dim, Number>::set_velocity_operator(const Number time) const
+  AdvectionDGOperator<dim, Number>::set_field_functions(const Number time) const
   {
     if (enable_analytical_velocity_update)
       {
@@ -246,9 +246,9 @@ namespace MeltPoolDG::LevelSet
     LinearAlgebra::distributed::Vector<Number>       &dst,
     LinearAlgebra::distributed::Vector<Number> const &src) const
   {
-    if (this->update_velocity_)
+    if (this->update_field_functions)
       {
-        set_velocity_operator(time);
+        set_field_functions(time);
       }
 
     this->scratch_data_.get_matrix_free().loop(
@@ -272,9 +272,9 @@ namespace MeltPoolDG::LevelSet
   {
     boundary_conditions->set_time(time);
 
-    if (this->update_velocity_)
+    if (this->update_field_functions)
       {
-        set_velocity_operator(time);
+        set_field_functions(time);
       }
 
     scratch_data_.get_matrix_free().loop( // dst MUST NOT be set to zero when applied!

@@ -221,6 +221,23 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
+  ReinitializationOperationAdaflo<dim>::set_initial_condition(
+    const Function<dim> &initial_field_function)
+  {
+    scratch_data.initialize_dof_vector(level_set, reinit_params_adaflo.dof_index_ls);
+
+    dealii::VectorTools::interpolate(scratch_data.get_mapping(),
+                                     scratch_data.get_dof_handler(
+                                       reinit_params_adaflo.dof_index_ls),
+                                     initial_field_function,
+                                     level_set);
+
+    scratch_data.get_constraint(reinit_params_adaflo.dof_index_ls).distribute(level_set);
+    force_compute_normal = true;
+  }
+
+  template <int dim>
+  void
   ReinitializationOperationAdaflo<dim>::set_adaflo_parameters(const Parameters<double> &parameters,
                                                               const int reinit_dof_idx,
                                                               const int reinit_quad_idx,

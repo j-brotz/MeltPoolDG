@@ -18,6 +18,8 @@ namespace MeltPoolDG::LevelSet
   {
     prm.enter_subsection("reinitialization");
     {
+      fe.add_parameters(prm);
+
       prm.add_parameter("enable", enable, "Set to true to activate reinitialization.");
       prm.add_parameter(
         "n initial steps",
@@ -41,6 +43,48 @@ namespace MeltPoolDG::LevelSet
         "Choose the corresponding implementation of the reinitialization operation.",
         dealii::Patterns::Selection("meltpooldg|adaflo"));
 
+      prm.enter_subsection("Discontinous Galerkin");
+      {
+        prm.add_parameter("factor diffusivity",
+                          reinitilization_DG_specific_data.factor_diffusivity,
+                          "Set the factor for diffusivity ");
+
+        prm.add_parameter("IP diffusion",
+                          reinitilization_DG_specific_data.IP_diffusion,
+                          "Set the internal penalty for diffusivity ");
+
+        prm.add_parameter(
+          "use const gradient in RI",
+          reinitilization_DG_specific_data.use_const_gradient_in_RI,
+          "Set if the Godunov gradient should be updated every reinitilization step");
+
+
+        prm.add_parameter("do CFL based time stepping",
+                          reinitilization_DG_specific_data.do_CFL_based_time_stepping,
+                          "Sets a flag if the time stepping should be based on the CFL condition");
+
+        prm.add_parameter(
+          "time integration scheme",
+          reinitilization_DG_specific_data.time_integration_scheme,
+          "Determines the general time integration scheme for the pseudo time integration of the reinilization equation.");
+
+        prm.add_parameter(
+          "IMEX integration scheme",
+          reinitilization_DG_specific_data.IMEX_integration_scheme,
+          "If a IMEX integration scheme is specifiead, the integration in pseudo time of the reinilization is done with an Implict-Explicit (IMEX) scheme."
+          "this means that the diffusion part is treated with the IMEX integration scheme and the hamiltonian is treated with the general time integration scheme."
+          "When choosing an implicit scheme with A-stability larger time steps can be chosen only limited by the stability of the hamiltonian part."
+          "This is done, since the diffusion part is the most restrictive part for explicit time integration scheme."
+          "If a scheme is set, the time step calculation based on a CFL number assumes an A-stable scheme and only calculates the time step based on the hamiltonian.");
+
+        prm.add_parameter("CFL",
+                          reinitilization_DG_specific_data.CFL,
+                          "Set a CFL number for the pseudo time stepping in reinitilization. ");
+      }
+      prm.leave_subsection();
+
+
+
       prm.enter_subsection("interface thickness parameter");
       {
         prm.add_parameter("type",
@@ -60,7 +104,7 @@ namespace MeltPoolDG::LevelSet
 
   template <typename number>
   void
-  ReinitializationData<number>::post()
+  ReinitializationData<number>::post(const FiniteElementData &base_fe_data)
   {
     // set the number of initial reinitialization steps equal to the number of reinit steps
     // if no value is provided
@@ -68,6 +112,7 @@ namespace MeltPoolDG::LevelSet
       n_initial_steps = max_n_steps;
 
     predictor.post();
+    fe.post(base_fe_data);
   }
 
   template <typename number>
@@ -85,6 +130,10 @@ namespace MeltPoolDG::LevelSet
                   implementation == "meltpooldg",
                 ExcMessage("For the adaflo implementation, a variable thickness parameter epsilon "
                            "is mandatory."));
+
+    // Cross check for DG since for DG only matrix free is supported
+    AssertThrow(fe.type != FiniteElementType::FE_DGQ || linear_solver.do_matrix_free,
+                ExcMessage("For the DG element only matrix free is implemented."));
   }
 
   template struct ReinitializationData<double>;

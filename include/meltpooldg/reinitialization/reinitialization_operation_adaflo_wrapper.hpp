@@ -81,6 +81,19 @@ namespace MeltPoolDG
       void
       set_initial_condition(const VectorType &level_set_in) override;
 
+      /**
+       * Interpolates the initial conditions from a function to the level set field
+       */
+      void
+      set_initial_condition(const Function<dim> &initial_field_function) override;
+
+      double
+      compute_CFL_based_timestep() const override
+      {
+        AssertThrow(
+          false, ExcMessage("CFL based time stepping is not implemented for continous elements!"));
+      }
+
     private:
       void
       set_adaflo_parameters(const Parameters<double> &parameters,

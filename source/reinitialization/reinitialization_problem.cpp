@@ -9,6 +9,7 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
+#include <meltpooldg/reinitialization/reinitialization_DG_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/reinitialization/reinitialization_problem.hpp>
@@ -27,6 +28,15 @@ namespace MeltPoolDG::LevelSet
 
     while (!time_iterator->is_finished())
       {
+        if (base_in->parameters.ls.reinit.reinitilization_DG_specific_data
+              .do_CFL_based_time_stepping)
+          {
+            double const time_step = reinit_operation->compute_CFL_based_timestep();
+
+            time_iterator->set_current_time_increment(time_step,
+                                                      std::numeric_limits<double>::max());
+          }
+
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout());
 
@@ -37,7 +47,9 @@ namespace MeltPoolDG::LevelSet
                        base_in);
 
         if (base_in->parameters.amr.do_amr)
-          refine_mesh(base_in);
+          {
+            refine_mesh(base_in);
+          }
       }
     Journal::print_end(scratch_data->get_pcout());
   }
@@ -65,12 +77,12 @@ namespace MeltPoolDG::LevelSet
        *  setup mapping
        */
       scratch_data->set_mapping(
-        FiniteElementUtils::create_mapping<dim>(base_in->parameters.base.fe));
+        FiniteElementUtils::create_mapping<dim>(base_in->parameters.ls.reinit.fe));
       /*
        *  create quadrature rule
        */
       scratch_data->attach_quadrature(
-        FiniteElementUtils::create_quadrature<dim>(base_in->parameters.base.fe));
+        FiniteElementUtils::create_quadrature<dim>(base_in->parameters.ls.reinit.fe));
 
       scratch_data->attach_dof_handler(dof_handler);
       reinit_dof_idx = scratch_data->attach_constraint_matrix(constraints);
@@ -87,35 +99,36 @@ namespace MeltPoolDG::LevelSet
      *  initialize the time iterator
      */
     time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
-    /*
-     *  set initial conditions of the levelset function
-     */
-    VectorType solution_level_set;
-    scratch_data->initialize_dof_vector(solution_level_set, reinit_dof_idx);
 
-    auto ic = base_in->get_initial_condition("level_set");
-
-    dealii::VectorTools::interpolate(scratch_data->get_mapping(),
-                                     dof_handler,
-                                     *ic,
-                                     solution_level_set);
-    constraints.distribute(solution_level_set);
     /*
      *    initialize the reinitialization operation class
      */
 
     if (base_in->parameters.ls.reinit.implementation == "meltpooldg")
       {
-        reinit_operation = std::make_shared<ReinitializationOperation<dim>>(
-          *scratch_data,
-          base_in->parameters.ls.reinit,
-          base_in->parameters.ls.normal_vec,
-          base_in->parameters.ls.get_n_subdivisions(),
-          *time_iterator,
-          reinit_dof_idx,
-          reinit_quad_idx,
-          reinit_dof_idx,
-          normal_dof_idx);
+        if (base_in->parameters.ls.reinit.fe.type != FiniteElementType::FE_DGQ)
+          {
+            reinit_operation = std::make_shared<ReinitializationOperation<dim>>(
+              *scratch_data,
+              base_in->parameters.ls.reinit,
+              base_in->parameters.ls.normal_vec,
+              base_in->parameters.ls.get_n_subdivisions(),
+              *time_iterator,
+              reinit_dof_idx,
+              reinit_quad_idx,
+              reinit_dof_idx,
+              normal_dof_idx);
+          }
+        else
+          {
+            reinit_operation =
+              std::make_shared<ReinitializationDGOperation<dim>>(*scratch_data,
+                                                                 base_in->parameters.ls.reinit,
+                                                                 *time_iterator,
+                                                                 reinit_dof_idx,
+                                                                 reinit_quad_idx,
+                                                                 reinit_dof_idx);
+          }
         reinit_operation->reinit();
       }
 #ifdef MELT_POOL_DG_WITH_ADAFLO
@@ -134,10 +147,7 @@ namespace MeltPoolDG::LevelSet
     else
       AssertThrow(false, ExcNotImplemented());
 
-    /*
-     * set initial conditions
-     */
-    reinit_operation->set_initial_condition(solution_level_set);
+    reinit_operation->set_initial_condition(*base_in->get_initial_condition("level_set"));
   }
 
   template <int dim>
@@ -147,7 +157,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  setup DoFHandler
      */
-    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.ls.reinit.fe, dof_handler);
 
     /*
      *  re-create partitioning
@@ -156,13 +166,26 @@ namespace MeltPoolDG::LevelSet
     /*
      *  make hanging nodes constraints
      */
-    MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
-                                                    base_in->get_periodic_bc(),
-                                                    reinit_dof_idx);
+
+    // Strong enforcement of hanging node constraints and periodic boundary conditions for
+    // continuous Galerkin finite elements
+    if (base_in->parameters.ls.reinit.fe.type != FiniteElementType::FE_DGQ)
+      {
+        MeltPoolDG::Constraints::make_HNC_plus_PBC<dim>(*scratch_data,
+                                                        base_in->get_periodic_bc(),
+                                                        reinit_dof_idx);
+      }
     /*
      *  create the matrix-free object
      */
-    scratch_data->build(false, false);
+    if (base_in->parameters.ls.reinit.fe.type != FiniteElementType::FE_DGQ)
+      {
+        scratch_data->build(false, false);
+      }
+    else
+      {
+        scratch_data->build(true, true);
+      }
 
     if (reinit_operation)
       reinit_operation->reinit();

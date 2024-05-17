@@ -109,6 +109,33 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
+  ReinitializationOperation<dim>::set_initial_condition(const Function<dim> &initial_field_function)
+  {
+    solution_level_set.zero_out_ghost_values();
+
+    dealii::VectorTools::interpolate(scratch_data.get_mapping(),
+                                     scratch_data.get_dof_handler(reinit_dof_idx),
+                                     initial_field_function,
+                                     solution_level_set);
+
+    scratch_data.get_constraint(reinit_dof_idx).distribute(solution_level_set);
+
+
+    /*
+     *    update the normal vector field corresponding to the given solution of the
+     *    level set; the normal vector field is called by reference within the
+     *    operator class
+     */
+    normal_vector_operation->solve();
+    /*
+     * precompute preconditioner system matrix
+     */
+    if (reinit_data.linear_solver.do_matrix_free)
+      update_preconditioner_matrixfree = true;
+  }
+
+  template <int dim>
+  void
   ReinitializationOperation<dim>::update_dof_idx(const unsigned int &reinit_dof_idx_in)
   {
     reinit_dof_idx = reinit_dof_idx_in;

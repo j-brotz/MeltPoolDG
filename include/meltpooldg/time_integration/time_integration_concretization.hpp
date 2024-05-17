@@ -12,62 +12,67 @@ namespace MeltPoolDG::TimeIntegratorConcretization
 {
   template <typename Operator, int dim, typename Number = double>
   inline std::shared_ptr<TimeIntegrationBase<dim>>
-  concretize(std::string                         time_integration_scheme,
+  concretize(TimeIntegrators                     time_integration_scheme,
              Operator                           &pde_operator,
              const MeltPoolDG::ScratchData<dim> &scratch_data_in_,
              const unsigned int                  dof_idx_in,
              const unsigned int                  quad_idx_in,
              const LinearSolverData<Number>     &linear_solver_data_in)
   {
-    if (time_integration_scheme == "RK_stage_1_order_1")
+    if (time_integration_scheme == TimeIntegrators::RK_stage_1_order_1)
       {
-        return std::make_shared<LowStorageRungeKuttaIntegrator<Operator, dim, stage_1_order_1>>(
+        return std::make_shared<
+          LowStorageRungeKuttaIntegrator<Operator, dim, TimeIntegrators::RK_stage_1_order_1>>(
           pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
       }
 
-    if (time_integration_scheme == "RK_stage_2_order_2")
+    if (time_integration_scheme == TimeIntegrators::RK_stage_2_order_2)
       {
-        return std::make_shared<LowStorageRungeKuttaIntegrator<Operator, dim, stage_2_order_2>>(
+        return std::make_shared<
+          LowStorageRungeKuttaIntegrator<Operator, dim, TimeIntegrators::RK_stage_2_order_2>>(
           pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
       }
 
-    if (time_integration_scheme == "RK_stage_3_order_3")
+    if (time_integration_scheme == TimeIntegrators::RK_stage_3_order_3)
       {
-        return std::make_shared<LowStorageRungeKuttaIntegrator<Operator, dim, stage_3_order_3>>(
+        return std::make_shared<
+          LowStorageRungeKuttaIntegrator<Operator, dim, TimeIntegrators::RK_stage_3_order_3>>(
           pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
       }
 
-    if (time_integration_scheme == "RK_stage_5_order_4")
+    if (time_integration_scheme == TimeIntegrators::RK_stage_5_order_4)
       {
-        return std::make_shared<LowStorageRungeKuttaIntegrator<Operator, dim, stage_5_order_4>>(
+        return std::make_shared<
+          LowStorageRungeKuttaIntegrator<Operator, dim, TimeIntegrators::RK_stage_5_order_4>>(
           pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
       }
 
-    if (time_integration_scheme == "RK_stage_7_order_4")
+    if (time_integration_scheme == TimeIntegrators::RK_stage_7_order_4)
       {
-        return std::make_shared<LowStorageRungeKuttaIntegrator<Operator, dim, stage_7_order_4>>(
+        return std::make_shared<
+          LowStorageRungeKuttaIntegrator<Operator, dim, TimeIntegrators::RK_stage_7_order_4>>(
           pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
       }
 
-    if (time_integration_scheme == "RK_stage_9_order_5")
+    if (time_integration_scheme == TimeIntegrators::RK_stage_9_order_5)
       {
-        return std::make_shared<LowStorageRungeKuttaIntegrator<Operator, dim, stage_9_order_5>>(
+        return std::make_shared<
+          LowStorageRungeKuttaIntegrator<Operator, dim, TimeIntegrators::RK_stage_9_order_5>>(
+          pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
+      }
+    if (time_integration_scheme == TimeIntegrators::explicit_euler)
+      {
+        return std::make_shared<OneStepTheta<Operator, dim, TimeIntegrators::explicit_euler>>(
           pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
       }
 
-    if (time_integration_scheme == "explicit_euler")
+    if (time_integration_scheme == TimeIntegrators::implicit_euler)
       {
-        return std::make_shared<OneStepTheta<Operator, dim, TimeIntegrators::explicit_Euler>>(
+        return std::make_shared<OneStepTheta<Operator, dim, TimeIntegrators::implicit_euler>>(
           pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
       }
 
-    if (time_integration_scheme == "implicit_euler")
-      {
-        return std::make_shared<OneStepTheta<Operator, dim, TimeIntegrators::implicit_Euler>>(
-          pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
-      }
-
-    if (time_integration_scheme == "crank_nicolson")
+    if (time_integration_scheme == TimeIntegrators::crank_nicolson)
       {
         return std::make_shared<OneStepTheta<Operator, dim, TimeIntegrators::crank_nicolson>>(
           pde_operator, scratch_data_in_, dof_idx_in, quad_idx_in, linear_solver_data_in);
@@ -75,12 +80,8 @@ namespace MeltPoolDG::TimeIntegratorConcretization
 
     // Done here additionally to the check in advection diffusion data. Since BDF2 is implemented
     // for the CG case
-    AssertThrow(
-      false,
-      ExcMessage(
-        "The chosen time integration scheme is not implemented. Available options are: "
-        "RK_stage_1_order_1, RK_stage_2_order_2, RK_stage_3_order_3, RK_stage_5_order_4, "
-        "RK_stage_7_order_4, RK_stage_9_order_5, explicit_euler, implicit_euler, crank_nicolson."));
+    AssertThrow(false,
+                ExcMessage("The chosen time integration scheme bdf2 is not implemented for DG"));
   }
 
 } // namespace MeltPoolDG::TimeIntegratorConcretization

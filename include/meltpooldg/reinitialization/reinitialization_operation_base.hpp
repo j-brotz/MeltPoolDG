@@ -31,6 +31,9 @@ namespace MeltPoolDG
       set_initial_condition(
         const LinearAlgebra::distributed::Vector<double> &solution_level_set_in) = 0;
 
+      virtual void
+      set_initial_condition(const Function<dim> & /*initial_field_function*/) = 0;
+
       virtual const LinearAlgebra::distributed::Vector<double> &
       get_level_set() const = 0;
 
@@ -51,6 +54,13 @@ namespace MeltPoolDG
 
       virtual void
       attach_output_vectors(GenericDataOut<dim> &data_out) const = 0;
+
+      virtual double
+      compute_CFL_based_timestep() const
+      {
+        AssertThrow(
+          false, ExcMessage("CFL based time stepping is not implemented for continous elements!"));
+      };
     };
 
   } // namespace LevelSet
