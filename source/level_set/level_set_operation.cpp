@@ -467,11 +467,10 @@ namespace MeltPoolDG::LevelSet
     // do reinitialization only if the level set has changed more than a certain tolerance
     if (max_d_level_set_since_last_reinit > level_set_data.reinit.tolerance)
       {
-        // Compute time increment for reinitialization from min(epsilon, dt)
+        // Compute time increment for reinitialization from epsilon
         reinit_time_iterator.set_current_time_increment(
-          std::min(level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
-                     scratch_data.get_min_cell_size() / level_set_data.get_n_subdivisions()),
-                   time_stepping.get_current_time_increment()));
+          level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
+            scratch_data.get_min_cell_size() / level_set_data.get_n_subdivisions()));
 
         reinit_operation->set_initial_condition(get_level_set());
 
