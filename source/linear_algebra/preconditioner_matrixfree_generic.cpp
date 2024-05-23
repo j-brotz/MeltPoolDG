@@ -1,4 +1,11 @@
-#include <meltpooldg/curvature/curvature_operator.hpp>
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
+
+#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/lac/sparsity_tools.h>
+
+#include <meltpooldg/interface/operator_base.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -33,7 +40,8 @@ namespace MeltPoolDG::Preconditioner
         const MPI_Comm mpi_communicator = scratch_data.get_mpi_comm();
 
         dsp.reinit(scratch_data.get_dof_handler(dof_idx).n_dofs(),
-                   scratch_data.get_dof_handler(dof_idx).n_dofs());
+                   scratch_data.get_dof_handler(dof_idx).n_dofs(),
+                   scratch_data.get_locally_relevant_dofs(dof_idx));
         DoFTools::make_sparsity_pattern(scratch_data.get_dof_handler(dof_idx),
                                         dsp,
                                         scratch_data.get_constraint(dof_idx));

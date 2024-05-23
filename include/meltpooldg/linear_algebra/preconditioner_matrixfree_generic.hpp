@@ -5,10 +5,17 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 
+#include <deal.II/lac/diagonal_matrix.h>
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
 
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_base.hpp>
+
+#include <memory>
 
 namespace MeltPoolDG::Preconditioner
 {
