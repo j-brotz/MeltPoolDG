@@ -1,3 +1,10 @@
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
+
+#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/lac/sparsity_tools.h>
+
 #include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 
@@ -46,7 +53,8 @@ namespace MeltPoolDG::Heat
         const MPI_Comm mpi_communicator = scratch_data.get_mpi_comm(temp_dof_idx);
 
         dsp.reinit(scratch_data.get_dof_handler(temp_dof_idx).n_dofs(),
-                   scratch_data.get_dof_handler(temp_dof_idx).n_dofs());
+                   scratch_data.get_dof_handler(temp_dof_idx).n_dofs(),
+                   scratch_data.get_locally_relevant_dofs(temp_dof_idx));
         DoFTools::make_sparsity_pattern(scratch_data.get_dof_handler(temp_dof_idx),
                                         dsp,
                                         scratch_data.get_constraint(temp_dof_idx));
