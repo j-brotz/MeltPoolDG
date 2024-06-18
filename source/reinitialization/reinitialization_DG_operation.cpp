@@ -12,7 +12,8 @@ namespace MeltPoolDG::LevelSet
     const TimeIterator<double>         &time_iterator,
     const unsigned int                  reinit_dof_idx_in,
     const unsigned int                  reinit_quad_idx_in,
-    const unsigned int                  ls_dof_idx_in)
+    const unsigned int                  ls_dof_idx_in,
+    const NormalVectorData<double>     &normal_vec_data)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , time_iterator(time_iterator)
@@ -30,6 +31,13 @@ namespace MeltPoolDG::LevelSet
       reinit_dof_idx_in,
       reinit_quad_idx_in,
       reinit_data.linear_solver);
+
+    normal_vector_operation =
+      std::make_shared<NormalVectorDGOperation<dim>>(scratch_data_in,
+                                                     reinit_quad_idx,
+                                                     reinit_quad_idx,
+                                                     solution_history.get_current_solution(),
+                                                     normal_vec_data);
   }
 
   template <int dim>
@@ -43,6 +51,7 @@ namespace MeltPoolDG::LevelSet
 
     reinit_DG_operator.reinit();
     reinitilization_integration->reinit();
+    normal_vector_operation->reinit();
   }
 
 
@@ -102,6 +111,8 @@ namespace MeltPoolDG::LevelSet
     solution_history.commit_old_solutions();
 
     reinit_DG_operator.prepare_operator(solution_history.get_current_solution());
+
+    normal_vector_operation->solve();
   }
 
   template <int dim>
@@ -175,11 +186,26 @@ namespace MeltPoolDG::LevelSet
   }
 
   template <int dim>
+  const BlockVectorType &
+  ReinitializationDGOperation<dim>::get_normal_vector() const
+  {
+    return normal_vector_operation->get_solution_normal_vector();
+  }
+
+  template <int dim>
+  BlockVectorType &
+  ReinitializationDGOperation<dim>::get_normal_vector()
+  {
+    return normal_vector_operation->get_solution_normal_vector();
+  }
+
+  template <int dim>
   void
   ReinitializationDGOperation<dim>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
   {
     solution_history.apply([&](VectorType &v) { vectors.push_back(&v); });
+    normal_vector_operation->attach_vectors(vectors);
 
     /**
      * When the mesh is refined the smoothed signum also needs to be refined.
@@ -194,6 +220,11 @@ namespace MeltPoolDG::LevelSet
     data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
                              solution_history.get_current_solution(),
                              "reinit_DG_psi");
+
+    for (unsigned int d = 0; d < dim; ++d)
+      data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
+                               get_normal_vector().block(d),
+                               "normal_" + std::to_string(d));
   }
 
   template <int dim>

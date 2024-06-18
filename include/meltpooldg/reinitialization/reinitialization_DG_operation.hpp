@@ -9,6 +9,7 @@
 
 // MeltPoolDG
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_DG_operator.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_base.hpp>
 #include <meltpooldg/time_integration/time_integration_concretization.hpp>
@@ -32,7 +33,8 @@ namespace MeltPoolDG::LevelSet
                                 const TimeIterator<double>         &time_iterator,
                                 const unsigned int                  reinit_dof_idx_in,
                                 const unsigned int                  reinit_quad_idx_in,
-                                const unsigned int                  ls_dof_idx_in);
+                                const unsigned int                  ls_dof_idx_in,
+                                const NormalVectorData<double>     &normal_vec_data);
     /**
      * Resizes the vectors to the right size of the underlying DoF handler
      */
@@ -68,15 +70,8 @@ namespace MeltPoolDG::LevelSet
     double
     get_max_change_level_set() const final;
 
-    /**
-     * required from base class
-     */
     const BlockVectorType &
-    get_normal_vector() const override
-    {
-      AssertThrow(false, ExcNotImplemented());
-    };
-
+    get_normal_vector() const override;
 
     const VectorType &
     get_level_set() const override;
@@ -84,14 +79,8 @@ namespace MeltPoolDG::LevelSet
     VectorType &
     get_level_set() override;
 
-    /**
-     * required from base class
-     */
     BlockVectorType &
-    get_normal_vector() override
-    {
-      AssertThrow(false, ExcNotImplemented());
-    };
+    get_normal_vector() override;
 
     void
     attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
@@ -130,5 +119,10 @@ namespace MeltPoolDG::LevelSet
 
     // maximum change of the level set due to the current reinitialization step
     double max_change_level_set = std::numeric_limits<double>::max();
+
+    /*
+     *   Computation of the normal vectors
+     */
+    std::shared_ptr<NormalVectorOperationBase<dim>> normal_vector_operation;
   };
 } // namespace MeltPoolDG::LevelSet

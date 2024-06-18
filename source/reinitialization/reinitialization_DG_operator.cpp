@@ -219,7 +219,7 @@ namespace MeltPoolDG::LevelSet
                                        std::min(grad_z_r.local_element(i), 0.0));
           }
 
-        if (solution.local_element(i) > 0.0)
+        if (signum_smoothed.local_element(i) >= 0.0)
           God_grad.local_element(i) = std::sqrt(argument_one);
         else
           {
@@ -257,9 +257,10 @@ namespace MeltPoolDG::LevelSet
             {
               // calculate argument of tanh: (pi*phi)/(2*grad(phi)*max_cell_size/fe_degree)
               const auto arg = numbers::PI * source.get_dof_value(q) /
-                               (eta_vector * std::abs(God_grad_p.get_dof_value(q)));
+                               (eta_vector * std::abs(God_grad_p.get_dof_value(q)) +
+                                0.00000000001); // In case Godunov gradient is zero
 
-              const auto u = MeltPoolDG::VectorTools::tanh<dim>(arg);
+              const auto u = std::tanh(arg);
 
               source.submit_dof_value(u, q);
             }

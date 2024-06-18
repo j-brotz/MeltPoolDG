@@ -42,6 +42,23 @@
       "implementation": "meltpooldg",
       "max n steps": "5",
       "enable": "true"
+    },
+    "normal vector": {
+      "filter parameter": "2.",
+      "implementation": "meltpooldg",
+      "verbosity level": "0",
+      "linear solver": {
+        "abs tolerance": "1e-12",
+        "do matrix free": "true",
+        "max iterations": "10000",
+        "rel tolerance": "1e-200",
+        "solver type": "GMRES",
+        "monitor type": "none",
+        "preconditioner type": "ILU"
+      },
+      "Discontinous Galerkin": {
+        "penalty factor": "1."
+      }
     }
   }
 }
