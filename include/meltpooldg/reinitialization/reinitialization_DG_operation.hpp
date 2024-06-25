@@ -8,6 +8,7 @@
 
 
 // MeltPoolDG
+#include <meltpooldg/curvature/curvature_DG_operation.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_DG_operator.hpp>
@@ -34,7 +35,9 @@ namespace MeltPoolDG::LevelSet
                                 const unsigned int                  reinit_dof_idx_in,
                                 const unsigned int                  reinit_quad_idx_in,
                                 const unsigned int                  ls_dof_idx_in,
-                                const NormalVectorData<double>     &normal_vec_data);
+                                const NormalVectorData<double>     &normal_vec_data,
+                                const CurvatureData<double>        &curvature_data);
+
     /**
      * Resizes the vectors to the right size of the underlying DoF handler
      */
@@ -124,5 +127,10 @@ namespace MeltPoolDG::LevelSet
      *   Computation of the normal vectors
      */
     std::shared_ptr<NormalVectorOperationBase<dim>> normal_vector_operation;
+
+    /*
+     *   Computation of the curvature
+     */
+    std::shared_ptr<CurvatureDGOperation<dim>> curvature_operation;
   };
 } // namespace MeltPoolDG::LevelSet

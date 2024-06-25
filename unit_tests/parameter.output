@@ -239,6 +239,10 @@
             "filter parameter": "2",
             "implementation": "meltpooldg",
             "verbosity level": "0",
+            "Discontinous Galerkin":
+            {
+                "penalty factor": "100"
+            },
             "linear solver":
             {
                 "abs tolerance": "1e-20",

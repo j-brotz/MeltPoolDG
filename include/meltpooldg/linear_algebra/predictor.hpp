@@ -127,7 +127,6 @@ namespace MeltPoolDG
             solution,
             time_iterator ? time_iterator->get_current_time_increment() : 1.0,
             time_iterator ? time_iterator->get_old_time_increment() : 1.0);
-          solution.update_ghost_values();
         }
       else if (data.type == PredictorType::least_squares_projection)
         {

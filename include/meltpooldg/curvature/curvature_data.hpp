@@ -27,6 +27,12 @@ namespace MeltPoolDG::LevelSet
       bool   enable              = false;
       number level_set_threshold = 0.9999999;
     } narrow_band;
+
+    struct CurvatureDGSpecificData
+    {
+      number penalty_factor = 100.0;
+    } curvature_DG_specific_data;
+
     PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
 

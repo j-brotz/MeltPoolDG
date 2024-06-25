@@ -56,6 +56,15 @@ namespace MeltPoolDG::LevelSet
       }
       prm.leave_subsection();
 
+      prm.enter_subsection("Discontinous Galerkin");
+      {
+        prm.add_parameter("penalty factor",
+                          curvature_DG_specific_data.penalty_factor,
+                          "Set the jump penalty factor of the diffusion term");
+      }
+      prm.leave_subsection();
+
+
       predictor.add_parameters(prm);
       linear_solver.add_parameters(prm);
     }
