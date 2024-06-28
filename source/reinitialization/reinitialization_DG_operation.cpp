@@ -34,7 +34,7 @@ namespace MeltPoolDG::LevelSet
 
     normal_vector_operation =
       std::make_shared<NormalVectorDGOperation<dim>>(scratch_data_in,
-                                                     reinit_quad_idx,
+                                                     reinit_dof_idx,
                                                      reinit_quad_idx,
                                                      solution_history.get_current_solution(),
                                                      normal_vec_data);
