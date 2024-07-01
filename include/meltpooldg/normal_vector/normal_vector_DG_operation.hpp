@@ -6,16 +6,20 @@
 #pragma once
 
 #include <meltpooldg/interface/scratch_data.hpp>
-#include <meltpooldg/normal_vector/helmholtz_operator.hpp>
+#include <meltpooldg/normal_vector/helmholtz_DG_operator.hpp>
 #include <meltpooldg/normal_vector/normal_vector_data.hpp>
 #include <meltpooldg/normal_vector/normal_vector_operation_base.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <deal.II/base/vectorization.h>
+#include <deal.II/lac/la_parallel_vector.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/matrix_free/matrix_free.h>
+#include <memory>
+#include <utility>
 
-namespace MeltPoolDG
-{
-  namespace LevelSet
+namespace MeltPoolDG::LevelSet
   {
     /**
      *    !!!!
@@ -30,8 +34,8 @@ namespace MeltPoolDG
     class NormalVectorDGOperation : public NormalVectorOperationBase<dim>
     {
     private:
-      using VectorType       = LinearAlgebra::distributed::Vector<double>;
-      using BlockVectorType  = LinearAlgebra::distributed::BlockVector<double>;
+      using VectorType       = LinearAlgebra::distributed::Vector<Number>;
+      using BlockVectorType  = LinearAlgebra::distributed::BlockVector<Number>;
       using SparseMatrixType = TrilinosWrappers::SparseMatrix;
 
     public:
@@ -39,7 +43,7 @@ namespace MeltPoolDG
                               const unsigned int              normal_dof_idx_in,
                               const unsigned int              normal_quad_idx_in,
                               const VectorType               &solution_level_set_in,
-                              const NormalVectorData<double> &normal_vector_data);
+                              const NormalVectorData<Number> &normal_vector_data);
 
       void
       reinit() override;
@@ -54,12 +58,12 @@ namespace MeltPoolDG
       get_solution_normal_vector() override;
 
       void
-      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
+      attach_vectors(std::vector<LinearAlgebra::distributed::Vector<Number> *> &vectors) override;
 
     private:
       const ScratchData<dim>        &scratch_data;
       const VectorType              &solution_level_set;
-      const NormalVectorData<double> normal_vector_data;
+      const NormalVectorData<Number> normal_vector_data;
 
       TimeIntegration::SolutionHistory<BlockVectorType> solution_history;
 
@@ -71,7 +75,7 @@ namespace MeltPoolDG
       const unsigned int normal_dof_idx;
       const unsigned int normal_quad_idx;
 
-      const HelmholtzOperator<dim, Number> helmholtz_operator;
+      const HelmholtzDGOperator<dim, Number> helmholtz_operator;
 
       /**
        * Applies the domain integral of the right hand side
@@ -115,5 +119,4 @@ namespace MeltPoolDG
                                     const VectorType                            &src,
                                     const std::pair<unsigned int, unsigned int> &face_range) const;
     };
-  } // namespace LevelSet
-} // namespace MeltPoolDG
+  } // namespace LevelSet::MeltPoolDG

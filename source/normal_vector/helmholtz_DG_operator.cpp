@@ -1,15 +1,15 @@
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
-#include <meltpooldg/normal_vector/helmholtz_operator.hpp>
+#include <meltpooldg/normal_vector/helmholtz_DG_operator.hpp>
 
 
 namespace MeltPoolDG::LevelSet
 {
   template <int dim, typename Number>
-  HelmholtzOperator<dim, Number>::HelmholtzOperator(const ScratchData<dim> &scratch_data_in,
+  HelmholtzDGOperator<dim, Number>::HelmholtzDGOperator(const ScratchData<dim> &scratch_data_in,
                                                     const unsigned int      dof_idx_in,
                                                     const unsigned int      quad_idx_in,
-                                                    const double            filter_parameter_in,
-                                                    const double interior_penalty_parameter_in,
+                                                    const Number            filter_parameter_in,
+                                                    const Number interior_penalty_parameter_in,
                                                     const PreconditionerType preconditioner_type_in)
     : scratch_data(scratch_data_in)
     , dof_idx(dof_idx_in)
@@ -21,7 +21,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::reinit() const
+  HelmholtzDGOperator<dim, Number>::reinit() const
   {
     const Number fe_degree = (static_cast<Number>(scratch_data.get_degree(dof_idx)));
 
@@ -30,6 +30,9 @@ namespace MeltPoolDG::LevelSet
 
     damping.resize(n_macro_cells);
     array_penalty_parameter.resize(n_macro_cells);
+
+    auto const constant_factor=(fe_degree + 1.0) * (fe_degree + 1.0) *
+                                                         interior_penalty_parameter;
 
     for (unsigned int macro_cells = 0; macro_cells < n_macro_cells; ++macro_cells)
       {
@@ -49,9 +52,7 @@ namespace MeltPoolDG::LevelSet
                          cell->diameter() / (std::sqrt(dim) * n_subdivisions))) *
               filter_parameter;
 
-            array_penalty_parameter[macro_cells][lane] = 1. / cell->minimum_vertex_distance() *
-                                                         (fe_degree + 1.0) * (fe_degree + 1.0) *
-                                                         interior_penalty_parameter;
+            array_penalty_parameter[macro_cells][lane] = 1. / cell->minimum_vertex_distance() * constant_factor;
           }
       }
 
@@ -67,12 +68,12 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::vmult(LinearAlgebra::distributed::Vector<Number>       &dst,
+  HelmholtzDGOperator<dim, Number>::vmult(LinearAlgebra::distributed::Vector<Number>       &dst,
                                         const LinearAlgebra::distributed::Vector<Number> &src) const
   {
-    scratch_data.get_matrix_free().loop(&HelmholtzOperator<dim, Number>::local_apply_domain,
-                                        &HelmholtzOperator<dim, Number>::local_apply_inner_face,
-                                        &HelmholtzOperator<dim, Number>::local_apply_boundary_face,
+    scratch_data.get_matrix_free().loop(&HelmholtzDGOperator<dim, Number>::local_apply_domain,
+                                        &HelmholtzDGOperator<dim, Number>::local_apply_inner_face,
+                                        &HelmholtzDGOperator<dim, Number>::local_apply_boundary_face,
                                         this,
                                         dst,
                                         src,
@@ -85,7 +86,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::local_apply_domain(
+  HelmholtzDGOperator<dim, Number>::local_apply_domain(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -118,7 +119,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::local_apply_inner_face(
+  HelmholtzDGOperator<dim, Number>::local_apply_inner_face(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -135,10 +136,10 @@ namespace MeltPoolDG::LevelSet
         eval_minus.gather_evaluate(src, EvaluationFlags::gradients | EvaluationFlags::values);
         eval_plus.gather_evaluate(src, EvaluationFlags::gradients | EvaluationFlags::values);
 
-        VectorizedArray<Number> cell_damping_minus = eval_minus.read_cell_data(damping);
-        VectorizedArray<Number> cell_damping_plus  = eval_plus.read_cell_data(damping);
+        const VectorizedArray<Number> cell_damping_minus = eval_minus.read_cell_data(damping);
+        const VectorizedArray<Number> cell_damping_plus  = eval_plus.read_cell_data(damping);
 
-        VectorizedArray<Number> penalty =
+        const VectorizedArray<Number> penalty =
           std::max(eval_minus.read_cell_data(array_penalty_parameter),
                    eval_plus.read_cell_data(array_penalty_parameter));
 
@@ -173,7 +174,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::local_apply_boundary_face(
+  HelmholtzDGOperator<dim, Number>::local_apply_boundary_face(
     const MatrixFree<dim, Number>               &data,
     VectorType                                  &dst,
     const VectorType                            &src,
@@ -219,11 +220,11 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::do_cell_integral_local(
+  HelmholtzDGOperator<dim, Number>::do_cell_integral_local(
     FECellIntegrator<dim, 1, Number> &cell_integrator) const
   {
     cell_integrator.evaluate(EvaluationFlags::values | EvaluationFlags::gradients);
-    auto const cell_damping = cell_integrator.read_cell_data(damping);
+    const auto cell_damping = cell_integrator.read_cell_data(damping);
 
     for (unsigned int q = 0; q < cell_integrator.n_q_points; ++q)
       {
@@ -242,7 +243,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::do_face_integral_local(
+  HelmholtzDGOperator<dim, Number>::do_face_integral_local(
     FEFaceIntegrator<dim, 1, Number> &face_integrator_minus,
     FEFaceIntegrator<dim, 1, Number> &face_integrator_plus) const
   {
@@ -286,7 +287,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::do_bounary_integral_local(
+  HelmholtzDGOperator<dim, Number>::do_bounary_integral_local(
     FEFaceIntegrator<dim, 1, Number> &face_integrator_minus) const
   {
     face_integrator_minus.evaluate(EvaluationFlags::gradients | EvaluationFlags::values);
@@ -321,7 +322,7 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   void
-  HelmholtzOperator<dim, Number>::build_matrix() const
+  HelmholtzDGOperator<dim, Number>::build_matrix() const
   {
     // no constraints are enforced strong
     const AffineConstraints<Number> dummy_constraints;
@@ -356,7 +357,7 @@ namespace MeltPoolDG::LevelSet
     system_matrix.compress(VectorOperation::add);
   }
 
-  template class HelmholtzOperator<1>;
-  template class HelmholtzOperator<2>;
-  template class HelmholtzOperator<3>;
+  template class HelmholtzDGOperator<1>;
+  template class HelmholtzDGOperator<2>;
+  template class HelmholtzDGOperator<3>;
 } // namespace MeltPoolDG::LevelSet

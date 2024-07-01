@@ -80,6 +80,10 @@ namespace MeltPoolDG::LevelSet
         prm.add_parameter("CFL",
                           reinitilization_DG_specific_data.CFL,
                           "Set a CFL number for the pseudo time stepping in reinitilization. ");
+
+        prm.add_parameter("avoid zero division smoothed signum",
+                          reinitilization_DG_specific_data.avoid_zero_division_smoothed_signum,
+                          "Sets a constant to avoid zero division in the computation of the smoothed signum.");
       }
       prm.leave_subsection();
 

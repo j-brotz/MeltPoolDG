@@ -316,6 +316,7 @@
                 "CFL": "1",
                 "IMEX integration scheme": "not_initialized",
                 "IP diffusion": "100",
+                "avoid zerodivision smoothed signum": "1e-16",
                 "do CFL based time stepping": "false",
                 "factor diffusivity": "0.25",
                 "time integration scheme": "RK_stage_5_order_4",

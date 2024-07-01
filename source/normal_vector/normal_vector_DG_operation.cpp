@@ -10,7 +10,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int              normal_dof_idx_in,
     const unsigned int              normal_quad_idx_in,
     const VectorType               &solution_level_set_in,
-    const NormalVectorData<double> &normal_vector_data_in)
+    const NormalVectorData<Number> &normal_vector_data_in)
     : scratch_data(scratch_data_in)
     , solution_level_set(solution_level_set_in)
     , normal_vector_data(normal_vector_data_in)
@@ -45,26 +45,31 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(right_hand_side, normal_dof_idx);
 
     /**
-     * could be in a loop if you find a way to get it to run with the template parameters
-     */
-    scratch_data.get_matrix_free().loop(
-      &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<0>,
-      &NormalVectorDGOperation<dim, Number>::right_hand_side_inner_face<0>,
-      &NormalVectorDGOperation<dim, Number>::right_hand_side_boundary_face<0>,
-      this,
-      right_hand_side,
-      solution_level_set,
-      true,
-      MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
-      MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
+    * The right hand side is filled for each dimension individually.
+    * Afterwards the system is is solved for each component of the normal vector
+    */
 
-    LinearSolver::solve<VectorType>(helmholtz_operator,
-                                    solution_history.get_current_solution().block(0),
-                                    right_hand_side,
-                                    normal_vector_data.linear_solver,
-                                    *helmholtz_operator.get_preconditioner());
+    if constexpr (dim > 0)
+      {
+       scratch_data.get_matrix_free().loop(
+        &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<0>,
+        &NormalVectorDGOperation<dim, Number>::right_hand_side_inner_face<0>,
+        &NormalVectorDGOperation<dim, Number>::right_hand_side_boundary_face<0>,
+        this,
+        right_hand_side,
+        solution_level_set,
+        true,
+        MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
+        MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
 
-    if constexpr (dim != 1)
+       LinearSolver::solve<VectorType>(helmholtz_operator,
+                                       solution_history.get_current_solution().block(0),
+                                       right_hand_side,
+                                       normal_vector_data.linear_solver,
+                                       *helmholtz_operator.get_preconditioner());
+      }
+
+    if constexpr (dim > 1)
       {
         scratch_data.get_matrix_free().loop(
           &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<1>,
@@ -84,7 +89,7 @@ namespace MeltPoolDG::LevelSet
                                         *helmholtz_operator.get_preconditioner());
       }
 
-    if constexpr (dim == 3)
+    if constexpr (dim > 2)
       {
         scratch_data.get_matrix_free().loop(
           &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<2>,
@@ -101,6 +106,11 @@ namespace MeltPoolDG::LevelSet
                                         solution_history.get_current_solution().block(2),
                                         right_hand_side,
                                         normal_vector_data.linear_solver);
+      }
+
+      if constexpr (dim>3)
+      {
+        DEAL_II_NOT_IMPLEMENTED();
       }
   }
 
@@ -227,7 +237,7 @@ namespace MeltPoolDG::LevelSet
 
   void
   NormalVectorDGOperation<dim, Number>::attach_vectors(
-    std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors)
+    std::vector<LinearAlgebra::distributed::Vector<Number> *> &vectors)
   {
     solution_history.apply([&](BlockVectorType &v) {
       for (unsigned int d = 0; d < dim; ++d)

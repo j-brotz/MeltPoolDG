@@ -9,33 +9,38 @@
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <deal.II/base/vectorization.h>
+#include <deal.II/lac/la_parallel_vector.h>
+#include <deal.II/lac/trilinos_sparse_matrix.h>
+#include <deal.II/lac/trilinos_sparsity_pattern.h>
+#include <deal.II/matrix_free/matrix_free.h>
+#include <memory>
+#include <utility>
 
 
-namespace MeltPoolDG
-{
-  namespace LevelSet
+namespace MeltPoolDG::LevelSet
   {
     /**
-     * This function applies the weak form of the Helmholtz operator n_ϕ  - η_n*Δn_ϕ on a source
+     * This function applies the weak DG form of the Helmholtz operator n_ϕ  - η_n*Δn_ϕ on a source
      * vector. It is used for both the normal vector calculation and the calculation of the
      * interface curvature.
      */
 
     using namespace dealii;
     template <int dim, typename Number = double>
-    class HelmholtzOperator
+    class HelmholtzDGOperator
     {
     private:
-      using VectorType          = LinearAlgebra::distributed::Vector<double>;
+      using VectorType          = LinearAlgebra::distributed::Vector<Number>;
       using SparseMatrixType    = TrilinosWrappers::SparseMatrix;
       using SparsityPatternType = TrilinosWrappers::SparsityPattern;
 
     public:
-      HelmholtzOperator(const ScratchData<dim>  &scratch_data_in,
+      HelmholtzDGOperator(const ScratchData<dim>  &scratch_data_in,
                         const unsigned int       dof_idx_in,
                         const unsigned int       quad_idx_in,
-                        const double             filter_parameter_in,
-                        const double             interior_penalty_parameter_in,
+                        const Number             filter_parameter_in,
+                        const Number             interior_penalty_parameter_in,
                         const PreconditionerType preconditioner_type_in);
       /**
        * Applies the operator to @p src and safes the result in @p dst
@@ -72,8 +77,8 @@ namespace MeltPoolDG
       mutable AlignedVector<VectorizedArray<Number>> damping;
       mutable AlignedVector<VectorizedArray<Number>> array_penalty_parameter;
 
-      const double filter_parameter;
-      const double interior_penalty_parameter;
+      const Number filter_parameter;
+      const Number interior_penalty_parameter;
 
       mutable SparseMatrixType system_matrix;
 
@@ -152,5 +157,4 @@ namespace MeltPoolDG
       void
       build_matrix() const;
     };
-  } // namespace LevelSet
-} // namespace MeltPoolDG
+  } // namespace  MeltPoolDG::LevelSet

@@ -8,7 +8,7 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.1103 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.95197
+Relative error to exact solution 0.95275
 Mass of bubble 0.070359
 ---------------------------------------------
     End of user defined postprocessing
@@ -23,7 +23,7 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.1072 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.90084
+Relative error to exact solution 0.90191
 Mass of bubble 0.070082
 ---------------------------------------------
     End of user defined postprocessing
@@ -38,7 +38,7 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.1042 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.85478
+Relative error to exact solution 0.85632
 Mass of bubble 0.070082
 ---------------------------------------------
     End of user defined postprocessing
@@ -53,8 +53,8 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.1011 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.81382
-Mass of bubble 0.069955
+Relative error to exact solution 0.81601
+Mass of bubble 0.069748
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -68,8 +68,8 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:      1.098 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.77801
-Mass of bubble 0.069268
+Relative error to exact solution 0.78107
+Mass of bubble 0.0692
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -83,8 +83,8 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:      1.095 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.74737
-Mass of bubble 0.06908
+Relative error to exact solution 0.75152
+Mass of bubble 0.068956
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -98,7 +98,7 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0919 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.72186
+Relative error to exact solution 0.72734
 Mass of bubble 0.068656
 ---------------------------------------------
     End of user defined postprocessing
@@ -110,11 +110,11 @@ Mass of bubble 0.068656
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0888 number of dofs: 1024
+ *        reinit_DG_psi Max-norm:     1.0889 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.70142
-Mass of bubble 0.068283
+Relative error to exact solution 0.70843
+Mass of bubble 0.068269
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -128,8 +128,8 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0858 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.6859
-Mass of bubble 0.068218
+Relative error to exact solution 0.69465
+Mass of bubble 0.068186
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -143,8 +143,8 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0827 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.67509
-Mass of bubble 0.067929
+Relative error to exact solution 0.68574
+Mass of bubble 0.067845
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -155,10 +155,10 @@ Mass of bubble 0.067929
     Starting user defined postprocessing
 ---------------------------------------------
 Accessible vectors:
- *        reinit_DG_psi Max-norm:     1.0796 number of dofs: 1024
+ *        reinit_DG_psi Max-norm:     1.0797 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.66873
+Relative error to exact solution 0.68141
 Mass of bubble 0.06757
 ---------------------------------------------
     End of user defined postprocessing
@@ -173,8 +173,8 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0766 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.66648
-Mass of bubble 0.067403
+Relative error to exact solution 0.68129
+Mass of bubble 0.067224
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -188,8 +188,8 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0741 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
-Relative error to exact solution 0.66799
-Mass of bubble 0.067224
+Relative error to exact solution 0.68433
+Mass of bubble 0.066955
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------

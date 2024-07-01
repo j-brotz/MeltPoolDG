@@ -47,6 +47,7 @@ namespace MeltPoolDG::LevelSet
       TimeIntegrators IMEX_integration_scheme    = TimeIntegrators::not_initialized;
 
       number CFL = 1.0;
+      number avoid_zero_division_smoothed_signum = 1e-16;
     } reinitilization_DG_specific_data;
 
 

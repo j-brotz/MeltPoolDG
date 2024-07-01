@@ -120,8 +120,8 @@ namespace MeltPoolDG::LevelSet
             const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
               normal_vector_minus[component],
               0.,
-              normal_vector_minus[component] * ((is_right == true) ? u_minus : u_minus),
-              normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus));
+              normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus),
+              normal_vector_minus[component] * ((is_right == true) ? u_minus : u_plus));
 
             eval_minus.submit_value(flux, q);
             eval_plus.submit_value(-flux, q);
@@ -162,8 +162,8 @@ namespace MeltPoolDG::LevelSet
             const auto flux = compare_and_apply_mask<SIMDComparison::greater_than_or_equal>(
               normal_vector_minus[component],
               0.,
-              normal_vector_minus[component] * ((is_right == true) ? u_minus : u_minus),
-              normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus));
+              normal_vector_minus[component] * ((is_right == true) ? u_plus : u_minus),
+              normal_vector_minus[component] * ((is_right == true) ? u_minus : u_plus));
 
             eval_minus.submit_value(flux, q);
           }
