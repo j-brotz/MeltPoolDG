@@ -25,6 +25,11 @@ namespace MeltPoolDG::LevelSet
       number level_set_threshold = 0.9999999;
     } narrow_band;
 
+    struct NormalDGSpecificData
+    {
+      number penalty_factor = 100.0;
+    } normal_DG_specific_data;
+
     PredictorData<number>    predictor;
     LinearSolverData<number> linear_solver;
 

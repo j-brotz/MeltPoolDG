@@ -127,7 +127,8 @@ namespace MeltPoolDG::LevelSet
                                                                  *time_iterator,
                                                                  reinit_dof_idx,
                                                                  reinit_quad_idx,
-                                                                 reinit_dof_idx);
+                                                                 reinit_dof_idx,
+                                                                 base_in->parameters.ls.normal_vec);
           }
         reinit_operation->reinit();
       }
