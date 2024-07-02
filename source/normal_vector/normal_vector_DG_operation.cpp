@@ -45,28 +45,28 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(right_hand_side, normal_dof_idx);
 
     /**
-    * The right hand side is filled for each dimension individually.
-    * Afterwards the system is is solved for each component of the normal vector
-    */
+     * The right hand side is filled for each dimension individually.
+     * Afterwards the system is is solved for each component of the normal vector
+     */
 
     if constexpr (dim > 0)
       {
-       scratch_data.get_matrix_free().loop(
-        &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<0>,
-        &NormalVectorDGOperation<dim, Number>::right_hand_side_inner_face<0>,
-        &NormalVectorDGOperation<dim, Number>::right_hand_side_boundary_face<0>,
-        this,
-        right_hand_side,
-        solution_level_set,
-        true,
-        MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
-        MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
+        scratch_data.get_matrix_free().loop(
+          &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<0>,
+          &NormalVectorDGOperation<dim, Number>::right_hand_side_inner_face<0>,
+          &NormalVectorDGOperation<dim, Number>::right_hand_side_boundary_face<0>,
+          this,
+          right_hand_side,
+          solution_level_set,
+          true,
+          MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
+          MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
 
-       LinearSolver::solve<VectorType>(helmholtz_operator,
-                                       solution_history.get_current_solution().block(0),
-                                       right_hand_side,
-                                       normal_vector_data.linear_solver,
-                                       *helmholtz_operator.get_preconditioner());
+        LinearSolver::solve<VectorType>(helmholtz_operator,
+                                        solution_history.get_current_solution().block(0),
+                                        right_hand_side,
+                                        normal_vector_data.linear_solver,
+                                        *helmholtz_operator.get_preconditioner());
       }
 
     if constexpr (dim > 1)
@@ -108,7 +108,7 @@ namespace MeltPoolDG::LevelSet
                                         normal_vector_data.linear_solver);
       }
 
-      if constexpr (dim>3)
+    if constexpr (dim > 3)
       {
         DEAL_II_NOT_IMPLEMENTED();
       }
