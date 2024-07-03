@@ -13,7 +13,8 @@ namespace MeltPoolDG::LevelSet
     const unsigned int                  reinit_dof_idx_in,
     const unsigned int                  reinit_quad_idx_in,
     const unsigned int                  ls_dof_idx_in,
-    const NormalVectorData<double>     &normal_vec_data)
+    const NormalVectorData<double>     &normal_vec_data,
+    const CurvatureData<double>        &curvature_data)
     : scratch_data(scratch_data_in)
     , reinit_data(reinit_data)
     , time_iterator(time_iterator)
@@ -38,6 +39,13 @@ namespace MeltPoolDG::LevelSet
                                                      reinit_quad_idx,
                                                      solution_history.get_current_solution(),
                                                      normal_vec_data);
+
+    curvature_operation = std::make_shared<CurvatureDGOperation<dim>>(
+      scratch_data_in,
+      reinit_quad_idx,
+      reinit_quad_idx,
+      normal_vector_operation->get_solution_normal_vector(),
+      curvature_data);
   }
 
   template <int dim>
@@ -52,6 +60,7 @@ namespace MeltPoolDG::LevelSet
     reinit_DG_operator.reinit();
     reinitilization_integration->reinit();
     normal_vector_operation->reinit();
+    curvature_operation->reinit();
   }
 
 
@@ -113,6 +122,7 @@ namespace MeltPoolDG::LevelSet
     reinit_DG_operator.prepare_operator(solution_history.get_current_solution());
 
     normal_vector_operation->solve();
+    curvature_operation->solve();
   }
 
   template <int dim>
@@ -225,6 +235,10 @@ namespace MeltPoolDG::LevelSet
       data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
                                get_normal_vector().block(d),
                                "normal_" + std::to_string(d));
+
+    data_out.add_data_vector(scratch_data.get_dof_handler(reinit_dof_idx),
+                             curvature_operation->get_curvature(),
+                             "curvature");
   }
 
   template <int dim>

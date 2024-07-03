@@ -178,36 +178,61 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
                               quadrature,
                               update_values | update_JxW_values | update_quadrature_points);
 
+      FEValues<dim> fe_values_curvature(
+        fe, quadrature, update_values | update_JxW_values | update_quadrature_points);
+
       std::vector<double> phi_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<double> curvature_at_q(QGauss<dim>(n_q_points).size());
 
 
 
       generic_data_out.get_vector("reinit_DG_psi").update_ghost_values();
+      generic_data_out.get_vector("curvature").update_ghost_values();
 
-      double error      = 0.0;
-      double norm_exact = 0.0;
-      double mass       = 0.0;
-
+      double error                = 0.0;
+      double norm_exact           = 0.0;
+      double mass                 = 0.0;
+      double error_curvature      = 0.0;
+      double norm_curvature_exact = 0.0;
       for (const auto &cell :
            generic_data_out.get_dof_handler("reinit_DG_psi").active_cell_iterators())
         if (cell->is_locally_owned())
           {
             fe_values.reinit(cell);
+            fe_values_curvature.reinit(cell);
+
             fe_values.get_function_values(generic_data_out.get_vector("reinit_DG_psi"),
                                           phi_at_q); // compute values of old solution
 
+            fe_values_curvature.get_function_values(generic_data_out.get_vector("curvature"),
+                                                    curvature_at_q); // compute curvature values
+
             for (const unsigned int q_index : fe_values.quadrature_point_indices())
               {
+                const auto radius = std::sqrt(
+                  fe_values.quadrature_point(q_index)[0] * fe_values.quadrature_point(q_index)[0] +
+                  fe_values.quadrature_point(q_index)[1] * fe_values.quadrature_point(q_index)[1]);
+
+                const auto exact_curvature = -1. / radius;
+
                 auto sol_difference = std::abs(
                   exact_solution.value(fe_values.quadrature_point(q_index), 0) - phi_at_q[q_index]);
+
+                auto curv_difference = std::abs(exact_curvature - curvature_at_q[q_index]);
+
                 if (fe_values.quadrature_point(q_index).norm() < (0.15 + 0.02))
                   {
                     if (fe_values.quadrature_point(q_index).norm() > (0.15 - 0.02))
                       {
                         error += sol_difference * sol_difference * fe_values.JxW(q_index);
+                        error_curvature +=
+                          curv_difference * curv_difference * fe_values.JxW(q_index);
+
                         norm_exact += exact_solution.value(fe_values.quadrature_point(q_index), 0) *
                                       exact_solution.value(fe_values.quadrature_point(q_index), 0) *
                                       fe_values.JxW(q_index);
+                        norm_curvature_exact +=
+                          exact_curvature * exact_curvature * fe_values.JxW(q_index);
                       }
                   }
                 if (phi_at_q[q_index] < 0.0)
@@ -217,14 +242,21 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
               }
           }
 
-      error      = dealii::Utilities::MPI::sum(error, this->mpi_communicator);
-      norm_exact = dealii::Utilities::MPI::sum(norm_exact, this->mpi_communicator);
-      mass       = dealii::Utilities::MPI::sum(mass, this->mpi_communicator);
+      error           = dealii::Utilities::MPI::sum(error, this->mpi_communicator);
+      norm_exact      = dealii::Utilities::MPI::sum(norm_exact, this->mpi_communicator);
+      mass            = dealii::Utilities::MPI::sum(mass, this->mpi_communicator);
+      error_curvature = dealii::Utilities::MPI::sum(error_curvature, this->mpi_communicator);
+      norm_curvature_exact =
+        dealii::Utilities::MPI::sum(norm_curvature_exact, this->mpi_communicator);
 
       pcout << "Relative error to exact solution " << std::sqrt(error) / std::sqrt(norm_exact)
             << std::endl;
 
       pcout << "Mass of bubble " << mass << std::endl;
+
+      pcout << "Relative error to exact curvature "
+            << std::sqrt(error_curvature) / std::sqrt(norm_curvature_exact) << std::endl;
+
       pcout << "---------------------------------------------" << std::endl;
       pcout << "    End of user defined postprocessing" << std::endl;
       pcout << "---------------------------------------------" << std::endl;

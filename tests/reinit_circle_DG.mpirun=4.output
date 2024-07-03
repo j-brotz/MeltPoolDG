@@ -8,8 +8,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.1103 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.95275
 Mass of bubble 0.070359
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -23,8 +25,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.1072 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.90191
 Mass of bubble 0.070082
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -38,8 +42,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.1042 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.85632
 Mass of bubble 0.070082
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -53,8 +59,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.1011 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.81601
 Mass of bubble 0.069748
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -68,8 +76,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:      1.098 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.78107
 Mass of bubble 0.0692
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -83,8 +93,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:      1.095 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.75152
 Mass of bubble 0.068956
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -98,8 +110,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0919 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.72734
 Mass of bubble 0.068656
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -113,8 +127,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0889 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.70843
 Mass of bubble 0.068269
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -128,8 +144,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0858 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.69465
 Mass of bubble 0.068186
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -143,8 +161,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0827 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.68574
 Mass of bubble 0.067845
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -158,8 +178,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0797 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.68141
 Mass of bubble 0.06757
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -173,8 +195,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0766 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.68129
 Mass of bubble 0.067224
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
@@ -188,8 +212,10 @@ Accessible vectors:
  *        reinit_DG_psi Max-norm:     1.0741 number of dofs: 1024
  *             normal_0 Max-norm:      1.956 number of dofs: 1024
  *             normal_1 Max-norm:      1.956 number of dofs: 1024
+ *            curvature Max-norm:     9.5657 number of dofs: 1024
 Relative error to exact solution 0.68433
 Mass of bubble 0.066955
+Relative error to exact curvature 0.05676
 ---------------------------------------------
     End of user defined postprocessing
 ---------------------------------------------
