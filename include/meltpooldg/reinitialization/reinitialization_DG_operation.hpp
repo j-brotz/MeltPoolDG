@@ -97,7 +97,14 @@ namespace MeltPoolDG::LevelSet
     double
     compute_CFL_based_timestep() const override;
 
+    void
+    set_artificial_diffusitivity() override;
 
+    VectorType &
+    get_sign_indicator_function() override
+    {
+      return reinit_DG_operator->get_sign_indicator_function();
+    }
 
   private:
     const ScratchData<dim>            &scratch_data;
@@ -114,7 +121,7 @@ namespace MeltPoolDG::LevelSet
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    ReinitilizationDGOperator<dim> reinit_DG_operator;
+    std::shared_ptr<ReinitilizationDGOperator<dim>> reinit_DG_operator;
 
     std::shared_ptr<TimeIntegrationBase<dim>> reinitilization_integration;
 

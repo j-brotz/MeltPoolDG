@@ -51,16 +51,12 @@ namespace MeltPoolDG::LevelSet
 
     if constexpr (dim > 0)
       {
-        scratch_data.get_matrix_free().loop(
+        scratch_data.get_matrix_free().cell_loop(
           &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<0>,
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_inner_face<0>,
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_boundary_face<0>,
           this,
           right_hand_side,
           solution_level_set,
-          true,
-          MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
-          MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
+          true);
 
         LinearSolver::solve<VectorType>(helmholtz_operator,
                                         solution_history.get_current_solution().block(0),
@@ -71,16 +67,12 @@ namespace MeltPoolDG::LevelSet
 
     if constexpr (dim > 1)
       {
-        scratch_data.get_matrix_free().loop(
+        scratch_data.get_matrix_free().cell_loop(
           &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<1>,
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_inner_face<1>,
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_boundary_face<1>,
           this,
           right_hand_side,
           solution_level_set,
-          true,
-          MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
-          MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
+          true);
 
         LinearSolver::solve<VectorType>(helmholtz_operator,
                                         solution_history.get_current_solution().block(1),
@@ -91,16 +83,12 @@ namespace MeltPoolDG::LevelSet
 
     if constexpr (dim > 2)
       {
-        scratch_data.get_matrix_free().loop(
+        scratch_data.get_matrix_free().cell_loop(
           &NormalVectorDGOperation<dim, Number>::right_hand_side_domain<2>,
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_inner_face<2>,
-          &NormalVectorDGOperation<dim, Number>::right_hand_side_boundary_face<2>,
           this,
           right_hand_side,
           solution_level_set,
-          true,
-          MatrixFree<dim, Number>::DataAccessOnFaces::unspecified,
-          MatrixFree<dim, Number>::DataAccessOnFaces::unspecified);
+          true);
 
         LinearSolver::solve<VectorType>(helmholtz_operator,
                                         solution_history.get_current_solution().block(2),
@@ -125,97 +113,19 @@ namespace MeltPoolDG::LevelSet
   {
     FECellIntegrator<dim, 1, Number> eval(data, normal_dof_idx, normal_quad_idx);
 
-    const Tensor<1, dim, Number> unit_vector = Point<dim>::unit_vector(direction);
-
-
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
         eval.reinit(cell);
-        eval.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
+        eval.gather_evaluate(src, EvaluationFlags::gradients);
 
         for (unsigned int q = 0; q < eval.n_q_points; ++q)
           {
-            const auto u    = eval.get_value(q);
-            const auto flux = u * unit_vector;
-
-            eval.submit_gradient(-flux, q);
+            eval.submit_value(eval.get_gradient(q)[direction], q);
           }
-
-        eval.integrate_scatter(EvaluationFlags::gradients, dst);
+        eval.integrate_scatter(EvaluationFlags::values, dst);
       }
   }
 
-  template <int dim, typename Number>
-  template <uint direction>
-  void
-  NormalVectorDGOperation<dim, Number>::right_hand_side_inner_face(
-    const MatrixFree<dim, Number>               &data,
-    VectorType                                  &dst,
-    const VectorType                            &src,
-    const std::pair<unsigned int, unsigned int> &face_range) const
-  {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data, true, normal_dof_idx, normal_quad_idx);
-    FEFaceIntegrator<dim, 1, Number> eval_plus(data, false, normal_dof_idx, normal_quad_idx);
-
-    const Tensor<1, dim, Number> unit_vector = Point<dim>::unit_vector(direction);
-
-
-    for (unsigned int face = face_range.first; face < face_range.second; face++)
-      {
-        eval_minus.reinit(face);
-        eval_plus.reinit(face);
-
-        eval_minus.gather_evaluate(src, EvaluationFlags::values);
-        eval_plus.gather_evaluate(src, EvaluationFlags::values);
-
-        for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
-          {
-            const auto u_minus = eval_minus.get_value(q);
-            const auto u_plus  = eval_plus.get_value(q);
-
-            const auto average = 0.5 * (u_minus + u_plus) * unit_vector;
-
-            eval_minus.submit_value(eval_minus.get_normal_vector(q) * average, q);
-            eval_plus.submit_value(-eval_minus.get_normal_vector(q) * average, q);
-          }
-
-        eval_minus.integrate_scatter(EvaluationFlags::values, dst);
-        eval_plus.integrate_scatter(EvaluationFlags::values, dst);
-      }
-  }
-
-  template <int dim, typename Number>
-  template <uint direction>
-  void
-  NormalVectorDGOperation<dim, Number>::right_hand_side_boundary_face(
-    const MatrixFree<dim, Number>               &data,
-    VectorType                                  &dst,
-    const VectorType                            &src,
-    const std::pair<unsigned int, unsigned int> &face_range) const
-  {
-    FEFaceIntegrator<dim, 1, Number> eval_minus(data, true, normal_dof_idx, normal_quad_idx);
-
-    const Tensor<1, dim, Number> unit_vector = Point<dim>::unit_vector(direction);
-
-
-    for (unsigned int face = face_range.first; face < face_range.second; face++)
-      {
-        eval_minus.reinit(face);
-
-        eval_minus.gather_evaluate(src, EvaluationFlags::values);
-
-        for (unsigned int q = 0; q < eval_minus.n_q_points; ++q)
-          {
-            const auto u_minus = eval_minus.get_value(q);
-            const auto u_plus  = u_minus;
-
-            const auto average = 0.5 * (u_minus + u_plus) * unit_vector;
-
-            eval_minus.submit_value(eval_minus.get_normal_vector(q) * average, q);
-          }
-        eval_minus.integrate_scatter(EvaluationFlags::values, dst);
-      }
-  }
 
   template <int dim, typename Number>
 

@@ -1,4 +1,5 @@
 #include <meltpooldg/reinitialization/reinitialization_DG_operator.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::LevelSet
@@ -9,7 +10,9 @@ namespace MeltPoolDG::LevelSet
     const MeltPoolDG::ScratchData<dim> &scratch_data_in,
     const ReinitializationData<double> &reinit_data_in,
     const unsigned int                  reinit_dof_idx_in,
-    const unsigned int                  reinit_quad_idx_in)
+    const unsigned int                  reinit_quad_idx_in,
+    const VectorType                   &curvature_in,
+    const BlockVectorType              &normal_vector_in)
     : scratch_data(scratch_data_in)
     , reinit_dof_idx(reinit_dof_idx_in)
     , reinit_quad_idx(reinit_quad_idx_in)
@@ -17,7 +20,10 @@ namespace MeltPoolDG::LevelSet
     , RI_DG_diffusion_operator(scratch_data_in,
                                reinit_data_in,
                                reinit_dof_idx_in,
-                               reinit_quad_idx_in)
+                               reinit_quad_idx_in,
+                               curvature_in,
+                               normal_vector_in,
+                               signum_smoothed)
 
     , RI_grad_operator(scratch_data_in, reinit_dof_idx_in, reinit_quad_idx_in)
   {
@@ -40,6 +46,8 @@ namespace MeltPoolDG::LevelSet
     Number const min_vertex_distance = scratch_data.get_min_cell_size();
     compute_godunov_gradient(solution);
     compute_smoothed_signum(solution, min_vertex_distance);
+    RI_DG_diffusion_operator.compute_diffusitivity_value();
+    RI_DG_diffusion_operator.compute_penalty_parameter();
   }
 
   template <int dim, typename Number>
@@ -78,6 +86,18 @@ namespace MeltPoolDG::LevelSet
 
         dst.add(1.0, num_Hamiltonian);
       }
+
+    if (reinit_data.reinitilization_DG_specific_data.use_interface_movement_penalization)
+      {
+        scratch_data.get_matrix_free().cell_loop(
+          &ReinitilizationDGOperator<dim, Number>::interface_movement_penalty,
+          this,
+          num_Hamiltonian,
+          src,
+          true);
+
+        dst.add(1.0, num_Hamiltonian);
+      }
   }
 
   template <int dim, typename Number>
@@ -87,6 +107,7 @@ namespace MeltPoolDG::LevelSet
     scratch_data.initialize_dof_vector(num_Hamiltonian, reinit_dof_idx);
     scratch_data.initialize_dof_vector(signum_smoothed, reinit_dof_idx);
     scratch_data.initialize_dof_vector(God_grad, reinit_dof_idx);
+    scratch_data.initialize_dof_vector(sign_indicator_function, reinit_dof_idx);
     scratch_data.initialize_dof_vector(grad_x_l, reinit_dof_idx);
     scratch_data.initialize_dof_vector(grad_x_r, reinit_dof_idx);
     scratch_data.initialize_dof_vector(grad_y_l, reinit_dof_idx);
@@ -101,7 +122,7 @@ namespace MeltPoolDG::LevelSet
         TimeIntegrators::not_initialized)
       IMEX_integration->reinit();
 
-    RI_DG_diffusion_operator.compute_viscosity_value();
+    RI_DG_diffusion_operator.compute_diffusitivity_value();
     RI_DG_diffusion_operator.compute_penalty_parameter();
   }
 
@@ -143,6 +164,45 @@ namespace MeltPoolDG::LevelSet
             const auto u = eval.get_value(q);
             // minus sign because the term is shifted to the right-hand side of the RI equation
             eval.submit_value(-u, q);
+          }
+
+        eval.integrate_scatter(EvaluationFlags::values, dst);
+      }
+  }
+
+  template <int dim, typename Number>
+  void
+  ReinitilizationDGOperator<dim, Number>::interface_movement_penalty(
+    const MatrixFree<dim, Number>               &data,
+    VectorType                                  &dst,
+    const VectorType                            &src,
+    const std::pair<unsigned int, unsigned int> &cell_range) const
+  {
+    FECellIntegrator<dim, 1, Number> eval(data, reinit_dof_idx, reinit_quad_idx);
+    FECellIntegrator<dim, 1, Number> eval_sig_indicator(data, reinit_dof_idx, reinit_quad_idx);
+
+    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+      {
+        eval.reinit(cell);
+        eval.gather_evaluate(src, EvaluationFlags::values);
+
+        eval_sig_indicator.reinit(cell);
+        eval_sig_indicator.gather_evaluate(sign_indicator_function, EvaluationFlags::values);
+
+        for (unsigned int q = 0; q < eval.n_q_points; ++q)
+          {
+            const auto u              = eval.get_value(q);
+            const auto sign_indicator = eval_sig_indicator.get_value(q);
+            const auto flux =
+              compare_and_apply_mask<SIMDComparison::greater_than>(u,
+                                                                   VectorizedArray<Number>(0.),
+                                                                   VectorizedArray<Number>(1.),
+                                                                   VectorizedArray<Number>(0.)) -
+              compare_and_apply_mask<SIMDComparison::greater_than>(sign_indicator,
+                                                                   VectorizedArray<Number>(0.),
+                                                                   VectorizedArray<Number>(1.),
+                                                                   VectorizedArray<Number>(0.));
+            eval.submit_value(-flux, q);
           }
 
         eval.integrate_scatter(EvaluationFlags::values, dst);
@@ -240,7 +300,9 @@ namespace MeltPoolDG::LevelSet
 
     {
       // Use maximum element size for the calculation of the argument of tanh
-      const dealii::VectorizedArray<Number> eta_vector = 2.0 * min_vertex_distance / fe_degree;
+      const dealii::VectorizedArray<Number> eta_vector =
+        reinit_data.reinitilization_DG_specific_data.signum_smoothness_paramater *
+        min_vertex_distance / fe_degree;
 
 
       FECellIntegrator<dim, 1, Number> source(data, reinit_dof_idx, reinit_quad_idx);
@@ -255,16 +317,23 @@ namespace MeltPoolDG::LevelSet
 
           for (unsigned int q = 0; q < source.dofs_per_cell; ++q)
             {
-              // calculate argument of tanh: (pi*phi)/(2*grad(phi)*max_cell_size/fe_degree)
-              const auto arg =
-                numbers::PI * source.get_dof_value(q) /
-                (eta_vector * std::abs(God_grad_p.get_dof_value(q)) +
-                 reinit_data.reinitilization_DG_specific_data
-                   .avoid_zero_division_smoothed_signum); // In case Godunov gradient is zero
+              if (reinit_data.reinitilization_DG_specific_data.hyperbolic_weighting_function_type ==
+                  HyperbolicWeightingFunctionType::smoothed_signum)
+                {
+                  // calculate argument of tanh: (pi*phi)/(2*grad(phi)*max_cell_size/fe_degree)
+                  const auto arg =
+                    numbers::PI * source.get_dof_value(q) /
+                    (eta_vector * std::abs(God_grad_p.get_dof_value(q)) +
+                     reinit_data.reinitilization_DG_specific_data
+                       .avoid_zero_division_smoothed_signum); // In case Godunov gradient is zero
 
-              const auto u = std::tanh(arg);
-
-              source.submit_dof_value(u, q);
+                  const auto u = std::tanh(arg);
+                  source.submit_dof_value(u, q);
+                }
+              else // The standard case is the level set before reinit
+                {
+                  source.submit_dof_value(source.get_dof_value(q), q);
+                }
             }
 
           source.set_dof_values(signum_smoothed);
@@ -275,11 +344,18 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim, typename Number>
   double
-  ReinitilizationDGOperator<dim, Number>::get_viscosity() const
+  ReinitilizationDGOperator<dim, Number>::get_max_diffusitivity() const
   {
-    return RI_DG_diffusion_operator.get_viscosity();
+    return RI_DG_diffusion_operator.get_max_diffusitivity();
   }
 
+  template <int dim, typename Number>
+  void
+  ReinitilizationDGOperator<dim, Number>::set_artificial_diffusitivity()
+  {
+    RI_DG_diffusion_operator.compute_diffusitivity_value();
+    RI_DG_diffusion_operator.compute_penalty_parameter();
+  }
 
   template class ReinitilizationDGOperator<1>;
   template class ReinitilizationDGOperator<2>;

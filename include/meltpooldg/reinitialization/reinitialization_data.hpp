@@ -25,6 +25,8 @@ namespace MeltPoolDG::LevelSet
               // interface thickness = value * cell size
               number_of_cells_across_interface)
 
+  BETTER_ENUM(HyperbolicWeightingFunctionType, char, smoothed_signum, initial_levelset)
+
   template <typename number = double>
   struct ReinitializationData
   {
@@ -39,15 +41,29 @@ namespace MeltPoolDG::LevelSet
 
     struct ReinitilizationDGSpecificData
     {
-      number          factor_diffusivity         = 0.25;
-      number          IP_diffusion               = 100.0;
-      bool            use_const_gradient_in_RI   = false;
-      bool            do_CFL_based_time_stepping = false;
-      TimeIntegrators time_integration_scheme    = TimeIntegrators::RK_stage_5_order_4;
-      TimeIntegrators IMEX_integration_scheme    = TimeIntegrators::not_initialized;
+      number factor_diffusivity = 0.25; // Only works combined with a spatially constant diffusion
+      number IP_diffusion       = 100.0;
+      bool   use_const_gradient_in_RI         = false;
+      bool   do_CFL_based_time_stepping       = false;
+      TimeIntegrators time_integration_scheme = TimeIntegrators::RK_stage_5_order_4;
+      TimeIntegrators IMEX_integration_scheme = TimeIntegrators::not_initialized;
 
       number CFL                                 = 1.0;
       number avoid_zero_division_smoothed_signum = 1e-16;
+      number signum_smoothness_paramater         = 2.0; // Only used for smoothed signum
+      bool   use_directed_diffusion_stabilization =
+        false; // Reinit is more stable without. Accuracy is better with.
+      HyperbolicWeightingFunctionType hyperbolic_weighting_function_type =
+        HyperbolicWeightingFunctionType::
+          smoothed_signum; // Using a the initial levelset as a weighting function usaually has
+                           // better accuaracy with directed diffusion usually has better accuracay
+                           // because shockwaves are less pronounced. This works because in a
+                           // coupled advection reinitalization the initial level set is not far
+                           // away from singed distance function.
+
+      bool use_spatially_constant_diffusion    = true;
+      bool use_interface_movement_penalization = false;
+
     } reinitilization_DG_specific_data;
 
 

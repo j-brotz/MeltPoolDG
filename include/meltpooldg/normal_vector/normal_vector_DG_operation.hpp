@@ -94,33 +94,5 @@ namespace MeltPoolDG::LevelSet
                            VectorType                                  &dst,
                            const VectorType                            &src,
                            const std::pair<unsigned int, unsigned int> &cell_range) const;
-
-    /**
-     * Applies the face integral of the right hand side
-     * @param data the matrix free object
-     * @param dst destination where the result is stored
-     * @param src source vector
-     * @param face_range
-     */
-    template <uint direction>
-    void
-    right_hand_side_inner_face(const MatrixFree<dim, Number>               &data,
-                               VectorType                                  &dst,
-                               const VectorType                            &src,
-                               const std::pair<unsigned int, unsigned int> &face_range) const;
-
-    /**
-     * Applies the boundary integral of the right hand side
-     * @param data the matrix free object
-     * @param dst destination where the result is stored
-     * @param src source vector
-     * @param face_range
-     */
-    template <uint direction>
-    void
-    right_hand_side_boundary_face(const MatrixFree<dim, Number>               &data,
-                                  VectorType                                  &dst,
-                                  const VectorType                            &src,
-                                  const std::pair<unsigned int, unsigned int> &face_range) const;
   };
 } // namespace MeltPoolDG::LevelSet

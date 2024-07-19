@@ -61,6 +61,26 @@ namespace MeltPoolDG
         AssertThrow(
           false, ExcMessage("CFL based time stepping is not implemented for continous elements!"));
       };
+
+      virtual void
+      set_artificial_diffusitivity()
+      {
+        /**
+         * Does nothing in the CG case
+         */
+      }
+
+      virtual VectorType &
+      get_sign_indicator_function()
+      {
+        /**
+         * Is not needed in the CG case
+         */
+        return dummy;
+      }
+
+    private:
+      VectorType dummy;
     };
 
   } // namespace LevelSet

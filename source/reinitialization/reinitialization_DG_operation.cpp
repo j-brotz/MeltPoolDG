@@ -23,16 +23,7 @@ namespace MeltPoolDG::LevelSet
     , ls_dof_idx(ls_dof_idx_in)
     , solution_history(std::max(reinit_data.predictor.n_old_solution_vectors,
                                 2U /*TODO: include time integration scheme*/))
-    , reinit_DG_operator(scratch_data_in, reinit_data, reinit_dof_idx_in, reinit_quad_idx_in)
   {
-    reinitilization_integration = TimeIntegratorConcretization::concretize(
-      reinit_data.reinitilization_DG_specific_data.time_integration_scheme,
-      reinit_DG_operator,
-      scratch_data_in,
-      reinit_dof_idx_in,
-      reinit_quad_idx_in,
-      reinit_data.linear_solver);
-
     normal_vector_operation =
       std::make_shared<NormalVectorDGOperation<dim>>(scratch_data_in,
                                                      reinit_dof_idx,
@@ -46,6 +37,22 @@ namespace MeltPoolDG::LevelSet
       reinit_quad_idx,
       normal_vector_operation->get_solution_normal_vector(),
       curvature_data);
+
+    reinit_DG_operator = std::make_shared<ReinitilizationDGOperator<dim>>(
+      scratch_data_in,
+      reinit_data,
+      reinit_dof_idx_in,
+      reinit_quad_idx_in,
+      curvature_operation->get_curvature(),
+      normal_vector_operation->get_solution_normal_vector());
+
+    reinitilization_integration = TimeIntegratorConcretization::concretize(
+      reinit_data.reinitilization_DG_specific_data.time_integration_scheme,
+      *reinit_DG_operator,
+      scratch_data_in,
+      reinit_dof_idx_in,
+      reinit_quad_idx_in,
+      reinit_data.linear_solver);
   }
 
   template <int dim>
@@ -57,12 +64,11 @@ namespace MeltPoolDG::LevelSet
 
     scratch_data.initialize_dof_vector(rhs, reinit_dof_idx);
 
-    reinit_DG_operator.reinit();
+    reinit_DG_operator->reinit();
     reinitilization_integration->reinit();
     normal_vector_operation->reinit();
     curvature_operation->reinit();
   }
-
 
   template <int dim>
   void
@@ -119,7 +125,8 @@ namespace MeltPoolDG::LevelSet
 
     solution_history.commit_old_solutions();
 
-    reinit_DG_operator.prepare_operator(solution_history.get_current_solution());
+    reinit_DG_operator->prepare_operator(solution_history.get_current_solution());
+    reinit_DG_operator->set_artificial_diffusitivity();
 
     normal_vector_operation->solve();
     curvature_operation->solve();
@@ -154,10 +161,10 @@ namespace MeltPoolDG::LevelSet
         if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme !=
             TimeIntegrators::not_initialized)
           {
-            reinit_DG_operator.apply_diffusion_implicit(time_iterator.get_old_time(),
-                                                        time_iterator.get_current_time_increment(),
-                                                        solution_history,
-                                                        rhs);
+            reinit_DG_operator->apply_diffusion_implicit(time_iterator.get_old_time(),
+                                                         time_iterator.get_current_time_increment(),
+                                                         solution_history,
+                                                         rhs);
             solution_history.set_recent_old_solution(solution_history.get_current_solution());
           }
 
@@ -218,9 +225,11 @@ namespace MeltPoolDG::LevelSet
     normal_vector_operation->attach_vectors(vectors);
 
     /**
-     * When the mesh is refined the smoothed signum also needs to be refined.
+     * When the mesh is refined the smoothed signum and the sign indicator function also need to be
+     * refined.
      */
-    vectors.push_back(&reinit_DG_operator.get_signum_smoothed());
+    vectors.push_back(&reinit_DG_operator->get_signum_smoothed());
+    vectors.push_back(&reinit_DG_operator->get_sign_indicator_function());
   }
 
   template <int dim>
@@ -248,21 +257,27 @@ namespace MeltPoolDG::LevelSet
     const double minimal_vertex_distance = scratch_data.get_min_cell_size();
     const double fe_degree = ((static_cast<double>(scratch_data.get_degree(reinit_dof_idx))));
 
-
     if (reinit_data.reinitilization_DG_specific_data.IMEX_integration_scheme !=
         TimeIntegrators::not_initialized)
       {
         return reinit_data.reinitilization_DG_specific_data.CFL * minimal_vertex_distance /
-               (fe_degree * fe_degree);
+               ((fe_degree * fe_degree) * reinit_DG_operator->get_signum_smoothed().linfty_norm());
       }
     else
       {
         return reinit_data.reinitilization_DG_specific_data.CFL /
                reinit_data.reinitilization_DG_specific_data.IP_diffusion /
                (std::pow(fe_degree, 2.0) / minimal_vertex_distance +
-                reinit_DG_operator.get_viscosity() * std::pow(fe_degree, 4.0) /
+                reinit_DG_operator->get_max_diffusitivity() * std::pow(fe_degree, 4.0) /
                   (minimal_vertex_distance * minimal_vertex_distance));
       }
+  }
+
+  template <int dim>
+  void
+  ReinitializationDGOperation<dim>::set_artificial_diffusitivity()
+  {
+    reinit_DG_operator->set_artificial_diffusitivity();
   }
 
   template class ReinitializationDGOperation<1>;
