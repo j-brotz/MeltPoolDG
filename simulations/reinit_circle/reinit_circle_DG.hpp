@@ -176,13 +176,15 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
       QGauss<dim>   quadrature(n_q_points);
       FEValues<dim> fe_values(fe,
                               quadrature,
-                              update_values | update_JxW_values | update_quadrature_points);
+                              update_values | update_JxW_values | update_quadrature_points |
+                                update_gradients);
 
       FEValues<dim> fe_values_curvature(
         fe, quadrature, update_values | update_JxW_values | update_quadrature_points);
 
-      std::vector<double> phi_at_q(QGauss<dim>(n_q_points).size());
-      std::vector<double> curvature_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<double>                 phi_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<double>                 curvature_at_q(QGauss<dim>(n_q_points).size());
+      std::vector<Tensor<1, dim, double>> gradient_at_q(QGauss<dim>(n_q_points).size());
 
 
 
@@ -194,6 +196,32 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
       double mass                 = 0.0;
       double error_curvature      = 0.0;
       double norm_curvature_exact = 0.0;
+      double error_gradient       = 0.0;
+      double norm_gradient_exact  = 0.0;
+      // Initialize mass
+      if (init_mass)
+        {
+          for (const auto &cell :
+               generic_data_out.get_dof_handler("reinit_DG_psi").active_cell_iterators())
+            if (cell->is_locally_owned())
+              {
+                fe_values.reinit(cell);
+
+                fe_values.get_function_values(generic_data_out.get_vector("reinit_DG_psi"),
+                                              phi_at_q); // compute values of old solution
+
+                for (const unsigned int q_index : fe_values.quadrature_point_indices())
+                  {
+                    if (phi_at_q[q_index] < 0.0)
+                      {
+                        initial_mass += fe_values.JxW(q_index);
+                      }
+                  }
+              }
+          initial_mass = dealii::Utilities::MPI::sum(initial_mass, this->mpi_communicator);
+
+          init_mass = false;
+        }
       for (const auto &cell :
            generic_data_out.get_dof_handler("reinit_DG_psi").active_cell_iterators())
         if (cell->is_locally_owned())
@@ -206,6 +234,9 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
 
             fe_values_curvature.get_function_values(generic_data_out.get_vector("curvature"),
                                                     curvature_at_q); // compute curvature values
+
+            fe_values.get_function_gradients(generic_data_out.get_vector("reinit_DG_psi"),
+                                             gradient_at_q); // compute values of old solution
 
             for (const unsigned int q_index : fe_values.quadrature_point_indices())
               {
@@ -220,20 +251,31 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
 
                 auto curv_difference = std::abs(exact_curvature - curvature_at_q[q_index]);
 
-                if (fe_values.quadrature_point(q_index).norm() < (0.15 + 0.02))
-                  {
-                    if (fe_values.quadrature_point(q_index).norm() > (0.15 - 0.02))
-                      {
-                        error += sol_difference * sol_difference * fe_values.JxW(q_index);
-                        error_curvature +=
-                          curv_difference * curv_difference * fe_values.JxW(q_index);
+                double norm_gradient = 0.0;
 
-                        norm_exact += exact_solution.value(fe_values.quadrature_point(q_index), 0) *
-                                      exact_solution.value(fe_values.quadrature_point(q_index), 0) *
-                                      fe_values.JxW(q_index);
-                        norm_curvature_exact +=
-                          exact_curvature * exact_curvature * fe_values.JxW(q_index);
-                      }
+                for (unsigned int d = 0; d < dim; d++)
+                  {
+                    norm_gradient += gradient_at_q[q_index][d] * gradient_at_q[q_index][d];
+                  }
+                norm_gradient = std::sqrt(norm_gradient);
+
+                if (std::abs(exact_solution.value(fe_values.quadrature_point(q_index), 0)) < 0.02)
+                  {
+                    {
+                      error += sol_difference * sol_difference * fe_values.JxW(q_index);
+                      error_curvature += curv_difference * curv_difference * fe_values.JxW(q_index);
+
+                      norm_exact += exact_solution.value(fe_values.quadrature_point(q_index), 0) *
+                                    exact_solution.value(fe_values.quadrature_point(q_index), 0) *
+                                    fe_values.JxW(q_index);
+                      norm_curvature_exact +=
+                        exact_curvature * exact_curvature * fe_values.JxW(q_index);
+
+                      error_gradient +=
+                        (norm_gradient - 1.0) * (norm_gradient - 1.0) * fe_values.JxW(q_index);
+
+                      norm_gradient_exact += fe_values.JxW(q_index);
+                    }
                   }
                 if (phi_at_q[q_index] < 0.0)
                   {
@@ -249,13 +291,21 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
       norm_curvature_exact =
         dealii::Utilities::MPI::sum(norm_curvature_exact, this->mpi_communicator);
 
+      error_gradient = dealii::Utilities::MPI::sum(error_gradient, this->mpi_communicator);
+      norm_gradient_exact =
+        dealii::Utilities::MPI::sum(norm_gradient_exact, this->mpi_communicator);
+
       pcout << "Relative error to exact solution " << std::sqrt(error) / std::sqrt(norm_exact)
             << std::endl;
 
       pcout << "Mass of bubble " << mass << std::endl;
+      pcout << "Mass loss " << ((mass - initial_mass) / initial_mass) * 100.0 << " % " << std::endl;
 
       pcout << "Relative error to exact curvature "
             << std::sqrt(error_curvature) / std::sqrt(norm_curvature_exact) << std::endl;
+
+      pcout << "Relative error in gradient "
+            << std::sqrt(error_gradient) / std::sqrt(norm_gradient_exact) << std::endl;
 
       pcout << "---------------------------------------------" << std::endl;
       pcout << "    End of user defined postprocessing" << std::endl;
@@ -263,8 +313,10 @@ namespace MeltPoolDG::Simulation::ReinitCircleDG
     }
 
   private:
-    double left_domain  = -0.5;
-    double right_domain = 0.5;
+    double         left_domain  = -0.5;
+    double         right_domain = 0.5;
+    mutable bool   init_mass    = true;
+    mutable double initial_mass = 0.0;
   };
 
 } // namespace MeltPoolDG::Simulation::ReinitCircleDG

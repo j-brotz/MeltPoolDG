@@ -25,17 +25,31 @@ namespace MeltPoolDG::LevelSet
   ReinitializationProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     initialize(base_in);
+    bool first_time_step = true;
 
     while (!time_iterator->is_finished())
       {
-        if (base_in->parameters.ls.reinit.reinitilization_DG_specific_data
-              .do_CFL_based_time_stepping)
+        /**
+         * Set the first time step size to zero in order to get the initial mass in postprocessing
+         * of the DG case
+         */
+        if (first_time_step && base_in->parameters.ls.reinit.fe.type == FiniteElementType::FE_DGQ)
           {
-            double const time_step = reinit_operation->compute_CFL_based_timestep();
-
-            time_iterator->set_current_time_increment(time_step,
-                                                      std::numeric_limits<double>::max());
+            time_iterator->set_current_time_increment(0.0, std::numeric_limits<double>::max());
+            first_time_step = false;
           }
+        else
+          {
+            if (base_in->parameters.ls.reinit.reinitilization_DG_specific_data
+                  .do_CFL_based_time_stepping)
+              {
+                double const time_step = reinit_operation->compute_CFL_based_timestep();
+
+                time_iterator->set_current_time_increment(time_step,
+                                                          std::numeric_limits<double>::max());
+              }
+          }
+
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout());
@@ -150,6 +164,14 @@ namespace MeltPoolDG::LevelSet
       AssertThrow(false, ExcNotImplemented());
 
     reinit_operation->set_initial_condition(*base_in->get_initial_condition("level_set"));
+
+    if (base_in->parameters.ls.reinit.fe.type == FiniteElementType::FE_DGQ)
+      {
+        // For a pure reinit problem this could be done inside reinit_operation, but we want to be
+        // able to set it from an external field in a coupled advection/reinit problem
+        reinit_operation->get_sign_indicator_function()->copy_locally_owned_data_from(
+          reinit_operation->get_level_set());
+      }
   }
 
   template <int dim>
@@ -214,6 +236,7 @@ namespace MeltPoolDG::LevelSet
       VectorType locally_relevant_solution;
       locally_relevant_solution.reinit(scratch_data->get_partitioner(reinit_dof_idx));
       locally_relevant_solution.copy_locally_owned_data_from(reinit_operation->get_level_set());
+      constraints.close();
       constraints.distribute(locally_relevant_solution);
       locally_relevant_solution.update_ghost_values();
 
@@ -253,6 +276,11 @@ namespace MeltPoolDG::LevelSet
                                  base_in->parameters.amr,
                                  dof_handler,
                                  time_iterator->get_current_time_step_number());
+
+    /**
+     * In the DG case the artificial diffusitivity needs to be recalculated if mesh is refined
+     */
+    reinit_operation->set_artificial_diffusitivity();
   }
 
   template <int dim>

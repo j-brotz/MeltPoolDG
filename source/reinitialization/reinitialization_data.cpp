@@ -85,6 +85,30 @@ namespace MeltPoolDG::LevelSet
           "avoid zero division smoothed signum",
           reinitilization_DG_specific_data.avoid_zero_division_smoothed_signum,
           "Sets a constant to avoid zero division in the computation of the smoothed signum.");
+
+        prm.add_parameter("signum smoothness paramater",
+                          reinitilization_DG_specific_data.signum_smoothness_paramater,
+                          "Sets the smoothness parameter for the smoothed signum.");
+
+        prm.add_parameter(
+          "use directed diffusion stabilization",
+          reinitilization_DG_specific_data.use_directed_diffusion_stabilization,
+          "Sets a flag if directed diffusion stabilization should be used for reinitilization.");
+
+        prm.add_parameter(
+          "hyperbolic weighting function_type",
+          reinitilization_DG_specific_data.hyperbolic_weighting_function_type,
+          "Sets the type of weighting function for the hyperbolic part of the reinit equation.");
+
+        prm.add_parameter(
+          "use spatially constant diffusion",
+          reinitilization_DG_specific_data.use_spatially_constant_diffusion,
+          "Sets a flag if a spatially constant diffusion should be used for reinitilization.");
+
+        prm.add_parameter(
+          "use interface movement penalization",
+          reinitilization_DG_specific_data.use_interface_movement_penalization,
+          "Sets a flag if a penalization of the interface movement should be used.");
       }
       prm.leave_subsection();
 

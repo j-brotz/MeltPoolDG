@@ -23,13 +23,16 @@ namespace MeltPoolDG::LevelSet
     ReinitializationDGDiffusionOperator(const MeltPoolDG::ScratchData<dim> &scratch_datain,
                                         const ReinitializationData<Number> &reinit_data_in,
                                         const unsigned int                  reinit_dof_idx_in,
-                                        const unsigned int                  reinit_quad_idx_in);
+                                        const unsigned int                  reinit_quad_idx_in,
+                                        const VectorType                   &curvature_in,
+                                        const BlockVectorType              &normal_vector_in,
+                                        const VectorType                   &smooth_signum_in);
 
     /**
      * Computes the necessary amount of diffusion
      */
     void
-    compute_viscosity_value();
+    compute_diffusitivity_value();
 
     /**
      * Computes the necessary penalty parameter
@@ -70,7 +73,7 @@ namespace MeltPoolDG::LevelSet
                                       [[maybe_unused]] const VectorType &src) const {};
 
     double
-    get_viscosity() const;
+    get_max_diffusitivity() const;
 
     /**
      *Variable is needed for time integration
@@ -84,9 +87,12 @@ namespace MeltPoolDG::LevelSet
     const unsigned int reinit_dof_idx;
     const unsigned int reinit_quad_idx;
 
-    mutable Number                                 viscosity = 1.;
+    mutable VectorType                             diffusitivity;
     mutable AlignedVector<VectorizedArray<Number>> array_penalty_parameter;
 
+    const VectorType      &curvature;
+    const BlockVectorType &normal_vector;
+    const VectorType      &smooth_signum;
 
     /**
      * Applies the domain integral

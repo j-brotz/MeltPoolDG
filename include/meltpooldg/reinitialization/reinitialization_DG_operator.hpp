@@ -33,7 +33,9 @@ namespace MeltPoolDG::LevelSet
     ReinitilizationDGOperator(const MeltPoolDG::ScratchData<dim> &scratch_data_in,
                               const ReinitializationData<double> &reinit_data_in,
                               const unsigned int                  reinit_dof_idx_in,
-                              const unsigned int                  reinit_quad_idx_in);
+                              const unsigned int                  reinit_quad_idx_in,
+                              const VectorType                   &curvature_in,
+                              const BlockVectorType              &normal_vector_in);
 
 
     /**
@@ -98,13 +100,22 @@ namespace MeltPoolDG::LevelSet
     set_field_functions([[maybe_unused]] Number const time) const {};
 
     double
-    get_viscosity() const;
+    get_max_diffusitivity() const;
 
     VectorType &
     get_signum_smoothed() const
     {
       return signum_smoothed;
     }
+
+    VectorType &
+    get_sign_indicator_function()
+    {
+      return sign_indicator_function;
+    }
+
+    void
+    set_artificial_diffusitivity();
 
   private:
     const MeltPoolDG::ScratchData<dim> &scratch_data;
@@ -117,6 +128,7 @@ namespace MeltPoolDG::LevelSet
     mutable VectorType num_Hamiltonian;
     mutable VectorType signum_smoothed;
     mutable VectorType God_grad;
+    mutable VectorType sign_indicator_function;
 
     // auxiliary vectors for Godunov's scheme
     mutable VectorType grad_x_l;
@@ -161,7 +173,18 @@ namespace MeltPoolDG::LevelSet
     void
     compute_smoothed_signum(const VectorType &solution, const Number min_vertex_distance) const;
 
-
+    /**
+     * Adds a penalty term to reinit equation when the interface moves a lot
+     * @param data the matrix free object
+     * @param dst destination where the result is stored
+     * @param src source vector
+     * @param cell_range
+     */
+    void
+    interface_movement_penalty(const MatrixFree<dim, Number>               &data,
+                               VectorType                                  &dst,
+                               const VectorType                            &src,
+                               const std::pair<unsigned int, unsigned int> &cell_range) const;
 
     /**
      * Computes the weak form of the Hamiltonian

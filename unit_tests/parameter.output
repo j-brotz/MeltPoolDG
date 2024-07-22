@@ -323,8 +323,13 @@
                 "avoid zero division smoothed signum": "1e-16",
                 "do CFL based time stepping": "false",
                 "factor diffusivity": "0.25",
+                "hyperbolic weighting function_type": "smoothed_signum",
+                "signum smoothness paramater": "2",
                 "time integration scheme": "RK_stage_5_order_4",
-                "use const gradient in RI": "false"
+                "use const gradient in RI": "false",
+                "use directed diffusion stabilization": "false",
+                "use interface movement penalization": "false",
+                "use spatially constant diffusion": "true"
             },
             "fe":
             {
