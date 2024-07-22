@@ -100,10 +100,10 @@ namespace MeltPoolDG::LevelSet
     void
     set_artificial_diffusitivity() override;
 
-    VectorType &
+    VectorType *
     get_sign_indicator_function() override
     {
-      return reinit_DG_operator->get_sign_indicator_function();
+      return &reinit_DG_operator->get_sign_indicator_function();
     }
 
   private:

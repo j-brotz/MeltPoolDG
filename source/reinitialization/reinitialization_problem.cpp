@@ -169,7 +169,7 @@ namespace MeltPoolDG::LevelSet
       {
         // For a pure reinit problem this could be done inside reinit_operation, but we want to be
         // able to set it from an external field in a coupled advection/reinit problem
-        reinit_operation->get_sign_indicator_function().copy_locally_owned_data_from(
+        reinit_operation->get_sign_indicator_function()->copy_locally_owned_data_from(
           reinit_operation->get_level_set());
       }
   }

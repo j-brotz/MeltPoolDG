@@ -70,17 +70,14 @@ namespace MeltPoolDG
          */
       }
 
-      virtual VectorType &
+      virtual VectorType *
       get_sign_indicator_function()
       {
         /**
          * Is not needed in the CG case
          */
-        return dummy;
+        return nullptr;
       }
-
-    private:
-      VectorType dummy;
     };
 
   } // namespace LevelSet
