@@ -14,18 +14,14 @@
     "end time": "0.05",
     "time step size": "0.01"
   },
-  
   "level set": {
-
     "fe": {
       "degree": "1",
       "type": "FE_DGQ"
     },
-
     "advection diffusion": {
       "time integration scheme": "RK_stage_5_order_4"
-  },
-
+    },
     "reinitialization": {
       "enable": "true",
       "implementation": "meltpooldg",
@@ -48,10 +44,7 @@
         "use spatially constant diffusion": "false",
         "IP diffusion": "10",
         "gradient error time derivative threshold": "1e-1"
-
-
       },
-
       "interface thickness parameter": {
         "type": "proportional_to_cell_size",
         "val": "0.5"
@@ -104,13 +97,12 @@
     }
   },
   "output": {
-        "do user defined postprocessing": "true",
-        "output variables": "all",
-        "write frequency": "1",
-        "write time step size": "0",
-        "paraview": {
-            "enable": "false"
-        }
+    "do user defined postprocessing": "true",
+    "output variables": "all",
+    "write frequency": "1",
+    "write time step size": "0",
+    "paraview": {
+      "enable": "false"
     }
-
+  }
 }
