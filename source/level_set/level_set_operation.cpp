@@ -635,7 +635,7 @@ namespace MeltPoolDG::LevelSet
                                                         std::tanh(2) /*cut off value*/);
 
                   level_set_as_heaviside(local_dof_indices[i]) =
-                    smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
+                    this->smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
                 }
               else
                 level_set_as_heaviside(local_dof_indices[i]) =

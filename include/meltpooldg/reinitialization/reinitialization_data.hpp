@@ -64,6 +64,7 @@ namespace MeltPoolDG::LevelSet
       bool use_spatially_constant_diffusion    = true;
       bool use_interface_movement_penalization = false;
 
+      double gradient_error_time_derivative_threshold = 1e-16;
     } reinitilization_DG_specific_data;
 
 

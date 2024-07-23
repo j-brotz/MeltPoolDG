@@ -9,6 +9,7 @@
 #include <meltpooldg/evaporation/evaporation_operation.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/interface/simulation_base.hpp>
+#include <meltpooldg/level_set/level_set_DG_operation.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>
@@ -51,7 +52,7 @@ namespace MeltPoolDG::LevelSet
     const unsigned int &reinit_hanging_nodes_dof_idx =
       ls_hanging_nodes_dof_idx; //@todo: would it make sense to use ls_zero_bc_idx?
 
-    std::shared_ptr<LevelSetOperation<dim>>                 level_set_operation;
+    std::shared_ptr<LevelSetOperationBase<dim>>             level_set_operation;
     std::shared_ptr<Evaporation::EvaporationOperation<dim>> evaporation_operation;
 
     VectorType advection_velocity;

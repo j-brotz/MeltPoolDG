@@ -34,6 +34,7 @@ namespace MeltPoolDG
               zalesak_disk,
               recoil_pressure,
               vortex_bubble,
+              vortex_bubble_DG,
               stefans_problem,
               stefans_problem_with_flow,
               stefans_problem1_with_flow_and_heat,

@@ -111,6 +111,21 @@ namespace MeltPoolDG::LevelSet
 
   template <int dim>
   void
+  AdvectionDGOperation<dim>::set_initial_condition(const VectorType &solution_level_set_in)
+  {
+    /*
+     *    copy the given solution into the member variable
+     */
+    solution_history.get_current_solution().zero_out_ghost_values();
+    solution_history.get_current_solution().copy_locally_owned_data_from(solution_level_set_in);
+
+    solution_history.set_recent_old_solution(solution_history.get_current_solution());
+
+    solution_history.update_ghost_values();
+  }
+
+  template <int dim>
+  void
   AdvectionDGOperation<dim>::reinit()
   {
     solution_history.apply(

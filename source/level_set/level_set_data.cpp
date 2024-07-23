@@ -19,6 +19,11 @@ namespace MeltPoolDG::LevelSet
                         "calculated as a localized function, being exactly 0 and 1 outside of "
                         "the interface region.");
 
+      prm.add_parameter(
+        "gradient error evaluation distance factor",
+        level_set_DG_specific_data.gradient_error_evaluation_distance_factor,
+        "Factor how many cell diameters away the gradient error should be evaluated");
+
       nearest_point.add_parameters(prm);
       advec_diff.add_parameters(prm);
       normal_vec.add_parameters(prm);

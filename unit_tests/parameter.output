@@ -200,6 +200,7 @@
     "level set":
     {
         "do localized heaviside": "true",
+        "gradient error evaluation distance factor": "3",
         "advection diffusion":
         {
             "diffusivity": "0",
@@ -323,6 +324,7 @@
                 "avoid zero division smoothed signum": "1e-16",
                 "do CFL based time stepping": "false",
                 "factor diffusivity": "0.25",
+                "gradient error time derivative threshold": "1e-16",
                 "hyperbolic weighting function_type": "smoothed_signum",
                 "signum smoothness paramater": "2",
                 "time integration scheme": "RK_stage_5_order_4",
