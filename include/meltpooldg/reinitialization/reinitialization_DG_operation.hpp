@@ -39,7 +39,7 @@ namespace MeltPoolDG::LevelSet
                                 const CurvatureData<double>        &curvature_data);
     /**
      * For advection reinit coupled problems the normal vector and curvature are computed a level
-     * higher on the level set operation level. This is because the compitation of the normal vector
+     * higher on the level set operation level. This is because the computation of the normal vector
      * and curvature is very expensive and should only be done once when needed.
      */
     ReinitializationDGOperation(
@@ -63,7 +63,7 @@ namespace MeltPoolDG::LevelSet
      * Copies a given field
      */
     void
-    set_initial_condition([[maybe_unused]] const VectorType &solution_level_set_in) override;
+    set_initial_condition(const VectorType &solution_level_set_in) override;
 
     /**
      * Sets the initial conditions of the level set field based on the analytical function

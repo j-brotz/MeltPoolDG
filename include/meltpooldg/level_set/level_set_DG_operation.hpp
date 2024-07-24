@@ -15,6 +15,16 @@
 #include <meltpooldg/reinitialization/reinitialization_DG_operation.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/point.h>
+#include <deal.II/grid/tria.h>
+#include <meltpooldg/interface/scratch_data.hpp>
+#include <limits>
+#include <map>
+#include <memory>
+#include <vector>
+
 
 namespace MeltPoolDG::LevelSet
 {
@@ -56,7 +66,7 @@ namespace MeltPoolDG::LevelSet
     /*
      *  necessary parameters
      */
-    const LevelSetData<double> level_set_data;
+    const LevelSetData<double> &level_set_data;
     /*
      * select the relevant DoFHandler
      */
@@ -111,6 +121,7 @@ namespace MeltPoolDG::LevelSet
       [[maybe_unused]] const std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
         inflow_outflow_bc) override
     { // Not needed in the DG case sinde BCs are applied weakly within the operator
+      DEAL_II_NOT_IMPLEMENTED();
     }
 
     void
@@ -119,6 +130,7 @@ namespace MeltPoolDG::LevelSet
     void
     distribute_constraints() override{
       // Not needed in the DG case since constraints are applied in a weak sense
+      DEAL_II_NOT_IMPLEMENTED();
     };
 
     void

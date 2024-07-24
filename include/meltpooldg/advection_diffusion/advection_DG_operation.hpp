@@ -59,7 +59,7 @@ namespace MeltPoolDG::LevelSet
      * Copies a given field to the initial conditions
      */
     void
-    set_initial_condition([[maybe_unused]] const VectorType &solution_level_set_in);
+    set_initial_condition(const VectorType &solution_level_set_in);
 
     /**
      * Allocates memory for the vectors based on the degrees of freedom of the DoFHandler.

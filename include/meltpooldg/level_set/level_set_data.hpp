@@ -28,7 +28,7 @@ namespace MeltPoolDG::LevelSet
 
     struct ReinitilizationDGSpecificData
     {
-      number gradient_error_evaluation_distance_factor = 3.0;
+      number gradient_error_evaluation_distance_cell_proportion = 3.0;
     } level_set_DG_specific_data;
 
     void

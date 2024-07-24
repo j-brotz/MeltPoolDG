@@ -23,12 +23,9 @@
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
+#include <meltpooldg/utilities/journal.hpp>
 
-namespace MeltPoolDG
-{
-  namespace Simulation
-  {
-    namespace VortexBubbleDG
+namespace MeltPoolDG::Simulation::VortexBubbleDG
     {
       using namespace dealii;
 
@@ -266,9 +263,13 @@ namespace MeltPoolDG
 
               area_droplet = Utilities::MPI::sum(area_droplet, this->mpi_communicator);
               area_bulk    = Utilities::MPI::sum(area_bulk, this->mpi_communicator);
+              
+              std::ostringstream str;
 
-              pcout << "area (phi>0) " << area_droplet << std::endl;
-              pcout << "area (phi<0) " << area_bulk << std::endl;
+              str << "area (phi>0) " << std::setw(10) << std::left << area_droplet << std::endl;
+              str << "area (phi<0) " << std::setw(10) << std::left << area_bulk << std::endl;
+
+            Journal::print_line(pcout, str.str(), "postprocessing", 1);
             }
         }
 
@@ -287,7 +288,4 @@ namespace MeltPoolDG
         double               right_domain = 1.0;
         mutable TableHandler table;
       };
-
-    } // namespace VortexBubbleDG
-  }   // namespace Simulation
-} // namespace MeltPoolDG
+    }

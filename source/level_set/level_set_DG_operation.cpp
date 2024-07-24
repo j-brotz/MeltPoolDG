@@ -18,6 +18,7 @@
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+#include <meltpooldg/level_set/utilities.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -481,7 +482,7 @@ namespace MeltPoolDG::LevelSet
               if (level_set_data.do_localized_heaviside)
                 {
                   level_set_as_heaviside(local_dof_indices[i]) =
-                    this->smooth_heaviside_from_distance_value(
+                    smooth_heaviside_from_distance_value(
                       2 * get_level_set()[local_dof_indices[i]] / (3 * epsilon_cell));
                 }
               else
@@ -522,9 +523,9 @@ namespace MeltPoolDG::LevelSet
     double level_set_gradient_error_numerator   = 0.0;
     double level_set_gradient_error_denominator = 0.0;
 
-    VectorizedArray<double> eval_distance =
+    const VectorizedArray<double> eval_distance =
       scratch_data.get_min_diameter() *
-      level_set_data.level_set_DG_specific_data.gradient_error_evaluation_distance_factor;
+      level_set_data.level_set_DG_specific_data.gradient_error_evaluation_distance_cell_proportion;
 
     double dummy;
     scratch_data.get_matrix_free().template cell_loop<double, VectorType>(

@@ -18,6 +18,7 @@
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+#include <meltpooldg/level_set/utilities.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -635,7 +636,7 @@ namespace MeltPoolDG::LevelSet
                                                         std::tanh(2) /*cut off value*/);
 
                   level_set_as_heaviside(local_dof_indices[i]) =
-                    this->smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
+                    smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
                 }
               else
                 level_set_as_heaviside(local_dof_indices[i]) =
