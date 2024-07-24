@@ -35,64 +35,64 @@ namespace MeltPoolDG::LevelSet
   LevelSetProblem<dim>::run(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     initialize(base_in);
-    //ScopedName         sc("run");
-    //TimerOutput::Scope scope(scratch_data->get_timer(), sc);
-//
-    //while (!time_iterator->is_finished())
-    //  {
-    //    time_iterator->compute_next_time_increment();
-    //    time_iterator->print_me(scratch_data->get_pcout());
-//
-    //    //@todo: adapt in case of adaptive time stepping
-    //    if (profiling_monitor && profiling_monitor->now())
-    //      {
-    //        profiling_monitor->print(scratch_data->get_pcout(),
-    //                                 scratch_data->get_timer(),
-    //                                 scratch_data->get_mpi_comm());
-    //      }
-    //    compute_advection_velocity(*base_in->get_advection_field("level_set"));
-//
-    //    if (evaporation_operation)
-    //      {
-    //        // Only if a spatially constant evaporative mass flux is given as an analytical
-    //        // function, the time is needed to evaluate the function.
-    //        if (base_in->parameters.evapor.evaporative_mass_flux_model ==
-    //            Evaporation::EvaporationModelType::analytical)
-    //          evaporation_operation->set_time(time_iterator->get_current_time());
-    //        else
-    //          AssertThrow(false,
-    //                      ExcMessage("Only a evaporation model of constant type is supported."));
-//
-    //        // compute evaporative mass flux spatially constant
-    //        evaporation_operation->compute_evaporative_mass_flux();
-//
-    //        // compute velocity due to evaporative mass flux
-    //        evaporation_operation->compute_evaporation_velocity();
-//
-    //        // compute advection velocity of the interface
-    //        advection_velocity += evaporation_operation->get_velocity();
-    //      }
-//
-    //    level_set_operation->solve();
-//
-//
-    //    // do output if requested
-    //    output_results(time_iterator->get_current_time_step_number(),
-    //                   time_iterator->get_current_time(),
-    //                   base_in);
-//
-    //    if (base_in->parameters.amr.do_amr)
-    //      refine_mesh(base_in);
-    //  }
-//
-    //Journal::print_end(scratch_data->get_pcout());
-    ////... always print timing statistics
-    //if (profiling_monitor)
-    //  {
-    //    profiling_monitor->print(scratch_data->get_pcout(),
-    //                             scratch_data->get_timer(),
-    //                             scratch_data->get_mpi_comm());
-    //  }
+    ScopedName         sc("run");
+    TimerOutput::Scope scope(scratch_data->get_timer(), sc);
+
+    while (!time_iterator->is_finished())
+      {
+        time_iterator->compute_next_time_increment();
+        time_iterator->print_me(scratch_data->get_pcout());
+
+        //@todo: adapt in case of adaptive time stepping
+        if (profiling_monitor && profiling_monitor->now())
+          {
+            profiling_monitor->print(scratch_data->get_pcout(),
+                                     scratch_data->get_timer(),
+                                     scratch_data->get_mpi_comm());
+          }
+        compute_advection_velocity(*base_in->get_advection_field("level_set"));
+
+        if (evaporation_operation)
+          {
+            // Only if a spatially constant evaporative mass flux is given as an analytical
+            // function, the time is needed to evaluate the function.
+            if (base_in->parameters.evapor.evaporative_mass_flux_model ==
+                Evaporation::EvaporationModelType::analytical)
+              evaporation_operation->set_time(time_iterator->get_current_time());
+            else
+              AssertThrow(false,
+                          ExcMessage("Only a evaporation model of constant type is supported."));
+
+            // compute evaporative mass flux spatially constant
+            evaporation_operation->compute_evaporative_mass_flux();
+
+            // compute velocity due to evaporative mass flux
+            evaporation_operation->compute_evaporation_velocity();
+
+            // compute advection velocity of the interface
+            advection_velocity += evaporation_operation->get_velocity();
+          }
+
+        level_set_operation->solve();
+
+
+        // do output if requested
+        output_results(time_iterator->get_current_time_step_number(),
+                       time_iterator->get_current_time(),
+                       base_in);
+
+        if (base_in->parameters.amr.do_amr)
+          refine_mesh(base_in);
+      }
+
+    Journal::print_end(scratch_data->get_pcout());
+    //... always print timing statistics
+    if (profiling_monitor)
+      {
+        profiling_monitor->print(scratch_data->get_pcout(),
+                                 scratch_data->get_timer(),
+                                 scratch_data->get_mpi_comm());
+      }
   }
 
   template <int dim>
@@ -184,102 +184,102 @@ namespace MeltPoolDG::LevelSet
                                                                          vel_dof_idx);
       }
     level_set_operation->reinit();
-//
-    ///*
-    // * set initial conditions
-    // */
-    //compute_advection_velocity(*base_in->get_advection_field("level_set"));
-//
-    ///*
-    // * configure level set with evaporation if requested
-    // */
-    //if (base_in->parameters.base.problem_name == ProblemType::level_set_with_evaporation)
-    //  {
-    //    evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
-    //      *scratch_data,
-    //      level_set_operation->get_level_set_as_heaviside(),
-    //      level_set_operation->get_normal_vector(),
-    //      base_in->parameters.evapor,
-    //      base_in->parameters.material,
-    //      normal_dof_idx,
-    //      vel_dof_idx,
-    //      ls_hanging_nodes_dof_idx,
-    //      ls_hanging_nodes_dof_idx,
-    //      ls_quad_idx);
-    //  }
-    ///*
-    // *  set initial conditions of the level set field ...
-    // */
-    //if (const auto initial_field =
-    //      base_in->get_initial_condition("level_set", true /*is optional*/))
-    //  {
-    //    // ... via a given level set field
-    //    level_set_operation->set_initial_condition(*initial_field);
-    //  }
-    //else if (const auto initial_field =
-    //           base_in->get_initial_condition("signed_distance", true /*is optional*/))
-    //  {
-    //    // ... or a given signed distance field.
-    //    level_set_operation->set_initial_condition(*initial_field,
-    //                                               true /*is signed distance function*/);
-    //  }
-    //else
-    //  AssertThrow(
-    //    false,
-    //    ExcMessage("For the level set operation either a function for the initial level set or the "
-    //               "signed distance field must be provided. Abort ..."));
-    ///*
-    // *  initialize postprocessor
-    // */
-    //post_processor =
-    //  std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(ls_dof_idx),
-    //                                       base_in->parameters.output,
-    //                                       base_in->parameters.time_stepping,
-    //                                       scratch_data->get_mapping(),
-    //                                       scratch_data->get_triangulation(ls_dof_idx),
-    //                                       scratch_data->get_pcout(1));
-    ///*
-    // *  initialize profiling
-    // */
-    //if (base_in->parameters.profiling.enable)
-    //  profiling_monitor =
-    //    std::make_unique<Profiling::ProfilingMonitor<double>>(base_in->parameters.profiling,
-    //                                                          *time_iterator);
-    ///*
-    // *    Do initial refinement steps if requested
-    // */
-    //if (base_in->parameters.amr.do_amr && base_in->parameters.amr.n_initial_refinement_cycles > 0)
-    //  for (int i = 0; i < base_in->parameters.amr.n_initial_refinement_cycles; ++i)
-    //    {
-    //      scratch_data->get_pcout()
-    //        << "cycle: " << i << " n_dofs: " << dof_handler.n_dofs() << "(ls)" << std::endl;
-    //      refine_mesh(base_in);
-    //      /*
-    //       *  set initial conditions after initial AMR
-    //       */
-    //      compute_advection_velocity(*base_in->get_advection_field("level_set"));
-    //      if (const auto initial_field =
-    //            base_in->get_initial_condition("level_set", true /*is optional*/))
-    //        {
-    //          // ... via a given level set field
-    //          level_set_operation->set_initial_condition(*initial_field);
-    //        }
-    //      else if (const auto initial_field =
-    //                 base_in->get_initial_condition("signed_distance", true /*is optional*/))
-    //        {
-    //          // ... or a given signed distance field.
-    //          level_set_operation->set_initial_condition(*initial_field,
-    //                                                     true /*is signed distance function*/);
-    //        }
-    //      else
-    //        AssertThrow(
-    //          false,
-    //          ExcMessage(
-    //            "For the level set operation either a function for the initial level set or the "
-    //            "signed distance field must be provided. Abort ..."));
-    //    }
-//
-    //output_results(0, base_in->parameters.time_stepping.start_time, base_in);
+
+    /*
+     * set initial conditions
+     */
+    compute_advection_velocity(*base_in->get_advection_field("level_set"));
+
+    /*
+     * configure level set with evaporation if requested
+     */
+    if (base_in->parameters.base.problem_name == ProblemType::level_set_with_evaporation)
+      {
+        evaporation_operation = std::make_shared<Evaporation::EvaporationOperation<dim>>(
+          *scratch_data,
+          level_set_operation->get_level_set_as_heaviside(),
+          level_set_operation->get_normal_vector(),
+          base_in->parameters.evapor,
+          base_in->parameters.material,
+          normal_dof_idx,
+          vel_dof_idx,
+          ls_hanging_nodes_dof_idx,
+          ls_hanging_nodes_dof_idx,
+          ls_quad_idx);
+      }
+    /*
+     *  set initial conditions of the level set field ...
+     */
+    if (const auto initial_field =
+          base_in->get_initial_condition("level_set", true /*is optional*/))
+      {
+        // ... via a given level set field
+        level_set_operation->set_initial_condition(*initial_field);
+      }
+    else if (const auto initial_field =
+               base_in->get_initial_condition("signed_distance", true /*is optional*/))
+      {
+        // ... or a given signed distance field.
+        level_set_operation->set_initial_condition(*initial_field,
+                                                   true /*is signed distance function*/);
+      }
+    else
+      AssertThrow(
+        false,
+        ExcMessage("For the level set operation either a function for the initial level set or the "
+                   "signed distance field must be provided. Abort ..."));
+    /*
+     *  initialize postprocessor
+     */
+    post_processor =
+      std::make_shared<Postprocessor<dim>>(scratch_data->get_mpi_comm(ls_dof_idx),
+                                           base_in->parameters.output,
+                                           base_in->parameters.time_stepping,
+                                           scratch_data->get_mapping(),
+                                           scratch_data->get_triangulation(ls_dof_idx),
+                                           scratch_data->get_pcout(1));
+    /*
+     *  initialize profiling
+     */
+    if (base_in->parameters.profiling.enable)
+      profiling_monitor =
+        std::make_unique<Profiling::ProfilingMonitor<double>>(base_in->parameters.profiling,
+                                                              *time_iterator);
+    /*
+     *    Do initial refinement steps if requested
+     */
+    if (base_in->parameters.amr.do_amr && base_in->parameters.amr.n_initial_refinement_cycles > 0)
+      for (int i = 0; i < base_in->parameters.amr.n_initial_refinement_cycles; ++i)
+        {
+          scratch_data->get_pcout()
+            << "cycle: " << i << " n_dofs: " << dof_handler.n_dofs() << "(ls)" << std::endl;
+          refine_mesh(base_in);
+          /*
+           *  set initial conditions after initial AMR
+           */
+          compute_advection_velocity(*base_in->get_advection_field("level_set"));
+          if (const auto initial_field =
+                base_in->get_initial_condition("level_set", true /*is optional*/))
+            {
+              // ... via a given level set field
+              level_set_operation->set_initial_condition(*initial_field);
+            }
+          else if (const auto initial_field =
+                     base_in->get_initial_condition("signed_distance", true /*is optional*/))
+            {
+              // ... or a given signed distance field.
+              level_set_operation->set_initial_condition(*initial_field,
+                                                         true /*is signed distance function*/);
+            }
+          else
+            AssertThrow(
+              false,
+              ExcMessage(
+                "For the level set operation either a function for the initial level set or the "
+                "signed distance field must be provided. Abort ..."));
+        }
+
+    output_results(0, base_in->parameters.time_stepping.start_time, base_in);
   }
 
   template <int dim>
@@ -354,6 +354,7 @@ namespace MeltPoolDG::LevelSet
                                      dof_handler_velocity,
                                      advec_func,
                                      advection_velocity);
+    hanging_node_constraints_velocity.close();
     hanging_node_constraints_velocity.distribute(advection_velocity);
   }
   /*
@@ -419,6 +420,7 @@ namespace MeltPoolDG::LevelSet
           locally_relevant_solution.reinit(scratch_data->get_partitioner(ls_dof_idx));
           locally_relevant_solution.copy_locally_owned_data_from(
             level_set_operation->get_level_set());
+          constraints_dirichlet.close();
           constraints_dirichlet.distribute(locally_relevant_solution);
           locally_relevant_solution.update_ghost_values();
 

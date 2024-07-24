@@ -200,7 +200,7 @@
     "level set":
     {
         "do localized heaviside": "true",
-        "gradient error evaluation distance factor": "3",
+        "gradient error evaluation distance cell proportion": "3",
         "advection diffusion":
         {
             "diffusivity": "0",

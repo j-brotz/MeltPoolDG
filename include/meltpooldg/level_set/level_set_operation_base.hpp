@@ -4,9 +4,6 @@
  *
  * ---------------------------------------------------------------------*/
 #pragma once
-#include <deal.II/dofs/dof_handler.h>
-
-#include <meltpooldg/post_processing/generic_data_out.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -28,8 +25,8 @@ namespace MeltPoolDG::LevelSet
                           const bool is_signed_distance_initial_field_function = false) = 0;
 
     virtual void
-    set_inflow_outflow_bc(const std::map<types::boundary_id, std::shared_ptr<Function<dim>>>
-        inflow_outflow_bc) = 0;
+    set_inflow_outflow_bc(
+      const std::map<types::boundary_id, std::shared_ptr<Function<dim>>> inflow_outflow_bc) = 0;
 
     virtual void
     reinit() = 0;

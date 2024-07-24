@@ -20,7 +20,7 @@
       "type": "FE_DGQ"
     },
     "advection diffusion": {
-      "time integration scheme": "RK_stage_5_order_4"
+      "time integration scheme": "crank_nicolson"
     },
     "reinitialization": {
       "enable": "true",

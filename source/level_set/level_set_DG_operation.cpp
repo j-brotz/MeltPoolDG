@@ -13,12 +13,12 @@
 #include <meltpooldg/level_set/level_set_DG_operation.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
+#include <meltpooldg/level_set/utilities.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation.hpp>
 #include <meltpooldg/reinitialization/reinitialization_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
-#include <meltpooldg/level_set/utilities.hpp>
 
 namespace MeltPoolDG::LevelSet
 {
@@ -482,8 +482,8 @@ namespace MeltPoolDG::LevelSet
               if (level_set_data.do_localized_heaviside)
                 {
                   level_set_as_heaviside(local_dof_indices[i]) =
-                    smooth_heaviside_from_distance_value(
-                      2 * get_level_set()[local_dof_indices[i]] / (3 * epsilon_cell));
+                    smooth_heaviside_from_distance_value(2 * get_level_set()[local_dof_indices[i]] /
+                                                         (3 * epsilon_cell));
                 }
               else
                 AssertThrow(
@@ -537,7 +537,7 @@ namespace MeltPoolDG::LevelSet
         for (unsigned int cell = macro_cells.first; cell < macro_cells.second; ++cell)
           {
             eval.reinit(cell);
-            eval.gather_evaluate(src, EvaluationFlags::gradients);
+            eval.gather_evaluate(src, EvaluationFlags::gradients | EvaluationFlags::values);
 
             VectorizedArray<double> error = 0.0;
 
@@ -552,12 +552,10 @@ namespace MeltPoolDG::LevelSet
                 error -= unity;
                 error *= error * eval.JxW(q_index);
 
-                error = compare_and_apply_mask<SIMDComparison::less_than>(eval.get_value(q_index),
-                                                                          eval_distance,
-                                                                          error,
-                                                                          0.0);
+                error = compare_and_apply_mask<SIMDComparison::less_than>(
+                  std::abs(eval.get_value(q_index)), eval_distance, error, 0.0);
                 const auto denominator = compare_and_apply_mask<SIMDComparison::less_than>(
-                  eval.get_value(q_index), eval_distance, eval.JxW(q_index), 0.0);
+                  std::abs(eval.get_value(q_index)), eval_distance, eval.JxW(q_index), 0.0);
 
                 level_set_gradient_error_numerator += error.sum();
                 level_set_gradient_error_denominator += denominator.sum();
@@ -566,7 +564,7 @@ namespace MeltPoolDG::LevelSet
       },
       dummy,
       solution,
-      true);
+      false);
 
     level_set_gradient_error_numerator =
       dealii::Utilities::MPI::sum(level_set_gradient_error_numerator,

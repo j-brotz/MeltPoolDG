@@ -4,10 +4,17 @@
  * ---------------------------------------------------------------------*/
 #pragma once
 // for parallelization
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/point.h>
+
+#include <deal.II/grid/tria.h>
+
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/advection_diffusion/advection_DG_operation.hpp>
 #include <meltpooldg/curvature/curvature_DG_operation.hpp>
+#include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/level_set_data.hpp>
 #include <meltpooldg/level_set/level_set_operation_base.hpp>
 #include <meltpooldg/normal_vector/normal_vector_DG_operation.hpp>
@@ -15,11 +22,6 @@
 #include <meltpooldg/reinitialization/reinitialization_DG_operation.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
 
-#include <deal.II/base/exceptions.h>
-#include <deal.II/base/function.h>
-#include <deal.II/base/point.h>
-#include <deal.II/grid/tria.h>
-#include <meltpooldg/interface/scratch_data.hpp>
 #include <limits>
 #include <map>
 #include <memory>
@@ -128,7 +130,8 @@ namespace MeltPoolDG::LevelSet
     reinit() override;
 
     void
-    distribute_constraints() override{
+    distribute_constraints() override
+    {
       // Not needed in the DG case since constraints are applied in a weak sense
       DEAL_II_NOT_IMPLEMENTED();
     };
