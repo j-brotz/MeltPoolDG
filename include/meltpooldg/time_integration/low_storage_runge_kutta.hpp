@@ -239,6 +239,7 @@ namespace MeltPoolDG
       pde_operator_.apply_operator(time, this->ki, this->ri);
       pde_operator_.apply_dirichlet_boundary_operator(time, this->ki, this->ri);
       {
+        ri.zero_out_ghost_values();
         scratch_data_.get_matrix_free().cell_loop(
           &LowStorageRungeKuttaIntegrator::local_apply_inverse_mass_matrix,
           this,

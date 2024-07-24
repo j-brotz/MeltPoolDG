@@ -109,6 +109,11 @@ namespace MeltPoolDG::LevelSet
           "use interface movement penalization",
           reinitilization_DG_specific_data.use_interface_movement_penalization,
           "Sets a flag if a penalization of the interface movement should be used.");
+
+        prm.add_parameter(
+          "gradient error time derivative threshold",
+          reinitilization_DG_specific_data.gradient_error_time_derivative_threshold,
+          "Sets the threshold in the time derivative when a reinit procedure reaches a stationary point");
       }
       prm.leave_subsection();
 

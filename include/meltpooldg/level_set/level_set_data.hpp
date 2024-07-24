@@ -26,6 +26,11 @@ namespace MeltPoolDG::LevelSet
     CurvatureData<number>          curv;
     ReinitializationData<number>   reinit;
 
+    struct ReinitilizationDGSpecificData
+    {
+      number gradient_error_evaluation_distance_cell_proportion = 3.0;
+    } level_set_DG_specific_data;
+
     void
     add_parameters(dealii::ParameterHandler &prm);
 

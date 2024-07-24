@@ -33,6 +33,7 @@
 #include "thermo_capillary_two_droplets/thermo_capillary_two_droplets.hpp"
 #include "unidirectional_heat_transfer/unidirectional_heat_transfer.hpp"
 #include "vortex_bubble/vortex_bubble.hpp"
+#include "vortex_bubble/vortex_bubble_DG.hpp"
 #include "zalesak_disk/zalesak_disk.hpp"
 
 namespace MeltPoolDG::Simulation
@@ -80,6 +81,9 @@ namespace MeltPoolDG::Simulation
         case ApplicationName::vortex_bubble:
           return std::make_shared<VortexBubble::SimulationVortexBubble<dim>>(parameter_file,
                                                                              mpi_communicator);
+        case ApplicationName::vortex_bubble_DG:
+          return std::make_shared<VortexBubbleDG::SimulationVortexBubbleDG<dim>>(parameter_file,
+                                                                                 mpi_communicator);
         case ApplicationName::stefans_problem:
           return std::make_shared<StefansProblem::SimulationStefansProblem<dim>>(parameter_file,
                                                                                  mpi_communicator);

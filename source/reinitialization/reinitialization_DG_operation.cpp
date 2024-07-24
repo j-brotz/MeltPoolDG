@@ -56,6 +56,48 @@ namespace MeltPoolDG::LevelSet
   }
 
   template <int dim>
+  ReinitializationDGOperation<dim>::ReinitializationDGOperation(
+    const ScratchData<dim>                                &scratch_data_in,
+    const ReinitializationData<double>                    &reinit_data,
+    const TimeIterator<double>                            &time_iterator,
+    const unsigned int                                     reinit_dof_idx_in,
+    const unsigned int                                     reinit_quad_idx_in,
+    const unsigned int                                     ls_dof_idx_in,
+    const std::shared_ptr<NormalVectorOperationBase<dim>> &normal_vector_operation_in,
+    const std::shared_ptr<CurvatureDGOperation<dim>>      &curvature_operation_in,
+    const bool                                             is_coupled_in)
+    : scratch_data(scratch_data_in)
+    , reinit_data(reinit_data)
+    , time_iterator(time_iterator)
+    , reinit_dof_idx(reinit_dof_idx_in)
+    , reinit_quad_idx(reinit_quad_idx_in)
+    , ls_dof_idx(ls_dof_idx_in)
+    , solution_history(std::max(reinit_data.predictor.n_old_solution_vectors,
+                                2U /*TODO: include time integration scheme*/))
+    , is_coupled(is_coupled_in)
+  {
+    normal_vector_operation = normal_vector_operation_in;
+
+    curvature_operation = curvature_operation_in;
+
+    reinit_DG_operator = std::make_shared<ReinitilizationDGOperator<dim>>(
+      scratch_data_in,
+      reinit_data,
+      reinit_dof_idx_in,
+      reinit_quad_idx_in,
+      curvature_operation->get_curvature(),
+      normal_vector_operation->get_solution_normal_vector());
+
+    reinitilization_integration = TimeIntegratorConcretization::concretize(
+      reinit_data.reinitilization_DG_specific_data.time_integration_scheme,
+      *reinit_DG_operator,
+      scratch_data_in,
+      reinit_dof_idx_in,
+      reinit_quad_idx_in,
+      reinit_data.linear_solver);
+  }
+
+  template <int dim>
   void
   ReinitializationDGOperation<dim>::reinit()
   {
@@ -66,8 +108,12 @@ namespace MeltPoolDG::LevelSet
 
     reinit_DG_operator->reinit();
     reinitilization_integration->reinit();
-    normal_vector_operation->reinit();
-    curvature_operation->reinit();
+
+    if (!is_coupled)
+      {
+        normal_vector_operation->reinit();
+        curvature_operation->reinit();
+      }
   }
 
   template <int dim>
@@ -119,6 +165,32 @@ namespace MeltPoolDG::LevelSet
         phi.set_dof_values(solution_history.get_current_solution());
       }
 
+    if (solution_history.get_current_solution().has_ghost_elements())
+      solution_history.get_current_solution().update_ghost_values();
+
+    solution_history.commit_old_solutions();
+
+    reinit_DG_operator->prepare_operator(solution_history.get_current_solution());
+    reinit_DG_operator->set_artificial_diffusitivity();
+
+
+    if (!is_coupled)
+      {
+        normal_vector_operation->solve();
+        curvature_operation->solve();
+      }
+  }
+
+  template <int dim>
+  void
+  ReinitializationDGOperation<dim>::set_initial_condition(const VectorType &solution_level_set_in)
+  {
+    /*
+     *    copy the given solution into the member variable
+     */
+    solution_history.get_current_solution().zero_out_ghost_values();
+    solution_history.get_current_solution().copy_locally_owned_data_from(solution_level_set_in);
+
 
     if (solution_history.get_current_solution().has_ghost_elements())
       solution_history.get_current_solution().update_ghost_values();
@@ -128,8 +200,11 @@ namespace MeltPoolDG::LevelSet
     reinit_DG_operator->prepare_operator(solution_history.get_current_solution());
     reinit_DG_operator->set_artificial_diffusitivity();
 
-    normal_vector_operation->solve();
-    curvature_operation->solve();
+    if (!is_coupled)
+      {
+        normal_vector_operation->solve();
+        curvature_operation->solve();
+      }
   }
 
   template <int dim>

@@ -37,6 +37,21 @@ namespace MeltPoolDG::LevelSet
                                 const unsigned int                  ls_dof_idx_in,
                                 const NormalVectorData<double>     &normal_vec_data,
                                 const CurvatureData<double>        &curvature_data);
+    /**
+     * For advection reinit coupled problems the normal vector and curvature are computed a level
+     * higher on the level set operation level. This is because the computation of the normal vector
+     * and curvature is very expensive and should only be done once when needed.
+     */
+    ReinitializationDGOperation(
+      const ScratchData<dim>                                &scratch_data_in,
+      const ReinitializationData<double>                    &reinit_data,
+      const TimeIterator<double>                            &time_iterator,
+      const unsigned int                                     reinit_dof_idx_in,
+      const unsigned int                                     reinit_quad_idx_in,
+      const unsigned int                                     ls_dof_idx_in,
+      const std::shared_ptr<NormalVectorOperationBase<dim>> &normal_vector_operation_in,
+      const std::shared_ptr<CurvatureDGOperation<dim>>      &curvature_operation_in,
+      const bool                                             is_coupled_in);
 
     /**
      * Resizes the vectors to the right size of the underlying DoF handler
@@ -45,10 +60,10 @@ namespace MeltPoolDG::LevelSet
     reinit() override;
 
     /**
-     * required from base class
+     * Copies a given field
      */
     void
-    set_initial_condition([[maybe_unused]] const VectorType &solution_level_set_in) override{};
+    set_initial_condition(const VectorType &solution_level_set_in) override;
 
     /**
      * Sets the initial conditions of the level set field based on the analytical function
@@ -139,5 +154,7 @@ namespace MeltPoolDG::LevelSet
      *   Computation of the curvature
      */
     std::shared_ptr<CurvatureDGOperation<dim>> curvature_operation;
+
+    const bool is_coupled = false;
   };
 } // namespace MeltPoolDG::LevelSet
