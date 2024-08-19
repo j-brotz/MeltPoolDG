@@ -34,8 +34,8 @@ fi
 ##############################################################
 # install p4est
 ##############################################################
-wget http://p4est.github.io/release/p4est-2.0.tar.gz
-$configDir/p4est-config.sh p4est-2.0.tar.gz `pwd/p4est-build`
+wget http://p4est.github.io/release/p4est-2.2.tar.gz
+$configDir/p4est-config.sh p4est-2.2.tar.gz `pwd/p4est-build`
 
 ##############################################################
 # install Trilinos
