@@ -240,8 +240,6 @@ namespace MeltPoolDG::LevelSet
                                                                    velocity_dof_idx,
                                                                    base_in);
         advec_diff_operation->reinit();
-
-        // TODO: add assert for inflow/outflow BC that this is not supported
       }
 #endif
     else

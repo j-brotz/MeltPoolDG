@@ -41,17 +41,6 @@ namespace MeltPoolDG::LevelSet
                                 2U /*TODO: include time integration scheme*/))
   {
     this->advec_diff_data = advec_diff_data_in;
-
-    // setup preconditioner matrixfree
-    if (this->advec_diff_data.linear_solver.do_matrix_free)
-      {
-        preconditioner_matrixfree = std::make_shared<
-          Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
-          scratch_data,
-          advec_diff_dof_idx,
-          this->advec_diff_data.linear_solver.preconditioner_type,
-          *advec_diff_operator);
-      }
   }
 
   template <int dim>
