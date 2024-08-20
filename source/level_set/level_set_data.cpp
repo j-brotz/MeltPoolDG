@@ -38,10 +38,10 @@ namespace MeltPoolDG::LevelSet
   LevelSetData<number>::post(const FiniteElementData &base_fe_data)
   {
     fe.post(base_fe_data);
-    advec_diff.post(base_fe_data);
+    advec_diff.post(fe);
     normal_vec.post();
     curv.post();
-    reinit.post(base_fe_data);
+    reinit.post(fe);
   }
 
   template <typename number>
