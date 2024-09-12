@@ -920,7 +920,7 @@ namespace MeltPoolDG::MeltPool
      *    initialize the heat operation class
      */
     if (problem_specific_parameters.do_heat_transfer)
-      heat_operation = std::make_shared<Heat::HeatTransferOperation<dim>>(
+      heat_operation = std::make_shared<Heat::HeatDiffuseOperation<dim>>(
         base_in->get_bc("heat_transfer"),
         *scratch_data,
         base_in->parameters.heat,

@@ -2,7 +2,7 @@
 
 #include <deal.II/numerics/error_estimator.h>
 
-#include <meltpooldg/heat/heat_transfer_operation.hpp>
+#include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -226,19 +226,19 @@ namespace MeltPoolDG::Heat
      *    initialize the heat operation class
      */
     heat_operation =
-      std::make_shared<HeatTransferOperation<dim>>(base_in->get_bc("heat_transfer"),
-                                                   *scratch_data,
-                                                   base_in->parameters.heat,
-                                                   *material,
-                                                   *time_iterator,
-                                                   temp_dof_idx,
-                                                   temp_hanging_nodes_dof_idx,
-                                                   temp_quad_idx,
-                                                   velocity_dof_idx,
-                                                   velocity_ptr,
-                                                   level_set_dof_idx,
-                                                   level_set_as_heaviside_ptr,
-                                                   problem_specific_parameters.do_solidification);
+      std::make_shared<HeatDiffuseOperation<dim>>(base_in->get_bc("heat_transfer"),
+                                                  *scratch_data,
+                                                  base_in->parameters.heat,
+                                                  *material,
+                                                  *time_iterator,
+                                                  temp_dof_idx,
+                                                  temp_hanging_nodes_dof_idx,
+                                                  temp_quad_idx,
+                                                  velocity_dof_idx,
+                                                  velocity_ptr,
+                                                  level_set_dof_idx,
+                                                  level_set_as_heaviside_ptr,
+                                                  problem_specific_parameters.do_solidification);
 
     heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
                                           base_in->parameters.time_stepping.start_time);

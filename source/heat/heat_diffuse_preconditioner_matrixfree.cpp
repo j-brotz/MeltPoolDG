@@ -5,7 +5,7 @@
 
 #include <deal.II/lac/sparsity_tools.h>
 
-#include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
+#include <meltpooldg/heat/heat_diffuse_preconditioner_matrixfree.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_trilinos_factory.hpp>
 
 namespace MeltPoolDG::Heat

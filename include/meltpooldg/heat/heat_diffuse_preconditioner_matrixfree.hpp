@@ -11,7 +11,7 @@
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 
-#include <meltpooldg/heat/heat_transfer_operator.hpp>
+#include <meltpooldg/heat/heat_diffuse_operator.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/preconditioner_matrixfree_base.hpp>
@@ -29,7 +29,7 @@ namespace MeltPoolDG::Heat
   {
   private:
     using VectorType   = LinearAlgebra::distributed::Vector<double>;
-    using OperatorType = std::shared_ptr<HeatTransferOperator<dim>>;
+    using OperatorType = std::shared_ptr<HeatDiffuseOperator<dim>>;
 
     const ScratchData<dim> &scratch_data;
     /**
