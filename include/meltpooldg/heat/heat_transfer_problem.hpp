@@ -12,7 +12,7 @@
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
-#include <meltpooldg/heat/heat_transfer_operation.hpp>
+#include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
@@ -57,10 +57,10 @@ namespace MeltPoolDG::Heat
     unsigned int velocity_dof_idx;
     unsigned int level_set_dof_idx;
 
-    std::shared_ptr<ScratchData<dim>>           scratch_data;
-    std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
-    std::shared_ptr<Material<double>>           material;
-    std::shared_ptr<Postprocessor<dim>>         post_processor;
+    std::shared_ptr<ScratchData<dim>>       scratch_data;
+    std::shared_ptr<HeatOperationBase<dim>> heat_operation;
+    std::shared_ptr<Material<double>>       material;
+    std::shared_ptr<Postprocessor<dim>>     post_processor;
 
     std::shared_ptr<Function<dim>> velocity_field_function;
     std::shared_ptr<Function<dim>> heaviside_field_function;

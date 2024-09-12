@@ -382,8 +382,6 @@ namespace MeltPoolDG::MeltPool
 
                 heat_operation->finish_time_advance();
 
-
-
                 if (melt_front_propagation)
                   {
                     ScopedName         sc("melt_front_propagation");

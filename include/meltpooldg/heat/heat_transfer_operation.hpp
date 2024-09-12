@@ -18,6 +18,7 @@
 
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
+#include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/heat_transfer_operator.hpp>
 #include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
 #include <meltpooldg/interface/boundary_conditions.hpp>
@@ -40,7 +41,7 @@ namespace MeltPoolDG::Heat
   using namespace dealii;
 
   template <int dim>
-  class HeatTransferOperation
+  class HeatTransferOperation : public HeatOperationBase<dim>
   {
   private:
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
@@ -128,16 +129,16 @@ namespace MeltPoolDG::Heat
 
     void
     set_initial_condition(const Function<dim> &initial_field_function_temperature,
-                          const double         start_time);
+                          const double         start_time) override;
 
     void
-    reinit();
+    reinit() override;
 
     void
     init_time_advance();
 
     void
-    solve(const bool do_finish_time_step = true);
+    solve(const bool do_finish_time_step) override;
 
     void
     finish_time_advance();
@@ -148,22 +149,22 @@ namespace MeltPoolDG::Heat
                                   const LevelSet::NearestPointData<double> &nearest_point_data);
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 
     void
-    distribute_constraints();
+    distribute_constraints() override;
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim> &data_out) const override;
 
     void
-    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const override;
 
     const VectorType &
-    get_temperature() const;
+    get_temperature() const override;
 
     VectorType &
-    get_temperature();
+    get_temperature() override;
 
     const VectorType &
     get_temperature_interface() const;
@@ -172,16 +173,16 @@ namespace MeltPoolDG::Heat
     get_temperature_interface();
 
     const VectorType &
-    get_heat_source() const;
+    get_heat_source() const override;
 
     VectorType &
-    get_heat_source();
+    get_heat_source() override;
 
     const VectorType &
-    get_user_rhs() const;
+    get_user_rhs() const override;
 
     VectorType &
-    get_user_rhs();
+    get_user_rhs() override;
 
   private:
     void

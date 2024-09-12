@@ -2,6 +2,7 @@
 
 #include <deal.II/numerics/error_estimator.h>
 
+#include <meltpooldg/heat/heat_transfer_operation.hpp>
 #include <meltpooldg/heat/heat_transfer_problem.hpp>
 #include <meltpooldg/material/material.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>

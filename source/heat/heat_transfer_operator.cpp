@@ -152,6 +152,7 @@ namespace MeltPoolDG::Heat
   {
     AssertThrow(false, ExcNotImplemented());
   }
+
   template <int dim, typename number>
   void
   HeatTransferOperator<dim, number>::update_ghost_values() const
