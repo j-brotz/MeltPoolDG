@@ -27,7 +27,7 @@ namespace MeltPoolDG::Heat
     distribute_constraints() = 0;
 
     virtual void
-    solve(const bool do_finish_time_step = true) = 0;
+    solve() = 0;
 
     /**
      * register vectors for adaptive mesh refinement solution transfer

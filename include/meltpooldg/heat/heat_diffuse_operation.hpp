@@ -138,7 +138,10 @@ namespace MeltPoolDG::Heat
     init_time_advance();
 
     void
-    solve(const bool do_finish_time_step) override;
+    solve() override;
+
+    void
+    solve(const bool do_finish_time_step);
 
     void
     finish_time_advance();

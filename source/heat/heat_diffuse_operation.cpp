@@ -245,6 +245,13 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
+  HeatDiffuseOperation<dim>::solve()
+  {
+    solve(true);
+  }
+
+  template <int dim>
+  void
   HeatDiffuseOperation<dim>::solve(const bool do_finish_time_step)
   {
     if (!ready_for_time_advance)
