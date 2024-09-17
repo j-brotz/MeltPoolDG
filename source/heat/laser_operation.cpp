@@ -27,7 +27,12 @@ namespace MeltPoolDG::Heat
         " the parameter laser power end time must be larger than laser power start time."));
 
     if (laser_data.model == LaserModelType::analytical_temperature)
-      return;
+      {
+        AssertThrow(data_in.base.problem_name == ProblemType::melt_pool,
+                    ExcMessage(
+                      "Only the melt pool problem can handle the analytical laser model."));
+        return;
+      }
 
     /*
      * Factory for the intensity profile
@@ -67,6 +72,14 @@ namespace MeltPoolDG::Heat
         default:
           AssertThrow(false, ExcNotImplemented());
       }
+
+    // For the CutFEM heat transfer operator, we don't precompute a sharp laser heat source.
+    // Instead, we pass the intensity function to the cut operation, which is then evaluated at the
+    // cut interface.
+    if (data_in.heat.operator_type == OperatorType::cut and
+        (laser_data.model == LaserModelType::interface_projection_sharp or
+         laser_data.model == LaserModelType::interface_projection_sharp_conforming))
+      return;
 
     /*
      * Factory for the laser model
@@ -265,6 +278,14 @@ namespace MeltPoolDG::Heat
   }
 
   template <int dim>
+  std::shared_ptr<const Function<dim, double>>
+  LaserOperation<dim>::get_intensity_profile() const
+  {
+    Assert(intensity_profile != nullptr, ExcInternalError());
+    return intensity_profile;
+  }
+
+  template <int dim>
   bool
   LaserOperation<dim>::compute_laser_intensity()
   {
@@ -308,11 +329,13 @@ namespace MeltPoolDG::Heat
     switch (laser_data.model)
       {
           case LaserModelType::volumetric: {
+            Assert(laser_heat_source_operation_volumetric != nullptr, ExcInternalError());
             laser_heat_source_operation_volumetric->compute_volumetric_heat_source(
               heat_source, scratch_data, temp_hanging_nodes_dof_idx, zero_out);
             break;
           }
           case LaserModelType::interface_projection_regularized: {
+            Assert(laser_heat_source_operation_projection != nullptr, ExcInternalError());
             laser_heat_source_operation_projection->compute_interfacial_heat_source(
               heat_source,
               scratch_data,
@@ -325,6 +348,7 @@ namespace MeltPoolDG::Heat
             break;
           }
           case LaserModelType::interface_projection_sharp: {
+            Assert(laser_heat_source_operation_projection != nullptr, ExcInternalError());
             laser_heat_source_operation_projection->compute_interfacial_heat_source_sharp(
               heat_user_rhs,
               scratch_data,
@@ -337,6 +361,7 @@ namespace MeltPoolDG::Heat
             break;
           }
           case LaserModelType::interface_projection_sharp_conforming: {
+            Assert(laser_heat_source_operation_projection != nullptr, ExcInternalError());
             laser_heat_source_operation_projection
               ->compute_interfacial_heat_source_sharp_conforming(heat_user_rhs,
                                                                  scratch_data,
@@ -350,6 +375,7 @@ namespace MeltPoolDG::Heat
             break;
           }
           case LaserModelType::RTE: {
+            Assert(rte_operation != nullptr, ExcInternalError());
             rte_operation->solve();
             rte_operation->compute_heat_source(heat_source, temp_hanging_nodes_dof_idx, zero_out);
             break;

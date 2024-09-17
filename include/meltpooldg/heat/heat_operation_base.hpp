@@ -6,6 +6,7 @@
 
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 
+#include <memory>
 #include <vector>
 
 namespace MeltPoolDG::Heat
@@ -47,23 +48,16 @@ namespace MeltPoolDG::Heat
     /*
      * getters
      */
-
     virtual const VectorType &
     get_temperature() const = 0;
 
     virtual VectorType &
     get_temperature() = 0;
 
-    virtual VectorType &
-    get_heat_source() = 0;
-
     virtual const VectorType &
     get_heat_source() const = 0;
 
-    virtual const VectorType &
-    get_user_rhs() const = 0;
-
     virtual VectorType &
-    get_user_rhs() = 0;
+    get_heat_source() = 0;
   };
 } // namespace MeltPoolDG::Heat

@@ -20,6 +20,31 @@ namespace MeltPoolDG::Heat
     {
       fe.add_parameters(prm);
 
+      prm.add_parameter("operator type",
+                        operator_type,
+                        "Choose the heat operator implementation. Options: diffuse, cut");
+
+      prm.enter_subsection("cut");
+      {
+        prm.add_parameter("two phase",
+                          cut.two_phase,
+                          "Set this parameter to \"false\" to ignore the gas phase.");
+        prm.add_parameter("gamma M",
+                          cut.gamma_M,
+                          "Mass ghost penalty parameter for 1. normal derivative.");
+        prm.add_parameter("gamma A",
+                          cut.gamma_A,
+                          "Stiffness ghost penalty parameter for 1. normal derivative.");
+        prm.add_parameter("nitsche parameter", cut.nitsche_parameter, "Nitsche parameter.");
+        prm.add_parameter("theta", cut.theta, "");
+        prm.add_parameter(
+          "do explicit symmetry term",
+          cut.do_explicit_symmetry_term,
+          "Set this parameter to true to consider the explicit symmetry term. "
+          "Note: this parameter only applies if the setup is two-phase and dynamic.");
+      }
+      prm.leave_subsection();
+
       prm.add_parameter("enable time dependent bc",
                         enable_time_dependent_bc,
                         "Set this parameter to true to enable time-dependent bc.");

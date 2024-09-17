@@ -182,10 +182,10 @@ namespace MeltPoolDG::Heat
     get_heat_source() override;
 
     const VectorType &
-    get_user_rhs() const override;
+    get_user_rhs() const;
 
     VectorType &
-    get_user_rhs() override;
+    get_user_rhs();
 
   private:
     void

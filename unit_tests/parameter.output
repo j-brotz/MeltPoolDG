@@ -119,11 +119,21 @@
     "heat":
     {
         "enable time dependent bc": "false",
+        "operator type": "diffuse",
         "use volume-specific thermal capacity for phase interpolation": "false",
         "convective boundary condition":
         {
             "convection coefficient": "0",
             "temperature infinity": "0"
+        },
+        "cut":
+        {
+            "do explicit symmetry term": "true",
+            "gamma A": "1.5",
+            "gamma M": "0.75",
+            "nitsche parameter": "500",
+            "theta": "0.5",
+            "two phase": "true"
         },
         "fe":
         {

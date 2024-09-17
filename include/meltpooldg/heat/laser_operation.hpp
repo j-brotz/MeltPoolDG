@@ -147,6 +147,12 @@ namespace MeltPoolDG::Heat
     double
     get_laser_power() const;
 
+    /**
+     * Getter function for the underlying intensity profile.
+     */
+    std::shared_ptr<const Function<dim, double>>
+    get_intensity_profile() const;
+
   private:
     /**
      * Print info on current laser features.

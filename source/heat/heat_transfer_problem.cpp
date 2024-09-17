@@ -1,19 +1,38 @@
+#include <meltpooldg/heat/heat_transfer_problem.hpp>
+//
+#include <deal.II/base/exceptions.h>
+#include <deal.II/base/utilities.h>
+
 #include <deal.II/distributed/grid_refinement.h>
 
-#include <deal.II/numerics/error_estimator.h>
+#include <deal.II/grid/tria.h>
 
+#include <deal.II/lac/solver_control.h>
+#include <deal.II/lac/vector.h>
+
+#include <deal.II/numerics/data_component_interpretation.h>
+#include <deal.II/numerics/error_estimator.h>
+#include <deal.II/numerics/vector_tools_common.h>
+#include <deal.II/numerics/vector_tools_integrate_difference.h>
+#include <deal.II/numerics/vector_tools_interpolate.h>
+
+#include <meltpooldg/heat/heat_cut_operation.hpp>
+#include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/heat_diffuse_operation.hpp>
-#include <meltpooldg/heat/heat_transfer_problem.hpp>
-#include <meltpooldg/material/material.hpp>
-#include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/heat/laser_data.hpp>
+#include <meltpooldg/interface/exceptions.hpp>
+#include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/utilities/amr.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/journal.hpp>
+#include <meltpooldg/utilities/vector_tools.hpp>
 
 #include <functional>
 #include <sstream>
+#include <utility>
 #include <vector>
+
 
 namespace MeltPoolDG::Heat
 {
@@ -39,6 +58,9 @@ namespace MeltPoolDG::Heat
                                    level_set_dof_idx,
                                    *heaviside_field_function);
 
+            if (level_set_field_function)
+              compute_field_vector(level_set, level_set_dof_idx, *level_set_field_function);
+
             // heat source
             // zero out
             heat_operation->get_heat_source() = 0;
@@ -52,13 +74,21 @@ namespace MeltPoolDG::Heat
             if (laser_operation)
               {
                 laser_operation->move_laser(dt);
-                laser_operation->compute_heat_source(heat_operation->get_heat_source(),
-                                                     heat_operation->get_user_rhs(),
-                                                     level_set_as_heaviside,
-                                                     level_set_dof_idx,
-                                                     temp_hanging_nodes_dof_idx,
-                                                     temp_quad_idx,
-                                                     false /* zero_out */);
+
+                // only precompute the laser heat source if it's not passed to the CutFEM Operator
+                if (base_in->parameters.heat.operator_type != OperatorType::cut)
+                  {
+                    auto heat_diffuse_operation =
+                      dynamic_cast<HeatDiffuseOperation<dim> *>(heat_operation.get());
+                    Assert(heat_diffuse_operation != nullptr, ExcInternalError());
+                    laser_operation->compute_heat_source(heat_diffuse_operation->get_heat_source(),
+                                                         heat_diffuse_operation->get_user_rhs(),
+                                                         level_set_as_heaviside,
+                                                         level_set_dof_idx,
+                                                         temp_hanging_nodes_dof_idx,
+                                                         temp_quad_idx,
+                                                         false /* zero_out */);
+                  }
               }
 
             Journal::print_formatted_norm(
@@ -201,44 +231,83 @@ namespace MeltPoolDG::Heat
         velocity_ptr = &velocity;
       }
     /*
-     *    set level-set as heaviside field
-     */
-    VectorType *level_set_as_heaviside_ptr = nullptr;
-    heaviside_field_function =
-      base_in->get_initial_condition("prescribed_heaviside",
-                                     (base_in->parameters.laser.model !=
-                                      LaserModelType::RTE) /*is_optional if laser is not RTE*/);
-    if (heaviside_field_function)
-      {
-        compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
-        level_set_as_heaviside_ptr = &level_set_as_heaviside;
-      }
-    /*
-     * initialize material
-     */
-    const auto material_type = determine_material_type(
-      heaviside_field_function != nullptr,
-      problem_specific_parameters.do_solidification,
-      base_in->parameters.material.two_phase_fluid_properties_transition_type ==
-        TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation);
-    material = std::make_shared<Material<double>>(base_in->parameters.material, material_type);
-    /*
      *    initialize the heat operation class
      */
-    heat_operation =
-      std::make_shared<HeatDiffuseOperation<dim>>(base_in->get_bc("heat_transfer"),
-                                                  *scratch_data,
-                                                  base_in->parameters.heat,
-                                                  *material,
-                                                  *time_iterator,
-                                                  temp_dof_idx,
-                                                  temp_hanging_nodes_dof_idx,
-                                                  temp_quad_idx,
-                                                  velocity_dof_idx,
-                                                  velocity_ptr,
-                                                  level_set_dof_idx,
-                                                  level_set_as_heaviside_ptr,
-                                                  problem_specific_parameters.do_solidification);
+    switch (base_in->parameters.heat.operator_type)
+      {
+          case OperatorType::diffuse: {
+            // set level-set as heaviside field
+            VectorType *level_set_as_heaviside_ptr = nullptr;
+            heaviside_field_function               = base_in->get_initial_condition(
+              "prescribed_heaviside",
+              (base_in->parameters.laser.model !=
+               LaserModelType::RTE) /*is_optional if laser is not RTE*/);
+            if (heaviside_field_function)
+              {
+                compute_field_vector(level_set_as_heaviside,
+                                     level_set_dof_idx,
+                                     *heaviside_field_function);
+                level_set_as_heaviside_ptr = &level_set_as_heaviside;
+              }
+
+            // initialize (diffuse) material class
+            material = std::make_shared<Material<double>>(
+              base_in->parameters.material,
+              determine_material_type(
+                heaviside_field_function != nullptr,
+                problem_specific_parameters.do_solidification,
+                base_in->parameters.material.two_phase_fluid_properties_transition_type ==
+                  TwoPhaseFluidPropertiesTransitionType::consistent_with_evaporation));
+
+            heat_operation = std::make_shared<HeatDiffuseOperation<dim>>(
+              base_in->get_bc("heat_transfer"),
+              *scratch_data,
+              base_in->parameters.heat,
+              *material,
+              *time_iterator,
+              temp_dof_idx,
+              temp_hanging_nodes_dof_idx,
+              temp_quad_idx,
+              velocity_dof_idx,
+              velocity_ptr,
+              level_set_dof_idx,
+              level_set_as_heaviside_ptr,
+              problem_specific_parameters.do_solidification);
+            break;
+          }
+          case OperatorType::cut: {
+            // set level-set field that defines the interface at the zero contour
+            level_set_field_function =
+              base_in->get_initial_condition("prescribed_level_set", false /* is_optional */);
+            if (level_set_field_function)
+              compute_field_vector(level_set, level_set_dof_idx, *level_set_field_function);
+
+            auto heat_cut_operation =
+              std::make_shared<HeatCutOperation<dim>>(*scratch_data,
+                                                      base_in->parameters.heat,
+                                                      base_in->parameters.material,
+                                                      base_in->parameters.evapor,
+                                                      *time_iterator,
+                                                      temp_dof_idx,
+                                                      temp_hanging_nodes_dof_idx,
+                                                      temp_quad_idx,
+                                                      problem_specific_parameters.do_solidification,
+                                                      level_set_dof_idx,
+                                                      level_set,
+                                                      velocity_dof_idx,
+                                                      velocity_ptr);
+
+            if (laser_operation)
+              heat_cut_operation->register_laser_intensity_function_and_direction(
+                laser_operation->get_intensity_profile(),
+                base_in->parameters.laser.template get_direction<dim>());
+
+            heat_operation = heat_cut_operation;
+            break;
+          }
+        default:
+          DEAL_II_NOT_IMPLEMENTED();
+      }
 
     heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
                                           base_in->parameters.time_stepping.start_time);
@@ -402,6 +471,11 @@ namespace MeltPoolDG::Heat
      */
     if (heaviside_field_function)
       data_out.add_data_vector(dof_handler_level_set, level_set_as_heaviside, "heaviside");
+    /**
+     *  prescribed level set
+     */
+    if (level_set_field_function)
+      data_out.add_data_vector(dof_handler_level_set, level_set, "level_set");
 
 
     if (laser_operation)
@@ -484,6 +558,8 @@ namespace MeltPoolDG::Heat
         compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
       if (heaviside_field_function)
         compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
+      if (level_set_field_function)
+        compute_field_vector(level_set, level_set_dof_idx, *level_set_field_function);
       if (laser_operation)
         laser_operation->distribute_constraints();
     };
