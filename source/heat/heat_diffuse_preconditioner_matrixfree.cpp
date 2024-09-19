@@ -39,8 +39,6 @@ namespace MeltPoolDG::Heat
                   preconditioner_type == PreconditionerType::ILUReduced,
                 ExcMessage("The supported preconditioner types are Identity|Diagonal"
                            "|DiagonalReduced|ILU|ILUReduced|AMG|AMGReduced."));
-
-    reinit();
   }
 
   template <int dim>

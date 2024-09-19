@@ -2,6 +2,8 @@
 
 #include <deal.II/base/function.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -19,6 +21,9 @@ namespace MeltPoolDG::Heat
 
     virtual void
     reinit() = 0;
+
+    virtual void
+    distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const = 0;
 
     virtual void
     set_initial_condition(const dealii::Function<dim> &initial_temperature,

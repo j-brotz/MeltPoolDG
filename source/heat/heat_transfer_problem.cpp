@@ -5,6 +5,8 @@
 
 #include <deal.II/distributed/grid_refinement.h>
 
+#include <deal.II/dofs/dof_tools.h>
+
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/solver_control.h>
@@ -198,6 +200,11 @@ namespace MeltPoolDG::Heat
       FiniteElementUtils::create_quadrature<dim>(base_in->parameters.heat.fe));
 
     /*
+     *  initialize the time stepping scheme
+     */
+    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
+
+    /*
      * laser operation
      */
     if (base_in->parameters.laser.power > 0.0)
@@ -210,26 +217,17 @@ namespace MeltPoolDG::Heat
         laser_operation->reset(base_in->parameters.time_stepping.start_time);
       }
 
-    setup_dof_system(base_in, false);
-
-    if (laser_operation)
-      laser_operation->reinit();
-
-
-    /*
-     *  initialize the time stepping scheme
-     */
-    time_iterator = std::make_shared<TimeIterator<double>>(base_in->parameters.time_stepping);
     /*
      *    set velocity field
      */
     VectorType *velocity_ptr = nullptr;
     velocity_field_function  = base_in->get_velocity_field("heat_transfer", true /*is_optional*/);
     if (velocity_field_function)
-      {
-        compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
-        velocity_ptr = &velocity;
-      }
+      velocity_ptr = &velocity;
+
+    //@todo move to a more central place
+    base_in->attach_boundary_condition("heat_transfer");
+
     /*
      *    initialize the heat operation class
      */
@@ -243,12 +241,7 @@ namespace MeltPoolDG::Heat
               (base_in->parameters.laser.model !=
                LaserModelType::RTE) /*is_optional if laser is not RTE*/);
             if (heaviside_field_function)
-              {
-                compute_field_vector(level_set_as_heaviside,
-                                     level_set_dof_idx,
-                                     *heaviside_field_function);
-                level_set_as_heaviside_ptr = &level_set_as_heaviside;
-              }
+              level_set_as_heaviside_ptr = &level_set_as_heaviside;
 
             // initialize (diffuse) material class
             material = std::make_shared<Material<double>>(
@@ -279,8 +272,6 @@ namespace MeltPoolDG::Heat
             // set level-set field that defines the interface at the zero contour
             level_set_field_function =
               base_in->get_initial_condition("prescribed_level_set", false /* is_optional */);
-            if (level_set_field_function)
-              compute_field_vector(level_set, level_set_dof_idx, *level_set_field_function);
 
             auto heat_cut_operation =
               std::make_shared<HeatCutOperation<dim>>(*scratch_data,
@@ -308,6 +299,18 @@ namespace MeltPoolDG::Heat
         default:
           DEAL_II_NOT_IMPLEMENTED();
       }
+
+    setup_dof_system(base_in, false);
+
+    if (velocity_field_function)
+      compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
+    if (heaviside_field_function)
+      compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
+
+    if (laser_operation)
+      laser_operation->reinit();
+
+    heat_operation->reinit();
 
     heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
                                           base_in->parameters.time_stepping.start_time);
@@ -369,10 +372,33 @@ namespace MeltPoolDG::Heat
   HeatTransferProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
                                              const bool                           do_reinit)
   {
-    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.heat.fe, dof_handler);
+    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler_level_set);
+
+    // before the CutFEM operation can distribute dofs, the mesh must be classified according to the
+    // level set indicator
+    if (base_in->parameters.heat.operator_type == OperatorType::cut)
+      {
+        Assert(level_set_field_function != nullptr, ExcInternalError());
+        IndexSet locally_relevant_dofs;
+        DoFTools::extract_locally_relevant_dofs(dof_handler_level_set, locally_relevant_dofs);
+        level_set.reinit(dof_handler_level_set.locally_owned_dofs(),
+                         locally_relevant_dofs,
+                         dof_handler_level_set.get_communicator());
+        level_set_field_function->set_time(time_iterator->get_current_time());
+        dealii::VectorTools::interpolate(scratch_data->get_mapping(),
+                                         dof_handler_level_set,
+                                         *level_set_field_function,
+                                         level_set);
+
+        auto heat_cut_operation = dynamic_cast<HeatCutOperation<dim> *>(heat_operation.get());
+        Assert(heat_cut_operation != nullptr, ExcInternalError());
+        heat_cut_operation->classify_cells();
+      }
+
+    heat_operation->distribute_dofs(dof_handler);
+
     FiniteElementUtils::distribute_dofs<dim, dim>(base_in->parameters.base.fe,
                                                   dof_handler_velocity);
-    FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler_level_set);
     if (laser_operation)
       laser_operation->distribute_dofs(base_in->parameters.heat.fe);
 
@@ -390,7 +416,6 @@ namespace MeltPoolDG::Heat
                                                     base_in->get_periodic_bc(),
                                                     level_set_dof_idx);
 
-    base_in->attach_boundary_condition("heat_transfer"); //@todo move to a more central place
     MeltPoolDG::Constraints::make_DBC_and_HNC_plus_PBC_and_merge_HNC_plus_PBC_into_DBC<dim>(
       *scratch_data,
       base_in->get_dirichlet_bc("heat_transfer"),
@@ -403,8 +428,9 @@ namespace MeltPoolDG::Heat
 
     scratch_data->build(
       true /*enable_boundary_faces*/,
-      base_in->parameters.laser.model ==
-        LaserModelType::interface_projection_sharp_conforming /*enable_inner_face_loops*/);
+      base_in->parameters.laser.model == LaserModelType::interface_projection_sharp_conforming or
+        base_in->parameters.heat.operator_type == OperatorType::cut /*enable_inner_face_loops*/,
+      base_in->parameters.heat.operator_type == OperatorType::cut /*enable_normal_vector_update*/);
 
     if (do_reinit)
       {

@@ -1,5 +1,11 @@
 #pragma once
 
+#include <deal.II/base/exceptions.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/non_matching/mesh_classifier.h>
+
 #include <utility>
 
 namespace MeltPoolDG::Heat::CutUtil
@@ -34,40 +40,22 @@ namespace MeltPoolDG::Heat::CutUtil
    *
    */
   FaceType
-  get_face_type(const std::pair<unsigned int, unsigned int> &adjacent_cell_categories)
-  {
-    // inside_face_liquid: both adjacent cells to the face are completely inside the liquid phase
-    if (adjacent_cell_categories.first == CellCategory::liquid &&
-        adjacent_cell_categories.second == CellCategory::liquid)
-      {
-        return inside_face_liquid;
-      }
-    // inside_face_gas: both adjacent cells to the face are completely inside the gas phase
-    else if (adjacent_cell_categories.first == CellCategory::gas &&
-             adjacent_cell_categories.second == CellCategory::gas)
-      {
-        return inside_face_gas;
-      }
-    // intersected_face: both adjacent cells to the face are intersected
-    else if (adjacent_cell_categories.first == CellCategory::intersected &&
-             adjacent_cell_categories.second == CellCategory::intersected)
-      {
-        return intersected_face;
-      }
-    // mixed_face_liquid: one adjacent cell of the face is completely inside the liquid phase
-    // and the other adjacent cell of the face is intersected
-    else if ((adjacent_cell_categories.first == CellCategory::liquid &&
-              adjacent_cell_categories.second == CellCategory::intersected) ||
-             (adjacent_cell_categories.first == CellCategory::intersected &&
-              adjacent_cell_categories.second == CellCategory::liquid))
-      {
-        return mixed_face_liquid;
-      }
-    // mixed_face_gas one adjacent cell of the face is completely inside th gas phase
-    // and the other adjacent cell of the face is intersected by the immersed boundary
-    else
-      {
-        return mixed_face_gas;
-      }
-  }
+  get_face_type(const std::pair<unsigned int, unsigned int> &adjacent_cell_categories);
+
+
+  /**
+   * This function is setting the FE index for every cell.
+   *
+   * @param dof_handler DoFHandler object, provides the cell iterator.
+   * @param mesh_classifier The dealii::NonMatching::MeshClassifier object which contains the
+   * information, how the active cells and faces of the triangulation are related to the
+   * sign of a level set function. Note that the reclassify() function has to be called
+   * before, so that the cell and face locations are categorized as one of the values of
+   * dealii::NonMatching::LocationToLevelSet: inside, outside or intersected.
+   *
+   */
+  template <int dim>
+  void
+  set_fe_index(const dealii::DoFHandler<dim>                  &dof_handler,
+               const dealii::NonMatching::MeshClassifier<dim> &mesh_classifier);
 } // namespace MeltPoolDG::Heat::CutUtil

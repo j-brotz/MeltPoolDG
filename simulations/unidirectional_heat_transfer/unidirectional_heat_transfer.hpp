@@ -118,21 +118,26 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
   };
 
   template <int dim>
-  class HorizontalLevelSetHeaviside : public Function<dim>
+  class HorizontalLevelSet : public Function<dim>
   {
   public:
-    HorizontalLevelSetHeaviside()
+    HorizontalLevelSet(const bool do_heaviside)
       : Function<dim>(1)
+      , heaviside(do_heaviside)
     {}
 
     double
     value(const Point<dim> &p, const unsigned int) const override
     {
-      const auto y = p[1];
-      return UtilityFunctions::CharacteristicFunctions::heaviside(level - y, eps);
+      const auto signed_distance = level - p[1];
+      if (heaviside)
+        return UtilityFunctions::CharacteristicFunctions::heaviside(signed_distance, eps);
+      else
+        return signed_distance;
     }
 
   private:
+    const bool   heaviside;
     const double eps   = 0.01;
     const double level = x_max / 2;
   };
@@ -248,18 +253,29 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
       else
         this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_transfer");
 
-      this->attach_velocity_field(std::make_shared<UnidirectionalVelocityField<dim>>(velocity),
-                                  "heat_transfer");
+      if (velocity != 0.0)
+        this->attach_velocity_field(std::make_shared<UnidirectionalVelocityField<dim>>(velocity),
+                                    "heat_transfer");
 
       if (do_two_phase)
         {
-          if (!do_solidification)
-            this->template attach_initial_condition(
-              std::make_shared<HorizontalLevelSetHeaviside<dim>>(), "prescribed_heaviside");
-          else
-            this->template attach_initial_condition(
-              std::make_shared<CovectedVerticalLevelSetHeaviside<dim>>(velocity),
-              "prescribed_heaviside");
+          if (this->parameters.heat.operator_type == Heat::OperatorType::diffuse)
+            {
+              if (!do_solidification)
+                this->attach_initial_condition(std::make_shared<HorizontalLevelSet<dim>>(
+                                                 true /* do_heaviside */),
+                                               "prescribed_heaviside");
+              else
+                this->attach_initial_condition(
+                  std::make_shared<CovectedVerticalLevelSetHeaviside<dim>>(velocity),
+                  "prescribed_heaviside");
+            }
+          else if (this->parameters.heat.operator_type == Heat::OperatorType::cut)
+            {
+              this->attach_initial_condition(std::make_shared<HorizontalLevelSet<dim>>(
+                                               false /* do_heaviside */),
+                                             "prescribed_level_set");
+            }
         }
     }
   };

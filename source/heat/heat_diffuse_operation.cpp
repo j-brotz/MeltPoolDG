@@ -10,6 +10,7 @@
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
 #include <meltpooldg/utilities/constraints.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
+#include <meltpooldg/utilities/fe_util.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
@@ -70,8 +71,6 @@ namespace MeltPoolDG::Heat
       scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, heat_operator);
 
     setup_newton();
-
-    reinit();
   }
 
   template <int dim>
@@ -150,12 +149,18 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
+  HeatDiffuseOperation<dim>::distribute_dofs(DoFHandler<dim> &dof_handler) const
+  {
+    FiniteElementUtils::distribute_dofs<dim, 1>(heat_data.fe, dof_handler);
+  }
+
+
+  template <int dim>
+  void
   HeatDiffuseOperation<dim>::set_initial_condition(
     const Function<dim> &initial_field_function_temperature,
     const double         start_time)
   {
-    reinit();
-
     if (heat_data.enable_time_dependent_bc)
       bc_data->set_time(start_time);
 

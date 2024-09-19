@@ -1,0 +1,54 @@
+{
+  "base": {
+    "application name": "unidirectional_heat_transfer",
+    "dimension": "2",
+    "do print parameters": "false",
+    "global refinements": "4",
+    "problem name": "heat_transfer",
+    "fe": {
+      "degree": "1"
+    }
+  },
+  "time stepping": {
+    "start time": "0.0",
+    "time step size": "0.001",
+    "end time": "1.0",
+    "max n steps": "5"
+  },
+  "heat": {
+    "operator type": "cut",
+    "cut": {
+      "two_phase": "false"
+    },
+    "linear solver": {
+      "rel tolerance": "1e-12"
+    },
+    "nlsolve": {
+      "residual tolerance": "1e-6"
+    }
+  },
+  "simulation specific": {
+    "do solidification": "false",
+    "do two phase": "true"
+  },
+  "problem specific": {
+    "do solidification": "false"
+  },
+  "material": {
+    "gas": {
+      "thermal conductivity": "27.7815",
+      "specific heat capacity": "230",
+      "density": "3925"
+    },
+    "liquid": {
+      "thermal conductivity": "55.563",
+      "specific heat capacity": "460",
+      "density": "7850"
+    }
+  },
+  "output": {
+    "paraview": {
+      "enable": "false"
+    }
+  }
+}

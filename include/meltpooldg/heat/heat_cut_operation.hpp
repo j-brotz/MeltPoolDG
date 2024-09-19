@@ -3,6 +3,10 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/tensor.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/non_matching/mesh_classifier.h>
+
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_cut_operator.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
@@ -41,6 +45,9 @@ namespace MeltPoolDG::Heat
     const unsigned int ls_dof_idx;
     const VectorType  &level_set;
 
+    std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
+    std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
+
     NewtonRaphsonSolver<dim> newton;
 
     std::unique_ptr<HeatCutOperator<dim, double>> heat_operator;
@@ -65,6 +72,12 @@ namespace MeltPoolDG::Heat
     register_laser_intensity_function_and_direction(
       std::shared_ptr<const dealii::Function<dim, double>> laser_intensity_profile_in,
       const dealii::Tensor<1, dim, double>                &laser_direction_in);
+
+    void
+    classify_cells();
+
+    void
+    distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;
 
     void
     reinit() override;

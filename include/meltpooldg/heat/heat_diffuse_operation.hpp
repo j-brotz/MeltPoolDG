@@ -8,6 +8,8 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/diagonal_matrix.h>
@@ -126,6 +128,9 @@ namespace MeltPoolDG::Heat
                                    std::vector<Point<dim>> /*quad_points*/,
                                    std::vector<double> /*weights*/
                                    >> &surface_mesh_info_in);
+
+    void
+    distribute_dofs(DoFHandler<dim> &dof_handler) const override;
 
     void
     set_initial_condition(const Function<dim> &initial_field_function_temperature,

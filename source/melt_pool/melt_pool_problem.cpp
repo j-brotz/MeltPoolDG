@@ -909,13 +909,6 @@ namespace MeltPoolDG::MeltPool
         laser_operation->reset(base_in->parameters.time_stepping.start_time);
       }
 
-    setup_dof_system(base_in, false);
-
-    level_set_operation->reinit();
-
-    if (laser_operation)
-      laser_operation->reinit();
-
     /*
      *    initialize the heat operation class
      */
@@ -934,6 +927,13 @@ namespace MeltPoolDG::MeltPool
         ls_hanging_nodes_dof_idx,
         &level_set_operation->get_level_set_as_heaviside(),
         problem_specific_parameters.do_solidification);
+
+    setup_dof_system(base_in, false);
+
+    level_set_operation->reinit();
+
+    if (laser_operation)
+      laser_operation->reinit();
 
     /*
      *    initialize the surface tension operation class
@@ -1076,6 +1076,10 @@ namespace MeltPoolDG::MeltPool
               base_in->parameters.evapor.evaporative_cooling);
           }
       }
+
+    if (heat_operation)
+      heat_operation->reinit();
+
     /*
      *    initialize the melt pool operation class
      */
@@ -1242,8 +1246,11 @@ namespace MeltPoolDG::MeltPool
           // constant evaporative mass flux --> no need to set initial condition
           (!(evaporation_operation && base_in->parameters.evapor.evaporative_mass_flux_model ==
                                         Evaporation::EvaporationModelType::analytical))
-          heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
-                                                base_in->parameters.time_stepping.start_time);
+          {
+            //            heat_operation->reinit();
+            heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
+                                                  base_in->parameters.time_stepping.start_time);
+          }
       }
     /*
      * set initial condition of the melt pool class
@@ -1291,8 +1298,8 @@ namespace MeltPoolDG::MeltPool
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.ls.fe, dof_handler_ls);
 
-    if (problem_specific_parameters.do_heat_transfer)
-      FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.heat.fe, dof_handler_heat);
+    if (heat_operation)
+      heat_operation->distribute_dofs(dof_handler_heat);
 
     if (laser_operation)
       laser_operation->distribute_dofs(base_in->parameters.base.fe);

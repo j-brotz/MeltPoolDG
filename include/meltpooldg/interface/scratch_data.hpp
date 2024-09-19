@@ -60,7 +60,8 @@ namespace MeltPoolDG
            const std::vector<const AffineConstraints<number> *> &constraint,
            const std::vector<Quadrature<dim>>                   &quad,
            const bool                                            enable_boundary_face_loops,
-           const bool                                            enable_inner_face_loops);
+           const bool                                            enable_inner_face_loops,
+           const bool enable_normal_vector_update = false);
     /**
      * Fill internal data structures step-by-step.
      */
@@ -83,7 +84,9 @@ namespace MeltPoolDG
     create_partitioning();
 
     void
-    build(const bool enable_boundary_face_loops, const bool enable_inner_face_loops);
+    build(const bool enable_boundary_face_loops,
+          const bool enable_inner_face_loops,
+          const bool enable_normal_vector_update = false);
 
     /**
      * initialize vectors
