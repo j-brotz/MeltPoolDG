@@ -131,24 +131,27 @@ namespace MeltPoolDG::Heat
     const MaterialData<number>                 &material_data_in,
     const Evaporation::EvaporationData<number> &evapor_data_in,
     const unsigned int                          temp_dof_idx_in,
-    const unsigned int                          temp_quad_idx_in,
     const unsigned int                          temp_hanging_nodes_dof_idx_in,
+    const unsigned int                          temp_quad_idx_in,
     const VectorType                           &temperature_in,
-    const bool                                  do_solidification_in,
-    const unsigned int                          vel_dof_idx_in,
-    const VectorType                           *velocity_in)
+    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
+      &mapping_info_surface_in,
+    const std::vector<
+      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
+                      &mapping_info_cells_in,
+    const bool         do_solidification_in,
+    const unsigned int vel_dof_idx_in,
+    const VectorType  *velocity_in)
     : scratch_data(scratch_data_in)
     , heat_data(heat_data_in)
     , material_data(material_data_in)
     , evapor_data(evapor_data_in)
     , temp_dof_idx(temp_dof_idx_in)
-    , temp_quad_idx(temp_quad_idx_in)
     , temp_hanging_nodes_dof_idx(temp_hanging_nodes_dof_idx_in)
+    , temp_quad_idx(temp_quad_idx_in)
     , temperature(temperature_in)
-    , mapping(heat_data.fe.degree)
-    , mapping_info_surface(mapping,
-                           dealii::update_values | dealii::update_gradients |
-                             dealii::update_JxW_values | dealii::update_normal_vectors)
+    , mapping_info_surface(mapping_info_surface_in)
+    , mapping_info_cells(mapping_info_cells_in)
     , fe_tmp(heat_data.fe.degree)
     , n_dofs_per_cell(fe_tmp.dofs_per_cell)
     , kappa_l(material_data.gas.thermal_conductivity /
@@ -166,28 +169,9 @@ namespace MeltPoolDG::Heat
 
     AssertThrow(heat_data.fe.type == FiniteElementType::FE_Q,
                 dealii::ExcMessage("only standard FE_Q elements are supported for now"));
+    AssertThrow(heat_data.fe.degree == 1, dealii::ExcMessage("only degree 1 is supported for now"));
 
     // TODO material assertion, see heat diffuse operator
-
-    // liquid domain
-    mapping_info_cells.push_back(
-      std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>(
-        mapping, update_values | update_gradients | update_JxW_values | update_normal_vectors));
-    if (heat_data.cut.two_phase)
-      mapping_info_faces.push_back(
-        std::make_shared<
-          dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>(
-          mapping, update_values | update_gradients | update_JxW_values | update_normal_vectors));
-
-    // gas domain
-    mapping_info_cells.push_back(
-      std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>(
-        mapping, update_values | update_gradients | update_JxW_values | update_normal_vectors));
-    if (heat_data.cut.two_phase)
-      mapping_info_faces.push_back(
-        std::make_shared<
-          dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>(
-          mapping, update_values | update_gradients | update_JxW_values | update_normal_vectors));
   }
 
 

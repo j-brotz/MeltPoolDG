@@ -100,7 +100,7 @@ namespace MeltPoolDG::Heat
     initialize(std::shared_ptr<SimulationBase<dim>> base_in);
 
     void
-    setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in, bool do_reinit = true);
+    setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in);
 
     void
     compute_field_vector(VectorType &vector, unsigned dof_idx, Function<dim> &field_function);

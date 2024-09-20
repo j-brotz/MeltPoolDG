@@ -6,6 +6,7 @@
 #include <deal.II/fe/fe_nothing.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_update_flags.h>
 
 #include <deal.II/hp/fe_collection.h>
 
@@ -49,8 +50,26 @@ namespace MeltPoolDG::Heat
     , solution_history(std::max(2U, heat_data.predictor.n_old_solution_vectors))
     , ls_dof_idx(ls_dof_idx_in)
     , level_set(level_set_in)
+    , mapping_info_surface(scratch_data.get_mapping(),
+                           dealii::update_values | dealii::update_gradients |
+                             dealii::update_JxW_values | dealii::update_normal_vectors)
     , newton(heat_data.nlsolve)
   {
+    // liquid domain
+    mapping_info_cells.push_back(
+      std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>(
+        scratch_data.get_mapping(),
+        dealii::update_values | dealii::update_gradients | dealii::update_JxW_values |
+          dealii::update_normal_vectors));
+    // gas domain
+    if (heat_data.cut.two_phase)
+      mapping_info_cells.push_back(
+        std::make_shared<
+          dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>(
+          scratch_data.get_mapping(),
+          dealii::update_values | dealii::update_gradients | dealii::update_JxW_values |
+            dealii::update_normal_vectors));
+
     heat_operator =
       std::make_unique<HeatCutOperator<dim, double>>(scratch_data,
                                                      heat_data,
@@ -60,6 +79,8 @@ namespace MeltPoolDG::Heat
                                                      temp_hanging_nodes_dof_idx,
                                                      temp_quad_idx,
                                                      solution_history.get_current_solution(),
+                                                     mapping_info_surface,
+                                                     mapping_info_cells,
                                                      do_solidification_in,
                                                      vel_dof_idx_in,
                                                      velocity_in);
@@ -88,6 +109,21 @@ namespace MeltPoolDG::Heat
   {
     level_set.update_ghost_values();
     mesh_classifier->reclassify();
+  }
+
+
+
+  template <int dim>
+  void
+  HeatCutOperation<dim>::compute_intersected_quadrature()
+  {
+    CutUtil::compute_intersected_quadrature(mapping_info_cells,
+                                            mapping_info_surface,
+                                            scratch_data.get_dof_handler(ls_dof_idx),
+                                            level_set,
+                                            scratch_data.get_matrix_free(),
+                                            heat_data.fe.degree,
+                                            heat_data.cut.two_phase);
   }
 
 
@@ -235,6 +271,7 @@ namespace MeltPoolDG::Heat
   HeatCutOperation<dim>::solve()
   {
     // TODO move to init_time_advance?
+    solution_history.commit_old_solutions();
     heat_operator->init_time_advance(time_iterator.get_current_time_increment());
 
     try

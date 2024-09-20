@@ -2,9 +2,11 @@
 
 #include <deal.II/base/function.h>
 #include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
+#include <deal.II/non_matching/mapping_info.h>
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/evaporation/evaporation_data.hpp>
@@ -48,6 +50,12 @@ namespace MeltPoolDG::Heat
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier;
     std::shared_ptr<dealii::NonMatching::MeshClassifier<dim>> mesh_classifier_old;
 
+    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>
+      mapping_info_surface;
+    std::vector<
+      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>>
+      mapping_info_cells;
+
     NewtonRaphsonSolver<dim> newton;
 
     std::unique_ptr<HeatCutOperator<dim, double>> heat_operator;
@@ -75,6 +83,9 @@ namespace MeltPoolDG::Heat
 
     void
     classify_cells();
+
+    void
+    compute_intersected_quadrature();
 
     void
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;

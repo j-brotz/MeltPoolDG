@@ -48,21 +48,16 @@ namespace MeltPoolDG::Heat
     const MaterialData<number>                 &material_data;
     const Evaporation::EvaporationData<number> &evapor_data;
     const unsigned int                          temp_dof_idx;
-    const unsigned int                          temp_quad_idx;
     const unsigned int                          temp_hanging_nodes_dof_idx;
+    const unsigned int                          temp_quad_idx;
 
     const VectorType &temperature;
 
-    dealii::MappingQ<dim> mapping;
-    mutable dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
-      mapping_info_surface;
-
-    std::vector<
+    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
+      &mapping_info_surface;
+    const std::vector<
       std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
-      mapping_info_cells;
-    std::vector<
-      std::shared_ptr<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
-      mapping_info_faces;
+      &mapping_info_cells;
 
     // use FE_DGQ for FEPointEvaluation (DoF numbering reasons)
     const dealii::FE_DGQ<dim> fe_tmp;
@@ -104,12 +99,17 @@ namespace MeltPoolDG::Heat
                     const MaterialData<number>                 &material_data_in,
                     const Evaporation::EvaporationData<number> &evapor_data_in,
                     const unsigned int                          temp_dof_idx_in,
-                    const unsigned int                          temp_quad_idx_in,
                     const unsigned int                          temp_hanging_nodes_dof_idx_in,
+                    const unsigned int                          temp_quad_idx_in,
                     const VectorType                           &temperature_in,
-                    const bool                                  do_solidification_in,
-                    const unsigned int                          vel_dof_idx_in = 0,
-                    const VectorType                           *velocity_in    = nullptr);
+                    dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>
+                      &mapping_info_surface_in,
+                    const std::vector<std::shared_ptr<
+                      dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<number>>>>
+                                      &mapping_info_cells_in,
+                    const bool         do_solidification_in,
+                    const unsigned int vel_dof_idx_in = 0,
+                    const VectorType  *velocity_in    = nullptr);
 
     void
     register_laser_intensity_function_and_direction(

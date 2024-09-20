@@ -300,20 +300,21 @@ namespace MeltPoolDG::Heat
           DEAL_II_NOT_IMPLEMENTED();
       }
 
-    setup_dof_system(base_in, false);
+    setup_dof_system(base_in);
 
     if (velocity_field_function)
       compute_field_vector(velocity, velocity_dof_idx, *velocity_field_function);
     if (heaviside_field_function)
       compute_field_vector(level_set_as_heaviside, level_set_dof_idx, *heaviside_field_function);
-
-    if (laser_operation)
-      laser_operation->reinit();
-
-    heat_operation->reinit();
+    if (level_set_field_function)
+      compute_field_vector(level_set, level_set_dof_idx, *level_set_field_function);
 
     heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
                                           base_in->parameters.time_stepping.start_time);
+
+    auto heat_cut_operation = dynamic_cast<HeatCutOperation<dim> *>(heat_operation.get());
+    if (heat_cut_operation)
+      heat_cut_operation->compute_intersected_quadrature();
 
     /*
      *  initialize postprocessor
@@ -369,8 +370,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatTransferProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in,
-                                             const bool                           do_reinit)
+  HeatTransferProblem<dim>::setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in)
   {
     FiniteElementUtils::distribute_dofs<dim, 1>(base_in->parameters.base.fe, dof_handler_level_set);
 
@@ -432,12 +432,9 @@ namespace MeltPoolDG::Heat
         base_in->parameters.heat.operator_type == OperatorType::cut /*enable_inner_face_loops*/,
       base_in->parameters.heat.operator_type == OperatorType::cut /*enable_normal_vector_update*/);
 
-    if (do_reinit)
-      {
-        heat_operation->reinit();
-        if (laser_operation)
-          laser_operation->reinit();
-      }
+    heat_operation->reinit();
+    if (laser_operation)
+      laser_operation->reinit();
   }
 
   template <int dim>
@@ -590,7 +587,7 @@ namespace MeltPoolDG::Heat
         laser_operation->distribute_constraints();
     };
 
-    const auto setup_dof_system = [&]() { this->setup_dof_system(base_in, true); };
+    const auto setup_dof_system = [&]() { this->setup_dof_system(base_in); };
 
     refine_grid<dim, VectorType>(mark_cells_for_refinement,
                                  attach_vectors,
