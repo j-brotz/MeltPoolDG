@@ -261,11 +261,7 @@ namespace MeltPoolDG::Heat
     };
 
     newton.norm_of_solution_vector = [this]() -> double {
-      // TODO cut norm
-      return MeltPoolDG::VectorTools::compute_norm<dim>(solution_history.get_current_solution(),
-                                                        scratch_data,
-                                                        temp_dof_idx,
-                                                        temp_quad_idx);
+      return heat_operator->compute_cut_L2_norm(solution_history.get_current_solution());
     };
   }
 

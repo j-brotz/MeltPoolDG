@@ -1,8 +1,8 @@
 #include <meltpooldg/heat/heat_cut_operator.hpp>
 //
 
-#include <deal.II/base/array_view.h>
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/utilities.h>
 
@@ -28,23 +28,6 @@ namespace MeltPoolDG::Heat
 
   namespace internal
   {
-    template <int dim, typename number>
-    inline void
-    evaluate_intersected_domain(PointEval<dim, number>                        &point_eval,
-                                const DomainEval<dim, number>                 &eval_intersected,
-                                const dealii::EvaluationFlags::EvaluationFlags evaluation_flags,
-                                const unsigned int                             cell_index,
-                                const unsigned int                             lane,
-                                const unsigned int                             n_dofs_per_cell)
-    {
-      static constexpr unsigned int n_lanes = dealii::VectorizedArray<number>::size();
-
-      point_eval.reinit(cell_index * n_lanes + lane);
-      point_eval.evaluate(dealii::StridedArrayView<const number, n_lanes>(
-                            &eval_intersected.begin_dof_values()[0][lane], n_dofs_per_cell),
-                          evaluation_flags);
-    }
-
     template <int dim, typename number>
     dealii::VectorizedArray<number>
     evaluate_function(const dealii::Function<dim, number>                       &function,
@@ -633,7 +616,7 @@ namespace MeltPoolDG::Heat
                  ++lane)
               {
                 // evaluate for inside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   point_eval_l,
                   eval_intersected_l,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -643,19 +626,19 @@ namespace MeltPoolDG::Heat
                 if (evapor_data.evaporative_cooling.enable)
                   {
                     // evaluate for inside surface integral
-                    internal::evaluate_intersected_domain<dim, number>(point_eval_surface_l,
-                                                                       eval_intersected_l,
-                                                                       evaluation_flags_surface,
-                                                                       cell_index,
-                                                                       lane,
-                                                                       n_dofs_per_cell);
+                    CutUtil::evaluate_intersected_domain<dim, number>(point_eval_surface_l,
+                                                                      eval_intersected_l,
+                                                                      evaluation_flags_surface,
+                                                                      cell_index,
+                                                                      lane,
+                                                                      n_dofs_per_cell);
                     // evaluate T^n+1 for inside surface integral
-                    internal::evaluate_intersected_domain<dim, number>(T_point_eval_surface_l,
-                                                                       T_eval_intersected_l,
-                                                                       evaluation_flags_surface,
-                                                                       cell_index,
-                                                                       lane,
-                                                                       n_dofs_per_cell);
+                    CutUtil::evaluate_intersected_domain<dim, number>(T_point_eval_surface_l,
+                                                                      T_eval_intersected_l,
+                                                                      evaluation_flags_surface,
+                                                                      cell_index,
+                                                                      lane,
+                                                                      n_dofs_per_cell);
                   }
 
                 // do inside domain integral
@@ -739,7 +722,7 @@ namespace MeltPoolDG::Heat
                  ++lane)
               {
                 // evaluate for inside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   point_eval_l,
                   eval_intersected_l,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -747,14 +730,14 @@ namespace MeltPoolDG::Heat
                   lane,
                   n_dofs_per_cell);
                 // evaluate for inside surface integral
-                internal::evaluate_intersected_domain<dim, number>(point_eval_surface_l,
-                                                                   eval_intersected_l,
-                                                                   evaluation_flags_surface,
-                                                                   cell_index,
-                                                                   lane,
-                                                                   n_dofs_per_cell);
+                CutUtil::evaluate_intersected_domain<dim, number>(point_eval_surface_l,
+                                                                  eval_intersected_l,
+                                                                  evaluation_flags_surface,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
                 // evaluate for outside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   point_eval_g,
                   eval_intersected_g,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -762,16 +745,16 @@ namespace MeltPoolDG::Heat
                   lane,
                   n_dofs_per_cell);
                 // evaluate for outside surface integral
-                internal::evaluate_intersected_domain<dim, number>(point_eval_surface_g,
-                                                                   eval_intersected_g,
-                                                                   evaluation_flags_surface,
-                                                                   cell_index,
-                                                                   lane,
-                                                                   n_dofs_per_cell);
+                CutUtil::evaluate_intersected_domain<dim, number>(point_eval_surface_g,
+                                                                  eval_intersected_g,
+                                                                  evaluation_flags_surface,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
                 if (evapor_data.evaporative_cooling.enable)
                   {
                     // evaluate T^n+1_l for inside surface integral
-                    internal::evaluate_intersected_domain<dim, number>(
+                    CutUtil::evaluate_intersected_domain<dim, number>(
                       T_point_eval_surface_l,
                       T_eval_intersected_l,
                       dealii::EvaluationFlags::values,
@@ -779,7 +762,7 @@ namespace MeltPoolDG::Heat
                       lane,
                       n_dofs_per_cell);
                     // evaluate T^n+1_g for inside surface integral
-                    internal::evaluate_intersected_domain<dim, number>(
+                    CutUtil::evaluate_intersected_domain<dim, number>(
                       T_point_eval_surface_g,
                       T_eval_intersected_g,
                       dealii::EvaluationFlags::values,
@@ -1083,7 +1066,7 @@ namespace MeltPoolDG::Heat
                  ++lane)
               {
                 // evaluate T^n+1 for inside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   Tnew_point_eval_l,
                   Tnew_eval_intersected_l,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -1091,7 +1074,7 @@ namespace MeltPoolDG::Heat
                   lane,
                   n_dofs_per_cell);
                 // evaluate T^n+1 for inside surface integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   Tnew_point_eval_surface_l,
                   Tnew_eval_intersected_l,
                   evapor_data.evaporative_cooling.enable ? evaluation_flags_surface :
@@ -1100,7 +1083,7 @@ namespace MeltPoolDG::Heat
                   lane,
                   n_dofs_per_cell);
                 // evaluate T^n for inside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   Told_point_eval_l,
                   Told_eval_intersected_l,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -1109,12 +1092,12 @@ namespace MeltPoolDG::Heat
                   n_dofs_per_cell);
                 if (evapor_data.evaporative_cooling.enable)
                   // evaluate T^n for inside surface integral
-                  internal::evaluate_intersected_domain<dim, number>(Told_point_eval_surface_l,
-                                                                     Told_eval_intersected_l,
-                                                                     evaluation_flags_surface,
-                                                                     cell_index,
-                                                                     lane,
-                                                                     n_dofs_per_cell);
+                  CutUtil::evaluate_intersected_domain<dim, number>(Told_point_eval_surface_l,
+                                                                    Told_eval_intersected_l,
+                                                                    evaluation_flags_surface,
+                                                                    cell_index,
+                                                                    lane,
+                                                                    n_dofs_per_cell);
 
 
                 // do inside domain integral
@@ -1208,7 +1191,7 @@ namespace MeltPoolDG::Heat
                  ++lane)
               {
                 // evaluate T^n+1_l for inside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   Tnew_point_eval_l,
                   Tnew_eval_intersected_l,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -1216,14 +1199,14 @@ namespace MeltPoolDG::Heat
                   lane,
                   n_dofs_per_cell);
                 // evaluate T^n+1_l for inside surface integral
-                internal::evaluate_intersected_domain<dim, number>(Tnew_point_eval_surface_l,
-                                                                   Tnew_eval_intersected_l,
-                                                                   evaluation_flags_surface,
-                                                                   cell_index,
-                                                                   lane,
-                                                                   n_dofs_per_cell);
+                CutUtil::evaluate_intersected_domain<dim, number>(Tnew_point_eval_surface_l,
+                                                                  Tnew_eval_intersected_l,
+                                                                  evaluation_flags_surface,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
                 // evaluate T^n+1_g for outside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   Tnew_point_eval_g,
                   Tnew_eval_intersected_g,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -1231,14 +1214,14 @@ namespace MeltPoolDG::Heat
                   lane,
                   n_dofs_per_cell);
                 // evaluate T^n+1_g for outside surface integral
-                internal::evaluate_intersected_domain<dim, number>(Tnew_point_eval_surface_g,
-                                                                   Tnew_eval_intersected_g,
-                                                                   evaluation_flags_surface,
-                                                                   cell_index,
-                                                                   lane,
-                                                                   n_dofs_per_cell);
+                CutUtil::evaluate_intersected_domain<dim, number>(Tnew_point_eval_surface_g,
+                                                                  Tnew_eval_intersected_g,
+                                                                  evaluation_flags_surface,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
                 // evaluate T^n_l for inside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   Told_point_eval_l,
                   Told_eval_intersected_l,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -1246,14 +1229,14 @@ namespace MeltPoolDG::Heat
                   lane,
                   n_dofs_per_cell);
                 // evaluate T^n_l for inside surface integral
-                internal::evaluate_intersected_domain<dim, number>(Told_point_eval_surface_l,
-                                                                   Told_eval_intersected_l,
-                                                                   evaluation_flags_surface,
-                                                                   cell_index,
-                                                                   lane,
-                                                                   n_dofs_per_cell);
+                CutUtil::evaluate_intersected_domain<dim, number>(Told_point_eval_surface_l,
+                                                                  Told_eval_intersected_l,
+                                                                  evaluation_flags_surface,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
                 // evaluate T^n_g for outside domain integral
-                internal::evaluate_intersected_domain<dim, number>(
+                CutUtil::evaluate_intersected_domain<dim, number>(
                   Told_point_eval_g,
                   Told_eval_intersected_g,
                   dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
@@ -1261,12 +1244,12 @@ namespace MeltPoolDG::Heat
                   lane,
                   n_dofs_per_cell);
                 // evaluate T^n_g for outside surface integral
-                internal::evaluate_intersected_domain<dim, number>(Told_point_eval_surface_g,
-                                                                   Told_eval_intersected_g,
-                                                                   evaluation_flags_surface,
-                                                                   cell_index,
-                                                                   lane,
-                                                                   n_dofs_per_cell);
+                CutUtil::evaluate_intersected_domain<dim, number>(Told_point_eval_surface_g,
+                                                                  Told_eval_intersected_g,
+                                                                  evaluation_flags_surface,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
 
                 // do inside domain integral
                 for (const unsigned int q : Tnew_point_eval_l.quadrature_point_indices())
@@ -1481,6 +1464,137 @@ namespace MeltPoolDG::Heat
   {
     DEAL_II_NOT_IMPLEMENTED();
     (void)system_matrix;
+  }
+
+
+
+  template <int dim, typename number>
+  number
+  HeatCutOperator<dim, number>::compute_cut_L2_norm(const VectorType &solution) const
+  {
+    solution.update_ghost_values();
+
+    number error_L2_squared = 0.;
+
+    const auto &matrix_free = scratch_data.get_matrix_free();
+    for (unsigned int cell_index = 0; cell_index < matrix_free.n_cell_batches(); ++cell_index)
+      {
+        const auto cell_category = matrix_free.get_cell_category(cell_index);
+        if (cell_category == CutUtil::CellCategory::liquid)
+          {
+            DomainEval eval_l(matrix_free,
+                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              0 /*quad_no*/,
+                              0 /*selected component*/,
+                              CutUtil::CellCategory::liquid /*active_fe_index*/);
+
+            eval_l.reinit(cell_index);
+            eval_l.gather_evaluate(solution, dealii::EvaluationFlags::values);
+
+            for (const unsigned int q : eval_l.quadrature_point_indices())
+              for (unsigned int lane = 0;
+                   lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
+                   ++lane)
+                error_L2_squared += dealii::Utilities::fixed_power<2>(eval_l.get_value(q)[lane]) *
+                                    eval_l.JxW(q)[lane];
+          }
+        else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
+          {
+            DomainEval eval_g(matrix_free,
+                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              0 /*quad_no*/,
+                              1 /*selected component*/,
+                              CutUtil::CellCategory::gas /*active_fe_index*/);
+
+            eval_g.reinit(cell_index);
+            eval_g.gather_evaluate(solution, dealii::EvaluationFlags::values);
+
+            for (const unsigned int q : eval_g.quadrature_point_indices())
+              for (unsigned int lane = 0;
+                   lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
+                   ++lane)
+                error_L2_squared += dealii::Utilities::fixed_power<2>(eval_g.get_value(q)[lane]) *
+                                    eval_g.JxW(q)[lane];
+          }
+        else if (cell_category == CutUtil::CellCategory::intersected and
+                 not heat_data.cut.two_phase)
+          {
+            // use FEEvaluation and FEPointEvaluation in combination for intersected cells
+            DomainEval eval_l(matrix_free,
+                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              0 /*quad_no*/,
+                              0 /*selected component*/,
+                              CutUtil::CellCategory::liquid /*active_fe_index*/);
+            PointEval  point_eval_l(*mapping_info_cells[0], fe_tmp);
+
+            eval_l.reinit(cell_index);
+            eval_l.read_dof_values_plain(solution);
+
+            for (unsigned int lane = 0;
+                 lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
+                 ++lane)
+              {
+                CutUtil::evaluate_intersected_domain<dim, number>(point_eval_l,
+                                                                  eval_l,
+                                                                  dealii::EvaluationFlags::values,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
+
+                for (const unsigned int q : point_eval_l.quadrature_point_indices())
+                  for (unsigned int v = 0; v < n_lanes; ++v)
+                    error_L2_squared +=
+                      dealii::Utilities::fixed_power<2>(point_eval_l.get_value(q)[v]) *
+                      point_eval_l.JxW(q)[v];
+              }
+          }
+        else if (cell_category == CutUtil::CellCategory::intersected and heat_data.cut.two_phase)
+          {
+            // use FEEvaluation and FEPointEvaluation in combination for intersected cells
+            DomainEval eval_l(matrix_free,
+                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              0 /*quad_no*/,
+                              0 /*selected component*/,
+                              CutUtil::CellCategory::liquid /*active_fe_index*/);
+            DomainEval eval_g(matrix_free,
+                              temp_hanging_nodes_dof_idx /*dof_no*/,
+                              0 /*quad_no*/,
+                              1 /*selected component*/,
+                              CutUtil::CellCategory::gas /*active_fe_index*/);
+            PointEval  point_eval_l(*mapping_info_cells[0], fe_tmp);
+            PointEval  point_eval_g(*mapping_info_cells[1], fe_tmp);
+
+            eval_l.reinit(cell_index);
+            eval_g.reinit(cell_index);
+            eval_l.read_dof_values_plain(solution);
+            eval_g.read_dof_values_plain(solution);
+
+            for (unsigned int lane = 0;
+                 lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
+                 ++lane)
+              {
+                CutUtil::evaluate_intersected_domain<dim, number>(
+                  point_eval_l, eval_l, EvaluationFlags::values, cell_index, lane, n_dofs_per_cell);
+                CutUtil::evaluate_intersected_domain<dim, number>(
+                  point_eval_g, eval_g, EvaluationFlags::values, cell_index, lane, n_dofs_per_cell);
+
+                for (const unsigned int q : point_eval_l.quadrature_point_indices())
+                  for (unsigned int v = 0; v < n_lanes; ++v)
+                    error_L2_squared +=
+                      dealii::Utilities::fixed_power<2>(point_eval_l.get_value(q)[v]) *
+                      point_eval_l.JxW(q)[v];
+
+                for (const unsigned int q : point_eval_g.quadrature_point_indices())
+                  for (unsigned int v = 0; v < n_lanes; ++v)
+                    error_L2_squared +=
+                      dealii::Utilities::fixed_power<2>(point_eval_g.get_value(q)[v]) *
+                      point_eval_g.JxW(q)[v];
+              }
+          }
+      }
+
+    return std::sqrt(
+      dealii::Utilities::MPI::sum(error_L2_squared, solution.get_mpi_communicator()));
   }
 
 

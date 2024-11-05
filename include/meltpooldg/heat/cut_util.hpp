@@ -1,14 +1,18 @@
 #pragma once
 
-#include <deal.II/base/exceptions.h>
+#include <deal.II/base/array_view.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
+#include <deal.II/matrix_free/evaluation_flags.h>
+#include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <deal.II/non_matching/mapping_info.h>
 #include <deal.II/non_matching/mesh_classifier.h>
+
+#include <meltpooldg/utilities/fe_integrator.hpp>
 
 #include <memory>
 #include <utility>
@@ -107,4 +111,24 @@ namespace MeltPoolDG::Heat::CutUtil
     const dealii::MatrixFree<dim, number, dealii::VectorizedArray<number>> &matrix_free,
     const int                                                               fe_degree,
     const bool                                                              is_two_phase);
+
+
+
+  template <int dim, typename number>
+  inline void
+  evaluate_intersected_domain(
+    dealii::FEPointEvaluation<1, dim, dim, dealii::VectorizedArray<number>> &point_eval,
+    const dealii::FECellIntegrator<dim, 1, number>                          &eval_intersected,
+    const dealii::EvaluationFlags::EvaluationFlags                           evaluation_flags,
+    const unsigned int                                                       cell_index,
+    const unsigned int                                                       lane,
+    const unsigned int                                                       n_dofs_per_cell)
+  {
+    static constexpr unsigned int n_lanes = dealii::VectorizedArray<number>::size();
+
+    point_eval.reinit(cell_index * n_lanes + lane);
+    point_eval.evaluate(dealii::StridedArrayView<const number, n_lanes>(
+                          &eval_intersected.begin_dof_values()[0][lane], n_dofs_per_cell),
+                        evaluation_flags);
+  };
 } // namespace MeltPoolDG::Heat::CutUtil
