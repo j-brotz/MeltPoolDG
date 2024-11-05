@@ -3,7 +3,7 @@
     "application name": "unidirectional_heat_transfer",
     "dimension": "2",
     "do print parameters": "false",
-    "global refinements": "3",
+    "global refinements": "4",
     "problem name": "heat_transfer",
     "fe": {
       "degree": "1"
@@ -11,21 +11,21 @@
   },
   "time stepping": {
     "start time": "0.0",
-    "time step size": "0.001",
-    "end time": "1.0",
+    "time step size": "0.2",
+    "end time": "10.0",
     "max n steps": "5"
   },
   "heat": {
     "operator type": "cut",
     "cut": {
-      "two_phase": "false"
+      "two_phase": "true"
     },
     "linear solver": {
       "rel tolerance": "1e-12",
-      "abs tolerance": "1e-7"
+      "abs tolerance": "1e-10"
     },
     "nlsolve": {
-      "residual tolerance": "1e-6"
+      "residual tolerance": "1e-9"
     }
   },
   "simulation specific": {

@@ -5,6 +5,7 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/utilities.h>
 
 #include <deal.II/distributed/tria.h>
 
@@ -217,8 +218,20 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
           // create mesh
           const Point<2> left(x_min, 0.0);
           const Point<2> right(x_max, 0.1);
-          GridGenerator::hyper_rectangle(*this->triangulation, left, right, true /*colorize*/);
-          this->triangulation->refine_global(this->parameters.base.global_refinements);
+
+          if (this->parameters.heat.operator_type == Heat::OperatorType::cut)
+            {
+              // if we use the cut operator, make sure the number of element per direction is odd
+              const std::vector<unsigned int> cell_repetitions(
+                dim, Utilities::pow(2, this->parameters.base.global_refinements) | 1);
+              GridGenerator::subdivided_hyper_rectangle(
+                *this->triangulation, cell_repetitions, left, right, true /*colorize*/);
+            }
+          else
+            {
+              GridGenerator::hyper_rectangle(*this->triangulation, left, right, true /*colorize*/);
+              this->triangulation->refine_global(this->parameters.base.global_refinements);
+            }
         }
       else
         {
