@@ -117,6 +117,8 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim>::compute_intersected_quadrature()
   {
+    level_set.update_ghost_values();
+
     CutUtil::compute_intersected_quadrature(mapping_info_cells,
                                             mapping_info_surface,
                                             scratch_data.get_dof_handler(ls_dof_idx),
@@ -232,19 +234,22 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperation<dim>::setup_newton()
   {
-    newton.residual = [&](const VectorType & /*evaluation_point*/, VectorType &rhs) {
+    newton.residual = [&](const VectorType & /*solution_update*/, VectorType &rhs) {
       heat_operator->create_rhs(rhs, solution_history.get_recent_old_solution());
+      scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(rhs);
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
       // TODO preconditioners
-      return LinearSolver::solve<VectorType, OperatorBase<dim, double>>(
-        *heat_operator,
-        solution_update,
-        rhs,
-        heat_data.linear_solver,
-        dealii::PreconditionIdentity(),
-        "heat_operation");
+      const int iter =
+        LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
+                                                                   solution_update,
+                                                                   rhs,
+                                                                   heat_data.linear_solver,
+                                                                   dealii::PreconditionIdentity(),
+                                                                   "heat_operation");
+      scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solution_update);
+      return iter;
     };
 
     newton.reinit_vector = [&](VectorType &v) {
