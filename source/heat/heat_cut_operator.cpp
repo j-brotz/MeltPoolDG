@@ -1452,8 +1452,42 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
+    scratch_data.get_matrix_free().initialize_dof_vector(diagonal);
+
+    dealii::TrilinosWrappers::SparseMatrix dummy;
+    internal_compute_diagonal_or_system_matrix(diagonal, dummy, true);
+
+    // invert
+    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
+    for (auto &i : diagonal)
+      i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
+  }
+
+
+
+  template <int dim, typename number>
+  void
+  HeatCutOperator<dim, number>::compute_system_matrix_from_matrixfree(
+    dealii::TrilinosWrappers::SparseMatrix &system_matrix) const
+  {
+    system_matrix = 0.0;
+
+    VectorType dummy;
+    internal_compute_diagonal_or_system_matrix(dummy, system_matrix, false);
+
+    system_matrix.compress(VectorOperation::add);
+  }
+
+
+
+  template <int dim, typename number>
+  void
+  HeatCutOperator<dim, number>::internal_compute_diagonal_or_system_matrix(
+    [[maybe_unused]] VectorType                             &diagonal,
+    [[maybe_unused]] dealii::TrilinosWrappers::SparseMatrix &system_matrix,
+    const bool                                               do_diagonal) const
+  {
     const auto &matrix_free = scratch_data.get_matrix_free();
-    matrix_free.initialize_dof_vector(diagonal);
 
     // use FEEvaluation and FEPointEvaluation in combination for intersected cells
     DomainEval<dim, number> eval_intersected_l(
@@ -1486,6 +1520,7 @@ namespace MeltPoolDG::Heat
     dealii::MatrixFreeTools::internal::
       ComputeMatrixScratchData<dim, dealii::VectorizedArray<number>, true /*is_face_*/>
         data_face;
+
     if (heat_data.cut.two_phase)
       {
         data_cell.dof_numbers               = {temp_dof_idx, temp_dof_idx};
@@ -1901,29 +1936,25 @@ namespace MeltPoolDG::Heat
         }
     };
 
-
-
-    std::vector<VectorType *> dummy(1);
-    dummy[0] = &diagonal;
-    dealii::MatrixFreeTools::internal::
-      compute_diagonal<dim, number, dealii::VectorizedArray<number>>(
-        matrix_free, data_cell, data_face, {} /*data_boundary*/, diagonal, dummy);
-
-    // invert
-    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
-    for (auto &i : diagonal)
-      i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
-  }
-
-
-
-  template <int dim, typename number>
-  void
-  HeatCutOperator<dim, number>::compute_system_matrix_from_matrixfree(
-    dealii::TrilinosWrappers::SparseMatrix &system_matrix) const
-  {
-    DEAL_II_NOT_IMPLEMENTED();
-    (void)system_matrix;
+    if (do_diagonal)
+      {
+        std::vector<VectorType *> dummy(1);
+        dummy[0] = &diagonal;
+        dealii::MatrixFreeTools::internal::
+          compute_diagonal<dim, number, dealii::VectorizedArray<number>>(
+            matrix_free, data_cell, data_face, {} /*data_boundary*/, diagonal, dummy);
+      }
+    else // compute matrix
+      {
+        dealii::MatrixFreeTools::internal::
+          compute_matrix<dim, number, dealii::VectorizedArray<number>>(matrix_free,
+                                                                       scratch_data.get_constraint(
+                                                                         temp_dof_idx),
+                                                                       data_cell,
+                                                                       data_face,
+                                                                       {} /*data_boundary*/,
+                                                                       system_matrix);
+      }
   }
 
 

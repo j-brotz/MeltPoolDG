@@ -195,5 +195,17 @@ namespace MeltPoolDG::Heat
       VectorType                                                             &residual,
       const VectorType                                                       &temperature_new,
       const std::pair<unsigned int, unsigned int>                            &face_range) const;
+
+    /**
+     * The setup for dealii::MatrixFreeTools::internal::compute_diagonal and
+     * dealii::MatrixFreeTools::internal::compute_matrix is identical. To avoid duplicate code this
+     * internal function can handle both operations. Choose which operation to perform using
+     * @param do_diagonal: `true` for compute_diagonal and `false` for compute_matrix.
+     */
+    void
+    internal_compute_diagonal_or_system_matrix(
+      [[maybe_unused]] VectorType                             &diagonal,
+      [[maybe_unused]] dealii::TrilinosWrappers::SparseMatrix &system_matrix,
+      const bool                                               do_diagonal) const;
   };
 } // namespace MeltPoolDG::Heat
