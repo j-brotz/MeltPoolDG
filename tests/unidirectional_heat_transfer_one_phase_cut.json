@@ -21,6 +21,7 @@
       "two_phase": "false"
     },
     "linear solver": {
+      "preconditioner type": "Diagonal",
       "rel tolerance": "1e-12",
       "abs tolerance": "1e-10"
     },

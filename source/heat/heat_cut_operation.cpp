@@ -33,13 +33,13 @@ namespace MeltPoolDG::Heat
     const MaterialData<double>                 &material_data_in,
     const Evaporation::EvaporationData<double> &evapor_data_in,
     const TimeIterator<double>                 &time_iterator_in,
-    unsigned int                                temp_dof_idx_in,
-    unsigned int                                temp_hanging_nodes_dof_idx_in,
-    unsigned int                                temp_quad_idx_in,
+    const unsigned int                          temp_dof_idx_in,
+    const unsigned int                          temp_hanging_nodes_dof_idx_in,
+    const unsigned int                          temp_quad_idx_in,
     const bool                                  do_solidification_in,
-    unsigned int                                ls_dof_idx_in,
+    const unsigned int                          ls_dof_idx_in,
     const VectorType                           &level_set_in,
-    unsigned int                                vel_dof_idx_in,
+    const unsigned int                          vel_dof_idx_in,
     const VectorType                           *velocity_in)
     : scratch_data(scratch_data_in)
     , heat_data(heat_data_in)
@@ -55,6 +55,8 @@ namespace MeltPoolDG::Heat
                              dealii::update_JxW_values | dealii::update_normal_vectors)
     , newton(heat_data.nlsolve)
   {
+    AssertThrow(heat_data.linear_solver.do_matrix_free, dealii::ExcNotImplemented());
+
     // liquid domain
     mapping_info_cells.push_back(
       std::make_shared<dealii::NonMatching::MappingInfo<dim, dim, dealii::VectorizedArray<double>>>(
@@ -84,6 +86,13 @@ namespace MeltPoolDG::Heat
                                                      do_solidification_in,
                                                      vel_dof_idx_in,
                                                      velocity_in);
+
+    /*
+     * setup preconditioner for matrix-free computation
+     */
+    preconditioner_matrixfree = std::make_shared<
+      Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>(
+      scratch_data, temp_dof_idx, heat_data.linear_solver.preconditioner_type, *heat_operator);
 
     mesh_classifier = std::make_shared<dealii::NonMatching::MeshClassifier<dim>>(
       scratch_data.get_dof_handler(ls_dof_idx), level_set);
@@ -174,6 +183,12 @@ namespace MeltPoolDG::Heat
       [this](VectorType &v) { scratch_data.initialize_dof_vector(v, temp_hanging_nodes_dof_idx); });
 
     scratch_data.initialize_dof_vector(volumetric_heat_source, temp_hanging_nodes_dof_idx);
+
+    /*
+     * setup sparsity pattern of system matrix only if the latter is
+     * needed for computing the preconditioner
+     */
+    preconditioner_matrixfree->reinit();
   }
 
 
@@ -240,14 +255,24 @@ namespace MeltPoolDG::Heat
     };
 
     newton.solve_with_jacobian = [&](const VectorType &rhs, VectorType &solution_update) -> int {
-      // TODO preconditioners
-      const int iter =
-        LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
-                                                                   solution_update,
-                                                                   rhs,
-                                                                   heat_data.linear_solver,
-                                                                   dealii::PreconditionIdentity(),
-                                                                   "heat_operation");
+      int iter;
+      if (diag_preconditioner)
+        iter = LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
+                                                                          solution_update,
+                                                                          rhs,
+                                                                          heat_data.linear_solver,
+                                                                          *diag_preconditioner,
+                                                                          "heat_operation");
+      else if (trilinos_preconditioner)
+        iter = LinearSolver::solve<VectorType, OperatorBase<dim, double>>(*heat_operator,
+                                                                          solution_update,
+                                                                          rhs,
+                                                                          heat_data.linear_solver,
+                                                                          *trilinos_preconditioner,
+                                                                          "heat_operation");
+      else
+        DEAL_II_NOT_IMPLEMENTED();
+
       scratch_data.get_constraint(temp_hanging_nodes_dof_idx).distribute(solution_update);
       return iter;
     };
@@ -274,6 +299,24 @@ namespace MeltPoolDG::Heat
     // TODO move to init_time_advance?
     solution_history.commit_old_solutions();
     heat_operator->init_time_advance(time_iterator.get_current_time_increment());
+
+    // setup preconditioner
+    switch (heat_data.linear_solver.preconditioner_type)
+      {
+          case PreconditionerType::Diagonal: {
+            diag_preconditioner = preconditioner_matrixfree->compute_diagonal_preconditioner();
+            break;
+          }
+        case PreconditionerType::Identity:
+        case PreconditionerType::AMG:
+          case PreconditionerType::ILU: {
+            trilinos_preconditioner = preconditioner_matrixfree->compute_trilinos_preconditioner();
+            break;
+          }
+          default: {
+            DEAL_II_NOT_IMPLEMENTED();
+          }
+      }
 
     try
       {

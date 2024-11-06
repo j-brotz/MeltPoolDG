@@ -6,6 +6,9 @@
 
 #include <deal.II/dofs/dof_handler.h>
 
+#include <deal.II/lac/diagonal_matrix.h>
+#include <deal.II/lac/trilinos_precondition.h>
+
 #include <deal.II/non_matching/mapping_info.h>
 #include <deal.II/non_matching/mesh_classifier.h>
 
@@ -15,6 +18,7 @@
 #include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_matrixfree_generic.hpp>
 #include <meltpooldg/material/material_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/solution_history.hpp>
@@ -60,6 +64,11 @@ namespace MeltPoolDG::Heat
 
     std::unique_ptr<HeatCutOperator<dim, double>> heat_operator;
 
+    std::shared_ptr<Preconditioner::PreconditionerMatrixFreeGeneric<dim, OperatorBase<dim, double>>>
+                                                                preconditioner_matrixfree;
+    std::shared_ptr<dealii::DiagonalMatrix<VectorType>>         diag_preconditioner;
+    std::shared_ptr<dealii::TrilinosWrappers::PreconditionBase> trilinos_preconditioner;
+
 
   public:
     HeatCutOperation(const ScratchData<dim>                     &scratch_data_in,
@@ -67,13 +76,13 @@ namespace MeltPoolDG::Heat
                      const MaterialData<double>                 &material_data_in,
                      const Evaporation::EvaporationData<double> &evapor_data_in,
                      const TimeIterator<double>                 &time_iterator_in,
-                     unsigned int                                temp_dof_idx_in,
-                     unsigned int                                temp_hanging_nodes_dof_idx_in,
-                     unsigned int                                temp_quad_idx_in,
+                     const unsigned int                          temp_dof_idx_in,
+                     const unsigned int                          temp_hanging_nodes_dof_idx_in,
+                     const unsigned int                          temp_quad_idx_in,
                      const bool                                  do_solidification_in,
-                     unsigned int                                ls_dof_idx_in,
+                     const unsigned int                          ls_dof_idx_in,
                      const VectorType                           &level_set_in,
-                     unsigned int                                vel_dof_idx_in = 0,
+                     const unsigned int                          vel_dof_idx_in = 0,
                      const VectorType                           *velocity_in    = nullptr);
 
     void

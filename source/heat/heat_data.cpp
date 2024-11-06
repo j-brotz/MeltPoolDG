@@ -8,7 +8,7 @@ namespace MeltPoolDG::Heat
   HeatData<number>::HeatData()
   {
     linear_solver.solver_type         = LinearSolverType::GMRES;
-    linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
+    linear_solver.preconditioner_type = PreconditionerType::Diagonal;
     predictor.type                    = PredictorType::linear_extrapolation;
   }
 

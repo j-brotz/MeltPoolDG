@@ -8,7 +8,9 @@
 
 #include <deal.II/fe/fe_update_flags.h>
 
+#include <deal.II/matrix_free/fe_evaluation_data.h>
 #include <deal.II/matrix_free/fe_point_evaluation.h>
+#include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/heat/cut_util.hpp>
 #include <meltpooldg/interface/exceptions.hpp>
@@ -19,7 +21,7 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim, typename number>
-  using DomainEval = FECellIntegrator<dim, 1, number>;
+  using DomainEval = dealii::FECellIntegrator<dim, 1, number>;
   template <int dim, typename number>
   using PointEval = dealii::FEPointEvaluation<1, dim, dim, dealii::VectorizedArray<number>>;
   template <int dim, typename number>
@@ -150,6 +152,7 @@ namespace MeltPoolDG::Heat
   {
     // TODO external heat source
 
+    AssertThrow(heat_data.linear_solver.do_matrix_free, dealii::ExcNotImplemented());
     AssertThrow(heat_data.fe.type == FiniteElementType::FE_Q,
                 dealii::ExcMessage("only standard FE_Q elements are supported for now"));
     AssertThrow(heat_data.fe.degree == 1, dealii::ExcMessage("only degree 1 is supported for now"));
@@ -529,7 +532,7 @@ namespace MeltPoolDG::Heat
     const std::pair<unsigned int, unsigned int>                            &cell_range) const
   {
     const auto cell_category = matrix_free.get_cell_range_category(cell_range);
-    if (cell_category == CutUtil::CellCategory::liquid) // liquid domain
+    if (cell_category == CutUtil::CellCategory::liquid)
       {
         DomainEval<dim, number> eval_l(matrix_free,
                                        temp_dof_idx /*dof_no*/,
@@ -557,8 +560,7 @@ namespace MeltPoolDG::Heat
                                      dst);
           }
       }
-    else if (cell_category == CutUtil::CellCategory::gas // gas domain
-             and heat_data.cut.two_phase)
+    else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
       {
         DomainEval<dim, number> eval_g(matrix_free,
                                        temp_dof_idx /*dof_no*/,
@@ -854,7 +856,7 @@ namespace MeltPoolDG::Heat
     const auto              face_category = matrix_free.get_face_range_category(face_range);
     const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
     if (face_type == CutUtil::FaceType::intersected_face or
-        face_type == CutUtil::FaceType::mixed_face_liquid) // liquid domain
+        face_type == CutUtil::FaceType::mixed_face_liquid)
       {
         FaceEval<dim, number> eval_minus_l(matrix_free,
                                            true /*is_interior_face*/,
@@ -892,8 +894,8 @@ namespace MeltPoolDG::Heat
           }
       }
     if ((face_type == CutUtil::FaceType::intersected_face or
-         face_type == CutUtil::FaceType::mixed_face_gas) // gas domain
-        and heat_data.cut.two_phase)
+         face_type == CutUtil::FaceType::mixed_face_gas) and
+        heat_data.cut.two_phase)
       {
         FaceEval<dim, number> eval_minus_g(matrix_free,
                                            true /*is_interior_face*/,
@@ -965,7 +967,7 @@ namespace MeltPoolDG::Heat
     const std::pair<unsigned int, unsigned int>                            &cell_range) const
   {
     const auto cell_category = matrix_free.get_cell_range_category(cell_range);
-    if (cell_category == CutUtil::CellCategory::liquid) // liquid domain
+    if (cell_category == CutUtil::CellCategory::liquid)
       {
         DomainEval<dim, number> Tnew_eval_l(matrix_free,
                                             temp_dof_idx /*dof_no*/,
@@ -1000,8 +1002,7 @@ namespace MeltPoolDG::Heat
                                           residual);
           }
       }
-    else if (cell_category == CutUtil::CellCategory::gas // gas domain
-             and heat_data.cut.two_phase)
+    else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
       {
         DomainEval<dim, number> Tnew_eval_g(matrix_free,
                                             temp_dof_idx /*dof_no*/,
@@ -1347,7 +1348,7 @@ namespace MeltPoolDG::Heat
     const auto              face_category = matrix_free.get_face_range_category(face_range);
     const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
     if (face_type == CutUtil::FaceType::intersected_face or
-        face_type == CutUtil::FaceType::mixed_face_liquid) // liquid domain
+        face_type == CutUtil::FaceType::mixed_face_liquid)
       {
         FaceEval<dim, number> Tnew_eval_minus_l(matrix_free,
                                                 true /*is_interior_face*/,
@@ -1386,8 +1387,8 @@ namespace MeltPoolDG::Heat
           }
       }
     if ((face_type == CutUtil::FaceType::intersected_face or
-         face_type == CutUtil::FaceType::mixed_face_gas) // gas domain
-        and heat_data.cut.two_phase)
+         face_type == CutUtil::FaceType::mixed_face_gas) and
+        heat_data.cut.two_phase)
       {
         for (unsigned int face_batch = face_range.first; face_batch < face_range.second;
              face_batch++)
@@ -1451,8 +1452,467 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
-    DEAL_II_NOT_IMPLEMENTED();
-    (void)diagonal;
+    const auto &matrix_free = scratch_data.get_matrix_free();
+    matrix_free.initialize_dof_vector(diagonal);
+
+    // use FEEvaluation and FEPointEvaluation in combination for intersected cells
+    DomainEval<dim, number> eval_intersected_l(
+      matrix_free,
+      temp_dof_idx /*dof_no*/,
+      0 /*quad_no*/,
+      0 /*selected component*/,
+      CutUtil::CellCategory::intersected /*active_fe_index*/);
+    DomainEval<dim, number> T_eval_intersected_l(eval_intersected_l);
+    DomainEval<dim, number> eval_intersected_g(
+      matrix_free,
+      temp_dof_idx /*dof_no*/,
+      0 /*quad_no*/,
+      heat_data.cut.two_phase ? 1 : 0 /*selected component*/,
+      CutUtil::CellCategory::intersected /*active_fe_index*/);
+    DomainEval<dim, number> T_eval_intersected_g(eval_intersected_g);
+    PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_tmp);
+    PointEval<dim, number>  point_eval_g(*mapping_info_cells[heat_data.cut.two_phase ? 1 : 0],
+                                        fe_tmp);
+    PointEval<dim, number>  point_eval_surface_l(mapping_info_surface, fe_tmp);
+    PointEval<dim, number>  T_point_eval_surface_l(point_eval_surface_l);
+    PointEval<dim, number>  point_eval_surface_g(point_eval_surface_l);
+    PointEval<dim, number>  T_point_eval_surface_g(point_eval_surface_l);
+
+    unsigned int old_cell_index = numbers::invalid_unsigned_int;
+
+    dealii::MatrixFreeTools::internal::
+      ComputeMatrixScratchData<dim, dealii::VectorizedArray<number>, false /*is_face_*/>
+        data_cell;
+    dealii::MatrixFreeTools::internal::
+      ComputeMatrixScratchData<dim, dealii::VectorizedArray<number>, true /*is_face_*/>
+        data_face;
+    if (heat_data.cut.two_phase)
+      {
+        data_cell.dof_numbers               = {temp_dof_idx, temp_dof_idx};
+        data_cell.quad_numbers              = {0, 0};
+        data_cell.n_components              = {1, 1};
+        data_cell.first_selected_components = {0, 1};
+        data_cell.batch_type                = {0, 0}; // 0 for cell
+
+        data_face.dof_numbers  = {temp_dof_idx, temp_dof_idx, temp_dof_idx, temp_dof_idx};
+        data_face.quad_numbers = {0, 0, 0, 0};
+        data_face.n_components = {1, 1, 1, 1};
+        data_face.first_selected_components = {0, 0, 1, 1};
+        data_face.batch_type = {1, 2, 1, 2}; // 1 for interior face, 2 for exterior face
+      }
+    else
+      {
+        data_cell.dof_numbers               = {temp_dof_idx};
+        data_cell.quad_numbers              = {0};
+        data_cell.n_components              = {1};
+        data_cell.first_selected_components = {0};
+        data_cell.batch_type                = {0}; // 0 for cell
+
+        data_face.dof_numbers               = {temp_dof_idx, temp_dof_idx};
+        data_face.quad_numbers              = {0, 0};
+        data_face.n_components              = {1, 1};
+        data_face.first_selected_components = {0, 0};
+        data_face.batch_type                = {1, 2}; // 1 for interior face, 2 for exterior face
+      }
+
+
+
+    data_cell.op_create = [&](const std::pair<unsigned int, unsigned int> &cell_range) {
+      std::vector<
+        std::unique_ptr<dealii::FEEvaluationData<dim, dealii::VectorizedArray<number>, false>>>
+        eval_data;
+
+      const auto emplace_eval = [&](const unsigned int index) {
+        eval_data.emplace_back(
+          std::make_unique<DomainEval<dim, number>>(matrix_free,
+                                                    cell_range,
+                                                    data_cell.dof_numbers[index],
+                                                    data_cell.quad_numbers[index],
+                                                    data_cell.first_selected_components[index]));
+      };
+
+      const auto cell_category = matrix_free.get_cell_range_category(cell_range);
+
+      if (cell_category == CutUtil::CellCategory::liquid or
+          cell_category == CutUtil::CellCategory::intersected)
+        {
+          emplace_eval(0);
+        }
+
+      if ((cell_category == CutUtil::CellCategory::gas or
+           cell_category == CutUtil::CellCategory::intersected) and
+          heat_data.cut.two_phase)
+        {
+          emplace_eval(1);
+        }
+
+      return eval_data;
+    };
+
+
+
+    data_cell.op_reinit = [&](auto &evaluators, const unsigned cell_index) {
+      for (unsigned int i = 0; i < evaluators.size(); ++i)
+        static_cast<DomainEval<dim, number> &>(*evaluators[i]).reinit(cell_index);
+    };
+
+
+
+    data_cell.op_compute =
+      [&](auto &evaluators) {
+        auto &eval_1 = static_cast<DomainEval<dim, number> &>(*evaluators[0]);
+
+        const unsigned int cell_index    = eval_1.get_current_cell_index();
+        const unsigned int cell_category = eval_1.get_active_fe_index();
+
+        if (cell_category == CutUtil::CellCategory::liquid)
+          {
+            eval_1.evaluate(dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
+            for (const unsigned int q : eval_1.quadrature_point_indices())
+              do_domain_integral_tangent(eval_1,
+                                         material_data.liquid.thermal_conductivity,
+                                         material_data.liquid.density *
+                                           material_data.liquid.specific_heat_capacity,
+                                         ost_factor_implicit,
+                                         q);
+            eval_1.integrate(dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
+          }
+        else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
+          {
+            eval_1.evaluate(dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
+
+            for (const unsigned int q : eval_1.quadrature_point_indices())
+              do_domain_integral_tangent(eval_1,
+                                         material_data.gas.thermal_conductivity,
+                                         material_data.gas.density *
+                                           material_data.gas.specific_heat_capacity,
+                                         ost_factor_implicit,
+                                         q);
+            eval_1.integrate(dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
+          }
+        else if (cell_category == CutUtil::CellCategory::intersected and
+                 not heat_data.cut.two_phase)
+          {
+            if (evapor_data.evaporative_cooling.enable and cell_index != old_cell_index)
+              {
+                T_eval_intersected_l.reinit(cell_index);
+                T_eval_intersected_l.read_dof_values(temperature);
+              }
+
+            for (unsigned int lane = 0;
+                 lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
+                 ++lane)
+              {
+                // evaluate for inside domain integral
+                CutUtil::evaluate_intersected_domain<dim, number>(
+                  point_eval_l,
+                  eval_1,
+                  dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
+                  cell_index,
+                  lane,
+                  n_dofs_per_cell);
+                if (evapor_data.evaporative_cooling.enable)
+                  {
+                    // evaluate for inside surface integral
+                    CutUtil::evaluate_intersected_domain<dim, number>(point_eval_surface_l,
+                                                                      eval_1,
+                                                                      evaluation_flags_surface,
+                                                                      cell_index,
+                                                                      lane,
+                                                                      n_dofs_per_cell);
+                    // evaluate T^n+1 for inside surface integral
+                    CutUtil::evaluate_intersected_domain<dim, number>(T_point_eval_surface_l,
+                                                                      T_eval_intersected_l,
+                                                                      evaluation_flags_surface,
+                                                                      cell_index,
+                                                                      lane,
+                                                                      n_dofs_per_cell);
+                  }
+
+                // do inside domain integral
+                for (const unsigned int q : point_eval_l.quadrature_point_indices())
+                  do_domain_integral_tangent(point_eval_l,
+                                             material_data.liquid.thermal_conductivity,
+                                             material_data.liquid.density *
+                                               material_data.liquid.specific_heat_capacity,
+                                             ost_factor_implicit,
+                                             q);
+                point_eval_l.integrate(
+                  dealii::StridedArrayView<number, n_lanes>(&eval_1.begin_dof_values()[0][lane],
+                                                            n_dofs_per_cell),
+                  dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
+
+                if (evapor_data.evaporative_cooling.enable)
+                  {
+                    // do immersed boundary integral
+                    for (const unsigned int q : point_eval_surface_l.quadrature_point_indices())
+                      do_immersed_boundary_integral_tangent(
+                        point_eval_surface_l,
+                        T_point_eval_surface_l,
+                        [&](const dealii::VectorizedArray<number> &T) {
+                          return internal::compute_qVapor_derivative(T);
+                        },
+                        ost_factor_implicit,
+                        q);
+
+                    point_eval_surface_l.integrate(dealii::StridedArrayView<number, n_lanes>(
+                                                     &eval_1.begin_dof_values()[0][lane],
+                                                     n_dofs_per_cell),
+                                                   evaluation_flags_surface, true
+                                                   /*specify flag 'true' for summing the integrated values into the solution values*/);
+                  }
+              }
+          }
+        else if (cell_category == CutUtil::CellCategory::intersected and heat_data.cut.two_phase)
+          {
+            auto &eval_2 = static_cast<DomainEval<dim, number> &>(*evaluators[1]);
+
+            if (evapor_data.evaporative_cooling.enable and cell_index != old_cell_index)
+              {
+                T_eval_intersected_l.reinit(cell_index);
+                T_eval_intersected_g.reinit(cell_index);
+                T_eval_intersected_l.read_dof_values(temperature);
+                T_eval_intersected_g.read_dof_values(temperature);
+              }
+
+            for (unsigned int lane = 0;
+                 lane < matrix_free.n_active_entries_per_cell_batch(cell_index);
+                 ++lane)
+              {
+                // evaluate for inside domain integral
+                CutUtil::evaluate_intersected_domain<dim, number>(
+                  point_eval_l,
+                  eval_1,
+                  dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
+                  cell_index,
+                  lane,
+                  n_dofs_per_cell);
+                // evaluate for inside surface integral
+                CutUtil::evaluate_intersected_domain<dim, number>(point_eval_surface_l,
+                                                                  eval_1,
+                                                                  evaluation_flags_surface,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
+                // evaluate for outside domain integral
+                CutUtil::evaluate_intersected_domain<dim, number>(
+                  point_eval_g,
+                  eval_2,
+                  dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients,
+                  cell_index,
+                  lane,
+                  n_dofs_per_cell);
+                // evaluate for outside surface integral
+                CutUtil::evaluate_intersected_domain<dim, number>(point_eval_surface_g,
+                                                                  eval_2,
+                                                                  evaluation_flags_surface,
+                                                                  cell_index,
+                                                                  lane,
+                                                                  n_dofs_per_cell);
+                if (evapor_data.evaporative_cooling.enable)
+                  {
+                    // evaluate T^n+1_l for inside surface integral
+                    CutUtil::evaluate_intersected_domain<dim, number>(T_point_eval_surface_l,
+                                                                      T_eval_intersected_l,
+                                                                      EvaluationFlags::values,
+                                                                      cell_index,
+                                                                      lane,
+                                                                      n_dofs_per_cell);
+                    // evaluate T^n+1_g for inside surface integral
+                    CutUtil::evaluate_intersected_domain<dim, number>(T_point_eval_surface_g,
+                                                                      T_eval_intersected_g,
+                                                                      EvaluationFlags::values,
+                                                                      cell_index,
+                                                                      lane,
+                                                                      n_dofs_per_cell);
+                  }
+
+                // do inside domain integral
+                for (const unsigned int q : point_eval_l.quadrature_point_indices())
+                  do_domain_integral_tangent(point_eval_l,
+                                             material_data.liquid.thermal_conductivity,
+                                             material_data.liquid.density *
+                                               material_data.liquid.specific_heat_capacity,
+                                             ost_factor_implicit,
+                                             q);
+                point_eval_l.integrate(
+                  dealii::StridedArrayView<number, n_lanes>(&eval_1.begin_dof_values()[0][lane],
+                                                            n_dofs_per_cell),
+                  dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
+
+                // do outside domain integral
+                for (const unsigned int q : point_eval_g.quadrature_point_indices())
+                  do_domain_integral_tangent(point_eval_g,
+                                             material_data.gas.thermal_conductivity,
+                                             material_data.gas.density *
+                                               material_data.gas.specific_heat_capacity,
+                                             ost_factor_implicit,
+                                             q);
+                point_eval_g.integrate(
+                  dealii::StridedArrayView<number, n_lanes>(&eval_2.begin_dof_values()[0][lane],
+                                                            n_dofs_per_cell),
+                  dealii::EvaluationFlags::values | dealii::EvaluationFlags::gradients);
+
+                // do immersed interface integral
+                for (const unsigned int q : point_eval_surface_l.quadrature_point_indices())
+                  do_interface_integral_tangent(
+                    point_eval_surface_l,
+                    point_eval_surface_g,
+                    T_point_eval_surface_l,
+                    T_point_eval_surface_g,
+                    [&](const dealii::VectorizedArray<number> &T) {
+                      return internal::compute_qVapor_derivative(T);
+                    },
+                    material_data.liquid.thermal_conductivity,
+                    material_data.gas.thermal_conductivity,
+                    ost_factor_implicit,
+                    nitsche_factor,
+                    kappa_l,
+                    kappa_g,
+                    evapor_data.evaporative_cooling.enable,
+                    q);
+
+                point_eval_surface_l.integrate(
+                    dealii::StridedArrayView<number, n_lanes>(&eval_1.begin_dof_values()[0][lane],
+                                                      n_dofs_per_cell),
+                    evaluation_flags_surface,
+                    true
+                    /*specify flag 'true' for summing the integrated values into the solution values*/);
+
+                point_eval_surface_g.integrate(
+                    dealii::StridedArrayView<number, n_lanes>(&eval_2.begin_dof_values()[0][lane],
+                                                      n_dofs_per_cell),
+                    evaluation_flags_surface,
+                    true
+                    /*specify flag 'true' for summing the integrated values into the solution values*/);
+              }
+          }
+        old_cell_index = cell_index;
+      };
+
+
+
+    data_face.op_create = [&](const std::pair<unsigned int, unsigned int> &face_range) {
+      std::vector<std::unique_ptr<FEEvaluationData<dim, VectorizedArray<number>, true>>> eval_data;
+
+      const auto emplace_face_eval = [&](const unsigned int index) {
+        bool       is_interior_face;
+        const auto batch_type = data_face.batch_type[index];
+        if (batch_type == 1)
+          is_interior_face = true;
+        else if (batch_type == 2)
+          is_interior_face = false;
+        else
+          AssertThrow(
+            false,
+            dealii::ExcMessage(
+              "The face batch type must either be 1 (interior face) or 2 (exterior face)!"));
+        eval_data.emplace_back(
+          std::make_unique<FaceEval<dim, number>>(matrix_free,
+                                                  face_range,
+                                                  is_interior_face,
+                                                  data_face.dof_numbers[index],
+                                                  data_face.quad_numbers[index],
+                                                  data_face.first_selected_components[index]));
+      };
+
+      const auto              face_category = matrix_free.get_face_range_category(face_range);
+      const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
+
+      if (face_type == CutUtil::FaceType ::intersected_face or
+          face_type == CutUtil::FaceType ::mixed_face_liquid)
+        {
+          emplace_face_eval(0);
+          emplace_face_eval(1);
+        }
+      if ((face_type == CutUtil::FaceType ::intersected_face or
+           face_type == CutUtil::FaceType ::mixed_face_gas) and
+          heat_data.cut.two_phase)
+        {
+          emplace_face_eval(2);
+          emplace_face_eval(3);
+        }
+      return eval_data;
+    };
+
+
+
+    data_face.op_reinit = [](auto &evaluators, const unsigned face_index) {
+      for (unsigned int i = 0; i < evaluators.size(); ++i)
+        static_cast<FaceEval<dim, number> &>(*evaluators[i]).reinit(face_index);
+    };
+
+
+
+    data_face.op_compute = [&](auto &evaluators) {
+      auto &eval_minus_l = static_cast<FaceEval<dim, number> &>(*evaluators[0]);
+      auto &eval_plus_l  = static_cast<FaceEval<dim, number> &>(*evaluators[1]);
+
+      const dealii::EvaluationFlags::EvaluationFlags evaluation_flags =
+        dealii::EvaluationFlags::gradients;
+
+      const unsigned int      face_index    = eval_minus_l.get_cell_or_face_batch_id();
+      const auto              face_category = matrix_free.get_face_category(face_index);
+      const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
+
+      if (face_type == CutUtil::FaceType ::intersected_face or
+          face_type == CutUtil::FaceType ::mixed_face_liquid)
+        {
+          eval_minus_l.evaluate(evaluation_flags);
+          eval_plus_l.evaluate(evaluation_flags);
+
+          for (const unsigned int q : eval_minus_l.quadrature_point_indices())
+            do_ghost_penalty_terms(eval_minus_l,
+                                   eval_plus_l,
+                                   material_data.liquid.thermal_conductivity,
+                                   ost_factor_implicit,
+                                   cell_side_length,
+                                   heat_data.cut.gamma_M,
+                                   heat_data.cut.gamma_A,
+                                   q);
+
+          eval_minus_l.integrate(evaluation_flags);
+          eval_plus_l.integrate(evaluation_flags);
+        }
+      if ((face_type == CutUtil::FaceType ::intersected_face or
+           face_type == CutUtil::FaceType ::mixed_face_gas) and
+          heat_data.cut.two_phase)
+        {
+          const int eval_idx = evaluators.size() == 4 ? 2 : 0;
+
+          auto &eval_minus_g = static_cast<FaceEval<dim, number> &>(*evaluators[eval_idx]);
+          auto &eval_plus_g  = static_cast<FaceEval<dim, number> &>(*evaluators[eval_idx + 1]);
+
+          eval_minus_g.evaluate(evaluation_flags);
+          eval_plus_g.evaluate(evaluation_flags);
+
+          for (const unsigned int q : eval_minus_g.quadrature_point_indices())
+            do_ghost_penalty_terms(eval_minus_g,
+                                   eval_plus_g,
+                                   material_data.gas.thermal_conductivity,
+                                   ost_factor_implicit,
+                                   cell_side_length,
+                                   heat_data.cut.gamma_M,
+                                   heat_data.cut.gamma_A,
+                                   q);
+
+          eval_minus_g.integrate(evaluation_flags);
+          eval_plus_g.integrate(evaluation_flags);
+        }
+    };
+
+
+
+    std::vector<VectorType *> dummy(1);
+    dummy[0] = &diagonal;
+    dealii::MatrixFreeTools::internal::
+      compute_diagonal<dim, number, dealii::VectorizedArray<number>>(
+        matrix_free, data_cell, data_face, {} /*data_boundary*/, diagonal, dummy);
+
+    // invert
+    const double linfty_norm = std::max(1.0, diagonal.linfty_norm());
+    for (auto &i : diagonal)
+      i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
   }
 
 
@@ -1482,11 +1942,11 @@ namespace MeltPoolDG::Heat
         const auto cell_category = matrix_free.get_cell_category(cell_index);
         if (cell_category == CutUtil::CellCategory::liquid)
           {
-            DomainEval eval_l(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
-                              0 /*selected component*/,
-                              CutUtil::CellCategory::liquid /*active_fe_index*/);
+            DomainEval<dim, number> eval_l(matrix_free,
+                                           temp_hanging_nodes_dof_idx /*dof_no*/,
+                                           0 /*quad_no*/,
+                                           0 /*selected component*/,
+                                           CutUtil::CellCategory::liquid /*active_fe_index*/);
 
             eval_l.reinit(cell_index);
             eval_l.gather_evaluate(solution, dealii::EvaluationFlags::values);
@@ -1500,11 +1960,11 @@ namespace MeltPoolDG::Heat
           }
         else if (cell_category == CutUtil::CellCategory::gas and heat_data.cut.two_phase)
           {
-            DomainEval eval_g(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
-                              1 /*selected component*/,
-                              CutUtil::CellCategory::gas /*active_fe_index*/);
+            DomainEval<dim, number> eval_g(matrix_free,
+                                           temp_hanging_nodes_dof_idx /*dof_no*/,
+                                           0 /*quad_no*/,
+                                           1 /*selected component*/,
+                                           CutUtil::CellCategory::gas /*active_fe_index*/);
 
             eval_g.reinit(cell_index);
             eval_g.gather_evaluate(solution, dealii::EvaluationFlags::values);
@@ -1520,12 +1980,12 @@ namespace MeltPoolDG::Heat
                  not heat_data.cut.two_phase)
           {
             // use FEEvaluation and FEPointEvaluation in combination for intersected cells
-            DomainEval eval_l(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
-                              0 /*selected component*/,
-                              CutUtil::CellCategory::liquid /*active_fe_index*/);
-            PointEval  point_eval_l(*mapping_info_cells[0], fe_tmp);
+            DomainEval<dim, number> eval_l(matrix_free,
+                                           temp_hanging_nodes_dof_idx /*dof_no*/,
+                                           0 /*quad_no*/,
+                                           0 /*selected component*/,
+                                           CutUtil::CellCategory::liquid /*active_fe_index*/);
+            PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_tmp);
 
             eval_l.reinit(cell_index);
             eval_l.read_dof_values_plain(solution);
@@ -1551,18 +2011,18 @@ namespace MeltPoolDG::Heat
         else if (cell_category == CutUtil::CellCategory::intersected and heat_data.cut.two_phase)
           {
             // use FEEvaluation and FEPointEvaluation in combination for intersected cells
-            DomainEval eval_l(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
-                              0 /*selected component*/,
-                              CutUtil::CellCategory::liquid /*active_fe_index*/);
-            DomainEval eval_g(matrix_free,
-                              temp_hanging_nodes_dof_idx /*dof_no*/,
-                              0 /*quad_no*/,
-                              1 /*selected component*/,
-                              CutUtil::CellCategory::gas /*active_fe_index*/);
-            PointEval  point_eval_l(*mapping_info_cells[0], fe_tmp);
-            PointEval  point_eval_g(*mapping_info_cells[1], fe_tmp);
+            DomainEval<dim, number> eval_l(matrix_free,
+                                           temp_hanging_nodes_dof_idx /*dof_no*/,
+                                           0 /*quad_no*/,
+                                           0 /*selected component*/,
+                                           CutUtil::CellCategory::liquid /*active_fe_index*/);
+            DomainEval<dim, number> eval_g(matrix_free,
+                                           temp_hanging_nodes_dof_idx /*dof_no*/,
+                                           0 /*quad_no*/,
+                                           1 /*selected component*/,
+                                           CutUtil::CellCategory::gas /*active_fe_index*/);
+            PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_tmp);
+            PointEval<dim, number>  point_eval_g(*mapping_info_cells[1], fe_tmp);
 
             eval_l.reinit(cell_index);
             eval_g.reinit(cell_index);
