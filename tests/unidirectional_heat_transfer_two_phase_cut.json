@@ -21,7 +21,7 @@
       "two_phase": "true"
     },
     "linear solver": {
-      "preconditioner type": "AMG",
+      "preconditioner type": "Diagonal",
       "rel tolerance": "1e-12",
       "abs tolerance": "1e-10"
     },
