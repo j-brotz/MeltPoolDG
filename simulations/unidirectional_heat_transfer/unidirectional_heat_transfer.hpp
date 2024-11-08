@@ -219,7 +219,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
           const Point<2> left(x_min, 0.0);
           const Point<2> right(x_max, 0.1);
 
-          if (this->parameters.heat.operator_type == Heat::OperatorType::cut)
+          if (this->parameters.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
             {
               // if we use the cut operator, make sure the number of element per direction is odd
               const std::vector<unsigned int> cell_repetitions(
@@ -272,7 +272,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
 
       if (do_two_phase)
         {
-          if (this->parameters.heat.operator_type == Heat::OperatorType::diffuse)
+          if (this->parameters.heat.operator_type == Heat::TwoPhaseOperatorType::diffuse)
             {
               if (!do_solidification)
                 this->attach_initial_condition(std::make_shared<HorizontalLevelSet<dim>>(
@@ -283,11 +283,11 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
                   std::make_shared<CovectedVerticalLevelSetHeaviside<dim>>(velocity),
                   "prescribed_heaviside");
             }
-          else if (this->parameters.heat.operator_type == Heat::OperatorType::cut)
+          else if (this->parameters.heat.operator_type == Heat::TwoPhaseOperatorType::cut)
             {
               this->attach_initial_condition(std::make_shared<HorizontalLevelSet<dim>>(
                                                false /* do_heaviside */),
-                                             "prescribed_level_set");
+                                             "prescribed_signed_distance");
             }
         }
     }

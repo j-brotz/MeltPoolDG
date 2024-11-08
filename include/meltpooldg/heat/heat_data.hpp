@@ -10,14 +10,14 @@
 
 namespace MeltPoolDG::Heat
 {
-  BETTER_ENUM(OperatorType, char, diffuse, cut)
+  BETTER_ENUM(TwoPhaseOperatorType, char, diffuse, cut)
 
   template <typename number = double>
   struct HeatData
   {
     HeatData();
 
-    OperatorType operator_type = OperatorType::diffuse;
+    TwoPhaseOperatorType operator_type = TwoPhaseOperatorType::diffuse;
 
     bool enable_time_dependent_bc = false;
 
@@ -26,9 +26,14 @@ namespace MeltPoolDG::Heat
 
     struct Cut
     {
-      bool   two_phase         = true;
-      number gamma_M           = 0.75;
-      number gamma_A           = 1.5;
+      bool two_phase = true;
+
+      struct GhostPenalty
+      {
+        number gamma_M = 0.75;
+        number gamma_A = 1.5;
+      } ghost_penalty;
+
       number nitsche_parameter = 500.0;
 
       // factor theta for time integration with one-step-theta method

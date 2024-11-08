@@ -76,7 +76,7 @@ namespace MeltPoolDG::Heat
     // For the CutFEM heat transfer operator, we don't precompute a sharp laser heat source.
     // Instead, we pass the intensity function to the cut operation, which is then evaluated at the
     // cut interface.
-    if (data_in.heat.operator_type == OperatorType::cut and
+    if (data_in.heat.operator_type == TwoPhaseOperatorType::cut and
         (laser_data.model == LaserModelType::interface_projection_sharp or
          laser_data.model == LaserModelType::interface_projection_sharp_conforming))
       return;

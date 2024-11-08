@@ -1,5 +1,6 @@
 #pragma once
 #include <deal.II/base/function.h>
+#include <deal.II/base/point.h>
 
 namespace dealii::Functions
 {
@@ -46,5 +47,27 @@ namespace dealii::Functions
 
   private:
     const std::shared_ptr<Function<dim, Number>> fu;
+  };
+
+
+
+  // this is a workaround to make a 2 component function out of a single component function
+  template <int dim>
+  class TwoComponentFunction : public dealii::Function<dim>
+  {
+  public:
+    TwoComponentFunction(const dealii::Function<dim> &function_in)
+      : dealii::Function<dim>(2 /* n_components */)
+      , function(function_in)
+    {}
+
+    double
+    value(const dealii::Point<dim> &p, const unsigned int /* component */) const override
+    {
+      return function.value(p);
+    }
+
+  private:
+    const dealii::Function<dim> &function;
   };
 } // namespace dealii::Functions

@@ -129,11 +129,14 @@
         "cut":
         {
             "do explicit symmetry term": "true",
-            "gamma A": "1.5",
-            "gamma M": "0.75",
             "nitsche parameter": "500",
             "theta": "0.5",
-            "two phase": "true"
+            "two phase": "true",
+            "ghost penalty":
+            {
+                "gamma A": "1.5",
+                "gamma M": "0.75"
+            }
         },
         "fe":
         {
@@ -146,7 +149,7 @@
             "do matrix free": "true",
             "max iterations": "10000",
             "monitor type": "none",
-            "preconditioner type": "DiagonalReduced",
+            "preconditioner type": "Diagonal",
             "rel tolerance": "1e-12",
             "solver type": "GMRES"
         },

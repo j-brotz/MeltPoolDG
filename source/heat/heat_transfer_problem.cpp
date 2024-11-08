@@ -78,7 +78,7 @@ namespace MeltPoolDG::Heat
                 laser_operation->move_laser(dt);
 
                 // only precompute the laser heat source if it's not passed to the CutFEM Operator
-                if (base_in->parameters.heat.operator_type != OperatorType::cut)
+                if (base_in->parameters.heat.operator_type != TwoPhaseOperatorType::cut)
                   {
                     auto heat_diffuse_operation =
                       dynamic_cast<HeatDiffuseOperation<dim> *>(heat_operation.get());
@@ -233,7 +233,7 @@ namespace MeltPoolDG::Heat
      */
     switch (base_in->parameters.heat.operator_type)
       {
-          case OperatorType::diffuse: {
+          case TwoPhaseOperatorType::diffuse: {
             // set level-set as heaviside field
             VectorType *level_set_as_heaviside_ptr = nullptr;
             heaviside_field_function               = base_in->get_initial_condition(
@@ -268,10 +268,10 @@ namespace MeltPoolDG::Heat
               problem_specific_parameters.do_solidification);
             break;
           }
-          case OperatorType::cut: {
+          case TwoPhaseOperatorType::cut: {
             // set level-set field that defines the interface at the zero contour
             level_set_field_function =
-              base_in->get_initial_condition("prescribed_level_set", false /* is_optional */);
+              base_in->get_initial_condition("prescribed_signed_distance", false /* is_optional */);
 
             auto heat_cut_operation =
               std::make_shared<HeatCutOperation<dim>>(*scratch_data,
@@ -311,10 +311,6 @@ namespace MeltPoolDG::Heat
 
     heat_operation->set_initial_condition(*base_in->get_initial_condition("heat_transfer"),
                                           base_in->parameters.time_stepping.start_time);
-
-    auto heat_cut_operation = dynamic_cast<HeatCutOperation<dim> *>(heat_operation.get());
-    if (heat_cut_operation)
-      heat_cut_operation->compute_intersected_quadrature();
 
     /*
      *  initialize postprocessor
@@ -376,7 +372,7 @@ namespace MeltPoolDG::Heat
 
     // before the CutFEM operation can distribute dofs, the mesh must be classified according to the
     // level set indicator
-    if (base_in->parameters.heat.operator_type == OperatorType::cut)
+    if (base_in->parameters.heat.operator_type == TwoPhaseOperatorType::cut)
       {
         Assert(level_set_field_function != nullptr, ExcInternalError());
         IndexSet locally_relevant_dofs;
@@ -389,10 +385,6 @@ namespace MeltPoolDG::Heat
                                          dof_handler_level_set,
                                          *level_set_field_function,
                                          level_set);
-
-        auto heat_cut_operation = dynamic_cast<HeatCutOperation<dim> *>(heat_operation.get());
-        Assert(heat_cut_operation != nullptr, ExcInternalError());
-        heat_cut_operation->classify_cells();
       }
 
     heat_operation->distribute_dofs(dof_handler);
@@ -426,11 +418,13 @@ namespace MeltPoolDG::Heat
     if (laser_operation)
       laser_operation->setup_constraints();
 
-    scratch_data->build(
-      true /*enable_boundary_faces*/,
-      base_in->parameters.laser.model == LaserModelType::interface_projection_sharp_conforming or
-        base_in->parameters.heat.operator_type == OperatorType::cut /*enable_inner_face_loops*/,
-      base_in->parameters.heat.operator_type == OperatorType::cut /*enable_normal_vector_update*/);
+    scratch_data->build(true /*enable_boundary_faces*/,
+                        base_in->parameters.laser.model ==
+                            LaserModelType::interface_projection_sharp_conforming or
+                          base_in->parameters.heat.operator_type ==
+                            TwoPhaseOperatorType::cut /*enable_inner_face_loops*/,
+                        base_in->parameters.heat.operator_type ==
+                          TwoPhaseOperatorType::cut /*enable_normal_vector_update*/);
 
     heat_operation->reinit();
     if (laser_operation)

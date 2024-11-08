@@ -90,12 +90,14 @@ namespace MeltPoolDG::Heat
       std::shared_ptr<const dealii::Function<dim, double>> laser_intensity_profile_in,
       const dealii::Tensor<1, dim, double>                &laser_direction_in);
 
+  private:
     void
-    classify_cells();
+    classify_cells() const;
 
     void
     compute_intersected_quadrature();
 
+  public:
     void
     distribute_dofs(dealii::DoFHandler<dim> &dof_handler) const override;
 
@@ -108,6 +110,9 @@ namespace MeltPoolDG::Heat
 
     void
     distribute_constraints() override;
+
+    void
+    init_time_advance();
 
     void
     solve() override;

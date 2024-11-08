@@ -1,4 +1,4 @@
-#include <meltpooldg/heat/cut_util.hpp>
+#include <meltpooldg/utilities/cut_util.hpp>
 //
 
 #include <deal.II/base/exceptions.h>
@@ -12,7 +12,7 @@
 #include <deal.II/non_matching/immersed_surface_quadrature.h>
 #include <deal.II/non_matching/quadrature_generator.h>
 
-namespace MeltPoolDG::Heat::CutUtil
+namespace MeltPoolDG::CutUtil
 {
   FaceType
   get_face_type(const std::pair<unsigned int, unsigned int> &adjacent_cell_categories)
@@ -185,4 +185,4 @@ namespace MeltPoolDG::Heat::CutUtil
     const dealii::MatrixFree<3, double, dealii::VectorizedArray<double>> &,
     const int,
     const bool);
-} // namespace MeltPoolDG::Heat::CutUtil
+} // namespace MeltPoolDG::CutUtil

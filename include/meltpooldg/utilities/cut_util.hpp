@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace MeltPoolDG::Heat::CutUtil
+namespace MeltPoolDG::CutUtil
 {
   /**
    * definition of the cell category numbering (active FE index)
@@ -130,5 +130,5 @@ namespace MeltPoolDG::Heat::CutUtil
     point_eval.evaluate(dealii::StridedArrayView<const number, n_lanes>(
                           &eval_intersected.begin_dof_values()[0][lane], n_dofs_per_cell),
                         evaluation_flags);
-  };
-} // namespace MeltPoolDG::Heat::CutUtil
+  }
+} // namespace MeltPoolDG::CutUtil

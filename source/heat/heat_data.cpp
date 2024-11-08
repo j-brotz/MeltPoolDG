@@ -29,19 +29,22 @@ namespace MeltPoolDG::Heat
         prm.add_parameter("two phase",
                           cut.two_phase,
                           "Set this parameter to \"false\" to ignore the gas phase.");
-        prm.add_parameter("gamma M",
-                          cut.gamma_M,
-                          "Mass ghost penalty parameter for 1. normal derivative.");
-        prm.add_parameter("gamma A",
-                          cut.gamma_A,
-                          "Stiffness ghost penalty parameter for 1. normal derivative.");
         prm.add_parameter("nitsche parameter", cut.nitsche_parameter, "Nitsche parameter.");
-        prm.add_parameter("theta", cut.theta, "");
-        prm.add_parameter(
-          "do explicit symmetry term",
-          cut.do_explicit_symmetry_term,
-          "Set this parameter to true to consider the explicit symmetry term. "
-          "Note: this parameter only applies if the setup is two-phase and dynamic.");
+        prm.add_parameter("theta", cut.theta, "Parameter for one step theta time integration.");
+        prm.add_parameter("do explicit symmetry term",
+                          cut.do_explicit_symmetry_term,
+                          "Set this parameter to true to consider the explicit symmetry term. "
+                          "Note: this parameter only applies if the setup is two-phase.");
+        prm.enter_subsection("ghost penalty");
+        {
+          prm.add_parameter("gamma M",
+                            cut.ghost_penalty.gamma_M,
+                            "Mass ghost penalty parameter for 1. normal derivative.");
+          prm.add_parameter("gamma A",
+                            cut.ghost_penalty.gamma_A,
+                            "Stiffness ghost penalty parameter for 1. normal derivative.");
+        }
+        prm.leave_subsection();
       }
       prm.leave_subsection();
 

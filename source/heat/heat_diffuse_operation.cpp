@@ -46,22 +46,22 @@ namespace MeltPoolDG::Heat
     , solution_history(std::max(heat_data.predictor.n_old_solution_vectors,
                                 2U /*TODO: include time integration scheme*/))
   {
-    heat_operator =
-      std::make_shared<HeatDiffuseOperator<dim>>(bc_data,
-                                                 scratch_data,
-                                                 heat_data,
-                                                 material,
-                                                 temp_dof_idx,
-                                                 temp_quad_idx,
-                                                 temp_hanging_nodes_dof_idx,
-                                                 solution_history.get_current_solution(),
-                                                 solution_history.get_recent_old_solution(),
-                                                 heat_source,
-                                                 vel_dof_idx,
-                                                 velocity,
-                                                 ls_dof_idx,
-                                                 level_set_as_heaviside,
-                                                 do_solidification);
+    heat_operator = std::make_shared<HeatDiffuseMultiPhaseOperation<dim>>(
+      bc_data,
+      scratch_data,
+      heat_data,
+      material,
+      temp_dof_idx,
+      temp_quad_idx,
+      temp_hanging_nodes_dof_idx,
+      solution_history.get_current_solution(),
+      solution_history.get_recent_old_solution(),
+      heat_source,
+      vel_dof_idx,
+      velocity,
+      ls_dof_idx,
+      level_set_as_heaviside,
+      do_solidification);
 
 
     /*

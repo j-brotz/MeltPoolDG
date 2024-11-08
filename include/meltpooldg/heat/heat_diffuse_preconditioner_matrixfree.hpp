@@ -29,7 +29,7 @@ namespace MeltPoolDG::Heat
   {
   private:
     using VectorType   = LinearAlgebra::distributed::Vector<double>;
-    using OperatorType = std::shared_ptr<HeatDiffuseOperator<dim>>;
+    using OperatorType = std::shared_ptr<HeatDiffuseMultiPhaseOperation<dim>>;
 
     const ScratchData<dim> &scratch_data;
     /**

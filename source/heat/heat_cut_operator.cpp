@@ -12,8 +12,8 @@
 #include <deal.II/matrix_free/fe_point_evaluation.h>
 #include <deal.II/matrix_free/tools.h>
 
-#include <meltpooldg/heat/cut_util.hpp>
 #include <meltpooldg/interface/exceptions.hpp>
+#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
 #include <functional>
@@ -137,8 +137,8 @@ namespace MeltPoolDG::Heat
     , temperature(temperature_in)
     , mapping_info_surface(mapping_info_surface_in)
     , mapping_info_cells(mapping_info_cells_in)
-    , fe_tmp(heat_data.fe.degree)
-    , n_dofs_per_cell(fe_tmp.dofs_per_cell)
+    , fe_point_tmp(heat_data.fe.degree)
+    , n_dofs_per_cell(fe_point_tmp.dofs_per_cell)
     , kappa_l(material_data.gas.thermal_conductivity /
               (material_data.gas.thermal_conductivity + material_data.liquid.thermal_conductivity))
     , kappa_g(material_data.liquid.thermal_conductivity /
@@ -183,7 +183,7 @@ namespace MeltPoolDG::Heat
 
     // precompute Nitsche term factor for the two-phase case
     if (heat_data.cut.two_phase)
-      gamma_Gamma_per_h =
+      weighted_nitsche_factor =
         heat_data.cut.nitsche_parameter *
         (material_data.liquid.thermal_conductivity * material_data.gas.thermal_conductivity) /
         (material_data.liquid.thermal_conductivity + material_data.gas.thermal_conductivity) /
@@ -200,7 +200,7 @@ namespace MeltPoolDG::Heat
     ost_factor_implicit = this->time_increment * heat_data.cut.theta;
     ost_factor_explicit = this->time_increment * (1. - heat_data.cut.theta);
     if (heat_data.cut.two_phase)
-      nitsche_factor = this->time_increment * gamma_Gamma_per_h;
+      nitsche_factor = this->time_increment * weighted_nitsche_factor;
   }
 
 
@@ -598,8 +598,8 @@ namespace MeltPoolDG::Heat
           0 /*selected component*/,
           CutUtil::CellCategory::intersected /*active_fe_index*/);
         DomainEval<dim, number> T_eval_intersected_l(eval_intersected_l);
-        PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_tmp);
-        PointEval<dim, number>  point_eval_surface_l(mapping_info_surface, fe_tmp);
+        PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_point_tmp);
+        PointEval<dim, number>  point_eval_surface_l(mapping_info_surface, fe_point_tmp);
         PointEval<dim, number>  T_point_eval_surface_l(point_eval_surface_l);
 
         for (unsigned int cell_index = cell_range.first; cell_index < cell_range.second;
@@ -697,9 +697,9 @@ namespace MeltPoolDG::Heat
           1 /*selected component*/,
           CutUtil::CellCategory::intersected /*active_fe_index*/);
         DomainEval<dim, number> T_eval_intersected_g(eval_intersected_g);
-        PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_tmp);
-        PointEval<dim, number>  point_eval_g(*mapping_info_cells[1], fe_tmp);
-        PointEval<dim, number>  point_eval_surface_l(mapping_info_surface, fe_tmp);
+        PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_point_tmp);
+        PointEval<dim, number>  point_eval_g(*mapping_info_cells[1], fe_point_tmp);
+        PointEval<dim, number>  point_eval_surface_l(mapping_info_surface, fe_point_tmp);
         PointEval<dim, number>  T_point_eval_surface_l(point_eval_surface_l);
         PointEval<dim, number>  point_eval_surface_g(point_eval_surface_l);
         PointEval<dim, number>  T_point_eval_surface_g(point_eval_surface_l);
@@ -885,8 +885,8 @@ namespace MeltPoolDG::Heat
                                      material_data.liquid.thermal_conductivity,
                                      ost_factor_implicit,
                                      cell_side_length,
-                                     heat_data.cut.gamma_M,
-                                     heat_data.cut.gamma_A,
+                                     heat_data.cut.ghost_penalty.gamma_M,
+                                     heat_data.cut.ghost_penalty.gamma_A,
                                      q);
 
             eval_minus_l.integrate_scatter(evaluation_flags, dst);
@@ -925,8 +925,8 @@ namespace MeltPoolDG::Heat
                                      material_data.gas.thermal_conductivity,
                                      ost_factor_implicit,
                                      cell_side_length,
-                                     heat_data.cut.gamma_M,
-                                     heat_data.cut.gamma_A,
+                                     heat_data.cut.ghost_penalty.gamma_M,
+                                     heat_data.cut.ghost_penalty.gamma_A,
                                      q);
 
             eval_minus_g.integrate_scatter(evaluation_flags, dst);
@@ -1048,9 +1048,9 @@ namespace MeltPoolDG::Heat
           0 /*selected component*/,
           CutUtil::CellCategory::intersected /*active_fe_index*/);
         DomainEval<dim, number> Told_eval_intersected_l(Tnew_eval_intersected_l);
-        PointEval<dim, number>  Tnew_point_eval_l(*mapping_info_cells[0], fe_tmp);
+        PointEval<dim, number>  Tnew_point_eval_l(*mapping_info_cells[0], fe_point_tmp);
         PointEval<dim, number>  Told_point_eval_l(Tnew_point_eval_l);
-        PointEval<dim, number>  Tnew_point_eval_surface_l(mapping_info_surface, fe_tmp);
+        PointEval<dim, number>  Tnew_point_eval_surface_l(mapping_info_surface, fe_point_tmp);
         PointEval<dim, number>  Told_point_eval_surface_l(Tnew_point_eval_surface_l);
 
         for (unsigned int cell_index = cell_range.first; cell_index < cell_range.second;
@@ -1164,11 +1164,11 @@ namespace MeltPoolDG::Heat
           1 /*selected component*/,
           CutUtil::CellCategory::intersected /*active_fe_index*/);
         DomainEval<dim, number> Told_eval_intersected_g(Tnew_eval_intersected_g);
-        PointEval<dim, number>  Tnew_point_eval_l(*mapping_info_cells[0], fe_tmp);
+        PointEval<dim, number>  Tnew_point_eval_l(*mapping_info_cells[0], fe_point_tmp);
         PointEval<dim, number>  Told_point_eval_l(Tnew_point_eval_l);
-        PointEval<dim, number>  Tnew_point_eval_g(*mapping_info_cells[1], fe_tmp);
+        PointEval<dim, number>  Tnew_point_eval_g(*mapping_info_cells[1], fe_point_tmp);
         PointEval<dim, number>  Told_point_eval_g(Tnew_point_eval_g);
-        PointEval<dim, number>  Tnew_point_eval_surface_l(mapping_info_surface, fe_tmp);
+        PointEval<dim, number>  Tnew_point_eval_surface_l(mapping_info_surface, fe_point_tmp);
         PointEval<dim, number>  Told_point_eval_surface_l(Tnew_point_eval_surface_l);
         PointEval<dim, number>  Tnew_point_eval_surface_g(Tnew_point_eval_surface_l);
         PointEval<dim, number>  Told_point_eval_surface_g(Tnew_point_eval_surface_l);
@@ -1377,8 +1377,8 @@ namespace MeltPoolDG::Heat
                                      material_data.liquid.thermal_conductivity,
                                      ost_factor_implicit,
                                      cell_side_length,
-                                     heat_data.cut.gamma_M,
-                                     heat_data.cut.gamma_A,
+                                     heat_data.cut.ghost_penalty.gamma_M,
+                                     heat_data.cut.ghost_penalty.gamma_A,
                                      q,
                                      -1.0);
 
@@ -1418,8 +1418,8 @@ namespace MeltPoolDG::Heat
                                      material_data.gas.thermal_conductivity,
                                      ost_factor_implicit,
                                      cell_side_length,
-                                     heat_data.cut.gamma_M,
-                                     heat_data.cut.gamma_A,
+                                     heat_data.cut.ghost_penalty.gamma_M,
+                                     heat_data.cut.ghost_penalty.gamma_A,
                                      q,
                                      -1.0);
 
@@ -1504,10 +1504,10 @@ namespace MeltPoolDG::Heat
       heat_data.cut.two_phase ? 1 : 0 /*selected component*/,
       CutUtil::CellCategory::intersected /*active_fe_index*/);
     DomainEval<dim, number> T_eval_intersected_g(eval_intersected_g);
-    PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_tmp);
+    PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_point_tmp);
     PointEval<dim, number>  point_eval_g(*mapping_info_cells[heat_data.cut.two_phase ? 1 : 0],
-                                        fe_tmp);
-    PointEval<dim, number>  point_eval_surface_l(mapping_info_surface, fe_tmp);
+                                        fe_point_tmp);
+    PointEval<dim, number>  point_eval_surface_l(mapping_info_surface, fe_point_tmp);
     PointEval<dim, number>  T_point_eval_surface_l(point_eval_surface_l);
     PointEval<dim, number>  point_eval_surface_g(point_eval_surface_l);
     PointEval<dim, number>  T_point_eval_surface_g(point_eval_surface_l);
@@ -1902,8 +1902,8 @@ namespace MeltPoolDG::Heat
                                    material_data.liquid.thermal_conductivity,
                                    ost_factor_implicit,
                                    cell_side_length,
-                                   heat_data.cut.gamma_M,
-                                   heat_data.cut.gamma_A,
+                                   heat_data.cut.ghost_penalty.gamma_M,
+                                   heat_data.cut.ghost_penalty.gamma_A,
                                    q);
 
           eval_minus_l.integrate(evaluation_flags);
@@ -1927,8 +1927,8 @@ namespace MeltPoolDG::Heat
                                    material_data.gas.thermal_conductivity,
                                    ost_factor_implicit,
                                    cell_side_length,
-                                   heat_data.cut.gamma_M,
-                                   heat_data.cut.gamma_A,
+                                   heat_data.cut.ghost_penalty.gamma_M,
+                                   heat_data.cut.ghost_penalty.gamma_A,
                                    q);
 
           eval_minus_g.integrate(evaluation_flags);
@@ -2016,7 +2016,7 @@ namespace MeltPoolDG::Heat
                                            0 /*quad_no*/,
                                            0 /*selected component*/,
                                            CutUtil::CellCategory::liquid /*active_fe_index*/);
-            PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_tmp);
+            PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_point_tmp);
 
             eval_l.reinit(cell_index);
             eval_l.read_dof_values_plain(solution);
@@ -2052,8 +2052,8 @@ namespace MeltPoolDG::Heat
                                            0 /*quad_no*/,
                                            1 /*selected component*/,
                                            CutUtil::CellCategory::gas /*active_fe_index*/);
-            PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_tmp);
-            PointEval<dim, number>  point_eval_g(*mapping_info_cells[1], fe_tmp);
+            PointEval<dim, number>  point_eval_l(*mapping_info_cells[0], fe_point_tmp);
+            PointEval<dim, number>  point_eval_g(*mapping_info_cells[1], fe_point_tmp);
 
             eval_l.reinit(cell_index);
             eval_g.reinit(cell_index);

@@ -60,7 +60,7 @@ namespace MeltPoolDG::Heat
       &mapping_info_cells;
 
     // use FE_DGQ for FEPointEvaluation (DoF numbering reasons)
-    const dealii::FE_DGQ<dim> fe_tmp;
+    const dealii::FE_DGQ<dim> fe_point_tmp;
     const unsigned int        n_dofs_per_cell;
 
     // coefficients for weighted average operator for two-phase case
@@ -71,7 +71,7 @@ namespace MeltPoolDG::Heat
     static constexpr unsigned int          n_lanes = dealii::VectorizedArray<number>::size();
 
     // weighted averaged Nitsche term factor for two-phase case
-    number gamma_Gamma_per_h;
+    number weighted_nitsche_factor;
 
     number cell_side_length = 0.;
     number ost_factor_implicit; // delta_t * theta

@@ -14,11 +14,12 @@
 
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
-#include <meltpooldg/heat/cut_util.hpp>
 #include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/interface/finite_element_data.hpp>
 #include <meltpooldg/linear_algebra/linear_solver.hpp>
+#include <meltpooldg/utilities/cut_util.hpp>
 #include <meltpooldg/utilities/dof_monitor.hpp>
+#include <meltpooldg/utilities/functions.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 
 #include <algorithm>
@@ -114,7 +115,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim>
   void
-  HeatCutOperation<dim>::classify_cells()
+  HeatCutOperation<dim>::classify_cells() const
   {
     level_set.update_ghost_values();
     mesh_classifier->reclassify();
@@ -145,6 +146,8 @@ namespace MeltPoolDG::Heat
   {
     AssertThrow(heat_data.fe.type == FiniteElementType::FE_Q,
                 dealii::ExcMessage("For now, only standard FE_Q elements are supported."));
+
+    classify_cells();
 
     dealii::FE_Q<dim>             fe_q(heat_data.fe.degree);
     dealii::FE_Nothing<dim>       fe_n;
@@ -189,29 +192,10 @@ namespace MeltPoolDG::Heat
      * needed for computing the preconditioner
      */
     preconditioner_matrixfree->reinit();
+
+    compute_intersected_quadrature();
   }
 
-
-
-  // this is a workaround to make a 2 component function out of a single component function
-  template <int dim>
-  class TwoComponentFunction : public dealii::Function<dim>
-  {
-  public:
-    TwoComponentFunction(const dealii::Function<dim> &function_in)
-      : dealii::Function<dim>(2 /* n_components */)
-      , function(function_in)
-    {}
-
-    double
-    value(const dealii::Point<dim> &p, const unsigned int /* component */) const override
-    {
-      return function.value(p);
-    }
-
-  private:
-    const dealii::Function<dim> &function;
-  };
 
 
   template <int dim>
@@ -221,10 +205,11 @@ namespace MeltPoolDG::Heat
   {
     if (heat_data.cut.two_phase)
       // For the two-phase case, the initial temperature function must be set up with 2 components
-      // because the FE_System for cut is set up with 2 to handle both phases.
+      // because the FESystem for cut is set up with 2 to handle both phases.
       dealii::VectorTools::interpolate(scratch_data.get_mapping(),
                                        scratch_data.get_dof_handler(temp_dof_idx),
-                                       TwoComponentFunction<dim>(initial_temperature),
+                                       dealii::Functions::TwoComponentFunction<dim>(
+                                         initial_temperature),
                                        solution_history.get_current_solution());
     else
       dealii::VectorTools::interpolate(scratch_data.get_mapping(),
@@ -290,15 +275,21 @@ namespace MeltPoolDG::Heat
     };
   }
 
+  template <int dim>
+  void
+  HeatCutOperation<dim>::init_time_advance()
+  {
+    solution_history.commit_old_solutions();
+    heat_operator->init_time_advance(time_iterator.get_current_time_increment());
+  }
+
 
 
   template <int dim>
   void
   HeatCutOperation<dim>::solve()
   {
-    // TODO move to init_time_advance?
-    solution_history.commit_old_solutions();
-    heat_operator->init_time_advance(time_iterator.get_current_time_increment());
+    init_time_advance();
 
     // setup preconditioner
     switch (heat_data.linear_solver.preconditioner_type)

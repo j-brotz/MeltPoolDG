@@ -89,7 +89,7 @@ namespace MeltPoolDG::Heat
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    std::shared_ptr<HeatDiffuseOperator<dim>> heat_operator;
+    std::shared_ptr<HeatDiffuseMultiPhaseOperation<dim>> heat_operator;
 
     std::shared_ptr<HeatTransferPreconditionerMatrixFree<dim>> heat_transfer_preconditioner;
     std::shared_ptr<DiagonalMatrix<VectorType>>                diag_preconditioner;
