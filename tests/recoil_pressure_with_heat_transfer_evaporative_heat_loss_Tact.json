@@ -84,7 +84,7 @@
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-4",
-      "preconditioner type": "DiagonalReduced"
+      "preconditioner type": "Diagonal"
     },
     "nlsolve": {
       "max nonlinear iterations": "20",
