@@ -8,7 +8,7 @@ namespace MeltPoolDG::Heat
   HeatData<number>::HeatData()
   {
     linear_solver.solver_type         = LinearSolverType::GMRES;
-    linear_solver.preconditioner_type = PreconditionerType::DiagonalReduced;
+    linear_solver.preconditioner_type = PreconditionerType::Diagonal;
     predictor.type                    = PredictorType::linear_extrapolation;
   }
 
@@ -19,6 +19,34 @@ namespace MeltPoolDG::Heat
     prm.enter_subsection("heat");
     {
       fe.add_parameters(prm);
+
+      prm.add_parameter("operator type",
+                        operator_type,
+                        "Choose the heat operator implementation. Options: diffuse, cut");
+
+      prm.enter_subsection("cut");
+      {
+        prm.add_parameter("two phase",
+                          cut.two_phase,
+                          "Set this parameter to \"false\" to ignore the gas phase.");
+        prm.add_parameter("nitsche parameter", cut.nitsche_parameter, "Nitsche parameter.");
+        prm.add_parameter("theta", cut.theta, "Parameter for one step theta time integration.");
+        prm.add_parameter("do explicit symmetry term",
+                          cut.do_explicit_symmetry_term,
+                          "Set this parameter to true to consider the explicit symmetry term. "
+                          "Note: this parameter only applies if the setup is two-phase.");
+        prm.enter_subsection("ghost penalty");
+        {
+          prm.add_parameter("gamma M",
+                            cut.ghost_penalty.gamma_M,
+                            "Mass ghost penalty parameter for 1. normal derivative.");
+          prm.add_parameter("gamma A",
+                            cut.ghost_penalty.gamma_A,
+                            "Stiffness ghost penalty parameter for 1. normal derivative.");
+        }
+        prm.leave_subsection();
+      }
+      prm.leave_subsection();
 
       prm.add_parameter("enable time dependent bc",
                         enable_time_dependent_bc,

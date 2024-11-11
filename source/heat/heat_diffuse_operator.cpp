@@ -4,7 +4,7 @@
 #include <deal.II/matrix_free/tools.h>
 
 #include <meltpooldg/evaporation/evaporation_data.hpp>
-#include <meltpooldg/heat/heat_transfer_operator.hpp>
+#include <meltpooldg/heat/heat_diffuse_operator.hpp>
 #include <meltpooldg/interface/exceptions.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/material/material.hpp>
@@ -18,7 +18,7 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim, typename number>
-  HeatTransferOperator<dim, number>::HeatTransferOperator(
+  HeatDiffuseMultiPhaseOperation<dim, number>::HeatDiffuseMultiPhaseOperation(
     const std::shared_ptr<BoundaryConditions<dim>> &bc,
     const ScratchData<dim>                         &scratch_data_in,
     const HeatData<number>                         &data_in,
@@ -87,7 +87,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::register_surface_mesh(
+  HeatDiffuseMultiPhaseOperation<dim, number>::register_surface_mesh(
     const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                                  std::vector<Point<dim>> /*quad_points*/,
                                  std::vector<double> /*weights*/
@@ -98,7 +98,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::register_evaporative_mass_flux(
+  HeatDiffuseMultiPhaseOperation<dim, number>::register_evaporative_mass_flux(
     VectorType        *evaporative_mass_flux_in,
     const unsigned int evapor_mass_flux_dof_idx_in,
     const double       latent_heat_of_evaporation_in,
@@ -145,16 +145,17 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::assemble_matrixbased(
-    [[maybe_unused]] const VectorType                       &advected_field_old,
-    [[maybe_unused]] HeatTransferOperator::SparseMatrixType &matrix,
-    [[maybe_unused]] VectorType                             &rhs) const
+  HeatDiffuseMultiPhaseOperation<dim, number>::assemble_matrixbased(
+    [[maybe_unused]] const VectorType                                 &advected_field_old,
+    [[maybe_unused]] HeatDiffuseMultiPhaseOperation::SparseMatrixType &matrix,
+    [[maybe_unused]] VectorType                                       &rhs) const
   {
     AssertThrow(false, ExcNotImplemented());
   }
+
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::update_ghost_values() const
+  HeatDiffuseMultiPhaseOperation<dim, number>::update_ghost_values() const
   {
     unsigned int i = 0;
 
@@ -176,7 +177,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::zero_out_ghost_values() const
+  HeatDiffuseMultiPhaseOperation<dim, number>::zero_out_ghost_values() const
   {
     unsigned int i = 0;
 
@@ -196,7 +197,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
+  HeatDiffuseMultiPhaseOperation<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -216,7 +217,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::tangent_cell_loop(
+  HeatDiffuseMultiPhaseOperation<dim, number>::tangent_cell_loop(
     const MatrixFree<dim, number>        &matrix_free,
     VectorType                           &dst,
     const VectorType                     &src,
@@ -260,7 +261,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::tangent_boundary_loop(
+  HeatDiffuseMultiPhaseOperation<dim, number>::tangent_boundary_loop(
     const MatrixFree<dim, number>        &matrix_free,
     VectorType                           &dst,
     const VectorType                     &src,
@@ -288,7 +289,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(
+  HeatDiffuseMultiPhaseOperation<dim, number>::compute_inverse_diagonal_from_matrixfree(
     VectorType &diagonal) const
   {
     scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
@@ -341,7 +342,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::compute_system_matrix_from_matrixfree_reduced(
+  HeatDiffuseMultiPhaseOperation<dim, number>::compute_system_matrix_from_matrixfree_reduced(
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
     system_matrix = 0.0;
@@ -391,7 +392,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::compute_system_matrix_from_matrixfree(
+  HeatDiffuseMultiPhaseOperation<dim, number>::compute_system_matrix_from_matrixfree(
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
     system_matrix = 0.0;
@@ -536,7 +537,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::rhs_cell_loop(
+  HeatDiffuseMultiPhaseOperation<dim, number>::rhs_cell_loop(
     const MatrixFree<dim, number>        &matrix_free,
     VectorType                           &dst,
     const VectorType                     &src,
@@ -727,7 +728,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
+  HeatDiffuseMultiPhaseOperation<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
   {
     // evaluate the evaporative heat loss term as surface integral
     if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp)
@@ -903,7 +904,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::rhs_boundary_loop(
+  HeatDiffuseMultiPhaseOperation<dim, number>::rhs_boundary_loop(
     const MatrixFree<dim, number>        &matrix_free,
     VectorType                           &dst,
     [[maybe_unused]] const VectorType    &src,
@@ -967,7 +968,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::create_rhs(VectorType &dst, const VectorType &src) const
+  HeatDiffuseMultiPhaseOperation<dim, number>::create_rhs(VectorType       &dst,
+                                                          const VectorType &src) const
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
 
@@ -991,7 +993,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::attach_vectors(
+  HeatDiffuseMultiPhaseOperation<dim, number>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> & /*vectors*/)
   {
     // none
@@ -999,14 +1001,14 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::distribute_constraints()
+  HeatDiffuseMultiPhaseOperation<dim, number>::distribute_constraints()
   {
     // none
   }
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::reinit()
+  HeatDiffuseMultiPhaseOperation<dim, number>::reinit()
   {
     // TODO: only if output variable is requested
     if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp ||
@@ -1016,7 +1018,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::attach_output_vectors(GenericDataOut<dim> &data_out) const
+  HeatDiffuseMultiPhaseOperation<dim, number>::attach_output_vectors(
+    GenericDataOut<dim> &data_out) const
   {
     /**
      * write conductivity vector to dof vector
@@ -1125,7 +1128,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::tangent_local_cell_operation(
+  HeatDiffuseMultiPhaseOperation<dim, number>::tangent_local_cell_operation(
     FECellIntegrator<dim, 1, number>                        &temp_vals,
     FECellIntegrator<dim, 1, number>                        &temp_lin_vals,
     FECellIntegrator<dim, 1, number>                        &temp_old_vals,
@@ -1267,7 +1270,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatTransferOperator<dim, number>::tangent_local_boundary_operation(
+  HeatDiffuseMultiPhaseOperation<dim, number>::tangent_local_boundary_operation(
     FEFaceIntegrator<dim, 1, number> &dQ_dT,
     FEFaceIntegrator<dim, 1, number> &temp_vals,
     const bool                        do_reinit_face) const
@@ -1312,7 +1315,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   std::tuple<VectorizedArray<number>, VectorizedArray<number>>
-  HeatTransferOperator<dim, number>::get_material_parameters(
+  HeatDiffuseMultiPhaseOperation<dim, number>::get_material_parameters(
     const FECellIntegrator<dim, 1, number> &temp_lin_val,
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
@@ -1349,7 +1352,7 @@ namespace MeltPoolDG::Heat
              VectorizedArray<number>,
              VectorizedArray<number>,
              VectorizedArray<number>>
-  HeatTransferOperator<dim, number>::get_material_parameters_and_derivatives(
+  HeatDiffuseMultiPhaseOperation<dim, number>::get_material_parameters_and_derivatives(
     const FECellIntegrator<dim, 1, number> &temp_lin_val,
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
@@ -1391,7 +1394,7 @@ namespace MeltPoolDG::Heat
 
 
 
-  template class HeatTransferOperator<1, double>;
-  template class HeatTransferOperator<2, double>;
-  template class HeatTransferOperator<3, double>;
+  template class HeatDiffuseMultiPhaseOperation<1, double>;
+  template class HeatDiffuseMultiPhaseOperation<2, double>;
+  template class HeatDiffuseMultiPhaseOperation<3, double>;
 } // namespace MeltPoolDG::Heat

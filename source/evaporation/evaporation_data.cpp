@@ -21,7 +21,9 @@ namespace MeltPoolDG::Evaporation
         "interface temperature evaluation type",
         interface_temperature_evaluation_type,
         "Choose the formulation how the (local) evaporative mass flux will be converted to a DoF vector."
-        "will be calculated.");
+        "will be calculated. "
+        "When the CutFEM heat transfer operator is used, this input parameter is ignored and the temperature "
+        "is evaluated at the sharp interface which is equivalent to \"sharp\".");
 
       prm.enter_subsection("thickness integral");
       {
@@ -88,6 +90,7 @@ namespace MeltPoolDG::Evaporation
                           "considered in the Navier-Stokes equations.",
                           Patterns::Selection("default|true|false"));
 
+        // When the CutFEM heat transfer operator is used, this input parameter is ignored.
         evaporative_cooling.delta_approximation_phase_weighted.add_parameters(prm);
       }
       prm.leave_subsection();

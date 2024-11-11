@@ -34,7 +34,8 @@ namespace MeltPoolDG
     const std::vector<const AffineConstraints<number> *> &constraint,
     const std::vector<Quadrature<dim>>                   &quad,
     const bool                                            enable_boundary_face_loops,
-    const bool                                            enable_inner_face_loops)
+    const bool                                            enable_inner_face_loops,
+    const bool                                            enable_normal_vector_update)
   {
     enable_inner_faces    = enable_inner_face_loops;
     enable_boundary_faces = enable_boundary_face_loops;
@@ -54,7 +55,7 @@ namespace MeltPoolDG
 
     this->create_partitioning();
 
-    this->build(enable_boundary_face_loops, enable_inner_face_loops);
+    this->build(enable_boundary_face_loops, enable_inner_face_loops, enable_normal_vector_update);
   }
 
   template <int dim, int spacedim, typename number, typename VectorizedArrayType>
@@ -170,7 +171,8 @@ namespace MeltPoolDG
   void
   ScratchData<dim, spacedim, number, VectorizedArrayType>::build(
     const bool enable_boundary_face_loops,
-    const bool enable_inner_face_loops)
+    const bool enable_inner_face_loops,
+    const bool enable_normal_vector_update)
   {
     enable_inner_faces    = enable_inner_face_loops;
     enable_boundary_faces = enable_boundary_face_loops;
@@ -188,9 +190,12 @@ namespace MeltPoolDG
 
         additional_data.overlap_communication_computation = false;
 
-        additional_data.mapping_update_flags =
-          (update_values | update_gradients | update_JxW_values | dealii::update_quadrature_points);
+        UpdateFlags update_flags =
+          update_values | update_gradients | update_JxW_values | update_quadrature_points;
+        if (enable_normal_vector_update)
+          update_flags = update_flags | update_normal_vectors;
 
+        additional_data.mapping_update_flags = update_flags;
 
         if (enable_inner_face_loops)
           {
@@ -198,9 +203,7 @@ namespace MeltPoolDG
                                 "Matrix-free: set update flags for inner face loops",
                                 "ScratchData",
                                 0);
-            additional_data.mapping_update_flags_inner_faces =
-              (update_values | update_gradients | update_JxW_values |
-               dealii::update_quadrature_points);
+            additional_data.mapping_update_flags_inner_faces = update_flags;
           }
 
         if (enable_boundary_face_loops)
@@ -209,9 +212,7 @@ namespace MeltPoolDG
                                 "Matrix-free: set update flags for boundary face loops",
                                 "ScratchData",
                                 0);
-            additional_data.mapping_update_flags_boundary_faces =
-              (update_values | update_gradients | update_JxW_values |
-               dealii::update_quadrature_points);
+            additional_data.mapping_update_flags_boundary_faces = update_flags;
           }
 
         this->matrix_free.reinit(

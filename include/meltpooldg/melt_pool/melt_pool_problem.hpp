@@ -19,7 +19,7 @@
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/flow/flow_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
-#include <meltpooldg/heat/heat_transfer_operation.hpp>
+#include <meltpooldg/heat/heat_diffuse_operation.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
@@ -245,7 +245,7 @@ namespace MeltPoolDG::MeltPool
     std::shared_ptr<
       MeltPoolDG::Evaporation::IncompressibleNewtonianFluidEvaporationMaterial<dim, double>>
                                                                evaporation_fluid_material;
-    std::shared_ptr<Heat::HeatTransferOperation<dim>>          heat_operation;
+    std::shared_ptr<Heat::HeatDiffuseOperation<dim>>           heat_operation;
     std::shared_ptr<Flow::DarcyDampingOperation<dim>>          darcy_operation;
     std::shared_ptr<Flow::SurfaceTensionOperation<dim>>        surface_tension_operation;
     std::shared_ptr<Evaporation::RecoilPressureOperation<dim>> recoil_pressure_operation;

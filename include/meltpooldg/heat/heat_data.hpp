@@ -6,16 +6,42 @@
 #include <meltpooldg/linear_algebra/linear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/nonlinear_solver_data.hpp>
 #include <meltpooldg/linear_algebra/predictor_data.hpp>
+#include <meltpooldg/utilities/enum.hpp>
 
 namespace MeltPoolDG::Heat
 {
+  BETTER_ENUM(TwoPhaseOperatorType, char, diffuse, cut)
+
   template <typename number = double>
   struct HeatData
   {
     HeatData();
 
-    bool enable_time_dependent_bc                                     = false;
+    TwoPhaseOperatorType operator_type = TwoPhaseOperatorType::diffuse;
+
+    bool enable_time_dependent_bc = false;
+
+    // TODO diffuse specific
     bool use_volume_specific_thermal_capacity_for_phase_interpolation = false;
+
+    struct Cut
+    {
+      bool two_phase = true;
+
+      struct GhostPenalty
+      {
+        number gamma_M = 0.75;
+        number gamma_A = 1.5;
+      } ghost_penalty;
+
+      number nitsche_parameter = 500.0;
+
+      // factor theta for time integration with one-step-theta method
+      // TODO move to a time integrator scheme section
+      number theta = 0.5;
+
+      bool do_explicit_symmetry_term = true;
+    } cut;
 
     struct RadiationBC
     {

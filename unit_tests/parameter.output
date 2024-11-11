@@ -119,11 +119,24 @@
     "heat":
     {
         "enable time dependent bc": "false",
+        "operator type": "diffuse",
         "use volume-specific thermal capacity for phase interpolation": "false",
         "convective boundary condition":
         {
             "convection coefficient": "0",
             "temperature infinity": "0"
+        },
+        "cut":
+        {
+            "do explicit symmetry term": "true",
+            "nitsche parameter": "500",
+            "theta": "0.5",
+            "two phase": "true",
+            "ghost penalty":
+            {
+                "gamma A": "1.5",
+                "gamma M": "0.75"
+            }
         },
         "fe":
         {
@@ -136,7 +149,7 @@
             "do matrix free": "true",
             "max iterations": "10000",
             "monitor type": "none",
-            "preconditioner type": "DiagonalReduced",
+            "preconditioner type": "Diagonal",
             "rel tolerance": "1e-12",
             "solver type": "GMRES"
         },

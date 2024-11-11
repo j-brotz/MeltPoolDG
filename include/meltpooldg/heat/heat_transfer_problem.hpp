@@ -6,17 +6,21 @@
 #pragma once
 
 #include <deal.II/base/function.h>
+#include <deal.II/base/parameter_handler.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
 #include <deal.II/lac/affine_constraints.h>
-#include <deal.II/lac/generic_linear_algebra.h>
+#include <deal.II/lac/la_parallel_block_vector.h>
+#include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/heat/heat_transfer_operation.hpp>
+#include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/heat/laser_operation.hpp>
 #include <meltpooldg/interface/problem_base.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
+#include <meltpooldg/interface/simulation_base.hpp>
 #include <meltpooldg/material/material.hpp>
+#include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 #include <meltpooldg/utilities/time_iterator.hpp>
@@ -40,6 +44,7 @@ namespace MeltPoolDG::Heat
 
     VectorType velocity;
     VectorType level_set_as_heaviside;
+    VectorType level_set;
 
     std::shared_ptr<TimeIterator<double>> time_iterator;
     DoFHandler<dim>                       dof_handler;
@@ -57,13 +62,14 @@ namespace MeltPoolDG::Heat
     unsigned int velocity_dof_idx;
     unsigned int level_set_dof_idx;
 
-    std::shared_ptr<ScratchData<dim>>           scratch_data;
-    std::shared_ptr<HeatTransferOperation<dim>> heat_operation;
-    std::shared_ptr<Material<double>>           material;
-    std::shared_ptr<Postprocessor<dim>>         post_processor;
+    std::shared_ptr<ScratchData<dim>>       scratch_data;
+    std::shared_ptr<HeatOperationBase<dim>> heat_operation;
+    std::shared_ptr<Material<double>>       material;
+    std::shared_ptr<Postprocessor<dim>>     post_processor;
 
     std::shared_ptr<Function<dim>> velocity_field_function;
     std::shared_ptr<Function<dim>> heaviside_field_function;
+    std::shared_ptr<Function<dim>> level_set_field_function;
 
     std::shared_ptr<Heat::LaserOperation<dim>> laser_operation;
 
@@ -94,7 +100,7 @@ namespace MeltPoolDG::Heat
     initialize(std::shared_ptr<SimulationBase<dim>> base_in);
 
     void
-    setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in, bool do_reinit = true);
+    setup_dof_system(std::shared_ptr<SimulationBase<dim>> base_in);
 
     void
     compute_field_vector(VectorType &vector, unsigned dof_idx, Function<dim> &field_function);

@@ -8,6 +8,8 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
 
+#include <deal.II/dofs/dof_handler.h>
+
 #include <deal.II/grid/tria.h>
 
 #include <deal.II/lac/diagonal_matrix.h>
@@ -18,8 +20,9 @@
 
 #include <meltpooldg/evaporation/evaporation_data.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
-#include <meltpooldg/heat/heat_transfer_operator.hpp>
-#include <meltpooldg/heat/heat_transfer_preconditioner_matrixfree.hpp>
+#include <meltpooldg/heat/heat_diffuse_operator.hpp>
+#include <meltpooldg/heat/heat_diffuse_preconditioner_matrixfree.hpp>
+#include <meltpooldg/heat/heat_operation_base.hpp>
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/scratch_data.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
@@ -40,7 +43,7 @@ namespace MeltPoolDG::Heat
   using namespace dealii;
 
   template <int dim>
-  class HeatTransferOperation
+  class HeatDiffuseOperation : public HeatOperationBase<dim>
   {
   private:
     using VectorType      = LinearAlgebra::distributed::Vector<double>;
@@ -86,7 +89,7 @@ namespace MeltPoolDG::Heat
 
     TimeIntegration::SolutionHistory<VectorType> solution_history;
 
-    std::shared_ptr<HeatTransferOperator<dim>> heat_operator;
+    std::shared_ptr<HeatDiffuseMultiPhaseOperation<dim>> heat_operator;
 
     std::shared_ptr<HeatTransferPreconditionerMatrixFree<dim>> heat_transfer_preconditioner;
     std::shared_ptr<DiagonalMatrix<VectorType>>                diag_preconditioner;
@@ -98,19 +101,19 @@ namespace MeltPoolDG::Heat
     std::unique_ptr<LevelSet::Tools::NearestPoint<dim>> nearest_point_search;
 
   public:
-    HeatTransferOperation(std::shared_ptr<BoundaryConditions<dim>> bc_data,
-                          const ScratchData<dim>                  &scratch_data_in,
-                          const HeatData<double>                  &heat_data_in,
-                          const Material<double>                  &material,
-                          const TimeIterator<double>              &time_iterator,
-                          unsigned int                             temp_dof_idx_in,
-                          unsigned int                             temp_hanging_nodes_dof_idx_in,
-                          unsigned int                             temp_quad_idx_in,
-                          unsigned int                             vel_dof_idx_in = 0,
-                          const VectorType                        *velocity_in    = nullptr,
-                          unsigned int                             ls_dof_idx_in  = 0,
-                          const VectorType *level_set_as_heaviside_in             = nullptr,
-                          const bool        do_solidifiaction                     = false);
+    HeatDiffuseOperation(std::shared_ptr<BoundaryConditions<dim>> bc_data,
+                         const ScratchData<dim>                  &scratch_data_in,
+                         const HeatData<double>                  &heat_data_in,
+                         const Material<double>                  &material,
+                         const TimeIterator<double>              &time_iterator,
+                         unsigned int                             temp_dof_idx_in,
+                         unsigned int                             temp_hanging_nodes_dof_idx_in,
+                         unsigned int                             temp_quad_idx_in,
+                         unsigned int                             vel_dof_idx_in = 0,
+                         const VectorType                        *velocity_in    = nullptr,
+                         unsigned int                             ls_dof_idx_in  = 0,
+                         const VectorType *level_set_as_heaviside_in             = nullptr,
+                         const bool        do_solidifiaction                     = false);
 
     void
     register_evaporative_mass_flux(
@@ -127,17 +130,23 @@ namespace MeltPoolDG::Heat
                                    >> &surface_mesh_info_in);
 
     void
-    set_initial_condition(const Function<dim> &initial_field_function_temperature,
-                          const double         start_time);
+    distribute_dofs(DoFHandler<dim> &dof_handler) const override;
 
     void
-    reinit();
+    set_initial_condition(const Function<dim> &initial_field_function_temperature,
+                          const double         start_time) override;
+
+    void
+    reinit() override;
 
     void
     init_time_advance();
 
     void
-    solve(const bool do_finish_time_step = true);
+    solve() override;
+
+    void
+    solve(const bool do_finish_time_step);
 
     void
     finish_time_advance();
@@ -148,22 +157,22 @@ namespace MeltPoolDG::Heat
                                   const LevelSet::NearestPointData<double> &nearest_point_data);
 
     void
-    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors);
+    attach_vectors(std::vector<LinearAlgebra::distributed::Vector<double> *> &vectors) override;
 
     void
-    distribute_constraints();
+    distribute_constraints() override;
 
     void
-    attach_output_vectors(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors(GenericDataOut<dim> &data_out) const override;
 
     void
-    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const;
+    attach_output_vectors_failed_step(GenericDataOut<dim> &data_out) const override;
 
     const VectorType &
-    get_temperature() const;
+    get_temperature() const override;
 
     VectorType &
-    get_temperature();
+    get_temperature() override;
 
     const VectorType &
     get_temperature_interface() const;
@@ -172,10 +181,10 @@ namespace MeltPoolDG::Heat
     get_temperature_interface();
 
     const VectorType &
-    get_heat_source() const;
+    get_heat_source() const override;
 
     VectorType &
-    get_heat_source();
+    get_heat_source() override;
 
     const VectorType &
     get_user_rhs() const;
