@@ -311,9 +311,6 @@ namespace MeltPoolDG::Heat
 
     VectorType dummy;
     internal_compute_diagonal_or_system_matrix(dummy, system_matrix, false);
-
-    // TODO: is this call needed?
-    system_matrix.compress(VectorOperation::add);
   }
 
   template <int dim, typename number>
@@ -370,10 +367,7 @@ namespace MeltPoolDG::Heat
             old_cell_index = current_cell_index;
           },
           // face operation
-          [&](auto &phi_m, auto &phi_p) {
-            (void)phi_m;
-            (void)phi_p; /*dummy*/
-          },
+          {},
           // boundary operation
           [&](auto &temp_vals) {
             tangent_local_boundary_operation(temp_vals,
@@ -404,10 +398,7 @@ namespace MeltPoolDG::Heat
             old_cell_index = current_cell_index;
           },
           // face operation
-          [&](auto &phi_m, auto &phi_p) {
-            (void)phi_m;
-            (void)phi_p; /*dummy*/
-          },
+          {},
           // boundary operation
           [&](auto &temp_vals) {
             tangent_local_boundary_operation(temp_vals,
