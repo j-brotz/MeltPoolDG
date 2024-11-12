@@ -205,8 +205,9 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     set_field_conditions() final
     {
       this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "advection_diffusion");
-      this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "advection_diffusion");
-      this->attach_exact_solution(std::make_shared<ExactSolution<dim>>(), "advection_diffusion");
+      this->attach_field_function(std::make_shared<AdvectionField<dim>>(),
+                                  "prescribed_velocity",
+                                  "advection_diffusion");
     }
 
     void

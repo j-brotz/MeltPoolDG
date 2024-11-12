@@ -222,7 +222,9 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
             dealii::GridTools::minimal_cell_diameter(*this->triangulation) /
             this->parameters.ls.get_n_subdivisions() / std::sqrt(dim))),
         "advection_diffusion");
-      this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "advection_diffusion");
+      this->attach_field_function(std::make_shared<AdvectionField<dim>>(),
+                                  "prescribed_velocity",
+                                  "advection_diffusion");
     }
 
     void

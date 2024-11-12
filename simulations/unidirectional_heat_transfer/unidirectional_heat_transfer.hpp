@@ -267,7 +267,8 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
         this->attach_initial_condition(std::make_shared<LinearTemp<dim>>(), "heat_transfer");
 
       if (velocity != 0.0)
-        this->attach_velocity_field(std::make_shared<UnidirectionalVelocityField<dim>>(velocity),
+        this->attach_field_function(std::make_shared<UnidirectionalVelocityField<dim>>(velocity),
+                                    "prescribed_velocity",
                                     "heat_transfer");
 
       if (do_two_phase)

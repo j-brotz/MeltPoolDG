@@ -27,7 +27,8 @@ namespace MeltPoolDG::LevelSet
         /*
          * compute the advection velocity for the current time
          */
-        compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
+        compute_advection_velocity(
+          *base_in->get_field_function("prescribed_velocity", "advection_diffusion"));
 
         advec_diff_operation->solve();
         /*
@@ -205,18 +206,17 @@ namespace MeltPoolDG::LevelSet
           }
         else
           {
-            advec_diff_operation =
-              std::make_shared<AdvectionDGOperation<dim>>(*scratch_data,
-                                                          base_in->parameters.ls.advec_diff,
-                                                          *time_iterator,
-                                                          advection_velocity,
-                                                          advec_diff_dof_idx,
-                                                          advec_diff_quad_idx,
-                                                          velocity_dof_idx,
-                                                          base_in->get_bc("advection_diffusion"),
-                                                          base_in->get_advection_field(
-                                                            "advection_diffusion"),
-                                                          true);
+            advec_diff_operation = std::make_shared<AdvectionDGOperation<dim>>(
+              *scratch_data,
+              base_in->parameters.ls.advec_diff,
+              *time_iterator,
+              advection_velocity,
+              advec_diff_dof_idx,
+              advec_diff_quad_idx,
+              velocity_dof_idx,
+              base_in->get_bc("advection_diffusion"),
+              base_in->get_field_function("prescribed_velocity", "advection_diffusion"),
+              true);
 
             /*In the DG case the boundary conditions are applied weakly inside the operator*/
           }
@@ -247,7 +247,8 @@ namespace MeltPoolDG::LevelSet
     /*
      *  set initial conditions for the advected field
      */
-    compute_advection_velocity(*base_in->get_advection_field("advection_diffusion"));
+    compute_advection_velocity(
+      *base_in->get_field_function("prescribed_velocity", "advection_diffusion"));
     advec_diff_operation->set_initial_condition(
       *base_in->get_initial_condition("advection_diffusion"));
     /*

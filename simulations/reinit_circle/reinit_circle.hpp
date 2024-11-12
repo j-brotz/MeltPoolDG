@@ -121,7 +121,6 @@ namespace MeltPoolDG
         set_field_conditions() override
         {
           this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "level_set");
-          this->attach_exact_solution(std::make_shared<ExactSolution<dim>>(0.01), "level_set");
         }
 
       private:

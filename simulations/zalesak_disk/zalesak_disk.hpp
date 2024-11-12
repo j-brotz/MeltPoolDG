@@ -141,7 +141,9 @@ namespace MeltPoolDG
             std::make_shared<Functions::SignedDistance::ZalesakDisk<dim>>(
               center, 0.3 /*radius*/, 0.1 /*notch_width*/, 0.5 /*notch_height*/),
             "signed_distance");
-          this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "level_set");
+          this->attach_field_function(std::make_shared<AdvectionField<dim>>(),
+                                      "prescribed_velocity",
+                                      "level_set");
         }
 
       private:

@@ -11,7 +11,6 @@
 
 #include <meltpooldg/interface/boundary_conditions.hpp>
 #include <meltpooldg/interface/exceptions.hpp>
-#include <meltpooldg/interface/field_conditions.hpp>
 #include <meltpooldg/interface/parameters.hpp>
 #include <meltpooldg/interface/periodic_boundary_conditions.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
@@ -132,60 +131,47 @@ namespace MeltPoolDG
     }
 
     /**
-     * Attach functions for field conditions
+     * Attaches a field function with a specified type and operation name.
+     *
+     * This function stores a provided field function in an internal dictionary,
+     * allowing it to be later retrieved by a combination of its @p type and
+     * @p operation_name. The @p type typically represents the category of the
+     * field function (e.g., "prescribed_velocity"), while
+     * @p operation_name indicates the specific operation or context to which the
+     * function applies (e.g., "heat" or "level_set").
+     *
+     * By using this function, various field functions can be organized and managed
+     * for different types and operations, enabling efficient lookup and reuse.
+     *
+     * @tparam FunctionType The type of the field function being attached, typically
+     *                      a derived class of `dealii::Function<dim>`.
+     * @param function      A `std::shared_ptr` to the field function object that
+     *                      should be associated with the specified @p type and
+     *                      @p operation_name.
+     * @param type          A string representing the field function category
+     *                      (e.g., "prescribed_velocity").
+     * @param operation_name A string specifying the operation or context where
+     *                       this field function is applicable (e.g., "level_set").
+     */
+    template <typename FunctionType>
+    void
+    attach_field_function(std::shared_ptr<FunctionType> function,
+                          const std::string            &type,
+                          const std::string            &operation_name)
+    {
+      field_functions[operation_name][type] = function;
+    }
+
+    /**
+     * Wrapper function to attach initial conditions. See documentation of
+     * attach_field_function.
      */
     template <typename FunctionType>
     void
     attach_initial_condition(std::shared_ptr<FunctionType> initial_function,
                              const std::string            &operation_name)
     {
-      if (!field_conditions_map[operation_name])
-        field_conditions_map[operation_name] = std::make_shared<FieldConditions<dim>>();
-
-      field_conditions_map[operation_name]->initial_field = initial_function;
-    }
-
-    template <typename FunctionType>
-    void
-    attach_source_field(std::shared_ptr<FunctionType> source_function,
-                        const std::string            &operation_name)
-    {
-      if (!field_conditions_map[operation_name])
-        field_conditions_map[operation_name] = std::make_shared<FieldConditions<dim>>();
-
-      field_conditions_map[operation_name]->source_field = source_function;
-    }
-
-    template <typename FunctionType>
-    void
-    attach_advection_field(std::shared_ptr<FunctionType> advection_velocity,
-                           const std::string            &operation_name)
-    {
-      if (!field_conditions_map[operation_name])
-        field_conditions_map[operation_name] = std::make_shared<FieldConditions<dim>>();
-
-      field_conditions_map[operation_name]->advection_field = advection_velocity;
-    }
-
-    template <typename FunctionType>
-    void
-    attach_velocity_field(std::shared_ptr<FunctionType> velocity, const std::string &operation_name)
-    {
-      if (!field_conditions_map[operation_name])
-        field_conditions_map[operation_name] = std::make_shared<FieldConditions<dim>>();
-
-      field_conditions_map[operation_name]->velocity_field = velocity;
-    }
-
-    template <typename FunctionType>
-    void
-    attach_exact_solution(std::shared_ptr<FunctionType> exact_solution,
-                          const std::string            &operation_name)
-    {
-      if (!field_conditions_map[operation_name])
-        field_conditions_map[operation_name] = std::make_shared<FieldConditions<dim>>();
-
-      field_conditions_map[operation_name]->exact_solution_field = exact_solution;
+      attach_field_function(initial_function, "initial_condition", operation_name);
     }
 
     /**
@@ -379,76 +365,41 @@ namespace MeltPoolDG
     }
 
     /**
-     * Getter functions for field conditions
+     * Getter functions for field function of @p type for @p operation_name.
+     * If the field function for the specified @p type and @p operation_name
+     * cannot be found, behavior depends on the value of @p is_optional:
+     * - If @p is_optional is set to `true`, the function will return a `nullptr`
+     *   to indicate that the field function is not required and can be omitted.
+     * - If @p is_optional is `false`, an exception may be thrown
+     *   to indicate that the requested field function is missing.
+     *
+     * @param type           The category of the field function (e.g., "temperature", "velocity").
+     * @param operation_name The name of the operation or context where the field function is used
+     *                       (e.g., "initial_condition", "boundary_condition").
+     * @param is_optional    A flag indicating whether the field function is optional.
+     *                       Defaults to `false`, requiring the field function to be present.
+     *
      */
+    std::shared_ptr<dealii::Function<dim>>
+    get_field_function(const std::string &type,
+                       const std::string &operation_name,
+                       const bool         is_optional = false)
+    {
+      auto field_conditions = field_functions[operation_name];
+
+      AssertThrow(is_optional || (!field_conditions.empty() && field_conditions[type]),
+                  ExcFieldNotAttached(type, operation_name));
+
+      if (!field_conditions.empty() && field_conditions[type])
+        return field_conditions[type];
+      else // is_optional = true
+        return nullptr;
+    }
+
     std::shared_ptr<dealii::Function<dim>>
     get_initial_condition(const std::string &operation_name, const bool is_optional = false)
     {
-      auto field_conditions = field_conditions_map[operation_name];
-
-      AssertThrow(is_optional || (field_conditions && field_conditions->initial_field),
-                  ExcFieldNotAttached("set_initial_condition", operation_name));
-
-      if (field_conditions && field_conditions->initial_field)
-        return field_conditions->initial_field;
-      else // is_optional = true
-        return nullptr;
-    }
-
-    std::shared_ptr<dealii::Function<dim>>
-    get_source_field(const std::string &operation_name, const bool is_optional = false)
-    {
-      auto field_conditions = field_conditions_map[operation_name];
-
-      AssertThrow(is_optional || (field_conditions && field_conditions->source_field),
-                  ExcFieldNotAttached("set_source_field", operation_name));
-
-      if (field_conditions && field_conditions->source_field)
-        return field_conditions->source_field;
-      else // is_optional = true
-        return nullptr;
-    }
-
-    std::shared_ptr<dealii::Function<dim>>
-    get_advection_field(const std::string &operation_name, const bool is_optional = false)
-    {
-      auto field_conditions = field_conditions_map[operation_name];
-
-      AssertThrow(is_optional || (field_conditions && field_conditions->advection_field),
-                  ExcFieldNotAttached("set_advection_field", operation_name));
-
-      if (field_conditions && field_conditions->advection_field)
-        return field_conditions->advection_field;
-      else // is_optional = true
-        return nullptr;
-    }
-
-    std::shared_ptr<dealii::Function<dim>>
-    get_velocity_field(const std::string &operation_name, const bool is_optional = false)
-    {
-      auto field_conditions = field_conditions_map[operation_name];
-
-      AssertThrow(is_optional || (field_conditions && field_conditions->velocity_field),
-                  ExcFieldNotAttached("set_velocity_field", operation_name));
-
-      if (field_conditions && field_conditions->velocity_field)
-        return field_conditions->velocity_field;
-      else // is_optional = true
-        return nullptr;
-    }
-
-    std::shared_ptr<dealii::Function<dim>>
-    get_exact_solution(const std::string &operation_name, const bool is_optional = false)
-    {
-      auto field_conditions = field_conditions_map[operation_name];
-
-      AssertThrow(is_optional || (field_conditions && field_conditions->exact_solution_field),
-                  ExcFieldNotAttached("set_exact_solution", operation_name));
-
-      if (field_conditions && field_conditions->exact_solution_field)
-        return field_conditions->exact_solution_field;
-      else // is_optional = true
-        return nullptr;
+      return get_field_function("initial_condition", operation_name, is_optional);
     }
 
     /**
@@ -595,8 +546,12 @@ namespace MeltPoolDG
     std::shared_ptr<dealii::Triangulation<dim, spacedim>> triangulation;
 
   private:
-    std::map<std::string, std::shared_ptr<FieldConditions<dim>>>    field_conditions_map;
     std::map<std::string, std::shared_ptr<BoundaryConditions<dim>>> boundary_conditions_map;
     PeriodicBoundaryConditions<dim>                                 periodic_boundary_conditions;
+
+    // nested dictionary for storing field functions as
+    // field_functions[<operation_name>][<type>] = <function>.
+    // The <operation_name> and <type> are specified in the respective problems.
+    std::map<std::string, std::map<std::string, std::shared_ptr<Function<dim>>>> field_functions;
   };
 } // namespace MeltPoolDG
