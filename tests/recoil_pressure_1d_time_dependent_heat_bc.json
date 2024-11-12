@@ -13,7 +13,7 @@
   "heat": {
     "enable time dependent bc": "true",
     "linear solver": {
-      "preconditioner type": "DiagonalReduced",
+      "preconditioner type": "Diagonal",
       "rel tolerance": "1e-4"
     },
     "nlsolve": {

@@ -42,7 +42,7 @@
   "heat": {
     "linear solver": {
       "rel tolerance": "1e-10",
-      "preconditioner type": "AMGReduced"
+      "preconditioner type": "AMG"
     },
     "nlsolve": {
       "field correction tolerance": "1e-9",

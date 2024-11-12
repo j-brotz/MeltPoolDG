@@ -10,19 +10,10 @@ namespace MeltPoolDG
               Identity,
               // Algebraic multigrid preconditioner from the Trilinos package ...
               AMG,
-              // ... potentially with reduced effort in computing the system matrix, e.g., by
-              // neglecting face integrals.
-              AMGReduced,
               // Incomplete LU factorization preconditioner from the Trilinos package ...
               ILU,
-              // ... potentially with reduced effort in computing the system matrix, e.g., by
-              // neglecting face integrals.
-              ILUReduced,
               // Use the inverse diagonal of the system matrix as preconditioner ...
-              Diagonal,
-              // ... potentially with reduced effort in computing the system matrix, e.g., by
-              // neglecting face integrals.
-              DiagonalReduced)
+              Diagonal)
 
   BETTER_ENUM(LinearSolverType,
               char,

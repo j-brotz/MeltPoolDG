@@ -1452,7 +1452,8 @@ namespace MeltPoolDG::Heat
   void
   HeatCutOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const
   {
-    scratch_data.get_matrix_free().initialize_dof_vector(diagonal);
+    // TODO: isn't here the DoF index missing?
+    scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
 
     dealii::TrilinosWrappers::SparseMatrix dummy;
     internal_compute_diagonal_or_system_matrix(diagonal, dummy, true);
@@ -1474,8 +1475,6 @@ namespace MeltPoolDG::Heat
 
     VectorType dummy;
     internal_compute_diagonal_or_system_matrix(dummy, system_matrix, false);
-
-    system_matrix.compress(VectorOperation::add);
   }
 
 

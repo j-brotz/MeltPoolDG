@@ -18,7 +18,7 @@
 namespace MeltPoolDG::Heat
 {
   template <int dim, typename number>
-  HeatDiffuseMultiPhaseOperation<dim, number>::HeatDiffuseMultiPhaseOperation(
+  HeatDiffuseMultiPhaseOperator<dim, number>::HeatDiffuseMultiPhaseOperator(
     const std::shared_ptr<BoundaryConditions<dim>> &bc,
     const ScratchData<dim>                         &scratch_data_in,
     const HeatData<number>                         &data_in,
@@ -87,7 +87,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::register_surface_mesh(
+  HeatDiffuseMultiPhaseOperator<dim, number>::register_surface_mesh(
     const std::vector<std::tuple<const typename Triangulation<dim, dim>::cell_iterator /*cell*/,
                                  std::vector<Point<dim>> /*quad_points*/,
                                  std::vector<double> /*weights*/
@@ -98,7 +98,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::register_evaporative_mass_flux(
+  HeatDiffuseMultiPhaseOperator<dim, number>::register_evaporative_mass_flux(
     VectorType        *evaporative_mass_flux_in,
     const unsigned int evapor_mass_flux_dof_idx_in,
     const double       latent_heat_of_evaporation_in,
@@ -145,17 +145,17 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::assemble_matrixbased(
-    [[maybe_unused]] const VectorType                                 &advected_field_old,
-    [[maybe_unused]] HeatDiffuseMultiPhaseOperation::SparseMatrixType &matrix,
-    [[maybe_unused]] VectorType                                       &rhs) const
+  HeatDiffuseMultiPhaseOperator<dim, number>::assemble_matrixbased(
+    [[maybe_unused]] const VectorType                                &advected_field_old,
+    [[maybe_unused]] HeatDiffuseMultiPhaseOperator::SparseMatrixType &matrix,
+    [[maybe_unused]] VectorType                                      &rhs) const
   {
     AssertThrow(false, ExcNotImplemented());
   }
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::update_ghost_values() const
+  HeatDiffuseMultiPhaseOperator<dim, number>::update_ghost_values() const
   {
     unsigned int i = 0;
 
@@ -177,7 +177,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::zero_out_ghost_values() const
+  HeatDiffuseMultiPhaseOperator<dim, number>::zero_out_ghost_values() const
   {
     unsigned int i = 0;
 
@@ -197,7 +197,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::vmult(VectorType &dst, const VectorType &src) const
+  HeatDiffuseMultiPhaseOperator<dim, number>::vmult(VectorType &dst, const VectorType &src) const
   {
     scratch_data.get_matrix_free().template loop<VectorType, VectorType>(
       [&](const auto &matrix_free, auto &dst, const auto &src, auto cell_range) {
@@ -217,7 +217,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::tangent_cell_loop(
+  HeatDiffuseMultiPhaseOperator<dim, number>::tangent_cell_loop(
     const MatrixFree<dim, number>        &matrix_free,
     VectorType                           &dst,
     const VectorType                     &src,
@@ -261,7 +261,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::tangent_boundary_loop(
+  HeatDiffuseMultiPhaseOperator<dim, number>::tangent_boundary_loop(
     const MatrixFree<dim, number>        &matrix_free,
     VectorType                           &dst,
     const VectorType                     &src,
@@ -289,51 +289,13 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::compute_inverse_diagonal_from_matrixfree(
+  HeatDiffuseMultiPhaseOperator<dim, number>::compute_inverse_diagonal_from_matrixfree(
     VectorType &diagonal) const
   {
     scratch_data.initialize_dof_vector(diagonal, temp_dof_idx);
 
-    // note: not thread safe!!!
-    const auto                        &matrix_free = scratch_data.get_matrix_free();
-    FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-    FECellIntegrator<dim, 1, number> temp_old_vals(matrix_free,
-                                                   temp_hanging_nodes_dof_idx,
-                                                   temp_quad_idx);
-    std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
-    if (evaporative_mass_flux &&
-        evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::regularized)
-      {
-        evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
-                                                                         evapor_mass_flux_dof_idx,
-                                                                         temp_quad_idx);
-      }
-
-    unsigned int old_cell_index = numbers::invalid_unsigned_int;
-
-    // compute diagonal ...
-    MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
-      matrix_free,
-      diagonal,
-      [&](auto &temp_vals) {
-        const unsigned int current_cell_index = temp_vals.get_current_cell_index();
-
-        tangent_local_cell_operation(temp_vals,
-                                     temp_lin_vals,
-                                     temp_old_vals,
-                                     velocity_vals,
-                                     ls_vals,
-                                     ls_interpolated_vals,
-                                     evapor_vals,
-                                     old_cell_index != current_cell_index);
-
-        old_cell_index = current_cell_index;
-      },
-      temp_dof_idx,
-      temp_quad_idx);
+    dealii::TrilinosWrappers::SparseMatrix dummy;
+    internal_compute_diagonal_or_system_matrix(diagonal, dummy, true);
 
     // ... and invert it
     for (auto &i : diagonal)
@@ -342,13 +304,25 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::compute_system_matrix_from_matrixfree_reduced(
+  HeatDiffuseMultiPhaseOperator<dim, number>::compute_system_matrix_from_matrixfree(
     TrilinosWrappers::SparseMatrix &system_matrix) const
   {
     system_matrix = 0.0;
 
-    // note: not thread safe!!!
-    const auto                        &matrix_free = scratch_data.get_matrix_free();
+    VectorType dummy;
+    internal_compute_diagonal_or_system_matrix(dummy, system_matrix, false);
+  }
+
+  template <int dim, typename number>
+  void
+  HeatDiffuseMultiPhaseOperator<dim, number>::internal_compute_diagonal_or_system_matrix(
+    [[maybe_unused]] VectorType                             &diagonal,
+    [[maybe_unused]] dealii::TrilinosWrappers::SparseMatrix &system_matrix,
+    const bool                                               do_diagonal) const
+  {
+    const auto &matrix_free = scratch_data.get_matrix_free();
+
+    FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
     FECellIntegrator<dim, 1, number> ls_interpolated_vals(matrix_free, temp_dof_idx, temp_quad_idx);
@@ -365,179 +339,80 @@ namespace MeltPoolDG::Heat
                                                                          temp_quad_idx);
       }
 
+    FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
+                                           true /*is_interior_face*/,
+                                           temp_dof_idx,
+                                           temp_quad_idx);
+
     unsigned int old_cell_index = numbers::invalid_unsigned_int;
 
-    // compute matrix (only cell contributions)
-    MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
-      matrix_free,
-      scratch_data.get_constraint(temp_dof_idx),
-      system_matrix,
-      [&](auto &temp_vals) {
-        const unsigned int current_cell_index = temp_vals.get_current_cell_index();
+    if (do_diagonal)
+      {
+        // compute diagonal ...
+        MatrixFreeTools::template compute_diagonal<dim, -1, 0, 1, number, VectorizedArray<number>>(
+          matrix_free,
+          diagonal,
+          [&](auto &temp_vals) {
+            const unsigned int current_cell_index = temp_vals.get_current_cell_index();
 
-        tangent_local_cell_operation(temp_vals,
-                                     temp_lin_vals,
-                                     temp_old_vals,
-                                     velocity_vals,
-                                     ls_vals,
-                                     ls_interpolated_vals,
-                                     evapor_vals,
-                                     old_cell_index != current_cell_index);
+            tangent_local_cell_operation(temp_vals,
+                                         temp_lin_vals,
+                                         temp_old_vals,
+                                         velocity_vals,
+                                         ls_vals,
+                                         ls_interpolated_vals,
+                                         evapor_vals,
+                                         old_cell_index != current_cell_index);
 
-        old_cell_index = current_cell_index;
-      },
-      temp_dof_idx,
-      temp_quad_idx);
+            old_cell_index = current_cell_index;
+          },
+          // face operation
+          {},
+          // boundary operation
+          [&](auto &temp_vals) {
+            tangent_local_boundary_operation(temp_vals,
+                                             dQ_dT,
+                                             true /*old_face_index != current_face_index*/);
+          },
+          temp_dof_idx,
+          temp_quad_idx);
+      }
+    else
+      {
+        MatrixFreeTools::template compute_matrix<dim, -1, 0, 1, number, VectorizedArray<number>>(
+          matrix_free,
+          scratch_data.get_constraint(temp_dof_idx),
+          system_matrix,
+          [&](auto &temp_vals) {
+            const unsigned int current_cell_index = temp_vals.get_current_cell_index();
+
+            tangent_local_cell_operation(temp_vals,
+                                         temp_lin_vals,
+                                         temp_old_vals,
+                                         velocity_vals,
+                                         ls_vals,
+                                         ls_interpolated_vals,
+                                         evapor_vals,
+                                         old_cell_index != current_cell_index);
+
+            old_cell_index = current_cell_index;
+          },
+          // face operation
+          {},
+          // boundary operation
+          [&](auto &temp_vals) {
+            tangent_local_boundary_operation(temp_vals,
+                                             dQ_dT,
+                                             true /*old_face_index != current_face_index*/);
+          },
+          temp_dof_idx,
+          temp_quad_idx);
+      }
   }
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::compute_system_matrix_from_matrixfree(
-    TrilinosWrappers::SparseMatrix &system_matrix) const
-  {
-    system_matrix = 0.0;
-
-    {
-      const auto                           &matrix_free = scratch_data.get_matrix_free();
-      std::pair<unsigned int, unsigned int> cell_range  = {0, matrix_free.n_cell_batches()};
-
-      FECellIntegrator<dim, 1, number>   temp_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-      FECellIntegrator<dim, dim, number> velocity_vals(matrix_free, vel_dof_idx, temp_quad_idx);
-      FECellIntegrator<dim, 1, number>   ls_vals(matrix_free, ls_dof_idx, temp_quad_idx);
-      FECellIntegrator<dim, 1, number>   ls_interpolated_vals(matrix_free,
-                                                            temp_dof_idx,
-                                                            temp_quad_idx);
-      FECellIntegrator<dim, 1, number>   temp_lin_vals(matrix_free, temp_dof_idx, temp_quad_idx);
-      FECellIntegrator<dim, 1, number>   temp_old_vals(matrix_free,
-                                                     temp_hanging_nodes_dof_idx,
-                                                     temp_quad_idx);
-      std::unique_ptr<FECellIntegrator<dim, 1, number>> evapor_vals;
-      if (evaporative_mass_flux &&
-          evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::regularized)
-        {
-          evapor_vals = std::make_unique<FECellIntegrator<dim, 1, number>>(matrix_free,
-                                                                           evapor_mass_flux_dof_idx,
-                                                                           temp_quad_idx);
-        }
-
-      const unsigned int dofs_per_cell = temp_vals.dofs_per_cell;
-
-      // cell integral
-      for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
-        {
-          const unsigned int n_filled_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
-
-          FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
-          std::fill_n(matrices,
-                      VectorizedArray<number>::size(),
-                      FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
-
-          temp_vals.reinit(cell);
-
-          for (unsigned int j = 0; j < dofs_per_cell; ++j)
-            {
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                temp_vals.begin_dof_values()[i] = static_cast<number>(i == j);
-
-              tangent_local_cell_operation(temp_vals,
-                                           temp_lin_vals,
-                                           temp_old_vals,
-                                           velocity_vals,
-                                           ls_vals,
-                                           ls_interpolated_vals,
-                                           evapor_vals,
-                                           j == 0 /*do_reinit_cell*/);
-
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                  matrices[v](i, j) = temp_vals.begin_dof_values()[i][v];
-            }
-
-          for (unsigned int v = 0; v < n_filled_lanes; ++v)
-            {
-              auto cell_v = matrix_free.get_cell_iterator(cell, v, temp_dof_idx);
-
-              std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
-              cell_v->get_dof_indices(dof_indices);
-
-              auto temp = dof_indices;
-              for (unsigned int j = 0; j < dof_indices.size(); ++j)
-                dof_indices[j] = temp[temp_vals.get_shape_info().lexicographic_numbering[j]];
-
-              scratch_data.get_constraint(temp_dof_idx)
-                .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
-            }
-        }
-    }
-    // boundary_integral
-    {
-      const auto                           &matrix_free = scratch_data.get_matrix_free();
-      std::pair<unsigned int, unsigned int> face_range  = {matrix_free.n_inner_face_batches(),
-                                                           matrix_free.n_inner_face_batches() +
-                                                             matrix_free.n_boundary_face_batches()};
-
-      FEFaceIntegrator<dim, 1, number> dQ_dT(matrix_free,
-                                             true /*is_interior_face*/,
-                                             temp_dof_idx,
-                                             temp_quad_idx);
-      FEFaceIntegrator<dim, 1, number> temp_vals(matrix_free,
-                                                 true /*is_interior_face*/,
-                                                 temp_dof_idx,
-                                                 temp_quad_idx);
-
-      const unsigned int dofs_per_cell = dQ_dT.dofs_per_cell;
-
-      for (unsigned int face = face_range.first; face < face_range.second; ++face)
-        {
-          dQ_dT.reinit(face);
-
-          const unsigned int n_filled_lanes = matrix_free.n_active_entries_per_face_batch(face);
-
-          FullMatrix<TrilinosScalar> matrices[VectorizedArray<number>::size()];
-          std::fill_n(matrices,
-                      VectorizedArray<number>::size(),
-                      FullMatrix<TrilinosScalar>(dofs_per_cell, dofs_per_cell));
-
-          for (unsigned int j = 0; j < dofs_per_cell; ++j)
-            {
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                dQ_dT.begin_dof_values()[i] = static_cast<number>(i == j);
-
-              tangent_local_boundary_operation(dQ_dT, temp_vals, j == 0 /*do_reinit_face*/);
-
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                for (unsigned int v = 0; v < n_filled_lanes; ++v)
-                  matrices[v](i, j) = dQ_dT.begin_dof_values()[i][v];
-            }
-
-          for (unsigned int v = 0; v < n_filled_lanes; ++v)
-            {
-              unsigned int const cell_number = matrix_free.get_face_info(face).cells_interior[v];
-
-              auto cell_v =
-                matrix_free.get_cell_iterator(cell_number / VectorizedArray<number>::size(),
-                                              cell_number % VectorizedArray<number>::size(),
-                                              temp_dof_idx);
-
-              std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
-              cell_v->get_dof_indices(dof_indices);
-
-              auto temp = dof_indices;
-              for (unsigned int j = 0; j < dof_indices.size(); ++j)
-                dof_indices[j] = temp[dQ_dT.get_shape_info().lexicographic_numbering[j]];
-
-              scratch_data.get_constraint(temp_dof_idx)
-                .distribute_local_to_global(matrices[v], dof_indices, system_matrix);
-            }
-        }
-    }
-
-    system_matrix.compress(VectorOperation::add);
-  }
-
-  template <int dim, typename number>
-  void
-  HeatDiffuseMultiPhaseOperation<dim, number>::rhs_cell_loop(
+  HeatDiffuseMultiPhaseOperator<dim, number>::rhs_cell_loop(
     const MatrixFree<dim, number>        &matrix_free,
     VectorType                           &dst,
     const VectorType                     &src,
@@ -728,7 +603,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
+  HeatDiffuseMultiPhaseOperator<dim, number>::rhs_cut_cell_loop(VectorType &dst) const
   {
     // evaluate the evaporative heat loss term as surface integral
     if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp)
@@ -904,7 +779,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::rhs_boundary_loop(
+  HeatDiffuseMultiPhaseOperator<dim, number>::rhs_boundary_loop(
     const MatrixFree<dim, number>        &matrix_free,
     VectorType                           &dst,
     [[maybe_unused]] const VectorType    &src,
@@ -968,8 +843,8 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::create_rhs(VectorType       &dst,
-                                                          const VectorType &src) const
+  HeatDiffuseMultiPhaseOperator<dim, number>::create_rhs(VectorType       &dst,
+                                                         const VectorType &src) const
   {
     AssertThrowZeroTimeIncrement(this->time_increment);
 
@@ -993,7 +868,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::attach_vectors(
+  HeatDiffuseMultiPhaseOperator<dim, number>::attach_vectors(
     std::vector<LinearAlgebra::distributed::Vector<double> *> & /*vectors*/)
   {
     // none
@@ -1001,14 +876,14 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::distribute_constraints()
+  HeatDiffuseMultiPhaseOperator<dim, number>::distribute_constraints()
   {
     // none
   }
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::reinit()
+  HeatDiffuseMultiPhaseOperator<dim, number>::reinit()
   {
     // TODO: only if output variable is requested
     if (evapor_flux_type == Evaporation::EvaporCoolingInterfaceFluxType::sharp ||
@@ -1018,7 +893,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::attach_output_vectors(
+  HeatDiffuseMultiPhaseOperator<dim, number>::attach_output_vectors(
     GenericDataOut<dim> &data_out) const
   {
     /**
@@ -1128,7 +1003,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::tangent_local_cell_operation(
+  HeatDiffuseMultiPhaseOperator<dim, number>::tangent_local_cell_operation(
     FECellIntegrator<dim, 1, number>                        &temp_vals,
     FECellIntegrator<dim, 1, number>                        &temp_lin_vals,
     FECellIntegrator<dim, 1, number>                        &temp_old_vals,
@@ -1270,7 +1145,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   void
-  HeatDiffuseMultiPhaseOperation<dim, number>::tangent_local_boundary_operation(
+  HeatDiffuseMultiPhaseOperator<dim, number>::tangent_local_boundary_operation(
     FEFaceIntegrator<dim, 1, number> &dQ_dT,
     FEFaceIntegrator<dim, 1, number> &temp_vals,
     const bool                        do_reinit_face) const
@@ -1315,7 +1190,7 @@ namespace MeltPoolDG::Heat
 
   template <int dim, typename number>
   std::tuple<VectorizedArray<number>, VectorizedArray<number>>
-  HeatDiffuseMultiPhaseOperation<dim, number>::get_material_parameters(
+  HeatDiffuseMultiPhaseOperator<dim, number>::get_material_parameters(
     const FECellIntegrator<dim, 1, number> &temp_lin_val,
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
@@ -1352,7 +1227,7 @@ namespace MeltPoolDG::Heat
              VectorizedArray<number>,
              VectorizedArray<number>,
              VectorizedArray<number>>
-  HeatDiffuseMultiPhaseOperation<dim, number>::get_material_parameters_and_derivatives(
+  HeatDiffuseMultiPhaseOperator<dim, number>::get_material_parameters_and_derivatives(
     const FECellIntegrator<dim, 1, number> &temp_lin_val,
     const FECellIntegrator<dim, 1, number> &ls_heaviside_val,
     const unsigned int                      q_index) const
@@ -1394,7 +1269,7 @@ namespace MeltPoolDG::Heat
 
 
 
-  template class HeatDiffuseMultiPhaseOperation<1, double>;
-  template class HeatDiffuseMultiPhaseOperation<2, double>;
-  template class HeatDiffuseMultiPhaseOperation<3, double>;
+  template class HeatDiffuseMultiPhaseOperator<1, double>;
+  template class HeatDiffuseMultiPhaseOperator<2, double>;
+  template class HeatDiffuseMultiPhaseOperator<3, double>;
 } // namespace MeltPoolDG::Heat
