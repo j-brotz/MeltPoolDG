@@ -153,11 +153,10 @@ namespace MeltPoolDG
      * @param operation_name A string specifying the operation or context where
      *                       this field function is applicable (e.g., "level_set").
      */
-    template <typename FunctionType>
     void
-    attach_field_function(std::shared_ptr<FunctionType> function,
-                          const std::string            &type,
-                          const std::string            &operation_name)
+    attach_field_function(std::shared_ptr<Function<dim>> function,
+                          const std::string             &type,
+                          const std::string             &operation_name)
     {
       field_functions[operation_name][type] = function;
     }
@@ -166,10 +165,9 @@ namespace MeltPoolDG
      * Wrapper function to attach initial conditions. See documentation of
      * attach_field_function.
      */
-    template <typename FunctionType>
     void
-    attach_initial_condition(std::shared_ptr<FunctionType> initial_function,
-                             const std::string            &operation_name)
+    attach_initial_condition(std::shared_ptr<Function<dim>> initial_function,
+                             const std::string             &operation_name)
     {
       attach_field_function(initial_function, "initial_condition", operation_name);
     }
