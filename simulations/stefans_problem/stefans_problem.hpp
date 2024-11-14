@@ -97,8 +97,9 @@ namespace MeltPoolDG::Simulation::StefansProblem
                                        Point<dim>::unit_vector(dim - 1) * y_interface,
                                        -Point<dim>::unit_vector(dim - 1)),
                                      "signed_distance");
-      this->attach_advection_field(std::make_shared<Functions::ZeroFunction<dim>>(dim),
-                                   "level_set");
+      this->attach_field_function(std::make_shared<Functions::ZeroFunction<dim>>(dim),
+                                  "prescribed_velocity",
+                                  "level_set");
     }
 
   private:

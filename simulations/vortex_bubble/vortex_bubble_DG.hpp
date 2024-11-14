@@ -212,7 +212,9 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
     set_field_conditions() override
     {
       this->attach_initial_condition(std::make_shared<InitializePhi<dim>>(), "signed_distance");
-      this->attach_advection_field(std::make_shared<AdvectionField<dim>>(), "level_set");
+      this->attach_field_function(std::make_shared<AdvectionField<dim>>(),
+                                  "prescribed_velocity",
+                                  "level_set");
     }
 
     void

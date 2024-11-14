@@ -57,7 +57,8 @@ namespace MeltPoolDG::LevelSet
                                                   ls_quad_idx,
                                                   vel_dof_idx,
                                                   base_in->get_bc("level_set"),
-                                                  base_in->get_advection_field("level_set"),
+                                                  base_in->get_field_function("prescribed_velocity",
+                                                                              "level_set"),
                                                   false);
 
     /*
@@ -72,7 +73,8 @@ namespace MeltPoolDG::LevelSet
                                                   ls_quad_idx,
                                                   vel_dof_idx,
                                                   base_in->get_bc("level_set"),
-                                                  base_in->get_advection_field("level_set"),
+                                                  base_in->get_field_function("prescribed_velocity",
+                                                                              "level_set"),
                                                   false);
 
 

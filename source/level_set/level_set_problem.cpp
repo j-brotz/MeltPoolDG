@@ -50,7 +50,8 @@ namespace MeltPoolDG::LevelSet
                                      scratch_data->get_timer(),
                                      scratch_data->get_mpi_comm());
           }
-        compute_advection_velocity(*base_in->get_advection_field("level_set"));
+        compute_advection_velocity(
+          *base_in->get_field_function("prescribed_velocity", "level_set"));
 
         if (evaporation_operation)
           {
@@ -188,7 +189,7 @@ namespace MeltPoolDG::LevelSet
     /*
      * set initial conditions
      */
-    compute_advection_velocity(*base_in->get_advection_field("level_set"));
+    compute_advection_velocity(*base_in->get_field_function("prescribed_velocity", "level_set"));
 
     /*
      * configure level set with evaporation if requested
@@ -257,7 +258,8 @@ namespace MeltPoolDG::LevelSet
           /*
            *  set initial conditions after initial AMR
            */
-          compute_advection_velocity(*base_in->get_advection_field("level_set"));
+          compute_advection_velocity(
+            *base_in->get_field_function("prescribed_velocity", "level_set"));
           if (const auto initial_field =
                 base_in->get_initial_condition("level_set", true /*is optional*/))
             {

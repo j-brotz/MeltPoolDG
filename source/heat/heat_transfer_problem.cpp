@@ -67,8 +67,8 @@ namespace MeltPoolDG::Heat
             // zero out
             heat_operation->get_heat_source() = 0;
             // add custom source field if given
-            if (const auto source_field_function =
-                  base_in->get_source_field("heat_transfer", true /*is_optional*/))
+            if (const auto source_field_function = base_in->get_field_function(
+                  "prescribed_heat_source", "heat_transfer", true /*is_optional*/))
               compute_field_vector(heat_operation->get_heat_source(),
                                    temp_dof_idx,
                                    *source_field_function);
@@ -221,7 +221,8 @@ namespace MeltPoolDG::Heat
      *    set velocity field
      */
     VectorType *velocity_ptr = nullptr;
-    velocity_field_function  = base_in->get_velocity_field("heat_transfer", true /*is_optional*/);
+    velocity_field_function =
+      base_in->get_field_function("prescribed_velocity", "heat_transfer", true /*is_optional*/);
     if (velocity_field_function)
       velocity_ptr = &velocity;
 
